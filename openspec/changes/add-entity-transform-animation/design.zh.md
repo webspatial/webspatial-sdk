@@ -85,7 +85,7 @@ interface AnimationConfig {
    */
   playbackRate?: number
 
-  /** 会话成功建立后触发；首个状态可为 delaying、running，或 queued 期间 pause 导致的 paused。 */
+  /** native 会话成功建立后触发；首个状态可为 delaying 或 running。 */
   onStart?: () => void
 
   /** 非循环动画自然结束时触发，携带 Native 侧最终 transform。 */
@@ -416,7 +416,8 @@ stateDiagram-v2
     queued --> paused : pause 在 queued 期间调用
     running --> paused : pause
     running --> finished : 非循环动画自然完成
-    paused --> running : play 恢复
+    paused --> queued : play 恢复待执行请求
+    paused --> running : play 恢复 native 会话
     finished --> idle : cancel 或重新 play
     queued --> idle : cancel
     paused --> idle : cancel
@@ -428,10 +429,11 @@ stateDiagram-v2
 - **idle → queued**：调用 `play()` 时实体尚未绑定到 `Reality` / `SceneGraph`，动画进入排队等待。
 - **idle → running**：调用 `play()` 时实体已绑定，Native 会话成功建立。
 - **queued → running**：实体挂载到场景后自动转为播放。
-- **queued → paused**：在 queued 期间调用 `pause()`，实体绑定后将以 paused 状态开始。
+- **queued → paused**：在 queued 期间调用 `pause()`，待执行的 play 请求被冻结；实体绑定后仍保持 paused，直到再次调用 `play()`。
 - **running → paused**：调用 `pause()`，Native 侧 `AnimationPlaybackController.pause()`。
 - **running → finished**：非循环动画自然播放完成，Native 发送 `_completed` 事件。
-- **paused → running**：调用 `play()` 恢复，Native 侧 `AnimationPlaybackController.resume()`。
+- **paused → queued**：在 native 会话尚未建立前，调用 `play()` 恢复已暂停的待执行请求。
+- **paused → running**：调用 `play()` 恢复已建立的 native 会话，Native 侧 `AnimationPlaybackController.resume()`。
 - **任意 alive 状态 → idle**：调用 `cancel()`，实体恢复到 `from`（或起始快照），Native 发送 `_canceled` 事件。
 - **finished → idle**：调用 `cancel()` 或再次 `play()` 启动新会话。
 
@@ -501,7 +503,7 @@ sequenceDiagram
 
 ### pause 后 play 恢复时序
 
-当动画处于 `paused` 状态时，调用 `play()` 会恢复同一会话。React SDK 将对外 `play()` 翻译为内部 `resume` 命令，但该细节不对应用暴露。
+当已建立的 native 动画会话处于 `paused` 状态时，调用 `play()` 会恢复同一会话。React SDK 将对外 `play()` 翻译为内部 `resume` 命令，但该细节不对应用暴露。若 `pause()` 发生在会话仍处于 queued 阶段，则 `play()` 会恢复待执行的 play 请求，并在 entity 已绑定后建立 native 会话。
 
 ```mermaid
 sequenceDiagram

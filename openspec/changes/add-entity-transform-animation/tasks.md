@@ -32,7 +32,7 @@
 
 - [x] 5.1 Add focused tests for:
   - [x] 5.1.1 Capability checks (`supports("useAnimation", ["entity"])` true/false/sub-token)
-  - [x] 5.1.2 React playback lifecycle (onStart timing, including queued-to-paused start, start/complete/cancel callbacks, exclusivity, invocation count, cancel restores `from`) *(needs realign)*
+  - [x] 5.1.2 React playback lifecycle (onStart timing, including queued pause/resume, start/complete/cancel callbacks, exclusivity, invocation count, cancel restores `from`) *(needs realign)*
   - [x] 5.1.3 Transform suppression (animated vs non-animated fields coexist, cache retention until next render)
   - [x] 5.1.4 Command / event ordering (serialize in call order, bridge delivery order)
   - [x] 5.1.5 Same animation bound to multiple entities (throw)

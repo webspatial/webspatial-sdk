@@ -65,6 +65,8 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 
 ### Requirement: 定义旋转单位与插值方式
 
+rotation 动画 MUST 使用与实体 `rotation` prop 相同的公开单位和 transform 约定，native 插值 MUST 使用最短路径四元数插值。
+
 #### Scenario: rotation 值使用角度
 
 - **WHEN** 动画配置指定 `rotation` 值
@@ -104,16 +106,17 @@ SDK MUST 支持对 `position`、`rotation`、`scale` 的动画控制，可单独
 - **AND** 若排队期间实体 transform 被外部更新，起始快照 MUST 以实际执行时刻的实体当前 transform 为准
 - **AND** 排队期间 `api.isAnimating` MUST 为 `true`
 - **AND** 排队的 play 所使用的 config MUST 以 `play()` 调用时刻的 config 为准，而非实体绑定时的 config
-- **AND** 若排队期间调用 `api.pause()` 或 `api.cancel()`，SDK MUST 按调用顺序处理：`cancel()` 取消排队的 play 并触发 `onCancel`；`pause()` 使 play 在实体绑定后以 paused 状态启动
+- **AND** 若排队期间调用 `api.pause()` 或 `api.cancel()`，SDK MUST 按调用顺序处理：`cancel()` 取消排队的 play 并触发 `onCancel`；`pause()` 将待执行的 play 请求冻结为 `paused` 状态，直到应用再次调用 `api.play()`
 
 #### Scenario: queued 期间 pause 后绑定
 
 - **GIVEN** `api.play()` 已在实体绑定前进入 `queued`
 - **AND** 应用在 `queued` 期间调用了 `api.pause()`
-- **WHEN** 实体稍后完成绑定，且该会话成功建立
-- **THEN** 会话的首个状态 MUST 为 `paused`
-- **AND** `onStart` MUST 对该会话触发一次
+- **WHEN** 实体稍后完成绑定
+- **THEN** 会话 MUST 保持 `paused`
 - **AND** `api.isPaused` MUST 为 `true`
+- **AND** `onStart` MUST 等到应用稍后调用 `api.play()` 且 native 会话成功建立后才触发
+- **AND** 该次稍后的 `api.play()` MUST 复用已有 pending session，且 MUST NOT 生成新的 `animationId`
 
 #### Scenario: 延迟播放
 
@@ -255,7 +258,7 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 
 #### Scenario: onStart 回调
 
-- **WHEN** `api.play()` 所请求的动画会话成功建立，且首个状态为 `delaying`、`running`，或 queued 期间 `pause()` 导致的 `paused`
+- **WHEN** `api.play()` 所请求的动画会话成功建立，且首个状态为 `delaying` 或 `running`
 - **THEN** 配置的 `onStart` MUST 对该会话触发一次
 - **AND** 若该请求在 `queued` 阶段尚未完成绑定，`onStart` MUST 不得提前触发
 - **AND** 若该请求在会话成功建立之前失败，`onStart` MUST 不得触发
@@ -324,9 +327,10 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 - **WHEN** SDK 将控制命令发送到 Native 层
 - **THEN** SDK MUST 按调用顺序向 native bridge 发送这些命令，且 bridge MUST 以相同顺序交付给 native
 
-#### Scenario: paused 会话时调用 play
+#### Scenario: 已建立 native 会话处于 paused 时调用 play
 
 - **GIVEN** 一个动画会话处于 `paused` 状态
+- **AND** 其 native 会话已成功建立
 - **WHEN** 应用代码调用 `api.play()`
 - **THEN** SDK MUST 从暂停进度继续该同一会话，而不是启动新会话
 - **AND** SDK MUST NOT 生成新的 `animationId`
@@ -424,6 +428,8 @@ SDK MUST 在校验时强制以下范围，违反时抛错：
 ---
 
 ### Requirement: 卸载时清理动画
+
+当拥有动画的实体卸载时，SDK MUST 停止并释放动画会话资源，且卸载后不得再触发生命周期回调。
 
 #### Scenario: alive 会话期间实体卸载
 

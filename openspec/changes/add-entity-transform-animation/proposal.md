@@ -56,8 +56,9 @@ The hook declares *what* to animate; playback runs natively at 90 fps. `api.play
   - **Static (TypeScript) guarantee**: The `animation` prop is only exposed in the type definitions of entity components that integrate with the `SpatialEntity` abstraction (e.g. `BoxEntity`, `ModelEntity`). Non-entity components (`SpatialDiv`, plain HTML elements) and non-Reality-entity `Model` components do not include this prop in their types, so passing it is a compile-time error. Note that TypeScript **cannot** statically prove that an entity component is actually rendered inside a `Reality` / `SceneGraph` subtree — this is a runtime concern.
   - **Runtime behavior when entity is unbound**: If a component with `useAnimation` is rendered outside `Reality` / `SceneGraph` (i.e. it never binds to a `SpatialEntity` context), the following behavior applies:
     - `api.play()` transitions `playState` to `queued` and remains there until either the entity binds to a `SpatialEntity` context (at which point playback starts normally) or the component unmounts (at which point the queued session is discarded).
-    - `api.pause()` and `api.cancel()` are no-ops while in the `queued` state.
-    - `api.isAnimating` remains `false`; `api.playState` stays `'queued'`.
+    - `api.pause()` freezes the pending play request in `paused` state; after the entity binds, playback remains paused until the application calls `api.play()` again.
+    - `api.cancel()` cancels the queued session, returns `playState` to `'idle'`, and fires `onCancel`.
+    - `api.isAnimating` remains `true` while `playState` is `'queued'`; after a queued pause, `api.isAnimating` becomes `false` and `api.isPaused` becomes `true`.
     - No lifecycle callbacks (`onStart`, `onComplete`, `onCancel`) fire while unbound; `onError` is not triggered either, since the absence of a bound entity is a valid waiting state, not an error.
     - On unmount, any queued session is silently cleaned up with no callbacks.
 - Extend runtime capability documentation so applications can query `supports("useAnimation", ["entity"])` before relying on the animation API.
