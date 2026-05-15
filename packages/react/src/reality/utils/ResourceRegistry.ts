@@ -10,6 +10,12 @@ import { SpatialObject } from '@webspatial/core-sdk'
  *
  * Callers can `await get(id)` before `add(id, promise)` runs: `get` returns a promise that
  * settles when something later calls `add` with the same id.
+ *
+ * **Subscriptions:** `subscribe(id, listener)` runs `listener` whenever `notify(id)` is invoked.
+ * The registry auto-notifies after each `add()` promise settles (then or catch), and on
+ * `remove`, `removeAndDestroy`, and `destroy()`. Components such as `<Texture>` may call
+ * `notify(id)` manually when a resource mutates in place without a new `add()` (e.g. same texture
+ * id, new URL via `updateProperties`).
  */
 export class ResourceRegistry {
   /** Every id maps to a promise — either the real resource from add(), or a placeholder until then. */
@@ -22,6 +28,8 @@ export class ResourceRegistry {
       reject: (error: Error) => void
     }
   >()
+  /** Subscribers are notified whenever an id gets a fresh resolved or failed resource attempt. */
+  private listeners = new Map<string, Set<() => void>>()
 
   add<T extends SpatialObject>(id: string, resource: Promise<T>): void {
     this.resources.set(id, resource)
@@ -35,6 +43,31 @@ export class ResourceRegistry {
           deferred.reject(err instanceof Error ? err : new Error(String(err))),
         )
       this.deferreds.delete(id)
+    }
+
+    // Resource users (e.g. materials bound to a texture id) may need to retry or refresh when
+    // a creation attempt settles, even if the id string itself did not change.
+    resource.then(() => this.notify(id)).catch(() => this.notify(id))
+  }
+
+  subscribe(id: string, listener: () => void): () => void {
+    const listeners = this.listeners.get(id) ?? new Set<() => void>()
+    listeners.add(listener)
+    this.listeners.set(id, listeners)
+
+    return () => {
+      listeners.delete(listener)
+      if (listeners.size === 0) {
+        this.listeners.delete(id)
+      }
+    }
+  }
+
+  notify(id: string): void {
+    const listeners = this.listeners.get(id)
+    if (!listeners) return
+    for (const listener of Array.from(listeners)) {
+      listener()
     }
   }
 
@@ -55,6 +88,7 @@ export class ResourceRegistry {
   remove(id: string): void {
     this.resources.delete(id)
     this.deferreds.delete(id)
+    this.notify(id)
   }
 
   // Same as remove, but when the promise resolves, destroy the spatial object (best-effort).
@@ -65,6 +99,7 @@ export class ResourceRegistry {
     }
     this.resources.delete(id)
     this.deferreds.delete(id)
+    this.notify(id)
   }
 
   destroy(): void {
@@ -75,6 +110,12 @@ export class ResourceRegistry {
       )
     }
     this.deferreds.clear()
+
+    const ids = Array.from(this.resources.keys())
+    for (const id of ids) {
+      this.notify(id)
+    }
+    this.listeners.clear()
 
     const pending = Array.from(this.resources.values())
     this.resources.clear()

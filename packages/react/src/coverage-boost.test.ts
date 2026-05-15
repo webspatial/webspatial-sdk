@@ -301,6 +301,64 @@ describe('reality/utils/ResourceRegistry', () => {
     expect(destroy1).toHaveBeenCalledTimes(1)
     expect(destroy2).toHaveBeenCalledTimes(1)
   })
+
+  it('notifies subscribers when resource attempts settle or are removed', async () => {
+    const registry = new ResourceRegistry()
+    const listener = vi.fn()
+    const unsubscribe = registry.subscribe('texture', listener)
+
+    registry.add('texture', Promise.resolve({ destroy: vi.fn() }) as any)
+    await Promise.resolve()
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    registry.notify('texture')
+    expect(listener).toHaveBeenCalledTimes(2)
+
+    registry.remove('texture')
+    expect(listener).toHaveBeenCalledTimes(3)
+
+    unsubscribe()
+    registry.notify('texture')
+    expect(listener).toHaveBeenCalledTimes(3)
+  })
+
+  it('notifies subscribers when a resource attempt fails', async () => {
+    const registry = new ResourceRegistry()
+    const listener = vi.fn()
+    registry.subscribe('texture', listener)
+
+    registry.add('texture', Promise.reject(new Error('nope')) as any)
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('notifies subscribers on removeAndDestroy', async () => {
+    const registry = new ResourceRegistry()
+    const listener = vi.fn()
+    registry.subscribe('tex', listener)
+    registry.add('tex', Promise.resolve({ destroy: vi.fn() }) as any)
+    await Promise.resolve()
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    registry.removeAndDestroy('tex')
+    expect(listener).toHaveBeenCalledTimes(2)
+  })
+
+  it('notifies subscribers before clearing listeners on destroy', async () => {
+    const registry = new ResourceRegistry()
+    const events: string[] = []
+    registry.subscribe('a', () => events.push('a'))
+    registry.subscribe('b', () => events.push('b'))
+    registry.add('a', Promise.resolve({ destroy: vi.fn() }) as any)
+    registry.add('b', Promise.resolve({ destroy: vi.fn() }) as any)
+    await Promise.resolve()
+    events.length = 0
+
+    registry.destroy()
+    expect(events).toEqual(expect.arrayContaining(['a', 'b']))
+    expect(events.length).toBeGreaterThanOrEqual(2)
+  })
 })
 
 describe('notifyUpdateStandInstanceLayout', () => {

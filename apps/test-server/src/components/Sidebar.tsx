@@ -34,7 +34,7 @@ export const routes = [
       { path: '/reality/dynamicAssets', label: 'DynamicAssets' },
       {
         path: '/reality/textured-unlit-box',
-        label: 'Textured unlit primitives',
+        label: 'Textures',
       },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
