@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import {
   BoxEntity,
   ConeEntity,
@@ -11,6 +10,7 @@ import {
   Texture,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
+import { useState } from 'react'
 
 /** Public grid texture (requires network for native download). */
 const DEMO_TEXTURE_URL =

@@ -1,5 +1,5 @@
-import { useRef } from 'react'
 import { Easing, Tween } from '@tweenjs/tween.js'
+import { useRef } from 'react'
 
 function applyTeen(tween: Tween<any>) {
   function animate() {

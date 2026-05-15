@@ -17,7 +17,7 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
   useEffect(() => {
     const controller = new AbortController()
     if (!ctx) return
-    const { session, reality, resourceRegistry } = ctx
+    const { session, resourceRegistry } = ctx
     const init = async () => {
       try {
         const resolvedUrl = getAbsoluteUrl(options.src)

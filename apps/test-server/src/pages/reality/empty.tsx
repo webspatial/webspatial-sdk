@@ -1,17 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom/client'
-import {
-  BoxEntity,
-  enableDebugTool,
-  Entity,
-  EntityRef,
-  ModelAsset,
-  ModelEntity,
-  Reality,
-  SceneGraph,
-  SpatializedElementRef,
-  UnlitMaterial,
-} from '@webspatial/react-sdk'
+import { enableDebugTool } from '@webspatial/react-sdk'
+import { useEffect, useRef, useState } from 'react'
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
@@ -19,7 +7,7 @@ const btnCls =
 enableDebugTool()
 
 function App() {
-  const [logs, setLogs] = useState('')
+  const [, setLogs] = useState('')
 
   useEffect(() => {
     window.onerror = (error: any) => {
@@ -45,9 +33,8 @@ function App() {
     })
   }
 
-  const [boxPosition, setBoxPosition] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotation, setBoxRotation] = useState({ x: 0, y: 0, z: 0 })
-  const [boxRotationOn, setBoxRotationOn] = useState(false)
+  const [boxRotationOn] = useState(false)
   const boxAnimationRef = useRef<any>()
   useEffect(() => {
     if (boxRotationOn) {
@@ -69,14 +56,6 @@ function App() {
 
     return () => {}
   }, [boxRotationOn])
-
-  const entRef = useRef<EntityRef>(null)
-  const modelEntRef = useRef<EntityRef>(null)
-  const boxEntRef = useRef<EntityRef>(null)
-
-  const realityRef = useRef<SpatializedElementRef<HTMLDivElement>>(null)
-
-  const [showModelEntity, setShowModelEntity] = useState(true)
 
   return (
     <div className="pl-5 pt-2">

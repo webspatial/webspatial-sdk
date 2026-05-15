@@ -24,10 +24,6 @@ declare global {
   }
 }
 
-type JSBError = {
-  message: string
-}
-
 export class PuppeteerPlatform implements PlatformAbility {
   // store iframe instance
   private iframeRegistry: Map<string, HTMLIFrameElement> = new Map()

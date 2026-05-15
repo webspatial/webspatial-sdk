@@ -9,7 +9,6 @@ export class Particle {
   private frame = 0
   private duration = 0
   private side = 'left'
-  private moveSpeed = 0.003
   private partSpeeds: number[] = []
   private partLifeFrames: number[] = []
   private breakForce = 0
@@ -24,7 +23,6 @@ export class Particle {
     this.side = option.side ?? 'left'
     this.duration = option.duration ?? Math.round(Math.random() * 30) + 20
     this.cornerRadius = option.cornerRadius ?? 0.01
-    this.moveSpeed = option.moveSpeed ?? 0.003
 
     this.partSize = this.size / this.layer
     this.breakForce = Math.random() * 0.1 + 0.1

@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react'
 import {
-  SpatialObject,
   SpatialUnlitMaterial,
   SpatialUnlitMaterialOptions,
 } from '@webspatial/core-sdk'

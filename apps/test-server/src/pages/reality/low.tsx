@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom/client'
-import { SpatialEntity, Spatial } from '@webspatial/core-sdk'
+import { Spatial, SpatialEntity } from '@webspatial/core-sdk'
+import { useEffect, useRef, useState } from 'react'
 
 function getSession() {
   const spatial = new Spatial()

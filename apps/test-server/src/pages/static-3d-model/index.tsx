@@ -1,8 +1,6 @@
-import ReactDOM from 'react-dom/client'
-
 import { enableDebugTool, Model, ModelRef } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState, RefObject } from 'react'
-import { useLogger, Logger } from './Logger'
+import { RefObject, useEffect, useRef, useState } from 'react'
+import { Logger, useLogger } from './Logger'
 
 enableDebugTool()
 

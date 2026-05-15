@@ -1,14 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Spatial } from '@webspatial/core-sdk'
-import { initScene, enableDebugTool } from '@webspatial/react-sdk'
+import { enableDebugTool, initScene } from '@webspatial/react-sdk'
+import { useEffect, useRef, useState } from 'react'
 
 enableDebugTool()
 
 const btnCls =
   'select-none px-4 py-2 text-sm font-semibold rounded-lg border border-gray-700 hover:text-white bg-gray-800 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 transition-all'
-
-const spatial = new Spatial()
-const spatialSupported = spatial.isSupported()
 
 const extUrl = 'https://www.google.com/'
 const extUrl2 = 'https://developer.mozilla.org/zh-CN/'
@@ -58,7 +54,6 @@ export default function SceneTest() {
 
   const winARef = useRef<any>(null)
   const winBRef = useRef<any>(null)
-  const winCRef = useRef<any>(null)
 
   return (
     <div className="p-10 text-white min-h-full">

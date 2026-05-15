@@ -1,7 +1,6 @@
 import React, { ElementType } from 'react'
 import { SpatialID } from './SpatialID'
 import {
-  CubeInfo,
   SpatializedElement,
   SpatialTapEvent as CoreSpatialTapEvent,
   SpatialDragEvent as CoreSpatialDragEvent,

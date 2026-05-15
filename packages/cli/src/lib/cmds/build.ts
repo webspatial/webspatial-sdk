@@ -2,9 +2,7 @@ import { PWAGenerator } from '../pwa'
 import { ResourceManager } from '../resource'
 import { XcodeManager } from '../xcode'
 import { checkBuildParams, checkStoreParams } from './check'
-import { launch } from './launch'
 import { ManifestInfo, PWAInitArgs } from '../types'
-import Xcrun from '../xcode/xcrun'
 import CliHistory from '../utils/history'
 
 // build and export ipa

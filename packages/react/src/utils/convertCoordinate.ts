@@ -9,7 +9,6 @@ import type { SpatializedElementRef } from '../spatialized-container/types'
 import type { EntityRef } from '../reality'
 import type { ModelRef } from '../Model'
 import { getSession } from './getSession'
-import { SpatialID } from '../spatialized-container/SpatialID'
 
 type CoordinateConvertible =
   | Window
