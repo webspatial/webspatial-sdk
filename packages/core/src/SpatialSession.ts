@@ -20,6 +20,7 @@ import {
   SpatialSceneCreationOptions,
   SpatialSphereGeometryOptions,
   SpatialUnlitMaterialOptions,
+  SpatialTextureResourceOptions,
   SpatialEntityUserData,
   AttachmentEntityOptions,
   ModelSource,
@@ -32,6 +33,7 @@ import {
   createSpatialEntity,
   createSpatialGeometry,
   createSpatialModelEntity,
+  createSpatialTexture,
   createSpatialUnlitMaterial,
 } from './reality/realityCreator'
 import {
@@ -167,6 +169,16 @@ export class SpatialSession {
    */
   createUnlitMaterial(options: SpatialUnlitMaterialOptions) {
     return createSpatialUnlitMaterial(options)
+  }
+
+  /**
+   * Creates a texture resource from the specified image URL.
+   * Texture resources can be referenced by materials and other spatial content.
+   * @param options Configuration options for the texture resource
+   * @returns Promise resolving to a new SpatialTextureResource instance
+   */
+  createTexture(options: SpatialTextureResourceOptions) {
+    return createSpatialTexture(options)
   }
 
   /**

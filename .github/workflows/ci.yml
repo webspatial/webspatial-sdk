@@ -8,6 +8,10 @@ on:
       - stable
   pull_request:
 
+permissions:
+  contents: read
+  statuses: write
+
 env:
   CI: true
   SKIP_SIMPLE_GIT_HOOKS: 1
@@ -16,6 +20,9 @@ jobs:
   version:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22, 24, latest]
     steps:
       - name: Checkout code repository
         uses: actions/checkout@v4
@@ -26,7 +33,7 @@ jobs:
       - name: Setup node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
       
       - name: Install dependencies and build
@@ -34,6 +41,9 @@ jobs:
       
       - name: Test
         run: pnpm run test
+
+      - name: Test React compatibility
+        run: pnpm run test:react-compat
 
       - name: Test changeset
         run: npx changeset version

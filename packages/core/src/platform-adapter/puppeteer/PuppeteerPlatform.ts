@@ -1,4 +1,11 @@
-import { PlatformAbility, CommandResult } from '../interface'
+import {
+  PlatformAbility,
+  CommandResult,
+  WebSpatialProtocolResult,
+} from '../interface'
+import { buildSpatialSceneQuery } from '../spatialSceneQuery'
+import type { SpatialSceneCreationOptionsInternal } from '../../types/internal'
+import type { AttachmentEntityOptions } from '../../types/types'
 import {
   CommandResultFailure,
   CommandResultSuccess,
@@ -20,8 +27,6 @@ declare global {
 type JSBError = {
   message: string
 }
-
-console.log('PuppeteerPlatform')
 
 export class PuppeteerPlatform implements PlatformAbility {
   // store iframe instance
@@ -85,12 +90,37 @@ export class PuppeteerPlatform implements PlatformAbility {
     }
   }
 
-  callWebSpatialProtocol(
+  openSpatialSceneSync(
+    url: string,
+    config: SpatialSceneCreationOptionsInternal | undefined,
+    target?: string,
+    features?: string,
+  ): WebSpatialProtocolResult {
+    const query = buildSpatialSceneQuery(url, config)
+    return this.runProtocolSync('createSpatialScene', query, target, features)
+  }
+
+  createNativeSpatialDiv(): Promise<WebSpatialProtocolResult> {
+    return this.runProtocolAsync(
+      'createSpatialized2DElement',
+      '',
+      undefined,
+      undefined,
+    )
+  }
+
+  createNativeAttachment(
+    _options?: AttachmentEntityOptions,
+  ): Promise<WebSpatialProtocolResult> {
+    return this.runProtocolAsync('createAttachment', '', undefined, undefined)
+  }
+
+  private runProtocolAsync(
     command: string,
     query?: string,
     target?: string,
     features?: string,
-  ): Promise<CommandResult> {
+  ): Promise<WebSpatialProtocolResult> {
     console.log(
       `PuppeteerPlatform: Calling webspatial protocol: webspatial://${command}${query ? `?${query}` : ''}`,
     )
@@ -124,12 +154,12 @@ export class PuppeteerPlatform implements PlatformAbility {
     })
   }
 
-  callWebSpatialProtocolSync(
+  private runProtocolSync(
     command: string,
     query?: string,
     target?: string,
     features?: string,
-  ): CommandResult {
+  ): WebSpatialProtocolResult {
     try {
       // create complete webspatial URL
       const webspatialUrl = `webspatial://${command}${query ? `?${query}` : ''}`

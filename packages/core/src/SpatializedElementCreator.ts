@@ -1,15 +1,15 @@
 import {
-  createSpatialized2DElementCommand,
   CreateSpatializedDynamic3DElementCommand,
   CreateSpatializedStatic3DElementCommand,
 } from './JSBCommand'
 import { Spatialized2DElement } from './Spatialized2DElement'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
+import { createNativeSpatialDiv } from './spatial-host'
 import { ModelSource } from './types/types'
 
 export async function createSpatialized2DElement(): Promise<Spatialized2DElement> {
-  const result = await new createSpatialized2DElementCommand().execute()
+  const result = await createNativeSpatialDiv()
   if (!result.success) {
     throw new Error('createSpatialized2DElement failed')
   } else {

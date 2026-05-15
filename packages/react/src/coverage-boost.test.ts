@@ -617,7 +617,7 @@ describe('spatialized-container-monitor', () => {
 })
 
 describe('StandardSpatializedContainer', () => {
-  it('applies default style and reacts to transform visibility updates', () => {
+  it('applies default class + data attributes and toggles data-xr-transform-active', () => {
     let handler: ((v: any) => void) | undefined
     const spatializedContainerObject = {
       onSpatialTransformVisibilityChange: vi.fn((id: string, fn: any) => {
@@ -646,25 +646,92 @@ describe('StandardSpatializedContainer', () => {
     expect(el).toBeTruthy()
     expect(el.className).toContain('xr-spatial-default')
     expect(el.className).toContain('c')
-    expect(el.style.visibility).toBe('hidden')
-    expect(el.style.transition).toBe('none')
-    expect(el.style.transform).toBe('none')
+    expect(el.getAttribute('data-xr-host')).toBe('')
+
+    // Spatial host appearance is now driven by CSS rules on `data-xr-host`
+    // rather than inline style; otherwise React commits would clobber the
+    // probe via styleProxy. Inline transform/visibility/transition must be
+    // empty on the host.
+    expect(el.style.transform).toBe('')
+    expect(el.style.visibility).toBe('')
+    expect(el.style.transition).toBe('')
+
+    expect(el.hasAttribute('data-xr-transform-active')).toBe(false)
 
     act(() => {
       handler?.({ transform: [], visibility: 'visible' })
     })
-    expect(el.style.transform).toContain('translateZ')
+    expect(el.hasAttribute('data-xr-transform-active')).toBe(true)
+    expect(el.style.transform).toBe('')
 
     r.unmount()
   })
 
-  it('injectSpatialDefaultStyle adds style tag into head', () => {
-    const before = document.head.querySelectorAll('style').length
+  // PR #1194 review (P2 from Codex): user-supplied props must not clobber
+  // SDK-controlled `data-xr-host` / `data-xr-transform-active` attributes,
+  // otherwise the 2D placeholder could un-hide or the stacking-context
+  // state could diverge from the spatial transform watcher.
+  it('SDK data attributes are not overridable via spatial element props', () => {
+    let handler: ((v: any) => void) | undefined
+    const spatializedContainerObject = {
+      onSpatialTransformVisibilityChange: vi.fn((_id: string, fn: any) => {
+        handler = fn
+        fn({ transform: 'none', visibility: 'visible' })
+      }),
+      offSpatialTransformVisibilityChange: vi.fn(),
+    } as any
+
+    const props: any = {
+      component: 'div',
+      inStandardSpatializedContainer: true,
+      [SpatialID]: 's2',
+      // These are exactly the values that would break the SDK contract
+      // if they were applied to the host: undefined would drop
+      // `data-xr-host` (un-hiding the placeholder) and a hard-coded value
+      // for `data-xr-transform-active` would force the translateZ stacking
+      // state regardless of the spatial transform watcher.
+      'data-xr-host': undefined,
+      'data-xr-transform-active': 'forced',
+    }
+
+    const r = render(
+      React.createElement(
+        SpatializedContainerContext.Provider,
+        { value: spatializedContainerObject },
+        React.createElement(StandardSpatializedContainer, props),
+      ),
+    )
+
+    const el = r.container.querySelector('div') as HTMLDivElement
+    expect(el).toBeTruthy()
+    expect(el.getAttribute('data-xr-host')).toBe('')
+    expect(el.hasAttribute('data-xr-transform-active')).toBe(false)
+
+    act(() => {
+      handler?.({ transform: 'matrix(1,0,0,1,0,0)', visibility: 'visible' })
+    })
+    expect(el.getAttribute('data-xr-transform-active')).toBe('')
+
+    r.unmount()
+  })
+
+  it('injectSpatialDefaultStyle is idempotent and emits class-scoped data-xr-host rules', () => {
+    // Idempotent across repeated calls — required so per-mount calls from
+    // SpatialContainerRefProxy do not pile up duplicate <style> elements.
     injectSpatialDefaultStyle()
-    const after = document.head.querySelectorAll('style').length
-    expect(after).toBe(before + 1)
-    const last = document.head.querySelectorAll('style')[after - 1]
-    expect(last?.innerHTML).toContain('xr-spatial-default')
+    injectSpatialDefaultStyle()
+    injectSpatialDefaultStyle()
+
+    const styles = document.head.querySelectorAll(
+      'style[data-xr-spatial-default-style]',
+    )
+    expect(styles.length).toBe(1)
+    const css = styles[0]?.innerHTML ?? ''
+    expect(css).toContain('xr-spatial-default')
+    // Hidden-host rules are scoped to the spatial class so unrelated DOM
+    // carrying `data-xr-host` is not affected.
+    expect(css).toContain('.xr-spatial-default[data-xr-host]')
+    expect(css).toContain('translateZ(0)')
   })
 })
 
@@ -1200,7 +1267,7 @@ describe('PortalSpatializedContainer', () => {
 })
 
 describe('SpatializedContainer', () => {
-  it('renders plain component when not in WebSpatial env', async () => {
+  it('renders plain component and runs ready callback in non-WebSpatial env', async () => {
     vi.resetModules()
     vi.doMock('./spatialized-container/context/PortalInstanceContext', () => {
       return {
@@ -1215,14 +1282,27 @@ describe('SpatializedContainer', () => {
     const { SpatializedContainer } = await import(
       './spatialized-container/SpatializedContainer'
     )
+    const cleanup = vi.fn()
+    const onSpatialContentReady = vi.fn((ctx: { host: HTMLElement }) => {
+      expect(ctx.host.tagName).toBe('DIV')
+      expect(ctx.host.isConnected).toBe(true)
+      return cleanup
+    })
 
     const r = render(
       React.createElement(SpatializedContainer, {
         component: 'div',
         'data-testid': 'plain',
+        onSpatialContentReady,
       } as any),
     )
-    expect(r.container.querySelector('[data-testid="plain"]')).toBeTruthy()
+    const el = r.container.querySelector('[data-testid="plain"]')
+    expect(el).toBeTruthy()
+    expect(el?.getAttribute('onSpatialContentReady')).toBe(null)
+    expect(onSpatialContentReady).toHaveBeenCalledTimes(1)
+
+    r.unmount()
+    expect(cleanup).toHaveBeenCalledTimes(1)
   })
 
   it('renders root container with standard/portal/task containers', async () => {
@@ -1661,6 +1741,12 @@ describe('SpatializedStatic3DElementContainer', () => {
   it('syncs modelURL and wires load callbacks and extra ref props', async () => {
     vi.resetModules()
 
+    vi.doMock('./webSpatialRuntime', () => ({
+      WebSpatialRuntime: {
+        supports: () => true,
+      },
+    }))
+
     const updateProperties = vi.fn()
     const updateModelTransform = vi.fn()
     const spatializedStatic3DElement: any = {
@@ -1721,7 +1807,7 @@ describe('SpatializedStatic3DElementContainer', () => {
     const onLoad = vi.fn()
     const onError = vi.fn()
     const portalInstanceObject = {
-      dom: { __targetProxy: { tid: 1 } },
+      dom: { tid: 1 },
     } as any
 
     const { SpatializedStatic3DElementContainer } = await import(
@@ -1754,6 +1840,7 @@ describe('SpatializedStatic3DElementContainer', () => {
       sources: [],
       autoplay: undefined,
       loop: undefined,
+      posterURL: '',
     })
 
     spatializedStatic3DElement.onLoadCallback?.()
@@ -1778,6 +1865,12 @@ describe('SpatializedStatic3DElementContainer', () => {
 
   it('extra ready rejects with failure event when model ready fails', async () => {
     vi.resetModules()
+
+    vi.doMock('./webSpatialRuntime', () => ({
+      WebSpatialRuntime: {
+        supports: () => true,
+      },
+    }))
 
     const spatializedStatic3DElement: any = {
       updateProperties: vi.fn(),
@@ -1821,7 +1914,7 @@ describe('SpatializedStatic3DElementContainer', () => {
     render(
       React.createElement(
         PortalInstanceContext.Provider,
-        { value: { dom: { __targetProxy: {} } } as any },
+        { value: { dom: {} } as any },
         React.createElement(SpatializedStatic3DElementContainer as any, {
           src: '/m2.glb',
         }),

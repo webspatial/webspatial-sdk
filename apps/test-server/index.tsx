@@ -38,6 +38,7 @@ import RealityLow from './src/pages/reality/low'
 import RealityNested from './src/pages/reality/nested'
 import RealityAttachments from './src/pages/reality/attachments'
 import RealityDynamicAssets from './src/pages/reality/dynamicAssets'
+import RealityTexturedUnlitBox from './src/pages/reality/texturedUnlitBox'
 import RealityTestIndex from './src/pages/reality-test/index'
 import RealityAliases from './src/pages/reality/aliases'
 import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
@@ -47,7 +48,6 @@ import SpatialRotationGesture from './src/pages/spatial-rotation-gesture/index'
 import SpatialRotateAxisConstraint from './src/pages/spatial-rotate-axis-constraint/index'
 import BackgroundMaterial from './src/pages/backgroundmaterial/index'
 import FixedPositionTest from './src/pages/FixedPositionTest/index'
-import AndroidBringup from './src/pages/androidBringup/index'
 import DisplayTest from './src/pages/displayTest/index'
 import MemoryStats from './src/pages/memoryStats/index'
 import NestedFixPosition from './src/pages/nestedfixposition/index'
@@ -66,7 +66,9 @@ import SpatialDivCoordTest from './src/pages/reality/spatialDivCoordTest'
 import EntitySpatialDivConvertTest from './src/pages/reality/entitySpatialDivConvertTest'
 import ModelSpatialDivConvertTest from './src/pages/reality/modelSpatialDivConvertTest'
 import SpatialDivTest from './src/pages/spatialDivTest/index'
+import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
+import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -123,6 +125,10 @@ function App() {
                 />
                 <Route path="/canvas-test" element={<CanvasTest />} />
                 <Route path="/jsapi-test" element={<JSAPITest />} />
+                <Route
+                  path="/runtime-capabilities"
+                  element={<RuntimeCapabilitiesPage />}
+                />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
                 <Route path="/scene/xrapp" element={<SceneXRApp />} />
@@ -179,6 +185,10 @@ function App() {
                   path="/reality/dynamicAssets"
                   element={<RealityDynamicAssets />}
                 />
+                <Route
+                  path="/reality/textured-unlit-box"
+                  element={<RealityTexturedUnlitBox />}
+                />
                 <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route
                   path="/spatial-drag-gesture"
@@ -205,7 +215,6 @@ function App() {
                   path="/fixed-position-test"
                   element={<FixedPositionTest />}
                 />
-                <Route path="/android-bringup" element={<AndroidBringup />} />
                 <Route path="/display-test" element={<DisplayTest />} />
                 <Route path="/memory-stats" element={<MemoryStats />} />
                 <Route
@@ -218,6 +227,10 @@ function App() {
                   element={<SpatialConverter />}
                 />
                 <Route path="/spatial-div-test" element={<SpatialDivTest />} />
+                <Route
+                  path="/spatial-content-ready-three"
+                  element={<SpatialContentReadyThree />}
+                />
                 <Route
                   path="/dropdown-menu-test"
                   element={<DropdownMenuTest />}

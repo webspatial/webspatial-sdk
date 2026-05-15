@@ -6,17 +6,26 @@ import {
   BoxEntity,
   UnlitMaterial,
   SpatializedElementRef,
+  ModelEntity,
+  ModelAsset,
 } from '@webspatial/react-sdk'
 
-const btnCls =
-  'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 transition-all'
+// Use DaisyUI button styles for consistency across test-server pages.
+const btnCls = 'btn btn-sm btn-neutral'
+const greenBtnCls = 'btn btn-sm btn-success'
+const redBtnCls = 'btn btn-sm btn-error'
+const modelBtnCls =
+  'btn btn-sm bg-white text-black hover:bg-white/80 border-transparent'
+const yellowBtnCls = 'btn btn-sm btn-warning text-black'
 
 export default function RealityGestures() {
   const [logs, setLogs] = useState<string>('')
   const [enabled, setEnabled] = useState<boolean>(true)
   const [exclusive, setExclusive] = useState<boolean>(false)
-  const [inputEnabled, setInputEnabled] = useState<boolean>(true)
+  const [inputEnabled, setInputEnabled] = useState<boolean>(false)
   const [redInputEnabled, setRedInputEnabled] = useState<boolean>(false)
+  const [modelInputEnabled, setModelInputEnabled] = useState<boolean>(false)
+  const [yellowInputEnabled, setYellowInputEnabled] = useState<boolean>(false)
   const [boxPos, setBoxPos] = useState({ x: 0, y: 0, z: 0 })
   const [boxRot, setBoxRot] = useState<{ x: number; y: number; z: number }>({
     x: 0,
@@ -59,11 +68,29 @@ export default function RealityGestures() {
         <button className={btnCls} onClick={() => setLogs('')}>
           Clear Log
         </button>
-        <button className={btnCls} onClick={() => setInputEnabled(v => !v)}>
+        <button
+          className={greenBtnCls}
+          onClick={() => setInputEnabled(v => !v)}
+        >
           {inputEnabled ? 'Disable' : 'Enable'} Green Input
         </button>
-        <button className={btnCls} onClick={() => setRedInputEnabled(v => !v)}>
+        <button
+          className={redBtnCls}
+          onClick={() => setRedInputEnabled(v => !v)}
+        >
           {redInputEnabled ? 'Disable' : 'Enable'} Red Input
+        </button>
+        <button
+          className={modelBtnCls}
+          onClick={() => setModelInputEnabled(v => !v)}
+        >
+          {modelInputEnabled ? 'Disable' : 'Enable'} Model Input
+        </button>
+        <button
+          className={yellowBtnCls}
+          onClick={() => setYellowInputEnabled(v => !v)}
+        >
+          {yellowInputEnabled ? 'Disable' : 'Enable'} Yellow Input
         </button>
         <button
           className={btnCls}
@@ -109,6 +136,32 @@ export default function RealityGestures() {
             {redInputEnabled ? 'ENABLED' : 'DISABLED'}
           </span>
         </div>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#ffffff]"></span>
+          <span className="text-gray-300">Model Entity:</span>
+          <span
+            className={
+              modelInputEnabled
+                ? 'text-green-400 font-bold'
+                : 'text-red-400 font-bold'
+            }
+          >
+            {modelInputEnabled ? 'ENABLED' : 'DISABLED'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#f2ff00]"></span>
+          <span className="text-gray-300">Yellow Box:</span>
+          <span
+            className={
+              yellowInputEnabled
+                ? 'text-green-400 font-bold'
+                : 'text-red-400 font-bold'
+            }
+          >
+            {yellowInputEnabled ? 'ENABLED' : 'DISABLED'}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -122,11 +175,21 @@ export default function RealityGestures() {
               '--xr-back': 100,
             }}
             onSpatialTap={async e => {
-              if (!enabled || e.target?.id !== 'boxGreen') return
-              console.log('onSpatialTap', e.target, e.currentTarget)
-              logLine('tap box', e.detail.location3D)
-              logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
-              logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
+              if (!enabled) return
+              logLine('tap target', e.target.id)
+              // if (e.target.id === 'boxRed') {
+              //   logLine('tap red')
+              // } else if (e.target.name === 'modelEntName') {
+              //   logLine('tap model')
+              // } else if (e.target.id === 'boxGreen') {
+              //   logLine('tap green')
+              // }
+              // return
+
+              // console.log('onSpatialTap', e.target, e.currentTarget)
+              // logLine('tap location3D', e.detail.location3D)
+              // logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+              // logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
             }}
             onSpatialDragStart={async e => {
               if (!enabled || e.target?.id !== 'boxGreen') return
@@ -253,11 +316,27 @@ export default function RealityGestures() {
               logLine('magnifyEnd')
             }}
           >
+            <UnlitMaterial id="matYellow" color="#f2ff00" />
             <UnlitMaterial id="matRed" color="#ff0000" />
             <UnlitMaterial id="matGreen" color="#22cc66" />
+            <ModelAsset
+              id="model"
+              src="/assets/vehicle-speedster.usdz"
+              onLoad={() => {
+                console.log('model load')
+              }}
+              onError={e => {
+                console.log('model error', e)
+              }}
+            >
+              <source
+                src="/assets/vehicle-speedster.usdz"
+                type="model/vnd.usdz+zip"
+              />
+            </ModelAsset>
             <SceneGraph>
               <Entity position={{ x: 0, y: 0, z: 0 }}>
-                <BoxEntity
+                {/* <BoxEntity
                   id="boxRed"
                   width={0.1}
                   height={0.1}
@@ -268,7 +347,7 @@ export default function RealityGestures() {
                   scale={boxScale}
                   materials={['matRed']}
                   enableInput={redInputEnabled}
-                />
+                /> */}
                 <BoxEntity
                   id="boxGreen"
                   width={0.2}
@@ -280,7 +359,43 @@ export default function RealityGestures() {
                   scale={boxScale}
                   materials={['matGreen']}
                   enableInput={inputEnabled}
-                />
+                >
+                  <BoxEntity
+                    id="boxRed"
+                    width={0.1}
+                    height={0.1}
+                    depth={0.05}
+                    cornerRadius={0.5}
+                    position={{ x: 0, y: 0, z: 0.15 }}
+                    rotation={boxRot}
+                    scale={boxScale}
+                    materials={['matRed']}
+                    enableInput={redInputEnabled}
+                  />
+                </BoxEntity>
+                <ModelEntity
+                  id="modelEnt"
+                  name="modelEntName"
+                  model="model"
+                  position={{
+                    x: boxPos.x,
+                    y: boxPos.y + 0.1,
+                    z: boxPos.z + 0.15,
+                  }}
+                  scale={{ x: 0.2, y: 0.2, z: 0.2 }}
+                  enableInput={modelInputEnabled}
+                >
+                  <BoxEntity
+                    id="boxYellow"
+                    width={0.1}
+                    height={0.1}
+                    depth={0.05}
+                    cornerRadius={0.5}
+                    position={{ x: 0.5, y: 0, z: 0.15 }}
+                    materials={['matYellow']}
+                    enableInput={yellowInputEnabled}
+                  />
+                </ModelEntity>
               </Entity>
             </SceneGraph>
           </Reality>

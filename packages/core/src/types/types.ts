@@ -109,6 +109,8 @@ export interface SpatializedStatic3DElementProperties
   loop?: boolean
   animationPaused?: boolean
   playbackRate?: number
+  currentTime?: number
+  posterURL?: string
 }
 
 export interface SpatialSceneCreationOptions {
@@ -260,6 +262,10 @@ export interface SpatialUnlitMaterialOptions {
   textureId?: string
   transparent?: boolean
   opacity?: number
+}
+
+export interface SpatialTextureResourceOptions {
+  url: string
 }
 
 export interface ModelComponentOptions {
