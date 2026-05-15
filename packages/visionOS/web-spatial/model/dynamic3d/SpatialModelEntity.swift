@@ -9,9 +9,16 @@ class SpatialModelEntity: SpatialEntity {
 
     required init(_ modelResource: SpatialModelResource, _ _name: String = "") {
         super.init(_name)
-        modelEntity = modelResource.resource
-        addChild(modelEntity!)
-        generateCollisionShapes(recursive: true)
+        // Clone the loaded resource so each `SpatialModelEntity` owns an independent RealityKit
+        // entity. Without this, multiple `<ModelEntity model="…">` nodes backed by the same
+        // `<ModelAsset>` share a single `Entity`; `addChild` then reparents it to the last caller
+        // (only one mesh renders) and destroying any one entity removes the shared node from the
+        // scene entirely.
+        if let cloned = modelResource.resource?.clone(recursive: true) {
+            modelEntity = cloned
+            addChild(cloned)
+            generateCollisionShapes(recursive: true)
+        }
     }
 
     required init() {
