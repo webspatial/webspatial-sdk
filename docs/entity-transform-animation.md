@@ -54,9 +54,9 @@ Returns `[AnimatedProps, AnimationApi]`.
 | Property/Method | Type | Description |
 |----------------|------|-------------|
 | `play()` | `void` | Start a new session (from idle/finished), resume (from paused), or no-op (if already running). |
-| `pause()` | `void` | Pause the running animation (preserves position). |
+| `pause()` | `void` | Pause the running animation, or freeze a queued pending play request. |
 | `cancel()` | `void` | Cancel the animation; restores entity to `from` transform. |
-| `isAnimating` | `boolean` | `true` while the session is alive (queued, running, or paused). |
+| `isAnimating` | `boolean` | `true` while queued, delaying, or running; `false` while paused, idle, or finished. |
 | `isPaused` | `boolean` | `true` when the session is paused. |
 | `playState` | `AnimationPlayState` | Current state: `'idle'`, `'queued'`, `'running'`, `'paused'`, or `'finished'`. |
 | `finished` | `boolean` | `true` after natural completion; resets to `false` on next `play()`. |
@@ -71,21 +71,21 @@ type AnimationPlayState = 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 
 ```
 idle ──play()──> queued ──(entity bound)──> running
-finished ──play()──> running                    │
-                                         pause()  play() = resume
-                                              │        │
-                                              ▼        │
-                                           paused ─────┘
-                                              │
-running ──(completes)──> finished        cancel()──> idle
+                 │    │                         │
+                 │    └─pause()──> paused ◀────┘
+                 │                  │
+                 │                  └─play()──> queued/running
+                 └─cancel()──> idle
+finished ──play()──> running
+running ──(completes)──> finished
 running ──cancel()──> idle
 running ──play()──> running (no-op)
 ```
 
 - `'idle'` — no active session (either never started, or after `cancel()`).
-- `'queued'` — `play()` was called before the entity was bound; will begin when bound.
+- `'queued'` — `play()` was called before the entity was bound; will begin when bound unless paused or canceled first.
 - `'running'` — actively animating (includes the delay phase). `play()` in this state is a no-op.
-- `'paused'` — paused mid-animation; `play()` resumes.
+- `'paused'` — paused mid-animation, or a queued pending play was frozen; `play()` resumes.
 - `'finished'` — completed naturally; entity remains at `to` transform.
 
 ## Behavior Details
@@ -100,7 +100,7 @@ running ──play()──> running (no-op)
 Follows the Web Animation API contract:
 
 - If the animation is **idle** or **finished**, `play()` starts a **new session**.
-- If the animation is **paused**, `play()` resumes the same session (sends a `resume` command to the bridge).
+- If the animation is **paused**, `play()` resumes the same session. If the native session already exists, this sends a `resume` command to the bridge; if the session was paused while queued, it resumes the pending play request.
 - If the animation is **running** or **delaying**, `play()` is a **no-op** — it does not restart or interrupt the current session.
 
 To restart an animation that is already running, explicitly cancel it first:

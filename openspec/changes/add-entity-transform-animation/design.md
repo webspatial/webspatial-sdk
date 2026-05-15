@@ -85,7 +85,7 @@ interface AnimationConfig {
    */
   playbackRate?: number
 
-  /** Called when the session is established successfully; the first state may be delaying, running, or paused after a queued pause. */
+  /** Called when the native session is established successfully; the first state may be delaying or running. */
   onStart?: () => void
 
   /** Called when a non-looping animation finishes naturally. Receives the final native transform. */
@@ -420,7 +420,8 @@ stateDiagram-v2
     queued --> paused : pause called while queued
     running --> paused : pause
     running --> finished : non-looping animation completes
-    paused --> running : play resumes
+    paused --> queued : play resumes pending request
+    paused --> running : play resumes native session
     finished --> idle : cancel or new play
     queued --> idle : cancel
     paused --> idle : cancel
@@ -432,10 +433,11 @@ stateDiagram-v2
 - **idle → queued**: `play()` called while entity is not yet rendered under `Reality` / `SceneGraph`; animation enters queued waiting.
 - **idle → running**: `play()` called while entity is bound; native session established successfully.
 - **queued → running**: Entity mounts to the scene and automatically transitions to playing.
-- **queued → paused**: `pause()` called during queued state; entity will start in paused state after binding.
+- **queued → paused**: `pause()` called during queued state; the pending play request is frozen and remains paused after binding until `play()` is called again.
 - **running → paused**: `pause()` called; native `AnimationPlaybackController.pause()`.
 - **running → finished**: Non-looping animation completes naturally; native sends `_completed` event.
-- **paused → running**: `play()` resumes; native `AnimationPlaybackController.resume()`.
+- **paused → queued**: `play()` resumes a paused pending request before a native session exists.
+- **paused → running**: `play()` resumes an established native session via `AnimationPlaybackController.resume()`.
 - **Any alive state → idle**: `cancel()` called; entity restores to `from` (or start snapshot); native sends `_canceled` event.
 - **finished → idle**: `cancel()` called or a new `play()` starts a fresh session.
 
@@ -505,7 +507,7 @@ sequenceDiagram
 
 ### play after pause (resume) Sequence
 
-When the animation is in the `paused` state, calling `play()` resumes the same session. The React SDK translates the public `play()` into an internal `resume` command, but this detail is not exposed to applications.
+When an established native animation session is in the `paused` state, calling `play()` resumes the same session. The React SDK translates the public `play()` into an internal `resume` command, but this detail is not exposed to applications. If `pause()` was called while the session was still queued, `play()` instead resumes the pending play request and establishes the native session when the entity is bound.
 
 ```mermaid
 sequenceDiagram

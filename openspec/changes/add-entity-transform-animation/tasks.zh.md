@@ -32,7 +32,7 @@
 
 - [x] 5.1 增加聚焦测试：
   - [x] 5.1.1 能力检测（`supports("useAnimation", ["entity"])` true/false/sub-token）
-  - [x] 5.1.2 React 播放生命周期（onStart 时机、包含 queued 后 paused 的 start、start/complete/cancel 回调、互斥性、调用次数、cancel 恢复到 from） *(needs realign)*
+  - [x] 5.1.2 React 播放生命周期（onStart 时机、包含 queued pause/resume、start/complete/cancel 回调、互斥性、调用次数、cancel 恢复到 from） *(needs realign)*
   - [x] 5.1.3 字段级抑制（动画字段与非动画字段共存、缓存保留至下一次渲染）
   - [x] 5.1.4 命令与事件顺序（按调用顺序序列化、bridge 投递顺序）
   - [x] 5.1.5 同一动画绑定多个实体（抛错）

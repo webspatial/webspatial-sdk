@@ -65,6 +65,8 @@ The SDK MUST allow transform animation for `position`, `rotation`, and `scale`, 
 
 ### Requirement: Define rotation units and interpolation
 
+Rotation animation MUST use the same public units and transform conventions as entity `rotation` props, while native interpolation MUST use shortest-path quaternion interpolation.
+
 #### Scenario: Rotation values use degrees
 
 - **WHEN** the animation config specifies `rotation` values
@@ -104,16 +106,17 @@ The animation config MUST support `duration`, `timingFunction`, `delay`, `autoSt
 - **AND** if the entity transform is updated externally while queued, the start snapshot MUST use the entity's current transform at the execution moment
 - **AND** `api.isAnimating` MUST be `true` while the request is queued
 - **AND** the config used for the queued play MUST be the config at the time `play()` was called, not at the time the entity is bound
-- **AND** if `api.pause()` or `api.cancel()` is called while the request is queued, the SDK MUST process them in call order: `cancel()` cancels the queued play and fires `onCancel`; `pause()` causes the play to start in paused state once the entity is bound
+- **AND** if `api.pause()` or `api.cancel()` is called while the request is queued, the SDK MUST process them in call order: `cancel()` cancels the queued play and fires `onCancel`; `pause()` freezes the pending play request in `paused` state until the application calls `api.play()` again
 
 #### Scenario: Bind after pausing while queued
 
 - **GIVEN** `api.play()` has already entered `queued` before the entity is bound
 - **AND** application code calls `api.pause()` while the request is queued
-- **WHEN** the entity is later bound and the session is established successfully
-- **THEN** the session's first state MUST be `paused`
-- **AND** `onStart` MUST be invoked once for that session
+- **WHEN** the entity is later bound
+- **THEN** the session MUST remain `paused`
 - **AND** `api.isPaused` MUST be `true`
+- **AND** `onStart` MUST NOT fire until application code later calls `api.play()` and the native session is established successfully
+- **AND** that later `api.play()` MUST reuse the existing pending session and MUST NOT generate a new `animationId`
 
 #### Scenario: Delayed playback
 
@@ -255,7 +258,7 @@ The playback API MUST let applications start, pause, resume via `play()`, and ca
 
 #### Scenario: Start callback
 
-- **WHEN** the animation session requested by `api.play()` is established successfully, and its first state is `delaying`, `running`, or `paused` due to a queued pause
+- **WHEN** the animation session requested by `api.play()` is established successfully, and its first state is `delaying` or `running`
 - **THEN** the configured `onStart` callback MUST be invoked once for that session
 - **AND** if that request is still queued because the entity is not yet bound, `onStart` MUST NOT fire early
 - **AND** if that request fails before the session is established successfully, `onStart` MUST NOT fire
@@ -324,9 +327,10 @@ The playback API MUST let applications start, pause, resume via `play()`, and ca
 - **WHEN** the SDK sends control commands to the native layer
 - **THEN** the SDK MUST send those commands to the native bridge in the same call order, and the bridge MUST deliver them to native in that order
 
-#### Scenario: Play while a paused session exists
+#### Scenario: Play while an established native session is paused
 
 - **GIVEN** an animation session is in the `paused` state
+- **AND** its native session has already been established
 - **WHEN** application code calls `api.play()`
 - **THEN** the SDK MUST continue that same session from its paused progress instead of starting a new session
 - **AND** the SDK MUST NOT generate a new `animationId`
@@ -424,6 +428,8 @@ While an animation session controls a transform field, the SDK MUST avoid sendin
 ---
 
 ### Requirement: Clean up animation on unmount
+
+The SDK MUST stop and release animation session resources when the owning entity unmounts, without firing lifecycle callbacks after unmount.
 
 #### Scenario: Entity unmounts while an alive session exists
 
