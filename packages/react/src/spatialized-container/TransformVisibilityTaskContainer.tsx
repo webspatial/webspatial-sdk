@@ -1,7 +1,7 @@
-import React, {
-  CSSProperties,
-  ForwardedRef,
+import {
   forwardRef,
+  type CSSProperties,
+  type ForwardedRef,
   useCallback,
   useRef,
 } from 'react'

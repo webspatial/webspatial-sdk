@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import {
   BoxEntity,
   ConeEntity,
@@ -10,6 +9,7 @@ import {
   Texture,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
+import { useState } from 'react'
 
 function buildPublicUrl(path: string): string {
   if (typeof window === 'undefined') return path

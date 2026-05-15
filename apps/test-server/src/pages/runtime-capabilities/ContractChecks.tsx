@@ -1,10 +1,3 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
 import {
   ELEMENT_DOM_DEPTH_KEYS,
   SUB_TOKENS_BY_NAME,
@@ -16,6 +9,13 @@ import {
   type ModelRef,
   type SpatializedElementRef,
 } from '@webspatial/react-sdk'
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
 /**
  * Same partition as `openspec/.../review.md` §3.6 — first six Model sub-tokens are HTML-oriented,

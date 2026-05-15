@@ -1,5 +1,4 @@
 import { type BackgroundMaterialType } from '@webspatial/core-sdk'
-import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'
 
 import { enableDebugTool } from '@webspatial/react-sdk'

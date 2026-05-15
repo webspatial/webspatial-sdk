@@ -1,5 +1,5 @@
-import React from 'react'
 import { Model } from '@webspatial/react-sdk'
+import React from 'react'
 
 export function CleanupSpa() {
   return (

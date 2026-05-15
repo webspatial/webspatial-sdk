@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import styled from 'styled-components'
-import React from 'react'
 
 const Panel = styled.div`
   margin: 12px 0;

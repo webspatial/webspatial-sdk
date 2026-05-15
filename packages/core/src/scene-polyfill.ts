@@ -434,8 +434,6 @@ export function formatSceneConfig(
   // defaultSize should format into px if window
   // defaultSize should format into m if volume
 
-  const defaultSceneConfig = getSceneDefaultConfig(sceneType)
-
   const errors: string[] = []
 
   const isWindow = sceneType === 'window'

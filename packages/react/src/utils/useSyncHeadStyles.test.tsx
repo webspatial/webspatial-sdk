@@ -1,5 +1,4 @@
 import { act, render } from '@testing-library/react'
-import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSyncHeadStyles } from './useSyncHeadStyles'
 import { syncParentHeadToChild } from './windowStyleSync'
