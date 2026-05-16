@@ -69,6 +69,7 @@ jobs:
             -derivedDataPath "$RUNNER_TEMP/webspatial-derived-data" \
             ARCHS=arm64 \
             ONLY_ACTIVE_ARCH=YES \
+            SWIFT_ENABLE_EXPLICIT_MODULES=NO \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
