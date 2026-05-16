@@ -58,20 +58,18 @@ jobs:
           languages: swift
           build-mode: manual
 
-      - name: Build visionOS app
+      - name: Typecheck visionOS Swift sources
+        shell: bash
         run: |
-          xcodebuild build \
-            -project packages/visionOS/web-spatial.xcodeproj \
-            -scheme web-spatial \
-            -configuration Debug \
-            -sdk xrsimulator \
-            -destination "generic/platform=visionOS Simulator" \
-            -derivedDataPath "$RUNNER_TEMP/webspatial-derived-data" \
-            ARCHS=arm64 \
-            ONLY_ACTIVE_ARCH=YES \
-            SWIFT_ENABLE_EXPLICIT_MODULES=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO
+          SDKROOT="$(xcrun --sdk xrsimulator --show-sdk-path)"
+          find packages/visionOS/web-spatial -name '*.swift' -print | LC_ALL=C sort > "$RUNNER_TEMP/webspatial-swift-files.txt"
+          xargs xcrun --sdk xrsimulator swiftc -typecheck \
+            -module-name WebSpatial \
+            -target arm64-apple-xros26.0-simulator \
+            -sdk "$SDKROOT" \
+            -swift-version 5 \
+            -D DEBUG \
+            < "$RUNNER_TEMP/webspatial-swift-files.txt"
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
