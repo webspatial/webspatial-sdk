@@ -64,8 +64,8 @@ jobs:
             -project packages/visionOS/web-spatial.xcodeproj \
             -scheme web-spatial \
             -configuration Debug \
-            -sdk xros \
-            -destination "generic/platform=visionOS" \
+            -sdk xrsimulator \
+            -destination "generic/platform=visionOS Simulator" \
             -derivedDataPath "$RUNNER_TEMP/webspatial-derived-data" \
             ARCH=arm64 \
             ONLY_ACTIVE_ARCH=YES \
