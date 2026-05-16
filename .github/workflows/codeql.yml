@@ -52,32 +52,6 @@ jobs:
           xcodebuild -version
           xcodebuild -showsdks
 
-      # The macos-15-arm64 runner ships the visionOS SDK but not the simulator
-      # runtime / device types. Without them, RealityAssetsCompile (realitytool)
-      # fails with: "Failed to find newest available Device type for visionOS ...".
-      # We only need to download the platform; we do NOT need to create or boot a
-      # concrete simulator device (that's what previously caused
-      # "Unable to find a device matching id=..." after long SPM resolution).
-      - name: Ensure visionOS simulator runtime
-        run: |
-          set -euo pipefail
-          if ! xcrun simctl list runtimes | grep -q 'com.apple.CoreSimulator.SimRuntime.xrOS-'; then
-            downloaded=false
-            for attempt in 1 2 3; do
-              if xcodebuild -downloadPlatform visionOS; then
-                downloaded=true
-                break
-              fi
-              sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService || true
-              sleep 10
-            done
-            if [ "$downloaded" != true ]; then
-              exit 1
-            fi
-          fi
-          xcrun simctl list runtimes
-          xcrun simctl list devicetypes | grep -i 'Apple Vision' || true
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
@@ -90,8 +64,8 @@ jobs:
             -project packages/visionOS/web-spatial.xcodeproj \
             -scheme web-spatial \
             -configuration Debug \
-            -sdk xrsimulator \
-            -destination "generic/platform=visionOS Simulator" \
+            -sdk xros \
+            -destination "generic/platform=visionOS" \
             -derivedDataPath "$RUNNER_TEMP/webspatial-derived-data" \
             ARCH=arm64 \
             ONLY_ACTIVE_ARCH=YES \
