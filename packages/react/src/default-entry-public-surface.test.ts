@@ -29,8 +29,10 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       // in v2 (see the `remove-getabsoluteurl` changeset). The helper still
       // exists at `src/internal/urlUtils.ts` for internal consumers and is
       // tested colocated at `src/internal/urlUtils.test.ts`.
+      // `SSRProvider` was a Group C public export until the
+      // `remove-ssr-provider` change; `withSSRSupported` no longer needs a
+      // Context (see `src/ssr/withSSRSupported.tsx`).
       'initScene',
-      'SSRProvider',
       // Spatial primitive facades
       'AttachmentEntity',
       'Box',

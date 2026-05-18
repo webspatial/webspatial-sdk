@@ -20,10 +20,17 @@
 //      is a no-op compatibility stub — see `./runtime/eagerStubs.ts`.
 //
 // All other surface (stateless utilities, type re-exports, JSX runtime
-// behavior, `'use client'` RSC boundary, SSR safety contracts) MUST be
-// byte-identical to the default entry. We achieve this by re-exporting
-// from `./index` BY REFERENCE — never redeclaring a symbol — so the two
-// entries remain in lockstep automatically.
+// behavior, `'use client'` RSC boundary) aligns with the default entry by
+// re-exporting from `./index` BY REFERENCE — never redeclaring a symbol — so
+// the two entries stay in lockstep.
+//
+// Normative product routing (see `openspec/.../spatial-lazy-load/spec.md`:
+// "Entry routing", "CSR-only for spatial primitives"): spatial primitives
+// from this entry MUST mount client-only; applications that server-render
+// those primitives MUST use `@webspatial/react-sdk` instead (or CSR-gate
+// their subtree). Packaging-hygiene overlaps with the default entry (ESM,
+// peers, sideEffects, etc.) without extending full façade SSR semantics to
+// eager-imported spatial components.
 //
 // Per spec `tasks.md §16` and the "Eager-mode entry for spatial-only
 // consumers" Requirement.
@@ -116,7 +123,6 @@ export {
   enableDebugTool,
   convertCoordinate,
   initScene,
-  SSRProvider,
   WebSpatialRuntime,
   WebSpatialRuntimeError,
   version,

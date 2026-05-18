@@ -223,6 +223,7 @@ export default defineConfig([
   // that contains only JSX-runtime-adjacent code.
   {
     ...baseConfig,
+    clean: false,
     splitting: true,
     entry: {
       'jsx/jsx-runtime': 'src/jsx/jsx-runtime.ts',

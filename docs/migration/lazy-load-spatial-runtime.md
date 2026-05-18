@@ -18,6 +18,20 @@ The full normative contract lives in [`openspec/specs/spatial-lazy-load/spec.md`
 
 ---
 
+## Choosing the eager entry
+
+Use **`import { … } from '@webspatial/react-sdk/eager'`** when the app targets **only** WebSpatial-capable environments and you want the spatial implementation **statically linked** (roughly one sync request, no real `bootSpatial()` work — the call is a **no-op stub**). Export names mirror the default entry; migrating is **`import`-root-only**.
+
+**SSR / prerender caveat:** spatial primitives imported from **`@webspatial/react-sdk/eager`** MUST NOT run during server-side rendering — that path is **client-only**. If your HTML snapshot must include façade fallbacks for `<Model />`, `<Reality />`, etc., keep **`@webspatial/react-sdk`** as the import root for those routes. Alternatively, CSR-gate eager-imported primitives (Next.js **`dynamic(import('...'), { ssr: false })`**, or mount spatial UI only in `useEffect` / after `typeof window`).
+
+Hydration-safe façade SSR is specified for the **default** entry only (see **`bootSpatial` before vs after `hydrateRoot`** below).
+
+**Do not** mix `@webspatial/react-sdk` and `@webspatial/react-sdk/eager` in the same bundle — pick one root per app.
+
+Further detail: [`packages/react/README.md` → "Two distribution forms"](../../packages/react/README.md#two-distribution-forms-default-vs-eager) and [`openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md`](../../openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md) ("Entry routing", "CSR-only for spatial primitives").
+
+---
+
 ## Step 1 — Drop `@webspatial/vite-plugin`
 
 Before:
@@ -78,7 +92,7 @@ There is one caveat: **public spatial hooks (currently `useMetrics`) do NOT swit
 
 ### Boot before vs after `hydrateRoot`
 
-For SSR consumers (Next.js App Router, custom SSR pipelines):
+For SSR consumers (Next.js App Router, custom SSR pipelines) using the **default** entry `@webspatial/react-sdk` (not `@webspatial/react-sdk/eager`):
 
 - **Boot before hydrate** (`await bootSpatial(); hydrateRoot(...)`): the spatial chunk fetch starts in parallel with HTML streaming. The hydration pass still uses fallback rendering (matching the SSR HTML); the swap to real implementations happens on the React commit immediately after hydration. Hydration is mismatch-safe.
 - **Boot after hydrate** (`hydrateRoot(...); void bootSpatial()`): the page is interactive faster (no boot-related delay). The spatial chunk loads after hydration; on resolution the next commit swaps to real implementations. Slightly later swap point than boot-before, but still mismatch-safe.
@@ -203,6 +217,8 @@ If you depend on one of these environments, please open an issue at <https://git
 
 ## RSC (React Server Components) consumers
 
+The following applies when spatial primitives are imported from the **default** entry `@webspatial/react-sdk`. If you use **`@webspatial/react-sdk/eager`**, do not rely on server HTML for those primitives — mount them **client-only** (see [Choosing the eager entry](#choosing-the-eager-entry)).
+
 The default entry carries a top-level `'use client'` directive, so the entire `@webspatial/react-sdk` is treated as a Client Component boundary by the RSC compiler. Importing facades from a Server Component file works:
 
 ```tsx
@@ -244,7 +260,8 @@ The placeholder return value is unchanged: `pointToPhysical(pt) === pt / 1360`, 
 - **BREAKING**: spatial code is now lazy-loaded via `bootSpatial()`; applications that previously relied on spatial primitives mounting real implementations on first render MUST `await bootSpatial()` before `ReactDOM.createRoot(...).render(...)` (or accept the documented fallback-to-real swap on the next React commit after `bootSpatial()` resolves later).
 - **BREAKING**: a component instance that calls `useMetrics()` (and any future spatial Hooks) now pins the placeholder-vs-real choice for its lifetime; remount required to switch to the real implementation after a late `bootSpatial()`.
 - **DEPRECATED**: `createElement` named export — migrate to the automatic JSX transform (`./jsx-runtime` / `./jsx-dev-runtime`). Removal scheduled for v2.
-- **BREAKING (v2)**: removed `getAbsoluteUrl` named export from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. It was an internal helper accidentally promoted to public during v1; the SDK still uses it internally via `src/internal/urlUtils.ts`. Replace direct callers with `new URL(url, location.href).href` (browser) or your framework's URL helper (Next.js `metadataBase`, etc.).
+- **BREAKING (v2+)**: removed **`SSRProvider`** from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. Hydration gating for internal `Model` / `SpatializedContainer` now uses `withSSRSupported` + `useSyncExternalStore` — delete any `<SSRProvider>` wrapper; no replacement import is required.
+
 - **BREAKING (v2)**: removed `withSpatialized2DElementContainer` and `withSpatialMonitor` named exports (plus the `Spatialized2DElementContainerProps` type) from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. The factory HOCs were demoted to internal-only — the documented public mechanism for wrapping intrinsic elements remains the `enable-xr` / `enable-xr-monitor` JSX marker. If you imported the factory directly to compose with a third-party HOC (e.g. `animated(withSpatialized2DElementContainer('div'))`), wrap your own `forwardRef` shim around `<div enable-xr ref={ref} />` and pass *that* to the third-party HOC (see `packages/react/README.md` → "Advanced: composing with third-party HOCs" for the recipe).
 
 ---
