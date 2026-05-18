@@ -147,6 +147,16 @@ export { initScene } from './initScene'
 export { SSRProvider } from './ssr'
 
 // --- Spatial primitive facades (Group A: lazy-loaded) -----------------------
+// `withSpatialized2DElementContainer` and `withSpatialMonitor` USED to live
+// on this re-export block as factory-style HOC public APIs; they have since
+// been demoted to internal-only — the `<div enable-xr>` /
+// `<div enable-xr-monitor>` JSX markers remain the documented public
+// mechanism for wrapping intrinsic elements with spatial behaviour. See the
+// `internalize-hoc-factories` changeset for migration recipes (e.g. for
+// passing a spatial-wrapped component to a third-party HOC like
+// `animated(...)`). The factories themselves still exist at their original
+// source paths and are reached internally by the JSX runtime via
+// `src/internal/facades-client.ts`.
 export {
   AttachmentEntity,
   Box,
@@ -170,8 +180,6 @@ export {
   Texture,
   UnlitMaterial,
   World,
-  withSpatialMonitor,
-  withSpatialized2DElementContainer,
 } from './facades'
 export type {
   AttachmentAssetProps,
@@ -215,7 +223,11 @@ export type {
   ModelSpatialTapEvent,
   Point3D,
   Quaternion,
-  Spatialized2DElementContainerProps,
+  // `Spatialized2DElementContainerProps` was originally re-exported here as
+  // the props shape of `withSpatialized2DElementContainer`. The HOC has
+  // since been demoted to internal-only (see the `internalize-hoc-factories`
+  // changeset); the type lives on at `src/spatialized-container/types.ts`
+  // for internal use but is no longer part of the published type surface.
   SpatializedDivElementRef,
   SpatializedElementRef,
   SpatializedStatic3DContainerProps,
