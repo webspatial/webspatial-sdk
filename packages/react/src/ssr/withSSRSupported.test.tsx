@@ -1,13 +1,10 @@
 import React from 'react'
 import { render, waitFor, cleanup } from '@testing-library/react'
-import { vi, describe, it, expect, afterEach } from 'vitest'
-import { withSSRSupported } from './withSSRSupported'
-import { SSRProvider } from './SSRContext'
-import { useSSRPhase } from './useSSRPhase'
+import { renderToString } from 'react-dom/server'
+import { hydrateRoot } from 'react-dom/client'
+import { afterEach, describe, it, expect } from 'vitest'
 
-vi.mock('./useSSRPhase', () => ({
-  useSSRPhase: vi.fn(),
-}))
+import { withSSRSupported } from './withSSRSupported'
 
 const RealComponent = React.forwardRef<
   HTMLDivElement,
@@ -19,197 +16,74 @@ const RealComponent = React.forwardRef<
 ))
 RealComponent.displayName = 'RealComponent'
 
-const SSRComponent = withSSRSupported(RealComponent)
+const Wrapped = withSSRSupported(RealComponent)
 
 describe('withSSRSupported', () => {
   afterEach(() => {
-    vi.restoreAllMocks()
     cleanup()
+    document.body.innerHTML = ''
   })
 
-  describe('with SSRProvider', () => {
-    it('1. server return fake div', () => {
-      vi.mocked(useSSRPhase).mockReturnValue('ssr')
-
-      const { container } = render(
-        <SSRProvider>
-          <SSRComponent />
-        </SSRProvider>,
-      )
-
-      expect(container.innerHTML).toBe('<div></div>')
-    })
-
-    it('2. client first render fake div, 3. client then render real div', async () => {
-      // 2. client first render fake div
-      vi.mocked(useSSRPhase).mockReturnValue('hydrate')
-
-      const { container, getByTestId, rerender } = render(
-        <SSRProvider>
-          <SSRComponent />
-        </SSRProvider>,
-      )
-      expect(container.innerHTML).toBe('<div></div>')
-
-      vi.mocked(useSSRPhase).mockReturnValue('after-hydrate')
-      rerender(
-        <SSRProvider>
-          <SSRComponent />
-        </SSRProvider>,
-      )
-
-      // 3. client then render real div
-      await waitFor(() => {
-        expect(getByTestId('real')).toBeTruthy()
-      })
-    })
-
-    it('4. client navigation then render real div', () => {
-      vi.mocked(useSSRPhase).mockReturnValue('after-hydrate')
-
-      const { getByTestId } = render(
-        <SSRProvider isSSR={false}>
-          <SSRComponent />
-        </SSRProvider>,
-      )
-
-      expect(getByTestId('real')).toBeTruthy()
-    })
+  it('SSR: renderToString yields placeholder div (no real subtree)', () => {
+    const html = renderToString(
+      <Wrapped style={{ color: 'red' }} className="test-class" />,
+    )
+    expect(html).not.toContain('data-testid')
+    expect(html).not.toContain('Real Component')
+    expect(html).toContain('test-class')
+    expect(html).toContain('color')
   })
 
-  describe('without SSRProvider (CSR)', () => {
-    it('1. client directly render real div', () => {
-      vi.mocked(useSSRPhase).mockReturnValue('after-hydrate')
-      const { getByTestId } = render(<SSRComponent />)
-      expect(getByTestId('real')).toBeTruthy()
-    })
+  it('CSR (jsdom): first paint renders real component', () => {
+    const { getByTestId } = render(<Wrapped />)
+    expect(getByTestId('real').textContent).toContain('Real Component')
   })
 
-  // Boundary scenario tests
-  describe('Boundary scenario tests', () => {
-    it('ref passing test - fake div phase should pass ref', () => {
-      vi.mocked(useSSRPhase).mockReturnValue('ssr')
+  it('forwards ref to real inner element on client', () => {
+    const ref = React.createRef<HTMLDivElement>()
+    render(<Wrapped ref={ref} />)
+    expect(ref.current?.getAttribute('data-testid')).toBe('real')
+  })
 
-      const ref = React.createRef<HTMLDivElement>()
+  it('placeholder preserves style and className on SSR output', () => {
+    const style = { color: 'red', fontSize: '16px' }
+    const html = renderToString(
+      <Wrapped style={style} className="test-class" />,
+    )
+    expect(html).toContain('test-class')
+    expect(html).toContain('red')
+    expect(html).toContain('16px')
+  })
 
-      render(
-        <SSRProvider>
-          <SSRComponent ref={ref} />
-        </SSRProvider>,
-      )
+  it('hydrateRoot: placeholder then swaps to real implementation', async () => {
+    const props = {
+      style: { color: 'green' } as React.CSSProperties,
+      className: 'transition-class',
+    }
+    const markup = renderToString(<Wrapped {...props} />)
+    expect(markup).not.toContain('Real Component')
 
-      // In fake div phase, ref should be correctly set
-      expect(ref.current).toBeInstanceOf(HTMLDivElement)
+    const container = document.createElement('div')
+    container.innerHTML = markup
+    document.body.appendChild(container)
+
+    hydrateRoot(container, <Wrapped {...props} />)
+
+    await waitFor(() => {
+      expect(container.querySelector('[data-testid="real"]')).toBeTruthy()
     })
+    const real = container.querySelector(
+      '[data-testid="real"]',
+    ) as HTMLDivElement
+    expect(real.textContent).toContain('Real Component')
+    expect(real.className).toBe('transition-class')
+    expect(real.style.color).toBe('green')
+  })
 
-    it('ref passing test - real div phase should pass ref to real component', () => {
-      vi.mocked(useSSRPhase).mockReturnValue('after-hydrate')
-
-      const ref = React.createRef<HTMLDivElement>()
-
-      render(
-        <SSRProvider isSSR={false}>
-          <SSRComponent ref={ref} />
-        </SSRProvider>,
-      )
-
-      // In real div phase, ref should be passed to the real component
-      expect(ref.current).toBeInstanceOf(HTMLDivElement)
-      expect(ref.current?.getAttribute('data-testid')).toBe('real')
-    })
-
-    it('style and className preservation test - fake div should preserve style and className', () => {
-      vi.mocked(useSSRPhase).mockReturnValue('hydrate')
-
-      const style = { color: 'red', fontSize: '16px' }
-      const className = 'test-class'
-
-      const { container } = render(
-        <SSRProvider>
-          <SSRComponent style={style} className={className} />
-        </SSRProvider>,
-      )
-
-      const fakeDiv = container.firstChild as HTMLDivElement
-
-      // Verify fake div preserves style attributes
-      expect(fakeDiv.style.color).toBe('red')
-      expect(fakeDiv.style.fontSize).toBe('16px')
-
-      // Verify fake div preserves className
-      expect(fakeDiv.className).toBe('test-class')
-    })
-
-    it('style and className preservation test - real div should correctly receive style and className', () => {
-      vi.mocked(useSSRPhase).mockReturnValue('after-hydrate')
-
-      const style = { color: 'blue', fontWeight: 'bold' }
-      const className = 'real-class'
-
-      const { getByTestId } = render(
-        <SSRProvider isSSR={false}>
-          <SSRComponent style={style} className={className} />
-        </SSRProvider>,
-      )
-
-      const realDiv = getByTestId('real')
-
-      // Verify real div correctly receives style attributes
-      expect(realDiv.style.color).toBe('blue')
-      expect(realDiv.style.fontWeight).toBe('bold')
-
-      // Verify real div correctly receives className
-      expect(realDiv.className).toBe('real-class')
-    })
-
-    it('component displayName test - HOC should correctly set displayName', () => {
-      // Verify HOC functionality instead of displayName property
-
-      // Test anonymous component case
-      const AnonymousComponent = () => <div>Anonymous</div>
-      const AnonymousSSRComponent = withSSRSupported(AnonymousComponent)
-
-      // Verify HOC functionality works correctly
-      vi.mocked(useSSRPhase).mockReturnValue('after-hydrate')
-      const { getByText } = render(<AnonymousSSRComponent />)
-      expect(getByText('Anonymous')).toBeTruthy()
-    })
-
-    it('hydration phase transition test - verify smooth transition from hydrate to after-hydrate', async () => {
-      vi.mocked(useSSRPhase).mockReturnValue('hydrate')
-
-      const { container, getByTestId, rerender } = render(
-        <SSRProvider>
-          <SSRComponent
-            style={{ color: 'green' }}
-            className="transition-class"
-          />
-        </SSRProvider>,
-      )
-
-      // Initial phase should be fake div, use more flexible assertions
-      const fakeDiv = container.firstChild as HTMLDivElement
-      expect(fakeDiv).toBeInstanceOf(HTMLDivElement)
-      expect(fakeDiv.style.color).toBe('green')
-      expect(fakeDiv.className).toBe('transition-class')
-
-      // Switch to after-hydrate phase
-      vi.mocked(useSSRPhase).mockReturnValue('after-hydrate')
-      rerender(
-        <SSRProvider>
-          <SSRComponent
-            style={{ color: 'green' }}
-            className="transition-class"
-          />
-        </SSRProvider>,
-      )
-
-      // Should render real div and maintain styles
-      await waitFor(() => {
-        const realDiv = getByTestId('real')
-        expect(realDiv.style.color).toBe('green')
-        expect(realDiv.className).toBe('transition-class')
-      })
-    })
+  it('wraps anonymous components', () => {
+    const AnonymousComponent = () => <div>Anonymous</div>
+    const AnonymousWrapped = withSSRSupported(AnonymousComponent)
+    const { getByText } = render(<AnonymousWrapped />)
+    expect(getByText('Anonymous')).toBeTruthy()
   })
 })

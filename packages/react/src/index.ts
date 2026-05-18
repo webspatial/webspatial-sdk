@@ -143,8 +143,10 @@ export { convertCoordinate } from './utils/convertCoordinate'
 // (`new URL(url, location.href).href` / framework URL helper).
 export { initScene } from './initScene'
 
-// --- SSR --------------------------------------------------------------------
-export { SSRProvider } from './ssr'
+// `SSRProvider` USED to be exported here as a Group C helper until the
+// `remove-ssr-provider` change: `withSSRSupported` now relies on
+// `useSyncExternalStore` + `getServerSnapshot` (no Context). Remove any
+// remaining `<SSRProvider>` wrappers from app code.
 
 // --- Spatial primitive facades (Group A: lazy-loaded) -----------------------
 // `withSpatialized2DElementContainer` and `withSpatialMonitor` USED to live
