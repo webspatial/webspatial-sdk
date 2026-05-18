@@ -6,16 +6,45 @@ import { createElement as reactCreateElement } from 'react'
 // spatial implementation). Per spatial-lazy-load spec `tasks.md` §6.2 the
 // JSX runtime delegates spatial vs. fallback rendering to the facade HOCs;
 // the JSX runtime itself NEVER imports from `../spatial/`, NEVER calls
-// `bootSpatial()`, and never schedules a dynamic import. After §8.1's tsup
-// rewrite the JSX runtime, the default entry, and the spatial chunk all
-// share a single tsup pass with `splitting: true`, so this relative import
-// collapses into the same shared chunk that the default entry uses for the
-// facades — no duplicate facade copy ships per JSX bundle.
+// `bootSpatial()`, and never schedules a dynamic import.
+//
+// Why an external package self-reference instead of a relative import:
+// `dist/jsx/jsx-runtime.js` MUST be server-callable (Server Components in
+// the App Router compile their JSX to `jsx(...)` calls reaching this file
+// via `tsconfig "jsxImportSource"`), so it cannot itself carry
+// `'use client'`. The facade HOCs, however, transitively import React
+// hooks (`useSyncExternalStore`, `useLayoutEffect`, ...) which the RSC
+// compiler rejects from a server-callable module. We therefore route
+// `jsx-shared`'s facade lookup through an internal `'use client'`
+// boundary file (`src/internal/facades-client.ts`, published as the
+// `@webspatial/react-sdk/internal/facades-client` subpath and marked
+// external by `tsup.config.ts`). Next's RSC compiler walks
+//     `jsx-runtime.js` → shared chunk → external subpath → facades-client.js
+// and STOPS at the directive, treating the imported facades as Client
+// References. The runtime check below (`canWrapWithFacade`) detects this
+// case and degrades to "strip markers, no HOC wrap" — see
+// `src/internal/facades-client.ts` for the full rationale.
 import {
   Model,
   withSpatialMonitor,
   withSpatialized2DElementContainer,
-} from '../facades'
+} from '@webspatial/react-sdk/internal/facades-client'
+
+// In an RSC server bundle, the three facade imports above resolve to
+// Client References (opaque objects) rather than callable functions. We
+// can still safely STRIP `enable-xr` / `enable-xr-monitor` markers from
+// props (so the resulting server-rendered DOM matches the client-side
+// facade fallback DOM), but we MUST NOT attempt to invoke the HOC
+// factories — calling a Client Reference throws. In the client bundle
+// (and during SSR pre-render of Client Components), the same imports
+// resolve to the real functions and the full strip + wrap path runs.
+//
+// The check is module-scoped because Client Reference identity is fixed
+// at module evaluation time and never flips back to a real function
+// during the lifetime of a process.
+const canWrapWithFacade =
+  typeof withSpatialized2DElementContainer === 'function' &&
+  typeof withSpatialMonitor === 'function'
 
 const attributeFlag = 'enable-xr'
 const styleFlag = 'enableXr'
@@ -82,14 +111,14 @@ export function replaceToSpatialPrimitiveType(
 
   if (attributeFlag in propsObject) {
     delete propsObject[attributeFlag]
-    if (wrapped === type) {
+    if (canWrapWithFacade && wrapped === type) {
       wrapped = withSpatialized2DElementContainer(type)
     }
   }
 
   if (xrMonitorFlag in propsObject) {
     delete propsObject[xrMonitorFlag]
-    if (wrapped === type) {
+    if (canWrapWithFacade && wrapped === type) {
       wrapped = withSpatialMonitor(type)
     }
   }
@@ -99,7 +128,7 @@ export function replaceToSpatialPrimitiveType(
   if (style !== null && typeof style === 'object' && styleFlag in style) {
     const { [styleFlag]: _enableXr, ...restStyle } = style
     propsObject.style = restStyle
-    if (wrapped === type) {
+    if (canWrapWithFacade && wrapped === type) {
       wrapped = withSpatialized2DElementContainer(type)
     }
   }
@@ -114,7 +143,7 @@ export function replaceToSpatialPrimitiveType(
     const filtered = tokens.filter(token => token !== classFlag)
     if (filtered.length !== tokens.length) {
       propsObject.className = filtered.join(' ')
-      if (wrapped === type) {
+      if (canWrapWithFacade && wrapped === type) {
         wrapped = withSpatialized2DElementContainer(type)
       }
     }

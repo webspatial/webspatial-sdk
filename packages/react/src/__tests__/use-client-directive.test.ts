@@ -63,6 +63,20 @@ describe('"use client" directive on published dist (spec tasks.md §13.1)', () =
       expect(existsSync(eagerPath)).toBe(true)
       expect(startsWithUseClient(eagerPath)).toBe(true)
     })
+
+    it('dist/internal/facades-client.js begins with the "use client" directive', () => {
+      // The internal facade boundary used by the JSX runtime
+      // (`src/internal/facades-client.ts`). It is reached transitively
+      // from `dist/jsx/jsx-runtime.js` via the external package
+      // self-reference `@webspatial/react-sdk/internal/facades-client`,
+      // and Next's RSC compiler must see the directive at the top of
+      // the resolved file in order to stop walking into the hook-bearing
+      // chunks and serialise the imported facades as Client References.
+      // See `src/internal/facades-client.ts` for the full rationale.
+      const file = resolve(distDir, 'internal/facades-client.js')
+      expect(existsSync(file)).toBe(true)
+      expect(startsWithUseClient(file)).toBe(true)
+    })
   })
 
   describe('Files that do NOT use React hooks MUST NOT carry "use client"', () => {
