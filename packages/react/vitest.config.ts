@@ -28,6 +28,14 @@ export default defineConfig({
         find: '@webspatial/react-sdk/internal/facades-client',
         replacement: resolve(__dirname, 'src/internal/facades-client.ts'),
       },
+      // Server-safe public subpath (see `src/server/index.ts`). Currently
+      // only `src/server/server.test.ts` imports through this specifier,
+      // but the alias keeps options open for future tests / fixtures that
+      // exercise the published entry shape end-to-end.
+      {
+        find: '@webspatial/react-sdk/server',
+        replacement: resolve(__dirname, 'src/server/index.ts'),
+      },
     ],
   },
   test: {
