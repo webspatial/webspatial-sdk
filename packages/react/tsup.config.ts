@@ -53,12 +53,23 @@ const versionDefine = {
 // to `src/noRuntime.ts`, but the lazy-load v1 default entry now exposes the
 // real `core-sdk` surface (Group B/C utilities) and `core-sdk` is counted in
 // the consumer-side marginal-delta budget (§9.2), not in the SDK-side proxy.
+//
+// `@webspatial/react-sdk/internal/facades-client` is treated as external too:
+// `src/jsx/jsx-shared.ts` reaches the facade trio through that subpath so
+// the published `dist/jsx/jsx-runtime.js` chunk graph terminates at the
+// `'use client'` boundary in `dist/internal/facades-client.js` (see
+// `src/internal/facades-client.ts` for the full RSC-compatibility rationale).
+// All other dist entries reach facades through the relative path
+// (`src/facades/index.ts`), so this externalisation does NOT round-trip
+// the default-entry / eager / spatial bundles through an extra subpath
+// import — only the JSX runtime chunks.
 const externals = [
   'react',
   'react-dom',
   'react/jsx-runtime',
   'react/jsx-dev-runtime',
   '@webspatial/core-sdk',
+  '@webspatial/react-sdk/internal/facades-client',
 ]
 
 const baseConfig: Options = {
@@ -75,25 +86,51 @@ const baseConfig: Options = {
   },
 }
 
+// Next.js / RSC requires `'use client'` to be the very first statement in
+// a module — before the version banner IIFE. esbuild may also emit a stray
+// second directive mid-file when splitting re-exports from `'use client'`
+// source files; strip duplicates and reorder to:
+//   'use client' → banner → body
+const directive = `'use client';\n`
+const bannerRe = /^\(function\(\)\{[\s\S]*?\}\)\(\)\s*\n/
+const useClientRe = /^['"]use client['"];\s*\n/gm
+const ensureRscClientBoundary = (filePath: string): void => {
+  let current = readFileSync(filePath, 'utf8')
+  let banner = ''
+  const bannerMatch = current.match(bannerRe)
+  if (bannerMatch) {
+    banner = bannerMatch[0]
+    current = current.slice(banner.length)
+  }
+  current = current.replace(useClientRe, '')
+  writeFileSync(filePath, directive + banner + current)
+}
+
 export default defineConfig([
-  // Bundle 1 — default entry + spatial chunk + JSX runtimes, all in a single
-  // tsup pass with `splitting: true` so esbuild can:
+  // Bundle 1 — default entry + spatial chunk + eager entry + internal
+  // `'use client'` facade subpath. All four reach the facade implementations
+  // through relative imports and end up co-located in a `splitting: true`
+  // shared-chunk graph that is fine to mix with React-hook code (every
+  // public-callable entry in this bundle either carries `'use client'`
+  // directly — `index.js`, `eager.js`, `internal/facades-client.js` — or is
+  // unreachable from RSC server modules via a static import — `spatial.js`
+  // is a dynamic-import target only).
   //
-  //   (a) emit `dist/spatial.js` as the dynamic-import target referenced by
-  //       the bridge (`runtime/bridge.ts:loadSpatialImpl`), per spec
+  //   (a) emits `dist/spatial.js` as the dynamic-import target referenced
+  //       by the bridge (`runtime/bridge.ts:loadSpatialImpl`), per spec
   //       "Spatial implementation MUST live in a dynamically importable
-  //       subpath" Requirement;
-  //   (b) hoist code shared by `dist/index.js` and the JSX runtime entries
-  //       (notably the facades + `replaceToSpatialPrimitiveType`) into a
-  //       small shared chunk so both consumers reuse a single copy instead
-  //       of duplicating it across files;
-  //   (c) keep the dynamic `import('../spatial')` literal as a separate
-  //       network request rather than inlining the spatial surface into the
-  //       default entry.
+  //       subpath" Requirement.
+  //   (b) hoists code shared by the default + eager + facade entries
+  //       (notably the facade HOCs and their hook dependencies) into a
+  //       single shared chunk so the eager entry does NOT duplicate code
+  //       the default entry already ships.
+  //   (c) keeps the dynamic `import('../spatial')` literal as a separate
+  //       network request rather than inlining the spatial surface into
+  //       the default entry.
   //
-  // The four entry keys also dictate the output filenames (e.g.
-  // `jsx/jsx-runtime` → `dist/jsx/jsx-runtime.js`), so the
-  // `package.json#exports` mappings in §8.3 stay deterministic.
+  // The entry keys dictate the output filenames (e.g. `internal/facades-client`
+  // → `dist/internal/facades-client.js`), so the `package.json#exports`
+  // mappings stay deterministic.
   {
     ...baseConfig,
     clean: true,
@@ -108,48 +145,81 @@ export default defineConfig([
       // default entry already ships.
       eager: 'src/eager.ts',
       spatial: 'src/spatial/index.ts',
-      'jsx/jsx-runtime': 'src/jsx/jsx-runtime.ts',
-      'jsx/jsx-dev-runtime': 'src/jsx/jsx-dev-runtime.ts',
+      // Internal `'use client'` boundary used exclusively by the JSX
+      // runtime (Bundle 2 below). Lives in this bundle so it shares the
+      // facade source files with `index.ts` / `eager.ts` via the same
+      // splitting graph — preserving the contract that
+      // `import { Model } from '@webspatial/react-sdk'` resolves to the
+      // SAME module-level binding (and therefore the SAME function
+      // identity) that the JSX runtime sees via the external subpath.
+      'internal/facades-client': 'src/internal/facades-client.ts',
     },
     outDir: 'dist',
     onSuccess: async () => {
       // Per spatial-lazy-load spec "SSR and hydration safety" Requirement
-      // ("Client-component directive" bullet) + tasks.md §13.1: the public
-      // default-entry MUST carry `'use client'` so RSC bundlers (Next.js
-      // App Router) treat `@webspatial/react-sdk` as a Client Component
-      // boundary — without it, server components that import a facade
-      // would attempt to render React hooks server-side and fail.
+      // ("Client-component directive" bullet) + tasks.md §13.1: every
+      // public RSC boundary MUST start with `'use client'` so consumer
+      // bundlers (Next.js App Router) treat the imported names as Client
+      // Component references and stop walking before the file's hook
+      // call sites.
       //
-      // Splitting (`splitting: true`, §8.1) merges multiple source files
-      // into shared chunks, so esbuild cannot preserve a per-source-file
-      // `'use client'` at chunk boundaries. The pragmatic answer is to
-      // inject the directive at the public RSC boundary (`dist/index.js`)
-      // — the only file consumer-side bundlers see directly. Internal
-      // chunks (`dist/chunk-*.js`) are reached transitively, already
-      // inside the client subgraph by the time React's RSC compiler
-      // walks them.
+      // Splitting (`splitting: true`) merges multiple source files into
+      // shared chunks, so esbuild cannot preserve a per-source-file
+      // `'use client'` at chunk boundaries. We therefore inject the
+      // directive at the PUBLIC RSC boundary entry files only —
+      // internal chunks (`dist/chunk-*.js`) are reached transitively,
+      // already inside the client subgraph by the time React's RSC
+      // compiler walks them.
       //
       // Negative cases per the same Requirement / spec preamble:
       //   - `dist/jsx/jsx-runtime.js`, `dist/jsx/jsx-dev-runtime.js`
-      //     do NOT use React hooks → MUST NOT carry the directive
+      //     do NOT use React hooks and MUST stay server-callable →
+      //     MUST NOT carry the directive (Bundle 2 below)
       //   - `dist/spatial.js` is the dynamic-import target (NOT a static
       //     RSC entry) → MUST NOT carry the directive
       // The §13.1 build-output assertion enforces both polarities.
-      const directive = `'use client';\n`
-      const ensureUseClient = (filePath: string): void => {
-        const current = readFileSync(filePath, 'utf8')
-        if (!current.startsWith(directive.trimEnd())) {
-          writeFileSync(filePath, directive + current)
-        }
-      }
+
       // Default entry — RSC client boundary.
-      ensureUseClient(resolve(__dirname, 'dist/index.js'))
+      ensureRscClientBoundary(resolve(__dirname, 'dist/index.js'))
       // Eager entry per spec tasks.md §16 — also a public RSC boundary
       // because consumers may import facade-equivalent symbols + the
       // `useSpatialReady` stub from a Server Component file. Without
       // the directive the RSC compiler would attempt server execution
       // of the underlying hook code and fail at the first hook call.
-      ensureUseClient(resolve(__dirname, 'dist/eager.js'))
+      ensureRscClientBoundary(resolve(__dirname, 'dist/eager.js'))
+      // Internal facade boundary — the entire point of this entry is to
+      // be a `'use client'` stop for the JSX runtime (see
+      // `src/internal/facades-client.ts` and Bundle 2's external config).
+      ensureRscClientBoundary(
+        resolve(__dirname, 'dist/internal/facades-client.js'),
+      )
     },
+  },
+  // Bundle 2 — JSX runtime entries. ISOLATED from Bundle 1 so the
+  // resulting `dist/jsx/jsx-runtime.js` and its shared chunks are
+  // GUARANTEED to contain no React hook imports: the facade trio used by
+  // `jsx-shared.ts` is reached only through the external package
+  // self-reference `@webspatial/react-sdk/internal/facades-client`
+  // (declared in `externals` above), which esbuild leaves as a literal
+  // import in the emitted bundle. Next's RSC compiler walks
+  //   `jsx-runtime.js` → its splitting chunk(s) → external subpath
+  // and stops at the `'use client'` directive at the top of
+  // `dist/internal/facades-client.js`, treating the imports as Client
+  // References. The runtime check `canWrapWithFacade` in `jsx-shared.ts`
+  // detects this case (Client References are objects, not functions) and
+  // degrades to "strip markers, do not HOC-wrap".
+  //
+  // Keeping the JSX runtime in its own tsup pass also ensures the
+  // `jsx-shared.ts` source — which would otherwise live in a shared
+  // chunk with hook-bearing modules in Bundle 1 — sits in a chunk graph
+  // that contains only JSX-runtime-adjacent code.
+  {
+    ...baseConfig,
+    splitting: true,
+    entry: {
+      'jsx/jsx-runtime': 'src/jsx/jsx-runtime.ts',
+      'jsx/jsx-dev-runtime': 'src/jsx/jsx-dev-runtime.ts',
+    },
+    outDir: 'dist',
   },
 ])

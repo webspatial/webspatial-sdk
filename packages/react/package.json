@@ -30,6 +30,10 @@
       "types": "./dist/jsx/jsx-dev-runtime.d.ts",
       "default": "./dist/jsx/jsx-dev-runtime.js"
     },
+    "./internal/facades-client": {
+      "types": "./dist/internal/facades-client.d.ts",
+      "default": "./dist/internal/facades-client.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
