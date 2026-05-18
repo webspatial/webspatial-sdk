@@ -105,6 +105,10 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     'enableDebugTool',
     'convertCoordinate',
     'initScene',
+    // `getAbsoluteUrl` and `createElement` are both `@deprecated` in v1 and
+    // slated for removal in v2. They stay on the eager-entry contract for
+    // strict parity with the default entry so a deprecation-then-remove
+    // migration is a single decision at the v2 cut, not two coupled ones.
     'getAbsoluteUrl',
     'SSRProvider',
     'WebSpatialRuntime',

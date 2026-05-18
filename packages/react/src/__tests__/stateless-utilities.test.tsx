@@ -64,9 +64,19 @@ afterEach(() => {
 
 // ---------------------------------------------------------------------------
 // §14.5 getAbsoluteUrl is SSR-safe and pure
+//
+// `getAbsoluteUrl` is `@deprecated` in v1 (see JSDoc on the function in
+// `src/utils/urlUtils.ts`) and will be removed in v2. These tests pin the v1
+// behavioural contract so the deprecation is purely a JSDoc-level signal —
+// callers continue to get the documented "graceful no-op on SSR + resolve
+// relative paths against `location.href` + never throw" behaviour until the
+// export is finally deleted. When the v2 cut removes the public export, the
+// underlying helper moves under `src/internal/` and this `describe` block
+// either follows it (renamed to "internal getAbsoluteUrl helper") or is
+// deleted alongside the export.
 // ---------------------------------------------------------------------------
 
-describe('getAbsoluteUrl (spec tasks.md §14.5 + Group C)', () => {
+describe('getAbsoluteUrl (spec tasks.md §14.5 + Group C — @deprecated v1)', () => {
   it('returns input unchanged under SSR (no window)', () => {
     vi.stubGlobal('window', undefined)
     expect(getAbsoluteUrl('a/b')).toBe('a/b')
