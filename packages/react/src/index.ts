@@ -134,6 +134,13 @@ export type {
 // barrel re-exports as a unit. Per `tasks.md §12.9` calibration follow-up.
 export { enableDebugTool } from './utils/debugTool'
 export { convertCoordinate } from './utils/convertCoordinate'
+// `getAbsoluteUrl` is `@deprecated` and will be removed in v2 — see the
+// JSDoc on the function for the rationale. The export remains here in v1
+// so existing consumers continue to compile (with an IDE strikethrough)
+// and so `default-entry-public-surface.test.ts` / `eager-entry-shape.test.ts`
+// keep asserting the v1 contract. Internal SDK callers (`Texture.tsx`,
+// `ModelAsset.tsx`) reach the helper via a relative import and are
+// unaffected by the public-surface removal.
 export { getAbsoluteUrl } from './utils/urlUtils'
 export { initScene } from './initScene'
 

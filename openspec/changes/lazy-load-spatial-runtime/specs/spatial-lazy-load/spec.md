@@ -605,6 +605,16 @@ The hard-peer decision reflects the v1 product reality: the default entry's prim
 - **AND** the package CHANGELOG MUST announce v2 removal so consumers have a migration window
 - **AND** the v2 removal is OUT OF SCOPE for this change; only the deprecation flag, JSDoc, and CHANGELOG note land in v1
 
+#### Scenario: getAbsoluteUrl export is deprecated
+
+- **WHEN** an application imports `getAbsoluteUrl` from `@webspatial/react-sdk` (or `@webspatial/react-sdk/eager`)
+- **THEN** the import MUST continue to function in v1 with the same SSR-safe + relative-URL-resolution + never-throw behavior pinned by "Group C pure helpers are SSR-safe and side-effect free"
+- **AND** the export MUST carry an `@deprecated` JSDoc annotation pointing users at the standard browser API (`new URL(url, location.href).href`) and, where server-side absolute URLs are needed, at the framework's own URL helpers (Next.js `metadataBase`, etc.)
+- **AND** the deprecation JSDoc MUST call out the RSC consumer constraint: under the default-entry's `'use client'` directive the symbol resolves to a Client Reference and is uncallable from a Server Component, so RSC consumers MUST migrate immediately rather than wait for v2
+- **AND** the package CHANGELOG MUST announce v2 removal so consumers have a migration window
+- **AND** SDK-internal callers (`Texture.tsx`, `ModelAsset.tsx`) MAY continue to use the helper via a relative import; the helper's source file MAY move under `src/internal/` when the public export is finally deleted in v2, but that move is OUT OF SCOPE for v1
+- **AND** the v2 removal is OUT OF SCOPE for this change; only the deprecation flag, JSDoc, README + migration-guide note, and CHANGELOG entry land in v1
+
 #### Scenario: Out-of-scope environments may work but are not v1 contracts
 
 - **WHEN** an application uses one of the documented out-of-scope environments (Module Federation, Next.js Turbopack, Webpack 4, CommonJS-only pipelines)
@@ -636,7 +646,7 @@ These APIs split into two groups by mechanism:
 | `WebSpatialRuntimeError` | Re-export of an `Error` subclass from `@webspatial/core-sdk`. |
 | `CapabilityKey` | TypeScript type re-export from `@webspatial/core-sdk`. Compile-time only. |
 | `SSRProvider` | A React Context provider; carries no spatial dependency. |
-| `getAbsoluteUrl(url)` | Resolves a relative URL against `window.location.href`; SSR-safe (returns input unchanged when `window` is unavailable). |
+| `getAbsoluteUrl(url)` | **`@deprecated` v1, removal v2.** Resolves a relative URL against `window.location.href`; SSR-safe (returns input unchanged when `window` is unavailable). Promoted to the public surface by accident during the lazy-load v1 redesign — the SDK only ever used it internally to feed the native bridge absolute asset URLs. Replace direct callers with `new URL(url, location.href).href` (browser) or your framework's URL helper (`metadataBase`, etc.) for server-side absolute URLs. See the `getAbsoluteUrl export is deprecated` Scenario below for the v1 → v2 contract. |
 | `version` | A `string` constant injected at build time via `__WEBSPATIAL_REACT_SDK_VERSION__`. |
 | Component / Hook / Entity / Model type-only re-exports (e.g. `SpatializedElementRef`, `EntityRef`, `ModelRef`, `ModelProps`) | Compile-time only; no runtime presence. |
 
@@ -754,7 +764,7 @@ The eager entry MUST re-export the same TypeScript surface as the default entry 
 Within that named-export set:
 
 - **Spatial primitives** (the facade names — `Model`, `Reality`, `Entity`, `BoxEntity` family, materials / assets, `SceneGraph` / `World`, the HOC wrappers, `useMetrics`) MUST resolve to the **real spatial implementations** loaded statically from `@webspatial/react-sdk/spatial`, not to facade fallbacks.
-- **Stateless utilities** (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry": `enableDebugTool`, `convertCoordinate`, `initScene`, `getAbsoluteUrl`, `WebSpatialRuntime`, `WebSpatialRuntimeError`, `SSRProvider`, `version`, `createElement`, type-only re-exports including the core-sdk type re-exports) MUST be the same module-level references the default entry exposes (re-export, not redeclare). This guarantees behavior parity and allows shared code paths.
+- **Stateless utilities** (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry": `enableDebugTool`, `convertCoordinate`, `initScene`, `getAbsoluteUrl` (`@deprecated` in v1 per "getAbsoluteUrl export is deprecated"), `WebSpatialRuntime`, `WebSpatialRuntimeError`, `SSRProvider`, `version`, `createElement` (`@deprecated` in v1 per "createElement export is deprecated"), type-only re-exports including the core-sdk type re-exports) MUST be the same module-level references the default entry exposes (re-export, not redeclare). This guarantees behavior parity and allows shared code paths. The two `@deprecated` exports MUST carry their deprecation JSDoc on the eager-entry surface too — re-export via `from './index'` preserves the annotation automatically.
 - **Lazy-load runtime API** (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`) MUST be exposed as **compatibility stubs** so that consumer code written against the default entry still type-checks and runs unchanged when its import root switches to the eager entry. The stub semantics are pinned by the Scenarios below.
 
 The eager entry MUST install the same polyfills as the spatial chunk (the `@webspatial/core-sdk/install-polyfills` side effect and the `initPolyfill()` container bootstrap) at module-evaluation time, since by definition the eager entry IS the spatial chunk for these consumers and there is no `bootSpatial()` to defer the install to.
