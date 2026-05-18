@@ -216,7 +216,9 @@ export default function Page() {
 
 Subsequent hydration on the client uses `useSpatialReady`'s `getServerSnapshot` returning `false`, so the first client render produces fallback DOM matching the server-rendered HTML. The swap to real implementations happens on the React commit after hydration completes. Hydration mismatches are not possible from the SDK alone — the only way to trigger one is to feed different props to a facade server-side vs client-side, which is the application's responsibility.
 
-The SDK's pure re-exports (`WebSpatialRuntime.supports`, `WebSpatialRuntimeError`, `getAbsoluteUrl`, type-only re-exports) are reachable from the same client subgraph because the `'use client'` boundary is at the SDK's public entry. If you need React-less consumption from a Server Component, track the follow-up issue listed in the spec's `tasks.md` §12.
+The SDK's pure re-exports (`WebSpatialRuntime.supports`, `WebSpatialRuntimeError`, type-only re-exports) are reachable from the same client subgraph because the `'use client'` boundary is at the SDK's public entry. For Server Component callers, a dedicated server-safe subpath `@webspatial/react-sdk/server` ships `detectSpatialRuntime(headers)` for request-time WebSpatial runtime detection + a type-only mirror of the default entry — see [`packages/react/README.md` → "Server-safe subpath"](../../packages/react/README.md#server-safe-subpath-webspatialreact-sdkserver) for details.
+
+> **Deprecation note (v1):** `getAbsoluteUrl` is `@deprecated` and slated for removal in v2. It was promoted to the public surface by accident during the lazy-load v1 redesign — the SDK only ever uses it internally. Replace direct callers with `new URL(url, location.href).href` or your framework's URL helper. RSC consumers must switch immediately (the symbol resolves to a Client Reference via the default entry and cannot be called from a Server Component).
 
 ---
 
