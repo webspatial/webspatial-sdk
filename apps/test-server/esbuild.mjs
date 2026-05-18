@@ -51,6 +51,16 @@ const buildOptions = {
     __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
   },
   // Avoid multiple react copies. https://github.com/evanw/esbuild/issues/3419
+  //
+  // IMPORTANT — every published SDK subpath this app may transitively reach
+  // MUST be listed here. esbuild's `alias` is a prefix-match remap, so an
+  // alias `@webspatial/react-sdk` → `src/eager.ts` causes any longer
+  // specifier (e.g. `@webspatial/react-sdk/internal/facades-client`) to
+  // get the prefix replaced naively, producing a nonsense path like
+  // `src/eager.ts/internal/facades-client`. The fix is to list every
+  // subpath explicitly so the more-specific alias wins. Adding a new
+  // subpath to `packages/react/package.json#exports` requires adding a
+  // matching alias here.
   alias: {
     three: path.resolve('node_modules/three/src/Three.js'),
     react: path.resolve('node_modules/react'),
@@ -58,11 +68,29 @@ const buildOptions = {
     '@webspatial/react-sdk/jsx-runtime': path.resolve(
       `${packagesBasePath}/react/src/jsx/jsx-runtime.ts`,
     ),
+    '@webspatial/react-sdk/jsx-dev-runtime': path.resolve(
+      `${packagesBasePath}/react/src/jsx/jsx-dev-runtime.ts`,
+    ),
+    // Internal `'use client'` boundary reached by `jsx-shared.ts` as an
+    // external package self-reference (so the published `dist/jsx/jsx-runtime.js`
+    // terminates at this file's `'use client'` directive for Next.js RSC
+    // bundlers). When consuming source directly, the same specifier MUST
+    // alias back to the source file or esbuild's prefix-match remaps it
+    // onto `eager.ts/internal/facades-client` and fails to resolve.
+    '@webspatial/react-sdk/internal/facades-client': path.resolve(
+      `${packagesBasePath}/react/src/internal/facades-client.ts`,
+    ),
+    // Server-safe public subpath (`detectSpatialRuntime`). Test-server is
+    // a pure CSR app and does NOT exercise this subpath today, but listing
+    // it here keeps future code paths from re-hitting the same prefix-match
+    // landmine.
+    '@webspatial/react-sdk/server': path.resolve(
+      `${packagesBasePath}/react/src/server/index.ts`,
+    ),
     // Test-server targets WebSpatial runtimes only — bundle the eager entry so
     // spatial is statically linked (no lazy `import('./spatial')` bridge in
     // this app). Plain-web / lazy-default consumer shape is exercised in
     // `apps/spatial-vite-min` instead.
-    
     '@webspatial/react-sdk': path.resolve(
       `${packagesBasePath}/react/src/eager.ts`,
     ),
