@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useRealityContext } from '../context'
-import { getAbsoluteUrl } from '../../utils/urlUtils'
+import { getAbsoluteUrl } from '../../internal/urlUtils'
 
 export type TextureProps = {
   children?: React.ReactNode

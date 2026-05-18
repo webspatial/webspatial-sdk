@@ -105,11 +105,11 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     'enableDebugTool',
     'convertCoordinate',
     'initScene',
-    // `getAbsoluteUrl` and `createElement` are both `@deprecated` in v1 and
-    // slated for removal in v2. They stay on the eager-entry contract for
-    // strict parity with the default entry so a deprecation-then-remove
-    // migration is a single decision at the v2 cut, not two coupled ones.
-    'getAbsoluteUrl',
+    // `getAbsoluteUrl` was on this parity list in v1 and was removed in v2
+    // (see the `remove-getabsoluteurl` changeset). Eager-entry stateless
+    // re-exports go through `src/eager.ts:export { ... } from './index'`,
+    // so removing the default-entry export cascades to the eager entry
+    // automatically and the parity contract continues to hold.
     'SSRProvider',
     'WebSpatialRuntime',
     'WebSpatialRuntimeError',
