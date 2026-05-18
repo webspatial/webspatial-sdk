@@ -147,5 +147,27 @@ describe('packages/react/package.json — published shape (spec tasks.md §8.7 /
       expect(pkg.exports?.['./default/jsx-runtime']).toBeUndefined()
       expect(pkg.exports?.['./default/jsx-dev-runtime']).toBeUndefined()
     })
+
+    it('exports["./server"] resolves to dist/server/index.js (server-safe public subpath)', () => {
+      // The server-safe subpath used by RSC consumers (Next.js App Router
+      // Server Components) to call helpers that the default entry cannot
+      // expose because of its top-level `'use client'` directive.
+      // See `src/server/index.ts` for the design rationale.
+      const pkg = loadPackageJson()
+      const sub = pkg.exports?.['./server'] as
+        | Record<string, string>
+        | string
+        | undefined
+      expect(sub).toBeDefined()
+      const file = typeof sub === 'string' ? sub : sub?.default
+      expect(file).toBe('./dist/server/index.js')
+      // Mirror the assertion the other RSC-adjacent subpaths use: NO
+      // `react-server` conditional — it was deliberately removed from
+      // this package per the spec preamble + reintroducing it would
+      // diverge from the `/server` design.
+      if (typeof sub === 'object' && sub !== null) {
+        expect((sub as Record<string, unknown>)['react-server']).toBeUndefined()
+      }
+    })
   })
 })
