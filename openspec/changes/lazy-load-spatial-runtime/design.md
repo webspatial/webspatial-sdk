@@ -12,6 +12,7 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 
 - Keep the cost of adding `@webspatial/react-sdk` to a typical web application small enough to be a non-issue for web users: target ≤ 8 KB gzipped marginal bundle delta on the consumer's bundle for the recommended named-import pattern (e.g. `import { Model, bootSpatial }`), with `dist/index.js` gzip ≤ 8 KB enforced as the SDK-side proxy. Both contracts are asserted by automated tests (proxy in the SDK's own test suite; marginal-delta in a Vite fixture). Worst-case namespace / full-barrel imports MAY exceed 8 KB and are explicitly informational.
 - Preserve application-level import ergonomics for documented public React APIs: `import { Model, Reality, Entity, BoxEntity } from '@webspatial/react-sdk'` continues to work from the default entry, while internal reality hooks such as `useEntity` remain unavailable from the public root.
+- Provide an additive `@webspatial/react-sdk/eager` entry for spatial-only consumers. It exposes the same TypeScript surface as the default entry, but statically links the spatial implementation, preloads the bridge, and turns the lazy-load runtime API into compatibility stubs so callers can migrate by changing only the import root.
 - Spatial implementations are loaded over the network **only** in a WebSpatial runtime and **only** via `bootSpatial()`; after the first successful load, the spatial chunk is cached for the remainder of the page lifetime, while failed loads may be retried on demand.
 - Hooks in the default entry are safe to call unconditionally and return documented stable defaults in web mode (no Rules-of-Hooks violations).
 - The unified JSX runtime strips `enable-xr` / `enable-xr-monitor` / `style.enableXr` / `__enableXr__` className token AND wraps the element type with the corresponding facade HOC, eliminating "unknown attribute" warnings in plain browsers and preserving today's AVP-side `<div enable-xr/>` → spatial-container behavior.
@@ -32,11 +33,12 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 
 - `@webspatial/react-sdk` `'.'` (default entry) contains only:
   - `runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`, `runtime/useSpatialReady.ts`, plus the `WebSpatialBootError` class (co-located with bridge or in `runtime/errors.ts`)
-  - `facades/*.tsx` — facade React components for every public spatial component / HOC
+  - `facades/*.tsx` — facade React components for every public spatial component, plus internal HOC wrapper factories used by the SDK's JSX runtime (`withSpatialized2DElementContainer`, `withSpatialMonitor`). The HOC factories are not public default-entry API after the `internalize-hoc-factories` change; the documented consumer mechanism is the `enable-xr` / `enable-xr-monitor` JSX markers.
   - `hooks-web/useMetrics-placeholder.ts` — placeholder constants module (no React hooks, no `'use client'` directive); `hooks-web/useMetrics.ts` — the public `useMetrics` hook (begins with `'use client'`, picks placeholder vs real once per instance per decision 5). Future public hooks add their own pair of files here following the same split convention.
   - JSX runtime: unified `jsx-runtime.ts` / `jsx-dev-runtime.ts` (with marker stripping AND facade-HOC wrapping; see decision 6)
   - Type-only exports (props, refs, event types)
-- `@webspatial/react-sdk/spatial` is a new bridge-facing subpath whose module is the single source of truth for the real spatial implementation that facades resolve by name: real `Model`, `Reality`, `Entity`, all public `*Entity` components, materials/assets, `SceneGraph` / `World`, real `withSpatialMonitor`, real `withSpatialized2DElementContainer`, and real `useMetrics`. Internal container constructors (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`) and internal reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useRealityEvents`, `useEntityId`, `useForceUpdate`) live inside the spatial chunk's module graph but are not part of the public default entry; the spatial subpath should export them only if a bridge-facing facade directly needs that symbol.
+- `@webspatial/react-sdk/spatial` is a new bridge-facing subpath whose module is the single source of truth for the real spatial implementation that facades resolve by name: real `Model`, `Reality`, `Entity`, all public `*Entity` components, materials/assets, `SceneGraph` / `World`, real `withSpatialMonitor`, real `withSpatialized2DElementContainer`, and real `useMetrics`. The real HOC factories remain exported from this bridge-facing namespace for SDK-internal JSX-runtime use, but they are not re-exported from the default or eager public roots. Internal container constructors (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`) and internal reality hooks (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useRealityEvents`, `useEntityId`, `useForceUpdate`) live inside the spatial chunk's module graph but are not part of the public default entry; the spatial subpath should export them only if a bridge-facing facade directly needs that symbol.
+- `@webspatial/react-sdk/eager` is an additive single-request entry for spatial-only consumers. It statically imports `./spatial`, calls the bridge's internal preload hook (`__internalSetSpatialImpl`) at module evaluation time, re-exports real spatial primitives from `./spatial`, re-exports stateless utilities and types from `./index` by reference, and exposes no-op readiness / boot compatibility stubs.
 - The `./web` and `./default` subpaths are **hard removed** from `package.json` `exports`. Old plugin configurations that alias to those paths will fail to resolve and surface the upgrade requirement loudly.
 
 **Why hard-cut instead of a transition window**: a transition window keeps two import shapes valid, prolongs the maintenance tax, and lets old plugin configurations silently bypass the lazy-load contract. The breaking change is small (two import strings) and discoverable at build time, so a clean cut is cheaper overall.
@@ -82,7 +84,7 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 
 **Why one path, not two**: introducing `<SpatialBoundary>`/Suspense in the same change doubles the activation contract and complicates the hook story. With `bootSpatial()` as the single front door, the application is responsible for awaiting it before render in the recommended path. Late boot is still supported (facades subscribe to bridge readiness — see decision 4), but hooks deliberately do not switch mid-life: the placeholder a component first sees is the implementation it sees forever, switching only on remount. This eliminates Rules-of-Hooks risk without forcing placeholders to mimic real-hook call sequences.
 
-### 4. Facade pattern for components and HOCs
+### 4. Facade pattern for components and internal HOC wrappers
 
 - For every public spatial React component, the default entry exports a facade with the same TypeScript signature. Facades **do not** accept a generic `fallback` prop in v1 — per-component default fallbacks are fixed (see the per-component table in the spec); customization is the application's responsibility via `useSpatialReady()` wrappers.
 - Facades subscribe to bridge readiness through the public `useSpatialReady()` hook, so a `false → true` transition automatically re-renders mounted facades to the real implementation:
@@ -113,14 +115,14 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 - **Self-containment**: facade modules MUST NOT import (statically or dynamically) from `src/spatial/`, MUST NOT call `new Spatial()` / `new SpatialScene()` / similar core-sdk runtime constructors, and MUST NOT use any value that only resolves at runtime in the spatial chunk. The complete fallback rendering for every facade lives in the default entry's static module graph; this is asserted by an automated audit (see tasks).
 - **`'use client'` directive**: every facade module file MUST begin with `'use client'`. Facades use `useSpatialReady` (a hook) and therefore cannot be Server Components in RSC; the directive marks them as Client Component references. tsup / esbuild preserve top-level string directives in their output by default; the build verification (§13) MUST assert the directive remains in the published `dist/` files for every facade.
 - **Plain web fast path**: the `useSpatialReady` short-circuit means non-WebSpatial browsers never register a subscription with the bridge and never observe a readiness flip — they take a deterministic, single-render path to the documented fallback.
-- HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`) return facade components that delegate to the real HOC's output via the bridge. Wrapper-cache contract (same `Comp` → same wrapper reference) is preserved by caching the facade wrapper using the raw `Comp` reference as the key; the real HOC's own cache lives inside the spatial chunk.
+- Internal HOC wrappers (`withSpatialized2DElementContainer`, `withSpatialMonitor`) return facade components that delegate to the real HOC's output via the bridge. They exist for the SDK's JSX-runtime marker path only; they are no longer documented public factories. Wrapper-cache contract (same `Comp` → same wrapper reference) is preserved by caching the facade wrapper using the raw `Comp` reference as the key; the real HOC's own cache lives inside the spatial chunk.
 - Per-component default fallback (full table is normative in the spec; summary here):
   - `Model` → `<model ref {...modelProps}>` (degraded HTML element; spatial-only event props stripped) — preserves today's plain-browser behavior.
   - `Reality` → single `<div aria-hidden="true">` placeholder; children NOT mounted (matches `runtime-capabilities` Reality fallback contract).
   - `*Entity`, `Material*`, `Texture`, `*Asset` → `null`.
   - `SceneGraph` / `World` → `<>{children}</>` (transparent container).
-  - HOC-wrapped components → `<Comp/El {...passthrough} ref/>` (transparent passthrough).
-- **Facade conventions**: `displayName` matches the public name (`Model`, `Reality`, `BoxEntity`); HOC wrapper facades follow the existing `WithSpatialMonitor(<inner>)` / `WithSpatialized2DElementContainer(<inner>)` naming. Facades are NOT wrapped in `React.memo`. In fallback paths that render `null` or a Fragment, forwarded `ref.current` is `null` (React-natural).
+  - Internal HOC-wrapped components (JSX runtime only) → `<Comp/El {...passthrough} ref/>` (transparent passthrough).
+- **Facade conventions**: `displayName` matches the public name (`Model`, `Reality`, `BoxEntity`); internal HOC wrapper facades follow the existing `WithSpatialMonitor(<inner>)` / `WithSpatialized2DElementContainer(<inner>)` naming. Facades are NOT wrapped in `React.memo`. In fallback paths that render `null` or a Fragment, forwarded `ref.current` is `null` (React-natural).
 - Facades MUST NOT use the readiness subscription to swap hook implementations — only the rendered component subtree. Hooks (decision 5) explicitly do not switch mid-life.
 
 ### 5. Hook placeholder protocol
@@ -176,6 +178,7 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 **After this change**: a **single** unified runtime serves all environments. The previously split `*.web.ts` files are deleted.
 
 - The unified runtime lives at `packages/react/src/jsx/jsx-runtime.ts` and `jsx-dev-runtime.ts` (or its current shared module `jsx-shared.ts`). It performs strip + wrap in the same pass; the HOC targets become the **facade** versions (already exported from the default entry by "Component facades"). The facade chooses between web fallback and real spatial container at render time via the bridge — so the JSX runtime no longer needs an environment-aware variant.
+- The RSC-compatible implementation obtains those facade HOCs through `@webspatial/react-sdk/internal/facades-client`, a small internal subpath that begins with `'use client'`. `jsx-runtime.js` itself remains server-callable. In a React Server Components server bundle the imported facades may resolve to Client References instead of callable functions; in that specific environment the runtime MUST strip markers but MUST NOT call the Client References. The resulting strip-only server output is valid because the internal HOC fallback is transparent and therefore produces the same DOM that the wrapped client fallback would hydrate.
 - Markers and corresponding wraps:
   1. `enable-xr` prop → strip + wrap with `withSpatialized2DElementContainer(type)` facade
   2. `enable-xr-monitor` prop → strip + wrap with `withSpatialMonitor(type)` facade
@@ -186,8 +189,8 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
   - The top-level `props` object is fresh per render (created by React's JSX transform); deleting attribute keys (e.g. `enable-xr`) and reassigning `props.className` is safe.
   - **`props.style` MUST be cloned (shallow spread) before deleting `enableXr`**. Today's `jsx-shared.ts` mutates `props.style` directly, which corrupts user-memoized style objects (a real, latent bug) and would throw when the user has `Object.freeze`d the style. This change clones first.
 - **Marker source**: only `props.className` is recognized. `props.class` (HTML-style alternative) is intentionally not recognized in v1 — kept consistent with current AVP behavior.
-- **SSR**: the runtime contains no `window` access; strip + wrap work the same on server and client. Because `useSpatialReady()` returns `false` during SSR, the wrapped facade renders its documented fallback — server HTML is clean, client hydration matches.
-- **`react-server` exports condition**: removed in `package.json`. The unified runtime IS RSC-safe (no `window` touch, no spatial chunk static import); a separate `react-server` mapping is no longer needed and would only add maintenance surface.
+- **SSR**: the runtime contains no `window` access; strip rules work the same on server and client. Wrapping runs whenever the internal facade HOCs are callable; in RSC server bundles where they resolve to Client References, the runtime strips markers and leaves the element unwrapped because the HOC fallback is transparent. Server HTML is clean in either case, and client hydration matches.
+- **`react-server` exports condition**: removed in `package.json`. The unified runtime IS RSC-safe (no `window` touch, no spatial chunk static import, and Client Reference detection for the internal facade boundary); a separate `react-server` mapping is no longer needed and would only add maintenance surface.
 - **A1 (today's `*.web.ts` does not strip) auto-resolves**: the buggy file is deleted; nothing on `react-server` path remains to leak markers. No separate bug-fix PR is needed.
 
 ### 7. Spatial runtime detection
@@ -200,15 +203,17 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 
 ### 8. tsup configuration changes
 
-- `packages/react/tsup.config.ts` reduces from four entries to three:
-  - Main entry: `src/index.ts` → `dist/index.js`
+- `packages/react/tsup.config.ts` collapses the old dual-build layout into flat published entries:
+  - Default entry: `src/index.ts` → `dist/index.js`
+  - Eager entry: `src/eager.ts` → `dist/eager.js`
   - Spatial entry: `src/spatial/index.ts` → `dist/spatial.js` (separate output file so dynamic `import('./spatial')` resolves to a distinct chunk that downstream bundlers can keep separate)
   - JSX runtime entries: `src/jsx/jsx-runtime.ts`, `src/jsx/jsx-dev-runtime.ts` → `dist/jsx/*.js` (single unified runtime — see decision 6; `*.web.ts` siblings are deleted)
+  - Server / internal support entries introduced by sibling changes, including the internal `facades-client` RSC boundary
 - Delete the `dist/web` and `dist/default` configurations entirely.
 - Delete the `XR_ENV` lines from the banners; only `react-sdk-version` remains.
 - The bridge's runtime `loadSpatialImpl()` MUST use the published subpath form: `await import('@webspatial/react-sdk/spatial')`. tsup MUST treat this subpath as external for the main bundle so the literal `import('@webspatial/react-sdk/spatial')` survives into the published `dist/index.js`; consumer bundlers then see a subpath dynamic import they can split into a separate chunk. (Decision 2's `typeof import('../spatial')` is type-only — used for typing the spatial namespace at compile time — and does NOT participate in the runtime import.)
 - The spatial entry has `noExternal` for any spatial-only internal deps but keeps `@webspatial/core-sdk` and `react` external (consumer-provided).
-- `package.json` `exports` for `./jsx-runtime` and `./jsx-dev-runtime` collapse to a single mapping each (no `react-server` conditional sub-key), since the unified runtime is RSC-safe and there is no longer a "stripped-only" companion file to point at.
+- `package.json` `exports` removes `./web` and `./default`, adds `./spatial`, `./eager`, and the SDK-internal `./internal/facades-client` RSC boundary, and collapses `./jsx-runtime` / `./jsx-dev-runtime` to a single mapping each (no `react-server` conditional sub-key), since the unified runtime is RSC-safe and there is no longer a "stripped-only" companion file to point at.
 
 ### 9. Size budget enforcement
 
@@ -237,7 +242,7 @@ For the broader bundler-capability contract that "Plugin-free integration" relie
 The "Plugin-free integration" Requirement uses a **capability-based** contract instead of a bundler enumeration. Three capabilities together cover the full surface needed for plugin-free operation:
 
 1. **ECMAScript modules** (`"type": "module"` in our package.json; consumer must support ESM imports).
-2. **`exports` package.json field** (consumer must resolve `'.'`, `./jsx-runtime`, `./jsx-dev-runtime`, `./spatial`).
+2. **`exports` package.json field** (consumer must resolve `'.'`, `./eager`, `./jsx-runtime`, `./jsx-dev-runtime`, `./spatial`, and the SDK-internal `./internal/facades-client` boundary reached by the JSX runtime).
 3. **Dynamic `import()` with code-splitting** (consumer must emit `dist/spatial.js` as a separate chunk fetched on demand).
 
 Why capability-based, not enumeration:
@@ -337,6 +342,22 @@ The lazy-load architecture has zero source code lines yet — only spec / docs i
 
 We chose **estimate now, calibrate during implementation**: the 8 KB target enters spec as the design intent, and `tasks.md §12.9` is a pre-v1-release calibration task that runs the fixture against the real build and decides whether to tighten the budget (e.g. to 6 KB if measured at 4 KB) or to surface optimization work (if measured > 8 KB).
 
+### 14. Eager-mode entry and shared distribution hygiene
+
+The lazy-load default entry optimizes the web-first case. A second distribution form, `@webspatial/react-sdk/eager`, optimizes the opposite profile: spatial-only applications where every page load is a WebSpatial runtime and the lazy sequence (main bundle parse → `bootSpatial()` → spatial chunk fetch → second parse) is pure overhead.
+
+The eager entry is intentionally additive. It does not weaken the default entry's 8 KB budget, dynamic-import boundary, or web fallback contract. Instead it:
+
+- Statically imports `./spatial` and calls `__internalSetSpatialImpl(SpatialImpl)` at module-evaluation time so facade-equivalent paths reached through the JSX runtime see the bridge as ready from the first render.
+- Re-exports real spatial primitives from `./spatial` (`Model`, `Reality`, the entity / material / asset family, `SceneGraph` / `World`, and `useMetrics`). Factory HOCs remain internal-only; the public marker path is still `enable-xr` / `enable-xr-monitor`.
+- Re-exports Group B / C utilities and type-only surface from `./index` by reference. This keeps `enableDebugTool`, `convertCoordinate`, `initScene`, `WebSpatialRuntime`, `SSRProvider`, `version`, `createElement`, and future stateless additions byte-identical between entries.
+- Exposes the lazy-load runtime API as compatibility stubs: `bootSpatial()` resolves immediately, `isSpatialReady()` and `useSpatialReady()` return `true`, `onSpatialLoadError()` registers but never fires, and `WebSpatialBootError` remains importable.
+- Has its own SDK-side gzip proxy budget (`dist/eager.js` ≤ 30 KB). The default-entry marginal-delta fixture continues to import `@webspatial/react-sdk`, not `@webspatial/react-sdk/eager`, and MUST remain ≤ 8 KB after the eager entry is added.
+
+Consumers MUST pick one root per application bundle. Mixing `@webspatial/react-sdk` and `@webspatial/react-sdk/eager` in the same bundle is unsupported because the same symbol name may refer to different physical implementations (facade vs real implementation). Development builds SHOULD warn if this is detectable, but the migration guide is the primary enforcement mechanism.
+
+The two forms still share packaging hygiene: ESM-only publishing, required React peers, `"sideEffects"` correctness, no observable top-level side effects in published-entry graphs beyond the eager/spatial polyfill bootstrap, SSR/RSC safety, type-only erasure, plugin-free integration, and named re-export discipline. Future changes may adjust the distribution forms, but they must explicitly preserve or separately justify changes to these hygiene contracts.
+
 ## Risks / Trade-offs
 
 - **[Risk] Old `@webspatial/vite-plugin` configuration not removed in lockstep** → consumer build fails immediately ("Cannot resolve `@webspatial/react-sdk/web`"). **Mitigation**: BREAKING marker at the top of CHANGELOG; first item in the migration guide is the plugin removal diff; coordinated cross-repo deprecation issue filed before SDK release.
@@ -347,6 +368,7 @@ We chose **estimate now, calibrate during implementation**: the 8 KB target ente
 - **[Risk] Bundle size budget too aggressive (8KB gzip, both proxy and marginal-delta tiers)** → blocks landing if the initial implementation exceeds either tier. **Mitigation**: the 8KB number is a design intent, not a measured reality; `tasks.md §12.9` is a pre-v1-release calibration follow-up that runs the §9.2 fixture against the real implementation and either tightens the budget (if measured at e.g. 4KB / 6KB) or files targeted optimization issues (if measured > 8KB); decision 13 documents the calibration philosophy. Worst-case namespace / full-barrel imports MAY exceed and are documented as informational, not v1 violations.
 - **[Risk] Forgotten top-level side effect breaks `"sideEffects": false` claim** → declaring `"sideEffects": false` while a default-entry module has a top-level side effect produces silently broken builds (the side effect runs in some bundlers and not others). **Mitigation**: spec's "Tree-shake friendliness" Requirement pins both the declaration AND the no-top-level-side-effects rule, with separate Scenarios; `tasks.md §9.5` (declaration check) and §9.6 (top-level side-effect lint) are paired CI gates. The only known top-level side effect today (`if (typeof window !== 'undefined') { initPolyfill() }` in `src/index.ts`) is removed in §7.2 with installation deferred into the spatial chunk's bootstrap.
 - **[Risk] In-house apps still alias to source** and therefore do not exercise the published `dist/spatial.js` chunk → regressions in the published chunk go undetected by this change. **Mitigation**: explicit follow-up task to migrate them; this change is intentionally scoped narrowly to keep PR reviewable.
+- **[Risk] Mixed default + eager imports create split semantics** → `Model` from the default entry is a facade while `Model` from the eager entry is the real implementation, so mixing roots in one bundle can produce confusing readiness behavior. **Mitigation**: the spec marks mixed imports unsupported, the README / migration guide document "pick one root per bundle", and the eager entry may emit a one-shot development warning if detection is practical.
 - **[Trade-off] Bridge singleton makes parallel React roots within the same page share one spatial chunk** — usually desirable, but if two roots have inconsistent boot expectations (one boots, one doesn't), the non-booting root will see the spatial implementation appear once the booting root completes. Acceptable for v1; documented in the spec.
 
 ## Migration Plan
@@ -400,6 +422,12 @@ We chose **estimate now, calibrate during implementation**: the 8 KB target ente
 
 - `import { ... } from '@webspatial/react-sdk/web'` → `import { ... } from '@webspatial/react-sdk'`
 - `import { ... } from '@webspatial/react-sdk/default'` → `import { ... } from '@webspatial/react-sdk'`
+
+**For spatial-only applications:**
+
+- Use `import { ... } from '@webspatial/react-sdk/eager'` when the application bundle only targets WebSpatial runtimes and the extra `bootSpatial()` network round-trip is unwanted.
+- Migration from the default entry is import-root-only: existing `await bootSpatial()` calls may remain and become no-op compatibility stubs.
+- Do not mix default-entry and eager-entry imports in the same application bundle; choose one root consistently.
 
 **Bundler / framework compatibility checklist (per "Plugin-free integration"):**
 
