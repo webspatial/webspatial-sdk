@@ -84,7 +84,7 @@ A subset of the public API works without `bootSpatial()` ever being called and i
 | `initScene(name, callback, options?)` | No-op without a WebSpatial session; routes to `getSession().initScene(...)` after boot |
 | `convertCoordinate(position, { from, to })` | Returns `position` unchanged without a session; resolves through the spatial scene after boot |
 | `enableDebugTool()` | SSR-safe no-op; in browsers attaches `inspectCurrentSpatialScene` and `getSpatialized2DElement` to `window` (the diagnostics themselves require `bootSpatial()` to be awaited) |
-| `getAbsoluteUrl(url)` | Resolves a relative URL against `window.location.href`; returns input unchanged under SSR |
+| `getAbsoluteUrl(url)` | **`@deprecated` — slated for removal in v2.** Was promoted to the public surface by accident during the lazy-load v1 redesign; the SDK only ever uses it internally to feed the native bridge absolute asset URLs. Replace direct callers with `new URL(url, location.href).href` (browser) or your framework's URL helper (`metadataBase`, etc.) for server-side absolute URLs. RSC consumers must switch immediately — the symbol resolves to a Client Reference and is uncallable from a Server Component. |
 | `SSRProvider` | React Context provider; carries no spatial dependency |
 | `version` | Package version constant (build-time injected) |
 

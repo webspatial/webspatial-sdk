@@ -25,6 +25,10 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       'WebSpatialRuntimeError',
       'enableDebugTool',
       'convertCoordinate',
+      // `getAbsoluteUrl` is `@deprecated` in v1 (see JSDoc on the function
+      // in `src/utils/urlUtils.ts`) and is slated for removal in v2. We
+      // intentionally keep it in this v1 contract assertion so accidental
+      // mid-cycle removal is caught before it ships.
       'getAbsoluteUrl',
       'initScene',
       'SSRProvider',
