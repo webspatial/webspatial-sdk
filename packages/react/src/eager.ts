@@ -53,6 +53,14 @@ __internalSetSpatialImpl(SpatialImpl)
 // 1-to-1 so a consumer can switch import roots without renaming any
 // symbol — see the "Migration from default to eager is import-root-only"
 // Scenario.
+// `withSpatialized2DElementContainer` and `withSpatialMonitor` USED to be
+// re-exported here for default-entry parity. They were demoted to
+// internal-only in the `internalize-hoc-factories` change — the
+// `enable-xr` / `enable-xr-monitor` JSX markers remain the documented
+// public mechanism, and consumers who need a wrapped component for
+// composition with another HOC (e.g. `animated(...)`) should write a
+// thin `forwardRef` shim around `<div enable-xr ref={ref} />`. See the
+// migration guide for the recipe.
 export {
   Model,
   Reality,
@@ -76,8 +84,6 @@ export {
   UnlitMaterial,
   SceneGraph,
   World,
-  withSpatialized2DElementContainer,
-  withSpatialMonitor,
   useMetrics,
 } from './spatial'
 
