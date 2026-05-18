@@ -238,8 +238,8 @@ Additional file-level constraints on facade modules (the `'use client'` directiv
 | `Entity` (the base Entity component / empty transform group), `BoxEntity` / `Box`, `SphereEntity` / `Sphere`, `ConeEntity` / `Cone`, `CylinderEntity` / `Cylinder`, `PlaneEntity` / `Plane`, `ModelEntity`, `AttachmentEntity` | `null` |
 | `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset` | `null` |
 | `SceneGraph` / `World` | `<>{children}</>` (transparent container in fallback mode) |
-| `withSpatialized2DElementContainer(Comp)` (HOC wrapper) | `<Comp {...passthroughProps} ref={ref} />` (strip spatial-event props, otherwise transparent) |
-| `withSpatialMonitor(El)` (HOC wrapper) | `<El {...passthroughProps} ref={ref} />` (transparent) |
+
+> The factory-style HOCs `withSpatialized2DElementContainer(Comp)` and `withSpatialMonitor(El)` originally appeared in this fallback table as public surface (returning `<Comp {...passthroughProps} ref={ref} />` / `<El {...passthroughProps} ref={ref} />` respectively). They have since been demoted to **internal-only** — see the `internalize-hoc-factories` changeset. The factories still exist (the SDK's own JSX runtime continues to reach them via `src/internal/facades-client.ts` to compile `<div enable-xr>` / `<div enable-xr-monitor>` JSX markers), but they are no longer part of the documented public surface. The wrapper-cache identity contract pinned in the Scenario below still applies to that internal usage; the JSX-runtime-driven wrap path is what every consumer of the markers reaches in practice.
 
 #### Scenario: Facade renders documented fallback while spatial implementation is unavailable
 
@@ -258,10 +258,11 @@ Additional file-level constraints on facade modules (the `'use client'` directiv
 
 #### Scenario: HOC facade preserves wrapper-cache identity contract
 
-- **WHEN** `withSpatialized2DElementContainer(Comp)` or `withSpatialMonitor(Comp)` is invoked from the default entry with the same `Comp` reference more than once
+- **WHEN** the JSX runtime (or any other internal SDK code path) invokes the internal `withSpatialized2DElementContainer(Comp)` or `withSpatialMonitor(Comp)` factory with the same `Comp` reference more than once
 - **THEN** repeated invocations MUST return the same wrapper component reference
 - **AND** the cache key MUST be the raw `Comp` reference; structurally equivalent but distinct references MUST yield distinct wrappers
 - **AND** the cached wrapper component MUST itself behave as a facade (web fallback before boot, real implementation after boot)
+- **AND** this contract applies to the internal factories reachable via `src/internal/facades-client.ts`; the factories were originally documented as public APIs in v1 and have since been demoted to internal-only per the `internalize-hoc-factories` change
 
 #### Scenario: Mounted facade switches to real implementation when bridge becomes ready
 
@@ -593,8 +594,8 @@ The hard-peer decision reflects the v1 product reality: the default entry's prim
 
 - **WHEN** an application attempts a named import of any of the following identifiers from the default entry: `SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`
 - **THEN** the import MUST fail at TypeScript compile time (the names are not in the public type surface) and at runtime (the names are not bound on the default entry's namespace object)
-- **AND** these identifiers MUST live only inside `@webspatial/react-sdk/spatial` as implementation internals consumed by facades and HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`)
-- **AND** the package CHANGELOG MUST mark the removal as a breaking change with the migration path "use `withSpatialized2DElementContainer(Comp)` / `withSpatialMonitor(Comp)` instead of constructing containers / monitors directly"
+- **AND** these identifiers MUST live only inside `@webspatial/react-sdk/spatial` as implementation internals consumed by facades and the internal HOC factories (`withSpatialized2DElementContainer`, `withSpatialMonitor`; both factories are internal-only per the `internalize-hoc-factories` change)
+- **AND** the package CHANGELOG MUST mark the removal as a breaking change with the migration path "use the `enable-xr` / `enable-xr-monitor` JSX markers (resolved via `tsconfig.jsxImportSource`) instead of constructing containers / monitors directly" (originally the migration path pointed at the HOC factories `withSpatialized2DElementContainer(Comp)` / `withSpatialMonitor(Comp)`; those factories were demoted to internal-only in the `internalize-hoc-factories` change)
 - **AND** an automated test MUST verify these identifiers are absent from `dist/index.js` per "Spatial-only identifiers are absent from default entry"
 
 #### Scenario: createElement export is deprecated

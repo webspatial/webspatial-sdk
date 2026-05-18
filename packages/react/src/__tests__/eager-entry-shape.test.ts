@@ -88,8 +88,12 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     'AttachmentAsset',
     'SceneGraph',
     'World',
-    'withSpatialized2DElementContainer',
-    'withSpatialMonitor',
+    // `withSpatialized2DElementContainer` and `withSpatialMonitor` were on
+    // this parity list in v1 and were demoted to internal-only in v2 (see
+    // the `internalize-hoc-factories` changeset). The eager entry inherits
+    // its facade surface from the default entry via re-export so the
+    // demotion cascades automatically — the parity contract continues to
+    // hold (both entries omit them).
     'useMetrics',
   ] as const
 

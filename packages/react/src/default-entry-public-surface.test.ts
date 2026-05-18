@@ -54,8 +54,14 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       'Texture',
       'UnlitMaterial',
       'World',
-      'withSpatialMonitor',
-      'withSpatialized2DElementContainer',
+      // `withSpatialMonitor` and `withSpatialized2DElementContainer` were
+      // factory-style HOC public exports in v1 and were demoted to
+      // internal-only in v2 (see the `internalize-hoc-factories`
+      // changeset). The `<div enable-xr>` / `<div enable-xr-monitor>` JSX
+      // markers remain the documented public mechanism; the factories
+      // themselves live on at their original source paths and are
+      // reached internally by the JSX runtime via
+      // `src/internal/facades-client.ts`.
       // Hooks
       'useMetrics',
       // Deprecated v1 export
@@ -218,22 +224,14 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       expect((sdk as Record<string, unknown>).Model).toBe(facadeMod.Model)
     })
 
-    it('the default-entry `withSpatialized2DElementContainer` is the facade HOC', async () => {
-      const facadeMod = await import(
-        './facades/withSpatialized2DElementContainer'
-      )
-      expect(
-        (sdk as Record<string, unknown>).withSpatialized2DElementContainer,
-      ).toBe(facadeMod.withSpatialized2DElementContainer)
-    })
-
-    it('the default-entry `withSpatialMonitor` is the facade HOC', async () => {
-      const facadeMod = await import('./facades/withSpatialMonitor')
-      expect((sdk as Record<string, unknown>).withSpatialMonitor).toBe(
-        facadeMod.withSpatialMonitor,
-      )
-    })
-
+    // `withSpatialized2DElementContainer` and `withSpatialMonitor` USED to
+    // be reachable on the default entry as facade-identity assertions; they
+    // were demoted to internal-only in the `internalize-hoc-factories`
+    // change (see this file's `requiredRuntimeExports` tombstone comment).
+    // Internal-only callers (the JSX runtime via `src/internal/facades-client.ts`,
+    // `parity.test.tsx`, `jsx-shared.test.tsx`) reach the facade files
+    // directly, so identity is preserved internally; no public-surface
+    // assertion belongs here.
     it('the default-entry `useMetrics` is the placeholder-or-real selector', async () => {
       const selectorMod = await import('./hooks-web/useMetrics')
       expect((sdk as Record<string, unknown>).useMetrics).toBe(
