@@ -292,8 +292,9 @@ These have no React state to manage; no `useSyncExternalStore` subscription; no 
 - `WebSpatialRuntimeError` — `Error` subclass re-exported from `core-sdk`.
 - `CapabilityKey` — TypeScript type re-export.
 - `SSRProvider` — React Context provider with no spatial dependency.
-- `getAbsoluteUrl(url)` — pure URL helper, SSR-safe.
 - `version` — string constant injected at build time.
+
+> Historical note: `getAbsoluteUrl(url)` (pure URL helper, SSR-safe) was originally listed in this Group C set during the lazy-load v1 design. It was demoted to an internal helper (`src/internal/urlUtils.ts`) and removed from the public surface after the design was published — see the `remove-getabsoluteurl` changeset for the rationale and migration recipe.
 - Component / Hook / Entity / Model type-only re-exports (`SpatializedElementRef`, `EntityRef`, `ModelRef`, `ModelProps`, etc.).
 
 These count toward both tiers of the size budget: the SDK-side `dist/index.js` proxy (`tasks.md §9.1`) and the typical-case marginal-delta fixture (`tasks.md §9.2`), since Group B / C bytes that the consumer's named-import pattern reaches will land in the application bundle. The largest contributor is the `core-sdk` capability table consumed by `WebSpatialRuntime.supports` (~1–2 KB gzipped after dead-code elimination); everything else in Group C is bytes-level.

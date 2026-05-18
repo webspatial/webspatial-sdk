@@ -12,7 +12,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { resetRuntimeCacheForTests } from '@webspatial/core-sdk'
 import { convertCoordinate } from '../utils/convertCoordinate'
 import { enableDebugTool } from '../utils/debugTool'
-import { getAbsoluteUrl } from '../utils/urlUtils'
 import { initScene } from '../initScene'
 import { WebSpatialRuntime } from '../webSpatialRuntime'
 import {
@@ -62,50 +61,12 @@ afterEach(() => {
   resetEnv()
 })
 
-// ---------------------------------------------------------------------------
-// §14.5 getAbsoluteUrl is SSR-safe and pure
-//
-// `getAbsoluteUrl` is `@deprecated` in v1 (see JSDoc on the function in
-// `src/utils/urlUtils.ts`) and will be removed in v2. These tests pin the v1
-// behavioural contract so the deprecation is purely a JSDoc-level signal —
-// callers continue to get the documented "graceful no-op on SSR + resolve
-// relative paths against `location.href` + never throw" behaviour until the
-// export is finally deleted. When the v2 cut removes the public export, the
-// underlying helper moves under `src/internal/` and this `describe` block
-// either follows it (renamed to "internal getAbsoluteUrl helper") or is
-// deleted alongside the export.
-// ---------------------------------------------------------------------------
-
-describe('getAbsoluteUrl (spec tasks.md §14.5 + Group C — @deprecated v1)', () => {
-  it('returns input unchanged under SSR (no window)', () => {
-    vi.stubGlobal('window', undefined)
-    expect(getAbsoluteUrl('a/b')).toBe('a/b')
-  })
-
-  it('resolves relative paths against window.location.href in browser', () => {
-    Object.defineProperty(window, 'location', {
-      value: { href: 'http://localhost/x/' },
-      configurable: true,
-    })
-    expect(getAbsoluteUrl('a/b')).toBe('http://localhost/x/a/b')
-  })
-
-  it('does NOT throw on malformed URL input — returns input unchanged', () => {
-    Object.defineProperty(window, 'location', {
-      value: { href: 'http://localhost/' },
-      configurable: true,
-    })
-    // The catch block in getAbsoluteUrl swallows URL parser failures; absolute
-    // bogus schemes fall through to the URL constructor which actually does
-    // resolve them, so we exercise the catch path with a string the URL
-    // constructor itself rejects.
-    const garbage = '\u0000not a valid url'
-    const out = getAbsoluteUrl(garbage)
-    // either a successful resolution OR fall-through to input — both are
-    // documented; key is no throw.
-    expect(typeof out).toBe('string')
-  })
-})
+// `getAbsoluteUrl` was a Group C export in v1 and was removed in v2 — its
+// behavioural contract is preserved in the internal helper at
+// `src/internal/urlUtils.ts` (still used by `Texture.tsx` /
+// `ModelAsset.tsx`); the colocated `src/internal/urlUtils.test.ts` suite
+// pins the SSR-safe + relative-resolution + never-throw behaviour. No
+// public-surface test belongs here.
 
 // ---------------------------------------------------------------------------
 // §14.1 initScene gracefully no-ops without bootSpatial / SSR
