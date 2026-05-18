@@ -1,33 +1,59 @@
-import React, { ComponentType, forwardRef, PropsWithoutRef } from 'react'
-import { useSSRPhase } from './useSSRPhase'
+'use client'
 
-export type SSRPhase = 'ssr' | 'hydrate' | 'after-hydrate'
+import React, {
+  ComponentType,
+  forwardRef,
+  PropsWithoutRef,
+  useSyncExternalStore,
+} from 'react'
+
+const noopSubscribe = (_onStoreChange: () => void) => (): void => {}
+
+/** Stable `getSnapshot` — client after hydration reads `true` (show real impl). */
+const clientSnapshotReady = (): true => true
 
 /**
- * A HOC that ensures a component is only rendered on the client side.
- * It returns null during server-side rendering.
- * @param Component The component to be rendered only on the client.
+ * Stable `getServerSnapshot` + hydration-first-pass snapshot (`false`)
+ * placeholder div. Must stay referentially identical across renders.
+ */
+const serverAndHydratePassSnapshot = (): false => false
+
+/**
+ * Hydration-aware gate for components that attach to browser-only spatial
+ * infrastructure. SSR and the client hydration pass render a placeholder
+ * `<div>` (only `style` and `className` from props); after hydration commits,
+ * the wrapped component renders.
+ *
+ * Implemented with `useSyncExternalStore` and a stable `getServerSnapshot` so
+ * React 18+ matches server HTML during `hydrateRoot` — no `SSRProvider` /
+ * `SSRContext` is required (see spatial-lazy-load spec "SSR and hydration
+ * safety" for the façade path; eager spatial primitives remain CSR-only by
+ * product routing).
+ *
+ * @param Component The component rendered after hydration.
  */
 export function withSSRSupported<T extends {}>(Component: ComponentType<T>) {
   const ClientOnlyComponent = (
     props: PropsWithoutRef<T>,
     ref: React.ForwardedRef<any>,
   ) => {
-    const phase = useSSRPhase()
+    const showRealImpl = useSyncExternalStore(
+      noopSubscribe,
+      clientSnapshotReady,
+      serverAndHydratePassSnapshot,
+    )
 
-    let renderType: 'fake' | 'real' = 'real'
-
-    if (phase === 'ssr' || phase === 'hydrate') {
-      renderType = 'fake'
+    if (!showRealImpl) {
+      const { style, className } = props as Record<string, unknown>
+      return (
+        <div
+          style={style as React.CSSProperties | undefined}
+          className={className as string | undefined}
+          ref={ref}
+        ></div>
+      )
     }
-
-    if (renderType === 'fake') {
-      const { style, className } = props as any
-      // keep style and className for SSR, prevent style flicker on hydration
-      return <div style={style} className={className} ref={ref}></div>
-    } else {
-      return <Component {...(props as T)} ref={ref} />
-    }
+    return <Component {...(props as T)} ref={ref} />
   }
 
   ClientOnlyComponent.displayName = `withClientOnly(${Component.displayName || Component.name || 'Component'})`

@@ -39,7 +39,11 @@ import {
 } from '../runtime/bridge'
 import { __resetBootStateForTests, bootSpatial } from '../runtime/boot'
 import { __resetBootForgottenWarningForTests } from '../facades/shared/warnBootForgotten'
-import { normalizeHtml, renderStatic } from './helpers/parity'
+import {
+  normalizeHtml,
+  renderClientMarkup,
+  renderStatic,
+} from './helpers/parity'
 
 function setUserAgent(userAgent: string): void {
   Object.defineProperty(window.navigator, 'userAgent', {
@@ -84,12 +88,13 @@ describe('Model parity (spec tasks.md §15.3 + REVIEW.md "Two-scenario behavior 
     // Path 1 — facade renders fallback because the bridge is not ready in
     // plain web; the facade strips spatial-only event props and emits a
     // native <model> element.
-    const path1 = renderStatic(<ModelFacade {...props} />)
+    const path1 = renderClientMarkup(<ModelFacade {...props} />)
 
     // Path 2 — real Model with `enable-xr={false}` (or under non-WebSpatial
-    // UA). Both gating paths short-circuit to the same degraded <model>
-    // tag rendering branch.
-    const path2 = renderStatic(<ModelReal {...props} />)
+    // UA). Both gating paths short-circuit to the same degraded `<model>`
+    // tag rendering branch. Use client render so `withSSRSupported` does not
+    // emit the SSR transport placeholder `<div>` (see `helpers/parity.renderClientMarkup`).
+    const path2 = renderClientMarkup(<ModelReal {...props} />)
 
     expect(normalizeHtml(path1)).toBe(normalizeHtml(path2))
   })
@@ -108,8 +113,8 @@ describe('Model parity (spec tasks.md §15.3 + REVIEW.md "Two-scenario behavior 
       onSpatialMagnifyEnd: handler,
       spatialEventOptions: { constrainedToAxis: [0, 1, 0] },
     }
-    const path1 = renderStatic(<ModelFacade {...(props as any)} />)
-    const path2 = renderStatic(<ModelReal {...(props as any)} />)
+    const path1 = renderClientMarkup(<ModelFacade {...(props as any)} />)
+    const path2 = renderClientMarkup(<ModelReal {...(props as any)} />)
 
     for (const stripped of [
       'onspatialtap',

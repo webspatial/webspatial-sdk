@@ -23,6 +23,7 @@
 // assert structural identity.
 
 import React from 'react'
+import { render } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 /** Normalize an HTML fragment so attribute / whitespace order doesn't cause
@@ -44,6 +45,20 @@ export function normalizeHtml(input: string): string {
     .trim()
 }
 
+/** Render via the **client** `react-dom` path (Vitest/jsdom): `SpatializedContainer`
+ * / `Model` use `withSSRSupported`, which hides real output behind a placeholder
+ * only for `renderToStaticMarkup`/`renderToString` (server snapshots). Parity harness
+ * Path 2 for real `@webspatial/react-sdk` exports MUST use this so we compare against
+ * the unsupported-branch DOM, not the transport placeholder.
+ */
+export function renderClientMarkup(node: React.ReactElement): string {
+  const { container, unmount } = render(node)
+  try {
+    return container.innerHTML
+  } finally {
+    unmount()
+  }
+}
 /** Render a tree to static markup, suppressing the unknown-tag warnings
  * React emits for native `<model>` (which jsdom + React's intrinsic table
  * do not yet recognize but which IS the spec-required degraded element). */
