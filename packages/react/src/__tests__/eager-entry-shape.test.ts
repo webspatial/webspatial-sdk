@@ -114,7 +114,7 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     // re-exports go through `src/eager.ts:export { ... } from './index'`,
     // so removing the default-entry export cascades to the eager entry
     // automatically and the parity contract continues to hold.
-    'SSRProvider',
+    // `SSRProvider` was removed in the `remove-ssr-provider` changeset.
     'WebSpatialRuntime',
     'WebSpatialRuntimeError',
     'version',

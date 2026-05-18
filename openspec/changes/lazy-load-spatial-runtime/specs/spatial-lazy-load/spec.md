@@ -453,11 +453,17 @@ For each call:
 
 In a server-side rendering context the default entry MUST behave as web mode: facades render their per-component default fallback, hook placeholders return their documented defaults, the bridge MUST NOT schedule any dynamic import, and registered `onSpatialLoadError` callbacks MUST NOT be invoked. The default entry MUST work under any React 18+ SSR API (including `renderToString`, `renderToPipeableStream`, `renderToReadableStream`, and React 19 `prerender*`) and inside React Server Components when the facade or hook is consumed via a Client Component.
 
+**Entry routing (normative)**
+
+- Applications that rely on SSR (streaming or synchronous), initial HTML snapshots that include WebSpatial primitives, or hydration of those primitives with the façade contracts in this Requirement MUST use the lazy-load **default entry** `@webspatial/react-sdk`. Facade SSR / hydration semantics in this Requirement apply **only** when spatial primitives resolve through that entry.
+- The **eager** entry `@webspatial/react-sdk/eager` targets **client-rendered** spatial UI: spatial primitives imported from the eager entry MUST NOT be server-rendered as part of a supported configuration. Consumers MUST mount eager-imported spatial subtrees only on the client (e.g. Next.js `dynamic(..., { ssr: false })`, conditional render after `typeof window !== 'undefined'`, or a client-only route tree) **or** MUST use the default entry for SSR pages where those primitives participate in server HTML output. SSR or mixed SSR/CSR setups that eagerly import primitives from `@webspatial/react-sdk/eager` **AND** evaluate them during server render are **out of scope** for SDK guarantees — behavior MAY include hydration mismatches or runtime divergence; remediation is routing those imports to the default entry or gating the subtree to CSR.
+
 To make hydration safe, the SDK MUST follow these constraints:
 
 - **Client-component directive**: every facade module and every public hook module that calls React hooks MUST begin with the `'use client'` directive. The directive MUST be preserved through the build into the published `dist/` files. Without this directive, the React Server Components compiler will treat facades as Server Components and fail the moment they call hooks. Files that do not call React hooks (`runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`, `runtime/errors.ts`, the constant-only `useMetrics` placeholder source, plain type-only modules) MUST NOT carry the directive — they remain server-callable.
 - **Hydration-aware readiness**: `useSpatialReady()` MUST be implemented with `useSyncExternalStore` (or another React-hydration-aware primitive that exposes a server snapshot). This guarantees that the value used during hydration matches the SSR snapshot, and React's built-in transition swaps to the live snapshot only after hydration commits — preventing any mismatch warning regardless of when `bootSpatial()` resolves relative to `hydrateRoot()`.
 - **`getServerSnapshot` stability**: the `getServerSnapshot` argument passed to `useSyncExternalStore` inside `useSpatialReady` MUST be a single module-level constant function returning `false`. It MUST NOT be a fresh closure created per call (which would trigger React's "Snapshot is unstable" warning). The same module-level constant MAY also serve as the plain-web `getSnapshot` (per the `useSpatialReady` short-circuit) since both must report `false`.
+- **Internal spatial host wrapper (`withSSRSupported`)**: real `Model` / `SpatializedContainer` (and similar) MUST gate heavy client work behind `useSyncExternalStore` with a stable module-level constant `getServerSnapshot` returning `false` during SSR **and** the client hydration pass, and `getSnapshot` returning `true` thereafter — yielding a deterministic `style`/`className` placeholder `<div>` without exporting `SSRProvider` / `SSRContext`.
 - **Deterministic facade rendering**: given identical props, a facade's fallback rendering MUST produce identical DOM across renders and across server/client. The SDK only guarantees mismatch-free hydration when (a) facade props are identical between server and client, and (b) `useSpatialReady` follows the `useSyncExternalStore` constraint above.
 
 Both `await bootSpatial(); hydrateRoot(...)` (boot before hydrate; bridge ready when hydrate starts) and `hydrateRoot(...); bootSpatial()` (hydrate first, boot after) MUST be supported. The `useSyncExternalStore`-based `useSpatialReady` makes both timings hydration-safe — but the "fallback flash" trade-off differs by rendering path:
@@ -645,7 +651,6 @@ These APIs split into two groups by mechanism:
 | `WebSpatialRuntime.supports(name, tokens?)` | Synchronous capability lookup against the `core-sdk` capability table. Pure data, no spatial chunk dependency. Behavior pinned by the `runtime-capabilities` spec. |
 | `WebSpatialRuntimeError` | Re-export of an `Error` subclass from `@webspatial/core-sdk`. |
 | `CapabilityKey` | TypeScript type re-export from `@webspatial/core-sdk`. Compile-time only. |
-| `SSRProvider` | A React Context provider; carries no spatial dependency. |
 | `version` | A `string` constant injected at build time via `__WEBSPATIAL_REACT_SDK_VERSION__`. |
 | Component / Hook / Entity / Model type-only re-exports (e.g. `SpatializedElementRef`, `EntityRef`, `ModelRef`, `ModelProps`) | Compile-time only; no runtime presence. |
 
@@ -665,10 +670,6 @@ These APIs split into two groups by mechanism:
 - **AND** the result MUST follow the `runtime-capabilities` Requirement contracts (`false` in non-WebSpatial browsers; `true` / `false` per the shell-version capability table in WebSpatial runtimes)
 
 #### Scenario: Group C pure helpers are SSR-safe and side-effect free
-
-- **WHEN** `SSRProvider` is rendered during SSR
-- **THEN** it MUST NOT trigger any dynamic import
-- **AND** it MUST NOT depend on any spatial chunk symbol
 
 - **WHEN** `WebSpatialRuntimeError` is constructed or thrown by application code
 - **THEN** it MUST behave as a standard `Error` subclass (re-exported from `core-sdk`) without requiring the spatial chunk
@@ -754,12 +755,14 @@ The contract has three normative parts:
 
 The package MUST expose a second published subpath, `@webspatial/react-sdk/eager`, in parallel with the lazy-load default entry (`@webspatial/react-sdk`). The eager entry MUST statically link the spatial implementation into the consumer's bundle so that consumers who target spatial-only runtimes (internal AVP / Pico enterprise apps, App Store apps shipped to fixed spatial devices, deeply spatial-first product surfaces) pay one network request instead of two and skip the `bootSpatial()` round-trip entirely.
 
+**CSR-only for spatial primitives (normative)** — The eager entry is for applications that embed spatial UI in **purely client-rendered surfaces** or that CSR-gate subtrees importing this entry. SSR (or prerender HTML) configurations that invoke eager-imported spatial primitives on the server are **unsupported** — see "**Entry routing (normative)**" under "SSR and hydration safety". Applications needing SSR for spatial primitives MUST use `@webspatial/react-sdk`.
+
 The eager entry MUST re-export the same TypeScript surface as the default entry — the named-export set MUST be a strict superset (no facade name MAY be missing, no hook name MAY be missing, no stateless utility MAY be missing) — so consumer code can migrate from the default entry to the eager entry by changing only the import root.
 
 Within that named-export set:
 
 - **Spatial primitives** (the facade names — `Model`, `Reality`, `Entity`, `BoxEntity` family, materials / assets, `SceneGraph` / `World`, and `useMetrics`) MUST resolve to the **real spatial implementations** loaded statically from `@webspatial/react-sdk/spatial`, not to facade fallbacks. Factory-style HOCs remain internal-only after the `internalize-hoc-factories` change; the public marker path is `enable-xr` / `enable-xr-monitor`, and the eager entry preloads the bridge so JSX-runtime marker wrappers reached through `@webspatial/react-sdk/internal/facades-client` render real implementations on first client render.
-- **Stateless utilities** (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry": `enableDebugTool`, `convertCoordinate`, `initScene`, `WebSpatialRuntime`, `WebSpatialRuntimeError`, `SSRProvider`, `version`, `createElement` (`@deprecated` per "createElement export is deprecated"), type-only re-exports including the core-sdk type re-exports) MUST be the same module-level references the default entry exposes (re-export, not redeclare). This guarantees behavior parity and allows shared code paths. The `@deprecated` `createElement` export MUST carry its JSDoc on the eager-entry surface too — re-export via `from './index'` preserves the annotation automatically.
+- **Stateless utilities** (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry": `enableDebugTool`, `convertCoordinate`, `initScene`, `WebSpatialRuntime`, `WebSpatialRuntimeError`, `version`, `createElement` (`@deprecated` per "createElement export is deprecated"), type-only re-exports including the core-sdk type re-exports) MUST be the same module-level references the default entry exposes (re-export, not redeclare). This guarantees behavior parity and allows shared code paths. The `@deprecated` `createElement` export MUST carry its JSDoc on the eager-entry surface too — re-export via `from './index'` preserves the annotation automatically.
 - **Lazy-load runtime API** (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`) MUST be exposed as **compatibility stubs** so that consumer code written against the default entry still type-checks and runs unchanged when its import root switches to the eager entry. The stub semantics are pinned by the Scenarios below.
 
 The eager entry MUST install the same polyfills as the spatial chunk (the `@webspatial/core-sdk/install-polyfills` side effect and the `initPolyfill()` container bootstrap) at module-evaluation time, since by definition the eager entry IS the spatial chunk for these consumers and there is no `bootSpatial()` to defer the install to.
@@ -794,7 +797,8 @@ The eager entry MUST coexist with the lazy-load default entry without polluting 
 
 - **WHEN** a consumer calls `useSpatialReady()` after importing from the eager entry
 - **THEN** it MUST return `true` on the first and every subsequent render
-- **AND** the hook implementation MUST remain SSR-safe (return `true` consistently across `getServerSnapshot` and `getSnapshot`) so the eager entry imposes no hydration mismatch even though it reports a different readiness value than the lazy-load default entry's SSR pass
+- **AND** stubs MAY omit `useSyncExternalStore` (`useSpatialReadyEager()` is implemented as a constant `true`; `isSpatialReady()` is synchronous) — this is intentional for CSR-only ergonomics
+- **AND** eager spatial primitives MUST NOT be server-rendered in a supported configuration (per "**CSR-only for spatial primitives**" above); parity with lazy-load SSR semantics is therefore **by requirement** delegated to routing consumers to `@webspatial/react-sdk`. Accidental SSR of eager primitives is intentionally **not** a contract of this Requirement
 
 #### Scenario: `onSpatialLoadError` registers but never fires
 
@@ -842,7 +846,7 @@ The packaging-hygiene contracts that apply to both forms are:
 - **Plugin-free integration** (the entire "Plugin-free integration" Requirement): both forms MUST work without `@webspatial/vite-plugin` or any peer plugin. Both forms MUST be ESM-only. The bundler-capability requirements (ESM, `exports` field, dynamic-import code-splitting) apply to both, though the eager entry does NOT require code-splitting (it has no dynamic `import()` boundary). The peer-dependency contract (`react: ">=18.0"`, `react-dom: ">=18.0"`, both required and not optional) applies to both.
 - **Stateless utility APIs and pure re-exports** (the entire "Stateless utility APIs and pure re-exports remain in the default entry" Requirement): both forms MUST expose the same Group B + Group C surface, with the same SSR-safety, side-effect-free, and runtime-graceful-degradation guarantees. The eager entry SHOULD re-export these by reference from the default entry rather than redeclare, to keep the contracts byte-identical.
 - **JSX runtime** (the entire "JSX runtime strips spatial markers and wraps with facade HOCs" Requirement): the unified `./jsx-runtime` and `./jsx-dev-runtime` subpaths, plus the internal `./internal/facades-client` boundary they use, MUST work with both consumer entries unchanged. The runtime's strip + facade-HOC-wrap behavior MUST NOT depend on which entry the consumer's `<Model>` / `<div enable-xr>` references resolve to. (In the eager entry the wrapped facade HOC's first client render commits the real implementation directly; in the lazy entry it commits the fallback first.)
-- **SSR and hydration safety** (the entire "SSR and hydration safety" Requirement, with the modification that the eager entry's `useSpatialReady()` returns `true` consistently): both forms MUST honor the `'use client'` directive on hook-using files, MUST be safe under React 18+ SSR APIs (`renderToString`, `renderToPipeableStream`, `renderToReadableStream`, RSC client-component import), and MUST NOT cause hydration mismatches when their props are deterministic across server and client.
+- **SSR and hydration safety** (the entire "SSR and hydration safety" Requirement): both forms MUST honor the `'use client'` directive on hook-using façade and hook modules. The **default** entry MUST satisfy the full façade SSR / hydration contracts in that Requirement. The **eager** entry's **spatial primitives** are **CSR-only** (per "**Entry routing (normative)**" and "**CSR-only for spatial primitives**" in the eager Requirement); server-rendering those primitives is **unsupported**, and mismatch remediation is **consumer-owned** (use the default entry or CSR-gate the subtree). Group B / Group C symbols re-exported on both entries MUST remain SSR-safe when invoked on the server, independent of spatial-primitive routing.
 - **Type-only re-exports vanish at runtime** (per the corresponding Scenario inside "Stateless utility APIs and pure re-exports remain in the default entry"): both forms MUST emit zero runtime bytes for type-only re-exports.
 
 The contracts that are **specific to the lazy-load default entry** and do NOT apply to the eager entry are:
@@ -850,6 +854,7 @@ The contracts that are **specific to the lazy-load default entry** and do NOT ap
 - The 8 KB marginal-delta budget on `dist/index.js` (per "Default entry MUST NOT bundle spatial implementation") — the eager entry has its own 30 KB budget per "Eager-mode entry for spatial-only consumers".
 - The dynamic-import boundary, bridge singleton, and `bootSpatial()` activation contract — the eager entry replaces these with compatibility stubs per "Eager-mode entry for spatial-only consumers".
 - The facade fallback rendering, hook placeholder values, and dev-mode "boot was forgotten" warning — the eager entry's facades are real implementations from first render, so there is no fallback to render and no warning to issue.
+- Full SSR + hydration guarantees for **spatial primitives** (facade fallbacks, `useSpatialReady` server snapshots, first-client-render swap timing) — the eager entry documents spatial UI as **CSR-only**; those guarantees apply only when consumers import primitives from `@webspatial/react-sdk`.
 
 #### Scenario: Hygiene contracts hold for both default and eager entries
 

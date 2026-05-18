@@ -100,6 +100,27 @@ Why a shim is required: the spatial wrapping logic lives in the SDK's JSX runtim
 
 The SDK relies on three bundler capabilities to deliver its size budget: ESM resolution, the `exports` package.json field, and dynamic `import()` with code-splitting. **Tested-target list (non-normative)**: Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1, esbuild ≥ 0.18 with `splitting: true`, Next.js App Router (Webpack mode), Next.js Pages Router. See the [migration guide](../../docs/migration/lazy-load-spatial-runtime.md#bundler-compatibility) for environments that are out of scope for v1 (Module Federation, Next.js Turbopack, Webpack 4, CommonJS-only pipelines).
 
+### Two distribution forms: default vs eager
+
+The package publishes two entry roots with the **same export names**, so you can switch by changing only the import path:
+
+| Entry | Import | Choose when |
+| --- | --- | --- |
+| **Default (lazy)** | `@webspatial/react-sdk` | Web-first progressive enhancement; **SSR**, streaming SSR, or any page whose **server-rendered HTML** should include façade fallbacks for spatial primitives. Smallest synchronous footprint (~8 KB marginal delta in the SDK’s §9.2 fixture). |
+| **Eager** | `@webspatial/react-sdk/eager` | Spatial-first apps (fixed WebSpatial shells, internal AVP / PICO surfaces) where you want **one network request** and no real `bootSpatial()` work — at the cost of inlining the full spatial implementation (~30 KB gzipped proxy on `dist/eager.js`). |
+
+**SSR / CSR routing**
+
+- Hydration-safe façade SSR (`useSpatialReady` + stable server snapshot → fallback on server and during the hydration pass) is the contract for **`@webspatial/react-sdk`** only.
+- Spatial primitives imported from **`@webspatial/react-sdk/eager`** MUST mount on the **client** only. Server-rendering those components is **not** a supported configuration: use the default entry for SSR pages, or CSR-gate the subtree (for example Next.js `dynamic(..., { ssr: false })`, or render spatial UI only after `typeof window !== 'undefined'`).
+
+**Other rules**
+
+- Migrating between entries is **import-root-only**; on eager, `bootSpatial()` / `isSpatialReady()` / `useSpatialReady()` are **compatibility stubs** (`bootSpatial()` resolves immediately; readiness always reports ready).
+- **Do not** mix both entry roots in one application bundle — the same symbol name may refer to façade vs real implementation and behavior is undefined.
+
+Normative detail: [`openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md`](../../openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md) — search for "Entry routing" and "CSR-only for spatial primitives".
+
 ### Stateless utility APIs
 
 A subset of the public API works without `bootSpatial()` ever being called and is included in the default-entry size budget:
@@ -111,10 +132,9 @@ A subset of the public API works without `bootSpatial()` ever being called and i
 | `initScene(name, callback, options?)` | No-op without a WebSpatial session; routes to `getSession().initScene(...)` after boot |
 | `convertCoordinate(position, { from, to })` | Returns `position` unchanged without a session; resolves through the spatial scene after boot |
 | `enableDebugTool()` | SSR-safe no-op; in browsers attaches `inspectCurrentSpatialScene` and `getSpatialized2DElement` to `window` (the diagnostics themselves require `bootSpatial()` to be awaited) |
-| `SSRProvider` | React Context provider; carries no spatial dependency |
 | `version` | Package version constant (build-time injected) |
 
-The full normative contract lives in [`openspec/specs/spatial-lazy-load/spec.md`](../../openspec/specs/spatial-lazy-load/spec.md) — search for "Stateless utility APIs and pure re-exports".
+The full normative contract lives in [`openspec/specs/spatial-lazy-load/spec.md`](../../openspec/specs/spatial-lazy-load/spec.md) — search for "Stateless utility APIs and pure re-exports". Internal `Model` / `SpatializedContainer` host wrappers use `useSyncExternalStore` for SSR + hydration — you do **not** wrap the app in a provider for that.
 
 ### Server-safe subpath (`@webspatial/react-sdk/server`)
 
