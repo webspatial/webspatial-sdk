@@ -110,7 +110,6 @@ export {
   enableDebugTool,
   convertCoordinate,
   initScene,
-  getAbsoluteUrl,
   SSRProvider,
   WebSpatialRuntime,
   WebSpatialRuntimeError,

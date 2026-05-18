@@ -218,7 +218,7 @@ Subsequent hydration on the client uses `useSpatialReady`'s `getServerSnapshot` 
 
 The SDK's pure re-exports (`WebSpatialRuntime.supports`, `WebSpatialRuntimeError`, type-only re-exports) are reachable from the same client subgraph because the `'use client'` boundary is at the SDK's public entry. For Server Component callers, a dedicated server-safe subpath `@webspatial/react-sdk/server` ships `detectSpatialRuntime(headers)` for request-time WebSpatial runtime detection + a type-only mirror of the default entry — see [`packages/react/README.md` → "Server-safe subpath"](../../packages/react/README.md#server-safe-subpath-webspatialreact-sdkserver) for details.
 
-> **Deprecation note (v1):** `getAbsoluteUrl` is `@deprecated` and slated for removal in v2. It was promoted to the public surface by accident during the lazy-load v1 redesign — the SDK only ever uses it internally. Replace direct callers with `new URL(url, location.href).href` or your framework's URL helper. RSC consumers must switch immediately (the symbol resolves to a Client Reference via the default entry and cannot be called from a Server Component).
+> **Removed in v2:** `getAbsoluteUrl` was a Group C public export in v1 and has been removed from the published surface. It was promoted to public by accident during the lazy-load v1 redesign — the SDK only ever used it internally to feed the native bridge absolute asset URLs. Replace direct callers with `new URL(url, location.href).href` (browser) or your framework's URL helper (Next.js `metadataBase`, etc.) for server-side absolute URLs. The helper itself still exists under `src/internal/urlUtils.ts` for `Texture` / `ModelAsset` and is no longer a public-API commitment.
 
 ---
 
@@ -244,6 +244,7 @@ The placeholder return value is unchanged: `pointToPhysical(pt) === pt / 1360`, 
 - **BREAKING**: spatial code is now lazy-loaded via `bootSpatial()`; applications that previously relied on spatial primitives mounting real implementations on first render MUST `await bootSpatial()` before `ReactDOM.createRoot(...).render(...)` (or accept the documented fallback-to-real swap on the next React commit after `bootSpatial()` resolves later).
 - **BREAKING**: a component instance that calls `useMetrics()` (and any future spatial Hooks) now pins the placeholder-vs-real choice for its lifetime; remount required to switch to the real implementation after a late `bootSpatial()`.
 - **DEPRECATED**: `createElement` named export — migrate to the automatic JSX transform (`./jsx-runtime` / `./jsx-dev-runtime`). Removal scheduled for v2.
+- **BREAKING (v2)**: removed `getAbsoluteUrl` named export from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. It was an internal helper accidentally promoted to public during v1; the SDK still uses it internally via `src/internal/urlUtils.ts`. Replace direct callers with `new URL(url, location.href).href` (browser) or your framework's URL helper (Next.js `metadataBase`, etc.).
 
 ---
 

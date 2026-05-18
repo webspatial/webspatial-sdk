@@ -64,7 +64,10 @@ useMetrics  // public, with placeholder/real selection per instance
 
 // Existing (unchanged)
 WebSpatialRuntime, WebSpatialRuntimeError, CapabilityKey, enableDebugTool,
-convertCoordinate, initScene, SSRProvider, getAbsoluteUrl, version
+convertCoordinate, initScene, SSRProvider, version
+// (`getAbsoluteUrl` was originally on this listing; demoted to an internal
+//  helper at `src/internal/urlUtils.ts` — see the `remove-getabsoluteurl`
+//  changeset.)
 
 // Deprecated in v1, removal planned for v2
 createElement
@@ -84,7 +87,7 @@ SpatializedStatic3DElementContainer, SpatialMonitor
 | **B** (session-aware) | `initScene` | Wraps `core-sdk getSession()`; gracefully degrades | "Stateless utility APIs and pure re-exports" |
 | **B** | `convertCoordinate` | Wraps `core-sdk getSession()`; returns input + warn when no session | "Stateless utility APIs" + `runtime-capabilities` MODIFIED |
 | **B** | `enableDebugTool` | SSR-safe noop; attaches diagnostics in WebSpatial runtime | "Stateless utility APIs" |
-| **C** (pure / type) | `WebSpatialRuntime.supports`, `WebSpatialRuntimeError`, `CapabilityKey`, `SSRProvider`, `getAbsoluteUrl`, `version`, type-only re-exports | Live in default entry; counted toward 8KB size budget; no spatial-chunk dependency | "Stateless utility APIs" |
+| **C** (pure / type) | `WebSpatialRuntime.supports`, `WebSpatialRuntimeError`, `CapabilityKey`, `SSRProvider`, `version`, type-only re-exports (note: `getAbsoluteUrl` was originally on this row but has since been demoted to an internal helper — see the `remove-getabsoluteurl` changeset) | Live in default entry; counted toward 8KB size budget; no spatial-chunk dependency | "Stateless utility APIs" |
 
 **Subtle consequence to call out**: in a WebSpatial runtime, an application that **forgets** to call `bootSpatial()` will see Group A facades render fallback (the bridge is not ready) **yet** Group B utilities still work correctly (they go through `core-sdk`'s session detection, independent of the react-sdk bridge). This is intentional — `bootSpatial()` only governs the react-sdk spatial chunk, not the core-sdk session lifecycle.
 
@@ -118,7 +121,7 @@ The two paths are physically separate code (boot bundle vs spatial chunk) and **
 | `withSpatialMonitor(El)` | `<El {...passthrough} ref/>` | facade table | **Not explicitly pinned** | — | ⚠️ Same gap |
 | `useMetrics` | 1/1360 ratio + identity-stable functions | `spatial-lazy-load` "Hook placeholders" + "useMetrics placeholder returns the documented fallback values" | Identical 1/1360 ratio; MAY emit one-shot `console.warn` | `runtime-capabilities` "`useMetrics` graceful degradation" | ✅ Aligned |
 | `initScene` / `convertCoordinate` / `enableDebugTool` | Group B utilities — Path 1 = Path 2 by construction (route through `core-sdk getSession()`; both null-session paths are the same code) | `spatial-lazy-load` "Stateless utility APIs..." Requirement | Same code path | `runtime-capabilities` "`convertCoordinate` graceful degradation" + Group B contracts | ✅ Aligned (single path, no parity risk) |
-| `WebSpatialRuntime.supports`, `getAbsoluteUrl`, `SSRProvider`, `version`, `WebSpatialRuntimeError`, `CapabilityKey` | Group C — no feature-gating concept; not a "two-scenario" API | `spatial-lazy-load` "Stateless utility APIs..." Requirement | (n/a — pure data / re-exports) | — | n/a |
+| `WebSpatialRuntime.supports`, `SSRProvider`, `version`, `WebSpatialRuntimeError`, `CapabilityKey` (note: `getAbsoluteUrl` originally listed here, removed from public surface — see the `remove-getabsoluteurl` changeset) | Group C — no feature-gating concept; not a "two-scenario" API | `spatial-lazy-load` "Stateless utility APIs..." Requirement | (n/a — pure data / re-exports) | — | n/a |
 | `bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, `createElement` | Infrastructure — not "feature-gated" APIs | (n/a) | (n/a) | — | n/a |
 
 **Why the audit matters**: Path 1 and Path 2 are written by different commits, in different files, in different bundles. Without parity tests, a future facade tweak (e.g. changing `Reality`'s placeholder from `<div>` to `<span>`) can silently leave the real-impl unsupported branch in the spatial chunk emitting a different DOM. `tasks.md §15` adds a parametrized parity-test harness that mounts each facade in both contexts and asserts the rendered HTML is structurally identical — caught at unit-test time, not in production.
