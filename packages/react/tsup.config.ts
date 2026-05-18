@@ -153,6 +153,14 @@ export default defineConfig([
       // SAME module-level binding (and therefore the SAME function
       // identity) that the JSX runtime sees via the external subpath.
       'internal/facades-client': 'src/internal/facades-client.ts',
+      // Server-safe public subpath. Designed to be importable from RSC
+      // server modules, so its emitted file MUST NOT carry the
+      // `'use client'` directive (the `ensureRscClientBoundary` injection
+      // below intentionally skips it). Currently a thin wrapper around
+      // `computeRuntimeFromUserAgent` from `@webspatial/core-sdk`; that
+      // dependency is marked external, so the emitted `dist/server/index.js`
+      // contains no React imports and no hook references at all.
+      'server/index': 'src/server/index.ts',
     },
     outDir: 'dist',
     onSuccess: async () => {

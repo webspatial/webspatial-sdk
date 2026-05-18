@@ -42,10 +42,11 @@ export default function HomePage() {
           <Link href="/server-only-util">
             <strong>/server-only-util</strong>
           </Link>{' '}
-          — pure Server Component using a Group B utility (
-          <code>getAbsoluteUrl</code>). Confirms the SDK&apos;s default entry is
-          importable from an RSC tree without crossing the{' '}
-          <code>&apos;use client&apos;</code> boundary.
+          — pure Server Component using the server-safe SDK subpath (
+          <code>@webspatial/react-sdk/server</code>). Calls{' '}
+          <code>detectSpatialRuntime(await headers())</code> so the initial HTML
+          can branch on whether the requesting device is a WebSpatial runtime —
+          no client JS required.
         </li>
       </ul>
       <p>
