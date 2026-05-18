@@ -2,40 +2,45 @@
 //
 // What this page proves:
 //
-// 1. Group B / Group C utilities (`getAbsoluteUrl`,
-//    `WebSpatialRuntime.supports`) are SSR-safe by design: `getAbsoluteUrl`
-//    early-returns when `typeof window === 'undefined'`, and `supports`
-//    returns `false` for spatial-dependent keys when no runtime is detected.
+// 1. `@webspatial/react-sdk/server` is the server-safe public subpath
+//    that an RSC file can call directly. `detectSpatialRuntime` runs in
+//    Node, takes the Web Fetch `Headers`-like object Next.js gives us
+//    from `await headers()`, and returns the same snapshot shape the
+//    client-side runtime cache produces from `navigator.userAgent`. No
+//    browser globals are touched and no facade / hook ever enters this
+//    page's server graph.
 //
-// 2. Next.js 15 caveat: `dist/index.js` carries `'use client'`, so Next
-//    marks every `@webspatial/react-sdk` export as a Client Reference.
-//    You cannot *import* those helpers from an RSC file until the SDK
-//    publishes a server-safe subpath. This page calls the same
-//    implementations via `@webspatial/core-sdk` (`supports`) and a local
-//    mirror of `getAbsoluteUrl` (see `lib/getAbsoluteUrl.ts`).
+// 2. The default entry of the SDK (`@webspatial/react-sdk`) carries
+//    `'use client'` at the top of its `dist/index.js`, so Next turns
+//    every imported symbol from THAT entry into a Client Reference and
+//    fails when called from a Server Component. The `/server` subpath
+//    exists precisely to dodge that constraint — see
+//    `packages/react/src/server/index.ts` for the design note.
 //
-// 3. Importing only these utilities does NOT pull the spatial chunk into
-//    the server bundle (no `chunk-SHX6AI5C-*.js` in this page's graph).
+// 3. Importing only `detectSpatialRuntime` does NOT pull the spatial
+//    chunk into the server bundle: `getSpatialImpl()`, `bootSpatial()`,
+//    `useSpatialReady()`, and the facade trees never reach the server.
 
-import { supports } from '@webspatial/core-sdk'
-import { getAbsoluteUrl } from '@/lib/getAbsoluteUrl'
-
-const WebSpatialRuntime = { supports } as const
+import { headers } from 'next/headers'
+import { detectSpatialRuntime } from '@webspatial/react-sdk/server'
 
 export const metadata = { title: '/server-only-util — spatial-next-min' }
 
-export default function ServerOnlyUtilPage() {
-  const resolvedRelative = getAbsoluteUrl('/scene.usdz')
-  const supportsModel = WebSpatialRuntime.supports('Model')
+export default async function ServerOnlyUtilPage() {
+  const requestHeaders = await headers()
+  const requestUserAgent = requestHeaders.get('user-agent') ?? '(unset)'
+  const runtime = detectSpatialRuntime(requestHeaders)
+
   return (
     <section>
-      <h1>Pure RSC + Group B/C utilities</h1>
+      <h1>Pure RSC + server-safe SDK subpath</h1>
       <p>
-        This page is a Server Component. It runs the same Group B/C helpers the
-        SDK documents, wired through <code>@webspatial/core-sdk</code> and{' '}
-        <code>lib/getAbsoluteUrl.ts</code> because Next.js cannot call exports
-        from the <code>&apos;use client&apos;</code> default entry on the server
-        (see file comment).
+        This page is a Server Component. It runs{' '}
+        <code>detectSpatialRuntime</code> from{' '}
+        <code>@webspatial/react-sdk/server</code> against the request&apos;s own{' '}
+        <code>user-agent</code> header — so the initial HTML can already branch
+        on whether the requesting device is running a WebSpatial runtime, before
+        any JavaScript reaches the client.
       </p>
       <h2 style={{ marginTop: 24 }}>Server-side values</h2>
       <pre
@@ -44,32 +49,41 @@ export default function ServerOnlyUtilPage() {
           padding: 12,
           borderRadius: 8,
           overflow: 'auto',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-all',
         }}
       >
-        {`getAbsoluteUrl('/scene.usdz')             // → ${JSON.stringify(resolvedRelative)}
-WebSpatialRuntime.supports('Model')        // → ${JSON.stringify(supportsModel)}`}
+        {`request.headers['user-agent']  // → ${JSON.stringify(requestUserAgent)}
+detectSpatialRuntime(headers)  // → ${JSON.stringify(runtime, null, 2)}`}
       </pre>
       <p>Notes on the values:</p>
       <ul>
         <li>
-          <code>getAbsoluteUrl</code> returns the input unchanged when there is
-          no <code>window</code> (which is always the case in the RSC render).
+          <code>runtime.type</code> is <code>&apos;visionos&apos;</code>,{' '}
+          <code>&apos;picoos&apos;</code>, <code>&apos;puppeteer&apos;</code>,
+          or <code>null</code>. A plain desktop / mobile browser resolves to{' '}
+          <code>null</code> — render your fallback hero here.
         </li>
         <li>
-          <code>WebSpatialRuntime.supports(key)</code> returns{' '}
-          <code>false</code> for spatial-dependent keys when no WebSpatial
-          runtime is detected (server, plain browser). In a WebSpatial runtime
-          (AVP / PICO / Puppeteer), the same key resolves against the
-          runtime&apos;s capability table.
+          <code>runtime.shellVersion</code> is the shell version string parsed
+          from <code>WSAppShell/&lt;ver&gt;</code> or{' '}
+          <code>PicoWebApp/&lt;ver&gt;</code>; <code>null</code> when no spatial
+          shell token is present.
+        </li>
+        <li>
+          The same snapshot shape is returned by the client-side runtime cache,
+          so server-rendered branching aligns one-to-one with post-hydration
+          branching.
         </li>
       </ul>
       <h2 style={{ marginTop: 24 }}>
         What you should NOT see in the network panel
       </h2>
       <p>
-        No request for any <code>spatial-*.js</code> or{' '}
-        <code>chunk-*-SHX6AI5C-*.js</code> file. This page does not import any
-        facade or hook, so the spatial chunk is not statically reachable.
+        No request for any <code>spatial-*.js</code> chunk and no facade chunk.
+        This page does not import any facade or hook, so the spatial
+        implementation graph is never statically reachable from the server
+        bundle for this route.
       </p>
     </section>
   )
