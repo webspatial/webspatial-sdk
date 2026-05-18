@@ -27,7 +27,24 @@ export default defineConfig({
   plugins: [react()],
 
   resolve: {
+    // IMPORTANT — every published SDK subpath this fixture may
+    // transitively reach MUST be listed here. Vite's `resolve.alias` is a
+    // prefix-match remap (same trap as esbuild's `alias`), so an alias
+    // `@webspatial/react-sdk` → `react/src` causes any longer specifier
+    // (e.g. `@webspatial/react-sdk/internal/facades-client`) to get the
+    // prefix replaced naively, producing a nonsense path. The fix is to
+    // list every subpath explicitly so the more-specific alias wins.
+    // Adding a new subpath to `packages/react/package.json#exports`
+    // requires adding a matching alias here.
     alias: {
+      '@webspatial/react-sdk/internal/facades-client': path.join(
+        XRSDKBaseDir,
+        'react/src/internal/facades-client.ts',
+      ),
+      '@webspatial/react-sdk/server': path.join(
+        XRSDKBaseDir,
+        'react/src/server/index.ts',
+      ),
       '@webspatial/react-sdk': path.join(XRSDKBaseDir, 'react/src'),
       '@webspatial/core-sdk': path.join(XRSDKBaseDir, 'core/src'),
     },
