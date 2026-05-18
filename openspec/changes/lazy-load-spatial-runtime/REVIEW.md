@@ -6,24 +6,25 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 
 - One small default bundle for everyone — **≤ 8KB gzipped marginal delta** added to a typical consumer app (e.g. `import { Model, bootSpatial }`), with `dist/index.js` ≤ 8KB as the SDK-side proxy
 - Spatial implementation lives in a separate `@webspatial/react-sdk/spatial` chunk, loaded dynamically via `await bootSpatial()` only inside a WebSpatial runtime
+- Spatial-only consumers can opt into `@webspatial/react-sdk/eager`, a single-request entry that statically links the spatial implementation and exposes no-op boot compatibility stubs
 - Plain web users see documented per-component fallbacks (e.g. `Model` → degraded `<model>` tag) without any extra network requests
 - `@webspatial/vite-plugin` becomes redundant — the SDK works against any bundler that supports ESM + `exports` + dynamic-import code-splitting
 
-**No source code changes in this PR.** It is documentation only — proposal, design, tasks, and spec under `openspec/changes/lazy-load-spatial-runtime/`.
+This guide originally accompanied the spec-only proposal. The active branch now includes implementation commits as well; use `tasks.md` as the source of truth for which implementation slices are complete and which follow-ups remain.
 
 ## What you're reviewing
 
 | Artifact | What it answers |
 | --- | --- |
 | `proposal.md` | Why this change & high-level "What Changes" |
-| `design.md` | How — 13 design decisions, risks, migration plan, open questions |
-| `tasks.md` | 15 sections / 90+ implementation tasks |
-| `specs/spatial-lazy-load/spec.md` | New capability — 11 normative Requirements + many Scenarios |
+| `design.md` | How — 14 design decisions, risks, migration plan, open questions |
+| `tasks.md` | 16 sections / 109 implementation and follow-up tasks |
+| `specs/spatial-lazy-load/spec.md` | New capability — 13 normative Requirements + many Scenarios |
 | `specs/runtime-capabilities/spec.md` | Delta to existing capability — 2 MODIFIED + 1 ADDED |
 
 `openspec validate lazy-load-spatial-runtime --strict` passes.
 
-## The 11 Requirements at a glance
+## The 13 Requirements at a glance
 
 | # | Requirement | Scenarios | Anchor concern |
 | --- | --- | --- | --- |
@@ -33,11 +34,13 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 | 4 | `bootSpatial` is the only activation path | 13 | Single API; idempotent; retry-on-demand; multi-listener `onSpatialLoadError`; `WebSpatialBootError` shape; multi-root sharing; StrictMode safe; dev-mode warning differential (warn in WebSpatial when boot forgotten; silent in plain web) |
 | 5 | Component facades | 8 | Per-component default fallback table (normative); `'use client'`; `displayName`; no `React.memo`; HOC cache identity |
 | 6 | Hook placeholders | 7 | Public surface = only `useMetrics` (1/1360 ratio); no mid-life switch; remount picks up real impl |
-| 7 | JSX runtime strips spatial markers and wraps with facade HOCs | 8 | Single unified runtime; strip + wrap; `Model` bypass; clone `props.style`; `className` only (not `class`); SSR equivalence |
+| 7 | JSX runtime strips spatial markers and wraps with facade HOCs | 8 | Single unified runtime; strip + wrap when callable; RSC Client Reference strip-only caveat; `Model` bypass; clone `props.style`; `className` only (not `class`); SSR-safe output |
 | 8 | SSR and hydration safety | 7 | Any React 18+ SSR API; `'use client'` on facades; `useSyncExternalStore` for hydration; both boot timings safe |
 | 9 | Plugin-free integration | 11 | Capability contract (ESM + `exports` + code-splitting); React **hard peer** ≥ 18.0 (`optional: false`); React-less use NOT a v1 contract; bundler-without-splitting still functions; legacy `/web` `/default` subpaths removed; spatial container internals removal; `createElement` deprecation; out-of-scope: Module Federation, Turbopack, Webpack 4, CommonJS |
 | 10 | Stateless utility APIs and pure re-exports remain in the default entry | 5 | Group B (session-aware utilities, gracefully degrade via core-sdk) + Group C (pure constants, type re-exports, React Context) live in default entry, are independent of the spatial chunk |
 | 11 | Tree-shake friendliness | 5 | `package.json` `"sideEffects": false`; no **observable** top-level side effects (module-private pure init like `forwardRef` / `new Map` / `createContext` explicitly permitted); named re-exports preferred; fixture asserts named-import is materially smaller than namespace import |
+| 12 | Eager-mode entry for spatial-only consumers | 9 | `@webspatial/react-sdk/eager`; statically linked spatial implementation; no-op `bootSpatial`; readiness always true; own 30KB proxy budget; import-root-only migration; mixed imports unsupported |
+| 13 | Two distribution forms share packaging hygiene | 2 | Lazy and eager entries both retain ESM-only, hard React peers, tree-shake hygiene, type-only erasure, plugin-free integration, SSR/RSC safety, and shared stateless utilities |
 
 Plus an updated `runtime-capabilities` MODIFIED delta: the "Unsupported behavior contracts" Requirement now states hooks/utility functions MUST gracefully degrade (not throw) — replaces the prior contradictory "MUST throw" scenario for `useMetrics` and `convertCoordinate`.
 
@@ -83,7 +86,7 @@ SpatializedStatic3DElementContainer, SpatialMonitor
 
 | Group | API | Lazy-load treatment | Pinned by |
 | --- | --- | --- | --- |
-| **A** (lazy-loaded) | `Model`, `Reality`, `*Entity`, materials/assets, `SceneGraph`, HOCs | Facade pattern (default entry) + real impl in spatial chunk | "Component facades" |
+| **A** (lazy-loaded) | `Model`, `Reality`, `*Entity`, materials/assets, `SceneGraph`, JSX-marker internal HOC wrappers | Facade pattern (default entry) + real impl in spatial chunk | "Component facades" |
 | **A** | `useMetrics` | Placeholder + per-instance selector | "Hook placeholders" + `runtime-capabilities` MODIFIED |
 | **A** | `createElement` (JSX runtime) | Single unified runtime; strip + facade-HOC wrap | "JSX runtime strips spatial markers and wraps with facade HOCs" |
 | **B** (session-aware) | `initScene` | Wraps `core-sdk getSession()`; gracefully degrades | "Stateless utility APIs and pure re-exports" |
@@ -101,7 +104,7 @@ SpatializedStatic3DElementContainer, SpatialMonitor
 | `Reality` | `<div aria-hidden="true" ref>` placeholder; children NOT mounted |
 | `Entity`, `*Entity` family, `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset` | `null` |
 | `SceneGraph` / `World` alias | `<>{children}</>` (transparent) |
-| HOC wrappers | `<Comp/El {...passthrough} ref />` (transparent passthrough) |
+| Internal HOC wrappers (JSX runtime only) | `<Comp/El {...passthrough} ref />` (transparent passthrough) |
 
 ## Two-scenario behavior contract audit
 
@@ -178,9 +181,9 @@ Reviewers, please confirm or push back on these BREAKING decisions:
 ## Recommended review path
 
 1. Skim **`proposal.md`** (~50 lines) for "Why" and "What Changes" first.
-2. Read **`spec.md`** Requirements 4 → 5 → 6 → 7 → 8 → 9 in that order — these are where the contract gets specific. Requirements 1, 2, 3 are short and sit above; Requirement 11 (Tree-shake friendliness) is a small but normative addition behind Requirement 1.
-3. Skim **`design.md`** decisions 1–13 — each decision points back at the relevant spec Requirement. Decision 13 (Size budget framing) explains the marginal-delta vs proxy split.
-4. Skim **`tasks.md`** §1–§15 to gauge implementation scope. §9 is size-budget enforcement (proxy + marginal-delta fixture + sideEffects + tree-shake check), §12.9 is the pre-v1 budget calibration follow-up, §13 is SSR validation, §14 is stateless-utility validation, §15 is the new facade ↔ real-impl unsupported parity validation.
+2. Read **`spec.md`** Requirements 4 → 5 → 6 → 7 → 8 → 9 in that order — these are where the contract gets specific for lazy-load. Requirements 12 → 13 cover the eager entry and shared packaging hygiene. Requirements 1, 2, 3 are short and sit above; Requirement 11 (Tree-shake friendliness) is a small but normative addition behind Requirement 1.
+3. Skim **`design.md`** decisions 1–14 — each decision points back at the relevant spec Requirement. Decision 13 (Size budget framing) explains the marginal-delta vs proxy split; Decision 14 covers the eager entry and shared distribution hygiene.
+4. Skim **`tasks.md`** §1–§16 to gauge implementation scope. §9 is size-budget enforcement (proxy + marginal-delta fixture + sideEffects + tree-shake check), §12.9 is the pre-v1 budget calibration follow-up, §13 is SSR validation, §14 is stateless-utility validation, §15 is the facade ↔ real-impl unsupported parity validation, and §16 tracks the eager-mode entry.
 5. Optionally read **`specs/runtime-capabilities/spec.md`** delta if you maintain `runtime-capabilities`.
 
 ## Validate locally
@@ -199,7 +202,7 @@ The PR was incrementally refined through multiple design-decision passes plus co
 
 ## Implementation roadmap
 
-**No source code is touched in this PR.** Once this spec is ratified and merged to `main`, implementation should land via **6 sequential PRs + 1 follow-up wave**, each branched off `main`. Tasks are pinned in `tasks.md`; this section is the suggested PR boundary so reviewers do not face a 2000-LOC BREAKING switchover in a single diff.
+This roadmap is historical guidance from the spec-only phase. The active branch has already implemented the foundation, facades/hooks, JSX runtime, default-entry switchover, build/size work, validation/docs, and the code/test portions of the eager entry. Remaining work is tracked directly in `tasks.md`: cross-repo plugin follow-ups (§11), in-house app / framework follow-ups (§12.1–§12.8), and eager documentation / final verification (§16.10–§16.13).
 
 ### PR boundary
 
