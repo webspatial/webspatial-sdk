@@ -10,7 +10,7 @@ Throughout this spec, **"WebSpatial runtime"** means a runtime classified by the
 
 The published default entry of `@webspatial/react-sdk` MUST contain only:
 
-- Lightweight facades for every public spatial component / HOC (per "Component facades")
+- Lightweight facades for every public spatial component, plus internal HOC wrapper facades used by the SDK's JSX runtime (per "Component facades")
 - Hook placeholders for every public spatial hook (per "Hook placeholders")
 - The runtime bridge, the boot helper, and the public readiness API (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`)
 - The unified JSX runtime (per "JSX runtime strips spatial markers and wraps with facade HOCs")
@@ -19,7 +19,7 @@ The published default entry of `@webspatial/react-sdk` MUST contain only:
 
 It MUST NOT contain any spatial implementation modules (containers, monitors, reality, entities, real `Model`, real reality hooks).
 
-The default entry MUST also contain the **complete** web-mode rendering for every public facade — every per-component default fallback specified in "Component facades" — so that rendering any facade in a non-WebSpatial browser succeeds without loading additional modules over the network.
+The default entry MUST also contain the **complete** web-mode rendering for every public component facade and internal HOC wrapper facade — every per-component default fallback specified in "Component facades" — so that rendering any facade in a non-WebSpatial browser succeeds without loading additional modules over the network.
 
 **Size budget framing**: the **product-level contract** is that adding `@webspatial/react-sdk` (and its peer `@webspatial/core-sdk`) to a downstream application following the SDK's recommended web-first integration pattern MUST NOT increase the application's gzipped bundle size by more than **8 KB** compared to the same application without the SDK. The "recommended integration pattern" is named-import of the spatial primitives the application actually uses (e.g. `import { Model, bootSpatial } from '@webspatial/react-sdk'`), NOT namespace import (`import * as W from ...`) or side-effect import. The marginal-delta contract is the user-facing measurement; an additional SDK-side proxy on `dist/index.js` size keeps the SDK build pipeline honest. Worst-case namespace / full-barrel imports MAY exceed the budget; that is informational, not a contract violation.
 
@@ -52,7 +52,7 @@ The default entry MUST also contain the **complete** web-mode rendering for ever
 #### Scenario: Default entry contains complete fallback rendering for every facade
 
 - **WHEN** the published `dist/index.js` is loaded
-- **THEN** it MUST contain the rendering logic for every public facade's documented default fallback (Model degraded `<model>` tag, Reality placeholder `<div aria-hidden>`, entity / material / asset `null` rendering, HOC pass-through wrappers, and any other per-component default fallback listed in "Component facades")
+- **THEN** it MUST contain the rendering logic for every public facade's documented default fallback (Model degraded `<model>` tag, Reality placeholder `<div aria-hidden>`, entity / material / asset `null` rendering, internal HOC pass-through wrappers used by the JSX runtime, and any other per-component default fallback listed in "Component facades")
 - **AND** rendering any facade in a non-WebSpatial browser MUST NOT require any additional module to be loaded over the network
 
 ---
@@ -219,13 +219,13 @@ Recommended integration pattern (non-normative): applications SHOULD `await boot
 
 ### Requirement: Component facades
 
-For every spatial React component or HOC publicly exported by `@webspatial/react-sdk`, the default entry MUST provide a facade with the same TypeScript signature. Facades MUST delegate to the real implementation via the bridge when `isSpatialReady()` is `true`, and MUST render the documented per-component default fallback otherwise.
+For every spatial React component publicly exported by `@webspatial/react-sdk`, the default entry MUST provide a facade with the same TypeScript signature. The SDK also maintains internal HOC wrapper facades (`withSpatialized2DElementContainer`, `withSpatialMonitor`) for the JSX-runtime marker path; those factories are not documented public default-entry exports after the `internalize-hoc-factories` change. Facades MUST delegate to the real implementation via the bridge when `isSpatialReady()` is `true`, and MUST render the documented per-component default fallback otherwise.
 
 Facades MUST NOT accept a generic `fallback` prop in v1; per-component default fallbacks are fixed by this Requirement and customization is the application's responsibility (using `useSpatialReady()` to write a wrapper component is the recommended pattern).
 
 Facade implementations MUST be self-contained within the default entry: they MUST NOT statically or dynamically import from `@webspatial/react-sdk/spatial`, MUST NOT call into runtime APIs that exist only in the spatial chunk, and MUST NOT instantiate `@webspatial/core-sdk` runtime classes during fallback rendering. The complete web-mode rendering for every facade MUST be reachable purely through the default entry's static module graph.
 
-Facade `displayName` MUST match the public component name (`Model`, `Reality`, `BoxEntity`, etc.). HOC wrapper facades MUST follow the existing `WithSpatialized2DElementContainer(<inner>)` / `WithSpatialMonitor(<inner>)` naming convention. Facades MUST NOT be wrapped in `React.memo` (props-identity comparison semantics are the real implementation's choice; the facade does not impose memoization).
+Facade `displayName` MUST match the public component name (`Model`, `Reality`, `BoxEntity`, etc.). Internal HOC wrapper facades MUST follow the existing `WithSpatialized2DElementContainer(<inner>)` / `WithSpatialMonitor(<inner>)` naming convention. Facades MUST NOT be wrapped in `React.memo` (props-identity comparison semantics are the real implementation's choice; the facade does not impose memoization).
 
 Additional file-level constraints on facade modules (the `'use client'` directive in particular) are pinned by the "SSR and hydration safety" Requirement.
 
@@ -296,7 +296,7 @@ Additional file-level constraints on facade modules (the `'use client'` directiv
 
 - **WHEN** a facade is inspected via React DevTools or `Component.displayName`
 - **THEN** its `displayName` MUST equal the public exported name (e.g. `Model`, `Reality`, `BoxEntity`)
-- **AND** HOC wrapper facades produced by `withSpatialized2DElementContainer(Comp)` / `withSpatialMonitor(Comp)` MUST follow the existing `WithSpatialized2DElementContainer(<inner>)` / `WithSpatialMonitor(<inner>)` naming convention
+- **AND** internal HOC wrapper facades produced by `withSpatialized2DElementContainer(Comp)` / `withSpatialMonitor(Comp)` MUST follow the existing `WithSpatialized2DElementContainer(<inner>)` / `WithSpatialMonitor(<inner>)` naming convention
 
 ---
 
@@ -372,11 +372,13 @@ For each call:
 
 1. **Strip** the WebSpatial-only markers from props before delegating to React's JSX runtime: the `enable-xr` prop, the `enable-xr-monitor` prop, the `enableXr` key inside `props.style`, and the `__enableXr__` token inside `props.className`.
 
-2. **Wrap** the element type with the corresponding **facade HOC** from the default entry when a marker is present:
+2. **Wrap** the element type with the corresponding **facade HOC** from the SDK-internal `@webspatial/react-sdk/internal/facades-client` boundary when a marker is present and the facade HOC is callable:
    - `enable-xr` / `style.enableXr` / `__enableXr__` → `withSpatialized2DElementContainer(type)`
    - `enable-xr-monitor` → `withSpatialMonitor(type)`
 
    The facade HOCs (defined by "Component facades") decide at render time whether to render the per-component fallback (web) or the real spatialized container (spatial runtime). The JSX runtime MUST NOT statically or dynamically import from `@webspatial/react-sdk/spatial`; it relies entirely on the facade indirection for spatial behavior.
+
+   **RSC Client Reference caveat**: `jsx-runtime` / `jsx-dev-runtime` themselves MUST remain server-callable. In React Server Components server bundles, the internal `facades-client` boundary may resolve `Model`, `withSpatialized2DElementContainer`, and `withSpatialMonitor` to Client References (opaque objects) rather than callable functions. In that environment the JSX runtime MUST strip markers but MUST NOT attempt to invoke the Client References; it MAY leave the element type unwrapped because the internal HOC fallback is transparent and therefore produces the same server HTML that the wrapped client fallback would hydrate. In client bundles and SSR environments where the internal facade HOCs are callable functions, the full strip + wrap path MUST run.
 
 3. When `type === Model` (the public `Model` facade), the JSX runtime MUST NOT wrap or strip — `Model` handles its own runtime branching internally. This preserves today's AVP behavior.
 
@@ -388,13 +390,15 @@ For each call:
 
 - **WHEN** an element is created with the `enable-xr` prop
 - **THEN** the prop MUST be removed from props before delegating to React
-- **AND** the element type passed to React MUST be `withSpatialized2DElementContainer(type)` (the facade HOC version)
+- **AND** when the internal facade HOC is callable, the element type passed to React MUST be `withSpatialized2DElementContainer(type)` (the facade HOC version)
+- **AND** when an RSC server bundle resolves the facade HOC to a Client Reference, the runtime MUST NOT call it and MAY pass the original element type after stripping the prop
 
 #### Scenario: enable-xr-monitor triggers monitor facade wrap and prop is stripped
 
 - **WHEN** an element is created with the `enable-xr-monitor` prop
 - **THEN** the prop MUST be removed from props before delegating to React
-- **AND** the element type passed to React MUST be `withSpatialMonitor(type)` (the facade HOC version)
+- **AND** when the internal facade HOC is callable, the element type passed to React MUST be `withSpatialMonitor(type)` (the facade HOC version)
+- **AND** when an RSC server bundle resolves the facade HOC to a Client Reference, the runtime MUST NOT call it and MAY pass the original element type after stripping the prop
 
 #### Scenario: enableXr style key triggers wrap and is stripped without mutating the user style object
 
@@ -402,14 +406,16 @@ For each call:
 - **THEN** the runtime MUST produce a new style object (e.g. via shallow spread / object-rest destructuring) that omits the `enableXr` key, and MUST reassign `props.style` to that new object
 - **AND** the new style object MUST NOT contain the `enableXr` key
 - **AND** the original `someStyleRef` MUST be unchanged after the JSX call (no `enableXr` deletion, no key reorder); this MUST hold even when `someStyleRef` is `Object.freeze`d
-- **AND** the element type passed to React MUST be `withSpatialized2DElementContainer(type)`
+- **AND** when the internal facade HOC is callable, the element type passed to React MUST be `withSpatialized2DElementContainer(type)`
+- **AND** when an RSC server bundle resolves the facade HOC to a Client Reference, the runtime MUST NOT call it and MAY pass the original element type after stripping the style key
 
 #### Scenario: __enableXr__ class token triggers wrap and is stripped from className
 
 - **WHEN** an element is created with a `className` string containing the `__enableXr__` token (whitespace-delimited)
 - **THEN** the token MUST be removed from the className string before delegating to React
 - **AND** the remaining class tokens MUST preserve original ordering and whitespace handling
-- **AND** the element type passed to React MUST be `withSpatialized2DElementContainer(type)`
+- **AND** when the internal facade HOC is callable, the element type passed to React MUST be `withSpatialized2DElementContainer(type)`
+- **AND** when an RSC server bundle resolves the facade HOC to a Client Reference, the runtime MUST NOT call it and MAY pass the original element type after stripping the class token
 
 #### Scenario: HTML class attribute is not recognized as a marker source
 
@@ -430,13 +436,16 @@ For each call:
 - **THEN** the JSX runtime MUST forward props to React's JSX runtime without modification
 - **AND** it MUST NOT clone `props.style`, MUST NOT split `className`, MUST NOT reassign any prop
 
-#### Scenario: SSR strips and wraps identically to client-side rendering
+#### Scenario: SSR strips markers and preserves hydration-safe output
 
 - **WHEN** the JSX runtime is invoked during server-side rendering (e.g. `renderToString`, `renderToPipeableStream`, RSC)
-- **THEN** the same strip + wrap rules MUST apply
+- **THEN** the same marker-strip rules MUST apply
+- **AND** when the internal facade HOCs resolve to callable functions, the same wrap rules MUST apply
+- **AND** when an RSC server bundle resolves the internal facade HOCs to Client References, the runtime MUST NOT call them and MAY leave marked elements unwrapped after stripping
 - **AND** the resulting server-rendered HTML MUST NOT contain the `enable-xr` attribute, the `enable-xr-monitor` attribute, the `enableXr` style key, or the `__enableXr__` class token
 - **AND** subsequent client-side hydration MUST NOT report a hydration mismatch caused by these markers
-- **AND** because `useSpatialReady()` returns `false` during SSR (per "Bridge singleton"), the wrapped facade HOC MUST render its documented fallback during SSR — not the real spatialized container
+- **AND** because `useSpatialReady()` returns `false` during SSR (per "Bridge singleton"), any wrapped facade HOC MUST render its documented fallback during SSR — not the real spatialized container
+- **AND** client bundles MUST restore the full strip + wrap path once the internal facade HOCs are callable functions
 
 ---
 
@@ -519,7 +528,7 @@ Applications MUST be able to use `@webspatial/react-sdk` without any build plugi
 **Bundler capability requirements** — the consuming bundler MUST support all three of:
 
 1. **ECMAScript modules**: the package is published as ESM (`"type": "module"`); CommonJS `require()` is not supported.
-2. **`exports` package.json field**: subpath resolution for `'.'`, `./jsx-runtime`, `./jsx-dev-runtime`, and `./spatial`.
+2. **`exports` package.json field**: subpath resolution for `'.'`, `./eager`, `./jsx-runtime`, `./jsx-dev-runtime`, `./spatial`, and the SDK-internal `./internal/facades-client` boundary reached by the JSX runtime.
 3. **Dynamic `import()` with code-splitting**: when the bridge invokes `import('@webspatial/react-sdk/spatial')`, the bundler MUST emit the spatial chunk as a separate output that is fetched on demand. Bundlers without code-splitting (e.g. bare esbuild without `splitting: true`) will inline the chunk into the main bundle; the SDK still functions correctly but the size-budget benefit defined by "Default entry MUST NOT bundle spatial implementation" is lost on the consumer side.
 
 Bundlers and frameworks that satisfy all three capabilities form the **non-normative tested-targets list** (maintained in the migration guide, not in this spec): Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1, esbuild ≥ 0.18 with `splitting: true`. Next.js App Router (Webpack mode) and Next.js Pages Router are the canonical tested framework targets.
@@ -749,7 +758,7 @@ The eager entry MUST re-export the same TypeScript surface as the default entry 
 
 Within that named-export set:
 
-- **Spatial primitives** (the facade names — `Model`, `Reality`, `Entity`, `BoxEntity` family, materials / assets, `SceneGraph` / `World`, the HOC wrappers, `useMetrics`) MUST resolve to the **real spatial implementations** loaded statically from `@webspatial/react-sdk/spatial`, not to facade fallbacks.
+- **Spatial primitives** (the facade names — `Model`, `Reality`, `Entity`, `BoxEntity` family, materials / assets, `SceneGraph` / `World`, and `useMetrics`) MUST resolve to the **real spatial implementations** loaded statically from `@webspatial/react-sdk/spatial`, not to facade fallbacks. Factory-style HOCs remain internal-only after the `internalize-hoc-factories` change; the public marker path is `enable-xr` / `enable-xr-monitor`, and the eager entry preloads the bridge so JSX-runtime marker wrappers reached through `@webspatial/react-sdk/internal/facades-client` render real implementations on first client render.
 - **Stateless utilities** (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry": `enableDebugTool`, `convertCoordinate`, `initScene`, `WebSpatialRuntime`, `WebSpatialRuntimeError`, `SSRProvider`, `version`, `createElement` (`@deprecated` per "createElement export is deprecated"), type-only re-exports including the core-sdk type re-exports) MUST be the same module-level references the default entry exposes (re-export, not redeclare). This guarantees behavior parity and allows shared code paths. The `@deprecated` `createElement` export MUST carry its JSDoc on the eager-entry surface too — re-export via `from './index'` preserves the annotation automatically.
 - **Lazy-load runtime API** (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`) MUST be exposed as **compatibility stubs** so that consumer code written against the default entry still type-checks and runs unchanged when its import root switches to the eager entry. The stub semantics are pinned by the Scenarios below.
 
@@ -832,7 +841,7 @@ The packaging-hygiene contracts that apply to both forms are:
 - **Tree-shake friendliness** (the entire "Tree-shake friendliness" Requirement): `"sideEffects"` allowlist correctness, no top-level observable side effects in any module reachable from any published entry, named re-export discipline. The SDK's `package.json` `"sideEffects"` field MUST be precise enough that consumer bundlers can tree-shake unreached code from BOTH the default entry's static graph AND the eager entry's static graph.
 - **Plugin-free integration** (the entire "Plugin-free integration" Requirement): both forms MUST work without `@webspatial/vite-plugin` or any peer plugin. Both forms MUST be ESM-only. The bundler-capability requirements (ESM, `exports` field, dynamic-import code-splitting) apply to both, though the eager entry does NOT require code-splitting (it has no dynamic `import()` boundary). The peer-dependency contract (`react: ">=18.0"`, `react-dom: ">=18.0"`, both required and not optional) applies to both.
 - **Stateless utility APIs and pure re-exports** (the entire "Stateless utility APIs and pure re-exports remain in the default entry" Requirement): both forms MUST expose the same Group B + Group C surface, with the same SSR-safety, side-effect-free, and runtime-graceful-degradation guarantees. The eager entry SHOULD re-export these by reference from the default entry rather than redeclare, to keep the contracts byte-identical.
-- **JSX runtime** (the entire "JSX runtime strips spatial markers and wraps with facade HOCs" Requirement): the unified `./jsx-runtime` and `./jsx-dev-runtime` subpaths MUST work with both consumer entries unchanged. The runtime's strip + facade-HOC-wrap behavior MUST NOT depend on which entry the consumer's `<Model>` / `<div enable-xr>` references resolve to. (In the eager entry the wrapped facade HOC's first render commits the real implementation directly; in the lazy entry it commits the fallback first.)
+- **JSX runtime** (the entire "JSX runtime strips spatial markers and wraps with facade HOCs" Requirement): the unified `./jsx-runtime` and `./jsx-dev-runtime` subpaths, plus the internal `./internal/facades-client` boundary they use, MUST work with both consumer entries unchanged. The runtime's strip + facade-HOC-wrap behavior MUST NOT depend on which entry the consumer's `<Model>` / `<div enable-xr>` references resolve to. (In the eager entry the wrapped facade HOC's first client render commits the real implementation directly; in the lazy entry it commits the fallback first.)
 - **SSR and hydration safety** (the entire "SSR and hydration safety" Requirement, with the modification that the eager entry's `useSpatialReady()` returns `true` consistently): both forms MUST honor the `'use client'` directive on hook-using files, MUST be safe under React 18+ SSR APIs (`renderToString`, `renderToPipeableStream`, `renderToReadableStream`, RSC client-component import), and MUST NOT cause hydration mismatches when their props are deterministic across server and client.
 - **Type-only re-exports vanish at runtime** (per the corresponding Scenario inside "Stateless utility APIs and pure re-exports remain in the default entry"): both forms MUST emit zero runtime bytes for type-only re-exports.
 
