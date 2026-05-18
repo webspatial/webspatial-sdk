@@ -29,6 +29,12 @@
       "@webspatial/react-sdk/jsx-dev-runtime": [
         "../../packages/react/src/jsx/jsx-dev-runtime.ts"
       ],
+      "@webspatial/react-sdk/internal/facades-client": [
+        "../../packages/react/src/internal/facades-client.ts"
+      ],
+      "@webspatial/react-sdk/server": [
+        "../../packages/react/src/server/index.ts"
+      ],
       "web-spatial": ["../npmLib/src"]
     }
   },
