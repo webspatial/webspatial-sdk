@@ -40,10 +40,10 @@ Every facade in the default entry has a documented fallback rendered in plain we
 | `Entity` / `Box` / `Sphere` / `Cone` / `Cylinder` / `Plane` / `*Entity` family | `null` (children NOT mounted) |
 | `Material` / `Texture` / `ModelAsset` / `AttachmentAsset` / `UnlitMaterial` | `null` |
 | `SceneGraph` / `World` | `<>{children}</>` (transparent — children render through their own facades) |
-| `withSpatialized2DElementContainer(Comp)` HOC | `<Comp {...passthroughProps} ref={ref} />` (transparent passthrough; spatial-only events stripped) |
-| `withSpatialMonitor(Comp)` HOC | `<Comp {...passthroughProps} ref={ref} />` (transparent passthrough) |
 
 The full normative table lives in [`openspec/specs/spatial-lazy-load/spec.md`](../../openspec/specs/spatial-lazy-load/spec.md) — search for "Component facades" and "Hook placeholders".
+
+> The factory HOCs `withSpatialized2DElementContainer` and `withSpatialMonitor` are **internal-only** in v2 — the documented public mechanism for wrapping intrinsic elements is the `enable-xr` / `enable-xr-monitor` JSX marker (see "JSX markers" below). For the rare case where you need a wrapped component as a value (e.g. to compose with another HOC like react-spring's `animated(...)`), use the recipe in "Advanced: composing with third-party HOCs" further down.
 
 ### Custom wrappers (escape hatch)
 
@@ -64,6 +64,33 @@ function MyModelOrSkeleton(props: ComponentProps<typeof Model>) {
 ```
 
 `useSpatialReady()` is hydration-safe (`useSyncExternalStore` with a stable server snapshot), so this pattern works in CSR, SSR, and React Server Components alike.
+
+### Advanced: composing with third-party HOCs
+
+The JSX marker `<div enable-xr>` covers ~all consumer needs, but it produces a JSX element at the call site — not a *component type* you can pass to a third-party HOC like `animated(...)`, `motion(...)`, or `styled(...)`. Wrap your own `forwardRef` shim around the marker and pass *that* to the third-party HOC:
+
+```tsx
+import { forwardRef } from 'react'
+import { animated, useSpring } from '@react-spring/web'
+
+// `tsconfig.json` MUST set `"jsxImportSource": "@webspatial/react-sdk"` for
+// `enable-xr` to compile into the real spatial wrapper.
+const SpatialDiv = forwardRef<HTMLDivElement, React.ComponentPropsWithRef<'div'>>(
+  function SpatialDiv(props, ref) {
+    return <div enable-xr ref={ref} {...props} />
+  },
+)
+SpatialDiv.displayName = 'SpatialDiv'
+
+const AnimatedDiv = animated(SpatialDiv)
+
+export function MyPanel() {
+  const [style] = useSpring(() => ({ '--xr-back': '40' }))
+  return <AnimatedDiv style={style} className="my-panel" />
+}
+```
+
+Why a shim is required: the spatial wrapping logic lives in the SDK's JSX runtime (resolved via `tsconfig.jsxImportSource`), so it only fires when the JSX *call site* is parsed by your bundler. A `forwardRef` shim moves that call site into a component module the bundler compiles, then exposes the resulting component as a stable value for the third-party HOC.
 
 ### React 18+ peer dependency
 

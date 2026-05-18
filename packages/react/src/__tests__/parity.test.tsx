@@ -263,7 +263,13 @@ describe('Parity gaps tracked under spec tasks.md §15.8 (OpenSpec follow-up)', 
     'SceneGraph / World parity — Path 2 unpinned in `runtime-capabilities`; needs spec amendment under §15.8',
   )
 
-  it.todo(
-    'withSpatialized2DElementContainer / withSpatialMonitor HOC parity — Path 2 unpinned in `runtime-capabilities`; needs spec amendment under §15.8',
-  )
+  // `withSpatialized2DElementContainer` / `withSpatialMonitor` USED to have
+  // a §15.8 parity gap (Path 2 unpinned in `runtime-capabilities`). Both
+  // HOC factories were demoted to internal-only in the
+  // `internalize-hoc-factories` change, so the parity contract no longer
+  // applies — they are no longer public APIs that the SDK promises a
+  // documented unsupported-branch contract for. The JSX runtime still
+  // reaches them via `src/internal/facades-client.ts`; the parity of the
+  // resulting JSX output for `<div enable-xr>` is covered by the
+  // `jsx-shared.test.tsx` "JSX call sites" suite.
 })
