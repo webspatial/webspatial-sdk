@@ -12,10 +12,7 @@ import {
   __setSpatialImplLoaderForTests,
   type SpatialImplementation,
 } from './bridge'
-import {
-  __resetBootStateForTests,
-  hasBootSpatialBeenCalled,
-} from './boot'
+import { __resetBootStateForTests, hasBootSpatialBeenCalled } from './boot'
 import { SpatialBoot } from './SpatialBoot'
 import { WebSpatialBootError } from './errors'
 import { useBootSpatial } from './useBootSpatial'
@@ -144,7 +141,10 @@ describe('useBootSpatial / SpatialBoot', () => {
     __setSpatialImplLoaderForTests(() => Promise.reject(new Error('fail')))
 
     const view = render(
-      <SpatialBoot gate fallback={<span data-testid="loading-fail">loading</span>}>
+      <SpatialBoot
+        gate
+        fallback={<span data-testid="loading-fail">loading</span>}
+      >
         <span data-testid="child-fail">child</span>
       </SpatialBoot>,
     )
