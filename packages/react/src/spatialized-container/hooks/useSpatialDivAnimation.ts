@@ -224,24 +224,14 @@ export function useSpatialDivAnimation(
         return
       }
 
-      // Cancel any existing session
+      // Per spec: play() while running/delaying/queued is a no-op.
+      // To restart, application code must explicitly cancel() first.
       if (
         currentSession &&
-        currentSession.state !== 'idle' &&
-        currentSession.state !== 'finished'
+        (currentSession.state === 'running' ||
+          currentSession.state === 'queued')
       ) {
-        const element = elementRef.current
-        if (element) {
-          try {
-            await element.animateSpatialDiv({
-              animationId: currentSession.animationId,
-              type: 'cancel',
-            })
-          } catch {}
-          element.cleanupSpatialDivAnimationListeners(
-            currentSession.animationId,
-          )
-        }
+        return
       }
 
       // Create new session
@@ -313,9 +303,13 @@ export function useSpatialDivAnimation(
 
       const element = elementRef.current
       if (!element) {
-        // Not yet bound; just reset
+        // Not yet bound (queued state); cancel the queued play and invoke onCancel
+        const canceledSession = session
+        session.state = 'idle'
         sessionRef.current = null
         forceUpdate()
+        // Per spec: cancel while queued MUST invoke onCancel with restored values
+        configRef.current.onCancel?.(canceledSession.config.from ?? {})
         return
       }
 
