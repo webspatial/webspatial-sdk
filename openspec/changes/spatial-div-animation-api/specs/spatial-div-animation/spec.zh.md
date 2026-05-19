@@ -198,13 +198,14 @@ SDK MUST 在校验时对以下范围抛错：
 - **GIVEN** `api.play()` 在元素绑定前已进入 queued 状态
 - **AND** 应用在排队期间调用了 `api.pause()`
 - **WHEN** 元素后续完成绑定，会话成功建立
-- **THEN** 会话的首态 MUST 为 paused
-- **AND** `onStart` MUST 为该会话调用一次
+- **THEN** 会话 MUST 保持 `paused`
 - **AND** `api.isPaused` MUST 为 `true`
+- **AND** `onStart` MUST 等到应用稍后调用 `api.play()` 且 native 会话成功建立后才触发
+- **AND** 该次稍后的 `api.play()` MUST 复用已有 pending session，且 MUST NOT 生成新的 `animationId`
 
 #### Scenario: Start 回调
 
-- **WHEN** `api.play()` 请求的动画会话成功建立，其首态为 delaying、running 或因 queued pause 导致的 paused
+- **WHEN** `api.play()` 请求的动画会话成功建立，其首态为 `delaying` 或 `running`
 - **THEN** `onStart` MUST 为该会话调用一次
 - **AND** 若请求仍处于 queued 状态（元素尚未绑定），`onStart` MUST NOT 提前触发
 - **AND** 若请求在会话建立前失败，`onStart` MUST NOT 触发

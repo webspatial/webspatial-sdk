@@ -94,7 +94,7 @@ interface SpatialDivAnimationConfig {
    */
   playbackRate?: number
 
-  /** Called when the session is successfully established. First state can be delaying, running, or paused due to queued pause. */
+  /** Called when the session is successfully established with first state delaying or running. */
   onStart?: () => void
 
   /** Called when a non-looping animation finishes naturally. Receives native final values. */
