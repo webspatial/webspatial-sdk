@@ -131,5 +131,5 @@
   - **Depends on** 2.3, 2.5, 4.3, and 4.4
 - [x] 5.6 Add state machine tests covering `isAnimating` / `isPaused` values across idle / queued / delaying / running / paused, and that they become false before callbacks after stop/completion.
   - **Depends on** 3.1
-- [ ] 5.7 Update `docs/` and `apps/test-server` examples demonstrating the `SpatialDiv` animation API (entrance fade/translate/scale, manual rotation, looping float), visual whitelist fields, capability checks, and known limitations.
+- [x] 5.7 Update `docs/` and `apps/test-server` examples demonstrating the `SpatialDiv` animation API (entrance fade/translate/scale, manual rotation, looping float), visual whitelist fields, capability checks, and known limitations.
   - **Depends on** 5.3 (core behavior verification)
