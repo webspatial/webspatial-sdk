@@ -97,7 +97,7 @@ SDK MUST 在校验时对以下范围抛错：
 
 | 字段 | 合法范围 | 说明 |
 |---|---|---|
-| `duration` | `> 0`，有限值 | `0`、负数、`NaN`、`Infinity` MUST 被拒绝。默认值：`0.3` |
+| `duration` | `> 0`，有限值 | `0`、负数、`NaN`、`Infinity` MUST 被拒绝 |
 | `delay` | `>= 0`，有限值 | 负数、`NaN`、`Infinity` MUST 被拒绝 |
 | `timingFunction` | `'linear'`、`'easeIn'`、`'easeOut'`、`'easeInOut'` 之一 | 其他字符串 MUST 被拒绝 |
 | `loop` | `true`、`false`、`undefined`、`{ reverse?: boolean }` | 其他结构 MUST 被拒绝 |
