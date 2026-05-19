@@ -12,6 +12,40 @@ export const btnCls =
 export const btnPrimary =
   'select-none px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 transition-colors'
 
+/** Format a possibly-undefined number with fixed precision. */
+export function fmtNum(n: number | undefined, digits = 2): string {
+  return typeof n === 'number' && Number.isFinite(n) ? n.toFixed(digits) : '-'
+}
+
+/** Pretty-print whitelisted SpatialDiv animated values for log lines. */
+export function fmtValues(values: Record<string, unknown> | undefined): string {
+  if (!values) return '-'
+  const parts: string[] = []
+  const tx = values['transform.translate.x'] as number | undefined
+  const ty = values['transform.translate.y'] as number | undefined
+  const tz = values['transform.translate.z'] as number | undefined
+  if (tx !== undefined || ty !== undefined || tz !== undefined) {
+    parts.push(`t=(${fmtNum(tx, 1)}, ${fmtNum(ty, 1)}, ${fmtNum(tz, 1)})`)
+  }
+  const rx = values['transform.rotate.x'] as number | undefined
+  const ry = values['transform.rotate.y'] as number | undefined
+  const rz = values['transform.rotate.z'] as number | undefined
+  if (rx !== undefined || ry !== undefined || rz !== undefined) {
+    parts.push(`r=(${fmtNum(rx, 1)}, ${fmtNum(ry, 1)}, ${fmtNum(rz, 1)})`)
+  }
+  const sx = values['transform.scale.x'] as number | undefined
+  const sy = values['transform.scale.y'] as number | undefined
+  const sz = values['transform.scale.z'] as number | undefined
+  if (sx !== undefined || sy !== undefined || sz !== undefined) {
+    parts.push(`s=(${fmtNum(sx, 2)}, ${fmtNum(sy, 2)}, ${fmtNum(sz, 2)})`)
+  }
+  const opacity = values['opacity'] as number | undefined
+  if (opacity !== undefined) {
+    parts.push(`o=${fmtNum(opacity, 2)}`)
+  }
+  return parts.length ? parts.join(' ') : '-'
+}
+
 export function Log({ lines }: { lines: string[] }) {
   return (
     <div className="mt-3 max-h-40 overflow-y-auto rounded-lg bg-black/40 border border-gray-800 p-3 text-xs font-mono text-gray-400">
@@ -37,6 +71,25 @@ export function useLog() {
   )
   const clear = useCallback(() => setLines([]), [])
   return { lines, log, clear }
+}
+
+export function PlayStateBadge({ state }: { state: string }) {
+  const colors: Record<string, string> = {
+    idle: 'bg-gray-700 text-gray-300',
+    queued: 'bg-yellow-900 text-yellow-300',
+    running: 'bg-green-900 text-green-300',
+    paused: 'bg-orange-900 text-orange-300',
+    finished: 'bg-blue-900 text-blue-300',
+  }
+  return (
+    <span
+      className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${
+        colors[state] ?? 'bg-gray-700 text-gray-300'
+      }`}
+    >
+      {state}
+    </span>
+  )
 }
 
 export function SpatialDivAnimationPageShell({
