@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   bootSpatial,
   Model,
@@ -11,6 +11,11 @@ import {
  * Boot runs after mount (recommended “boot after hydrate” pattern).
  */
 export function LazySpatialDemo() {
+  const [spatialTapCount, setSpatialTapCount] = useState(0)
+  const onPanelSpatialTap = useCallback(() => {
+    setSpatialTapCount(c => c + 1)
+  }, [])
+
   const [bootState, setBootState] = useState<
     'idle' | 'booting' | 'ready' | 'failed'
   >('idle')
@@ -87,11 +92,14 @@ export function LazySpatialDemo() {
         >
           The JSX runtime strips <code>enable-xr</code> from the emitted DOM,
           wraps this host with the spatial 2D container in client bundles, and
-          keeps SSR/hydrate markup aligned with facade fallbacks.
+          keeps SSR/hydrate markup aligned with facade fallbacks.{' '}
+          <code>onSpatialTap</code> count: <strong>{spatialTapCount}</strong>{' '}
+          (WebSpatial runtime).
         </figcaption>
         <div
           enable-xr
           role="presentation"
+          onSpatialTap={onPanelSpatialTap}
           style={{
             '--xr-back': '40',
             '--xr-background-material': 'thin',
@@ -110,9 +118,13 @@ export function LazySpatialDemo() {
             letterSpacing: '0.02em',
             boxShadow:
               'inset 0 2px 4px rgb(15 23 42 / 0.06), 0 1px 0 rgb(255 255 255 / 0.85)',
+            ...(spatialTapCount > 0
+              ? { outline: '3px solid rgb(34 197 94 / 0.75)' }
+              : {}),
           }}
         >
           Spatial panel (plain web fallback)
+          {spatialTapCount > 0 ? ` — taps: ${spatialTapCount}` : ''}
         </div>
       </figure>
     </section>
