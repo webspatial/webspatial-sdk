@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react'
 import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
@@ -11,13 +12,18 @@ import {
 
 export default function TransformTranslatePage() {
   const { lines, log, clear } = useLog()
+  // State that triggers re-renders (used by suppression test)
+  const [borderHue, setBorderHue] = useState(0)
+  const suppressionTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  )
 
   const [animation, api] = useAnimation({
     from: {
       transform: { translate: { x: 0, y: 0, z: 0 } },
     },
     to: {
-      transform: { translate: { x: 0.2, y: 0.1, z: 0 } },
+      transform: { translate: { x: 100, y: 10, z: 0 } },
     },
     duration: 2.0,
     timingFunction: 'easeInOut',
@@ -38,14 +44,43 @@ export default function TransformTranslatePage() {
     log('restart: cancel() + play()')
   }
 
+  // Suppression test: plays animation + rapidly triggers re-renders via state
+  // changes. If transform suppression works, the animation should be smooth.
+  // If not, the element will jitter as updateTransform overwrites mid-frames.
+  const startSuppressionTest = () => {
+    ;(api as any).play()
+    log('suppression: started animation + re-render interference')
+
+    let tick = 0
+    suppressionTimerRef.current = setInterval(() => {
+      tick++
+      // Cycle border color to trigger React re-render → PortalInstanceContext sync
+      setBorderHue((tick * 37) % 360)
+      if (tick <= 5) {
+        log(
+          `suppression: re-render tick ${tick} (borderHue=${(tick * 37) % 360})`,
+        )
+      }
+      if (tick >= 20) {
+        if (suppressionTimerRef.current) {
+          clearInterval(suppressionTimerRef.current)
+          suppressionTimerRef.current = null
+        }
+        log('suppression: stopped interference (20 ticks)')
+      }
+    }, 100)
+  }
+
   return (
     <SpatialDivAnimationPageShell
       title="Transform Translate"
       description={
         <>
-          Translate (0,0,0)→(0.2,0.1,0) over 2s. The SpatialDiv moves in 3D
-          space: right (+X), up (+Y), and toward the user (-Z). Restart proves
-          play re-entry semantics.
+          Translate (0,0,0)→(0.1, 0.05, -0.08)m over 2s. The SpatialDiv moves in
+          3D space: right (+X), up (+Y), and toward the user (-Z) in meters.
+          Restart proves play re-entry semantics. The Suppression Test rapidly
+          re-renders the component during animation — if transform suppression
+          works, motion stays smooth.
         </>
       }
     >
@@ -61,6 +96,8 @@ export default function TransformTranslatePage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            // Border color driven by state — triggers re-render + native sync
+            border: `2px solid hsl(${borderHue}, 70%, 50%)`,
           }}
         >
           <span style={{ color: 'white', fontSize: 16 }}>Move Me</span>
@@ -82,6 +119,12 @@ export default function TransformTranslatePage() {
           <button className={btnCls} onClick={restart}>
             Restart (cancel + play)
           </button>
+          <button
+            className={btnCls + ' !bg-yellow-700 !text-white'}
+            onClick={startSuppressionTest}
+          >
+            Suppression Test
+          </button>
           <button className={btnCls} onClick={clear}>
             Clear Log
           </button>
@@ -95,6 +138,29 @@ export default function TransformTranslatePage() {
           </span>
         </div>
         <Log lines={lines} />
+
+        <div className="mt-4 rounded-lg border border-gray-800 bg-black/30 p-4 text-xs text-gray-500">
+          <h4 className="mb-2 font-medium text-gray-400">
+            How to verify transform suppression
+          </h4>
+          <ul className="list-disc space-y-1 pl-4">
+            <li>
+              <strong>Click "Suppression Test"</strong> — this plays the
+              translate animation while rapidly changing border color (triggers
+              React re-render every 100ms).
+            </li>
+            <li>
+              <strong>Expected (suppression works):</strong> element moves
+              smoothly from origin to (0.1, 0.05, -0.08)m despite re-renders.
+            </li>
+            <li>
+              <strong>Broken (no suppression):</strong> element jitters or snaps
+              back to origin each re-render because{' '}
+              <code>updateTransform(identityMatrix)</code> overwrites the
+              animation mid-state.
+            </li>
+          </ul>
+        </div>
       </section>
     </SpatialDivAnimationPageShell>
   )

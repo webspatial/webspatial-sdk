@@ -299,7 +299,10 @@ export class PortalInstanceObject {
     spatializedElement.updateProperties(properties)
 
     // update transform
-    spatializedElement.updateTransform(this.transformMatrix!)
+    // Suppress transform sync while animation controls it (spec §3.6)
+    if (!this.isFieldSuppressed('transform')) {
+      spatializedElement.updateTransform(this.transformMatrix!)
+    }
 
     // assign spatializedElement to dom
     Object.assign(this.dom, {
