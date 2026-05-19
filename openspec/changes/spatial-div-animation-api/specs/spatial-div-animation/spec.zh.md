@@ -283,28 +283,36 @@ SDK MUST 在校验时对以下范围抛错：
 - **THEN** 当前会话 MUST NOT 受 config 更新影响
 - **AND** 下一次 `api.play()` MUST 使用最新的 config
 
-#### Scenario: alive 会话存在时再次调用 play
+#### Scenario: 已建立 native 会话处于 paused 时调用 play
 
-- **GIVEN** 动画会话已处于 alive（queued、delaying、running 或 paused）
-- **WHEN** 应用再次调用 `api.play()`
-- **THEN** SDK MUST 先取消现有会话，再用当前 config 启动新会话
-- **AND** 前一个会话的 `onCancel` MUST 在新会话的 `onStart` 之前触发
-- **AND** 前一个会话的 `onCancel` 触发时 `api.isAnimating` MUST 为 `false`，新会话的 `onStart` 触发时 `api.isAnimating` MUST 为 `true`
+- **GIVEN** 一个动画会话处于 `paused` 状态
+- **AND** 其 native 会话已成功建立
+- **WHEN** 应用代码调用 `api.play()`
+- **THEN** SDK MUST 从暂停进度继续该同一会话，而不是启动新会话
+- **AND** SDK MUST NOT 生成新的 `animationId`
+- **AND** 该次 `play()` MUST NOT 再次触发 `onStart`
 
-#### Scenario: 每次 play 生成新的会话 id
+#### Scenario: 已有非 paused 的 alive 会话时调用 play（running/delaying 状态）
 
-- **WHEN** `api.play()` 启动新的动画会话
+- **GIVEN** 一个动画会话已经处于 `delaying` 或 `running` 状态
+- **WHEN** 应用代码再次调用 `api.play()`
+- **THEN** 该调用 MUST 为**空操作**（不抛错、不触发生命周期回调、不发送原生命令、不创建新会话）
+- **AND** 已有会话 MUST 继续不受干扰地运行
+- **AND** 若要重新开始动画，应用代码 MUST 显式先调用 `api.cancel()` 再调用 `api.play()`
+
+> **设计理由：** 此行为与 Web Animation API 对齐——对一个已在播放的 animation 调用 `play()` 是空操作。
+
+#### Scenario: queued 状态时调用 play
+
+- **GIVEN** 一个动画会话处于 `queued` 状态（play 在 SpatialDiv 绑定前调用）
+- **WHEN** 应用代码再次调用 `api.play()`
+- **THEN** 该调用 MUST 为空操作——已排队的会话保持不变，将在 SpatialDiv 绑定后开始
+
+#### Scenario: 每次新会话 play 生成新的会话 id
+
+- **WHEN** `api.play()` 启动一个新的动画会话，而不是恢复一个已暂停会话
 - **THEN** SDK MUST 为该会话生成新的全局唯一 `animationId`
-- **AND** 后续的 `pause`、`cancel` 调用 MUST 使用该 `animationId`
-
-#### Scenario: cancel-old 失败 MUST 阻止 start-new
-
-- **GIVEN** SDK 正在执行 cancel-old → start-new 流程
-- **WHEN** 旧会话的 cancel 命令异步失败
-- **THEN** SDK MUST 调用 `onError`
-- **AND** 旧会话 MUST 保持失败前状态
-- **AND** SDK MUST NOT 启动新会话
-- **AND** 新会话的 `onStart` MUST NOT 触发
+- **AND** 后续对该会话的 `pause`、恢复态 `play` 与 `cancel` MUST 作用于该 `animationId` 对应的会话
 
 #### Scenario: 串行化控制命令
 

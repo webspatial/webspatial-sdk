@@ -283,28 +283,36 @@ The playback API MUST allow applications to start, pause, and cancel `SpatialDiv
 - **THEN** the current session MUST NOT be affected by the config update
 - **AND** the next `api.play()` MUST use the latest config
 
-#### Scenario: Calling play again while an alive session exists
+#### Scenario: Play while an established native session is paused
 
-- **GIVEN** an alive session exists (queued, delaying, running, or paused)
+- **GIVEN** an animation session is in the `paused` state
+- **AND** its native session has already been established
+- **WHEN** application code calls `api.play()`
+- **THEN** the SDK MUST continue that same session from its paused progress instead of starting a new session
+- **AND** the SDK MUST NOT generate a new `animationId`
+- **AND** that `play()` call MUST NOT fire `onStart` again
+
+#### Scenario: Play while a non-paused alive session already exists (running/delaying)
+
+- **GIVEN** an animation session is already in `delaying` or `running` state
 - **WHEN** application code calls `api.play()` again
-- **THEN** the SDK MUST cancel the existing session first, then start a new session using the current config
-- **AND** the previous session's `onCancel` MUST fire before the new session's `onStart`
-- **AND** `api.isAnimating` MUST be `false` when the previous `onCancel` fires, and MUST be `true` when the new `onStart` fires
+- **THEN** the call MUST be a **no-op** (no error thrown, no lifecycle callback invoked, no native command sent, no new session created)
+- **AND** the existing session MUST continue uninterrupted
+- **AND** to restart the animation, application code MUST explicitly call `api.cancel()` before calling `api.play()`
 
-#### Scenario: Each play generates a new session id
+> **Rationale:** This aligns with the Web Animation API where `animation.play()` on an already-running animation is a no-op.
 
-- **WHEN** `api.play()` starts a new animation session
-- **THEN** the SDK MUST generate a new globally unique `animationId` for that session
-- **AND** subsequent `pause` and `cancel` calls MUST use that `animationId`
+#### Scenario: Play while session is in queued state
 
-#### Scenario: cancel-old failure MUST block start-new
+- **GIVEN** an animation session is in the `queued` state (play called before SpatialDiv bound)
+- **WHEN** application code calls `api.play()` again
+- **THEN** the call MUST be a **no-op** — the queued session remains and will start when SpatialDiv is bound
 
-- **GIVEN** the SDK is executing the cancel-old → start-new flow
-- **WHEN** the old session's cancel command fails asynchronously
-- **THEN** the SDK MUST call `onError`
-- **AND** the old session MUST remain in its pre-failure state
-- **AND** the SDK MUST NOT start the new session
-- **AND** the new session's `onStart` MUST NOT fire
+#### Scenario: Each new-session play generates a new session id
+
+- **WHEN** `api.play()` starts a new animation session rather than resuming a paused one
+- **THEN** the SDK MUST generate a new globally-unique `animationId` for that session
+- **AND** subsequent `pause`, resume-via-`play`, and `cancel` calls MUST target the session identified by that `animationId`
 
 #### Scenario: Serialize control commands
 
