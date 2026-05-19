@@ -158,4 +158,6 @@ export interface AnimateSpatialDivResult {
   animationId: string
   finished: Promise<SpatialDivAnimatedValues>
   canceled: Promise<SpatialDivAnimatedValues>
+  /** Resolves when native sends an async _failed event. */
+  failed: Promise<SpatialDivAnimationError>
 }

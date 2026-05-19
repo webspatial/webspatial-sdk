@@ -71,12 +71,16 @@ export class Spatialized2DElement extends SpatializedElement {
     if (type === 'play') {
       let resolveFinished!: (val: SpatialDivAnimatedValues) => void
       let resolveCancel!: (val: SpatialDivAnimatedValues) => void
+      let resolveFailed!: (val: SpatialDivAnimationError) => void
 
       const finished = new Promise<SpatialDivAnimatedValues>(r => {
         resolveFinished = r
       })
       const canceled = new Promise<SpatialDivAnimatedValues>(r => {
         resolveCancel = r
+      })
+      const failed = new Promise<SpatialDivAnimationError>(r => {
+        resolveFailed = r
       })
 
       const cleanup = () => {
@@ -116,7 +120,14 @@ export class Spatialized2DElement extends SpatializedElement {
           reason: string
         }) => {
           cleanup()
-          // Failed events are handled by the hook layer
+          // Propagate async native failure to hook layer via failed promise
+          resolveFailed({
+            animationId: data.animationId ?? animationId,
+            command: (data.command ??
+              'play') as SpatialDivAnimationError['command'],
+            code: data.code,
+            reason: data.reason ?? 'Native animation failed',
+          })
         },
       )
 
@@ -136,7 +147,7 @@ export class Spatialized2DElement extends SpatializedElement {
         )
       }
 
-      return { animationId, finished, canceled }
+      return { animationId, finished, canceled, failed }
     }
 
     // pause / resume / cancel
