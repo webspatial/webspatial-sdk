@@ -123,11 +123,11 @@
   - **依赖** 1.4
 - [x] 5.2 增加 hook 分叉测试，覆盖 entity key / SpatialDiv key / 混用 key 抛错 / `__kind` 绑定校验
   - **依赖** 1.2、1.3
-- [ ] 5.3 增加 React 行为测试，覆盖 autoStart、manual play、queued play（含排队期间 pause/cancel）、delay pause/play、delay pause then cancel、delay 直接 cancel、play 重入（paused 时 resume、running/delaying/queued 时 no-op）、config 更新不影响 alive 会话、控制命令串行化、single-binding error、animation prop 替换/移除、warning
+- [x] 5.3 增加 React 行为测试，覆盖 autoStart、manual play、queued play（含排队期间 pause/cancel）、delay pause/play、delay pause then cancel、delay 直接 cancel、play 重入（paused 时 resume、running/delaying/queued 时 no-op）、config 更新不影响 alive 会话、控制命令串行化、single-binding error、animation prop 替换/移除、warning
   - **依赖** 3.1–3.6
-- [ ] 5.4 增加同步竞争测试，覆盖 `opacity` 属性级抑制（含缓存和恢复）、transform 整体抑制、抑制释放时机（回调前释放标记）、以及动画期间普通 CSS transform 更新被延后到会话结束后恢复
+- [x] 5.4 增加同步竞争测试，覆盖 `opacity` 属性级抑制（含缓存和恢复）、transform 整体抑制、抑制释放时机（回调前释放标记）、以及动画期间普通 CSS transform 更新被延后到会话结束后恢复
   - **依赖** 3.3、3.4
-- [ ] 5.5 增加 bridge / native 会话测试，覆盖 completed、canceled、failed（含 play 失败和 pause/cancel 失败）、终态事件互斥、loop 和 cancel 恢复语义、listener 注册时序、`animationId` 唯一性、unmount 时 Promise 不 resolve
+- [x] 5.5 增加 bridge / native 会话测试，覆盖 completed、canceled、failed（含 play 失败和 pause/cancel 失败）、终态事件互斥、loop 和 cancel 恢复语义、listener 注册时序、`animationId` 唯一性、unmount 时 Promise 不 resolve
   - **依赖** 2.3、2.5、4.3、4.4
 - [x] 5.6 增加状态机测试，覆盖 isAnimating / isPaused 在 idle / queued / delaying / running / paused 各状态下的值，以及 stop/completion 后在回调触发前变为 false
   - **依赖** 3.1
