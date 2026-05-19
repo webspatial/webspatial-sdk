@@ -18,6 +18,8 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       'bootSpatial',
       'isSpatialReady',
       'useSpatialReady',
+      'useBootSpatial',
+      'SpatialBoot',
       'onSpatialLoadError',
       'WebSpatialBootError',
       // Core infrastructure

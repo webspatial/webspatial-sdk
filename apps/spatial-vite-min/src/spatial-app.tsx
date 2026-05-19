@@ -11,8 +11,9 @@ export type SpatialAppProps = {
    * - `lazy` — default package entry + real `bootSpatial()`.
    * - `eager-boot` — `@webspatial/react-sdk/eager` + still `await bootSpatial()` (migration parity).
    * - `eager-lean` — eager entry only; no `bootSpatial()` call (typical spatial-only app).
+   * - `lazy-gate` — lazy entry; parent wraps this tree in `<SpatialBoot gate>`.
    */
-  mode: 'lazy' | 'eager-boot' | 'eager-lean'
+  mode: 'lazy' | 'lazy-gate' | 'eager-boot' | 'eager-lean'
   /** Real `Model` from either `@webspatial/react-sdk` or `@webspatial/react-sdk/eager`. */
   Model: React.ComponentType<SpatialAppModelProps>
 }
@@ -40,6 +41,7 @@ const cellStyle = {
 
 const fixtureTitles: Record<SpatialAppProps['mode'], string> = {
   lazy: 'Lazy default entry',
+  'lazy-gate': 'Lazy + SpatialBoot gate',
   'eager-boot': 'Eager entry + await bootSpatial()',
   'eager-lean': 'Eager entry, no bootSpatial()',
 }
@@ -51,7 +53,9 @@ export function SpatialApp({ mode, Model }: SpatialAppProps) {
   }, [])
 
   const entryImport =
-    mode === 'lazy' ? '@webspatial/react-sdk' : '@webspatial/react-sdk/eager'
+    mode === 'lazy' || mode === 'lazy-gate'
+      ? '@webspatial/react-sdk'
+      : '@webspatial/react-sdk/eager'
 
   return (
     <main
@@ -72,6 +76,8 @@ export function SpatialApp({ mode, Model }: SpatialAppProps) {
       >
         <a href="/">Lazy default</a>
         <span aria-hidden="true">|</span>
+        <a href="/lazy-gate.html">Lazy + SpatialBoot gate</a>
+        <span aria-hidden="true">|</span>
         <a href="/eager.html">Eager + bootSpatial()</a>
         <span aria-hidden="true">|</span>
         <a href="/eager-lean.html">Eager, no boot</a>
@@ -81,6 +87,17 @@ export function SpatialApp({ mode, Model }: SpatialAppProps) {
         {' — '}
         <code>{entryImport}</code>
       </p>
+      {mode === 'lazy-gate' ? (
+        <p style={{ marginBottom: 16, fontSize: 14, color: '#444' }}>
+          This page is wrapped by{' '}
+          <code>
+            &lt;SpatialBoot gate fallback=&#123;…&#125;&gt;
+          </code>{' '}
+          in <code>main-lazy-gate.tsx</code>. Until{' '}
+          <code>bootSpatial()</code> resolves, only the loading fallback is
+          shown; then this tree mounts.
+        </p>
+      ) : null}
 
       <h1>WebSpatial Vite Min ({mode})</h1>
       <p>
