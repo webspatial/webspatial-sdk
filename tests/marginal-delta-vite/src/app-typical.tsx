@@ -11,7 +11,11 @@ export async function mount(el: HTMLElement): Promise<void> {
   await bootSpatial()
   createRoot(el).render(
     <StrictMode>
-      <Model src="/scene.usdz" style={{ width: 320, height: 320 }} />
+      <Model
+        enable-xr
+        src="/modelasset/cone.usdz"
+        style={{ width: 320, height: 320 }}
+      />
     </StrictMode>,
   )
 }

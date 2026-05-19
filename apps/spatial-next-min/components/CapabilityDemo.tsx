@@ -59,7 +59,8 @@ export function CapabilityDemo() {
       </p>
       {ready ? (
         <Model
-          src="/scene.usdz"
+          enable-xr
+          src="/modelasset/cone.usdz"
           style={{
             width: 320,
             height: 320,

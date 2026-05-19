@@ -160,11 +160,10 @@ the same page renders a real `<Model>`.
    try Turbopack anyway, run `next dev --turbo` — the SDK will likely
    still work (it follows standard ESM + `exports` + dynamic-import
    semantics), but it is not covered by any contract.
-2. **`/scene.usdz` is referenced but not shipped.** The placeholder
-   asset URL exists for the `<Model>` facade prop only; on plain web
-   the asset is never fetched (the facade only renders a degraded
-   `<model>` tag). In a WebSpatial runtime you would supply a real
-   USDZ file in `public/`.
+2. **`<Model>` points at `public/modelasset/cone.usdz`.** Same small USDZ as
+   `apps/test-server/public/modelasset/cone.usdz`, copied here so Next dev serves
+   it at `/modelasset/cone.usdz`. On plain web the facade renders a degraded
+   `<model>` tag; WebSpatial loads the shipped file for the spatial primitive.
 3. **`bootSpatial()` rejection only matters in WebSpatial.** Per the
    spec, `bootSpatial()` resolves synchronously on plain web. Catching
    `WebSpatialBootError` in the demo is for migration parity — that

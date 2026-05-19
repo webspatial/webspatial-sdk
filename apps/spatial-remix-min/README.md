@@ -35,6 +35,11 @@ pnpm --filter spatial-remix-min run typecheck
 This app consumes **`packages/react/dist`** through the workspace symlink (same
 contract as `spatial-vite-min` / `spatial-next-min`).
 
+## Static assets
+
+`<Model>` on **`/lazy`** loads **`public/modelasset/cone.usdz`** — the same
+small USDZ used by `apps/test-server` demos (served at **`/modelasset/cone.usdz`**).
+
 ## Routes
 
 | Path         | Purpose                                                           |

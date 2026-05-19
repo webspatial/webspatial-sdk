@@ -124,7 +124,8 @@ export function LazyDemo() {
         after boot resolves it swaps to the real spatial 3D primitive.
       </p>
       <Model
-        src="/scene.usdz"
+        enable-xr
+        src="/modelasset/cone.usdz"
         style={{
           width: 320,
           height: 320,
