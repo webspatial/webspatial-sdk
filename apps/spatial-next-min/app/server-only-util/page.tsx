@@ -1,25 +1,16 @@
-// Pure Server Component — NO `'use client'` directive, NO React hooks.
+// Internal engineering route — NOT a customer recipe.
 //
-// What this page proves:
+// Uses `@webspatial/react-sdk/server` (`detectSpatialRuntime`) only to
+// validate that the in-repo server bundle does not pull hooks/facades. Product
+// direction: third-party apps branch on User-Agent using **official WebSpatial
+// site documentation**, not SDK detection helpers.
 //
-// 1. `@webspatial/react-sdk/server` is the server-safe public subpath
-//    that an RSC file can call directly. `detectSpatialRuntime` runs in
-//    Node, takes the Web Fetch `Headers`-like object Next.js gives us
-//    from `await headers()`, and returns the same snapshot shape the
-//    client-side runtime cache produces from `navigator.userAgent`. No
-//    browser globals are touched and no facade / hook ever enters this
-//    page's server graph.
+// 1. The default entry (`@webspatial/react-sdk`) carries `'use client'` at the
+//    top of `dist/index.js`, so Next turns callable imports from that entry
+//    into Client References on the server.
 //
-// 2. The default entry of the SDK (`@webspatial/react-sdk`) carries
-//    `'use client'` at the top of its `dist/index.js`, so Next turns
-//    every imported symbol from THAT entry into a Client Reference and
-//    fails when called from a Server Component. The `/server` subpath
-//    exists precisely to dodge that constraint — see
-//    `packages/react/src/server/index.ts` for the design note.
-//
-// 3. Importing only `detectSpatialRuntime` does NOT pull the spatial
-//    chunk into the server bundle: `getSpatialImpl()`, `bootSpatial()`,
-//    `useSpatialReady()`, and the facade trees never reach the server.
+// 2. Importing `detectSpatialRuntime` from this internal subpath does NOT pull
+//    the spatial chunk into the server bundle.
 
 import { headers } from 'next/headers'
 import { detectSpatialRuntime } from '@webspatial/react-sdk/server'
@@ -33,14 +24,16 @@ export default async function ServerOnlyUtilPage() {
 
   return (
     <section>
-      <h1>Pure RSC + server-safe SDK subpath</h1>
+      <h1>RSC + internal server entry (engineering validation)</h1>
       <p>
-        This page is a Server Component. It runs{' '}
-        <code>detectSpatialRuntime</code> from{' '}
-        <code>@webspatial/react-sdk/server</code> against the request&apos;s own{' '}
-        <code>user-agent</code> header — so the initial HTML can already branch
-        on whether the requesting device is running a WebSpatial runtime, before
-        any JavaScript reaches the client.
+        This Server Component calls an <strong>internal</strong>{' '}
+        <code>detectSpatialRuntime</code> helper from{' '}
+        <code>@webspatial/react-sdk/server</code> to prove the server graph
+        stays free of facades.{' '}
+        <strong>
+          Integrators should use the request <code>User-Agent</code> and
+          official WebSpatial documentation — not this API.
+        </strong>
       </p>
       <h2 style={{ marginTop: 24 }}>Server-side values</h2>
       <pre
