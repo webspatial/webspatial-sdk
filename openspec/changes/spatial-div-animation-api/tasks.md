@@ -69,26 +69,26 @@
 
 ## 1. Public API And Capability Contract
 
-- [ ] 1.1 Define `SpatialDiv` `useAnimation` config types (`SpatialDivAnimationConfig`, `SpatialDivAnimatedValues`), return types (`SpatialDivAnimatedProps`, `AnimationApi`), and `AnimationError`, covering only the visual whitelist: `transform.translate.x/y/z`, `transform.rotate.x/y/z`, `transform.scale.x/y/z`, and `opacity`. Specify default `duration = 0.3`, `playbackRate = 1`, `opacity` in inclusive `[0, 1]`, `rotate` in degrees, and `scale` as unitless multipliers.
+- [x] 1.1 Define `SpatialDiv` `useAnimation` config types (`SpatialDivAnimationConfig`, `SpatialDivAnimatedValues`), return types (`SpatialDivAnimatedProps`, `AnimationApi`), and `AnimationError`, covering only the visual whitelist: `transform.translate.x/y/z`, `transform.rotate.x/y/z`, `transform.scale.x/y/z`, and `opacity`. Specify default `duration = 0.3`, `playbackRate = 1`, `opacity` in inclusive `[0, 1]`, `rotate` in degrees, and `scale` as unitless multipliers.
 - [ ] 1.2 Implement "dual-path unconditional call + active short-circuit" dispatch in `useAnimation`: top-level `resolveAnimationKind(config)` determines kind; `useEntityAnimation(config, active)` and `useSpatialDivAnimation(config, active)` called unconditionally in parallel (satisfying Rules of Hooks); inactive side effects short-circuit returning noop API
   - **Depends on** 1.1 (needs SpatialDiv config type definitions)
 - [ ] 1.3 Add public typing for the `animation` prop on spatialized HTML nodes and restrict it to the `enable-xr` path; add `__kind` binding validation (throw when binding entity animation to SpatialDiv or vice versa).
   - **Depends on** 1.2 (needs the `__kind` tagging mechanism)
 - [x] 1.4 Extend runtime capability data and docs with the public contract for `supports('useAnimation', ['element'])`.
-- [ ] 1.5 Implement SpatialDiv animation config validation: visual whitelist restrictions, numeric ranges (including `opacity` inclusive `[0, 1]` and finite `transform.translate/rotate/scale` values), `timingFunction`, `loop` shape, entity/SpatialDiv key mutual exclusion, and rejection for `width`, `height`, `back` / `backOffset`, `depth`, or other layout/spatial-size fields.
+- [x] 1.5 Implement SpatialDiv animation config validation: visual whitelist restrictions, numeric ranges (including `opacity` inclusive `[0, 1]` and finite `transform.translate/rotate/scale` values), `timingFunction`, `loop` shape, entity/SpatialDiv key mutual exclusion, and rejection for `width`, `height`, `back` / `backOffset`, `depth`, or other layout/spatial-size fields.
   - **Depends on** 1.1 (needs type definitions)
 
 ## 2. Core SDK And Bridge Session Flow
 
 - [ ] 2.1 Add `animateSpatialDiv(command)` to `Spatialized2DElement` in `@webspatial/core-sdk`: `play` returns `AnimateSpatialDivResult`, others return `void`.
   - **Depends on** 1.1 (needs command/result types)
-- [ ] 2.2 Design and wire the JSBridge command `AnimateSpatialized2DElement`, plus `_completed` (payload `SpatialDivAnimatedValues`), `_canceled` (payload `SpatialDivAnimatedValues`), and `_failed` (payload `AnimationError`) naming and payloads; payloads include only visual whitelist fields; ensure listeners are registered before sending `play`.
+- [x] 2.2 Design and wire the JSBridge command `AnimateSpatialized2DElement`, plus `_completed` (payload `SpatialDivAnimatedValues`), `_canceled` (payload `SpatialDivAnimatedValues`), and `_failed` (payload `AnimationError`) naming and payloads; payloads include only visual whitelist fields; ensure listeners are registered before sending `play`.
   - **Depends on** 2.1 (needs command entrypoint)
 - [ ] 2.3 Implement command serialization for `play`/`pause`/`resume`/`cancel` (send in call order), global uniqueness for session ids, and async failure reporting via `_failed`; enforce terminal event mutual exclusion (`_completed` vs `_canceled` for the same `animationId`).
   - **Depends on** 2.2 (needs bridge commands/events)
-- [ ] 2.4 Implement snapshot rules when `from` is omitted: read `opacity` from native state, extract `transform.translate/rotate/scale` from the native current transform, snapshot only fields present in `to`, and ensure `delay` does not change snapshot timing; cover queued, delay, and stop-point results.
+- [x] 2.4 Implement snapshot rules when `from` is omitted: read `opacity` from native state, extract `transform.translate/rotate/scale` from the native current transform, snapshot only fields present in `to`, and ensure `delay` does not change snapshot timing; cover queued, delay, and stop-point results.
   - **Depends on** 2.1 (needs `animateSpatialDiv`)
-- [ ] 2.5 Define unmount behavior for `finished` / `canceled` Promises: MUST NOT resolve and MUST NOT trigger lifecycle callbacks after unmount.
+- [x] 2.5 Define unmount behavior for `finished` / `canceled` Promises: MUST NOT resolve and MUST NOT trigger lifecycle callbacks after unmount.
   - **Depends on** 2.3 (needs session management)
 
 ## 3. React SpatialDiv Integration
@@ -99,22 +99,22 @@
   - **Depends on** 3.1 (AnimationApi) and 1.3 (prop types and `__kind` validation)
 - [ ] 3.3 Implement property-level suppression and recovery for `opacity`; keep per-field caches, release suppression flags before end callbacks, and restore regular sync on the next React render after callbacks.
   - **Depends on** 3.2 (binding path)
-- [ ] 3.4 Implement transform-wide suppression during `transform` animation, caching, and recovery after session end.
+- [x] 3.4 Implement transform-wide suppression during `transform` animation, caching, and recovery after session end.
   - **Depends on** 3.2 (binding path)
 - [ ] 3.5 Implement play re-entry (paused: play → resume same session; running/delaying/queued: play → no-op), config updates do not affect alive sessions, and command serialization in call order.
   - **Depends on** 3.1 (state machine) and 2.3 (command serialization)
-- [ ] 3.6 Add warnings for non-`enable-xr` usage and unsupported runtimes (at most once per hook instance), and keep `play()` as a no-op; when unsupported, `isAnimating` stays `false`.
+- [x] 3.6 Add warnings for non-`enable-xr` usage and unsupported runtimes (at most once per hook instance), and keep `play()` as a no-op; when unsupported, `isAnimating` stays `false`.
   - **Depends on** 1.4 (capability key)
 
 ## 4. Native Playback
 
 - [ ] 4.1 Add SpatialDiv animation session storage, a playback controller, and lifecycle management in the visionOS runtime.
   - **Depends on** 2.2 (bridge command shape)
-- [ ] 4.2 Implement native interpolation and application for whitelisted fields: `transform.translate.x/y/z`, `transform.rotate.x/y/z`, `transform.scale.x/y/z`, and `opacity`; recompose transform in the fixed translate → rotate → scale order.
+- [x] 4.2 Implement native interpolation and application for whitelisted fields: `transform.translate.x/y/z`, `transform.rotate.x/y/z`, `transform.scale.x/y/z`, and `opacity`; recompose transform in the fixed translate → rotate → scale order.
   - **Depends on** 4.1 (session management)
 - [ ] 4.3 Implement native semantics for `delay`, reset loop (instant reset without re-snapshot), reverse loop, pause (including pausing during delay and preserving remaining delay), play (resume from pause), cancel (restore to `from` or start snapshot), and emit `_completed` / `_canceled` terminal events.
   - **Depends on** 4.2 (interpolation)
-- [ ] 4.4 Implement `_failed` events and error payloads for bridge/native async failures; ensure no `_completed` / `_canceled` after play failure, and keep sessions in pre-failure state after pause/resume/cancel failures.
+- [x] 4.4 Implement `_failed` events and error payloads for bridge/native async failures; ensure no `_completed` / `_canceled` after play failure, and keep sessions in pre-failure state after pause/resume/cancel failures.
   - **Depends on** 4.3 (playback semantics)
 
 ## 5. Validation And Documentation
