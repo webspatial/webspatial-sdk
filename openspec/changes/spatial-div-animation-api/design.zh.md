@@ -88,10 +88,9 @@ interface SpatialDivAnimationConfig {
   /**
    * 播放速率倍数。默认：1
    * 大于 1 加速；0 到 1 之间减速。
-   * 负值表示倒放。
-   * 必须非零且有限。
+   * 必须大于 0 且有限。负值和零 MUST 被拒绝。
    * 在会话创建时应用，整个会话期间保持不变。
-   * 对应 Native（AVP）侧的 AnimationView.speed 参数。
+   * 在 Session 内 elapsed 计算时乘以该值实现变速。
    */
   playbackRate?: number
 
@@ -479,7 +478,7 @@ interface AnimateSpatialDivCommand {
   timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
   delay?: number
   loop?: boolean | { reverse?: boolean }
-  /** 播放速率倍数。默认值：1。对应 AVP 侧 AnimationView.speed。 */
+  /** 播放速率倍数。默认值：1。在 Session 内 elapsed 计算时乘以该值实现变速。 */
   playbackRate?: number
 }
 
