@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import {
-  bootSpatial,
   Model,
+  useBootSpatial,
   useSpatialReady,
-  WebSpatialBootError,
 } from '@webspatial/react-sdk'
 
 /**
@@ -16,31 +15,19 @@ export function LazySpatialDemo() {
     setSpatialTapCount(c => c + 1)
   }, [])
 
-  const [bootState, setBootState] = useState<
-    'idle' | 'booting' | 'ready' | 'failed'
-  >('idle')
+  const { status: bootState } = useBootSpatial({
+    onError: err => {
+      console.error('[spatial-remix-min /lazy] bootSpatial rejected', err)
+    },
+  })
   const ready = useSpatialReady()
-
-  useEffect(() => {
-    setBootState('booting')
-    bootSpatial()
-      .then(() => setBootState('ready'))
-      .catch((err: unknown) => {
-        setBootState('failed')
-        if (err instanceof WebSpatialBootError) {
-          console.error('[spatial-remix-min /lazy] bootSpatial rejected', err)
-        } else {
-          throw err
-        }
-      })
-  }, [])
 
   return (
     <section style={{ maxWidth: 720 }}>
       <h1>Lazy default entry (`@webspatial/react-sdk`)</h1>
       <p>
         <code>
-          import &#123; Model, bootSpatial, useSpatialReady &#125; from
+          import &#123; Model, useBootSpatial, useSpatialReady &#125; from
           &apos;@webspatial/react-sdk&apos;
         </code>
       </p>
@@ -51,7 +38,7 @@ export function LazySpatialDemo() {
       <p>
         On plain web, boot resolves quickly and the facade fallback stays. In a
         WebSpatial runtime the spatial chunk loads after{' '}
-        <code>bootSpatial()</code>.
+        <code>bootSpatial()</code> (via <code>useBootSpatial()</code>).
       </p>
 
       <h2 style={{ marginTop: 24 }}>Model facade</h2>
