@@ -198,13 +198,14 @@ The playback API MUST allow applications to start, pause, and cancel `SpatialDiv
 - **GIVEN** `api.play()` entered queued before binding
 - **AND** application code calls `api.pause()` while queued
 - **WHEN** the element later binds and the session is successfully established
-- **THEN** the first session state MUST be paused
-- **AND** `onStart` MUST be invoked once for that session
+- **THEN** the session MUST remain `paused`
 - **AND** `api.isPaused` MUST be `true`
+- **AND** `onStart` MUST NOT fire until the application later calls `api.play()` and the native session is successfully established
+- **AND** that later `api.play()` MUST reuse the existing pending session and MUST NOT generate a new `animationId`
 
 #### Scenario: onStart callback
 
-- **WHEN** the session requested by `api.play()` is successfully established, with first state delaying, running, or paused due to queued pause
+- **WHEN** the session requested by `api.play()` is successfully established, with first state `delaying` or `running`
 - **THEN** `onStart` MUST be invoked once for that session
 - **AND** if the request is still queued (element not yet bound), `onStart` MUST NOT fire early
 - **AND** if the request fails before the session is established, `onStart` MUST NOT fire
