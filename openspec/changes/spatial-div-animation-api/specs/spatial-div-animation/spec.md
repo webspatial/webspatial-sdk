@@ -97,7 +97,7 @@ The SDK MUST enforce the following ranges during validation and throw when viola
 
 | Field | Valid range | Notes |
 |---|---|---|
-| `duration` | `> 0`, finite | `0`, negatives, `NaN`, and `Infinity` MUST be rejected. Default: `0.3` |
+| `duration` | `> 0`, finite | `0`, negatives, `NaN`, and `Infinity` MUST be rejected |
 | `delay` | `>= 0`, finite | negatives, `NaN`, and `Infinity` MUST be rejected |
 | `timingFunction` | one of `'linear'`, `'easeIn'`, `'easeOut'`, `'easeInOut'` | any other string MUST be rejected |
 | `loop` | `true`, `false`, `undefined`, or `{ reverse?: boolean }` | any other shape MUST be rejected |
