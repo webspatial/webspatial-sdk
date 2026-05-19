@@ -9,11 +9,11 @@
 // Requirement (its hooks/utility-functions branch) cannot regress silently.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { resetRuntimeCacheForTests } from '@webspatial/core-sdk'
 import { convertCoordinate } from '../utils/convertCoordinate'
 import { enableDebugTool } from '../utils/debugTool'
 import { initScene } from '../initScene'
 import { WebSpatialRuntime } from '../webSpatialRuntime'
+import { resetRuntimeCacheForTests } from '../runtime/capabilities'
 import {
   __resetSpatialBridgeForTests,
   __setSpatialImplLoaderForTests,
@@ -41,7 +41,7 @@ function resetEnv(): void {
   vi.unstubAllGlobals()
   __resetSpatialBridgeForTests()
   __resetBootStateForTests()
-  // Reset the core-sdk's cached UA/runtime snapshot so each test sees the
+  // Reset the local cached UA/runtime snapshot so each test sees the
   // freshly stubbed userAgent. Without this, supports() would observe the
   // first-test snapshot for the entire suite.
   resetRuntimeCacheForTests()
@@ -141,28 +141,8 @@ describe('convertCoordinate (spec tasks.md §14.2 + runtime-capabilities "conver
 
 describe('enableDebugTool (spec tasks.md §14.3 + Group B "enableDebugTool" row)', () => {
   it('SSR-safe: under no-window, enableDebugTool returns without throwing', async () => {
-    // `core-sdk`'s `isSSREnv()` is a module-cached `typeof window` snapshot
-    // computed at first import — it cannot be flipped at runtime via
-    // `vi.stubGlobal`. We reset the module graph, mock the imported
-    // `isSSREnv` to report SSR, then load a fresh `enableDebugTool` against
-    // that mock so the SSR-bail branch executes.
-    vi.resetModules()
-    vi.doMock('@webspatial/core-sdk', async () => {
-      const actual = await vi.importActual<
-        typeof import('@webspatial/core-sdk')
-      >('@webspatial/core-sdk')
-      return { ...actual, isSSREnv: () => true }
-    })
-    try {
-      const { enableDebugTool: enableDebugToolSSR } = await import(
-        '../utils/debugTool'
-      )
-      vi.stubGlobal('window', undefined)
-      expect(() => enableDebugToolSSR()).not.toThrow()
-    } finally {
-      vi.doUnmock('@webspatial/core-sdk')
-      vi.resetModules()
-    }
+    vi.stubGlobal('window', undefined)
+    expect(() => enableDebugTool()).not.toThrow()
   })
 
   it('attaches inspectCurrentSpatialScene + getSpatialized2DElement to window in browser', () => {

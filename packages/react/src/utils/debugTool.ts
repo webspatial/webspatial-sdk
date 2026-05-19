@@ -1,4 +1,3 @@
-import { isSSREnv } from '@webspatial/core-sdk'
 import type { Spatialized2DElement } from '@webspatial/core-sdk'
 import { getSpatialImpl } from '../runtime/bridge'
 
@@ -36,7 +35,7 @@ function getSpatialized2DElement(
 }
 
 export function enableDebugTool() {
-  if (isSSREnv()) return
+  if (typeof window === 'undefined') return
 
   Object.assign(window, {
     inspectCurrentSpatialScene,

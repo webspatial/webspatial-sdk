@@ -49,10 +49,10 @@ const versionDefine = {
 
 // Treat React + React DOM as external — they are required peer dependencies
 // per `package.json` and contribute zero bytes to the SDK's own bundle.
-// `@webspatial/core-sdk` is also a peer; the previous web build aliased it
-// to `src/noRuntime.ts`, but the lazy-load v1 default entry now exposes the
-// real `core-sdk` surface (Group B/C utilities) and `core-sdk` is counted in
-// the consumer-side marginal-delta budget (§9.2), not in the SDK-side proxy.
+// `@webspatial/core-sdk` is external for the spatial/eager implementation
+// graph only. The default entry owns a tiny local runtime-capability helper
+// and MUST NOT emit runtime imports from core-sdk; the dist identifier scan
+// enforces that boundary.
 //
 // `@webspatial/react-sdk/internal/facades-client` is treated as external too:
 // `src/jsx/jsx-shared.ts` reaches the facade trio through that subpath so
@@ -107,14 +107,16 @@ const ensureRscClientBoundary = (filePath: string): void => {
 }
 
 export default defineConfig([
-  // Bundle 1 — default entry + spatial chunk + eager entry + internal
-  // `'use client'` facade subpath. All four reach the facade implementations
-  // through relative imports and end up co-located in a `splitting: true`
-  // shared-chunk graph that is fine to mix with React-hook code (every
-  // public-callable entry in this bundle either carries `'use client'`
-  // directly — `index.js`, `eager.js`, `internal/facades-client.js` — or is
-  // unreachable from RSC server modules via a static import — `spatial.js`
-  // is a dynamic-import target only).
+  // Bundle — default entry + spatial chunk + eager entry + server/internal
+  // support subpaths + JSX runtime entries. The JSX runtime reaches the
+  // facade trio only through the external package self-reference
+  // `@webspatial/react-sdk/internal/facades-client`, so even though all
+  // entries are emitted by one tsup config, the JSX runtime's static graph
+  // still terminates at the `'use client'` boundary instead of importing
+  // hook-bearing facade source files directly. Keeping one config also
+  // makes `clean: true` deterministic: dist is cleaned once before all
+  // entries emit, avoiding a race where one config deletes another config's
+  // already-written JSX runtime files.
   //
   //   (a) emits `dist/spatial.js` as the dynamic-import target referenced
   //       by the bridge (`runtime/bridge.ts:loadSpatialImpl`), per spec
@@ -157,10 +159,12 @@ export default defineConfig([
       // server modules, so its emitted file MUST NOT carry the
       // `'use client'` directive (the `ensureRscClientBoundary` injection
       // below intentionally skips it). Currently a thin wrapper around
-      // `computeRuntimeFromUserAgent` from `@webspatial/core-sdk`; that
-      // dependency is marked external, so the emitted `dist/server/index.js`
-      // contains no React imports and no hook references at all.
+      // the local runtime-capability parser used by the default entry, so
+      // the emitted `dist/server/index.js` contains no React imports, no
+      // hook references, and no runtime import from `@webspatial/core-sdk`.
       'server/index': 'src/server/index.ts',
+      'jsx/jsx-runtime': 'src/jsx/jsx-runtime.ts',
+      'jsx/jsx-dev-runtime': 'src/jsx/jsx-dev-runtime.ts',
     },
     outDir: 'dist',
     onSuccess: async () => {
@@ -202,33 +206,5 @@ export default defineConfig([
         resolve(__dirname, 'dist/internal/facades-client.js'),
       )
     },
-  },
-  // Bundle 2 — JSX runtime entries. ISOLATED from Bundle 1 so the
-  // resulting `dist/jsx/jsx-runtime.js` and its shared chunks are
-  // GUARANTEED to contain no React hook imports: the facade trio used by
-  // `jsx-shared.ts` is reached only through the external package
-  // self-reference `@webspatial/react-sdk/internal/facades-client`
-  // (declared in `externals` above), which esbuild leaves as a literal
-  // import in the emitted bundle. Next's RSC compiler walks
-  //   `jsx-runtime.js` → its splitting chunk(s) → external subpath
-  // and stops at the `'use client'` directive at the top of
-  // `dist/internal/facades-client.js`, treating the imports as Client
-  // References. The runtime check `canWrapWithFacade` in `jsx-shared.ts`
-  // detects this case (Client References are objects, not functions) and
-  // degrades to "strip markers, do not HOC-wrap".
-  //
-  // Keeping the JSX runtime in its own tsup pass also ensures the
-  // `jsx-shared.ts` source — which would otherwise live in a shared
-  // chunk with hook-bearing modules in Bundle 1 — sits in a chunk graph
-  // that contains only JSX-runtime-adjacent code.
-  {
-    ...baseConfig,
-    clean: false,
-    splitting: true,
-    entry: {
-      'jsx/jsx-runtime': 'src/jsx/jsx-runtime.ts',
-      'jsx/jsx-dev-runtime': 'src/jsx/jsx-dev-runtime.ts',
-    },
-    outDir: 'dist',
   },
 ])

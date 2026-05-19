@@ -1,4 +1,4 @@
-import { supports } from '@webspatial/core-sdk'
+import { supports } from './runtime/capabilities'
 
 /**
  * Runtime capability checks (`supports('Model')`, `supports('WindowScene', ['defaultSize'])`, ...).
