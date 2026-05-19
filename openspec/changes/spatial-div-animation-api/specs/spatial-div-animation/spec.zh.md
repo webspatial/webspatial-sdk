@@ -101,6 +101,7 @@ SDK MUST 在校验时对以下范围抛错：
 | `delay` | `>= 0`，有限值 | 负数、`NaN`、`Infinity` MUST 被拒绝 |
 | `timingFunction` | `'linear'`、`'easeIn'`、`'easeOut'`、`'easeInOut'` 之一 | 其他字符串 MUST 被拒绝 |
 | `loop` | `true`、`false`、`undefined`、`{ reverse?: boolean }` | 其他结构 MUST 被拒绝 |
+| `playbackRate` | `> 0`，有限值 | `0`、负数、`NaN`、`Infinity` MUST 被拒绝。默认值：`1` |
 
 #### Scenario: 白名单数值校验
 
@@ -112,6 +113,11 @@ SDK MUST 在校验时对以下范围抛错：
 | `transform.rotate.x/y/z` | 有限值，单位 degree | `NaN`、`Infinity` MUST 被拒绝 |
 | `transform.scale.x/y/z` | 有限值，无单位倍率 | `NaN`、`Infinity` MUST 被拒绝 |
 | `opacity` | `[0, 1]` 闭区间，有限值 | 超出 `[0, 1]`、`NaN`、`Infinity` MUST 被拒绝 |
+
+#### Scenario: playbackRate 校验
+
+- **WHEN** 动画配置将 `playbackRate` 设置为 `0`、负数、`NaN` 或 `Infinity`
+- **THEN** SDK MUST 直接抛错
 
 #### Scenario: 缺少动画目标
 
