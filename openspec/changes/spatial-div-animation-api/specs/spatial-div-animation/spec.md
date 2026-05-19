@@ -126,21 +126,24 @@ The SDK MUST enforce the following ranges during validation and throw when viola
 
 ---
 
-### Requirement: Define isAnimating / isPaused state semantics
+### Requirement: Define isAnimating / isPaused / finished / playState state semantics
 
-The SDK MUST define a session as **alive** when it is in any of these states: queued, delaying, running, paused. A session is **not alive** when idle (no session or the session has ended). `isAnimating` reflects whether the session is actively progressing; `isPaused` reflects whether the session is frozen while still alive.
+The SDK MUST define a session as **alive** when it is in any of these states: queued, delaying, running, paused. A session is **not alive** when idle (no session or the session has ended). `isAnimating` reflects whether the session is actively progressing; `isPaused` reflects whether the session is frozen while still alive. `finished` reflects whether the most recent current session completed naturally; it MUST become `true` only after a non-looping animation completes naturally, and MUST reset to `false` on a later `play()` that starts a new session or on `cancel()`.
 
-`api.isAnimating` and `api.isPaused` MUST reflect the session state as follows:
+`api.isAnimating`, `api.isPaused`, `api.finished`, and `api.playState` MUST reflect the session state as follows:
 
-| State | `isAnimating` | `isPaused` | Description |
-|---|---|---|---|
-| idle | `false` | `false` | no session, or the session has ended |
-| queued | `true` | `false` | `play()` called before element binding; waiting to bind |
-| delaying | `true` | `false` | `play()` called; in delay; visible motion has not started |
-| running | `true` | `false` | visible motion is in progress |
-| paused | `false` | `true` | session is paused via `api.pause()` |
+| State | `isAnimating` | `isPaused` | `finished` | `playState` | Description |
+|---|---|---|---|---|---|
+| idle | `false` | `false` | `false` | `"idle"` | no session, or the session has ended |
+| queued | `true` | `false` | `false` | `"queued"` | `play()` called before element binding; waiting to bind |
+| delaying | `true` | `false` | `false` | `"running"` | `play()` called; in delay; visible motion has not started |
+| running | `true` | `false` | `false` | `"running"` | visible motion is in progress |
+| paused | `false` | `true` | `false` | `"paused"` | session is paused via `api.pause()` |
+| finished | `false` | `false` | `true` | `"finished"` | non-looping animation completed naturally |
 
 A session exists (alive) iff `isAnimating || isPaused` is `true`. `pause()` and `cancel()` are no-op when `!isAnimating && !isPaused` (no alive session).
+
+`api.playState` MUST return the string corresponding to the current row in the table above. The internal `delaying` state maps to `playState` `"running"` because from the developer's perspective the session is actively progressing.
 
 #### Scenario: isAnimating is true during delay
 
@@ -160,6 +163,31 @@ A session exists (alive) iff `isAnimating || isPaused` is `true`. `pause()` and 
 - **WHEN** the session ends via `api.cancel()` or natural completion
 - **THEN** `api.isAnimating` MUST become `false` before any lifecycle callback fires
 - **AND** `api.isPaused` MUST be `false`
+
+#### Scenario: finished is true after natural completion
+
+- **WHEN** a non-looping animation completes naturally
+- **THEN** `api.finished` MUST become `true`
+- **AND** `api.playState` MUST be `"finished"`
+
+#### Scenario: finished resets to false after cancel
+
+- **GIVEN** a non-looping animation has completed naturally and `api.finished` is `true`
+- **WHEN** application code calls `api.cancel()`
+- **THEN** `api.finished` MUST reset to `false`
+- **AND** `api.playState` MUST be `"idle"`
+
+#### Scenario: finished resets to false after re-play
+
+- **GIVEN** a non-looping animation has completed naturally and `api.finished` is `true`
+- **WHEN** application code calls `api.play()` to start a new session
+- **THEN** `api.finished` MUST reset to `false`
+
+#### Scenario: playState is running during delay
+
+- **GIVEN** the config sets a positive `delay`
+- **WHEN** `api.play()` is called and the session is in the delay phase
+- **THEN** `api.playState` MUST be `"running"`
 
 ---
 
