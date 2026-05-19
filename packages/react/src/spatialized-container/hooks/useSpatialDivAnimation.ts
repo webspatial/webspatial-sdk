@@ -413,7 +413,11 @@ export function useSpatialDivAnimation(
         elementIdRef.current = element.id
         // If there's a queued session, start it
         const session = sessionRef.current
-        if (session && session.state === 'queued') {
+        if (
+          session &&
+          (session.state === 'queued' ||
+            (session.state === 'paused' && session.queuedPause))
+        ) {
           doPlay(session, element)
         }
       }
