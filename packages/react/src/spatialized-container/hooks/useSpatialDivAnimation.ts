@@ -145,6 +145,16 @@ export function useSpatialDivAnimation(
           configRef.current.onCancel?.(currentValues)
         })
 
+        // Listen for async native failure
+        result.failed.then(error => {
+          if (unmountedRef.current || session.unmounted) return
+          if (sessionRef.current !== session) return
+          session.state = 'idle'
+          sessionRef.current = null
+          forceUpdate()
+          reportError(error)
+        })
+
         // Transition to running (or paused if queued pause)
         if (session.queuedPause) {
           session.state = 'paused'
