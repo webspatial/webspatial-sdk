@@ -74,7 +74,7 @@
   - **Depends on** 1.1 (needs SpatialDiv config type definitions)
 - [ ] 1.3 Add public typing for the `animation` prop on spatialized HTML nodes and restrict it to the `enable-xr` path; add `__kind` binding validation (throw when binding entity animation to SpatialDiv or vice versa).
   - **Depends on** 1.2 (needs the `__kind` tagging mechanism)
-- [ ] 1.4 Extend runtime capability data and docs with the public contract for `supports('useAnimation', ['element'])`.
+- [x] 1.4 Extend runtime capability data and docs with the public contract for `supports('useAnimation', ['element'])`.
 - [ ] 1.5 Implement SpatialDiv animation config validation: visual whitelist restrictions, numeric ranges (including `opacity` inclusive `[0, 1]` and finite `transform.translate/rotate/scale` values), `timingFunction`, `loop` shape, entity/SpatialDiv key mutual exclusion, and rejection for `width`, `height`, `back` / `backOffset`, `depth`, or other layout/spatial-size fields.
   - **Depends on** 1.1 (needs type definitions)
 
@@ -119,7 +119,7 @@
 
 ## 5. Validation And Documentation
 
-- [ ] 5.1 Add capability tests covering `supports('useAnimation', ['element'])` true/false/stability, and independence from `supports('useAnimation', ['entity'])`.
+- [x] 5.1 Add capability tests covering `supports('useAnimation', ['element'])` true/false/stability, and independence from `supports('useAnimation', ['entity'])`.
   - **Depends on** 1.4
 - [ ] 5.2 Add hook routing tests covering entity keys vs SpatialDiv keys, mixed-key validation errors, and `__kind` binding validation.
   - **Depends on** 1.2 and 1.3
