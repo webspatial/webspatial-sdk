@@ -93,6 +93,11 @@ pnpm --filter spatial-vite-min build    # production build (all HTML inputs)
 pnpm --filter spatial-vite-min preview  # serve the built artifact
 ```
 
+## Static assets
+
+The `<Model>` sample uses **`public/modelasset/cone.usdz`** — the same file as
+`apps/test-server/public/modelasset/cone.usdz`, served at **`/modelasset/cone.usdz`**.
+
 ## Browser smoke checklist
 
 - Plain Chrome (`/` or `/eager.html` or `/eager-lean.html`): spatial-div cells render as

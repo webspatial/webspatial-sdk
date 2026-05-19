@@ -103,7 +103,8 @@ export function EagerDemo() {
 
       <h2 style={{ marginTop: 32 }}>Model</h2>
       <Model
-        src="/scene.usdz"
+        enable-xr
+        src="/modelasset/cone.usdz"
         style={{
           width: 320,
           height: 320,
