@@ -24,7 +24,7 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
 - Server-side or RSC-time spatial implementations. SSR always renders web fallbacks; the bridge stays inert until client-side hydration completes and `bootSpatial()` is awaited.
 - Introducing `<SpatialBoundary>` / Suspense-style integration in this change. `bootSpatial()` is the single supported activation path; a Suspense path can be added in a future change without breaking current callers.
 - Migrating in-house consumers (`apps/test-server`, `packages/autoTest`, `tests/ci-test`) to consume `dist` + `bootSpatial()`. Tracked as a follow-up. Their current alias-to-source workflow continues to work because the new `src/index.ts` is the lean entry.
-- Rewriting or restructuring `@webspatial/core-sdk`. `noRuntime.ts` becomes unused by react-sdk after this change but is left in place; cleanup is out of scope.
+- Rewriting or restructuring `@webspatial/core-sdk`. React SDK's default and server entries use local lightweight runtime-capability helpers so core-sdk runtime code is reached only by the spatial/eager implementation graph. `noRuntime.ts` becomes unused by react-sdk after this change but is left in place; cleanup is out of scope.
 - Removing or rewriting `@webspatial/vite-plugin`. The plugin lives in another repo; we only document the recommendation that users uninstall it.
 
 ## Decisions
@@ -195,7 +195,7 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 
 ### 7. Spatial runtime detection
 
-- A single `detectSpatialRuntime(): 'visionos' | 'picoos' | 'puppeteer' | null` helper in `runtime/detect.ts`, thin wrapper over the existing core-sdk runtime snapshot. The `'puppeteer'` value indicates a Puppeteer-driven test harness UA and MUST be treated identically to `'visionos'` / `'picoos'` for bridge / boot / facade decisions (per `runtime-capabilities` spec's "Detection helper used by lazy-load bridge" Scenario); this is intentional so `packages/autoTest` exercises the real `import('@webspatial/react-sdk/spatial')` path end-to-end. Internally facades branch on `detectSpatialRuntime() === null` vs non-null, so the `'puppeteer'` value flows through the spatial-equivalent path automatically with no per-call special-casing.
+- A single `detectSpatialRuntime(): 'visionos' | 'picoos' | 'puppeteer' | null` helper in `runtime/detect.ts`, backed by the React SDK's local lightweight UA parser. It mirrors the `runtime-capabilities` snapshot contract without importing `@webspatial/core-sdk` at runtime from the default entry. The `'puppeteer'` value indicates a Puppeteer-driven test harness UA and MUST be treated identically to `'visionos'` / `'picoos'` for bridge / boot / facade decisions (per `runtime-capabilities` spec's "Detection helper used by lazy-load bridge" Scenario); this is intentional so `packages/autoTest` exercises the real `import('@webspatial/react-sdk/spatial')` path end-to-end. Internally facades branch on `detectSpatialRuntime() === null` vs non-null, so the `'puppeteer'` value flows through the spatial-equivalent path automatically with no per-call special-casing.
 - Synchronous; no `await`, no network. Safe to call during SSR (returns `null` when `window` is unavailable).
 - Called by `bootSpatial()` to decide whether to schedule the dynamic import, by `useSpatialReady()` once per component instance (via `useState` initializer) to choose the no-op vs real subscriber path, and by the dev-mode forgot-to-boot warning gate. Facades themselves never call `detectSpatialRuntime()` per render — they only consult `useSpatialReady()`.
 - The result is treated as stable for the page lifetime, consistent with the existing `runtime-capabilities` decisions.
@@ -220,7 +220,7 @@ If `bootSpatial()` is not awaited (misuse): `useMetrics` remains in placeholder 
 Decision 13 (below) frames *why* the size budget has two tiers; this decision pins *how* enforcement is wired into the test suite:
 
 - **SDK-side proxy** (`packages/react/src/__tests__/size-budget.test.ts` or similar): runs after `tsup` build, computes gzip size of `dist/index.js`, asserts ≤ 8192 bytes. Fast deterministic check — runs in the SDK's own test suite without a fixture build. Pinned by spec Scenario "SDK-side `dist/index.js` size proxy"; codified in `tasks.md §9.1`.
-- **Marginal-delta fixture** (e.g. `tests/marginal-delta-vite/`): builds two minimal Vite ≥ 4 consumer apps — `app-base` (no SDK import) and `app-typical` (`import { Model, bootSpatial }` plus minimal usage) — and asserts gzipped marginal delta ≤ 8192 bytes including transitive `@webspatial/core-sdk` bytes. Pinned by spec Scenario "Marginal bundle delta on a typical consumer (product-level contract)"; codified in `tasks.md §9.2`.
+- **Marginal-delta fixture** (e.g. `tests/marginal-delta-vite/`): builds two minimal Vite ≥ 4 consumer apps — `app-base` (no SDK import) and `app-typical` (`import { Model, bootSpatial }` plus minimal usage) — and asserts gzipped marginal delta ≤ 8192 bytes. The default-entry dist scan separately asserts that this path contains no runtime imports from `@webspatial/core-sdk`. Pinned by spec Scenario "Marginal bundle delta on a typical consumer (product-level contract)"; codified in `tasks.md §9.2`.
 - **Tree-shake effectiveness check**: a third `app-namespace` variant in the same fixture uses `import * as W` to defeat tree-shaking; assertion is that `app-namespace` marginal is *strictly larger* than `app-typical` marginal (catches broken tree-shaking even when absolute number passes). Pinned by spec Scenario "Tree-shake validation in fixture"; codified in `tasks.md §9.3`.
 - **Identifier scan**: scans `dist/index.js` for spatial-only identifiers (`Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `PortalSpatializedContainer`, `StandardSpatializedContainer`, `SpatialMonitor`, `ResourceRegistry`, `AttachmentRegistry`, real reality-hook implementation symbols) — list comes verbatim from the spec's "Spatial-only identifiers are absent from default entry" Scenario. Codified in `tasks.md §9.4`.
 - **`sideEffects: false` declaration** + **top-level side-effect lint**: pinned by spec's "Tree-shake friendliness" Requirement; codified in `tasks.md §9.5–§9.6`.
@@ -281,39 +281,39 @@ The current `packages/react/package.json` has `peerDependenciesMeta.react.option
 
 A subset of the public API is **not** part of the lazy-load architecture. These APIs live in the default entry's static module graph and work without `bootSpatial()` or any bridge / facade / placeholder machinery. The `spatial-lazy-load` spec pins the contract in the "Stateless utility APIs and pure re-exports remain in the default entry" Requirement. Two mechanisms divide them:
 
-**Group B — session-aware utilities** route through `@webspatial/core-sdk`'s `getSession()`, which encodes the WebSpatial-runtime-or-not check via UA detection inside core-sdk:
+**Group B — bridge-session-aware utilities** route through the React SDK bridge (`getSpatialImpl()?.getSession?.()`) after `bootSpatial()` has resolved:
 
-- `initScene(name, callback, options?)` → `getSession()?.initScene(...)`. Noops when no session.
-- `convertCoordinate(position, { from, to })` → `getSession()?.getSpatialScene().convertCoordinate(...)`. Returns input position when no session, with optional `console.warn` (graceful per `runtime-capabilities`'s "Unsupported behavior contracts" MODIFIED Requirement).
-- `enableDebugTool()` → `isSSREnv()` early-return; otherwise attaches diagnostic helpers to `window`.
+- `initScene(name, callback, options?)` → `getSpatialImpl()?.getSession?.()?.initScene(...)`. Noops when no session.
+- `convertCoordinate(position, { from, to })` → bridge session scene conversion when available. Returns input position when no session, with optional `console.warn` (graceful per `runtime-capabilities`'s "Unsupported behavior contracts" MODIFIED Requirement).
+- `enableDebugTool()` → `typeof window === 'undefined'` early-return; otherwise attaches diagnostic helpers to `window`. The helpers read the bridge session lazily and throw a descriptive `bootSpatial()`-pointing error when called before boot.
 
-These have no React state to manage; no `useSyncExternalStore` subscription; no need to wait for the spatial chunk. They also do not need `'use client'` directives because they are not React hooks and have no client-only React API surface (`enableDebugTool` does touch `window`, but is invoked imperatively from app code, not at component render time).
+These have no React state to manage and no `useSyncExternalStore` subscription. They also do not need `'use client'` directives because they are not React hooks and have no client-only React API surface (`enableDebugTool` does touch `window`, but is invoked imperatively from app code, not at component render time).
 
-**Subtle consequence worth flagging**: in a WebSpatial runtime, an application that **forgets** to call `bootSpatial()` will see facades render fallback (the react-sdk bridge is not ready) **yet** still get correct behavior from session-aware utilities (Group B goes through `core-sdk` session detection, which is independent of the react-sdk bridge). This is intentional — `bootSpatial()` only governs the react-sdk spatial chunk, not the core-sdk session lifecycle — and is documented for reviewers in `REVIEW.md` and the spec's Stateless utilities Requirement.
+**Subtle consequence worth flagging**: in a WebSpatial runtime, an application that **forgets** to call `bootSpatial()` will see facades render fallback and Group B utilities gracefully degrade because both read from the same unready bridge. This intentionally keeps `bootSpatial()` as the single activation path and keeps the default entry free of core-sdk runtime imports.
 
 **Group C — pure constants, type re-exports, React Context** with no runtime spatial dependency:
 
-- `WebSpatialRuntime.supports(name, tokens?)` — capability table lookup; pure data.
-- `WebSpatialRuntimeError` — `Error` subclass re-exported from `core-sdk`.
-- `CapabilityKey` — TypeScript type re-export.
+- `WebSpatialRuntime.supports(name, tokens?)` — local capability table lookup; pure data, no core-sdk runtime import.
+- `WebSpatialRuntimeError` — local `Error` subclass matching the runtime-capability error contract.
+- `CapabilityKey` — TypeScript type exported from the local capability helper.
 - `SSRProvider` — **removed** in the `remove-ssr-provider` change; `withSSRSupported` gates client-only hosts via `useSyncExternalStore` instead.
 - `version` — string constant injected at build time.
 
 > Historical note: `getAbsoluteUrl(url)` (pure URL helper, SSR-safe) was originally listed in this Group C set during the lazy-load v1 design. It was demoted to an internal helper (`src/internal/urlUtils.ts`) and removed from the public surface after the design was published — see the `remove-getabsoluteurl` changeset for the rationale and migration recipe.
 - Component / Hook / Entity / Model type-only re-exports (`SpatializedElementRef`, `EntityRef`, `ModelRef`, `ModelProps`, etc.).
 
-These count toward both tiers of the size budget: the SDK-side `dist/index.js` proxy (`tasks.md §9.1`) and the typical-case marginal-delta fixture (`tasks.md §9.2`), since Group B / C bytes that the consumer's named-import pattern reaches will land in the application bundle. The largest contributor is the `core-sdk` capability table consumed by `WebSpatialRuntime.supports` (~1–2 KB gzipped after dead-code elimination); everything else in Group C is bytes-level.
+These count toward both tiers of the size budget: the SDK-side `dist/index.js` proxy (`tasks.md §9.1`) and the typical-case marginal-delta fixture (`tasks.md §9.2`), since Group B / C bytes that the consumer's named-import pattern reaches will land in the application bundle. The largest contributor is the local capability table consumed by `WebSpatialRuntime.supports` (~1–2 KB gzipped after dead-code elimination); everything else in Group C is bytes-level.
 
-**Why not move Group B into the spatial chunk?** The session-aware utilities are commonly called *before* `bootSpatial()` in the application lifecycle (e.g., `WebSpatialRuntime.supports('Model')` to decide whether to bother booting at all; `initScene` declaring scene type at app entry). Putting them in the lazy-loaded chunk would introduce a chicken-and-egg loop. Their cost in the default entry is small and predictable; keeping them there is the correct trade-off.
+**Why not move Group B into the spatial chunk?** The stateless utility names are commonly imported from the default entry and are expected to be callable before `bootSpatial()` in plain web / SSR. They therefore stay in the default entry, but their spatial behavior is bridge-gated: no core-sdk session is touched until the spatial chunk has loaded.
 
 ### 13. Size budget framing — typical-case marginal delta as the product contract
 
 The "8 KB" headline number lives in two places in the spec, and they are different measurements with different purposes:
 
-1. **Product-level contract** (the user-facing measurement): the marginal gzipped bytes that `import { Model, bootSpatial }`-style usage of the SDK adds to a downstream application's bundle, including any transitive bytes from `@webspatial/core-sdk`. This is what the developer perceives as "the cost of adding the SDK". Pinned in spec by the "Marginal bundle delta on a typical consumer" Scenario; enforced by a CI fixture (Vite ≥ 4 minimal consumer per "Plugin-free integration") in `tasks.md §9`.
+1. **Product-level contract** (the user-facing measurement): the marginal gzipped bytes that `import { Model, bootSpatial }`-style usage of the SDK adds to a downstream application's bundle. The default-entry static graph must not contain runtime imports from `@webspatial/core-sdk`; core-sdk runtime bytes are reserved for the spatial/eager implementation graph. Pinned in spec by the "Marginal bundle delta on a typical consumer" Scenario; enforced by a CI fixture (Vite ≥ 4 minimal consumer per "Plugin-free integration") in `tasks.md §9`.
 2. **SDK-side proxy** (the build-time check): the gzipped byte count of `dist/index.js` on its own. This is fast, deterministic, and runs every time tsup rebuilds the SDK. Pinned in spec by the "SDK-side `dist/index.js` size proxy" Scenario.
 
-We keep both because they answer different questions. The proxy catches "did the SDK package itself bloat?" inside the SDK's own test suite, with no fixture infrastructure required. The marginal-delta fixture catches "what does the consumer actually pay?" — including transitive `core-sdk` bytes and bundler tree-shaking effectiveness — that the proxy by itself cannot see.
+We keep both because they answer different questions. The proxy catches "did the SDK package itself bloat?" inside the SDK's own test suite, with no fixture infrastructure required. The marginal-delta fixture catches "what does the consumer actually pay?" in a real bundler, while the dist identifier scan separately catches accidental core-sdk runtime leakage from the default entry.
 
 **Why typical case, not worst case?**
 

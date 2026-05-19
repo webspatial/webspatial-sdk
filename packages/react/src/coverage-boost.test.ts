@@ -1618,12 +1618,6 @@ describe('utils/debugTool', () => {
         }),
       }
     })
-    vi.doMock('@webspatial/core-sdk', () => {
-      return {
-        isSSREnv: () => false,
-      }
-    })
-
     const { enableDebugTool } = await import('./utils/debugTool')
     enableDebugTool()
 
@@ -1642,18 +1636,19 @@ describe('utils/debugTool', () => {
 
   it('enableDebugTool is no-op in SSR env', async () => {
     vi.resetModules()
-    delete (window as any).inspectCurrentSpatialScene
-    delete (window as any).getSpatialized2DElement
+    const originalWindow = window
+    delete (originalWindow as any).inspectCurrentSpatialScene
+    delete (originalWindow as any).getSpatialized2DElement
 
-    vi.doMock('@webspatial/core-sdk', () => {
-      return {
-        isSSREnv: () => true,
-      }
-    })
     const { enableDebugTool } = await import('./utils/debugTool')
-    enableDebugTool()
-    expect((window as any).inspectCurrentSpatialScene).toBeUndefined()
-    expect((window as any).getSpatialized2DElement).toBeUndefined()
+    vi.stubGlobal('window', undefined)
+    try {
+      enableDebugTool()
+    } finally {
+      vi.stubGlobal('window', originalWindow)
+    }
+    expect((originalWindow as any).inspectCurrentSpatialScene).toBeUndefined()
+    expect((originalWindow as any).getSpatialized2DElement).toBeUndefined()
   })
 })
 

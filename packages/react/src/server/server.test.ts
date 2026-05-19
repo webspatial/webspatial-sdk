@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { detectSpatialRuntime } from './index'
 
-// Representative UA strings — each one exercises a different branch of
-// `computeRuntimeFromUserAgent` (the underlying core-sdk parser). The
-// detection contract is owned by `@webspatial/core-sdk` tests; here we
-// only assert that:
+// Representative UA strings — each one exercises a different branch of the
+// lightweight parser shared by the default and server entries. Here we assert:
 //   (a) the wrapper relays an input UA into the parser correctly, and
 //   (b) the `Headers`-like input narrowing works.
 const VISIONOS_UA =

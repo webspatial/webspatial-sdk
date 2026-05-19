@@ -31,8 +31,8 @@
 // NOT be exposed here.
 // =============================================================================
 
-import { computeRuntimeFromUserAgent } from '@webspatial/core-sdk'
-import type { WebSpatialRuntimeSnapshot } from '@webspatial/core-sdk'
+import { computeRuntimeFromUserAgent } from '../runtime/capabilities'
+import type { WebSpatialRuntimeSnapshot } from '../runtime/capabilities'
 
 /**
  * Structural type satisfied by any object exposing a request-header getter.

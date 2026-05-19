@@ -74,6 +74,12 @@ type ChunkScanReport = {
   matches: Array<{ file: string; identifier: string; line: string }>
 }
 
+type RuntimeSpecifierMatch = {
+  file: string
+  specifier: string
+  line: string
+}
+
 function findStaticImportPaths(source: string): string[] {
   const paths: string[] = []
   // tsup-emitted output uses static `import { x } from "./chunk-XXX.js"` and
@@ -158,6 +164,35 @@ function scanReachableChunks(): ChunkScanReport {
   return { files: [...visited], matches }
 }
 
+function findCoreSdkRuntimeReferences(
+  files: string[],
+): RuntimeSpecifierMatch[] {
+  const matches: RuntimeSpecifierMatch[] = []
+  const coreSdkRuntimeRe =
+    /\b(?:from|import)\s*(?:\(\s*)?['"](@webspatial\/core-sdk(?:\/[^'"]*)?)['"]/g
+
+  for (const file of files) {
+    if (!existsSync(file)) continue
+    const source = readFileSync(file, 'utf8')
+    let match: RegExpExecArray | null
+    while ((match = coreSdkRuntimeRe.exec(source)) !== null) {
+      const lineStart = source.lastIndexOf('\n', match.index) + 1
+      const lineEnd = source.indexOf('\n', match.index)
+      const line = source.slice(
+        lineStart,
+        lineEnd === -1 ? source.length : lineEnd,
+      )
+      matches.push({
+        file,
+        specifier: match[1],
+        line: line.trim(),
+      })
+    }
+  }
+
+  return matches
+}
+
 describe('dist identifier scan — spatial-only identifiers absent from default entry (spec tasks.md §9.4)', () => {
   it('dist/index.js exists (run `pnpm build` first)', () => {
     expect(existsSync(indexJsPath)).toBe(true)
@@ -171,6 +206,14 @@ describe('dist identifier scan — spatial-only identifiers absent from default 
     // specific line so the regression source is obvious without re-running
     // the test under a debugger.
     expect(report.matches).toEqual([])
+  })
+
+  it('default-entry static-graph closure contains no runtime import of @webspatial/core-sdk', () => {
+    // Core SDK runtime code is spatial-only from the React default entry's
+    // perspective. The default graph may expose core-sdk TYPE declarations in
+    // `.d.ts`, but emitted JS must not import core-sdk unless the spatial
+    // chunk is the one being loaded.
+    expect(findCoreSdkRuntimeReferences(report.files)).toEqual([])
   })
 
   it('static graph from dist/index.js does NOT statically import dist/spatial.js', () => {
