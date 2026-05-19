@@ -23,7 +23,14 @@
 // production builds tree-shake it out.
 // =============================================================================
 
+import { useEffect, useRef } from 'react'
 import type { WebSpatialBootError } from './errors'
+import type {
+  BootStatus,
+  UseBootSpatialOptions,
+  UseBootSpatialResult,
+} from './useBootSpatial'
+import { createSpatialBoot } from './SpatialBoot'
 
 let bootWarned = false
 
@@ -86,6 +93,33 @@ export function onSpatialLoadErrorEager(
 function noop(): void {
   // intentionally empty
 }
+
+/**
+ * Eager-mode `useBootSpatial` stub. Reports `ready` immediately; `boot()`
+ * delegates to the no-op `bootSpatialEager`.
+ */
+export function useBootSpatialEager(
+  options: UseBootSpatialOptions = {},
+): UseBootSpatialResult {
+  const { onReady } = options
+  const onReadyRef = useRef(onReady)
+  onReadyRef.current = onReady
+
+  useEffect(() => {
+    void bootSpatialEager().then(() => {
+      onReadyRef.current?.()
+    })
+  }, [])
+
+  return {
+    status: 'ready' satisfies BootStatus,
+    error: null,
+    boot: bootSpatialEager,
+  }
+}
+
+/** Eager entry `SpatialBoot` — same gate semantics, instant ready status. */
+export const SpatialBootEager = createSpatialBoot(useBootSpatialEager)
 
 // Test-only: reset the one-shot warning latch so multiple test runs
 // can each verify the warning fires on first call.
