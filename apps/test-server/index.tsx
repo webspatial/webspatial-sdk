@@ -82,13 +82,15 @@ import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loo
 import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
 import SpatialDivAnimationPage from './src/pages/spatial-div-animation/index'
 import SpatialDivFadeInEntrancePage from './src/pages/spatial-div-animation/fade-in-entrance'
-import SpatialDivSizeExpandPage from './src/pages/spatial-div-animation/size-expand'
+import SpatialDivScaleExpandPage from './src/pages/spatial-div-animation/scale-expand'
 import SpatialDivOpacityFadePage from './src/pages/spatial-div-animation/opacity-fade'
 import SpatialDivCombinedDelayPage from './src/pages/spatial-div-animation/combined-delay'
 import SpatialDivPlaybackRatePage from './src/pages/spatial-div-animation/playback-rate'
-import SpatialDivDepthPage from './src/pages/spatial-div-animation/depth'
-import SpatialDivBackOffsetPage from './src/pages/spatial-div-animation/back-offset'
+import SpatialDivRotate3dPage from './src/pages/spatial-div-animation/rotate-3d'
 import SpatialDivTransformTranslatePage from './src/pages/spatial-div-animation/transform-translate'
+import SpatialDivReverseLoopPage from './src/pages/spatial-div-animation/reverse-loop'
+import SpatialDivCapabilityCheckPage from './src/pages/spatial-div-animation/capability-check'
+import SpatialDivPlayStatePage from './src/pages/spatial-div-animation/play-state'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -245,8 +247,8 @@ function App() {
                   element={<SpatialDivFadeInEntrancePage />}
                 />
                 <Route
-                  path="/spatial-div-animation/size-expand"
-                  element={<SpatialDivSizeExpandPage />}
+                  path="/spatial-div-animation/scale-expand"
+                  element={<SpatialDivScaleExpandPage />}
                 />
                 <Route
                   path="/spatial-div-animation/opacity-fade"
@@ -261,12 +263,20 @@ function App() {
                   element={<SpatialDivPlaybackRatePage />}
                 />
                 <Route
-                  path="/spatial-div-animation/depth"
-                  element={<SpatialDivDepthPage />}
+                  path="/spatial-div-animation/rotate-3d"
+                  element={<SpatialDivRotate3dPage />}
                 />
                 <Route
-                  path="/spatial-div-animation/back-offset"
-                  element={<SpatialDivBackOffsetPage />}
+                  path="/spatial-div-animation/reverse-loop"
+                  element={<SpatialDivReverseLoopPage />}
+                />
+                <Route
+                  path="/spatial-div-animation/capability-check"
+                  element={<SpatialDivCapabilityCheckPage />}
+                />
+                <Route
+                  path="/spatial-div-animation/play-state"
+                  element={<SpatialDivPlayStatePage />}
                 />
                 <Route
                   path="/spatial-div-animation/transform-translate"
