@@ -121,7 +121,7 @@
 
 - [x] 5.1 Add capability tests covering `supports('useAnimation', ['element'])` true/false/stability, and independence from `supports('useAnimation', ['entity'])`.
   - **Depends on** 1.4
-- [ ] 5.2 Add hook routing tests covering entity keys vs SpatialDiv keys, mixed-key validation errors, and `__kind` binding validation.
+- [x] 5.2 Add hook routing tests covering entity keys vs SpatialDiv keys, mixed-key validation errors, and `__kind` binding validation.
   - **Depends on** 1.2 and 1.3
 - [ ] 5.3 Add React behavior tests covering autoStart, manual play, queued play (including pause/cancel while queued), delay pause/play, delay pause then cancel, delay cancel, play re-entry (paused: resume; running/delaying/queued: no-op), config updates not affecting alive sessions, command serialization, single-binding errors, animation prop replacement/removal, and warnings.
   - **Depends on** 3.1–3.6
@@ -129,7 +129,7 @@
   - **Depends on** 3.3 and 3.4
 - [ ] 5.5 Add bridge/native session tests covering completed/canceled/failed (including play failure and pause/cancel failure), terminal mutual exclusion, loop semantics, cancel restoration semantics, listener registration ordering, `animationId` uniqueness, and unmount behavior where Promises do not resolve.
   - **Depends on** 2.3, 2.5, 4.3, and 4.4
-- [ ] 5.6 Add state machine tests covering `isAnimating` / `isPaused` values across idle / queued / delaying / running / paused, and that they become false before callbacks after stop/completion.
+- [x] 5.6 Add state machine tests covering `isAnimating` / `isPaused` values across idle / queued / delaying / running / paused, and that they become false before callbacks after stop/completion.
   - **Depends on** 3.1
 - [ ] 5.7 Update `docs/` and `apps/test-server` examples demonstrating the `SpatialDiv` animation API (entrance fade/translate/scale, manual rotation, looping float), visual whitelist fields, capability checks, and known limitations.
   - **Depends on** 5.3 (core behavior verification)
