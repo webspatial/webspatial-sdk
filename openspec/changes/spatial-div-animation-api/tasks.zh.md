@@ -131,5 +131,5 @@
   - **依赖** 2.3、2.5、4.3、4.4
 - [x] 5.6 增加状态机测试，覆盖 isAnimating / isPaused 在 idle / queued / delaying / running / paused 各状态下的值，以及 stop/completion 后在回调触发前变为 false
   - **依赖** 3.1
-- [ ] 5.7 更新 `docs/` 与 `apps/test-server` 示例，演示 `SpatialDiv` 动画 API（入场淡入/位移/缩放、手动触发旋转、循环浮动）、视觉白名单字段、能力检测与已知限制
+- [x] 5.7 更新 `docs/` 与 `apps/test-server` 示例，演示 `SpatialDiv` 动画 API（入场淡入/位移/缩放、手动触发旋转、循环浮动）、视觉白名单字段、能力检测与已知限制
   - **依赖** 5.3（需要核心行为验证通过）
