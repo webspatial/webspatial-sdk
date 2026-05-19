@@ -2,8 +2,10 @@ import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
+  PlayStateBadge,
   btnCls,
   btnPrimary,
+  fmtValues,
   useLog,
 } from './shared'
 
@@ -11,32 +13,30 @@ export default function PlaybackRatePage() {
   const { lines, log, clear } = useLog()
 
   const [animation, api] = useAnimation({
-    from: { width: 150, opacity: 1.0 },
-    to: { width: 450, opacity: 0.4 },
+    from: { 'transform.rotate.z': 0, opacity: 1.0 },
+    to: { 'transform.rotate.z': 360, opacity: 0.4 },
     duration: 2.0,
     timingFunction: 'linear',
     playbackRate: 2.0,
     autoStart: false,
-    onStart: () => log('rate: onStart (2x speed, effective 1s)'),
-    onComplete: (values: any) =>
-      log(
-        `rate: onComplete → w=${values.width?.toFixed(0)} o=${values.opacity?.toFixed(2)}`,
-      ),
+    onStart: () => log('rate: onStart (2× speed, effective ~1s)'),
+    onComplete: (values: any) => log(`rate: onComplete → ${fmtValues(values)}`),
+    onCancel: (values: any) => log(`rate: onCancel → ${fmtValues(values)}`),
     onError: (err: any) => log(`rate: onError → ${err.reason}`),
   } as any)
 
   return (
     <SpatialDivAnimationPageShell
       title="Playback Rate (2× speed)"
-      description="Width 150→450 + opacity 1→0.4 over 2s at 2× speed (effective 1s). Linear easing."
+      description="rotate.z 0→360 + opacity 1→0.4 over 2s at 2× speed (effective ~1s). Linear easing."
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div
           enable-xr
-          animation={animation}
+          animation={animation as any}
           style={{
-            width: 150,
-            height: 100,
+            width: 160,
+            height: 160,
             background: 'linear-gradient(135deg, #5f1e4a, #872d6a)',
             borderRadius: 12,
             display: 'flex',
@@ -58,9 +58,11 @@ export default function PlaybackRatePage() {
             Clear Log
           </button>
         </div>
-        <div className="text-xs text-gray-500 mt-2">
-          playState:{' '}
-          <code className="text-cyan-300">{(api as any).playState}</code>
+        <div className="mt-3 flex items-center gap-3">
+          <PlayStateBadge state={(api as any).playState} />
+          <span className="text-xs font-mono text-gray-500">
+            isAnimating={String((api as any).isAnimating)}
+          </span>
         </div>
         <Log lines={lines} />
       </section>

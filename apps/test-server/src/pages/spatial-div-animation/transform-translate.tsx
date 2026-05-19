@@ -2,8 +2,10 @@ import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
+  PlayStateBadge,
   btnCls,
   btnPrimary,
+  fmtValues,
   useLog,
 } from './shared'
 
@@ -26,15 +28,19 @@ export default function TransformTranslatePage() {
     autoStart: false,
     onStart: () => log('translate: onStart'),
     onComplete: (values: any) =>
-      log(
-        `translate: onComplete → x=${values['transform.translate.x']?.toFixed(1)}, y=${values['transform.translate.y']?.toFixed(1)}, z=${values['transform.translate.z']?.toFixed(1)}`,
-      ),
+      log(`translate: onComplete → ${fmtValues(values)}`),
     onCancel: (values: any) =>
-      log(
-        `translate: onCancel → x=${values['transform.translate.x']?.toFixed(1)}, y=${values['transform.translate.y']?.toFixed(1)}, z=${values['transform.translate.z']?.toFixed(1)}`,
-      ),
+      log(`translate: onCancel → ${fmtValues(values)}`),
     onError: (err: any) => log(`translate: onError → ${err.reason}`),
   } as any)
+
+  // Demonstrates play re-entry: cancel + play in one click ensures a fresh
+  // session even if a previous one is still alive (covers spec 3.5).
+  const restart = () => {
+    ;(api as any).cancel()
+    ;(api as any).play()
+    log('restart: cancel() + play()')
+  }
 
   return (
     <SpatialDivAnimationPageShell
@@ -42,14 +48,15 @@ export default function TransformTranslatePage() {
       description={
         <>
           Translate (0,0,0)→(100,50,-80) over 2s. The SpatialDiv moves in 3D
-          space: right (+X), up (+Y), and toward the user (-Z).
+          space: right (+X), up (+Y), and toward the user (-Z). Restart proves
+          play re-entry semantics.
         </>
       }
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div
           enable-xr
-          animation={animation}
+          animation={animation as any}
           style={{
             width: 200,
             height: 150,
@@ -76,13 +83,20 @@ export default function TransformTranslatePage() {
           <button className={btnCls} onClick={() => (api as any).cancel()}>
             Cancel
           </button>
+          <button className={btnCls} onClick={restart}>
+            Restart (cancel + play)
+          </button>
           <button className={btnCls} onClick={clear}>
             Clear Log
           </button>
         </div>
-        <div className="text-xs text-gray-500 mt-2">
-          playState:{' '}
-          <code className="text-cyan-300">{(api as any).playState}</code>
+        <div className="mt-3 flex items-center gap-3">
+          <PlayStateBadge state={(api as any).playState} />
+          <span className="text-xs font-mono text-gray-500">
+            isAnimating={String((api as any).isAnimating)} &nbsp; isPaused=
+            {String((api as any).isPaused)} &nbsp; finished=
+            {String((api as any).finished)}
+          </span>
         </div>
         <Log lines={lines} />
       </section>

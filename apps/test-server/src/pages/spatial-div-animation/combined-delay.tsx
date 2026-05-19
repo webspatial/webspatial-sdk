@@ -2,8 +2,10 @@ import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
+  PlayStateBadge,
   btnCls,
   btnPrimary,
+  fmtValues,
   useLog,
 } from './shared'
 
@@ -11,36 +13,43 @@ export default function CombinedDelayPage() {
   const { lines, log, clear } = useLog()
 
   const [animation, api] = useAnimation({
-    from: { width: 200, height: 120, opacity: 0.3, depth: 0 },
-    to: { width: 350, height: 200, opacity: 1.0, depth: 60 },
+    from: {
+      'transform.translate.y': -30,
+      'transform.scale.x': 0.8,
+      'transform.scale.y': 0.8,
+      'transform.scale.z': 1,
+      opacity: 0.3,
+    },
+    to: {
+      'transform.translate.y': 0,
+      'transform.scale.x': 1.0,
+      'transform.scale.y': 1.0,
+      'transform.scale.z': 1,
+      opacity: 1.0,
+    },
     duration: 1.2,
     delay: 0.5,
     timingFunction: 'easeInOut',
     autoStart: false,
     onStart: () => log('combined: onStart (after 500ms delay)'),
     onComplete: (values: any) =>
-      log(
-        `combined: onComplete → w=${values.width?.toFixed(0)} h=${values.height?.toFixed(0)} o=${values.opacity?.toFixed(2)} d=${values.depth?.toFixed(0)}`,
-      ),
-    onCancel: (values: any) =>
-      log(
-        `combined: onCancel → w=${values.width?.toFixed(0)} o=${values.opacity?.toFixed(2)}`,
-      ),
+      log(`combined: onComplete → ${fmtValues(values)}`),
+    onCancel: (values: any) => log(`combined: onCancel → ${fmtValues(values)}`),
     onError: (err: any) => log(`combined: onError → ${err.reason}`),
   } as any)
 
   return (
     <SpatialDivAnimationPageShell
       title="Combined Properties + 500ms Delay"
-      description="Animates width, height, opacity, and depth simultaneously. Starts after 500ms delay. Duration 1.2s."
+      description="Animates transform.translate.y, transform.scale, and opacity simultaneously after a 500ms delay. Duration 1.2s."
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div
           enable-xr
-          animation={animation}
+          animation={animation as any}
           style={{
-            width: 200,
-            height: 120,
+            width: 240,
+            height: 140,
             background: 'linear-gradient(135deg, #5f3a1e, #874d2d)',
             borderRadius: 12,
             display: 'flex',
@@ -68,9 +77,12 @@ export default function CombinedDelayPage() {
             Clear Log
           </button>
         </div>
-        <div className="text-xs text-gray-500 mt-2">
-          playState:{' '}
-          <code className="text-cyan-300">{(api as any).playState}</code>
+        <div className="mt-3 flex items-center gap-3">
+          <PlayStateBadge state={(api as any).playState} />
+          <span className="text-xs font-mono text-gray-500">
+            isAnimating={String((api as any).isAnimating)} &nbsp; isPaused=
+            {String((api as any).isPaused)}
+          </span>
         </div>
         <Log lines={lines} />
       </section>
