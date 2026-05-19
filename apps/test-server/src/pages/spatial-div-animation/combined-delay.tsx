@@ -14,17 +14,17 @@ export default function CombinedDelayPage() {
 
   const [animation, api] = useAnimation({
     from: {
-      'transform.translate.y': -30,
-      'transform.scale.x': 0.8,
-      'transform.scale.y': 0.8,
-      'transform.scale.z': 1,
+      transform: {
+        translate: { y: -30 },
+        scale: { x: 0.8, y: 0.8, z: 1 },
+      },
       opacity: 0.3,
     },
     to: {
-      'transform.translate.y': 0,
-      'transform.scale.x': 1.0,
-      'transform.scale.y': 1.0,
-      'transform.scale.z': 1,
+      transform: {
+        translate: { y: 0 },
+        scale: { x: 1.0, y: 1.0, z: 1 },
+      },
       opacity: 1.0,
     },
     duration: 1.2,

@@ -37,7 +37,10 @@ function nextAnimationId(): string {
 }
 
 /**
+/**
  * Computes the set of field names that will be suppressed during animation.
+ * Per spec, only transform and opacity are animatable.
+ * When transform is animated, the entire transform sync is suppressed.
  */
 function getSuppressedFieldNames(
   config: SpatialDivAnimationConfig,
@@ -45,12 +48,8 @@ function getSuppressedFieldNames(
   const fields = new Set<string>()
   const to = config.to
   if (to.opacity !== undefined) fields.add('opacity')
-  if (to.back !== undefined) fields.add('backOffset')
-  if (to.depth !== undefined) fields.add('depth')
-  if (to.width !== undefined) fields.add('width')
-  if (to.height !== undefined) fields.add('height')
-  if (to.transform?.translate) {
-    // Suppress the entire transform during translate animation
+  if (to.transform) {
+    // Suppress the entire transform during any transform sub-field animation
     fields.add('transform')
   }
   return fields

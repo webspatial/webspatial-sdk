@@ -14,14 +14,10 @@ export default function Rotate3DPage() {
 
   const [animation, api] = useAnimation({
     from: {
-      'transform.rotate.x': 0,
-      'transform.rotate.y': 0,
-      'transform.rotate.z': 0,
+      transform: { rotate: { x: 0, y: 0, z: 0 } },
     },
     to: {
-      'transform.rotate.x': 180,
-      'transform.rotate.y': 180,
-      'transform.rotate.z': 180,
+      transform: { rotate: { x: 180, y: 180, z: 180 } },
     },
     duration: 2.5,
     timingFunction: 'easeInOut',

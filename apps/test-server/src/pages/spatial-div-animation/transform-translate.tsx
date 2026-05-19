@@ -14,14 +14,10 @@ export default function TransformTranslatePage() {
 
   const [animation, api] = useAnimation({
     from: {
-      'transform.translate.x': 0,
-      'transform.translate.y': 0,
-      'transform.translate.z': 0,
+      transform: { translate: { x: 0, y: 0, z: 0 } },
     },
     to: {
-      'transform.translate.x': 100,
-      'transform.translate.y': 50,
-      'transform.translate.z': -80,
+      transform: { translate: { x: 0.2, y: 0.1, z: 0 } },
     },
     duration: 2.0,
     timingFunction: 'easeInOut',
@@ -47,7 +43,7 @@ export default function TransformTranslatePage() {
       title="Transform Translate"
       description={
         <>
-          Translate (0,0,0)→(100,50,-80) over 2s. The SpatialDiv moves in 3D
+          Translate (0,0,0)→(0.2,0.1,0) over 2s. The SpatialDiv moves in 3D
           space: right (+X), up (+Y), and toward the user (-Z). Restart proves
           play re-entry semantics.
         </>
