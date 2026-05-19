@@ -11,7 +11,7 @@ const PICOOS_UA = 'Mozilla/5.0 PicoBrowser PicoWebApp/2.0.0 ' // see packages/co
 const PLAIN_BROWSER_UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15'
 
-describe('@webspatial/react-sdk/server — detectSpatialRuntime', () => {
+describe('@webspatial/react-sdk/server — detectSpatialRuntime (internal subpath)', () => {
   describe('input narrowing', () => {
     it('accepts a raw user-agent string', () => {
       const result = detectSpatialRuntime(VISIONOS_UA)

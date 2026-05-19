@@ -87,6 +87,8 @@ demos” externally.
 
 1. **Visual**: For `Model`, spatialized `div`s, `Reality`, etc., what is the
    **intended** plain-web appearance (posters, passthrough DOM, inert 3D tags)?
+   **Signed:** `Reality` remains a **single `<div aria-hidden="true">` placeholder**
+   that preserves the layout box (see §11).
 2. **Interaction**: Are spatial gestures **explicitly unsupported** on plain
    web, or should some actions degrade to **2D-safe** behavior?
 3. **Copy**: Do customer-facing docs use consistent language such as
@@ -167,8 +169,15 @@ If the product targets **SSR / prerender**:
    spatial-marked trees?
 2. Are **Server Components** in scope for the default entry’s `'use client'`
    boundary, and who owns documentation for Next / RSC integrators?
+3. **Signed:** Request-time branching (e.g. “hero for WebSpatial shells vs plain
+   web”) uses **User-Agent rules from official WebSpatial docs**, not a
+   documented SDK detection export (see §11).
 
 If SSR is **out of scope**, state that explicitly to avoid implied guarantees.
+
+**Signed:** **`SSRProvider` is removed** from the public package — no
+application-level Context wrapper; hydration safety is internal to the SDK
+(§11).
 
 ---
 
@@ -194,7 +203,22 @@ If SSR is **out of scope**, state that explicitly to avoid implied guarantees.
 
 ---
 
+## 11. Product sign-off (engineering-facing)
+
+Decisions from product sync (record for docs/SDK scope):
+
+| Topic | Decision |
+| --- | --- |
+| `@webspatial/react-sdk/server` | **Not part of the public developer surface.** The subpath may remain in the package for **internal WebSpatial demos, CI, and R&D**; do not document it as a supported integration API in customer-facing materials. |
+| Runtime detection in app code | **`detectSpatialRuntime` is not a supported public API** for third-party integrators. Developers classify environments using the **User-Agent string** and **official WebSpatial site documentation** — not SDK detection helpers. |
+| `SSRProvider` removal | **Agreed.** No app-level provider for hydration gating; SDK handles this internally (`useSpatialReady`, `withSSRSupported`). |
+| `Reality` plain-web / fallback | **Keep the `<div>` placeholder** (layout-preserving degraded rendering). Do not change the facade/impl contract to `null` or alternate tags without an explicit product + spec revision. |
+
+---
+
 ## Document history
 
 - Introduced for cross-team alignment alongside lazy-load v1 and the eager
   entry. Update this file when P0 answers change materially.
+- **§11** added after product sign-off on server subpath visibility, public
+  detection API, `SSRProvider`, and `Reality` fallback.
