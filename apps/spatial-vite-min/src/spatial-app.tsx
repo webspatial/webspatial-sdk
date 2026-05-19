@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useState } from 'react'
 
 export type SpatialAppModelProps = {
   src?: string
@@ -45,6 +45,11 @@ const fixtureTitles: Record<SpatialAppProps['mode'], string> = {
 }
 
 export function SpatialApp({ mode, Model }: SpatialAppProps) {
+  const [spatialTapCount, setSpatialTapCount] = useState(0)
+  const onFirstCellSpatialTap = useCallback(() => {
+    setSpatialTapCount(c => c + 1)
+  }, [])
+
   const entryImport =
     mode === 'lazy' ? '@webspatial/react-sdk' : '@webspatial/react-sdk/eager'
 
@@ -90,6 +95,11 @@ export function SpatialApp({ mode, Model }: SpatialAppProps) {
       </p>
 
       <h2 style={{ marginTop: 32 }}>SpatialDiv grid</h2>
+      <p style={{ marginBottom: 12, fontSize: 14 }}>
+        Cell <strong>1</strong> uses <code>onSpatialTap</code> (
+        <strong>{spatialTapCount}</strong>) — increments on spatial tap in a
+        WebSpatial runtime.
+      </p>
       <div
         style={{
           display: 'grid',
@@ -98,8 +108,20 @@ export function SpatialApp({ mode, Model }: SpatialAppProps) {
         }}
       >
         {Array.from({ length: 9 }).map((_, i) => (
-          <div key={i} enable-xr style={cellStyle}>
-            {i + 1}
+          <div
+            key={i}
+            enable-xr
+            {...(i === 0 ? { onSpatialTap: onFirstCellSpatialTap } : {})}
+            style={
+              {
+                ...cellStyle,
+                ...(i === 0 && spatialTapCount > 0
+                  ? { boxShadow: '0 0 0 3px rgb(34 197 94 / 0.85)' }
+                  : {}),
+              } as React.CSSProperties
+            }
+          >
+            {i === 0 && spatialTapCount > 0 ? `1 (${spatialTapCount})` : i + 1}
           </div>
         ))}
       </div>
