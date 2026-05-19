@@ -657,8 +657,15 @@ interface AnimateSpatialDivResult {
 
    **`onComplete` / `onCancel` 返回值范围：** 回调中的 `SpatialDivAnimatedValues` 仅包含 `to` 中声明的字段对应的终态或恢复值；未被动画控制的字段不会出现在返回值中。这与实体动画的 `TransformValues` 回调行为一致。
 
-8. **cancel-old 失败时 MUST 阻止 start-new**
-   对于 `play()` 驱动的重入和 animation prop 替换场景，如果取消旧会话的命令异步失败，SDK MUST 通过 `onError` 上报，并保持旧会话的失败前状态。在该失败情况下，SDK MUST NOT 启动新会话，且新会话的 `onStart` MUST NOT 触发。
+8. **`play()` 重入语义与实体动画一致**
+   当动画会话已处于 alive 状态时，`play()` 的行为与实体动画完全对齐：
+   - **paused 状态**：`play()` 从暂停进度继续同一会话（resume），不创建新会话，不生成新 `animationId`，不再次触发 `onStart`。
+   - **running / delaying 状态**：`play()` 为空操作（no-op），已有会话继续运行不受干扰。若要重新开始动画，应用代码 MUST 显式先调用 `api.cancel()` 再调用 `api.play()`。
+   - **queued 状态**：`play()` 为空操作，已排队的会话保持不变。
+
+   此行为与 Web Animation API 对齐——对一个已在播放的 animation 调用 `play()` 是空操作。
+
+   对于 animation prop 替换场景（React re-render 将 `animationA` 替换为 `animationB`），SDK 仍 MUST 先取消旧会话再启动新会话，该流程不受此决策影响。
 
 9. **Config 更新不影响 alive 会话**
 
