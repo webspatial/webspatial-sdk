@@ -121,7 +121,7 @@
 
 - [x] 5.1 增加 capability 测试，覆盖 `supports('useAnimation', ['element'])` 的 true / false / 稳定性，以及与 `supports('useAnimation', ['entity'])` 的独立性
   - **依赖** 1.4
-- [ ] 5.2 增加 hook 分叉测试，覆盖 entity key / SpatialDiv key / 混用 key 抛错 / `__kind` 绑定校验
+- [x] 5.2 增加 hook 分叉测试，覆盖 entity key / SpatialDiv key / 混用 key 抛错 / `__kind` 绑定校验
   - **依赖** 1.2、1.3
 - [ ] 5.3 增加 React 行为测试，覆盖 autoStart、manual play、queued play（含排队期间 pause/cancel）、delay pause/play、delay pause then cancel、delay 直接 cancel、play 重入（paused 时 resume、running/delaying/queued 时 no-op）、config 更新不影响 alive 会话、控制命令串行化、single-binding error、animation prop 替换/移除、warning
   - **依赖** 3.1–3.6
@@ -129,7 +129,7 @@
   - **依赖** 3.3、3.4
 - [ ] 5.5 增加 bridge / native 会话测试，覆盖 completed、canceled、failed（含 play 失败和 pause/cancel 失败）、终态事件互斥、loop 和 cancel 恢复语义、listener 注册时序、`animationId` 唯一性、unmount 时 Promise 不 resolve
   - **依赖** 2.3、2.5、4.3、4.4
-- [ ] 5.6 增加状态机测试，覆盖 isAnimating / isPaused 在 idle / queued / delaying / running / paused 各状态下的值，以及 stop/completion 后在回调触发前变为 false
+- [x] 5.6 增加状态机测试，覆盖 isAnimating / isPaused 在 idle / queued / delaying / running / paused 各状态下的值，以及 stop/completion 后在回调触发前变为 false
   - **依赖** 3.1
 - [ ] 5.7 更新 `docs/` 与 `apps/test-server` 示例，演示 `SpatialDiv` 动画 API（入场淡入/位移/缩放、手动触发旋转、循环浮动）、视觉白名单字段、能力检测与已知限制
   - **依赖** 5.3（需要核心行为验证通过）
