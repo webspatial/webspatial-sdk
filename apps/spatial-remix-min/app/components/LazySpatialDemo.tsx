@@ -50,7 +50,11 @@ export function LazySpatialDemo() {
       </p>
 
       <h2 style={{ marginTop: 24 }}>Model facade</h2>
-      <Model src="/assets/demo.usdz" style={{ width: 200, height: 120 }} />
+      <Model
+        enable-xr
+        src="/modelasset/cone.usdz"
+        style={{ width: 200, height: 120 }}
+      />
 
       <h2 style={{ marginTop: 24 }}>SpatialDiv (`enable-xr`)</h2>
       <p>
