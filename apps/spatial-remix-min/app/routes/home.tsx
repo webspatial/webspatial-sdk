@@ -36,8 +36,8 @@ export default function Home() {
           <Link to="/lazy-gate">
             <strong>/lazy-gate</strong>
           </Link>{' '}
-          — <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code>; spatial
-          subtree mounts only after <code>bootSpatial()</code> resolves.
+          — <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code>;
+          spatial subtree mounts only after <code>bootSpatial()</code> resolves.
         </li>
         <li>
           <Link to="/server-ua">
