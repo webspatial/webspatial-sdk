@@ -1,10 +1,74 @@
 import Foundation
 import QuartzCore
 
+// MARK: - Partial Vec3 for transform sub-fields
+
+/// Partial 3D vector for specifying individual axis values.
+/// Used for translate (pixels), rotate (degrees), and scale (unitless multiplier).
+struct Vec3Partial: Decodable {
+    let x: Double?
+    let y: Double?
+    let z: Double?
+}
+
+// MARK: - Transform Target
+
+/// Structured transform target for SpatialDiv animation.
+/// Composed in fixed order: translate → rotate → scale.
+struct SpatialDivTransformTarget: Decodable {
+    /// Translation in CSS pixels.
+    let translate: Vec3Partial?
+    /// Rotation in degrees, aligning with CSS rotateX/Y/Z().
+    let rotate: Vec3Partial?
+    /// Scale as unitless multipliers, aligning with CSS scaleX/Y/Z().
+    let scale: Vec3Partial?
+}
+
+// MARK: - Animation Target
+
+/// Whitelisted property values for SpatialDiv animation.
+/// Per spec: only transform (translate/rotate/scale) and opacity.
+/// Layout-affecting fields (width, height, back, backOffset, depth) are NOT animatable.
+struct SpatialDivAnimationTarget: Decodable {
+    let transform: SpatialDivTransformTarget?
+    let opacity: Double?
+}
+
+// MARK: - Loop Configuration
+
+/// Loop configuration decoded from JS bridge.
+/// Supports: true (reset loop), { reverse: true } (reverse loop), false/nil (play once).
+enum SpatialDivLoopConfig: Decodable {
+    case none
+    case resetLoop
+    case reverseLoop
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+
+        // Try bool first
+        if let boolVal = try? container.decode(Bool.self) {
+            self = boolVal ? .resetLoop : .none
+            return
+        }
+
+        // Try object { reverse?: Bool }
+        struct LoopObject: Decodable {
+            let reverse: Bool?
+        }
+        if let obj = try? container.decode(LoopObject.self) {
+            self = (obj.reverse == true) ? .reverseLoop : .resetLoop
+            return
+        }
+
+        self = .none
+    }
+}
+
 // MARK: - JSB Command
 
 /// Command received from the JS SDK via the bridge.
-/// Matches the `commandType = "AnimateSpatialized2DElement"` defined in core-sdk JSBCommand.ts.
+/// Matches the `commandType = "AnimateSpatialized2DElement"` defined in core-sdk.
 struct AnimateSpatialized2DElementCommand: CommandDataProtocol {
     static let commandType: String = "AnimateSpatialized2DElement"
 
@@ -19,15 +83,28 @@ struct AnimateSpatialized2DElementCommand: CommandDataProtocol {
     let timingFunction: String?
     let delay: Double?
     let playbackRate: Double?
+    let loop: SpatialDivLoopConfig?
 }
 
-/// Target property values for SpatialDiv animation.
-struct SpatialDivAnimationTarget: Decodable {
-    let width: Double?
-    let height: Double?
-    let depth: Double?
-    let opacity: Double?
-    let backOffset: Double?
+// MARK: - Resolved SRT Values
+
+/// Fully resolved translate/rotate/scale values for interpolation.
+struct ResolvedSRT {
+    var translateX: Double
+    var translateY: Double
+    var translateZ: Double
+    var rotateX: Double // degrees
+    var rotateY: Double // degrees
+    var rotateZ: Double // degrees
+    var scaleX: Double
+    var scaleY: Double
+    var scaleZ: Double
+
+    static let identity = ResolvedSRT(
+        translateX: 0, translateY: 0, translateZ: 0,
+        rotateX: 0, rotateY: 0, rotateZ: 0,
+        scaleX: 1, scaleY: 1, scaleZ: 1
+    )
 }
 
 // MARK: - Timing Functions
@@ -57,9 +134,7 @@ enum SpatialDivTimingFunction {
     }
 
     /// Solve cubic bezier curve for Y given input T (time fraction).
-    /// Uses Newton-Raphson iteration to find the x parameter, then computes y.
     private func cubicBezier(_ t: Double, x1: Double, y1: Double, x2: Double, y2: Double) -> Double {
-        // For linear case, short-circuit
         if x1 == 0 && y1 == 0 && x2 == 1 && y2 == 1 {
             return t
         }
@@ -72,15 +147,11 @@ enum SpatialDivTimingFunction {
             if abs(derivative) < 1e-6 { break }
             guessT -= (currentX - t) / derivative
         }
-
-        // Clamp to valid range
         guessT = max(0.0, min(1.0, guessT))
-
         return sampleCurveY(guessT, y1: y1, y2: y2)
     }
 
     private func sampleCurveX(_ t: Double, x1: Double, x2: Double) -> Double {
-        // B(t) = 3*(1-t)^2*t*x1 + 3*(1-t)*t^2*x2 + t^3
         return ((1.0 - 3.0 * x2 + 3.0 * x1) * t + (3.0 * x2 - 6.0 * x1)) * t * t + 3.0 * x1 * t
     }
 
@@ -106,9 +177,8 @@ enum SpatialDivTimingFunction {
 // MARK: - Animation Session
 
 /// Represents a single SpatialDiv animation session.
-/// Uses CADisplayLink for frame-driven interpolation since SpatialDiv properties
-/// (width, height, depth, opacity, backOffset) are not RealityKit transform-based
-/// and cannot use FromToByAnimation.
+/// Uses CADisplayLink for frame-driven interpolation.
+/// Only animates: transform (translate/rotate/scale) and opacity.
 class SpatialDivAnimationSession {
     let animationId: String
     let elementId: String
@@ -119,8 +189,23 @@ class SpatialDivAnimationSession {
     /// Start values (from). If nil, snapshot from element at play time.
     let from: SpatialDivAnimationTarget?
 
-    /// Actual start values after snapshotting from element.
-    var resolvedFrom: SpatialDivAnimationTarget?
+    /// Resolved "from" SRT values after snapshotting from element.
+    var resolvedFromSRT: ResolvedSRT = .identity
+
+    /// Resolved "to" SRT values.
+    var resolvedToSRT: ResolvedSRT = .identity
+
+    /// Resolved "from" opacity.
+    var resolvedFromOpacity: Double = 1.0
+
+    /// Resolved "to" opacity.
+    var resolvedToOpacity: Double = 1.0
+
+    /// Whether transform is being animated.
+    var animatesTransform: Bool = false
+
+    /// Whether opacity is being animated.
+    var animatesOpacity: Bool = false
 
     /// Duration in seconds.
     let duration: TimeInterval
@@ -131,28 +216,30 @@ class SpatialDivAnimationSession {
     /// Timing function for easing.
     let timingFunction: SpatialDivTimingFunction
 
-    /// Playback speed multiplier. Default: 1.0.
+    /// Playback speed multiplier.
     let speed: Double
+
+    /// Loop configuration.
+    let loopConfig: SpatialDivLoopConfig
+
+    // MARK: - Loop State
+
+    /// Whether the current iteration is playing in reverse (for reverse loop).
+    var isReversed: Bool = false
 
     // MARK: - State
 
-    /// Whether the session has been canceled (terminal state).
     private(set) var isCanceled: Bool = false
-
-    /// Whether the session has completed naturally (terminal state).
     private(set) var isCompleted: Bool = false
-
-    /// Whether the session is paused.
     private(set) var isPaused: Bool = false
 
-    /// Whether this session has reached a terminal state.
     var isTerminal: Bool {
         return isCanceled || isCompleted
     }
 
     // MARK: - Timing
 
-    /// The timestamp when animation actually starts (after delay).
+    /// The timestamp when animation motion actually starts (after delay).
     var startTime: CFTimeInterval = 0
 
     /// Accumulated pause duration to subtract from elapsed time.
@@ -175,7 +262,8 @@ class SpatialDivAnimationSession {
         duration: Double,
         timingFunction: String,
         delay: Double,
-        speed: Double = 1.0
+        speed: Double = 1.0,
+        loopConfig: SpatialDivLoopConfig = .none
     ) {
         self.animationId = animationId
         self.elementId = elementId
@@ -185,6 +273,7 @@ class SpatialDivAnimationSession {
         self.delay = delay
         self.timingFunction = SpatialDivTimingFunction.from(name: timingFunction)
         self.speed = speed
+        self.loopConfig = loopConfig
         createdTime = CACurrentMediaTime()
     }
 
@@ -208,14 +297,21 @@ class SpatialDivAnimationSession {
         pausedDuration += CACurrentMediaTime() - pauseStartTime
     }
 
-    // MARK: - Interpolation
+    // MARK: - Timing Calculations
 
-    /// Calculate the current progress (0...1) based on elapsed time.
-    func currentProgress(at timestamp: CFTimeInterval) -> Double {
+    /// Calculate the raw linear progress (0...1) at the given timestamp.
+    func rawProgress(at timestamp: CFTimeInterval) -> Double {
         guard delayCompleted else { return 0 }
         let elapsed = (timestamp - startTime - pausedDuration) * speed
-        let rawProgress = min(max(elapsed / duration, 0.0), 1.0)
-        return timingFunction.evaluate(rawProgress)
+        return min(max(elapsed / duration, 0.0), 1.0)
+    }
+
+    /// Calculate the eased progress, accounting for reverse loop direction.
+    func currentProgress(at timestamp: CFTimeInterval) -> Double {
+        let raw = rawProgress(at: timestamp)
+        let eased = timingFunction.evaluate(raw)
+        // If reversed (reverse loop), invert the progress
+        return isReversed ? (1.0 - eased) : eased
     }
 
     /// Check if the delay phase should end at the given timestamp.
@@ -230,20 +326,45 @@ class SpatialDivAnimationSession {
         return false
     }
 
-    /// Check if the animation is complete at the given timestamp.
-    func isAnimationComplete(at timestamp: CFTimeInterval) -> Bool {
+    /// Check if the current iteration is complete at the given timestamp.
+    func isIterationComplete(at timestamp: CFTimeInterval) -> Bool {
         guard delayCompleted else { return false }
         let elapsed = (timestamp - startTime - pausedDuration) * speed
         return elapsed >= duration
     }
 
-    /// Interpolate a single value between from and to.
+    /// Reset timing for a new loop iteration.
+    func resetForNextIteration(at timestamp: CFTimeInterval) {
+        startTime = timestamp
+        pausedDuration = 0
+    }
+
+    // MARK: - Interpolation Helpers
+
     static func lerp(_ from: Double, _ to: Double, _ progress: Double) -> Double {
         return from + (to - from) * progress
     }
 }
 
 // MARK: - Event Payloads
+
+/// Payload structure matching the JS-side SpatialDivAnimatedValues.
+struct SpatialDivAnimationValuesPayload: Encodable {
+    let transform: SpatialDivTransformPayload?
+    let opacity: Double?
+}
+
+struct SpatialDivTransformPayload: Encodable {
+    let translate: Vec3Payload?
+    let rotate: Vec3Payload?
+    let scale: Vec3Payload?
+}
+
+struct Vec3Payload: Encodable {
+    let x: Double?
+    let y: Double?
+    let z: Double?
+}
 
 struct SpatialDivAnimationCompletedPayload: Encodable {
     let type: String
@@ -260,12 +381,4 @@ struct SpatialDivAnimationFailedPayload: Encodable {
     let animationId: String
     let command: String
     let reason: String
-}
-
-struct SpatialDivAnimationValuesPayload: Encodable {
-    let width: Double?
-    let height: Double?
-    let depth: Double?
-    let opacity: Double?
-    let backOffset: Double?
 }

@@ -12,8 +12,8 @@ export default function ReverseLoopPage() {
   const { lines, log, clear } = useLog()
 
   const [animation, api] = useAnimation({
-    from: { 'transform.translate.x': -80 },
-    to: { 'transform.translate.x': 80 },
+    from: { transform: { translate: { x: -80 } } },
+    to: { transform: { translate: { x: 80 } } },
     duration: 1.5,
     timingFunction: 'linear',
     loop: { reverse: true },

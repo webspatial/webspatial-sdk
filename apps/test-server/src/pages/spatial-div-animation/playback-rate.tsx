@@ -13,8 +13,14 @@ export default function PlaybackRatePage() {
   const { lines, log, clear } = useLog()
 
   const [animation, api] = useAnimation({
-    from: { 'transform.rotate.z': 0, opacity: 1.0 },
-    to: { 'transform.rotate.z': 360, opacity: 0.4 },
+    from: {
+      transform: { rotate: { z: 0 } },
+      opacity: 1.0,
+    },
+    to: {
+      transform: { rotate: { z: 360 } },
+      opacity: 0.4,
+    },
     duration: 2.0,
     timingFunction: 'linear',
     playbackRate: 2.0,

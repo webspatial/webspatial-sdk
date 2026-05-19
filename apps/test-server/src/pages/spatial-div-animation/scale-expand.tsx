@@ -14,14 +14,10 @@ export default function ScaleExpandPage() {
 
   const [animation, api] = useAnimation({
     from: {
-      'transform.scale.x': 0.6,
-      'transform.scale.y': 0.6,
-      'transform.scale.z': 1,
+      transform: { scale: { x: 0.6, y: 0.6, z: 1 } },
     },
     to: {
-      'transform.scale.x': 1.0,
-      'transform.scale.y': 1.0,
-      'transform.scale.z': 1,
+      transform: { scale: { x: 1.0, y: 1.0, z: 1 } },
     },
     duration: 1.0,
     autoStart: false,
