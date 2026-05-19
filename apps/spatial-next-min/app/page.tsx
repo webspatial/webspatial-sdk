@@ -9,8 +9,8 @@ export default function HomePage() {
     <div>
       <h1>spatial-next-min</h1>
       <p>
-        Five worked examples of <code>@webspatial/react-sdk</code> under Next.js
-        15 App Router. Each page exercises a different scenario from the{' '}
+        Worked examples of <code>@webspatial/react-sdk</code> under Next.js 15 App
+        Router. Each page exercises a different scenario from the{' '}
         <code>lazy-load-spatial-runtime</code> spec.
       </p>
       <ul style={{ lineHeight: 1.8 }}>
@@ -19,8 +19,15 @@ export default function HomePage() {
             <strong>/lazy</strong>
           </Link>{' '}
           — default lazy entry (<code>@webspatial/react-sdk</code>) +{' '}
-          <code>bootSpatial()</code> in <code>useEffect</code>. Recommended
-          shape for web-first apps with progressive enhancement.
+          <code>useBootSpatial()</code> after mount. Recommended shape for
+          web-first apps with progressive enhancement.
+        </li>
+        <li>
+          <Link href="/lazy-gate">
+            <strong>/lazy-gate</strong>
+          </Link>{' '}
+          — <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code>; delays
+          mounting spatial children until boot completes.
         </li>
         <li>
           <Link href="/eager">

@@ -101,6 +101,8 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     'bootSpatial',
     'isSpatialReady',
     'useSpatialReady',
+    'useBootSpatial',
+    'SpatialBoot',
     'onSpatialLoadError',
     'WebSpatialBootError',
   ] as const

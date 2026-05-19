@@ -106,6 +106,8 @@ export {
   isSpatialReadyEager as isSpatialReady,
   useSpatialReadyEager as useSpatialReady,
   onSpatialLoadErrorEager as onSpatialLoadError,
+  useBootSpatialEager as useBootSpatial,
+  SpatialBootEager as SpatialBoot,
 } from './runtime/eagerStubs'
 // `WebSpatialBootError` is the same class definition the default entry
 // exports — eager stubs simply never throw it, but the class remains

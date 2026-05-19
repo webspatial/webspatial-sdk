@@ -31,8 +31,16 @@
 // --- Lazy-load runtime: bridge / boot / readiness / error class --------------
 export { bootSpatial } from './runtime/boot'
 export { isSpatialReady, onSpatialLoadError } from './runtime/bridge'
+export { SpatialBoot } from './runtime/SpatialBoot'
+export { useBootSpatial } from './runtime/useBootSpatial'
 export { useSpatialReady } from './runtime/useSpatialReady'
 export { WebSpatialBootError } from './runtime/errors'
+export type { SpatialBootProps } from './runtime/SpatialBoot'
+export type {
+  BootStatus,
+  UseBootSpatialOptions,
+  UseBootSpatialResult,
+} from './runtime/useBootSpatial'
 
 // --- Runtime capability infrastructure (local, core-free at runtime) ---------
 export { WebSpatialRuntime } from './webSpatialRuntime'

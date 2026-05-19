@@ -15,6 +15,9 @@ without calling `bootSpatial()`).
   primary runtime hook. In plain web browsers it resolves on the next
   microtask; in WebSpatial-capable runtimes it dynamically loads
   `@webspatial/react-sdk/spatial`.
+- **Lazy + gate (`lazy-gate.html` → `src/main-lazy-gate.tsx`):** wraps the
+  app in `<SpatialBoot gate fallback={…}>` so the spatial subtree mounts only
+  after boot (see `docs/design/spatial-boot-component.md`).
 - **Lazy production graph:** Vite's default code-splitting emits the spatial
   chunk as a separate `dist/assets/spatial-*.js` file that is fetched on
   demand by the bridge — confirming the published-bundle shape works
@@ -86,6 +89,7 @@ pnpm --filter spatial-vite-min dev      # dev server
 
 # Then open any page (nav links exist in the UI):
 #   Lazy default:          http://localhost:5173/
+#   Lazy + SpatialBoot gate: http://localhost:5173/lazy-gate.html
 #   Eager + bootSpatial:   http://localhost:5173/eager.html
 #   Eager, no bootSpatial: http://localhost:5173/eager-lean.html
 

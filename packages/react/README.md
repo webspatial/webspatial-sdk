@@ -29,6 +29,22 @@ ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
 
 If you cannot pre-await (e.g. you're inside an existing render cycle), call `bootSpatial()` later: facades will mount their fallback first and swap to the real implementation on the React commit immediately after the bridge resolves.
 
+Optional sugar for in-tree boot (SSR / Remix client subtrees):
+
+```tsx
+import { SpatialBoot, useBootSpatial } from '@webspatial/react-sdk'
+
+// Auto-boot after mount; children render immediately (default gate={false})
+<SpatialBoot>
+  <App />
+</SpatialBoot>
+
+// Or expose boot status in your own UI
+const { status } = useBootSpatial()
+```
+
+See `docs/design/spatial-boot-component.md` for `gate` / `fallback` semantics. Lazy CSR apps that want minimal fallback flash should still `await bootSpatial()` before `createRoot().render()`.
+
 ### Default fallbacks per component
 
 Every facade in the default entry has a documented fallback rendered in plain web / SSR / pre-boot:
