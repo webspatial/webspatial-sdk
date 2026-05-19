@@ -42,11 +42,10 @@ export default function HomePage() {
           <Link href="/server-only-util">
             <strong>/server-only-util</strong>
           </Link>{' '}
-          — pure Server Component using the server-safe SDK subpath (
-          <code>@webspatial/react-sdk/server</code>). Calls{' '}
-          <code>detectSpatialRuntime(await headers())</code> so the initial HTML
-          can branch on whether the requesting device is a WebSpatial runtime —
-          no client JS required.
+          — internal validation: RSC calling the non–public{' '}
+          <code>@webspatial/react-sdk/server</code> entry (see package README).
+          For real apps, branch on <code>User-Agent</code> per WebSpatial docs —
+          not this demo pattern.
         </li>
       </ul>
       <p>

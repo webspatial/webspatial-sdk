@@ -1,34 +1,18 @@
 // =============================================================================
-// `@webspatial/react-sdk/server` — server-safe public subpath.
+// `@webspatial/react-sdk/server` — INTERNAL / non–public-developer surface.
 //
-// Reach for this entry from React Server Components (Next.js App Router) when
-// you need a WebSpatial helper that is safe to *call* from a Server Module —
-// i.e. not just a JSX element type to render, but an actual function executed
-// during RSC render.
+// Product decision: this subpath is for WebSpatial **engineering demos, CI,
+// and R&D** — not documented as a supported third-party integration API.
+// Integrators classify environments using User-Agent + official site docs.
 //
-// Why this is a separate entry
-// ----------------------------
-// `dist/index.js` (the default entry) carries `'use client'` at its top
-// because most of its exports are React hooks or facade components that
-// transitively need hooks. When a Server Component imports anything from
-// `@webspatial/react-sdk`, Next's RSC compiler turns the resolved symbols
-// into Client References (opaque objects, NOT callable). Trying to call
-// such an import throws:
+// Technical note: `dist/index.js` (the default entry) carries `'use client'`,
+// so most callable helpers cannot run from an RSC server module. This entry
+// exists so in-repo apps/tests can import server-safe helpers without pulling
+// the client directive; behavior may change without semver migration guidance
+// for external SDK consumers.
 //
-//   "Attempted to call X() from the server but X is on the client."
-//
-// Helpers that are genuinely server-safe — no `window`, no `navigator`, no
-// React state — therefore have to live on a separate subpath whose dist
-// file does NOT carry the directive, so the RSC compiler resolves them
-// to real callable functions.
-//
-// What lives here
-// ---------------
-// Only APIs that are useful in *server-side execution context* (RSC render,
-// edge middleware, Node scripts) AND fail gracefully without browser globals.
-// Hooks, facade components, and APIs that mutate module-level singleton
-// state (which would leak across requests in a shared Node process) MUST
-// NOT be exposed here.
+// Hooks, facade components, and APIs that mutate module-level singleton state
+// MUST NOT be exposed here.
 // =============================================================================
 
 import { computeRuntimeFromUserAgent } from '../runtime/capabilities'
@@ -52,37 +36,17 @@ export type SpatialRuntimeHeaders = {
 }
 
 /**
- * Detect which WebSpatial runtime the visiting device is running, on the
- * server, before any JS hits the client. Returns the same snapshot shape the
- * client-side runtime cache produces from `navigator.userAgent` — but driven
- * by an explicit user-agent value so it works in RSC / edge / Node contexts
- * that have no `navigator`.
+ * Server-side snapshot of the WebSpatial runtime type for a User-Agent string
+ * (same shape the client runtime cache derives from `navigator.userAgent`).
  *
- * @param input
- *   The user agent. Accepts:
- *   - a raw user-agent string (e.g. `req.headers['user-agent']`),
- *   - a `Headers`-like object with a `.get(name)` method (covers Next.js
- *     `await headers()`, Web Fetch `Headers`, and most framework header
- *     wrappers — see {@link SpatialRuntimeHeaders}),
- *   - `null` / `undefined` (treated as "no user agent" → `{ type: null }`).
+ * **Not a supported public API for third-party apps.** Product direction:
+ * integrators branch on **`User-Agent` using official WebSpatial documentation**,
+ * not SDK detection exports. This function remains for **in-repo demos / CI /
+ * engineering** only (`@webspatial/react-sdk/server` is not part of the
+ * documented developer surface).
  *
- * @returns
- *   `WebSpatialRuntimeSnapshot` — `{ type: 'visionos' | 'picoos' | 'puppeteer' | null,
- *   shellVersion: string | null }`. `type === null` means the request is
- *   from a plain browser / non-spatial environment.
- *
- * @example  Next.js App Router (Server Component)
- *   import { headers } from 'next/headers'
- *   import { detectSpatialRuntime } from '@webspatial/react-sdk/server'
- *
- *   export default async function Page() {
- *     const runtime = detectSpatialRuntime(await headers())
- *     if (runtime.type === 'visionos') return <SpatialHero />
- *     return <FallbackHero />
- *   }
- *
- * @example  Generic — raw string
- *   detectSpatialRuntime(request.headers.get('user-agent') ?? '')
+ * @param input The user agent: raw string, `Headers`-like `.get` object
+ *   ({@link SpatialRuntimeHeaders}), or `null` / `undefined`.
  */
 export function detectSpatialRuntime(
   input: string | SpatialRuntimeHeaders | null | undefined,

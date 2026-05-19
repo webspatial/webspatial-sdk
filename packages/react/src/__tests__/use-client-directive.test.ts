@@ -107,12 +107,10 @@ describe('"use client" directive on published dist (spec tasks.md §13.1)', () =
       expect(startsWithUseClient(file)).toBe(false)
     })
 
-    it('dist/server/index.js does NOT carry the directive (server-safe public subpath)', () => {
-      // The whole point of `@webspatial/react-sdk/server` is to be
-      // server-callable from RSC files. Carrying `'use client'` would
-      // make every export resolve as a Client Reference at runtime,
-      // defeating the purpose. See `src/server/index.ts` for the
-      // design rationale.
+    it('dist/server/index.js does NOT carry the directive (internal RSC-callable subpath — not public developer API)', () => {
+      // `@webspatial/react-sdk/server` must stay callable from server modules in
+      // in-repo demos. Carrying `'use client'` would make exports resolve as
+      // Client References. See `src/server/index.ts`.
       const file = resolve(distDir, 'server/index.js')
       expect(existsSync(file)).toBe(true)
       expect(startsWithUseClient(file)).toBe(false)
