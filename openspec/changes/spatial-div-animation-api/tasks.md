@@ -101,7 +101,7 @@
   - **Depends on** 3.2 (binding path)
 - [ ] 3.4 Implement transform-wide suppression during `transform` animation, caching, and recovery after session end.
   - **Depends on** 3.2 (binding path)
-- [ ] 3.5 Implement play re-entry (alive session: play → cancel old → start new), cancel-old failure blocks start-new, config updates do not affect alive sessions, and command serialization in call order.
+- [ ] 3.5 Implement play re-entry (paused: play → resume same session; running/delaying/queued: play → no-op), config updates do not affect alive sessions, and command serialization in call order.
   - **Depends on** 3.1 (state machine) and 2.3 (command serialization)
 - [ ] 3.6 Add warnings for non-`enable-xr` usage and unsupported runtimes (at most once per hook instance), and keep `play()` as a no-op; when unsupported, `isAnimating` stays `false`.
   - **Depends on** 1.4 (capability key)
@@ -123,7 +123,7 @@
   - **Depends on** 1.4
 - [ ] 5.2 Add hook routing tests covering entity keys vs SpatialDiv keys, mixed-key validation errors, and `__kind` binding validation.
   - **Depends on** 1.2 and 1.3
-- [ ] 5.3 Add React behavior tests covering autoStart, manual play, queued play (including pause/cancel while queued), delay pause/play, delay pause then cancel, delay cancel, play re-entry ordering (cancel old → start new), config updates not affecting alive sessions, command serialization, cancel-old failure blocks start-new, single-binding errors, animation prop replacement/removal, and warnings.
+- [ ] 5.3 Add React behavior tests covering autoStart, manual play, queued play (including pause/cancel while queued), delay pause/play, delay pause then cancel, delay cancel, play re-entry (paused: resume; running/delaying/queued: no-op), config updates not affecting alive sessions, command serialization, single-binding errors, animation prop replacement/removal, and warnings.
   - **Depends on** 3.1–3.6
 - [ ] 5.4 Add sync competition tests covering `opacity` property-level suppression (including cache and recovery), transform-wide suppression, suppression release timing (flags cleared before callbacks), and regular CSS transform updates being delayed until the session ends.
   - **Depends on** 3.3 and 3.4
