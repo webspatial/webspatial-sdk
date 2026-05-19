@@ -69,6 +69,14 @@ import SpatialDivTest from './src/pages/spatialDivTest/index'
 import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
 import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
+import EntityAnimationPage from './src/pages/entity-animation/index'
+import EntityAnimationEntrancePage from './src/pages/entity-animation/entrance'
+import EntityAnimationManualTriggerPage from './src/pages/entity-animation/manual-trigger'
+import EntityAnimationReverseLoopPage from './src/pages/entity-animation/reverse-loop'
+import EntityAnimationCancelSyncPage from './src/pages/entity-animation/cancel-sync'
+import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/capability-check'
+import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loop'
+import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -128,6 +136,38 @@ function App() {
                 <Route
                   path="/runtime-capabilities"
                   element={<RuntimeCapabilitiesPage />}
+                />
+                <Route
+                  path="/entity-animation"
+                  element={<EntityAnimationPage />}
+                />
+                <Route
+                  path="/entity-animation/entrance"
+                  element={<EntityAnimationEntrancePage />}
+                />
+                <Route
+                  path="/entity-animation/manual-trigger"
+                  element={<EntityAnimationManualTriggerPage />}
+                />
+                <Route
+                  path="/entity-animation/reverse-loop"
+                  element={<EntityAnimationReverseLoopPage />}
+                />
+                <Route
+                  path="/entity-animation/cancel-sync"
+                  element={<EntityAnimationCancelSyncPage />}
+                />
+                <Route
+                  path="/entity-animation/capability-check"
+                  element={<EntityAnimationCapabilityCheckPage />}
+                />
+                <Route
+                  path="/entity-animation/reset-loop"
+                  element={<EntityAnimationResetLoopPage />}
+                />
+                <Route
+                  path="/entity-animation/play-state"
+                  element={<EntityAnimationPlayStatePage />}
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />

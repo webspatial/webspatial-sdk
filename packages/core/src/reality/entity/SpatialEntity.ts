@@ -3,6 +3,7 @@ import {
   ConvertFromEntityToSceneCommand,
   ConvertFromSceneToEntityCommand,
   SetParentForEntityCommand,
+  AnimateTransformJSBCommand,
 } from './../../JSBCommand'
 import {
   SpatialEntityEventType,
@@ -10,6 +11,12 @@ import {
   SpatialEntityUserData,
   Vec3,
 } from '../../types/types'
+import type {
+  AnimateTransformCommand,
+  AnimateTransformResult,
+  TransformValues,
+  AnimationError,
+} from '../../types/animation'
 import {
   AddComponentToEntityCommand,
   RemoveComponentFromEntityCommand,
@@ -21,6 +28,7 @@ import { SpatialEntityProperties } from '../../types/types'
 import { SpatialComponent } from '../component/SpatialComponent'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 import { createSpatialEvent } from '../../SpatialWebEventCreator'
+import { decomposeSRT } from '../../utils'
 import {
   ObjectDestroyMsg,
   SpatialDragEndMsg,
@@ -32,6 +40,9 @@ import {
   SpatialRotateMsg,
   SpatialTapMsg,
   SpatialWebMsgType,
+  AnimationCompletedEventPayload,
+  AnimationCanceledEventPayload,
+  AnimationFailedEventPayload,
 } from '../../WebMsgCommand'
 
 export class SpatialEntity extends SpatialObject {
@@ -116,6 +127,122 @@ export class SpatialEntity extends SpatialObject {
     this.rotation = properties.rotation ?? this.rotation
     this.scale = properties.scale ?? this.scale
     return new UpdateEntityPropertiesCommand(this, properties).execute()
+  }
+
+  /**
+   * Send an animation command to the native layer.
+   *
+   * For `play`: registers event listeners for completion / stop / failure,
+   * sends the JSB command, and returns an `AnimateTransformResult` with
+   * `finished` and `stopped` promises.
+   *
+   * For `pause`, `resume`, `cancel``: sends the command and resolves when
+   * the bridge acknowledges it.
+   */
+  animateTransform(
+    command: AnimateTransformCommand & { type: 'play' },
+  ): Promise<AnimateTransformResult>
+  animateTransform(command: AnimateTransformCommand): Promise<void>
+  async animateTransform(
+    command: AnimateTransformCommand,
+  ): Promise<AnimateTransformResult | void> {
+    const { animationId, type } = command
+
+    if (type === 'play') {
+      // Register event listeners BEFORE sending the play command
+      // to avoid race conditions where native fires before we listen.
+      let resolveFinished!: (val: TransformValues) => void
+      let resolveCancel!: (val: TransformValues) => void
+      let resolveFailed!: (err: AnimationError) => void
+
+      const finished = new Promise<TransformValues>(r => {
+        resolveFinished = r
+      })
+      const canceled = new Promise<TransformValues>(r => {
+        resolveCancel = r
+      })
+      const failed = new Promise<AnimationError>(r => {
+        resolveFailed = r
+      })
+
+      const cleanup = () => {
+        SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
+        SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
+        SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
+      }
+
+      SpatialWebEvent.addEventReceiver(
+        `${animationId}_completed`,
+        (data: AnimationCompletedEventPayload) => {
+          cleanup()
+          const values = decomposeSRT(data.transform)
+          // Update local entity state to match the native final transform
+          if (values.position) this.position = values.position
+          if (values.rotation) this.rotation = values.rotation
+          if (values.scale) this.scale = values.scale
+          resolveFinished(values)
+        },
+      )
+
+      SpatialWebEvent.addEventReceiver(
+        `${animationId}_canceled`,
+        (data: AnimationCanceledEventPayload) => {
+          cleanup()
+          const values = decomposeSRT(data.transform)
+          if (values.position) this.position = values.position
+          if (values.rotation) this.rotation = values.rotation
+          if (values.scale) this.scale = values.scale
+          resolveCancel(values)
+        },
+      )
+
+      SpatialWebEvent.addEventReceiver(
+        `${animationId}_failed`,
+        (data: AnimationFailedEventPayload) => {
+          cleanup()
+          resolveFailed({
+            animationId: data.animationId,
+            command: data.command,
+            code: data.code,
+            reason: data.reason,
+          })
+        },
+      )
+
+      // Send the play command
+      const result = await new AnimateTransformJSBCommand(command).execute()
+      if (!result.success) {
+        cleanup()
+        throw new Error(
+          result.errorMessage ?? 'AnimateTransform play command failed',
+        )
+      }
+
+      return {
+        animationId,
+        finished,
+        canceled,
+        failed,
+      } as AnimateTransformResult
+    } else {
+      // pause / resume / cancel — fire and wait for bridge ack
+      const result = await new AnimateTransformJSBCommand(command).execute()
+      if (!result.success) {
+        throw new Error(
+          result.errorMessage ?? `AnimateTransform ${type} command failed`,
+        )
+      }
+    }
+  }
+
+  /**
+   * Remove all animation event receivers for a given animationId.
+   * Called on entity unmount to prevent leaked listeners.
+   */
+  cleanupAnimationListeners(animationId: string) {
+    SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
+    SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
+    SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
   }
 
   async addEvent(type: SpatialEntityEventType, callback: (data: any) => void) {

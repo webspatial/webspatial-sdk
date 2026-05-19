@@ -80,15 +80,17 @@ describe('utils', () => {
       { x: 2, y: 3, z: 4 },
     )
 
+    // Use toMatchObject because happy-dom returns a real DOMPoint (which
+    // includes a `w` property) rather than a plain {x,y,z} object.
     const origin = m.transformPoint({ x: 0, y: 0, z: 0 })
-    expect(origin).toEqual({
+    expect(origin).toMatchObject({
       x: 10,
       y: 20,
       z: 30,
     })
 
     const p = m.transformPoint({ x: 1, y: 1, z: 1 })
-    expect(p).toEqual({ x: 12, y: 23, z: 34 })
+    expect(p).toMatchObject({ x: 12, y: 23, z: 34 })
   })
 })
 

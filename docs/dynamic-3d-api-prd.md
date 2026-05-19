@@ -31,6 +31,7 @@ import {
   UnlitMaterial,
   Texture,
   ModelAsset,
+  useAnimation,
 } from '@webspatial/react-sdk';
 ```
 
@@ -264,7 +265,64 @@ const [color, setColor] = useState('#ff0000');
 
 ## 13. Animation
 
-Drive transforms (or other state) from `requestAnimationFrame` and pass updated props. Entity transforms are applied each frame from React state.
+### 12.1 Native transform animation (`useAnimation`)
+
+Animate entity transforms (position, rotation, scale) at native frame rate using the `useAnimation` hook. Playback runs in RealityKit at 90 fps — no per-frame JS bridge calls.
+
+```tsx
+import { useAnimation } from '@webspatial/react-sdk';
+
+const [animation, api] = useAnimation({
+  to: { position: { x: 0, y: 1.5, z: -2 } },
+  duration: 0.6,
+  timingFunction: 'easeOut',
+});
+
+<BoxEntity materials={['red']} width={0.3} height={0.3} depth={0.3} animation={animation} />
+```
+
+**Config options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `to` | `{ position?, rotation?, scale? }` | *(required)* | Target transform values |
+| `from` | `{ position?, rotation?, scale? }` | current | Starting transform values (omit to animate from current) |
+| `duration` | `number` | `0.25` | Duration in seconds (must be positive and finite) |
+| `delay` | `number` | `0` | Delay before playback starts, in seconds |
+| `timingFunction` | `'linear' \| 'easeIn' \| 'easeOut' \| 'easeInOut'` | `'linear'` | Easing curve |
+| `autoStart` | `boolean` | `true` | Start playing on mount |
+| `loop` | `boolean \| { reverse: true }` | `false` | `true` = reset loop; `{ reverse: true }` = ping-pong |
+| `onStart` | `() => void` | — | Called when native playback actually begins |
+| `onComplete` | `() => void` | — | Called on natural completion |
+| `onCancel` | `() => void` | — | Called when `cancel()` is invoked |
+| `onError` | `(err: AnimationError) => void` | — | Called on bridge or native failure |
+
+**Imperative API (`api`):**
+
+| Method / Property | Description |
+|-------------------|-------------|
+| `api.play()` | Start or restart the animation |
+| `api.pause()` | Pause (preserves delay remaining time) |
+| `api.resume()` | Resume from paused state |
+| `api.stop()` | Stop and reset |
+| `api.isAnimating` | `true` while queued, delaying, or running |
+| `api.isPaused` | `true` while paused |
+
+**Feature detection:**
+
+```ts
+import { supports } from '@webspatial/core-sdk';
+
+if (supports('useAnimation', ['entity'])) {
+  // Animation API is available in the current runtime
+}
+```
+
+> **Note:** The `animation` prop is only accepted by entity components under `<Reality>` / `<SceneGraph>` (e.g. `BoxEntity`, `SphereEntity`, `ModelEntity`). It is not available on `SpatialDiv` or non-entity components. While an animated entity is playing, the animated transform fields (e.g. `position`) are suppressed — ordinary prop updates for those fields are ignored until the animation stops. Non-animated fields continue to update normally.
+
+### 12.2 Frame-driven animation (manual)
+
+For custom per-frame logic, drive transforms from `requestAnimationFrame` and pass updated props. Entity transforms are applied each frame from React state.
 
 ```tsx
 const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 });
@@ -281,6 +339,8 @@ useEffect(() => {
 
 <BoxEntity materials={['red']} rotation={rotation} />
 ```
+
+> **Trade-off:** Frame-driven animation crosses the JS–native bridge every frame and cannot match the smoothness of `useAnimation` on visionOS. Prefer `useAnimation` for transform animations.
 
 ---
 
