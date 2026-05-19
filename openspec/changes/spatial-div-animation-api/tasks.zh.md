@@ -69,26 +69,26 @@
 
 ## 1. 公开 API 与能力契约
 
-- [ ] 1.1 更新 `SpatialDiv` 版本的 `useAnimation` 配置类型（`SpatialDivAnimationConfig`、`SpatialDivAnimatedValues`）、返回类型（`SpatialDivAnimatedProps`、`AnimationApi`）与 `AnimationError` 形状，仅覆盖视觉白名单：`transform.translate.x/y/z`、`transform.rotate.x/y/z`、`transform.scale.x/y/z`、`opacity`；明确 `duration = 0.3`、`playbackRate = 1`、`opacity` 范围 `[0, 1]`、`rotate` 单位 degree、`scale` 为无单位倍率
+- [x] 1.1 更新 `SpatialDiv` 版本的 `useAnimation` 配置类型（`SpatialDivAnimationConfig`、`SpatialDivAnimatedValues`）、返回类型（`SpatialDivAnimatedProps`、`AnimationApi`）与 `AnimationError` 形状，仅覆盖视觉白名单：`transform.translate.x/y/z`、`transform.rotate.x/y/z`、`transform.scale.x/y/z`、`opacity`；明确 `duration = 0.3`、`playbackRate = 1`、`opacity` 范围 `[0, 1]`、`rotate` 单位 degree、`scale` 为无单位倍率
 - [x] 1.2 在 `useAnimation` hook 入口实现"双路无条件调用 + active 短路"分派模式：顶层 `resolveAnimationKind(config)` 判定 kind，`useEntityAnimation(config, active)` 与 `useSpatialDivAnimation(config, active)` 无条件并列调用（满足 Rules of Hooks），非激活侧 effect 短路返回 noop API
   - **依赖** 1.1（需要 SpatialDiv 配置类型定义）
 - [x] 1.3 为空间化 HTML 节点补充 `animation` prop 的对外类型，并约束其仅在 `enable-xr` 链路上生效；在绑定阶段增加 `__kind` 校验（entity animation 绑到 SpatialDiv 或反之时抛错）
   - **依赖** 1.2（需要 `__kind` 标记机制就绪）
 - [x] 1.4 扩展 runtime capability 数据与文档，新增 `supports('useAnimation', ['element'])` 的公开契约
-- [ ] 1.5 更新 `SpatialDiv` 动画配置校验，覆盖视觉白名单限制、数值范围（含 `opacity` 闭区间 `[0, 1]`、`transform.translate/rotate/scale` 有限值）、`timingFunction` 与 `loop` 结构、entity/SpatialDiv key 互斥，并拒绝 `width`、`height`、`back` / `backOffset`、`depth` 等影响布局或空间尺寸语义的字段
+- [x] 1.5 更新 `SpatialDiv` 动画配置校验，覆盖视觉白名单限制、数值范围（含 `opacity` 闭区间 `[0, 1]`、`transform.translate/rotate/scale` 有限值）、`timingFunction` 与 `loop` 结构、entity/SpatialDiv key 互斥，并拒绝 `width`、`height`、`back` / `backOffset`、`depth` 等影响布局或空间尺寸语义的字段
   - **依赖** 1.1（需要类型定义）
 
 ## 2. Core SDK 与 Bridge 会话流程
 
 - [x] 2.1 在 `@webspatial/core-sdk` 中为 `Spatialized2DElement` 增加 `animateSpatialDiv(command)` 方法，play 返回 `AnimateSpatialDivResult`，其余返回 `void`
   - **依赖** 1.1（需要命令和结果类型定义）
-- [ ] 2.2 更新并接入 `AnimateSpatialized2DElement` 的 JSBridge 命令结构，以及 `_completed`（payload: `SpatialDivAnimatedValues`）、`_canceled`（payload: `SpatialDivAnimatedValues`）、`_failed`（payload: `AnimationError`）事件命名和 payload；payload 仅包含视觉白名单字段，确保 listener 在 play 命令发送前注册
+- [x] 2.2 更新并接入 `AnimateSpatialized2DElement` 的 JSBridge 命令结构，以及 `_completed`（payload: `SpatialDivAnimatedValues`）、`_canceled`（payload: `SpatialDivAnimatedValues`）、`_failed`（payload: `AnimationError`）事件命名和 payload；payload 仅包含视觉白名单字段，确保 listener 在 play 命令发送前注册
   - **依赖** 2.1（需要命令入口就绪）
 - [x] 2.3 打通 `play`、`pause`、`resume`、`cancel` 的命令串行化（按调用顺序发送至 bridge）、会话 id 全局唯一、异步失败上报（通过 `_failed` 事件）；实现终态事件互斥保证（`_completed` 与 `_canceled` 对同一 `animationId` 互斥）
   - **依赖** 2.2（需要 bridge 命令和事件就绪）
-- [ ] 2.4 更新 `from` 缺省时的当前值快照逻辑：`opacity` 从 native 状态读取，`transform.translate/rotate/scale` 从 native 当前 transform 提取，快照仅覆盖 `to` 中声明的字段，`delay` 不改变快照时机；覆盖 queued、delay 和 stop 点结果返回
+- [x] 2.4 更新 `from` 缺省时的当前值快照逻辑：`opacity` 从 native 状态读取，`transform.translate/rotate/scale` 从 native 当前 transform 提取，快照仅覆盖 `to` 中声明的字段，`delay` 不改变快照时机；覆盖 queued、delay 和 stop 点结果返回
   - **依赖** 2.1（需要 `animateSpatialDiv` 入口）
-- [ ] 2.5 实现 `finished` / `canceled` Promise 在元素卸载时的行为：MUST NOT resolve，MUST NOT 调用生命周期回调
+- [x] 2.5 实现 `finished` / `canceled` Promise 在元素卸载时的行为：MUST NOT resolve，MUST NOT 调用生命周期回调
   - **依赖** 2.3（需要会话管理就绪）
 
 ## 3. React SpatialDiv 集成
@@ -99,22 +99,22 @@
   - **依赖** 3.1（需要 AnimationApi 就绪）、1.3（需要 prop 类型和 `__kind` 校验）
 - [x] 3.3 实现 `opacity` 的属性级普通同步抑制与恢复；按字段维护缓存，在会话结束前释放抑制标记，回调后的下一个 React 渲染周期恢复常规同步
   - **依赖** 3.2（需要绑定链路就绪）
-- [ ] 3.4 实现 `transform` 动画期间的整体 transform 同步抑制、缓存和会话结束后的恢复
+- [x] 3.4 实现 `transform` 动画期间的整体 transform 同步抑制、缓存和会话结束后的恢复
   - **依赖** 3.2（需要绑定链路就绪）
 - [x] 3.5 实现 play 重入（paused 时 play → resume 同一会话；running/delaying/queued 时 play → no-op）、config 更新不影响 alive 会话、控制命令按调用顺序串行化
   - **依赖** 3.1（需要状态机就绪）、2.3（需要命令串行化就绪）
-- [ ] 3.6 对未开启 `enable-xr` 或不支持 runtime 的使用路径给出 warning（每个 hook 实例至多一次），并保持 `play()` 为 no-op；不支持 runtime 时 `isAnimating` 保持 `false`
+- [x] 3.6 对未开启 `enable-xr` 或不支持 runtime 的使用路径给出 warning（每个 hook 实例至多一次），并保持 `play()` 为 no-op；不支持 runtime 时 `isAnimating` 保持 `false`
   - **依赖** 1.4（需要 capability key 就绪）
 
 ## 4. Native 播放
 
 - [x] 4.1 在 visionOS runtime 中增加 `SpatialDiv` 动画会话存储、播放控制器和生命周期管理
   - **依赖** 2.2（需要 bridge 命令结构就绪）
-- [ ] 4.2 更新白名单字段的 native 插值与应用，仅包括 `transform.translate.x/y/z`、`transform.rotate.x/y/z`、`transform.scale.x/y/z`、`opacity`；按 translate → rotate → scale 固定顺序重组 transform
+- [x] 4.2 更新白名单字段的 native 插值与应用，仅包括 `transform.translate.x/y/z`、`transform.rotate.x/y/z`、`transform.scale.x/y/z`、`opacity`；按 translate → rotate → scale 固定顺序重组 transform
   - **依赖** 4.1（需要会话管理就绪）
 - [x] 4.3 实现 `delay`、reset loop（含瞬时重置，不重新快照）、reverse loop、pause（含 delay 期间 pause 保留剩余 delay）、play（从暂停恢复）、cancel（恢复到 `from` 或起始快照）的 native 语义，并返回 `_completed` / `_canceled` 终态
   - **依赖** 4.2（需要插值就绪）
-- [ ] 4.4 实现 bridge / native 异步失败的 `_failed` 事件与错误 payload 回传；确保 play 失败后不发 `_completed` / `_canceled`，pause/resume/cancel 失败后会话保持失败前状态
+- [x] 4.4 实现 bridge / native 异步失败的 `_failed` 事件与错误 payload 回传；确保 play 失败后不发 `_completed` / `_canceled`，pause/resume/cancel 失败后会话保持失败前状态
   - **依赖** 4.3（需要播放语义就绪）
 
 ## 5. 验证与文档
