@@ -136,34 +136,13 @@ A subset of the public API works without `bootSpatial()` ever being called and i
 
 The full normative contract lives in [`openspec/specs/spatial-lazy-load/spec.md`](../../openspec/specs/spatial-lazy-load/spec.md) — search for "Stateless utility APIs and pure re-exports". Internal `Model` / `SpatializedContainer` host wrappers use `useSyncExternalStore` for SSR + hydration — you do **not** wrap the app in a provider for that.
 
-### Server-safe subpath (`@webspatial/react-sdk/server`)
+### RSC, server requests, and runtime detection
 
-The default entry carries `'use client'` at the top of its emitted `dist/index.js`, which means Next.js App Router (and any RSC-aware bundler) turns every imported symbol into a Client Reference — calling it from a Server Component throws `"Attempted to call X() from the server but X is on the client."`.
+The default entry carries `'use client'` at the top of its emitted `dist/index.js`. Frameworks that support React Server Components treat imports from `@webspatial/react-sdk` as a **client boundary**: you can still **render** facade components from a Server Component file (they become client components), but you cannot **call** hook-style APIs from server-only modules.
 
-Helpers that are genuinely server-callable live on a separate subpath:
+If you need to **branch server-rendered HTML** on the incoming request (e.g. different hero for WebSpatial-capable shells vs plain browsers), base that decision on the **HTTP `User-Agent`** string and the **official WebSpatial documentation** for how to interpret it — for example [Introduction](https://webspatial.dev/docs/introduction) and [Development Guide](https://webspatial.dev/docs/development-guide). **Do not rely on undocumented SDK helpers** for environment detection in application code.
 
-```ts
-import { detectSpatialRuntime } from '@webspatial/react-sdk/server'
-```
-
-| API | Behavior |
-| --- | --- |
-| `detectSpatialRuntime(input)` | Server-side WebSpatial runtime detection from a User-Agent string or a `Headers`-like object (Next.js `await headers()`, Web Fetch `Headers`, Express-style `req.headers`). Returns the same `{ type, shellVersion }` snapshot the client runtime cache produces from `navigator.userAgent`. `type === null` when the request is from a plain browser. |
-| `export type *` | Mirror of the default entry's full type surface so RSC files can write type annotations (`ModelProps`, `CapabilityKey`, `Vec3`, …) without crossing back to `@webspatial/react-sdk`. Zero runtime cost. |
-
-```tsx
-// app/page.tsx (RSC)
-import { headers } from 'next/headers'
-import { detectSpatialRuntime } from '@webspatial/react-sdk/server'
-
-export default async function Page() {
-  const runtime = detectSpatialRuntime(await headers())
-  if (runtime.type === 'visionos') return <SpatialHero />
-  return <FallbackHero />
-}
-```
-
-Only APIs that are useful in server-side execution context AND fail gracefully without browser globals belong here. Hooks, facade components, and any helper that mutates module-level singleton state (which would leak across requests in a shared Node process) are intentionally **not** re-exported from this subpath — keep importing those from the default entry, which Next will resolve as a Client Component boundary.
+The npm package may ship an internal `@webspatial/react-sdk/server` module for WebSpatial’s own demos, tests, and tooling. That subpath is **not** part of the supported public developer surface and may change without a semver migration guide.
 
 ## SpatialDiv `onSpatialContentReady` runtime note
 
