@@ -1,18 +1,35 @@
 import type { TimingFunction } from './animation'
 
+// ---- SpatialDiv Transform sub-fields ----
+
+/**
+ * Structured transform for SpatialDiv animation.
+ * Composed in fixed order: translate → rotate → scale.
+ * Does NOT support arbitrary CSS transform strings, skew, perspective, or matrix interpolation.
+ */
+export interface SpatialDivTransform {
+  /** Translation in CSS pixels. */
+  translate?: { x?: number; y?: number; z?: number }
+  /** Rotation in degrees, aligning with CSS rotateX/Y/Z(). */
+  rotate?: { x?: number; y?: number; z?: number }
+  /** Scale as unitless multipliers, aligning with CSS scaleX/Y/Z(). */
+  scale?: { x?: number; y?: number; z?: number }
+}
+
 // ---- SpatialDiv Animated Values ----
 
 /**
  * Whitelisted property values for SpatialDiv animation.
- * Only these fields can be animated on spatialized 2D elements.
+ * Only visual fields that do NOT change the DOM layout box, native spatial
+ * panel size, depth, or spatial-position semantics are allowed:
+ *   - transform.translate.x/y/z
+ *   - transform.rotate.x/y/z
+ *   - transform.scale.x/y/z
+ *   - opacity
  */
 export interface SpatialDivAnimatedValues {
-  back?: number
-  transform?: { translate?: { x?: number; y?: number; z?: number } }
+  transform?: SpatialDivTransform
   opacity?: number
-  depth?: number
-  width?: number
-  height?: number
 }
 
 // ---- SpatialDiv Animation Config ----
@@ -20,23 +37,25 @@ export interface SpatialDivAnimatedValues {
 export interface SpatialDivAnimationConfig {
   /**
    * Target animation values (required).
-   * Only whitelisted fields: back, transform.translate.x/y/z, opacity, depth, width, height.
+   * Only whitelisted fields: transform (translate/rotate/scale) and opacity.
+   * Layout-affecting fields (width, height, back, backOffset, depth) are
+   * explicitly forbidden and will throw at validation time.
    */
   to: SpatialDivAnimatedValues
 
   /** Starting animation values. Omit to snapshot current state at play time. */
   from?: SpatialDivAnimatedValues
 
-  /** Duration in seconds. Default: 0.3 */
+  /** Duration in seconds. Must be > 0 and finite. Default: 0.3 */
   duration?: number
 
   /**
    * Easing curve. Default: 'easeInOut'
-   * Only these four values are valid.
+   * Only these four values are valid; other strings will throw.
    */
   timingFunction?: TimingFunction
 
-  /** Delay before playback starts, in seconds. Default: 0 */
+  /** Delay before playback starts, in seconds. Must be >= 0 and finite. Default: 0 */
   delay?: number
 
   /** Start automatically when element mounts. Default: true */
@@ -44,25 +63,25 @@ export interface SpatialDivAnimationConfig {
 
   /**
    * Loop behavior.
-   * - true: reset to `from` and replay (infinite)
-   * - { reverse: true }: alternate direction each cycle (infinite)
+   * - true: reset to `from` and replay (infinite reset loop)
+   * - { reverse: true }: alternate direction each cycle (infinite reverse loop)
    * - undefined / false: play once
    */
   loop?: boolean | { reverse?: boolean }
 
   /**
    * Playback speed multiplier. Default: 1
-   * Must be non-zero and finite.
+   * Must be a positive finite number (> 0).
    */
   playbackRate?: number
 
-  /** Called when session is established. */
+  /** Called when session is established successfully. */
   onStart?: () => void
 
   /** Called when a non-looping animation finishes naturally. */
   onComplete?: (finalValues: SpatialDivAnimatedValues) => void
 
-  /** Called when canceled via api.cancel(). */
+  /** Called when canceled via api.cancel(). Receives the restored values. */
   onCancel?: (currentValues: SpatialDivAnimatedValues) => void
 
   /**

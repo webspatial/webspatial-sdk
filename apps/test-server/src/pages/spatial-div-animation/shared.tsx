@@ -21,25 +21,32 @@ export function fmtNum(n: number | undefined, digits = 2): string {
 export function fmtValues(values: Record<string, unknown> | undefined): string {
   if (!values) return '-'
   const parts: string[] = []
-  const tx = values['transform.translate.x'] as number | undefined
-  const ty = values['transform.translate.y'] as number | undefined
-  const tz = values['transform.translate.z'] as number | undefined
-  if (tx !== undefined || ty !== undefined || tz !== undefined) {
-    parts.push(`t=(${fmtNum(tx, 1)}, ${fmtNum(ty, 1)}, ${fmtNum(tz, 1)})`)
+
+  // Extract from nested structure: { transform?: { translate?, rotate?, scale? }, opacity? }
+  const transform = values.transform as
+    | {
+        translate?: { x?: number; y?: number; z?: number }
+        rotate?: { x?: number; y?: number; z?: number }
+        scale?: { x?: number; y?: number; z?: number }
+      }
+    | undefined
+
+  if (transform) {
+    const t = transform.translate
+    if (t && (t.x !== undefined || t.y !== undefined || t.z !== undefined)) {
+      parts.push(`t=(${fmtNum(t.x, 1)}, ${fmtNum(t.y, 1)}, ${fmtNum(t.z, 1)})`)
+    }
+    const r = transform.rotate
+    if (r && (r.x !== undefined || r.y !== undefined || r.z !== undefined)) {
+      parts.push(`r=(${fmtNum(r.x, 1)}, ${fmtNum(r.y, 1)}, ${fmtNum(r.z, 1)})`)
+    }
+    const s = transform.scale
+    if (s && (s.x !== undefined || s.y !== undefined || s.z !== undefined)) {
+      parts.push(`s=(${fmtNum(s.x, 2)}, ${fmtNum(s.y, 2)}, ${fmtNum(s.z, 2)})`)
+    }
   }
-  const rx = values['transform.rotate.x'] as number | undefined
-  const ry = values['transform.rotate.y'] as number | undefined
-  const rz = values['transform.rotate.z'] as number | undefined
-  if (rx !== undefined || ry !== undefined || rz !== undefined) {
-    parts.push(`r=(${fmtNum(rx, 1)}, ${fmtNum(ry, 1)}, ${fmtNum(rz, 1)})`)
-  }
-  const sx = values['transform.scale.x'] as number | undefined
-  const sy = values['transform.scale.y'] as number | undefined
-  const sz = values['transform.scale.z'] as number | undefined
-  if (sx !== undefined || sy !== undefined || sz !== undefined) {
-    parts.push(`s=(${fmtNum(sx, 2)}, ${fmtNum(sy, 2)}, ${fmtNum(sz, 2)})`)
-  }
-  const opacity = values['opacity'] as number | undefined
+
+  const opacity = values.opacity as number | undefined
   if (opacity !== undefined) {
     parts.push(`o=${fmtNum(opacity, 2)}`)
   }
