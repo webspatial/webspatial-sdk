@@ -11,15 +11,8 @@ import { useSpatialDivAnimation } from './spatialized-container/hooks/useSpatial
 
 // Keys that belong to entity animation
 const ENTITY_KEYS = new Set(['position', 'rotation', 'scale'])
-// Keys that belong to SpatialDiv animation
-const SPATIAL_DIV_KEYS = new Set([
-  'back',
-  'transform',
-  'opacity',
-  'depth',
-  'width',
-  'height',
-])
+// Keys that belong to SpatialDiv animation (only visual fields per spec)
+const SPATIAL_DIV_KEYS = new Set(['transform', 'opacity'])
 
 export type AnimationKind = 'entity' | 'spatialDiv'
 
