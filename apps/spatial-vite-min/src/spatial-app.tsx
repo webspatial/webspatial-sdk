@@ -112,7 +112,8 @@ export function SpatialApp({ mode, Model }: SpatialAppProps) {
         primitive in the AVP runtime.
       </p>
       <Model
-        src="/scene.usdz"
+        enable-xr
+        src="/modelasset/cone.usdz"
         style={{
           width: 320,
           height: 320,
