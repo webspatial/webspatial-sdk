@@ -4,22 +4,35 @@ export default function SpatialDivAnimationPage() {
   return (
     <div className="min-h-full bg-[#0d0d0d] p-6 text-white">
       <div className="mx-auto max-w-6xl">
-        <h1 className="mb-2 text-2xl font-bold">SpatialDiv Animation (POC)</h1>
+        <h1 className="mb-2 text-2xl font-bold">SpatialDiv Animation</h1>
         <p className="mb-2 max-w-3xl text-sm text-gray-400">
           Test pages for SpatialDiv animation via{' '}
           <code className="text-cyan-300">useAnimation</code> +{' '}
           <code className="text-cyan-300">
             {'<div enable-xr animation={...}>'}
           </code>
-          . The hook auto-dispatches to the SpatialDiv path based on{' '}
-          <code>to</code> key set (opacity, width, height, depth, back).
+          . The hook auto-dispatches to the SpatialDiv path based on the{' '}
+          <code>to</code> key set.
         </p>
-        <p className="mb-8 max-w-3xl text-xs text-gray-500">
+        <p className="mb-4 max-w-3xl text-xs text-gray-500">
           Requires the WebSpatial visionOS runtime with{' '}
           <code>AnimateSpatialized2DElement</code> JSB command support. In a
           regular browser, the <code>enable-xr</code> div renders as a normal
           div; callbacks and state transitions remain testable.
         </p>
+
+        <div className="mb-8 rounded-xl border border-yellow-900/60 bg-yellow-950/30 p-4 text-xs text-yellow-200">
+          <div className="mb-1 font-semibold text-yellow-300">
+            Visual whitelist only
+          </div>
+          The SpatialDiv animation API only accepts visual fields:{' '}
+          <code className="text-cyan-300">transform.translate.x/y/z</code>,{' '}
+          <code className="text-cyan-300">transform.rotate.x/y/z</code>,{' '}
+          <code className="text-cyan-300">transform.scale.x/y/z</code>, and{' '}
+          <code className="text-cyan-300">opacity</code>. Layout / spatial-size
+          fields (<code>width</code>, <code>height</code>, <code>back</code>,{' '}
+          <code>backOffset</code>, <code>depth</code>) are explicitly rejected.
+        </div>
 
         <SpatialDivAnimationOverview />
 
@@ -29,28 +42,46 @@ export default function SpatialDivAnimationPage() {
           </h3>
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              Entrance: card fades in from back=-50/opacity=0 to rest position
+              Entrance: card fades in from translate.z=-50 / opacity=0 to rest
               on mount.
             </li>
             <li>
-              Size expand: div grows from 200×120 to 400×240; cancel restores
-              original size.
+              Scale expand: div grows from scale 0.6 to 1.0; cancel restores
+              original transform.
             </li>
             <li>
-              Opacity: element fades from 1.0 to 0.2; pause freezes mid-fade.
+              Opacity: element fades from 1.0 to 0.2; pause freezes mid-fade;
+              suppression test confirms native ignores CSS opacity changes.
             </li>
             <li>
-              Combined: after 500ms delay, width/height/opacity/depth animate
+              Combined: after 500ms delay, translate.y / scale / opacity animate
               simultaneously.
             </li>
-            <li>Playback rate: 2× speed completes a 2s animation in ~1s.</li>
             <li>
-              Suppression: during animation, DOM sync does not overwrite
-              animated properties (no visual jumps).
+              Playback rate: 2× speed completes a 2s rotate.z + opacity
+              animation in ~1s.
+            </li>
+            <li>
+              3D Rotate: transform.rotate.x/y/z animate together; pause / resume
+              / cancel each behave correctly.
+            </li>
+            <li>
+              Reverse loop: ping-pongs translate.x indefinitely; toggle pauses /
+              resumes the same session.
             </li>
             <li>
               All lifecycle callbacks (onStart, onComplete, onCancel, onError)
               appear in the log panel.
+            </li>
+            <li>
+              <code>playState</code> transitions through{' '}
+              <code>idle → running → paused → running → finished</code> as
+              expected; cancel returns to <code>idle</code>.
+            </li>
+            <li>
+              Capability detection page reports{' '}
+              <code>supports('useAnimation', ['element'])</code> consistently
+              with runtime expectation.
             </li>
           </ul>
         </section>

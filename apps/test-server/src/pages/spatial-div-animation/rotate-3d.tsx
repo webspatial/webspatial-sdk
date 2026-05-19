@@ -2,42 +2,46 @@ import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
+  PlayStateBadge,
   btnCls,
   btnPrimary,
+  fmtValues,
   useLog,
 } from './shared'
 
-export default function DepthPage() {
+export default function Rotate3DPage() {
   const { lines, log, clear } = useLog()
 
   const [animation, api] = useAnimation({
-    from: { depth: 0 },
-    to: { depth: 100 },
-    duration: 1.5,
+    from: {
+      'transform.rotate.x': 0,
+      'transform.rotate.y': 0,
+      'transform.rotate.z': 0,
+    },
+    to: {
+      'transform.rotate.x': 180,
+      'transform.rotate.y': 180,
+      'transform.rotate.z': 180,
+    },
+    duration: 2.5,
     timingFunction: 'easeInOut',
     autoStart: false,
-    onStart: () => log('depth: onStart'),
+    onStart: () => log('rotate3d: onStart'),
     onComplete: (values: any) =>
-      log(`depth: onComplete → depth=${values.depth?.toFixed(1)}`),
-    onCancel: (values: any) =>
-      log(`depth: onCancel → depth=${values.depth?.toFixed(1)}`),
-    onError: (err: any) => log(`depth: onError → ${err.reason}`),
+      log(`rotate3d: onComplete → ${fmtValues(values)}`),
+    onCancel: (values: any) => log(`rotate3d: onCancel → ${fmtValues(values)}`),
+    onError: (err: any) => log(`rotate3d: onError → ${err.reason}`),
   } as any)
 
   return (
     <SpatialDivAnimationPageShell
-      title="Depth"
-      description={
-        <>
-          Depth 0→100 over 1.5s. The SpatialDiv gains volumetric depth, becoming
-          a 3D slab.
-        </>
-      }
+      title="3D Rotate (X/Y/Z)"
+      description="transform.rotate.x/y/z 0→180 degrees over 2.5s. Pause / resume / cancel exercise the full session lifecycle."
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div
           enable-xr
-          animation={animation}
+          animation={animation as any}
           style={{
             width: 200,
             height: 200,
@@ -48,7 +52,7 @@ export default function DepthPage() {
             justifyContent: 'center',
           }}
         >
-          <span style={{ color: 'white', fontSize: 16 }}>Depth Me</span>
+          <span style={{ color: 'white', fontSize: 16 }}>Rotate Me</span>
         </div>
 
         <div className="flex flex-wrap gap-2 mt-3">
@@ -68,9 +72,12 @@ export default function DepthPage() {
             Clear Log
           </button>
         </div>
-        <div className="text-xs text-gray-500 mt-2">
-          playState:{' '}
-          <code className="text-cyan-300">{(api as any).playState}</code>
+        <div className="mt-3 flex items-center gap-3">
+          <PlayStateBadge state={(api as any).playState} />
+          <span className="text-xs font-mono text-gray-500">
+            isAnimating={String((api as any).isAnimating)} &nbsp; isPaused=
+            {String((api as any).isPaused)}
+          </span>
         </div>
         <Log lines={lines} />
       </section>
