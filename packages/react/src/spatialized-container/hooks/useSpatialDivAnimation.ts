@@ -130,6 +130,8 @@ export function useSpatialDivAnimation(
         result.finished.then(finalValues => {
           if (unmountedRef.current || session.unmounted) return
           if (sessionRef.current !== session) return
+          // Terminal mutual exclusion: ignore if session already ended
+          if (session.state === 'finished' || session.state === 'idle') return
           session.state = 'finished'
           forceUpdate()
           configRef.current.onComplete?.(finalValues)
@@ -139,6 +141,8 @@ export function useSpatialDivAnimation(
         result.canceled.then(currentValues => {
           if (unmountedRef.current || session.unmounted) return
           if (sessionRef.current !== session) return
+          // Terminal mutual exclusion: ignore if session already ended
+          if (session.state === 'finished' || session.state === 'idle') return
           session.state = 'idle'
           sessionRef.current = null
           forceUpdate()
@@ -149,6 +153,8 @@ export function useSpatialDivAnimation(
         result.failed.then(error => {
           if (unmountedRef.current || session.unmounted) return
           if (sessionRef.current !== session) return
+          // Terminal mutual exclusion: ignore if session already ended
+          if (session.state === 'finished' || session.state === 'idle') return
           session.state = 'idle'
           sessionRef.current = null
           forceUpdate()
