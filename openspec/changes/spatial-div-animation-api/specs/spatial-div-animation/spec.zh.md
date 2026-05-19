@@ -111,7 +111,7 @@ SDK MUST 在校验时对以下范围抛错：
 |---|---|---|
 | `transform.translate.x/y/z` | 有限值 | `NaN`、`Infinity` MUST 被拒绝 |
 | `transform.rotate.x/y/z` | 有限值，单位 degree | `NaN`、`Infinity` MUST 被拒绝 |
-| `transform.scale.x/y/z` | 有限值，无单位倍率 | `NaN`、`Infinity` MUST 被拒绝 |
+| `transform.scale.x/y/z` | `>= 0`，有限值，无单位倍率 | 负数、`NaN`、`Infinity` MUST 被拒绝。zero scale 允许使用（如退场动画），但可能产生退化 transform；从 zero-scale 状态开始动画不推荐，插值结果可能未定义 |
 | `opacity` | `[0, 1]` 闭区间，有限值 | 超出 `[0, 1]`、`NaN`、`Infinity` MUST 被拒绝 |
 
 #### Scenario: playbackRate 校验
