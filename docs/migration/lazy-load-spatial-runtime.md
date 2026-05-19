@@ -105,12 +105,12 @@ Both timings produce identical hydration safety because `useSpatialReady` is imp
 
 The four internal container classes are no longer publicly exported:
 
-| Removed (BREAKING) | Replacement |
-| --- | --- |
-| `SpatializedContainer` | Use `withSpatialized2DElementContainer(Comp)` HOC; the facade decides at render time whether to mount the real container or the transparent passthrough |
-| `Spatialized2DElementContainer` | Same as above |
-| `SpatializedStatic3DElementContainer` | Use `<Model {...} />`; the `Model` facade owns this internally |
-| `SpatialMonitor` | Use `withSpatialMonitor(El)` HOC |
+| Removed (BREAKING)                    | Replacement                                                                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SpatializedContainer`                | Use `withSpatialized2DElementContainer(Comp)` HOC; the facade decides at render time whether to mount the real container or the transparent passthrough |
+| `Spatialized2DElementContainer`       | Same as above                                                                                                                                           |
+| `SpatializedStatic3DElementContainer` | Use `<Model {...} />`; the `Model` facade owns this internally                                                                                          |
+| `SpatialMonitor`                      | Use `withSpatialMonitor(El)` HOC                                                                                                                        |
 
 Before:
 
@@ -118,7 +118,11 @@ Before:
 import { Spatialized2DElementContainer } from '@webspatial/react-sdk'
 
 function MyContainer() {
-  return <Spatialized2DElementContainer component="div">...</Spatialized2DElementContainer>
+  return (
+    <Spatialized2DElementContainer component="div">
+      ...
+    </Spatialized2DElementContainer>
+  )
 }
 ```
 
@@ -171,8 +175,8 @@ Migrate to the automatic JSX transform:
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@webspatial/react-sdk"
-  }
+    "jsxImportSource": "@webspatial/react-sdk",
+  },
 }
 ```
 
@@ -201,6 +205,7 @@ These bundlers / frameworks satisfy all three capabilities and are exercised in 
 - esbuild ≥ 0.18 with `splitting: true`
 - **Next.js App Router** (Webpack mode) — canonical RSC framework target
 - **Next.js Pages Router**
+- **React Router 7** (Remix-style SSR + Vite) — see `apps/spatial-remix-min/`
 
 ### Out-of-scope environments (v1)
 
@@ -264,7 +269,7 @@ The placeholder return value is unchanged: `pointToPhysical(pt) === pt / 1360`, 
 - **DEPRECATED**: `createElement` named export — migrate to the automatic JSX transform (`./jsx-runtime` / `./jsx-dev-runtime`). Removal scheduled for v2.
 - **BREAKING (v2+)**: removed **`SSRProvider`** from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. Hydration gating for internal `Model` / `SpatializedContainer` now uses `withSSRSupported` + `useSyncExternalStore` — delete any `<SSRProvider>` wrapper; no replacement import is required.
 
-- **BREAKING (v2)**: removed `withSpatialized2DElementContainer` and `withSpatialMonitor` named exports (plus the `Spatialized2DElementContainerProps` type) from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. The factory HOCs were demoted to internal-only — the documented public mechanism for wrapping intrinsic elements remains the `enable-xr` / `enable-xr-monitor` JSX marker. If you imported the factory directly to compose with a third-party HOC (e.g. `animated(withSpatialized2DElementContainer('div'))`), wrap your own `forwardRef` shim around `<div enable-xr ref={ref} />` and pass *that* to the third-party HOC (see `packages/react/README.md` → "Advanced: composing with third-party HOCs" for the recipe).
+- **BREAKING (v2)**: removed `withSpatialized2DElementContainer` and `withSpatialMonitor` named exports (plus the `Spatialized2DElementContainerProps` type) from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. The factory HOCs were demoted to internal-only — the documented public mechanism for wrapping intrinsic elements remains the `enable-xr` / `enable-xr-monitor` JSX marker. If you imported the factory directly to compose with a third-party HOC (e.g. `animated(withSpatialized2DElementContainer('div'))`), wrap your own `forwardRef` shim around `<div enable-xr ref={ref} />` and pass _that_ to the third-party HOC (see `packages/react/README.md` → "Advanced: composing with third-party HOCs" for the recipe).
 
 ---
 
