@@ -94,7 +94,7 @@ interface SpatialDivAnimationConfig {
    */
   playbackRate?: number
 
-  /** 会话建立成功后调用；首态可以是 delaying、running 或因 queued pause 导致的 paused。 */
+  /** 会话成功建立且首态为 delaying 或 running 时调用。 */
   onStart?: () => void
 
   /** 非循环动画自然完成时调用。接收 native 终态值。 */
