@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import {
   bootSpatial,
   Model,
@@ -28,6 +29,11 @@ import {
 //    fetch on first navigation, unlike `/lazy`.
 
 export function EagerDemo() {
+  const [spatialTapCount, setSpatialTapCount] = useState(0)
+  const onFirstCellSpatialTap = useCallback(() => {
+    setSpatialTapCount(c => c + 1)
+  }, [])
+
   const [bootState, setBootState] = useState<
     'idle' | 'booting' | 'ready' | 'failed'
   >('idle')
@@ -69,6 +75,11 @@ export function EagerDemo() {
       </p>
 
       <h2 style={{ marginTop: 24 }}>SpatialDiv grid</h2>
+      <p style={{ marginBottom: 8, fontSize: 14 }}>
+        Cell <strong>1</strong> listens for <code>onSpatialTap</code> (
+        <strong>{spatialTapCount}</strong>) — increments when the slab is
+        spatially tapped (WebSpatial runtime).
+      </p>
       <div
         style={{
           display: 'grid',
@@ -80,6 +91,7 @@ export function EagerDemo() {
           <div
             key={i}
             enable-xr
+            {...(i === 0 ? { onSpatialTap: onFirstCellSpatialTap } : {})}
             style={
               {
                 width: 100,
@@ -93,10 +105,13 @@ export function EagerDemo() {
                 background: '#206',
                 '--xr-back': '40',
                 '--xr-background-material': 'thin',
-              } as React.CSSProperties
+                ...(i === 0 && spatialTapCount > 0
+                  ? { boxShadow: '0 0 0 3px rgb(251 191 36 / 0.95)' }
+                  : {}),
+              } as CSSProperties
             }
           >
-            {i + 1}
+            {i === 0 && spatialTapCount > 0 ? `1 (${spatialTapCount})` : i + 1}
           </div>
         ))}
       </div>

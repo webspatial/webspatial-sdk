@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import {
   bootSpatial,
   Model,
@@ -32,8 +33,17 @@ import {
 // fallback HTML matches server-rendered HTML — no mismatch warning),
 // then the post-hydrate `useEffect` calls `bootSpatial()`, the bridge
 // flips, and a subsequent commit swaps facades to real implementations.
+//
+// `onSpatialTap` (and sibling spatial gestures) lives only on this client
+// subtree: the façade strips it from SSR / plain-web DOM like other spatial-only
+// props so markup stays hydration-safe (`withSpatialized2DElementContainer`).
 
 export function LazyDemo() {
+  const [spatialTapCount, setSpatialTapCount] = useState(0)
+  const onFirstCellSpatialTap = useCallback(() => {
+    setSpatialTapCount(c => c + 1)
+  }, [])
+
   const [bootState, setBootState] = useState<
     'idle' | 'booting' | 'ready' | 'failed'
   >('idle')
@@ -82,7 +92,13 @@ export function LazyDemo() {
         <code>withSpatialized2DElementContainer</code> on the client; the same
         JSX in a Server Component renders as a bare <code>&lt;div&gt;</code> via
         the RSC server-bypass path so the SSR HTML and the post-hydration
-        fallback DOM stay in sync.
+        fallback DOM stay in sync. Cell <strong>1</strong> uses{' '}
+        <code>onSpatialTap</code> (counter below); taps fire when the slab
+        receives a spatial tap in a WebSpatial runtime.
+      </p>
+      <p style={{ marginTop: 8, marginBottom: 0, fontSize: 14 }}>
+        <code>onSpatialTap</code> count (cell 1):{' '}
+        <strong>{spatialTapCount}</strong>
       </p>
       <div
         style={{
@@ -95,6 +111,7 @@ export function LazyDemo() {
           <div
             key={i}
             enable-xr
+            {...(i === 0 ? { onSpatialTap: onFirstCellSpatialTap } : {})}
             style={
               {
                 width: 100,
@@ -108,10 +125,13 @@ export function LazyDemo() {
                 background: '#444',
                 '--xr-back': '40',
                 '--xr-background-material': 'thin',
-              } as React.CSSProperties
+                ...(i === 0 && spatialTapCount > 0
+                  ? { boxShadow: '0 0 0 3px rgb(34 197 94 / 0.85)' }
+                  : {}),
+              } as CSSProperties
             }
           >
-            {i + 1}
+            {i === 0 && spatialTapCount > 0 ? `1 (${spatialTapCount})` : i + 1}
           </div>
         ))}
       </div>
