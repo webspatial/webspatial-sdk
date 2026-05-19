@@ -88,10 +88,9 @@ interface SpatialDivAnimationConfig {
   /**
    * Playback rate multiplier. Default: 1
    * Values > 1 speed up; 0 to 1 slow down.
-   * Negative values indicate reverse playback.
-   * Must be non-zero and finite.
+   * Must be greater than 0 and finite. Negative values and zero MUST be rejected.
    * Applied at session creation time and remains constant for the session lifetime.
-   * Maps to the native (AVP) AnimationView.speed parameter.
+   * Multiplied into elapsed time within the Session to achieve variable speed.
    */
   playbackRate?: number
 
@@ -479,7 +478,7 @@ interface AnimateSpatialDivCommand {
   timingFunction?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
   delay?: number
   loop?: boolean | { reverse?: boolean }
-  /** Playback speed multiplier. Default: 1. Maps to AnimationView.speed on AVP. */
+  /** Playback speed multiplier. Default: 1. Multiplied into elapsed time within the Session to achieve variable speed. */
   playbackRate?: number
 }
 

@@ -101,6 +101,7 @@ The SDK MUST enforce the following ranges during validation and throw when viola
 | `delay` | `>= 0`, finite | negatives, `NaN`, and `Infinity` MUST be rejected |
 | `timingFunction` | one of `'linear'`, `'easeIn'`, `'easeOut'`, `'easeInOut'` | any other string MUST be rejected |
 | `loop` | `true`, `false`, `undefined`, or `{ reverse?: boolean }` | any other shape MUST be rejected |
+| `playbackRate` | `> 0`, finite | `0`, negatives, `NaN`, and `Infinity` MUST be rejected. Default: `1` |
 
 #### Scenario: Whitelisted numeric validation
 
@@ -112,6 +113,11 @@ The SDK MUST enforce the following ranges during validation and throw when viola
 | `transform.rotate.x/y/z` | finite, degrees | `NaN` and `Infinity` MUST be rejected |
 | `transform.scale.x/y/z` | finite, unitless multiplier | `NaN` and `Infinity` MUST be rejected |
 | `opacity` | finite, inclusive `[0, 1]` | values outside `[0, 1]`, `NaN`, and `Infinity` MUST be rejected |
+
+#### Scenario: playbackRate validation
+
+- **WHEN** the config sets `playbackRate` to `0`, a negative number, `NaN`, or `Infinity`
+- **THEN** the SDK MUST throw
 
 #### Scenario: Missing animation target
 
