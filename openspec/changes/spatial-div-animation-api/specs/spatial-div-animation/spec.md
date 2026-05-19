@@ -111,7 +111,7 @@ The SDK MUST enforce the following ranges during validation and throw when viola
 |---|---|---|
 | `transform.translate.x/y/z` | finite | `NaN` and `Infinity` MUST be rejected |
 | `transform.rotate.x/y/z` | finite, degrees | `NaN` and `Infinity` MUST be rejected |
-| `transform.scale.x/y/z` | finite, unitless multiplier | `NaN` and `Infinity` MUST be rejected |
+| `transform.scale.x/y/z` | `>= 0`, finite, unitless multiplier | negatives, `NaN`, and `Infinity` MUST be rejected. Zero scale is allowed (e.g. exit animations) but may produce a degenerate transform; starting an animation from zero scale is not recommended as interpolation results may be undefined |
 | `opacity` | finite, inclusive `[0, 1]` | values outside `[0, 1]`, `NaN`, and `Infinity` MUST be rejected |
 
 #### Scenario: playbackRate validation
