@@ -33,13 +33,13 @@ If you cannot pre-await (e.g. you're inside an existing render cycle), call `boo
 
 Every facade in the default entry has a documented fallback rendered in plain web / SSR / pre-boot:
 
-| Public name | Fallback rendering in non-WebSpatial browsers |
-| --- | --- |
-| `Model` | Native `<model>` element (with spatial-only event props stripped) |
-| `Reality` | Single `<div aria-hidden="true">` placeholder preserving the layout box |
-| `Entity` / `Box` / `Sphere` / `Cone` / `Cylinder` / `Plane` / `*Entity` family | `null` (children NOT mounted) |
-| `Material` / `Texture` / `ModelAsset` / `AttachmentAsset` / `UnlitMaterial` | `null` |
-| `SceneGraph` / `World` | `<>{children}</>` (transparent — children render through their own facades) |
+| Public name                                                                    | Fallback rendering in non-WebSpatial browsers                               |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `Model`                                                                        | Native `<model>` element (with spatial-only event props stripped)           |
+| `Reality`                                                                      | Single `<div aria-hidden="true">` placeholder preserving the layout box     |
+| `Entity` / `Box` / `Sphere` / `Cone` / `Cylinder` / `Plane` / `*Entity` family | `null` (children NOT mounted)                                               |
+| `Material` / `Texture` / `ModelAsset` / `AttachmentAsset` / `UnlitMaterial`    | `null`                                                                      |
+| `SceneGraph` / `World`                                                         | `<>{children}</>` (transparent — children render through their own facades) |
 
 The full normative table lives in [`openspec/specs/spatial-lazy-load/spec.md`](../../openspec/specs/spatial-lazy-load/spec.md) — search for "Component facades" and "Hook placeholders".
 
@@ -67,7 +67,7 @@ function MyModelOrSkeleton(props: ComponentProps<typeof Model>) {
 
 ### Advanced: composing with third-party HOCs
 
-The JSX marker `<div enable-xr>` covers ~all consumer needs, but it produces a JSX element at the call site — not a *component type* you can pass to a third-party HOC like `animated(...)`, `motion(...)`, or `styled(...)`. Wrap your own `forwardRef` shim around the marker and pass *that* to the third-party HOC:
+The JSX marker `<div enable-xr>` covers ~all consumer needs, but it produces a JSX element at the call site — not a _component type_ you can pass to a third-party HOC like `animated(...)`, `motion(...)`, or `styled(...)`. Wrap your own `forwardRef` shim around the marker and pass _that_ to the third-party HOC:
 
 ```tsx
 import { forwardRef } from 'react'
@@ -75,11 +75,12 @@ import { animated, useSpring } from '@react-spring/web'
 
 // `tsconfig.json` MUST set `"jsxImportSource": "@webspatial/react-sdk"` for
 // `enable-xr` to compile into the real spatial wrapper.
-const SpatialDiv = forwardRef<HTMLDivElement, React.ComponentPropsWithRef<'div'>>(
-  function SpatialDiv(props, ref) {
-    return <div enable-xr ref={ref} {...props} />
-  },
-)
+const SpatialDiv = forwardRef<
+  HTMLDivElement,
+  React.ComponentPropsWithRef<'div'>
+>(function SpatialDiv(props, ref) {
+  return <div enable-xr ref={ref} {...props} />
+})
 SpatialDiv.displayName = 'SpatialDiv'
 
 const AnimatedDiv = animated(SpatialDiv)
@@ -90,7 +91,7 @@ export function MyPanel() {
 }
 ```
 
-Why a shim is required: the spatial wrapping logic lives in the SDK's JSX runtime (resolved via `tsconfig.jsxImportSource`), so it only fires when the JSX *call site* is parsed by your bundler. A `forwardRef` shim moves that call site into a component module the bundler compiles, then exposes the resulting component as a stable value for the third-party HOC.
+Why a shim is required: the spatial wrapping logic lives in the SDK's JSX runtime (resolved via `tsconfig.jsxImportSource`), so it only fires when the JSX _call site_ is parsed by your bundler. A `forwardRef` shim moves that call site into a component module the bundler compiles, then exposes the resulting component as a stable value for the third-party HOC.
 
 ### React 18+ peer dependency
 
@@ -98,16 +99,16 @@ Why a shim is required: the spatial wrapping logic lives in the SDK's JSX runtim
 
 ### Bundler compatibility
 
-The SDK relies on three bundler capabilities to deliver its size budget: ESM resolution, the `exports` package.json field, and dynamic `import()` with code-splitting. **Tested-target list (non-normative)**: Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1, esbuild ≥ 0.18 with `splitting: true`, Next.js App Router (Webpack mode), Next.js Pages Router. See the [migration guide](../../docs/migration/lazy-load-spatial-runtime.md#bundler-compatibility) for environments that are out of scope for v1 (Module Federation, Next.js Turbopack, Webpack 4, CommonJS-only pipelines).
+The SDK relies on three bundler capabilities to deliver its size budget: ESM resolution, the `exports` package.json field, and dynamic `import()` with code-splitting. **Tested-target list (non-normative)**: Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1, esbuild ≥ 0.18 with `splitting: true`, Next.js App Router (Webpack mode), Next.js Pages Router, React Router 7 (Remix-style SSR + Vite — `apps/spatial-remix-min`). See the [migration guide](../../docs/migration/lazy-load-spatial-runtime.md#bundler-compatibility) for environments that are out of scope for v1 (Module Federation, Next.js Turbopack, Webpack 4, CommonJS-only pipelines).
 
 ### Two distribution forms: default vs eager
 
 The package publishes two entry roots with the **same export names**, so you can switch by changing only the import path:
 
-| Entry | Import | Choose when |
-| --- | --- | --- |
-| **Default (lazy)** | `@webspatial/react-sdk` | Web-first progressive enhancement; **SSR**, streaming SSR, or any page whose **server-rendered HTML** should include façade fallbacks for spatial primitives. Smallest synchronous footprint (~8 KB marginal delta in the SDK’s §9.2 fixture). |
-| **Eager** | `@webspatial/react-sdk/eager` | Spatial-first apps (fixed WebSpatial shells, internal AVP / PICO surfaces) where you want **one network request** and no real `bootSpatial()` work — at the cost of inlining the full spatial implementation (~30 KB gzipped proxy on `dist/eager.js`). |
+| Entry              | Import                        | Choose when                                                                                                                                                                                                                                             |
+| ------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Default (lazy)** | `@webspatial/react-sdk`       | Web-first progressive enhancement; **SSR**, streaming SSR, or any page whose **server-rendered HTML** should include façade fallbacks for spatial primitives. Smallest synchronous footprint (~8 KB marginal delta in the SDK’s §9.2 fixture).          |
+| **Eager**          | `@webspatial/react-sdk/eager` | Spatial-first apps (fixed WebSpatial shells, internal AVP / PICO surfaces) where you want **one network request** and no real `bootSpatial()` work — at the cost of inlining the full spatial implementation (~30 KB gzipped proxy on `dist/eager.js`). |
 
 **SSR / CSR routing**
 
@@ -125,14 +126,14 @@ Normative detail: [`openspec/changes/lazy-load-spatial-runtime/specs/spatial-laz
 
 A subset of the public API works without `bootSpatial()` ever being called and is included in the default-entry size budget:
 
-| API | Behavior |
-| --- | --- |
-| `WebSpatialRuntime.supports(name, tokens?)` | Synchronous capability lookup; returns `false` for spatial keys in plain browsers and `true` for documented capabilities under Puppeteer / WebSpatial shells |
-| `bootSpatial()` / `isSpatialReady()` / `useSpatialReady()` / `onSpatialLoadError()` / `WebSpatialBootError` | Boot bridge — see "Web-first, spatial-enhanced" above |
-| `initScene(name, callback, options?)` | No-op without a WebSpatial session; routes to `getSession().initScene(...)` after boot |
-| `convertCoordinate(position, { from, to })` | Returns `position` unchanged without a session; resolves through the spatial scene after boot |
-| `enableDebugTool()` | SSR-safe no-op; in browsers attaches `inspectCurrentSpatialScene` and `getSpatialized2DElement` to `window` (the diagnostics themselves require `bootSpatial()` to be awaited) |
-| `version` | Package version constant (build-time injected) |
+| API                                                                                                         | Behavior                                                                                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `WebSpatialRuntime.supports(name, tokens?)`                                                                 | Synchronous capability lookup; returns `false` for spatial keys in plain browsers and `true` for documented capabilities under Puppeteer / WebSpatial shells                   |
+| `bootSpatial()` / `isSpatialReady()` / `useSpatialReady()` / `onSpatialLoadError()` / `WebSpatialBootError` | Boot bridge — see "Web-first, spatial-enhanced" above                                                                                                                          |
+| `initScene(name, callback, options?)`                                                                       | No-op without a WebSpatial session; routes to `getSession().initScene(...)` after boot                                                                                         |
+| `convertCoordinate(position, { from, to })`                                                                 | Returns `position` unchanged without a session; resolves through the spatial scene after boot                                                                                  |
+| `enableDebugTool()`                                                                                         | SSR-safe no-op; in browsers attaches `inspectCurrentSpatialScene` and `getSpatialized2DElement` to `window` (the diagnostics themselves require `bootSpatial()` to be awaited) |
+| `version`                                                                                                   | Package version constant (build-time injected)                                                                                                                                 |
 
 The full normative contract lives in [`openspec/specs/spatial-lazy-load/spec.md`](../../openspec/specs/spatial-lazy-load/spec.md) — search for "Stateless utility APIs and pure re-exports". Internal `Model` / `SpatializedContainer` host wrappers use `useSyncExternalStore` for SSR + hydration — you do **not** wrap the app in a provider for that.
 
