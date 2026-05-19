@@ -101,7 +101,7 @@
   - **依赖** 3.2（需要绑定链路就绪）
 - [ ] 3.4 实现 `transform` 动画期间的整体 transform 同步抑制、缓存和会话结束后的恢复
   - **依赖** 3.2（需要绑定链路就绪）
-- [x] 3.5 实现 play 重入（alive 会话存在时 play → cancel old → start new）、cancel-old failure blocks start-new、config 更新不影响 alive 会话、控制命令按调用顺序串行化
+- [x] 3.5 实现 play 重入（paused 时 play → resume 同一会话；running/delaying/queued 时 play → no-op）、config 更新不影响 alive 会话、控制命令按调用顺序串行化
   - **依赖** 3.1（需要状态机就绪）、2.3（需要命令串行化就绪）
 - [ ] 3.6 对未开启 `enable-xr` 或不支持 runtime 的使用路径给出 warning（每个 hook 实例至多一次），并保持 `play()` 为 no-op；不支持 runtime 时 `isAnimating` 保持 `false`
   - **依赖** 1.4（需要 capability key 就绪）
@@ -123,7 +123,7 @@
   - **依赖** 1.4
 - [ ] 5.2 增加 hook 分叉测试，覆盖 entity key / SpatialDiv key / 混用 key 抛错 / `__kind` 绑定校验
   - **依赖** 1.2、1.3
-- [ ] 5.3 增加 React 行为测试，覆盖 autoStart、manual play、queued play（含排队期间 pause/cancel）、delay pause/play、delay pause then cancel、delay 直接 cancel、play 重入（cancel old → start new 顺序保证）、config 更新不影响 alive 会话、控制命令串行化、cancel-old failure blocks start-new、single-binding error、animation prop 替换/移除、warning
+- [ ] 5.3 增加 React 行为测试，覆盖 autoStart、manual play、queued play（含排队期间 pause/cancel）、delay pause/play、delay pause then cancel、delay 直接 cancel、play 重入（paused 时 resume、running/delaying/queued 时 no-op）、config 更新不影响 alive 会话、控制命令串行化、single-binding error、animation prop 替换/移除、warning
   - **依赖** 3.1–3.6
 - [ ] 5.4 增加同步竞争测试，覆盖 `opacity` 属性级抑制（含缓存和恢复）、transform 整体抑制、抑制释放时机（回调前释放标记）、以及动画期间普通 CSS transform 更新被延后到会话结束后恢复
   - **依赖** 3.3、3.4

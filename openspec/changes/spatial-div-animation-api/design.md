@@ -658,8 +658,15 @@ Reasons for choosing `CADisplayLink`:
 
    **`onComplete` / `onCancel` return scope:** The `SpatialDivAnimatedValues` in callbacks contains only the final or restored values for fields declared in `to`; fields not controlled by the animation do not appear in the return value. This is consistent with the entity animation `TransformValues` callback behavior.
 
-8. **If cancel-old fails, MUST block start-new**
-   For `play()` re-entry and animation prop replacement, if the cancel-old command fails asynchronously, the SDK MUST report via `onError` and keep the old session in its pre-failure state. In that case, the SDK MUST NOT start a new session and the new session's `onStart` MUST NOT fire.
+8. **`play()` re-entry semantics match entity animation**
+   When an animation session is already alive, `play()` behavior aligns with entity animation:
+   - **Paused state**: `play()` continues the same session from its paused progress (resume), does not create a new session, does not generate a new `animationId`, and does not fire `onStart` again.
+   - **Running / delaying state**: `play()` is a no-op; the existing session continues uninterrupted. To restart the animation, application code MUST explicitly call `api.cancel()` before calling `api.play()`.
+   - **Queued state**: `play()` is a no-op; the queued session remains unchanged.
+
+   This aligns with the Web Animation API where `animation.play()` on an already-running animation is a no-op.
+
+   For the animation prop replacement scenario (React re-render replaces `animationA` with `animationB`), the SDK MUST still cancel the old session before starting the new one; that flow is not affected by this decision.
 
 9. **Config updates do not affect alive sessions**
 
