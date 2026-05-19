@@ -13,8 +13,8 @@ import { renderToPipeableStream, renderToString } from 'react-dom/server'
 import { hydrateRoot } from 'react-dom/client'
 import { Writable } from 'node:stream'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { resetRuntimeCacheForTests } from '@webspatial/core-sdk'
 import { __resetBootStateForTests, bootSpatial } from '../runtime/boot'
+import { resetRuntimeCacheForTests } from '../runtime/capabilities'
 import {
   __getSpatialReadySubscriberCountForTests,
   __resetSpatialBridgeForTests,

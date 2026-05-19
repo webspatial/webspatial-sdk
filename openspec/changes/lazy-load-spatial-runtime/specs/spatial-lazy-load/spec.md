@@ -21,14 +21,14 @@ It MUST NOT contain any spatial implementation modules (containers, monitors, re
 
 The default entry MUST also contain the **complete** web-mode rendering for every public component facade and internal HOC wrapper facade — every per-component default fallback specified in "Component facades" — so that rendering any facade in a non-WebSpatial browser succeeds without loading additional modules over the network.
 
-**Size budget framing**: the **product-level contract** is that adding `@webspatial/react-sdk` (and its peer `@webspatial/core-sdk`) to a downstream application following the SDK's recommended web-first integration pattern MUST NOT increase the application's gzipped bundle size by more than **8 KB** compared to the same application without the SDK. The "recommended integration pattern" is named-import of the spatial primitives the application actually uses (e.g. `import { Model, bootSpatial } from '@webspatial/react-sdk'`), NOT namespace import (`import * as W from ...`) or side-effect import. The marginal-delta contract is the user-facing measurement; an additional SDK-side proxy on `dist/index.js` size keeps the SDK build pipeline honest. Worst-case namespace / full-barrel imports MAY exceed the budget; that is informational, not a contract violation.
+**Size budget framing**: the **product-level contract** is that adding `@webspatial/react-sdk` to a downstream application following the SDK's recommended web-first integration pattern MUST NOT increase the application's gzipped bundle size by more than **8 KB** compared to the same application without the SDK. The default entry MUST NOT emit runtime imports from `@webspatial/core-sdk`; core-sdk runtime code belongs to the spatial/eager implementation graph. The "recommended integration pattern" is named-import of the spatial primitives the application actually uses (e.g. `import { Model, bootSpatial } from '@webspatial/react-sdk'`), NOT namespace import (`import * as W from ...`) or side-effect import. The marginal-delta contract is the user-facing measurement; an additional SDK-side proxy on `dist/index.js` size keeps the SDK build pipeline honest. Worst-case namespace / full-barrel imports MAY exceed the budget; that is informational, not a contract violation.
 
 #### Scenario: Marginal bundle delta on a typical consumer (product-level contract)
 
 - **WHEN** a downstream application imports the SDK using the recommended named-import pattern (e.g. `import { Model, bootSpatial } from '@webspatial/react-sdk'` and uses `<Model />` plus `await bootSpatial()` per the migration guide)
-- **AND** the application is built with one of the documented compatible bundlers (per "Plugin-free integration"), with `@webspatial/core-sdk` installed as a peer dependency
+- **AND** the application is built with one of the documented compatible bundlers (per "Plugin-free integration")
 - **THEN** the marginal gzipped bundle delta — the difference between the application bundle with the SDK imported and the same application bundle without the SDK imported — MUST be at most 8192 bytes (8 KB)
-- **AND** the measurement MUST include any bytes from `@webspatial/core-sdk` that the bundler pulls into the application bundle as a transitive consequence of importing `@webspatial/react-sdk`
+- **AND** the default-entry build-output assertion MUST fail if importing `@webspatial/react-sdk` makes any runtime import from `@webspatial/core-sdk` reachable through the default entry's static module graph
 - **AND** the budget MUST be enforced by a CI fixture (a minimal Vite + React project under `tests/` or similar) that fails the build when exceeded
 
 #### Scenario: SDK-side `dist/index.js` size proxy
@@ -48,6 +48,13 @@ The default entry MUST also contain the **complete** web-mode rendering for ever
 
 - **WHEN** the published `dist/index.js` is searched for spatial-only identifier names
 - **THEN** none of the following identifiers MUST appear in the file (verified to exist in the source as spatial-only exports): `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `PortalSpatializedContainer`, `StandardSpatializedContainer`, `SpatialMonitor`, `ResourceRegistry`, `AttachmentRegistry`, the real-implementation function bodies of `withSpatialized2DElementContainer` / `withSpatialMonitor` (distinct from their facade re-exports), real-`Model` implementation symbols, and real reality-hook implementation symbols (`useEntity`, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useEntityId`, `useRealityEvents`, `useForceUpdate`)
+
+#### Scenario: Core SDK runtime imports are absent from default entry
+
+- **WHEN** the published `dist/index.js` static-import closure is inspected
+- **THEN** no emitted JavaScript file reachable from that closure MUST import `@webspatial/core-sdk` or any `@webspatial/core-sdk/*` runtime subpath
+- **AND** type-only declarations MAY still reference core-sdk types in `.d.ts` output
+- **AND** `@webspatial/core-sdk` runtime imports MAY appear in the spatial/eager implementation graph
 
 #### Scenario: Default entry contains complete fallback rendering for every facade
 
@@ -636,25 +643,25 @@ A subset of the public API consists of **stateless utility functions, pure const
 
 These APIs split into two groups by mechanism:
 
-**Group B — session-aware utilities** wrap `@webspatial/core-sdk`'s `getSession()` (which encodes the WebSpatial-runtime-or-not check via UA detection). They gracefully degrade when no `SpatialSession` is reachable, per the `runtime-capabilities` spec's "Unsupported behavior contracts" Requirement.
+**Group B — bridge-session-aware utilities** route through the React SDK bridge (`getSpatialImpl()?.getSession?.()`) after `bootSpatial()` has resolved. They gracefully degrade when no spatial implementation or `SpatialSession` is reachable, per the `runtime-capabilities` spec's "Unsupported behavior contracts" Requirement. They MUST NOT import `@webspatial/core-sdk` at runtime from the default entry.
 
 | API | Behavior when no session is reachable |
 | --- | --- |
-| `initScene(name, callback, options?)` | Returns `undefined` without side effects (the underlying `getSession()?.initScene(...)` is a no-op) |
+| `initScene(name, callback, options?)` | Returns `undefined` without side effects when the bridge has no session |
 | `convertCoordinate(position, { from, to })` | Resolves with `position` unchanged; MAY emit a one-shot `console.warn` (pinned in `runtime-capabilities` "Unsupported behavior contracts" Requirement) |
-| `enableDebugTool()` | Returns immediately when `isSSREnv()` is `true`; in WebSpatial runtime attaches `inspectCurrentSpatialScene` and `getSpatialized2DElement` to `window`; in non-WebSpatial runtime the `getSession()` calls inside the diagnostic helpers themselves no-op |
+| `enableDebugTool()` | Returns immediately when `typeof window === 'undefined'`; in browser runtime attaches `inspectCurrentSpatialScene` and `getSpatialized2DElement` to `window`; diagnostic helpers read the bridge session lazily and throw a descriptive `bootSpatial()`-pointing error if no session is available |
 
 **Group C — pure constants, type re-exports, and React Context**:
 
 | API | Description |
 | --- | --- |
-| `WebSpatialRuntime.supports(name, tokens?)` | Synchronous capability lookup against the `core-sdk` capability table. Pure data, no spatial chunk dependency. Behavior pinned by the `runtime-capabilities` spec. |
-| `WebSpatialRuntimeError` | Re-export of an `Error` subclass from `@webspatial/core-sdk`. |
-| `CapabilityKey` | TypeScript type re-export from `@webspatial/core-sdk`. Compile-time only. |
+| `WebSpatialRuntime.supports(name, tokens?)` | Synchronous capability lookup against the React SDK's local copy of the runtime-capability table. Pure data, no spatial chunk or core-sdk runtime dependency. Behavior pinned by the `runtime-capabilities` spec. |
+| `WebSpatialRuntimeError` | Local `Error` subclass matching the runtime-capability error contract. |
+| `CapabilityKey` | TypeScript type exported from the React SDK local capability helper. Compile-time only. |
 | `version` | A `string` constant injected at build time via `__WEBSPATIAL_REACT_SDK_VERSION__`. |
 | Component / Hook / Entity / Model type-only re-exports (e.g. `SpatializedElementRef`, `EntityRef`, `ModelRef`, `ModelProps`) | Compile-time only; no runtime presence. |
 
-**Subtle consequence**: an application running in a WebSpatial runtime that does NOT call `bootSpatial()` will see facades render their fallback (the bridge is not ready) yet still get session-aware utility behavior (because Group B goes through `core-sdk` directly, not through the react-sdk bridge). This is intentional and documented; it is not a contradiction with the `bootSpatial` activation contract because Group B utilities never claim to participate in that contract.
+**Subtle consequence**: an application running in a WebSpatial runtime that does NOT call `bootSpatial()` will see facades render their fallback and Group B utilities gracefully degrade because both read from the same unready bridge. This keeps the default entry core-free at runtime and makes `bootSpatial()` the single activation path for spatial implementation behavior.
 
 #### Scenario: Group B utilities work without `bootSpatial()`
 
@@ -666,13 +673,13 @@ These APIs split into two groups by mechanism:
 #### Scenario: `WebSpatialRuntime.supports` works without `bootSpatial()`
 
 - **WHEN** an application calls `WebSpatialRuntime.supports('Model')` (or any other capability key) at any point in the page lifetime
-- **THEN** the call MUST resolve synchronously against the `core-sdk` capability table without scheduling any dynamic import
+- **THEN** the call MUST resolve synchronously against the React SDK's local capability table without scheduling any dynamic import
 - **AND** the result MUST follow the `runtime-capabilities` Requirement contracts (`false` in non-WebSpatial browsers; `true` / `false` per the shell-version capability table in WebSpatial runtimes)
 
 #### Scenario: Group C pure helpers are SSR-safe and side-effect free
 
 - **WHEN** `WebSpatialRuntimeError` is constructed or thrown by application code
-- **THEN** it MUST behave as a standard `Error` subclass (re-exported from `core-sdk`) without requiring the spatial chunk
+- **THEN** it MUST behave as a standard `Error` subclass without requiring the spatial chunk or a core-sdk runtime import
 
 #### Scenario: Type-only re-exports vanish at runtime
 
@@ -684,6 +691,7 @@ These APIs split into two groups by mechanism:
 - **WHEN** the `dist/index.js` size budget is measured (per "Default entry MUST NOT bundle spatial implementation")
 - **THEN** the published Group B utility implementations and Group C constants / helpers MUST be counted within the gzipped budget
 - **AND** they MUST NOT be split into a separate chunk to circumvent the budget
+- **AND** the measurement MUST include a build-output assertion that the default-entry static graph contains no runtime imports from `@webspatial/core-sdk`
 
 ---
 

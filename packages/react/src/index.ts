@@ -34,18 +34,22 @@ export { isSpatialReady, onSpatialLoadError } from './runtime/bridge'
 export { useSpatialReady } from './runtime/useSpatialReady'
 export { WebSpatialBootError } from './runtime/errors'
 
-// --- Core infrastructure (Group C: pure re-exports / type re-exports) --------
+// --- Runtime capability infrastructure (local, core-free at runtime) ---------
 export { WebSpatialRuntime } from './webSpatialRuntime'
-export { WebSpatialRuntimeError } from '@webspatial/core-sdk'
-export type { CapabilityKey } from '@webspatial/core-sdk'
+export { WebSpatialRuntimeError } from './runtime/capabilities'
+export type {
+  CapabilityKey,
+  WebSpatialRuntimeSnapshot,
+  WebSpatialRuntimeType,
+} from './runtime/capabilities'
 
 // --- Core-sdk type re-exports (zero runtime cost) ---------------------------
-// `@webspatial/core-sdk` is now a regular dependency (not a peer) of this
-// package — consumers `pnpm add @webspatial/react-sdk` and the SDK's npm
-// transitively installs core-sdk. To complete that "single-package
-// installation, single-package import" experience, the documented
-// user-facing TYPE surface of core-sdk is re-exported here so consumer code
-// never needs `import from '@webspatial/core-sdk'`.
+// `@webspatial/core-sdk` remains a regular dependency of this package because
+// the spatial/eager implementation graphs use its real runtime classes.
+// The default entry, however, MUST NOT emit runtime imports from core-sdk.
+// To keep the "single-package installation, single-package import" TypeScript
+// experience, the documented user-facing TYPE surface of core-sdk is still
+// re-exported here as declaration-only API.
 //
 // IMPORTANT: only TYPE-only re-exports live here. Re-exporting heavy
 // runtime classes (`Spatial`, `SpatialSession`, `SpatializedDynamic3DElement`,
@@ -119,14 +123,10 @@ export type {
   XRSpatialSceneConfig,
   XRPrdConfig,
   PWAManifest,
-  // Runtime detection types (advanced: surfaces what
-  // `WebSpatialRuntime.runtime` returns / what the bridge looks at).
-  WebSpatialRuntimeSnapshot,
-  WebSpatialRuntimeType,
   JsbAdapterPlatformKind,
 } from '@webspatial/core-sdk'
 
-// --- Stateless utilities (Group B: gracefully degrade via core-sdk session) --
+// --- Stateless utilities (Group B: gracefully degrade via bridge session) ----
 // `enableDebugTool` is imported from its source file (NOT from `./utils`)
 // so the `./utils/index.ts` barrel — which still re-exports `getSession`
 // for spatial-chunk callers — does NOT enter the default-entry static
