@@ -223,7 +223,7 @@ export class SpatialEntity extends SpatialObject {
         finished,
         canceled,
         failed,
-      } as AnimateTransformResult & { failed: Promise<AnimationError> }
+      } as AnimateTransformResult
     } else {
       // pause / resume / cancel — fire and wait for bridge ack
       const result = await new AnimateTransformJSBCommand(command).execute()

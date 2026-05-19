@@ -195,6 +195,11 @@ export interface AnimateTransformResult {
    * After cancel, `finished` MUST remain pending (not rejected).
    */
   canceled: Promise<TransformValues>
+  /**
+   * Resolves when the animation fails due to a native or bridge error.
+   * Optional because older native runtimes may not emit the failed event.
+   */
+  failed?: Promise<AnimationError>
 }
 
 // ---- Internal animated props (cross-layer communication) ----

@@ -35,7 +35,7 @@ interface AnimationSession {
   /** The config snapshot used for this session. */
   config: AnimationConfig
   /** Result from core animateTransform (play). */
-  result?: AnimateTransformResult & { failed?: Promise<AnimationError> }
+  result?: AnimateTransformResult
   /** Whether a queued pause was requested before bind. */
   queuedPause?: boolean
   /** Whether unmounted — suppress callbacks after unmount. */
@@ -159,9 +159,7 @@ export function useAnimation(
         const result = await entity.animateTransform(
           cmd as AnimateTransformCommand & { type: 'play' },
         )
-        session.result = result as AnimateTransformResult & {
-          failed?: Promise<AnimationError>
-        }
+        session.result = result
 
         // If session was stopped or replaced while waiting for bridge ack, skip
         if (sessionRef.current !== session || session.unmounted) return
@@ -208,8 +206,8 @@ export function useAnimation(
         })
 
         // Listen for failed event
-        if ((result as any).failed) {
-          ;(result as any).failed.then((error: AnimationError) => {
+        if (result.failed) {
+          result.failed.then((error: AnimationError) => {
             if (sessionRef.current !== session || session.unmounted) return
             session.state = 'idle'
             sessionRef.current = null
