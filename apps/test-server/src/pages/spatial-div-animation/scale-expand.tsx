@@ -1,61 +1,59 @@
-import { useState } from 'react'
 import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
+  PlayStateBadge,
   btnCls,
   btnPrimary,
+  fmtValues,
   useLog,
 } from './shared'
 
-export default function SizeExpandPage() {
+export default function ScaleExpandPage() {
   const { lines, log, clear } = useLog()
-  const [size, setSize] = useState({ width: 200, height: 120 })
 
   const [animation, api] = useAnimation({
-    to: { width: 400, height: 240 },
+    from: {
+      'transform.scale.x': 0.6,
+      'transform.scale.y': 0.6,
+      'transform.scale.z': 1,
+    },
+    to: {
+      'transform.scale.x': 1.0,
+      'transform.scale.y': 1.0,
+      'transform.scale.z': 1,
+    },
     duration: 1.0,
     autoStart: false,
     timingFunction: 'easeInOut',
-    onStart: () => log('size: onStart'),
+    onStart: () => log('scale: onStart'),
     onComplete: (values: any) =>
-      log(
-        `size: onComplete → w=${values.width?.toFixed(0)} h=${values.height?.toFixed(0)}`,
-      ),
-    onCancel: (values: any) => {
-      log(
-        `size: onCancel → w=${values.width?.toFixed(0)} h=${values.height?.toFixed(0)}`,
-      )
-      if (values.width != null && values.height != null) {
-        setSize({ width: values.width, height: values.height })
-      }
-    },
-    onError: (err: any) => log(`size: onError → ${err.reason}`),
+      log(`scale: onComplete → ${fmtValues(values)}`),
+    onCancel: (values: any) =>
+      log(`scale: onCancel (restored) → ${fmtValues(values)}`),
+    onError: (err: any) => log(`scale: onError → ${err.reason}`),
   } as any)
 
   return (
     <SpatialDivAnimationPageShell
-      title="Size Expand + Cancel Sync"
-      description="Width 200→400, height 120→240 over 1s. Manual trigger. Cancel restores and syncs React state."
+      title="Scale Expand + Cancel"
+      description="transform.scale 0.6→1.0 over 1s. Cancel restores the from snapshot — no manual React state sync required."
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div
           enable-xr
-          animation={animation}
+          animation={animation as any}
           style={{
-            width: size.width,
-            height: size.height,
+            width: 240,
+            height: 160,
             background: 'linear-gradient(135deg, #3a1e5f, #5a2d87)',
             borderRadius: 12,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'none',
           }}
         >
-          <span style={{ color: 'white', fontSize: 14 }}>
-            {size.width}×{size.height}
-          </span>
+          <span style={{ color: 'white', fontSize: 14 }}>Scale Me</span>
         </div>
 
         <div className="flex flex-wrap gap-2 mt-3">
@@ -75,9 +73,13 @@ export default function SizeExpandPage() {
             Clear Log
           </button>
         </div>
-        <div className="text-xs text-gray-500 mt-2">
-          playState:{' '}
-          <code className="text-cyan-300">{(api as any).playState}</code>
+        <div className="mt-3 flex items-center gap-3">
+          <PlayStateBadge state={(api as any).playState} />
+          <span className="text-xs font-mono text-gray-500">
+            isAnimating={String((api as any).isAnimating)} &nbsp; isPaused=
+            {String((api as any).isPaused)} &nbsp; finished=
+            {String((api as any).finished)}
+          </span>
         </div>
         <Log lines={lines} />
       </section>
