@@ -3,6 +3,7 @@ import {
   BoxEntity,
   Reality,
   SceneGraph,
+  UnlitMaterial,
   useAnimation,
 } from '@webspatial/react-sdk'
 import {
@@ -119,12 +120,14 @@ export default function EntityAnimationManualTriggerPage() {
           {posX}
         </div>
         <Reality style={{ width: '100%', height: '220px' }}>
+          <UnlitMaterial id="matRed" color="#ff0000" />
           <SceneGraph>
             <BoxEntity
               width={0.1}
               height={0.1}
               depth={0.1}
               position={{ x: posX, y: 0, z: 0 }}
+              materials={['matRed']}
               animation={animation}
             />
           </SceneGraph>
