@@ -1,0 +1,57 @@
+## Why
+
+Product positioning is **web-first, spatial as enhancement**: most page loads happen in regular browsers, only a minority enter a WebSpatial runtime (visionOS / Pico OS). The current "dual build (`dist/web` vs `dist/default`) + `@webspatial/vite-plugin` alias switching" architecture under-delivers on its size promise and adds operational tax:
+
+- `dist/web/index.js` is ~124KB (≈ `dist/default/index.js`); only `initScene` and the JSX runtime have `.web.ts` placeholders. All heavyweight modules (`Spatialized*Container*`, `withSpatialMonitor`, `Reality`, `*Entity`, real `Model`, reality hooks) ship in the web bundle anyway.
+- The size optimization is conditional on adopting `@webspatial/vite-plugin`, running `concurrently`, and ordering `web → avp` builds correctly. Any missing piece silently degrades.
+- The three in-house consumers (`apps/test-server`, `packages/autoTest`, `tests/ci-test`) all bypass the plugin and alias `@webspatial/react-sdk` directly to source, so the dual-build contract has zero in-tree end-to-end coverage.
+- Two parallel `XR_ENV` injection mechanisms exist (tsup banner writes `__webspatialsdk__.XR_ENV`; the plugin defines `window.XR_ENV`), creating inconsistent runtime semantics.
+
+A simpler, web-first-aligned architecture is to **defer spatial code from build time to run time**: ship one tiny default bundle for everyone, dynamically `import()` the spatial implementation only inside a WebSpatial runtime.
+
+## What Changes
+
+- **BREAKING** Remove the `@webspatial/react-sdk/web` and `@webspatial/react-sdk/default` subpath exports. Only `'.'`, `./jsx-runtime`, `./jsx-dev-runtime`, and the new `./spatial` remain.
+- **BREAKING** The default entry no longer ships spatial implementations. Applications running in a WebSpatial runtime MUST `await bootSpatial()` before initial render to load the spatial chunk; otherwise all spatial APIs render as web fallbacks.
+- **BREAKING** Remove four internal container / monitor identifiers from the default entry's public exports: `SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`. These were never intended as public API — the supported usage is via the HOCs `withSpatialized2DElementContainer(Comp)` and `withSpatialMonitor(Comp)`. They continue to live inside the spatial chunk as facade / HOC implementation details. (The `Entity` component remains a public facade because it is a documented empty transform group.)
+- **DEPRECATION** Mark the `createElement` export as `@deprecated`. It exists to support the classic JSX transform (`tsconfig` `"jsx": "react"` / `"jsxFactory": "createElement"`); the new JSX transform — recommended since React 17+ — covers the same strip + wrap behavior via the package.json `./jsx-runtime` mapping. v1 retains the export with a deprecation annotation; the export is scheduled for removal in v2. No in-tree consumer currently uses it (verified by grep across `apps/`, `packages/`, `tests/`).
+- Introduce a runtime **bridge singleton** (`getSpatialImpl()` / `loadSpatialImpl()` / `isSpatialReady()`) and a **boot helper** (`bootSpatial()`) in the default entry. The bridge dynamically imports `@webspatial/react-sdk/spatial` only in WebSpatial runtimes; after the first successful load it reuses the cached spatial namespace for the remainder of the page lifetime, while failed loads may be retried on demand.
+- Replace every public spatial component / HOC / hook export in the default entry with a **lightweight facade / placeholder**. Facades render their documented per-component default fallback until `bootSpatial()` resolves; hooks return documented stable defaults. Per-facade `props.fallback` is intentionally **not** part of the v1 API — customization is the application's responsibility via a small wrapper that branches on the public `useSpatialReady()` hook.
+- Move all real implementations (`Spatialized*Container*`, `withSpatial*`, `Reality`, `*Entity`, real `Model`, reality hooks) into `packages/react/src/spatial/` and expose them via a new `@webspatial/react-sdk/spatial` subpath that the bridge dynamically imports.
+- Replace the previously split `*.web.ts` JSX runtime files with a **single unified runtime** that **strips** WebSpatial-only markers (`enable-xr`, `enable-xr-monitor`, `style.enableXr`, `__enableXr__` className token) AND **wraps** the element type with the corresponding facade HOC. The unified runtime serves plain web, AVP, SSR, and RSC consistently, eliminating today's "unknown attribute" warnings on the `react-server` exports condition.
+- Delete the `dist/web` and `dist/default` build entries from `tsup.config.ts`; remove the `XR_ENV` `window.__webspatialsdk__` writes from banners (only version banners remain).
+- Add a **two-tiered size budget**: the product-level contract is that adding `@webspatial/react-sdk` to a typical consumer application following the recommended named-import pattern (e.g. `import { Model, bootSpatial }`) MUST NOT increase the application's gzipped bundle size by more than **8 KB** (marginal delta, including transitive `@webspatial/core-sdk` bytes). An additional SDK-side proxy of `dist/index.js` gzip ≤ 8 KB is enforced at build time as a fail-fast check. Worst-case namespace / full-barrel imports MAY exceed and are documented as informational.
+- Add **Tree-shake friendliness contract**: declare `"sideEffects": false` on the published `package.json`, eliminate every existing top-level side effect from default-entry modules (notably the current `if (typeof window !== 'undefined') { initPolyfill() }` in `src/index.ts`, which moves into the spatial chunk's bootstrap), and prefer named re-exports over wildcard re-exports for runtime values. Without these, modern bundlers conservatively retain every barrel module and the marginal-delta budget is unreachable.
+- Document that **`@webspatial/vite-plugin` is no longer required**. Old plugin configurations that alias `@webspatial/react-sdk` to `/web` or `/default` will fail to resolve after this change; users must remove or upgrade the plugin in lockstep with the SDK upgrade.
+- Define a **capability-based bundler contract** (the consuming bundler MUST support ESM, the `exports` package.json field, and dynamic-import code-splitting) so the SDK is plugin-free against any compatible bundler. Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1, and esbuild ≥ 0.18 with `splitting: true` are documented tested targets; Module Federation, Next.js Turbopack, Webpack 4, and CommonJS-only consumer pipelines are explicitly out of scope for v1.
+
+## Capabilities
+
+### New Capabilities
+
+- `spatial-lazy-load`: Default-entry size budget (typical-case marginal delta + SDK-side proxy) and self-containment; bridge / boot contract; per-component facade and hook-placeholder behavior; user-side wrapper hook (`useSpatialReady`); spatial chunk exposure and load semantics; unified JSX runtime that strips spatial markers and wraps with facade HOCs; SSR / hydration behavior; stateless utility APIs and pure re-exports remaining in the default entry; tree-shake friendliness (`"sideEffects": false`, no top-level side effects, named re-export preference); plugin-free integration.
+
+### Modified Capabilities
+
+- `runtime-capabilities`: Internal runtime snapshot retrieval MUST be synchronous and SSR-safe so the bridge can decide without `await`; spatial-dependent capability keys MUST resolve to `false` in non-WebSpatial browsers (re-asserted across the broader key set used by lazy-load).
+
+## Impact
+
+- **`@webspatial/react-sdk`**
+  - New: `runtime/bridge.ts`, `runtime/boot.ts`, `runtime/detect.ts`, `runtime/useSpatialReady.ts`, `runtime/errors.ts` (`WebSpatialBootError` class), `facades/*.tsx`, `hooks-web/useMetrics.ts` (public hook with `'use client'`), `hooks-web/useMetrics-placeholder.ts` (placeholder constants — no hooks, no directive), `spatial/index.ts`.
+  - For React Server Components compatibility, every facade module and every public hook module that calls React hooks (the public `useMetrics.ts`, `runtime/useSpatialReady.ts`, every facade file) MUST begin with the `'use client'` directive; build verification asserts the directive is preserved in the published `dist/` files.
+  - Rewritten: `src/index.ts` to export only facades (including `Entity` as the empty transform group component), the `useMetrics` placeholder/real-selector, bridge-public surface (`isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, `bootSpatial`), Group B / C stateless utilities (`initScene`, `convertCoordinate`, `enableDebugTool`, `WebSpatialRuntime`, `WebSpatialRuntimeError`, `SSRProvider`, `getAbsoluteUrl`, `version`), the unified JSX runtime, the `@deprecated` `createElement` (slated for v2 removal), and type-only exports. The existing top-level `if (typeof window !== 'undefined') { initPolyfill() }` side effect MUST be removed (per "Tree-shake friendliness"); polyfill installation moves into the spatial chunk's bootstrap. Four container / monitor identifiers (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`) MUST be removed from the public exports (per the BREAKING bullet above).
+  - `tsup.config.ts`: collapse to three entries (main, spatial, JSX runtime); delete `dist/web` / `dist/default` / `*.web.*` configs; remove `XR_ENV` banner writes.
+  - `package.json` `exports`: hard remove `./web` and `./default`; add `./spatial`; collapse `./jsx-runtime` and `./jsx-dev-runtime` to single mappings (drop the `react-server` conditional sub-key).
+  - `package.json` `peerDependencies`: declare `react: ">=18.0"` and `react-dom: ">=18.0"` (the `useSyncExternalStore` baseline required by `useSpatialReady` per the "Plugin-free integration" Requirement).
+  - `package.json` `sideEffects`: declare `"sideEffects": false` (or a precise allow-list) so consumer bundlers can tree-shake unused barrel exports (per "Tree-shake friendliness").
+  - JSX runtime: delete `jsx-runtime.web.ts` and `jsx-dev-runtime.web.ts`; the unified runtime in `jsx-runtime.ts` / `jsx-dev-runtime.ts` (via `jsx-shared.ts`) strips markers, wraps with facade HOCs, and clones `props.style` before removing the `enableXr` key.
+- **`@webspatial/core-sdk`**
+  - No structural change. `noRuntime.ts` shim is no longer needed by react-sdk after this change but is left in place; cleanup is out of scope.
+- **In-house apps & tests** (`apps/test-server`, `packages/autoTest`, `tests/ci-test`)
+  - **Not modified in this change.** They continue to alias `@webspatial/react-sdk` → `packages/react/src` (source-level), which still works because the source-level `index.ts` is the new lean entry. A follow-up change will migrate them to consume `dist` plus `bootSpatial()` for end-to-end size validation.
+- **`@webspatial/vite-plugin`** (separate repo `webspatial/web-builder-plugins`)
+  - Becomes redundant. Users on the new SDK MUST remove the plugin from `vite.config.ts` (alias rewrite to removed subpaths will otherwise break the build). Cross-repo deprecation is tracked as a follow-up issue and is **not blocking** this change.
+- **Documentation**
+  - New migration guide covering: removed subpaths, plugin removal, mandatory `bootSpatial()` adoption, per-component fallback semantics.
+  - Public API docs updated to describe each component's web fallback behavior.
