@@ -11,6 +11,8 @@ or the source for public-facing positioning copy.
 - Measured size-impact report (spec vs main baseline): `docs/lazy-load-spatial-runtime-size-impact.md`
 - OpenSpec change (normative requirements): `openspec/changes/lazy-load-spatial-runtime/`
 - Consumer-shaped lazy + eager fixtures: `apps/spatial-vite-min/`
+- **React Router 7 (Remix-style) SSR:** `apps/spatial-remix-min/`
+- Next.js App Router reference: `apps/spatial-next-min/`
 - WebSpatial-runtime-heavy internal demos (eager via build alias): `apps/test-server/`
 
 ---
@@ -28,14 +30,14 @@ or the source for public-facing positioning copy.
 
 Answer these before broad public messaging or enterprise commitments.
 
-| # | Topic | Question for product |
-|---|--------|----------------------|
-| P0-1 | Primary persona | Is the **default** story **web-first progressive enhancement**, or **spatial-first** apps? |
-| P0-2 | Two entries | Are **`@webspatial/react-sdk` (lazy)** and **`@webspatial/react-sdk/eager`** both first-class, or is eager **advanced / internal-only** in customer messaging? |
-| P0-3 | Plain web bar | On a normal browser, what is **acceptable** (static poster, flat layout) vs **unacceptable** (white screen, uncaught errors) for pages that use spatial primitives? |
-| P0-4 | WebSpatial boot | In WebSpatial runtimes, is **`await bootSpatial()` before first spatial UI** required, or is a **first-frame fallback then upgrade** acceptable? |
-| P0-5 | Boot failure | If `bootSpatial()` rejects, should the app **hard-fail**, **silent degrade**, or show **recoverable error UI**? |
-| P0-6 | Parity scope | Is **facade vs real-impl structural parity** on plain web a **public quality promise**, or an **internal engineering contract** with optional narrowing per component? |
+| #    | Topic           | Question for product                                                                                                                                                   |
+| ---- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0-1 | Primary persona | Is the **default** story **web-first progressive enhancement**, or **spatial-first** apps?                                                                             |
+| P0-2 | Two entries     | Are **`@webspatial/react-sdk` (lazy)** and **`@webspatial/react-sdk/eager`** both first-class, or is eager **advanced / internal-only** in customer messaging?         |
+| P0-3 | Plain web bar   | On a normal browser, what is **acceptable** (static poster, flat layout) vs **unacceptable** (white screen, uncaught errors) for pages that use spatial primitives?    |
+| P0-4 | WebSpatial boot | In WebSpatial runtimes, is **`await bootSpatial()` before first spatial UI** required, or is a **first-frame fallback then upgrade** acceptable?                       |
+| P0-5 | Boot failure    | If `bootSpatial()` rejects, should the app **hard-fail**, **silent degrade**, or show **recoverable error UI**?                                                        |
+| P0-6 | Parity scope    | Is **facade vs real-impl structural parity** on plain web a **public quality promise**, or an **internal engineering contract** with optional narrowing per component? |
 
 ---
 
@@ -64,17 +66,19 @@ Answer these before broad public messaging or enterprise commitments.
 **Alignment questions**
 
 1. Is eager **only** for WebSpatial-only shells / devices, or may customers ship
-  eager bundles to **arbitrary** browsers (accepting larger bundles and
+   eager bundles to **arbitrary** browsers (accepting larger bundles and
    real-impl degrade paths executing)?
 2. Do public docs **recommend omitting** `bootSpatial()` on eager, or keeping it
    for copy-paste compatibility with lazy apps?
 
 ### 3.3 Internal vs consumer-shaped apps
 
-| App | Role (suggested framing) |
-|-----|----------------------------|
-| `apps/spatial-vite-min` | **Consumer-shaped** validation: published `exports`, lazy + eager pages, no SDK `src/` alias. |
-| `apps/test-server` | **WebSpatial-runtime-heavy** validation; may alias SDK `src` and eager entry for fast iteration. |
+| App                      | Role (suggested framing)                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------ |
+| `apps/spatial-vite-min`  | **Consumer-shaped** validation: published `exports`, lazy + eager pages, no SDK `src/` alias.    |
+| `apps/spatial-next-min`  | **Next.js 15** SSR / RSC reference (`@webspatial/react-sdk`).                                    |
+| `apps/spatial-remix-min` | **React Router 7** (Remix-style) + **Vite SSR** reference.                                       |
+| `apps/test-server`       | **WebSpatial-runtime-heavy** validation; may alias SDK `src` and eager entry for fast iteration. |
 
 Product should confirm this split matches how **you** talk about “official
 demos” externally.
@@ -207,12 +211,12 @@ application-level Context wrapper; hydration safety is internal to the SDK
 
 Decisions from product sync (record for docs/SDK scope):
 
-| Topic | Decision |
-| --- | --- |
-| `@webspatial/react-sdk/server` | **Not part of the public developer surface.** The subpath may remain in the package for **internal WebSpatial demos, CI, and R&D**; do not document it as a supported integration API in customer-facing materials. |
-| Runtime detection in app code | **`detectSpatialRuntime` is not a supported public API** for third-party integrators. Developers classify environments using the **User-Agent string** and **official WebSpatial site documentation** — not SDK detection helpers. |
-| `SSRProvider` removal | **Agreed.** No app-level provider for hydration gating; SDK handles this internally (`useSpatialReady`, `withSSRSupported`). |
-| `Reality` plain-web / fallback | **Keep the `<div>` placeholder** (layout-preserving degraded rendering). Do not change the facade/impl contract to `null` or alternate tags without an explicit product + spec revision. |
+| Topic                          | Decision                                                                                                                                                                                                                           |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@webspatial/react-sdk/server` | **Not part of the public developer surface.** The subpath may remain in the package for **internal WebSpatial demos, CI, and R&D**; do not document it as a supported integration API in customer-facing materials.                |
+| Runtime detection in app code  | **`detectSpatialRuntime` is not a supported public API** for third-party integrators. Developers classify environments using the **User-Agent string** and **official WebSpatial site documentation** — not SDK detection helpers. |
+| `SSRProvider` removal          | **Agreed.** No app-level provider for hydration gating; SDK handles this internally (`useSpatialReady`, `withSSRSupported`).                                                                                                       |
+| `Reality` plain-web / fallback | **Keep the `<div>` placeholder** (layout-preserving degraded rendering). Do not change the facade/impl contract to `null` or alternate tags without an explicit product + spec revision.                                           |
 
 ---
 
