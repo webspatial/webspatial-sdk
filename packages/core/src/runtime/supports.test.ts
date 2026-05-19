@@ -242,4 +242,16 @@ describe('getRuntime / supports', () => {
     expect(supports('Model', ['stagemode'])).toBe(false)
     expect(supports('useAnimation', ['entity'])).toBe(true)
   })
+
+  test('visionOS WSAppShell/1.8.0: useAnimation entity and element both true', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useAnimation')).toBe(true)
+    expect(supports('useAnimation', ['entity'])).toBe(true)
+    expect(supports('useAnimation', ['element'])).toBe(true)
+  })
 })
