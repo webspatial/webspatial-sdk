@@ -1,9 +1,5 @@
 import { useCallback, useState } from 'react'
-import {
-  Model,
-  useBootSpatial,
-  useSpatialReady,
-} from '@webspatial/react-sdk'
+import { Model, useBootSpatial, useSpatialReady } from '@webspatial/react-sdk'
 
 /**
  * Client subtree for `@webspatial/react-sdk` (lazy default entry).
