@@ -1,6 +1,6 @@
 /**
  * Versioned capability rows transcribed from the product matrix (`capability-matrix.template.md`).
- * visionOS **WSAppShell/1.5.0** & **1.6.0** & **1.7.0**; picoOS **PicoWebApp/0.1.1** & **0.1.2** & **0.2.2** — see matrix in OpenSpec / product docs.
+ * visionOS **WSAppShell/1.5.0** & **1.6.0** & **1.7.0** & **1.8.0**; picoOS **PicoWebApp/0.1.1** & **0.1.2** & **0.2.2** — see matrix in OpenSpec / product docs.
  *
  * **picoOS** rows use dedicated builders (alpha2.0 / alpha2.1 subtokens); visionOS rows are separate.
  */
@@ -85,6 +85,16 @@ function matrixVision_1_7_0_Flags(): Record<string, boolean> {
 }
 
 /**
+ * visionOS **WSAppShell/1.8.0** — element animation support.
+ * Inherits from 1.7.0 and enables `useAnimation:element`.
+ */
+function matrixVision_1_8_0_Flags(): Record<string, boolean> {
+  const flags = matrixVision_1_7_0_Flags()
+  flags['useAnimation:element'] = true
+  return flags
+}
+
+/**
  * picoOS **PicoWebApp/0.1.1** — alpha2.0 baseline (product matrix).
  * WindowScene / VolumeScene / Material subtokens Y; Model sub-tokens per matrix; **`xrInnerDepth` / `xrOuterDepth` N**.
  */
@@ -130,6 +140,10 @@ function visionOsRow_1_7_0(): CapabilityVersionRow {
   return { version: '1.7.0', flags: matrixVision_1_7_0_Flags() }
 }
 
+function visionOsRow_1_8_0(): CapabilityVersionRow {
+  return { version: '1.8.0', flags: matrixVision_1_8_0_Flags() }
+}
+
 function picoOsRow_0_1_1(): CapabilityVersionRow {
   return { version: '0.1.1', flags: matrixPico_0_1_1_Flags() }
 }
@@ -146,6 +160,11 @@ export const CAPABILITY_TABLE: {
   visionos: CapabilityVersionRow[]
   picoos: CapabilityVersionRow[]
 } = {
-  visionos: [visionOsRow_1_5_0(), visionOsRow_1_6_0(), visionOsRow_1_7_0()],
+  visionos: [
+    visionOsRow_1_5_0(),
+    visionOsRow_1_6_0(),
+    visionOsRow_1_7_0(),
+    visionOsRow_1_8_0(),
+  ],
   picoos: [picoOsRow_0_1_1(), picoOsRow_0_1_2(), picoOsRow_0_2_2()],
 }
