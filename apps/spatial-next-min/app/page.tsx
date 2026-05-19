@@ -9,8 +9,8 @@ export default function HomePage() {
     <div>
       <h1>spatial-next-min</h1>
       <p>
-        Worked examples of <code>@webspatial/react-sdk</code> under Next.js 15 App
-        Router. Each page exercises a different scenario from the{' '}
+        Worked examples of <code>@webspatial/react-sdk</code> under Next.js 15
+        App Router. Each page exercises a different scenario from the{' '}
         <code>lazy-load-spatial-runtime</code> spec.
       </p>
       <ul style={{ lineHeight: 1.8 }}>

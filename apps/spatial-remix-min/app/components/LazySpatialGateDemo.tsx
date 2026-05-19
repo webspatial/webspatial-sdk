@@ -100,18 +100,17 @@ export function LazySpatialGateDemo() {
       </p>
       <p>
         The heading above stays visible during boot. Spatial primitives below
-        are inside{' '}
-        <code>
-          &lt;SpatialBoot gate fallback=&#123;…&#125;&gt;
-        </code>
-        .
+        are inside <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code>.
       </p>
 
       <SpatialBoot
         gate
         fallback={<SpatialBootGateFallback />}
         onError={(err: WebSpatialBootError) => {
-          console.error('[spatial-remix-min /lazy-gate] bootSpatial rejected', err)
+          console.error(
+            '[spatial-remix-min /lazy-gate] bootSpatial rejected',
+            err,
+          )
         }}
       >
         <LazySpatialGateContent />

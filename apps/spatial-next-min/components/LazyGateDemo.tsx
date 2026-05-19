@@ -107,11 +107,9 @@ export function LazyGateDemo() {
       </p>
       <p>
         Same lazy entry as <code>/lazy</code>, but spatial UI is behind{' '}
-        <code>
-          &lt;SpatialBoot gate fallback=&#123;…&#125;&gt;
-        </code>
-        . On WebSpatial runtimes you may briefly see the loading fallback before
-        this subtree mounts.
+        <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code>. On
+        WebSpatial runtimes you may briefly see the loading fallback before this
+        subtree mounts.
       </p>
 
       <SpatialBoot
@@ -119,7 +117,10 @@ export function LazyGateDemo() {
         fallback={<SpatialBootGateFallback />}
         onError={(err: WebSpatialBootError) => {
           // eslint-disable-next-line no-console
-          console.error('[spatial-next-min /lazy-gate] bootSpatial rejected', err)
+          console.error(
+            '[spatial-next-min /lazy-gate] bootSpatial rejected',
+            err,
+          )
         }}
       >
         <LazyGateContent />

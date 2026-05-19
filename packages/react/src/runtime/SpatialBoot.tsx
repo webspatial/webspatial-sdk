@@ -52,8 +52,7 @@ export function createSpatialBoot(
 
     const { status } = useBootHook({ onReady, onError })
 
-    const showChildren =
-      !gate || status === 'ready' || status === 'failed'
+    const showChildren = !gate || status === 'ready' || status === 'failed'
 
     if (!showChildren) {
       return fallback ?? null

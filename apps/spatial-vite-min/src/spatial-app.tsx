@@ -90,12 +90,9 @@ export function SpatialApp({ mode, Model }: SpatialAppProps) {
       {mode === 'lazy-gate' ? (
         <p style={{ marginBottom: 16, fontSize: 14, color: '#444' }}>
           This page is wrapped by{' '}
-          <code>
-            &lt;SpatialBoot gate fallback=&#123;…&#125;&gt;
-          </code>{' '}
-          in <code>main-lazy-gate.tsx</code>. Until{' '}
-          <code>bootSpatial()</code> resolves, only the loading fallback is
-          shown; then this tree mounts.
+          <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code> in{' '}
+          <code>main-lazy-gate.tsx</code>. Until <code>bootSpatial()</code>{' '}
+          resolves, only the loading fallback is shown; then this tree mounts.
         </p>
       ) : null}
 
