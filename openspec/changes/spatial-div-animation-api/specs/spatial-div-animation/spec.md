@@ -19,8 +19,11 @@ The SDK MUST provide a `SpatialDiv` animation API consisting of a React `useAnim
 #### Scenario: animation applies only to spatialized HTML nodes
 
 - **WHEN** application code passes the `animation` object to a non-`enable-xr` DOM node
-- **THEN** the SDK MUST emit a warning
+- **THEN** the SDK MUST emit a warning at the React prop binding layer when the `animation` prop is detected on a DOM element that is not a `Spatialized2DElementContainer`
 - **AND** the SDK MUST NOT start native playback
+- **AND** `api.play()` MUST be a no-op (the session MUST NOT enter `queued` state; `api.isAnimating` MUST remain `false`)
+- **AND** `api.pause()` and `api.cancel()` MUST also be no-ops
+- **AND** lifecycle callbacks (`onStart`, `onComplete`, `onCancel`, `onError`) MUST NOT be invoked
 
 #### Scenario: animation object MUST NOT be reused across elements
 
@@ -209,7 +212,7 @@ The playback API MUST allow applications to start, pause, and cancel `SpatialDiv
 
 #### Scenario: play() before element is bound
 
-- **GIVEN** the `SpatialDiv` is not yet bound on the native side
+- **GIVEN** the `SpatialDiv` has `enable-xr` but is not yet bound on the native side
 - **WHEN** application code calls `api.play()`
 - **THEN** the SDK MUST place the request into the queued state
 - **AND** execute it in call order after binding completes
