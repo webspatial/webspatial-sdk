@@ -6,6 +6,7 @@ This repository is a `pnpm` workspace monorepo that ships WebSpatial SDK package
 
 - `packages/*`: published packages (Core SDK, React SDK, Builder CLI, platform shells).
 - `apps/test-server`: local dev site and demo pages used during development.
+- `apps/spatial-vite-min`, `apps/spatial-next-min`, `apps/spatial-remix-min`: small **consumer-shaped** fixtures (Vite SPA, Next SSR, React Router / Remix-style SSR).
 - `tests/ci-test`: CI/e2e harness (Mocha/Chai) that runs against the Apple Vision Pro simulator.
 - `tests/autoTest`: Puppeteer-based browser automation suite for WebSpatial demo pages.
 - `tools/scripts`: repo scripts used by CI and pre-commit checks.
