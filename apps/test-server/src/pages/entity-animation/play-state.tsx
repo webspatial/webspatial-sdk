@@ -16,8 +16,14 @@ export default function EntityAnimationPlayStatePage() {
   const logger = useLog()
 
   const [animation, api] = useAnimation({
-    from: { position: { x: -0.2, y: 0, z: 0 } },
-    to: { position: { x: 0.2, y: 0, z: 0 } },
+    from: {
+      position: { x: -0.2, y: 0, z: 0 },
+      scale: { x: 0.5, y: 0.5, z: 0.5 },
+    },
+    to: {
+      position: { x: 0.2, y: 0, z: 0 },
+      scale: { x: -1, y: 1, z: 1 },
+    },
     duration: 4.0,
     timingFunction: 'easeInOut',
     autoStart: false,
@@ -95,7 +101,7 @@ export default function EntityAnimationPlayStatePage() {
               width={0.1}
               height={0.1}
               depth={0.1}
-              position={{ x: 0, y: 0, z: 0 }}
+              // position={{ x: 0, y: 0, z: 0 }}
               animation={animation}
             />
           </SceneGraph>
