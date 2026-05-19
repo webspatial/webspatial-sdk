@@ -126,21 +126,24 @@ SDK MUST 在校验时对以下范围抛错：
 
 ---
 
-### Requirement: 定义 isAnimating / isPaused 状态语义
+### Requirement: 定义 isAnimating / isPaused / finished / playState 状态语义
 
-会话处于以下任一状态时为 **alive**：queued、delaying、running、paused。会话为 idle（无会话或会话已结束）时为 **not alive**。`isAnimating` 反映会话是否正在积极推进，`isPaused` 反映会话是否被冻结但仍然 alive。
+会话处于以下任一状态时为 **alive**：queued、delaying、running、paused。会话为 idle（无会话或会话已结束）时为 **not alive**。`isAnimating` 反映会话是否正在积极推进，`isPaused` 反映会话是否被冻结但仍然 alive。`finished` 反映最近一个当前有效会话是否已自然完成；它 MUST 只在非循环动画自然完成后变为 `true`，并在后续 `play()` 启动新会话或 `cancel()` 时重置为 `false`。
 
-`api.isAnimating` 和 `api.isPaused` MUST 按以下模型反映动画会话状态：
+`api.isAnimating`、`api.isPaused`、`api.finished` 和 `api.playState` MUST 按以下模型反映动画会话状态：
 
-| 状态 | `isAnimating` | `isPaused` | 描述 |
-|---|---|---|---|
-| idle | `false` | `false` | 无会话，或会话已结束 |
-| queued | `true` | `false` | `play()` 在元素绑定前调用，等待绑定 |
-| delaying | `true` | `false` | `play()` 已调用，delay 期间，视觉动效尚未开始 |
-| running | `true` | `false` | 视觉动效进行中 |
-| paused | `false` | `true` | 会话已通过 `api.pause()` 暂停 |
+| 状态 | `isAnimating` | `isPaused` | `finished` | `playState` | 描述 |
+|---|---|---|---|---|---|
+| idle | `false` | `false` | `false` | `"idle"` | 无会话，或会话已结束 |
+| queued | `true` | `false` | `false` | `"queued"` | `play()` 在元素绑定前调用，等待绑定 |
+| delaying | `true` | `false` | `false` | `"running"` | `play()` 已调用，delay 期间，视觉动效尚未开始 |
+| running | `true` | `false` | `false` | `"running"` | 视觉动效进行中 |
+| paused | `false` | `true` | `false` | `"paused"` | 会话已通过 `api.pause()` 暂停 |
+| finished | `false` | `false` | `true` | `"finished"` | 非循环动画自然完成 |
 
 会话存在（alive）当且仅当 `isAnimating || isPaused` 为 `true`。`pause()`、`cancel()` 在 `!isAnimating && !isPaused`（即无 alive 会话）时为 no-op。
+
+`api.playState` MUST 返回上表中对应当前行的字符串。内部 `delaying` 状态映射为 `playState` 的 `"running"`，因为从开发者角度该会话正在积极推进。
 
 #### Scenario: delay 期间 isAnimating 为 true
 
@@ -160,6 +163,31 @@ SDK MUST 在校验时对以下范围抛错：
 - **WHEN** 动画会话通过 `api.cancel()` 或自然完成结束
 - **THEN** `api.isAnimating` MUST 在任何生命周期回调触发之前变为 `false`
 - **AND** `api.isPaused` MUST 为 `false`
+
+#### Scenario: finished 在自然完成后为 true
+
+- **WHEN** 非循环动画自然完成
+- **THEN** `api.finished` MUST 变为 `true`
+- **AND** `api.playState` MUST 为 `"finished"`
+
+#### Scenario: finished 在 cancel 后重置为 false
+
+- **GIVEN** 非循环动画已自然完成，`api.finished` 为 `true`
+- **WHEN** 应用调用 `api.cancel()`
+- **THEN** `api.finished` MUST 重置为 `false`
+- **AND** `api.playState` MUST 为 `"idle"`
+
+#### Scenario: finished 在重新 play 后重置为 false
+
+- **GIVEN** 非循环动画已自然完成，`api.finished` 为 `true`
+- **WHEN** 应用调用 `api.play()` 启动新会话
+- **THEN** `api.finished` MUST 重置为 `false`
+
+#### Scenario: playState 在 delay 期间为 running
+
+- **GIVEN** 动画配置设置了正数 `delay`
+- **WHEN** `api.play()` 被调用且 delay 期间活跃
+- **THEN** `api.playState` MUST 为 `"running"`
 
 ---
 
