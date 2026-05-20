@@ -32,6 +32,10 @@ export const routes = [
       },
       { path: '/reality/dynamicAssets', label: 'DynamicAssets' },
       {
+        path: '/reality/shared-model-asset',
+        label: 'Shared ModelAsset Repro',
+      },
+      {
         path: '/reality/textured-unlit-box',
         label: 'Textures',
       },
