@@ -26,6 +26,7 @@ export default defineConfig({
         lazyGate: path.resolve(__dirname, 'lazy-gate.html'),
         eager: path.resolve(__dirname, 'eager.html'),
         eagerLean: path.resolve(__dirname, 'eager-lean.html'),
+        xrMonitor: path.resolve(__dirname, 'xr-monitor.html'),
       },
     },
   },
