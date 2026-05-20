@@ -25,7 +25,6 @@ export default function RealitySharedModelAssetRepro() {
     margin: '0 6px 6px 0',
     border: '1.5px solid #aaa',
     borderRadius: 8,
-    background: '#f6f6f6',
     cursor: 'pointer',
     fontSize: 15,
     fontFamily: 'inherit',
@@ -70,7 +69,9 @@ export default function RealitySharedModelAssetRepro() {
       <ul className="mb-4 list-disc pl-5 text-gray-300">
         <li>Expected: left, middle, and right models are visible at once.</li>
         <li>Expected: toggling the middle model does not remove the others.</li>
-        <li>Expected: left material/position changes do not affect the others.</li>
+        <li>
+          Expected: left material/position changes do not affect the others.
+        </li>
       </ul>
 
       <Reality
@@ -88,7 +89,9 @@ export default function RealitySharedModelAssetRepro() {
             <ModelEntity
               id="sharedVehicleLeft"
               model="sharedVehicle"
-              materials={overrideLeftMaterial ? ['sharedReproYellow'] : undefined}
+              materials={
+                overrideLeftMaterial ? ['sharedReproYellow'] : undefined
+              }
               position={{ x: -0.28, y: moveLeftModel ? 0.12 : 0, z: 0 }}
               rotation={{ x: 0, y: -0.35, z: 0 }}
               scale={{ x: 0.14, y: 0.14, z: 0.14 }}
