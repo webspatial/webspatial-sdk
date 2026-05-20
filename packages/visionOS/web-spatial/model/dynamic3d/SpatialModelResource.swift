@@ -3,9 +3,13 @@ import SwiftUI
 
 @Observable
 class SpatialModelResource: SpatialObject {
-    var _resource: Entity?
+    private var _resource: Entity?
     var resource: Entity? {
         _resource
+    }
+
+    func makeInstance() -> Entity? {
+        _resource?.clone(recursive: true)
     }
 
     init(_ urlString: String, _ onload: @escaping (Result<SpatialModelResource, Error>) -> Void) {
