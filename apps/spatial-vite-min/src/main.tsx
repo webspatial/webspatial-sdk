@@ -1,6 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { bootSpatial, Model, WebSpatialBootError } from '@webspatial/react-sdk'
+import { LazyRealityScene } from './lazy-reality-scene'
 import { SpatialApp } from './spatial-app'
 
 // `bootSpatial()` resolves immediately in plain web browsers (no spatial
@@ -27,7 +28,7 @@ async function start(): Promise<void> {
   if (!el) throw new Error('#root not found')
   createRoot(el).render(
     <React.StrictMode>
-      <SpatialApp mode="lazy" Model={Model} />
+      <SpatialApp mode="lazy" Model={Model} RealityScene={LazyRealityScene} />
     </React.StrictMode>,
   )
 }

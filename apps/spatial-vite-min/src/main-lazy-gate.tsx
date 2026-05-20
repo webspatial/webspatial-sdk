@@ -1,6 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { Model, SpatialBoot } from '@webspatial/react-sdk'
+import { LazyRealityScene } from './lazy-reality-scene'
 import { SpatialApp } from './spatial-app'
 
 function SpatialBootGateFallback() {
@@ -28,7 +29,11 @@ if (!el) throw new Error('#root not found')
 createRoot(el).render(
   <React.StrictMode>
     <SpatialBoot gate fallback={<SpatialBootGateFallback />}>
-      <SpatialApp mode="lazy-gate" Model={Model} />
+      <SpatialApp
+        mode="lazy-gate"
+        Model={Model}
+        RealityScene={LazyRealityScene}
+      />
     </SpatialBoot>
   </React.StrictMode>,
 )

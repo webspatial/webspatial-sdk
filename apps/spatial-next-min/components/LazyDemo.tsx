@@ -8,6 +8,7 @@ import {
   useSpatialReady,
   WebSpatialBootError,
 } from '@webspatial/react-sdk'
+import { LazyRealityScene } from '@/components/LazyRealityScene'
 
 // Why 'use client': this component imports facades (`Model`) and a hook
 // (`useSpatialReady`) from the default entry. Per spec every facade file
@@ -69,8 +70,8 @@ export function LazyDemo() {
       <h1>Lazy default entry</h1>
       <p>
         <code>
-          import &#123; Model, bootSpatial, useSpatialReady &#125; from
-          &apos;@webspatial/react-sdk&apos;
+          import &#123; Reality, BoxEntity, Model, bootSpatial, useSpatialReady
+          &#125; from &apos;@webspatial/react-sdk&apos;
         </code>
       </p>
       <p>
@@ -135,6 +136,8 @@ export function LazyDemo() {
           </div>
         ))}
       </div>
+
+      <LazyRealityScene />
 
       <h2 style={{ marginTop: 32 }}>Model</h2>
       <p>
