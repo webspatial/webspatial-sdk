@@ -30,6 +30,34 @@ export class PortalInstanceObject {
   readonly parentPortalInstanceObject: PortalInstanceObject | null
   spatializedElement?: SpatializedElement
 
+  /**
+   * Fields currently suppressed by an active SpatialDiv animation session.
+   * When set, updateSpatializedElementProperties() will skip these fields,
+   * preventing DOM sync from overwriting native animation intermediate values.
+   */
+  private _suppressedFields: Set<string> | null = null
+
+  /**
+   * Set suppressed fields for SpatialDiv animation.
+   * Pass null to release suppression (resume normal sync).
+   */
+  setSuppressedFields(fields: Set<string> | null) {
+    const hadSuppression =
+      this._suppressedFields !== null && this._suppressedFields.size > 0
+    this._suppressedFields = fields
+    // When suppression is released, force a sync so DOM values override native animation end values
+    if (hadSuppression && (fields === null || fields.size === 0)) {
+      this.updateSpatializedElementProperties()
+    }
+  }
+
+  /**
+   * Check if a specific field is currently suppressed.
+   */
+  isFieldSuppressed(field: string): boolean {
+    return this._suppressedFields?.has(field) ?? false
+  }
+
   // cachedDomInfo used for cache dom info
   // when dom is updated, this property should be updated as well
   private cachedDomInfo?: CachedDomInfo
@@ -249,23 +277,32 @@ export class PortalInstanceObject {
     const extraProperties =
       this.getExtraSpatializedElementProperties?.(computedStyle) || {}
 
-    spatializedElement.updateProperties({
+    // Build properties, skipping any fields suppressed by animation
+    const properties: Record<string, any> = {
       clientX: x,
       clientY: y,
-      width,
-      height,
-      depth,
-      opacity,
       scrollWithParent,
       zIndex,
       visible,
-      backOffset,
       rotationAnchor,
       ...extraProperties,
-    })
+    }
+
+    // Only include fields that are not suppressed by active animation
+    if (!this.isFieldSuppressed('width')) properties.width = width
+    if (!this.isFieldSuppressed('height')) properties.height = height
+    if (!this.isFieldSuppressed('depth')) properties.depth = depth
+    if (!this.isFieldSuppressed('opacity')) properties.opacity = opacity
+    if (!this.isFieldSuppressed('backOffset'))
+      properties.backOffset = backOffset
+
+    spatializedElement.updateProperties(properties)
 
     // update transform
-    spatializedElement.updateTransform(this.transformMatrix!)
+    // Suppress transform sync while animation controls it (spec §3.6)
+    if (!this.isFieldSuppressed('transform')) {
+      spatializedElement.updateTransform(this.transformMatrix!)
+    }
 
     // assign spatializedElement to dom
     Object.assign(this.dom, {

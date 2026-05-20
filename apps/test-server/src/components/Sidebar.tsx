@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { entityAnimationRoutes } from '../pages/entity-animation/routes'
+import { spatialDivAnimationRoutes } from '../pages/spatial-div-animation/routes'
 
 export const routes = [
   { path: '/', label: 'Home' },
@@ -57,6 +58,17 @@ export const routes = [
     ],
   },
   { path: '/runtime-capabilities', label: 'Runtime capabilities' },
+  {
+    path: '/spatial-div-animation',
+    label: 'SpatialDiv Animation',
+    children: [
+      { path: '/spatial-div-animation', label: 'Overview' },
+      ...spatialDivAnimationRoutes.map(route => ({
+        path: route.path,
+        label: route.label,
+      })),
+    ],
+  },
   { path: '/unit-convert', label: 'Unit Convert' },
   {
     path: '/scene',
