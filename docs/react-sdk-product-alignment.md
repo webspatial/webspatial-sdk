@@ -8,7 +8,7 @@ or the source for public-facing positioning copy.
 **Related engineering material**
 
 - Migration and integration details: `docs/migration/lazy-load-spatial-runtime.md`
-- **Proposed `SpatialBoot` / `useBootSpatial` APIs (product workshop):** `docs/design/spatial-boot-component.md`
+- **`SpatialBoot` / `useBootSpatial` (shipped):** `docs/design/spatial-boot-component.md`
 - Measured size-impact report (spec vs main baseline): `docs/lazy-load-spatial-runtime-size-impact.md`
 - OpenSpec change (normative requirements): `openspec/changes/lazy-load-spatial-runtime/`
 - Consumer-shaped lazy + eager fixtures: `apps/spatial-vite-min/`
@@ -27,18 +27,18 @@ or the source for public-facing positioning copy.
 
 ---
 
-## 2. P0 — Resolve first (short workshop)
+## 2. P0 — Decisions (product sign-off)
 
-Answer these before broad public messaging or enterprise commitments.
+These were the first workshop items. **Status: decided** (2026-05); use §11 and the subsections below for engineering-facing detail.
 
-| #    | Topic           | Question for product                                                                                                                                                   |
-| ---- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0-1 | Primary persona | Is the **default** story **web-first progressive enhancement**, or **spatial-first** apps?                                                                             |
-| P0-2 | Two entries     | Are **`@webspatial/react-sdk` (lazy)** and **`@webspatial/react-sdk/eager`** both first-class, or is eager **advanced / internal-only** in customer messaging?         |
-| P0-3 | Plain web bar   | On a normal browser, what is **acceptable** (static poster, flat layout) vs **unacceptable** (white screen, uncaught errors) for pages that use spatial primitives?    |
-| P0-4 | WebSpatial boot | In WebSpatial runtimes, is **`await bootSpatial()` before first spatial UI** required, or is a **first-frame fallback then upgrade** acceptable?                       |
-| P0-5 | Boot failure    | If `bootSpatial()` rejects, should the app **hard-fail**, **silent degrade**, or show **recoverable error UI**?                                                        |
-| P0-6 | Parity scope    | Is **facade vs real-impl structural parity** on plain web a **public quality promise**, or an **internal engineering contract** with optional narrowing per component? |
+| #    | Topic           | Decision |
+| ---- | --------------- | -------- |
+| P0-1 | Primary persona | **Web-first progressive enhancement.** Default narrative, docs, and consumer demos center on `@webspatial/react-sdk` (lazy): the app works in plain browsers via documented facade fallbacks and enhances after `bootSpatial()` in WebSpatial runtimes. |
+| P0-2 | Two entries     | **`@webspatial/react-sdk` is the customer-facing default.** `@webspatial/react-sdk/eager` is **advanced / internal-only** in customer messaging (WebSpatial-only shells, copy-paste from lazy, or internal R&D). Consumer fixtures may still ship eager pages for pipeline validation. |
+| P0-3 | Plain web bar   | **Accept** the per-component default fallbacks in [`packages/react/README.md`](../packages/react/README.md) (and OpenSpec "Component facades") as the plain-web experience. **Reject** white screens, uncaught errors, and layout collapse caused by the SDK. **Expected:** `Entity` / `Material` / `*Asset` render **no DOM** (`null` fallback); integrators who need visible placeholders use `useSpatialReady()` wrappers (see `/capability-wrapper` in `spatial-next-min`). See [§4.1](#41-experience-p0-3--plain-web-quality-bar). |
+| P0-4 | WebSpatial boot | **Both patterns are supported.** `await bootSpatial()` before first render (fewer fallback flashes on pure CSR) and **first-frame fallback then upgrade** (boot in `useEffect`, `useBootSpatial`, or `<SpatialBoot>`) are valid. Document trade-offs; do not mandate one timing globally (SSR/hydration always shows fallback on the hydration pass regardless). |
+| P0-5 | Boot failure    | **SDK degrades; apps own failure UX.** On reject, `bootSpatial()` throws `WebSpatialBootError` (`cause`, `attempt`); `onSpatialLoadError` and `useBootSpatial({ onError })` notify developers. Facades **continue** documented fallbacks (`isSpatialReady()` stays false). Apps choose logging, retry, toast, or full-page error UI — the SDK does not ship a mandatory global error screen. |
+| P0-6 | Parity scope    | **Public quality goal, fixed incrementally.** Facade fallback (Path 1) and real-implementation unsupported branches (Path 2) should structurally align per OpenSpec; close gaps **one component at a time** (see `packages/react/src/__tests__/parity.test.tsx` §15.8 `it.todo`). Not an all-or-nothing release gate, but not "tests only" either. |
 
 ---
 
@@ -51,12 +51,13 @@ Answer these before broad public messaging or enterprise commitments.
 - On **non-WebSpatial** browsers, `bootSpatial()` returns quickly without loading
   that chunk; facades provide **degraded** UI paths.
 
-**Alignment questions**
+**Signed**
 
-1. Who is the **canonical** customer demo for lazy + Vite-style bundling?
-   (Recommended: `apps/spatial-vite-min`.)
-2. Should **all** integrators call `bootSpatial()` even on plain web (harmless
-   early-return), or is it **optional** there?
+1. **Canonical** lazy + Vite-style customer demo: `apps/spatial-vite-min`.
+2. **Recommend** calling `bootSpatial()` once at app startup even on plain web
+   (harmless early-return, no spatial chunk fetch). Optional on purely static
+   marketing pages that never target WebSpatial is acceptable copy-wise, but
+   not the default integration recipe.
 
 ### 3.2 Eager entry — `@webspatial/react-sdk/eager`
 
@@ -64,13 +65,14 @@ Answer these before broad public messaging or enterprise commitments.
   not used for app-authored spatial primitives.
 - `bootSpatial()` is a **compatibility no-op** (optional dev warning).
 
-**Alignment questions**
+**Signed (P0-2)**
 
-1. Is eager **only** for WebSpatial-only shells / devices, or may customers ship
-   eager bundles to **arbitrary** browsers (accepting larger bundles and
-   real-impl degrade paths executing)?
-2. Do public docs **recommend omitting** `bootSpatial()` on eager, or keeping it
-   for copy-paste compatibility with lazy apps?
+1. **Customer messaging:** eager is for **WebSpatial-only** shells / devices
+   (or advanced integrators who accept larger bundles). Not the default path
+   for arbitrary-browser PWAs in public docs.
+2. **Public docs:** do **not** lead with eager. When documenting migration from
+   lazy, mention eager as an advanced alternative; keeping `await bootSpatial()`
+   in source for copy-paste compatibility is fine (no-op on eager entry).
 
 ### 3.3 Internal vs consumer-shaped apps
 
@@ -88,37 +90,78 @@ demos” externally.
 
 ## 4. Plain web (no WebSpatial runtime)
 
-### 4.1 Experience
+### 4.1 Experience (P0-3 — plain web quality bar)
 
-1. **Visual**: For `Model`, spatialized `div`s, `Reality`, etc., what is the
-   **intended** plain-web appearance (posters, passthrough DOM, inert 3D tags)?
-   **Signed:** `Reality` remains a **single `<div aria-hidden="true">` placeholder**
-   that preserves the layout box (see §11).
-2. **Interaction**: Are spatial gestures **explicitly unsupported** on plain
-   web, or should some actions degrade to **2D-safe** behavior?
-3. **Copy**: Do customer-facing docs use consistent language such as
-   **“spatial features require a WebSpatial-capable runtime”** to avoid implying
-   Chrome parity with device spatial behavior?
+P0-3 is **not** a request for new SDK fallbacks. It defines what integrators and
+end users should consider **acceptable** when spatial primitives render in a
+normal browser (Chrome, Safari, Firefox) without a WebSpatial runtime.
+
+**Acceptable (SDK default fallbacks — no app wrapper required)**
+
+| What integrators use | Plain-web behavior |
+| -------------------- | ------------------ |
+| `Model` | Degraded native `<model>` (spatial event props stripped); layout preserved |
+| `Reality` | Single `<div aria-hidden="true">` preserving the layout box; **children do not mount** |
+| `enable-xr` / `enable-xr-monitor` hosts | Ordinary `<div>` (marker stripped); no spatial slab |
+| `Entity` / `*Entity` / `Material` / `*Asset` | **No DOM** (`null` fallback) — expected, not a bug |
+| `SceneGraph` / `World` | **No DOM** (`null` fallback) — expected; under `<Reality>` the child subtree does not mount anyway |
+| `useMetrics` | Stable placeholder math (`pt / 1360`); does not throw |
+
+**Plain-web UX tiers (P0-3 component detail):** **Visible** fallbacks are `Model`,
+`Reality`, and `enable-xr` / `enable-xr-monitor` hosts. **Structural** fallbacks
+(`SceneGraph`, entities, materials, assets) are `null` for API safety; in the
+canonical `<Reality>…</Reality>` tree only the `Reality` placeholder is user-visible
+because Reality fallback does not mount children. Consumer demo for
+`enable-xr-monitor`: `apps/spatial-vite-min` `/xr-monitor.html`.
+
+**Unacceptable (treat as SDK or integration defect)**
+
+- Full-page white screen or uncaught React errors attributable to spatial imports
+- Severe layout collapse (e.g. `Reality` / `Model` placeholders not honoring `style` / `className` box)
+- Documentation or marketing copy that implies full spatial interaction in plain web
+
+**Integrator responsibility (acceptable, not SDK defaults)**
+
+- "Prettier" marketing UX when defaults are too plain (e.g. custom poster via
+  `useSpatialReady()` — see `apps/spatial-next-min` `/capability-wrapper`)
+- Visible skeletons while the spatial chunk loads (`<SpatialBoot gate>` or app UI)
+
+**Signed**
+
+1. **Visual:** Per the table above; `Reality` stays a layout-preserving `<div>`
+   placeholder (§11).
+2. **Interaction:** Spatial gestures (`onSpatialTap`, drag, rotate, magnify on
+   spatial primitives) are **unsupported** on plain web — only normal DOM
+   interaction on fallback hosts applies.
+3. **Copy:** Customer-facing docs MUST use wording equivalent to **"Spatial
+   features require a WebSpatial-capable runtime"** and MUST NOT imply AVP/PICO
+   parity in a normal browser.
 
 ### 4.2 `bootSpatial()` on plain web
 
 Engineering note: `bootSpatial()` early-returns when no WebSpatial runtime is
 detected; it does **not** load the spatial chunk.
 
-Product should still decide **documentation tone**: “always call once at
-startup” vs “optional on marketing sites”.
+**Signed:** Public integration guides **recommend** calling `bootSpatial()` once
+at startup (same call path as WebSpatial builds). Pure static pages that omit it
+may still render facade fallbacks but forfeit dev-only "forgot to boot" warnings
+in WebSpatial runtimes.
 
 ---
 
 ## 5. WebSpatial runtime
 
-1. **Boot ordering**: Must the first paint already be spatial-capable, or is
-   staged loading acceptable?
-2. **Loading UX**: Is a **global** loading indicator required, or per-widget
-   skeletons only?
-3. **Dev warnings**: Are console warnings in development (e.g. forgot
-   `bootSpatial`) acceptable for integrators?
-4. **Failure UX**: Same as P0-5 — align on hard-fail vs degrade vs retry.
+1. **Boot ordering (P0-4):** **Signed** — both pre-await and first-frame
+   fallback-then-upgrade are supported; see `docs/design/spatial-boot-component.md`
+   and `spatial-vite-min` (`/`, `/lazy-gate.html`, `main.tsx` pre-await).
+2. **Loading UX:** **Not mandated by the SDK.** Global loading (`<SpatialBoot gate>`)
+   or per-widget skeletons are **application** choices.
+3. **Dev warnings:** **Signed** — development-only console warnings (e.g. forgot
+   `bootSpatial` in a WebSpatial UA) are acceptable.
+4. **Failure UX (P0-5):** **Signed** — SDK default is **degrade** (facade
+   fallbacks remain); apps handle surfacing via `WebSpatialBootError`,
+   `onSpatialLoadError`, `catch`, or `useBootSpatial({ onError })`. Retry via
+   calling `bootSpatial()` again is supported (bridge increments `attempt`).
 
 ---
 
@@ -138,16 +181,17 @@ surprises when:
 - hydrating,
 - or migrating between lazy and eager entries.
 
-### 6.2 Product scope choice
+### 6.2 Product scope choice (P0-6)
 
-Pick one and record it:
+**Signed: A with incremental delivery** — parity is a **public** SDK quality
+goal (facade Path 1 vs real-impl Path 2 when spatial is unavailable or
+unsupported). Engineering closes gaps **per component** via §15.8 follow-ups
+(`Reality`, `*Entity` family, materials/assets, `SceneGraph` / `World`, etc.);
+`Model` parity is already exercised in `parity.test.tsx`.
 
-- **A — Full parity culture**: parity is a **public** SDK quality bar; list
-  **priority components** (e.g. `Model`, `Reality`) for UX review.
-- **B — Narrow parity**: parity is **internal** except for a **minimal** set of
-  primitives named in docs; others are “no crash + documented degrade”.
-- **C — Parity as tests only**: parity is **engineering regression protection**,
-  not a user-facing promise (still document plain-web behavior plainly).
+Do **not** block releases on all `it.todo` items at once; do **not** treat parity
+as "tests only" while shipping regressions that diverge from documented
+fallback tables.
 
 ---
 
@@ -199,11 +243,12 @@ application-level Context wrapper; hydration safety is internal to the SDK
 
 ## 10. Suggested sign-off workflow
 
-1. Product + EM fill **Section 2 (P0)** in a 30–45 minute session.
-2. UX + tech writing turn answers into **public docs** and **onboarding**
-   examples (`spatial-vite-min`, main README).
-3. Engineering maps decisions to **OpenSpec scenarios** (tighten or relax) and
-   adjusts **parity test** scope for Section 6.
+1. ~~Product + EM fill **Section 2 (P0)**~~ — **Done** (see §2, §11).
+2. UX + tech writing propagate §2 / §4 into **public docs** and onboarding
+   (`packages/react/README.md`, `docs/migration/lazy-load-spatial-runtime.md`,
+   `spatial-vite-min`).
+3. Engineering maps P0-6 to **OpenSpec / parity tests** — promote one `it.todo` at
+   a time from `parity.test.tsx`.
 4. Revisit **quarterly** or when adding major primitives / new runtime targets.
 
 ---
@@ -214,10 +259,17 @@ Decisions from product sync (record for docs/SDK scope):
 
 | Topic                          | Decision                                                                                                                                                                                                                           |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **P0-1** Primary persona       | **Web-first progressive enhancement**; lazy default entry is the public story.                                                                                                                                                     |
+| **P0-2** Distribution entries  | **`@webspatial/react-sdk` only** in customer-facing messaging; **eager = advanced / internal-only**.                                                                                                                               |
+| **P0-3** Plain web bar         | **Accept** documented facade fallbacks (README table); **reject** white screen / uncaught errors / layout collapse. **`null` entity/material fallbacks on web are expected.** Custom visuals = app wrappers (`useSpatialReady`).      |
+| **P0-4** Boot timing           | **Pre-await and fallback-then-upgrade both OK**; document trade-offs (CSR vs SSR/hydration).                                                                                                                                         |
+| **P0-5** Boot failure          | **SDK degrades** (facades stay on fallbacks); **apps own UX** via `WebSpatialBootError`, `onSpatialLoadError`, `catch` / `onError`, optional retry. No mandatory SDK error page.                                                    |
+| **P0-6** Parity                | **Public quality goal**; align facade vs real-impl **per component** (§15.8 backlog), not single big-bang.                                                                                                                        |
 | `@webspatial/react-sdk/server` | **Not part of the public developer surface.** The subpath may remain in the package for **internal WebSpatial demos, CI, and R&D**; do not document it as a supported integration API in customer-facing materials.                |
 | Runtime detection in app code  | **`detectSpatialRuntime` is not a supported public API** for third-party integrators. Developers classify environments using the **User-Agent string** and **official WebSpatial site documentation** — not SDK detection helpers. |
 | `SSRProvider` removal          | **Agreed.** No app-level provider for hydration gating; SDK handles this internally (`useSpatialReady`, `withSSRSupported`).                                                                                                       |
-| `Reality` plain-web / fallback | **Keep the `<div>` placeholder** (layout-preserving degraded rendering). Do not change the facade/impl contract to `null` or alternate tags without an explicit product + spec revision.                                           |
+| `Reality` plain-web / fallback | **Keep the `<div>` placeholder** (layout-preserving degraded rendering). Do not change the facade/impl contract to `null` or alternate tags without an explicit product + spec revision. Children use **scene-graph** APIs (`Entity`, `*Entity`, materials) — not the top-level `Model` facade. |
+| `bootSpatial()` on plain web   | **Recommend** one call at startup in integration docs (harmless no-op without WebSpatial UA).                                                                                                                                      |
 
 ---
 
@@ -227,3 +279,5 @@ Decisions from product sync (record for docs/SDK scope):
   entry. Update this file when P0 answers change materially.
 - **§11** added after product sign-off on server subpath visibility, public
   detection API, `SSRProvider`, and `Reality` fallback.
+- **§2 P0 table decided** (2026-05): web-first, eager internal-only, plain-web
+  bar (§4.1), dual boot timings, app-owned boot-failure UX, incremental parity.

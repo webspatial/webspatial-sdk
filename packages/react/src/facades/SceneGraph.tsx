@@ -10,24 +10,22 @@ export type SceneGraphProps = {
 }
 
 /**
- * Default-entry facade for `SceneGraph`. The fallback is a transparent
- * `<>{children}</>` Fragment so users can still author scene-graph trees
- * in plain browsers / before boot, with each individual entity / asset
- * falling back via its own facade. Per spec per-component fallback
- * table ("`SceneGraph` / `World` → `<>{children}</>` (transparent
- * container)").
+ * Default-entry facade for `SceneGraph`. Fallback is `null` (children NOT
+ * mounted), matching entity / asset facades and the usual authoring shape
+ * under `<Reality>` (whose fallback already suppresses the child subtree).
+ * Per spec per-component fallback table ("`SceneGraph` / `World` → `null`").
  *
  * **PARITY (spec tasks.md §15.6)**: Path 2 unpinned in
  * `runtime-capabilities` today; the parity test is tracked as `it.todo`
  * under §15.8 (see `src/__tests__/parity.test.tsx`). Once the real-impl
  * unsupported branch lands or the spec amendment defines it, the
- * existing transparent-children behavior here MUST stay aligned.
+ * existing `null` fallback here MUST stay aligned.
  */
 export function SceneGraph({ children }: SceneGraphProps) {
   const ready = useSpatialReady()
   if (!ready) {
     warnBootForgotten('SceneGraph')
-    return <>{children}</>
+    return null
   }
   const RealSceneGraph = getSpatialImpl()!.SceneGraph
   return <RealSceneGraph>{children}</RealSceneGraph>

@@ -55,7 +55,7 @@ Every facade in the default entry has a documented fallback rendered in plain we
 | `Reality`                                                                      | Single `<div aria-hidden="true">` placeholder preserving the layout box     |
 | `Entity` / `Box` / `Sphere` / `Cone` / `Cylinder` / `Plane` / `*Entity` family | `null` (children NOT mounted)                                               |
 | `Material` / `Texture` / `ModelAsset` / `AttachmentAsset` / `UnlitMaterial`    | `null`                                                                      |
-| `SceneGraph` / `World`                                                         | `<>{children}</>` (transparent — children render through their own facades) |
+| `SceneGraph` / `World`                                                         | `null` (children NOT mounted)                                               |
 
 The full normative table lives in [`openspec/specs/spatial-lazy-load/spec.md`](../../openspec/specs/spatial-lazy-load/spec.md) — search for "Component facades" and "Hook placeholders".
 
