@@ -88,6 +88,7 @@ import SpatialDivTransformTranslatePage from './src/pages/spatial-div-animation/
 import SpatialDivReverseLoopPage from './src/pages/spatial-div-animation/reverse-loop'
 import SpatialDivCapabilityCheckPage from './src/pages/spatial-div-animation/capability-check'
 import SpatialDivPlayStatePage from './src/pages/spatial-div-animation/play-state'
+import SpatialDivPerfComparisonPage from './src/pages/spatial-div-animation/perf-comparison'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -223,6 +224,10 @@ function App() {
                 <Route
                   path="/spatial-div-animation/transform-translate"
                   element={<SpatialDivTransformTranslatePage />}
+                />
+                <Route
+                  path="/spatial-div-animation/perf-comparison"
+                  element={<SpatialDivPerfComparisonPage />}
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
