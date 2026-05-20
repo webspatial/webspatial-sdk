@@ -16,6 +16,8 @@ export type SpatialAppProps = {
   mode: 'lazy' | 'lazy-gate' | 'eager-boot' | 'eager-lean'
   /** Real `Model` from either `@webspatial/react-sdk` or `@webspatial/react-sdk/eager`. */
   Model: React.ComponentType<SpatialAppModelProps>
+  /** Lazy-only: minimal Reality scene graph (`@webspatial/react-sdk`). */
+  RealityScene?: React.ComponentType
 }
 
 // `<div enable-xr>` is the documented JSX marker that the SDK's
@@ -46,7 +48,7 @@ const fixtureTitles: Record<SpatialAppProps['mode'], string> = {
   'eager-lean': 'Eager entry, no bootSpatial()',
 }
 
-export function SpatialApp({ mode, Model }: SpatialAppProps) {
+export function SpatialApp({ mode, Model, RealityScene }: SpatialAppProps) {
   const [spatialTapCount, setSpatialTapCount] = useState(0)
   const onFirstCellSpatialTap = useCallback(() => {
     setSpatialTapCount(c => c + 1)
@@ -139,6 +141,10 @@ export function SpatialApp({ mode, Model }: SpatialAppProps) {
           </div>
         ))}
       </div>
+
+      {(mode === 'lazy' || mode === 'lazy-gate') && RealityScene ? (
+        <RealityScene />
+      ) : null}
 
       <h2 style={{ marginTop: 32 }}>Model</h2>
       <p style={{ marginBottom: 16 }}>
