@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { Model, useBootSpatial, useSpatialReady } from '@webspatial/react-sdk'
+import { LazyRealityScene } from './LazyRealityScene'
 
 /**
  * Client subtree for `@webspatial/react-sdk` (lazy default entry).
@@ -23,8 +24,8 @@ export function LazySpatialDemo() {
       <h1>Lazy default entry (`@webspatial/react-sdk`)</h1>
       <p>
         <code>
-          import &#123; Model, useBootSpatial, useSpatialReady &#125; from
-          &apos;@webspatial/react-sdk&apos;
+          import &#123; Reality, BoxEntity, Model, useBootSpatial,
+          useSpatialReady &#125; from &apos;@webspatial/react-sdk&apos;
         </code>
       </p>
       <p>
@@ -36,6 +37,8 @@ export function LazySpatialDemo() {
         WebSpatial runtime the spatial chunk loads after{' '}
         <code>bootSpatial()</code> (via <code>useBootSpatial()</code>).
       </p>
+
+      <LazyRealityScene />
 
       <h2 style={{ marginTop: 24 }}>Model facade</h2>
       <Model

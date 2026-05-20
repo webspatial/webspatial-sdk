@@ -8,6 +8,7 @@ import {
   useSpatialReady,
   WebSpatialBootError,
 } from '@webspatial/react-sdk'
+import { LazyRealityScene } from '@/components/LazyRealityScene'
 
 function SpatialBootGateFallback() {
   return (
@@ -79,6 +80,8 @@ function LazyGateContent() {
           </div>
         ))}
       </div>
+
+      <LazyRealityScene />
 
       <h2 style={{ marginTop: 32 }}>Model</h2>
       <Model
