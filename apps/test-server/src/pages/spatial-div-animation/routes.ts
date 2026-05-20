@@ -63,4 +63,10 @@ export const spatialDivAnimationRoutes: SpatialDivAnimationRoute[] = [
     description:
       'Verify playState transitions across idle/queued/running/paused/finished.',
   },
+  {
+    path: '/spatial-div-animation/perf-comparison',
+    label: 'Perf Comparison',
+    description:
+      'JS-driven (rAF) vs declarative (useAnimation) side-by-side FPS benchmark.',
+  },
 ]
