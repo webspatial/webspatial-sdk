@@ -104,9 +104,10 @@ The `<Model>` sample uses **`public/modelasset/cone.usdz`** — the same file as
 
 ## Browser smoke checklist
 
-- Plain Chrome (`/` or `/eager.html` or `/eager-lean.html`): spatial-div cells render as
-  flat boxes; the `<Model>` shows a poster `<model>` element with no
-  spatial behavior; no `console.error` from the SDK.
+- Plain Chrome (`/` or `/lazy-gate.html` or eager pages): spatial-div cells render as
+  flat boxes; `<Model>` shows a poster `<model>` element; **`/lazy` and `/lazy-gate`**
+  also show a **Reality** scene-graph block as a single `aria-hidden` placeholder
+  (no `BoxEntity` in the DOM until boot). No `console.error` from the SDK.
 - AVP simulator / PICO emulator: spatial-div cells float as slabs;
   `<Model>` mounts the real spatial 3D primitive. On the **lazy** page,
   `bootSpatial()` gates the dynamic spatial chunk; on **eager** pages spatial
