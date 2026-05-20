@@ -120,7 +120,7 @@ Product positioning is now explicitly **web-first, spatial as enhancement**: mos
   - `Model` → `<model ref {...modelProps}>` (degraded HTML element; spatial-only event props stripped) — preserves today's plain-browser behavior.
   - `Reality` → single `<div aria-hidden="true">` placeholder; children NOT mounted (matches `runtime-capabilities` Reality fallback contract).
   - `*Entity`, `Material*`, `Texture`, `*Asset` → `null`.
-  - `SceneGraph` / `World` → `<>{children}</>` (transparent container).
+  - `SceneGraph` / `World` → `null` (children NOT mounted; typical trees are under `<Reality>`, whose fallback already suppresses the child subtree).
   - Internal HOC-wrapped components (JSX runtime only) → `<Comp/El {...passthrough} ref/>` (transparent passthrough).
 - **Facade conventions**: `displayName` matches the public name (`Model`, `Reality`, `BoxEntity`); internal HOC wrapper facades follow the existing `WithSpatialMonitor(<inner>)` / `WithSpatialized2DElementContainer(<inner>)` naming. Facades are NOT wrapped in `React.memo`. In fallback paths that render `null` or a Fragment, forwarded `ref.current` is `null` (React-natural).
 - Facades MUST NOT use the readiness subscription to swap hook implementations — only the rendered component subtree. Hooks (decision 5) explicitly do not switch mid-life.

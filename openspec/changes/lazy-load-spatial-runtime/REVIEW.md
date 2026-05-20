@@ -105,7 +105,7 @@ SpatializedStatic3DElementContainer, SpatialMonitor
 | `Model` | `<model ref {...remainingProps} />` (spatial event props stripped) |
 | `Reality` | `<div aria-hidden="true" ref>` placeholder; children NOT mounted |
 | `Entity`, `*Entity` family, `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset` | `null` |
-| `SceneGraph` / `World` alias | `<>{children}</>` (transparent) |
+| `SceneGraph` / `World` alias | `null` (children NOT mounted) |
 | Internal HOC wrappers (JSX runtime only) | `<Comp/El {...passthrough} ref />` (transparent passthrough) |
 
 ## Two-scenario behavior contract audit
@@ -123,7 +123,7 @@ The two paths are physically separate code (boot bundle vs spatial chunk) and **
 | `Reality` | `<div aria-hidden="true" ref>`, children NOT mounted | `spatial-lazy-load` "Reality fallback preserves layout" | Same — `<div aria-hidden>` placeholder, layout preserved, no child mount | `runtime-capabilities` "`Reality` unsupported fallback" | ✅ Aligned |
 | `Entity` / `*Entity` family | `null` | `spatial-lazy-load` "Component facades" + facade table | "MUST NOT render corresponding DOM/entity node" — implies `null` | `runtime-capabilities` "Unsupported HTML component rendering" | ✅ Aligned |
 | `UnlitMaterial` / `Material` / `Texture` / `*Asset` | `null` | facade table | Same (entity-rendering contract above) | `runtime-capabilities` "Unsupported HTML component rendering" | ✅ Aligned |
-| `SceneGraph` / `World` | `<>{children}</>` (transparent) | facade table | **Not explicitly pinned** today | — | ⚠️ Gap — `tasks.md §15.3` parity test asserts alignment; v1.x amendment opens a `runtime-capabilities` Scenario |
+| `SceneGraph` / `World` | `null` (children NOT mounted) | facade table | **Not explicitly pinned** today | — | ⚠️ Gap — `tasks.md §15.3` parity test asserts alignment; v1.x amendment opens a `runtime-capabilities` Scenario |
 | `withSpatialized2DElementContainer(Comp)` / `withSpatialMonitor(El)` | — | — | — | — | n/a — both factories were demoted to **internal-only** in the `internalize-hoc-factories` change. The §15.8 parity gap they represented is dissolved (the SDK no longer commits to a documented Path 2 contract for them). The JSX-runtime-driven wrap path remains tested by `jsx-shared.test.tsx`. |
 | `useMetrics` | 1/1360 ratio + identity-stable functions | `spatial-lazy-load` "Hook placeholders" + "useMetrics placeholder returns the documented fallback values" | Identical 1/1360 ratio; MAY emit one-shot `console.warn` | `runtime-capabilities` "`useMetrics` graceful degradation" | ✅ Aligned |
 | `initScene` / `convertCoordinate` / `enableDebugTool` | Group B utilities — Path 1 gracefully degrades until the bridge has a session; Path 2 routes through the loaded spatial impl session | `spatial-lazy-load` "Stateless utility APIs..." Requirement | Same fallback shape | `runtime-capabilities` "`convertCoordinate` graceful degradation" + Group B contracts | ✅ Aligned |

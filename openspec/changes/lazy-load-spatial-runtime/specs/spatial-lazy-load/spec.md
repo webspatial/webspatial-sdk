@@ -244,7 +244,7 @@ Additional file-level constraints on facade modules (the `'use client'` directiv
 | `Reality` | A single `<div aria-hidden="true" ref={ref}>` placeholder that preserves the layout box (className, style, and other layout-affecting props apply to the host); the React children subtree MUST NOT mount |
 | `Entity` (the base Entity component / empty transform group), `BoxEntity` / `Box`, `SphereEntity` / `Sphere`, `ConeEntity` / `Cone`, `CylinderEntity` / `Cylinder`, `PlaneEntity` / `Plane`, `ModelEntity`, `AttachmentEntity` | `null` |
 | `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset` | `null` |
-| `SceneGraph` / `World` | `<>{children}</>` (transparent container in fallback mode) |
+| `SceneGraph` / `World` | `null` (children NOT mounted) |
 
 > The factory-style HOCs `withSpatialized2DElementContainer(Comp)` and `withSpatialMonitor(El)` originally appeared in this fallback table as public surface (returning `<Comp {...passthroughProps} ref={ref} />` / `<El {...passthroughProps} ref={ref} />` respectively). They have since been demoted to **internal-only** — see the `internalize-hoc-factories` changeset. The factories still exist (the SDK's own JSX runtime continues to reach them via `src/internal/facades-client.ts` to compile `<div enable-xr>` / `<div enable-xr-monitor>` JSX markers), but they are no longer part of the documented public surface. The wrapper-cache identity contract pinned in the Scenario below still applies to that internal usage; the JSX-runtime-driven wrap path is what every consumer of the markers reaches in practice.
 
