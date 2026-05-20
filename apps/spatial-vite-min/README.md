@@ -31,6 +31,11 @@ without calling `bootSpatial()`).
   only what the UI needs from `@webspatial/react-sdk/eager` and mounts React
   immediately — the usual **spatial-only** shape when you are not sharing a
   bootstrap module with lazy apps.
+- **enable-xr-monitor (`xr-monitor.html` → `src/main-xr-monitor.tsx`):** lazy
+  entry demo for `<div enable-xr-monitor>` with nested `<div enable-xr>` cells;
+  insert/remove or resize a layout block inside the monitor (box-size changes, not
+  visibility-only) so the nested `enable-xr` grid and `Reality` placeholder shift;
+  slabs re-sync in WebSpatial runtimes.
 - Inspect `dist/assets/` after `vite build`: the eager entry graphs should
   **not** rely on the same lazy `import()` bridge pattern as the default lazy
   page.
@@ -90,6 +95,7 @@ pnpm --filter spatial-vite-min dev      # dev server
 # Then open any page (nav links exist in the UI):
 #   Lazy default:          http://localhost:5173/
 #   Lazy + SpatialBoot gate: http://localhost:5173/lazy-gate.html
+#   enable-xr-monitor:     http://localhost:5173/xr-monitor.html
 #   Eager + bootSpatial:   http://localhost:5173/eager.html
 #   Eager, no bootSpatial: http://localhost:5173/eager-lean.html
 
@@ -105,9 +111,12 @@ The `<Model>` sample uses **`public/modelasset/cone.usdz`** — the same file as
 ## Browser smoke checklist
 
 - Plain Chrome (`/` or `/lazy-gate.html` or eager pages): spatial-div cells render as
-  flat boxes; `<Model>` shows a poster `<model>` element; **`/lazy` and `/lazy-gate`**
+  flat boxes; `<Model>` shows a poster `<model>` element; **`/` and `/lazy-gate`**
   also show a **Reality** scene-graph block as a single `aria-hidden` placeholder
-  (no `BoxEntity` in the DOM until boot). No `console.error` from the SDK.
+  (no `BoxEntity` / `SceneGraph` children in the DOM until boot). **`/xr-monitor.html`**
+  renders the monitor host with an insert/remove layout block plus a 3×2
+  `enable-xr` grid (grid jumps when the block toggles). No
+  `console.error` from the SDK.
 - AVP simulator / PICO emulator: spatial-div cells float as slabs;
   `<Model>` mounts the real spatial 3D primitive. On the **lazy** page,
   `bootSpatial()` gates the dynamic spatial chunk; on **eager** pages spatial

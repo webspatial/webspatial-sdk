@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react'
+import { FixtureNav } from './fixture-nav'
 
 export type SpatialAppModelProps = {
   src?: string
@@ -67,23 +68,7 @@ export function SpatialApp({ mode, Model, RealityScene }: SpatialAppProps) {
         color: '#222',
       }}
     >
-      <nav
-        style={{
-          marginBottom: 16,
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 12,
-          alignItems: 'center',
-        }}
-      >
-        <a href="/">Lazy default</a>
-        <span aria-hidden="true">|</span>
-        <a href="/lazy-gate.html">Lazy + SpatialBoot gate</a>
-        <span aria-hidden="true">|</span>
-        <a href="/eager.html">Eager + bootSpatial()</a>
-        <span aria-hidden="true">|</span>
-        <a href="/eager-lean.html">Eager, no boot</a>
-      </nav>
+      <FixtureNav />
       <p style={{ marginBottom: 8 }}>
         <strong>Current:</strong> {fixtureTitles[mode]}
         {' — '}

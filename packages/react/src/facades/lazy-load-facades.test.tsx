@@ -321,16 +321,15 @@ describe('lazy-load facades', () => {
     })
   })
 
-  describe('SceneGraph / World facade — transparent <>{children}</> in fallback', () => {
-    it('passes children through unchanged', () => {
-      const { container } = render(
+  describe('SceneGraph / World facade — plain web fallback returns null', () => {
+    it('renders null in fallback (children NOT mounted)', () => {
+      const { container, queryByTestId } = render(
         <SceneGraph>
           <span data-testid="scenegraph-child">hello</span>
         </SceneGraph>,
       )
-      const child = container.querySelector('[data-testid="scenegraph-child"]')
-      expect(child).not.toBeNull()
-      expect(child?.textContent).toBe('hello')
+      expect(container.children.length).toBe(0)
+      expect(queryByTestId('scenegraph-child')).toBeNull()
     })
 
     it('World alias references the same facade as SceneGraph', () => {
