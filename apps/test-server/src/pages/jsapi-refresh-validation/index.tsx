@@ -33,7 +33,8 @@ const HISTORY_KEY = 'ws-refresh-validation-history'
 const CYCLE_KEY = 'ws-refresh-validation-cycle'
 const AUTO_RUN_KEY = 'ws-refresh-validation-auto-run'
 const CHILD_COUNT_KEY = 'ws-refresh-validation-child-count'
-const AUTO_SYNC_DELAY_MS = 800
+const SCENE_SETTLE_DELAY_MS = 1200
+const CURRENT_LIVE_KEY = '__current_live__'
 
 let hasAutoRunForThisPageLoad = false
 
@@ -90,39 +91,53 @@ function childDelta(snapshot: SnapshotSummary) {
   return snapshot.childrenCount - snapshot.seedChildCount
 }
 
-function toSummary(raw: any, cycle: number, seedChildCount: number): SnapshotSummary {
-  const childrenMap =
-    raw?.children && typeof raw.children === 'object' ? raw.children : null
-  const childrenArray = Array.isArray(raw?.children) ? raw.children : null
-  const childValues = childrenArray ?? Object.values(childrenMap ?? {})
-  const childKeysFromMap = childrenMap ? Object.keys(childrenMap) : []
-  const explicitChildrenIds = Array.isArray(raw?.childrenIds)
-    ? raw.childrenIds.filter((value: unknown): value is string => typeof value === 'string')
-    : []
-  const childrenIds =
-    explicitChildrenIds.length > 0
-      ? explicitChildrenIds
-      : childKeysFromMap.length > 0
-        ? childKeysFromMap
-        : childValues
-            .map(
-              (child: any) =>
-                child?.id ?? child?.key ?? child?.name ?? child?.title ?? null,
-            )
-            .filter((value: unknown): value is string => typeof value === 'string')
+function getNodeId(node: any): string | null {
+  const value = node?.id ?? node?.key ?? node?.name ?? node?.title ?? null
+  return typeof value === 'string' ? value : null
+}
 
-  const typed2DChildren = childValues.filter((child: any) => {
-    const type = String(child?.type ?? child?.kind ?? '')
-    return (
-      type.includes('Spatialized2DElement') ||
-      type.includes('2DElement') ||
-      type.includes('2D')
-    )
-  }).length
-  // VisionOS inspect currently returns `children` as an object map and may omit
-  // explicit type fields. In this validation page all attached children are 2D.
-  const child2DCount =
-    typed2DChildren > 0 ? typed2DChildren : childrenIds.length
+function getContainerInfo(source: any): { nodes: any[]; ids: string[] } {
+  const childrenMap =
+    source?.children &&
+    typeof source.children === 'object' &&
+    !Array.isArray(source.children)
+      ? source.children
+      : null
+  const childrenArray = Array.isArray(source?.children) ? source.children : null
+  const nodes = childrenArray ?? Object.values(childrenMap ?? {})
+  const childKeysFromMap = childrenMap ? Object.keys(childrenMap) : []
+  const explicitChildrenIds = Array.isArray(source?.childrenIds)
+    ? source.childrenIds.filter(
+        (value: unknown): value is string => typeof value === 'string',
+      )
+    : []
+  const nodeIds = nodes
+    .map((child: any) => getNodeId(child))
+    .filter((value: unknown): value is string => typeof value === 'string')
+
+  return {
+    nodes,
+    ids:
+      explicitChildrenIds.length > 0
+        ? explicitChildrenIds
+        : childKeysFromMap.length > 0
+          ? childKeysFromMap
+          : nodeIds,
+  }
+}
+
+function is2DNode(node: any) {
+  const type = String(node?.type ?? node?.kind ?? '')
+  return (
+    type.includes('Spatialized2DElement') ||
+    type.includes('2DElement') ||
+    type.includes('2D')
+  )
+}
+
+function toSummary(raw: any, cycle: number, seedChildCount: number): SnapshotSummary {
+  const rootInfo = getContainerInfo(raw)
+  const typed2DChildren = rootInfo.nodes.filter((child: any) => is2DNode(child)).length
   const sceneSpatialObjectIds = Array.isArray(raw?.sceneSpatialObjectIds)
     ? raw.sceneSpatialObjectIds.filter(
         (value: unknown): value is string => typeof value === 'string',
@@ -133,15 +148,15 @@ function toSummary(raw: any, cycle: number, seedChildCount: number): SnapshotSum
     cycle,
     time: new Date().toLocaleTimeString(),
     seedChildCount,
-    childrenCount: childrenIds.length,
-    child2DCount,
+    childrenCount: rootInfo.ids.length,
+    child2DCount: typed2DChildren > 0 ? typed2DChildren : rootInfo.ids.length,
     spatialObjectCount:
       typeof raw?.spatialObjectCount === 'number' ? raw.spatialObjectCount : null,
     currentPageGeneration:
       typeof raw?.currentPageGeneration === 'number'
         ? raw.currentPageGeneration
         : null,
-    childrenIds,
+    childrenIds: rootInfo.ids,
     sceneSpatialObjectIds,
     raw,
   }
@@ -299,7 +314,7 @@ function SnapshotDetails({
               <div>{snapshot.time}</div>
             </div>
             <div className="bg-[#111111] p-3 rounded-lg border border-gray-800">
-              <div className="text-gray-400 text-xs mb-1">Seed Children</div>
+              <div className="text-gray-400 text-xs mb-1">Declared Children</div>
               <div>{snapshot.seedChildCount}</div>
             </div>
             <div className="bg-[#111111] p-3 rounded-lg border border-gray-800">
@@ -311,7 +326,7 @@ function SnapshotDetails({
               <div>{String(snapshot.spatialObjectCount)}</div>
             </div>
             <div className="bg-[#111111] p-3 rounded-lg border border-gray-800">
-              <div className="text-gray-400 text-xs mb-1">Children</div>
+              <div className="text-gray-400 text-xs mb-1">Scene Children</div>
               <div>{String(snapshot.childrenCount)}</div>
             </div>
             <div className="bg-[#111111] p-3 rounded-lg border border-gray-800">
@@ -319,7 +334,7 @@ function SnapshotDetails({
               <div>{String(snapshot.child2DCount)}</div>
             </div>
             <div className="bg-[#111111] p-3 rounded-lg border border-gray-800">
-              <div className="text-gray-400 text-xs mb-1">Children Delta</div>
+              <div className="text-gray-400 text-xs mb-1">Scene - Declared</div>
               <div>
                 {childDelta(snapshot) ?? '(unknown)'}
               </div>
@@ -328,7 +343,7 @@ function SnapshotDetails({
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <div className="bg-[#111111] p-3 rounded-lg border border-gray-800 min-h-0">
-              <div className="text-gray-400 text-xs mb-2">Children IDs</div>
+              <div className="text-gray-400 text-xs mb-2">Scene Child IDs</div>
               <IdList ids={snapshot.childrenIds} className="max-h-36" />
             </div>
             <div className="bg-[#111111] p-3 rounded-lg border border-gray-800 min-h-0">
@@ -365,13 +380,14 @@ function SnapshotDetails({
 function RefreshValidationSeed({ childCount }: { childCount: number }) {
   return (
     <div className="pointer-events-none select-none">
-      <div enable-xr style={parentStyle}>
+      <div style={parentStyle}>
         <div className="text-xs uppercase tracking-wide text-blue-100/80">
-          Parent Spatial Div
+          Declarative Seed Container
         </div>
-        <div className="mt-2 text-sm font-medium">React + enable-xr seed</div>
+        <div className="mt-2 text-sm font-medium">React declarative seed</div>
         <div className="mt-2 text-xs text-blue-100/80">
-          Reload to verify the scene does not accumulate stale 2D elements.
+          The container stays in normal DOM. Only child divs attach to the spatial
+          scene.
         </div>
 
         {Array.from({ length: childCount }, (_, index) => (
@@ -402,8 +418,47 @@ export default function SpatialDivRefreshValidation() {
     () => Number(sessionStorage.getItem(CYCLE_KEY) ?? '0'),
     [history.length, current?.cycle],
   )
-  const selectedSnapshot =
-    history.find(item => snapshotKey(item) === selectedHistoryKey) ?? current
+  const historyItems = useMemo(() => {
+    const items: Array<{
+      key: string
+      snapshot: SnapshotSummary
+      isLive: boolean
+    }> = []
+
+    if (current) {
+      items.push({
+        key: CURRENT_LIVE_KEY,
+        snapshot: current,
+        isLive: true,
+      })
+    }
+
+    history
+      .slice()
+      .reverse()
+      .forEach(item => {
+        items.push({
+          key: snapshotKey(item),
+          snapshot: item,
+          isLive: false,
+        })
+      })
+
+    return items
+  }, [history, current])
+  const selectedHistorySnapshot =
+    selectedHistoryKey === CURRENT_LIVE_KEY
+      ? current
+      : history.find(item => snapshotKey(item) === selectedHistoryKey) ??
+        current ??
+        history.at(-1) ??
+        null
+  const selectedSnapshotKey =
+    selectedHistoryKey === CURRENT_LIVE_KEY
+      ? CURRENT_LIVE_KEY
+      : selectedHistorySnapshot
+        ? snapshotKey(selectedHistorySnapshot)
+        : null
 
   async function inspectOnly() {
     const cycle = Number(sessionStorage.getItem(CYCLE_KEY) ?? '0')
@@ -413,6 +468,7 @@ export default function SpatialDivRefreshValidation() {
     }
     const summary = toSummary(raw, cycle, childCount)
     setCurrent(summary)
+    setSelectedHistoryKey(null)
     return summary
   }
 
@@ -424,6 +480,7 @@ export default function SpatialDivRefreshValidation() {
     const cycle = Number(sessionStorage.getItem(CYCLE_KEY) ?? '0')
     const summary = toSummary(raw, cycle, nextChildCount)
     setCurrent(summary)
+    setSelectedHistoryKey(null)
     return summary
   }
 
@@ -466,6 +523,34 @@ export default function SpatialDivRefreshValidation() {
     const normalized = Math.min(MAX_CHILDREN, Math.max(0, Math.trunc(nextCount)))
     writeChildCount(normalized)
     setChildCount(normalized)
+    setSeedRevision(previous => previous + 1)
+    return normalized
+  }
+
+  async function handleChildCountChange(nextCount: number) {
+    const normalized = Math.min(MAX_CHILDREN, Math.max(0, Math.trunc(nextCount)))
+    if (normalized === childCount) {
+      return
+    }
+
+    setBusy(true)
+    setStatus(`Rendering declarative seed with ${normalized} child(ren)`)
+    updateChildCount(normalized)
+
+    try {
+      await delay(SCENE_SETTLE_DELAY_MS)
+      const summary = await syncCurrentSnapshot(normalized)
+      if (!summary) {
+        setStatus('Inspect returned empty result after child update')
+        return
+      }
+      setStatus(`Current snapshot synced for ${normalized} child(ren)`)
+    } catch (error) {
+      console.error('Failed to sync current snapshot after child update', error)
+      setStatus(`Current snapshot sync failed: ${String(error)}`)
+    } finally {
+      setBusy(false)
+    }
   }
 
   useEffect(() => {
@@ -480,15 +565,23 @@ export default function SpatialDivRefreshValidation() {
   }, [])
 
   useEffect(() => {
-    if (selectedHistoryKey) {
+    if (selectedHistoryKey === CURRENT_LIVE_KEY) {
+      if (current) {
+        return
+      }
+    } else if (selectedHistoryKey) {
       const hasSelected = history.some(item => snapshotKey(item) === selectedHistoryKey)
       if (hasSelected) {
         return
       }
     }
+    if (current) {
+      setSelectedHistoryKey(CURRENT_LIVE_KEY)
+      return
+    }
     const latest = history.at(-1)
     setSelectedHistoryKey(latest ? snapshotKey(latest) : null)
-  }, [history, selectedHistoryKey])
+  }, [history, current, selectedHistoryKey])
 
   useEffect(() => {
     if (hasAutoRunForThisPageLoad) {
@@ -503,23 +596,6 @@ export default function SpatialDivRefreshValidation() {
     })
   }, [])
 
-  useEffect(() => {
-    if (busy) {
-      return
-    }
-
-    const timer = window.setTimeout(() => {
-      syncCurrentSnapshot(childCount).catch(error => {
-        console.error('Failed to sync current snapshot', error)
-        setStatus(`Current snapshot sync failed: ${String(error)}`)
-      })
-    }, AUTO_SYNC_DELAY_MS)
-
-    return () => {
-      window.clearTimeout(timer)
-    }
-  }, [childCount, busy])
-
   return (
     <div className="p-10 text-white min-h-full space-y-6">
       <div>
@@ -527,12 +603,11 @@ export default function SpatialDivRefreshValidation() {
           Spatial Div Refresh Validation
         </h1>
         <p className="text-gray-300 max-w-4xl">
-          This page renders one parent and a configurable set of nested child
-          spatial divs with
-          {' `enable-xr` '}
-          only, waits for React-driven creation to settle, then records a scene
-          snapshot. Refresh the page several times and compare cycle history to
-          see whether scene state drifts upward.
+          This page keeps the parent in normal DOM and applies {' `enable-xr` '}
+          only to a configurable set of child divs, waits for React-driven
+          creation to settle, then records a scene snapshot. Refresh the page
+          several times and compare cycle history to see whether scene state
+          drifts upward.
         </p>
       </div>
 
@@ -559,8 +634,7 @@ export default function SpatialDivRefreshValidation() {
               className="px-4 py-2 bg-indigo-700 rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
               disabled={busy || childCount >= MAX_CHILDREN}
               onClick={() => {
-                updateChildCount(childCount + 1)
-                setStatus('Added one declarative child')
+                handleChildCountChange(childCount + 1)
               }}
             >
               Add Child
@@ -569,8 +643,7 @@ export default function SpatialDivRefreshValidation() {
               className="px-4 py-2 bg-amber-700 rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50"
               disabled={busy || childCount <= 0}
               onClick={() => {
-                updateChildCount(childCount - 1)
-                setStatus('Removed one declarative child')
+                handleChildCountChange(childCount - 1)
               }}
             >
               Remove Child
@@ -578,8 +651,22 @@ export default function SpatialDivRefreshValidation() {
             <button
               className="px-4 py-2 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors disabled:opacity-50"
               disabled={busy}
-              onClick={() => {
-                inspectOnly()
+              onClick={async () => {
+                setBusy(true)
+                setStatus('Inspecting current scene')
+                try {
+                  const summary = await inspectOnly()
+                  if (!summary) {
+                    setStatus('Inspect returned empty result')
+                    return
+                  }
+                  setStatus('Current snapshot updated from inspect')
+                } catch (error) {
+                  console.error('Inspect only failed', error)
+                  setStatus(`Inspect failed: ${String(error)}`)
+                } finally {
+                  setBusy(false)
+                }
               }}
             >
               Inspect Only
@@ -630,16 +717,13 @@ export default function SpatialDivRefreshValidation() {
             History stores full snapshots, including the raw inspect payload. Select
             any cycle to inspect it on the right.
           </div>
-          {history.length > 0 ? (
+          {historyItems.length > 0 ? (
             <div className="space-y-2 overflow-auto pr-1 min-h-0">
-              {history
-                .slice()
-                .reverse()
-                .map(item => {
-                  const isSelected = snapshotKey(item) === selectedHistoryKey
+              {historyItems.map(item => {
+                  const isSelected = item.key === selectedSnapshotKey
                   return (
                     <button
-                      key={snapshotKey(item)}
+                      key={item.key}
                       type="button"
                       className={`w-full text-left bg-[#111111] p-3 rounded-lg border text-xs space-y-2 transition-colors ${
                         isSelected
@@ -647,26 +731,31 @@ export default function SpatialDivRefreshValidation() {
                           : 'border-gray-800 hover:border-gray-700'
                       }`}
                       onClick={() => {
-                        setSelectedHistoryKey(snapshotKey(item))
+                        setSelectedHistoryKey(item.key)
                       }}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="font-medium text-sm">
-                          Cycle {item.cycle}
+                          {item.isLive ? 'Current (Live)' : `Cycle ${item.snapshot.cycle}`}
                         </div>
-                        <div className="text-gray-400">{item.time}</div>
+                        <div className="text-gray-400">{item.snapshot.time}</div>
                       </div>
+                      {item.isLive ? (
+                        <div className="text-[11px] uppercase tracking-wide text-blue-300">
+                          Syncs with the current snapshot above
+                        </div>
+                      ) : null}
                       <div className="grid grid-cols-2 gap-2 text-gray-300">
-                        <div>Seed: {item.seedChildCount}</div>
-                        <div>Gen: {String(item.currentPageGeneration)}</div>
-                        <div>Children: {String(item.childrenCount)}</div>
-                        <div>2D: {String(item.child2DCount)}</div>
-                        <div>Objects: {String(item.spatialObjectCount)}</div>
+                        <div>Declared: {item.snapshot.seedChildCount}</div>
+                        <div>Gen: {String(item.snapshot.currentPageGeneration)}</div>
+                        <div>Children: {String(item.snapshot.childrenCount)}</div>
+                        <div>2D: {String(item.snapshot.child2DCount)}</div>
+                        <div>Objects: {String(item.snapshot.spatialObjectCount)}</div>
                         <div>
-                          Diff:{' '}
-                          {item.childrenCount === null
+                          Delta:{' '}
+                          {item.snapshot.childrenCount === null
                             ? '(unknown)'
-                            : item.childrenCount - item.seedChildCount}
+                            : item.snapshot.childrenCount - item.snapshot.seedChildCount}
                         </div>
                       </div>
                     </button>
@@ -691,9 +780,20 @@ export default function SpatialDivRefreshValidation() {
           </div>
           <div className="flex-1 min-h-0 overflow-auto">
             <SnapshotDetails
-              snapshot={selectedSnapshot}
+              key={
+                selectedHistorySnapshot
+                  ? `history-${snapshotKey(selectedHistorySnapshot)}`
+                  : 'history-empty'
+              }
+              snapshot={selectedHistorySnapshot}
               title="Selected Snapshot Detail"
-              subtitle="History stores full snapshots. Pick any cycle on the left to inspect its full payload."
+              subtitle={
+                selectedHistorySnapshot
+                  ? selectedSnapshotKey === CURRENT_LIVE_KEY
+                    ? 'Live item: this detail view stays in sync with the current snapshot and the first card in the history list.'
+                    : `History item: cycle ${selectedHistorySnapshot.cycle}, captured at ${selectedHistorySnapshot.time}. Pick any cycle on the left to inspect a different full payload.`
+                  : 'History stores full snapshots. Pick any cycle on the left to inspect its full payload.'
+              }
             />
           </div>
         </div>
