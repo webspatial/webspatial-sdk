@@ -1,10 +1,10 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { Model, SpatialBoot } from '@webspatial/react-sdk'
+import { Model, SpatialBoot, WebSpatialBootError } from '@webspatial/react-sdk'
 import { LazyRealityScene } from './lazy-reality-scene'
 import { SpatialApp } from './spatial-app'
 
-function SpatialBootGateFallback() {
+function SpatialBootLoadingFallback() {
   return (
     <p
       style={{
@@ -17,8 +17,7 @@ function SpatialBootGateFallback() {
         fontFamily: 'system-ui, sans-serif',
       }}
     >
-      Loading spatial… (<code>SpatialBoot gate</code> — children mount after{' '}
-      <code>bootSpatial()</code> resolves)
+      Loading spatial… (optional <code>fallback</code> while boot is in flight)
     </p>
   )
 }
@@ -28,7 +27,12 @@ if (!el) throw new Error('#root not found')
 
 createRoot(el).render(
   <React.StrictMode>
-    <SpatialBoot gate fallback={<SpatialBootGateFallback />}>
+    <SpatialBoot
+      fallback={<SpatialBootLoadingFallback />}
+      onError={(err: WebSpatialBootError) => {
+        console.error('[spatial-vite-min /lazy-gate] bootSpatial rejected', err)
+      }}
+    >
       <SpatialApp
         mode="lazy-gate"
         Model={Model}

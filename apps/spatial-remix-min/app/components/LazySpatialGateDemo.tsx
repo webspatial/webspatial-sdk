@@ -18,7 +18,7 @@ function SpatialBootGateFallback() {
         border: '1px solid rgb(226 232 240)',
       }}
     >
-      Loading spatial… (<code>SpatialBoot gate</code>)
+      Loading spatial… (<code>SpatialBoot</code> optional fallback)
     </p>
   )
 }
@@ -33,8 +33,8 @@ function LazySpatialGateContent() {
   return (
     <>
       <p>
-        useSpatialReady: <strong>{ready ? 'true' : 'false'}</strong> (after gate
-        opened)
+        useSpatialReady: <strong>{ready ? 'true' : 'false'}</strong> (after boot
+        completes)
       </p>
 
       <LazyRealityScene />
@@ -89,12 +89,12 @@ function LazySpatialGateContent() {
 }
 
 /**
- * Lazy entry with `<SpatialBoot gate>` — children mount only after boot.
+ * Lazy entry with `<SpatialBoot>` — children mount only after boot succeeds.
  */
 export function LazySpatialGateDemo() {
   return (
     <section style={{ maxWidth: 720 }}>
-      <h1>SpatialBoot gate (`@webspatial/react-sdk`)</h1>
+      <h1>SpatialBoot + loading fallback</h1>
       <p>
         <code>
           import &#123; SpatialBoot, Model, useSpatialReady &#125; from
@@ -102,12 +102,11 @@ export function LazySpatialGateDemo() {
         </code>
       </p>
       <p>
-        The heading above stays visible during boot. Spatial primitives below
-        are inside <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code>.
+        Optional <code>fallback</code> while boot is in flight (default is
+        blank). Children mount only after <code>bootSpatial()</code> succeeds.
       </p>
 
       <SpatialBoot
-        gate
         fallback={<SpatialBootGateFallback />}
         onError={(err: WebSpatialBootError) => {
           console.error(

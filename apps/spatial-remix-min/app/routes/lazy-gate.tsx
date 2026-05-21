@@ -4,11 +4,11 @@ import type { Route } from './+types/lazy-gate'
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: '/lazy-gate — SpatialBoot gate' },
+    { title: '/lazy-gate — SpatialBoot fallback' },
     {
       name: 'description',
       content:
-        'React Router SSR + SpatialBoot gate + @webspatial/react-sdk lazy entry',
+        'React Router SSR + SpatialBoot + @webspatial/react-sdk lazy entry',
     },
   ]
 }

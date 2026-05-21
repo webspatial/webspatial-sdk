@@ -18,16 +18,16 @@ export default function HomePage() {
           <Link href="/lazy">
             <strong>/lazy</strong>
           </Link>{' '}
-          — default lazy entry (<code>@webspatial/react-sdk</code>) +{' '}
-          <code>useBootSpatial()</code> after mount. Recommended shape for
-          web-first apps with progressive enhancement.
+          — default lazy entry (<code>@webspatial/react-sdk</code>) wrapped in{' '}
+          <code>&lt;SpatialBoot&gt;</code>. Recommended shape for web-first
+          apps.
         </li>
         <li>
           <Link href="/lazy-gate">
             <strong>/lazy-gate</strong>
           </Link>{' '}
-          — <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code>; delays
-          mounting spatial children until boot completes.
+          — <code>&lt;SpatialBoot fallback=&#123;…&#125;&gt;</code>; optional
+          loading UI while boot completes before children mount.
         </li>
         <li>
           <Link href="/eager">

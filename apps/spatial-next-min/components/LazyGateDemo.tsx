@@ -21,7 +21,7 @@ function SpatialBootGateFallback() {
         border: '1px solid rgb(226 232 240)',
       }}
     >
-      Loading spatial… (<code>SpatialBoot gate</code>)
+      Loading spatial… (<code>SpatialBoot</code> optional fallback)
     </p>
   )
 }
@@ -36,8 +36,8 @@ function LazyGateContent() {
   return (
     <>
       <p>
-        useSpatialReady: <strong>{ready ? 'true' : 'false'}</strong> (after gate
-        opened)
+        useSpatialReady: <strong>{ready ? 'true' : 'false'}</strong> (after boot
+        completes)
       </p>
 
       <h2 style={{ marginTop: 24 }}>SpatialDiv grid</h2>
@@ -101,7 +101,7 @@ function LazyGateContent() {
 export function LazyGateDemo() {
   return (
     <section>
-      <h1>SpatialBoot gate</h1>
+      <h1>SpatialBoot with loading fallback</h1>
       <p>
         <code>
           import &#123; SpatialBoot, Model, useSpatialReady &#125; from
@@ -109,14 +109,12 @@ export function LazyGateDemo() {
         </code>
       </p>
       <p>
-        Same lazy entry as <code>/lazy</code>, but spatial UI is behind{' '}
-        <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code>. On
-        WebSpatial runtimes you may briefly see the loading fallback before this
-        subtree mounts.
+        Same contract as <code>/lazy</code> — boot completes before children
+        mount. This route passes an optional <code>fallback</code> node to show
+        while the spatial chunk loads (default is blank).
       </p>
 
       <SpatialBoot
-        gate
         fallback={<SpatialBootGateFallback />}
         onError={(err: WebSpatialBootError) => {
           // eslint-disable-next-line no-console

@@ -36,8 +36,8 @@ These were the first workshop items. **Status: decided** (2026-05); use §11 and
 | P0-1 | Primary persona | **Web-first progressive enhancement.** Default narrative, docs, and consumer demos center on `@webspatial/react-sdk` (lazy): the app works in plain browsers via documented facade fallbacks and enhances after `bootSpatial()` in WebSpatial runtimes. |
 | P0-2 | Two entries     | **`@webspatial/react-sdk` is the customer-facing default.** `@webspatial/react-sdk/eager` is **advanced / internal-only** in customer messaging (WebSpatial-only shells, copy-paste from lazy, or internal R&D). Consumer fixtures may still ship eager pages for pipeline validation. |
 | P0-3 | Plain web bar   | **Accept** the per-component default fallbacks in [`packages/react/README.md`](../packages/react/README.md) (and OpenSpec "Component facades") as the plain-web experience. **Reject** white screens, uncaught errors, and layout collapse caused by the SDK. **Expected:** `Entity` / `Material` / `*Asset` render **no DOM** (`null` fallback); integrators who need visible placeholders use `useSpatialReady()` wrappers (see `/capability-wrapper` in `spatial-next-min`). See [§4.1](#41-experience-p0-3--plain-web-quality-bar). |
-| P0-4 | WebSpatial boot | **Both patterns are supported.** `await bootSpatial()` before first render (fewer fallback flashes on pure CSR) and **first-frame fallback then upgrade** (boot in `useEffect`, `useBootSpatial`, or `<SpatialBoot>`) are valid. Document trade-offs; do not mandate one timing globally (SSR/hydration always shows fallback on the hydration pass regardless). |
-| P0-5 | Boot failure    | **SDK degrades; apps own failure UX.** On reject, `bootSpatial()` throws `WebSpatialBootError` (`cause`, `attempt`); `onSpatialLoadError` and `useBootSpatial({ onError })` notify developers. Facades **continue** documented fallbacks (`isSpatialReady()` stays false). Apps choose logging, retry, toast, or full-page error UI — the SDK does not ship a mandatory global error screen. |
+| P0-4 | WebSpatial boot | **Phase 1 (public): boot then render.** Wrap spatial UI in `<SpatialBoot>` (default behavior: do not mount `children` until `bootSpatial()` succeeds). Plain web: boot is a no-op microtask. **Phase 2:** document render-first-then-boot (`gate={false}`) and entry-level `await bootSpatial()` before `createRoot` as optional CSR optimizations. |
+| P0-5 | Boot failure    | **Phase 1 (`<SpatialBoot>`):** `onError` runs; **`children` do not mount.** Apps own all failure UX (toast, error page, retry). **Elsewhere** (imperative `bootSpatial()` without gate, or phase-2 render-first): facades may still use documented fallbacks when the tree is mounted but `isSpatialReady()` is false. |
 | P0-6 | Parity scope    | **Public quality goal, fixed incrementally.** Facade fallback (Path 1) and real-implementation unsupported branches (Path 2) should structurally align per OpenSpec; close gaps **one component at a time** (see `packages/react/src/__tests__/parity.test.tsx` §15.8 `it.todo`). Not an all-or-nothing release gate, but not "tests only" either. |
 
 ---
@@ -124,7 +124,7 @@ because Reality fallback does not mount children. Consumer demo for
 
 - "Prettier" marketing UX when defaults are too plain (e.g. custom poster via
   `useSpatialReady()` — see `apps/spatial-next-min` `/capability-wrapper`)
-- Visible skeletons while the spatial chunk loads (`<SpatialBoot gate>` or app UI)
+- Visible skeletons while the spatial chunk loads (optional `<SpatialBoot fallback={…}>` or app layout UI)
 
 **Signed**
 
@@ -151,17 +151,16 @@ in WebSpatial runtimes.
 
 ## 5. WebSpatial runtime
 
-1. **Boot ordering (P0-4):** **Signed** — both pre-await and first-frame
-   fallback-then-upgrade are supported; see `docs/design/spatial-boot-component.md`
-   and `spatial-vite-min` (`/`, `/lazy-gate.html`, `main.tsx` pre-await).
-2. **Loading UX:** **Not mandated by the SDK.** Global loading (`<SpatialBoot gate>`)
-   or per-widget skeletons are **application** choices.
+1. **Boot ordering (P0-4):** **Phase 1** — `<SpatialBoot>`: boot completes before
+   `children` mount (see `docs/design/spatial-boot-component.md`, fixtures
+   `spatial-vite-min` `/`, `spatial-next-min` `/lazy`, `spatial-remix-min` `/lazy`).
+2. **Loading UX:** **Not mandated.** Default is blank while boot; apps may pass
+   optional `fallback` on `<SpatialBoot>` or show layout-level loading outside the wrapper.
 3. **Dev warnings:** **Signed** — development-only console warnings (e.g. forgot
    `bootSpatial` in a WebSpatial UA) are acceptable.
-4. **Failure UX (P0-5):** **Signed** — SDK default is **degrade** (facade
-   fallbacks remain); apps handle surfacing via `WebSpatialBootError`,
-   `onSpatialLoadError`, `catch`, or `useBootSpatial({ onError })`. Retry via
-   calling `bootSpatial()` again is supported (bridge increments `attempt`).
+4. **Failure UX (P0-5):** **Phase 1 `<SpatialBoot>`** — `onError`; **no `children`**.
+   Apps implement error/retry UX. Imperative `catch` / `onSpatialLoadError` still apply
+   for non-React boot paths.
 
 ---
 
@@ -281,3 +280,5 @@ Decisions from product sync (record for docs/SDK scope):
   detection API, `SSRProvider`, and `Reality` fallback.
 - **§2 P0 table decided** (2026-05): web-first, eager internal-only, plain-web
   bar (§4.1), dual boot timings, app-owned boot-failure UX, incremental parity.
+- **SpatialBoot phase 1** (2026-05): public story = boot then mount; boot failure
+  does not mount children; `gate`/`fallback` omitted from phase-1 customer docs.

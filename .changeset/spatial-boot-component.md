@@ -2,4 +2,4 @@
 "@webspatial/react-sdk": minor
 ---
 
-Add optional `useBootSpatial()` hook and `<SpatialBoot>` component (explicit `gate` / `fallback` per `docs/design/spatial-boot-component.md`). Eager entry re-exports compatibility stubs. Does not replace entry-level `await bootSpatial()` for lazy CSR.
+Add `useBootSpatial()` and `<SpatialBoot>`: default boots after mount and mounts `children` only when ready; boot failure invokes `onError` without mounting children. Optional `fallback` for loading UI. Phase-2 advanced `gate={false}` documented in `docs/design/spatial-boot-component.md`.
