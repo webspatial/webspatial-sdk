@@ -23,7 +23,6 @@
     "jsx": "react-jsx",
     "paths": {
       "@webspatial/react-sdk": ["./src"],
-      "@webspatial/react-sdk/server": ["./src/server/index.ts"],
       "@webspatial/react-sdk/internal/facades-client": [
         "./src/internal/facades-client.ts"
       ],

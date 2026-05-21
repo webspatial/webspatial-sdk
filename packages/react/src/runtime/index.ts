@@ -5,7 +5,6 @@ export {
   loadSpatialImpl,
   onSpatialLoadError,
 } from './bridge'
-export { detectSpatialRuntime } from './detect'
 export { WebSpatialBootError } from './errors'
 export { SpatialBoot } from './SpatialBoot'
 export { useSpatialReady } from './useSpatialReady'
