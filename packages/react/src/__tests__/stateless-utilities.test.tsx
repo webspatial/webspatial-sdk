@@ -13,7 +13,7 @@ import { convertCoordinate } from '../utils/convertCoordinate'
 import { enableDebugTool } from '../utils/debugTool'
 import { initScene } from '../initScene'
 import { WebSpatialRuntime } from '../webSpatialRuntime'
-import { resetRuntimeCacheForTests } from '../runtime/capabilities'
+import { resetRuntimeCacheForTests } from '@webspatial/core-sdk/runtime'
 import {
   __resetSpatialBridgeForTests,
   __setSpatialImplLoaderForTests,
