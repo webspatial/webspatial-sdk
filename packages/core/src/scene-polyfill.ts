@@ -194,9 +194,12 @@ class SceneManager {
           const host = window.location.host
           const protocol = window.location.protocol
           const finalURL = `${protocol}//${host}/${token}/?command=${command}`
-          const rid = new URL(url).searchParams.get('rid')
+          const sourceParams = new URL(url).searchParams
           const final = new URL(finalURL)
-          if (rid) final.searchParams.set('rid', rid)
+          for (const key of ['rid', 'wsrid', 'wsepoch']) {
+            const value = sourceParams.get(key)
+            if (value) final.searchParams.set(key, value)
+          }
           return this.originalOpen(final.toString(), target, features)
         }
       }
