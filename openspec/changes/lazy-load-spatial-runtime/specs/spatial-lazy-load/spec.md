@@ -12,7 +12,7 @@ The published default entry of `@webspatial/react-sdk` MUST contain only:
 
 - Lightweight facades for every public spatial component, plus internal HOC wrapper facades used by the SDK's JSX runtime (per "Component facades")
 - Hook placeholders for every public spatial hook (per "Hook placeholders")
-- The runtime bridge, the boot helper, and the public readiness API (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`)
+- The runtime bridge, the boot helper, the public readiness API (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`), and the recommended React integration component `SpatialBoot` (per "`SpatialBoot` React integration")
 - The unified JSX runtime (per "JSX runtime strips spatial markers and wraps with facade HOCs")
 - Stateless utility APIs and pure re-exports (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry")
 - Type-only exports
@@ -134,7 +134,57 @@ The default entry MUST also export:
 - `onSpatialLoadError(cb: (err: WebSpatialBootError) => void): () => void` — registers a callback invoked on every failed load attempt. Multiple callbacks MAY be registered concurrently; the returned function unsubscribes the corresponding callback. Callbacks MUST be invoked in registration order. Successful retries after a prior failure MUST NOT replay earlier errors to listeners. The wrapping into `WebSpatialBootError` is performed inside the bridge's internal `loadSpatialImpl()` (per "Bridge singleton"); listeners always receive the same `WebSpatialBootError` instance that `bootSpatial()` would reject with.
 - `WebSpatialBootError` — an `Error` subclass used as the rejection value of `bootSpatial()` and the argument to `onSpatialLoadError` callbacks. Instances MUST satisfy `name === 'WebSpatialBootError'`, MUST set `cause` to the original error thrown by the dynamic `import()`, and MUST expose `attempt: number` (1-based) indicating which retry the failure corresponds to.
 
-Recommended integration pattern (non-normative): applications SHOULD `await bootSpatial()` before invoking `ReactDOM.createRoot(...).render(...)` so that facades and hook placeholders never render in spatial runtimes. Calling `bootSpatial()` later is permitted; mounted facades will switch to the real implementation on the next React commit (see "Component facades"), but components that called spatial hook placeholders during their prior renders MUST remount to pick up the real hook implementations (see "Hook placeholders").
+Recommended integration patterns (non-normative):
+
+- **React (preferred):** wrap spatial UI in `<SpatialBoot>` from the default entry so the SDK invokes `bootSpatial()` after mount and mounts `children` only after a successful boot (see "`SpatialBoot` React integration").
+- **Imperative / CSR-only:** applications MAY `await bootSpatial()` before `ReactDOM.createRoot(...).render(...)` to avoid an initial blank period when also using `<SpatialBoot>`, or call `bootSpatial()` without `<SpatialBoot>` for full manual control (advanced). Calling `bootSpatial()` later while facades are already mounted is permitted; facades switch on the next React commit (see "Component facades"), but hook placeholders from prior renders MUST remount after boot (see "Hook placeholders").
+
+---
+
+### Requirement: `SpatialBoot` React integration
+
+The default entry and the eager entry (`@webspatial/react-sdk/eager`) MUST export a client component `SpatialBoot` that wraps `bootSpatial()` for React applications.
+
+`SpatialBoot` MUST:
+
+- Invoke `bootSpatial()` once after mount (unless a future internal option disables auto-boot — not part of the v1 public surface).
+- By default (`gate` prop omitted or `true`), MUST NOT mount `children` until `bootSpatial()` has resolved successfully in the current page session.
+- While boot is in flight and `children` are not mounted, MUST render `fallback` when provided, otherwise render nothing (`null`).
+- When `bootSpatial()` rejects with `WebSpatialBootError`, MUST invoke the optional `onError` callback with that error and MUST NOT mount `children`.
+- When `bootSpatial()` resolves successfully, MUST mount `children` and MAY invoke the optional `onReady` callback.
+
+The default entry MUST NOT export a public `useBootSpatial` hook in v1. Boot progress state machines MAY exist as internal implementation details of `SpatialBoot`; a public hook MAY be added in a follow-up change if product requests it.
+
+`SpatialBoot` MUST carry `'use client'` (directly or via its module graph) so it is safe to import from Next.js App Router / React Router client boundaries.
+
+The eager entry MUST export `SpatialBoot` as a compatibility stub with the same props and gating semantics, reporting ready immediately (spatial implementation already linked).
+
+#### Scenario: Default gate hides children until boot succeeds
+
+- **WHEN** a consumer renders `<SpatialBoot><App /></SpatialBoot>` without setting `gate` to `false`
+- **AND** `bootSpatial()` has not yet resolved in a WebSpatial runtime
+- **THEN** `App` MUST NOT be mounted
+- **AND** when `bootSpatial()` subsequently resolves, `App` MUST mount on the next React commit
+
+#### Scenario: Boot failure does not mount children
+
+- **WHEN** `bootSpatial()` rejects with `WebSpatialBootError` inside `<SpatialBoot onError={cb}>…</SpatialBoot>`
+- **THEN** `onError` MUST be called with that error
+- **AND** `children` MUST remain unmounted for that failure
+
+#### Scenario: Optional fallback during boot
+
+- **WHEN** a consumer passes `fallback={<Loading />}` to `<SpatialBoot>`
+- **AND** `children` are not yet mounted because boot has not succeeded
+- **THEN** the rendered output MUST be `<Loading />` (not `children`)
+
+#### Scenario: Eager entry SpatialBoot is immediately ready
+
+- **WHEN** a consumer renders `<SpatialBoot>` imported from `@webspatial/react-sdk/eager`
+- **THEN** `children` MUST be eligible to mount on the first client commit without waiting on a dynamic import
+- **AND** `bootSpatial()` stub behavior from the eager entry MUST still apply per "Eager-mode entry" lazy-load runtime stub Scenarios
+
+---
 
 #### Scenario: Boot is a no-op in non-WebSpatial browsers
 
@@ -771,7 +821,7 @@ Within that named-export set:
 
 - **Spatial primitives** (the facade names — `Model`, `Reality`, `Entity`, `BoxEntity` family, materials / assets, `SceneGraph` / `World`, and `useMetrics`) MUST resolve to the **real spatial implementations** loaded statically from `@webspatial/react-sdk/spatial`, not to facade fallbacks. Factory-style HOCs remain internal-only after the `internalize-hoc-factories` change; the public marker path is `enable-xr` / `enable-xr-monitor`, and the eager entry preloads the bridge so JSX-runtime marker wrappers reached through `@webspatial/react-sdk/internal/facades-client` render real implementations on first client render.
 - **Stateless utilities** (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry": `enableDebugTool`, `convertCoordinate`, `initScene`, `WebSpatialRuntime`, `WebSpatialRuntimeError`, `version`, `createElement` (`@deprecated` per "createElement export is deprecated"), type-only re-exports including the core-sdk type re-exports) MUST be the same module-level references the default entry exposes (re-export, not redeclare). This guarantees behavior parity and allows shared code paths. The `@deprecated` `createElement` export MUST carry its JSDoc on the eager-entry surface too — re-export via `from './index'` preserves the annotation automatically.
-- **Lazy-load runtime API** (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`) MUST be exposed as **compatibility stubs** so that consumer code written against the default entry still type-checks and runs unchanged when its import root switches to the eager entry. The stub semantics are pinned by the Scenarios below.
+- **Lazy-load runtime API** (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, `SpatialBoot`) MUST be exposed as **compatibility stubs** (or real `SpatialBoot` with eager semantics) so that consumer code written against the default entry still type-checks and runs unchanged when its import root switches to the eager entry. The stub semantics are pinned by the Scenarios below. A public `useBootSpatial` hook MUST NOT be required on either entry in v1.
 
 The eager entry MUST install the same polyfills as the spatial chunk (the `@webspatial/core-sdk/install-polyfills` side effect and the `initPolyfill()` container bootstrap) at module-evaluation time, since by definition the eager entry IS the spatial chunk for these consumers and there is no `bootSpatial()` to defer the install to.
 

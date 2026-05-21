@@ -8,7 +8,7 @@ or the source for public-facing positioning copy.
 **Related engineering material**
 
 - Migration and integration details: `docs/migration/lazy-load-spatial-runtime.md`
-- **`SpatialBoot` / `useBootSpatial` (shipped):** `docs/design/spatial-boot-component.md`
+- **`SpatialBoot` (shipped; `useBootSpatial` internal only):** `docs/design/spatial-boot-component.md`
 - Measured size-impact report (spec vs main baseline): `docs/lazy-load-spatial-runtime-size-impact.md`
 - OpenSpec change (normative requirements): `openspec/changes/lazy-load-spatial-runtime/`
 - Consumer-shaped lazy + eager fixtures: `apps/spatial-vite-min/`
@@ -281,4 +281,4 @@ Decisions from product sync (record for docs/SDK scope):
 - **§2 P0 table decided** (2026-05): web-first, eager internal-only, plain-web
   bar (§4.1), dual boot timings, app-owned boot-failure UX, incremental parity.
 - **SpatialBoot phase 1** (2026-05): public story = boot then mount; boot failure
-  does not mount children; `gate`/`fallback` omitted from phase-1 customer docs.
+  does not mount children; `useBootSpatial` not exported (phase 2 if needed).

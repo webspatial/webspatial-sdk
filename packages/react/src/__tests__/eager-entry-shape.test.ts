@@ -101,7 +101,6 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     'bootSpatial',
     'isSpatialReady',
     'useSpatialReady',
-    'useBootSpatial',
     'SpatialBoot',
     'onSpatialLoadError',
     'WebSpatialBootError',
@@ -143,6 +142,12 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
       // `WebSpatialBootError` is a class (still typeof 'function').
       expect(typeof value).toBe('function')
     }
+  })
+
+  it('does NOT export internal boot hook `useBootSpatial`', () => {
+    expect(
+      (EagerEntry as Record<string, unknown>).useBootSpatial,
+    ).toBeUndefined()
   })
 
   it('exposes Group B / Group C stateless utilities re-exported from the default entry', () => {
