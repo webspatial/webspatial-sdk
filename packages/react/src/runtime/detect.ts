@@ -1,5 +1,7 @@
-import { computeRuntimeFromUserAgent } from './capabilities'
-import type { WebSpatialRuntimeType } from './capabilities'
+import {
+  computeRuntimeFromUserAgent,
+  type WebSpatialRuntimeType,
+} from '@webspatial/core-sdk/runtime'
 
 export type SpatialRuntimeType = Exclude<WebSpatialRuntimeType, null>
 

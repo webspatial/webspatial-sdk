@@ -14,7 +14,7 @@ import { hydrateRoot } from 'react-dom/client'
 import { Writable } from 'node:stream'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { __resetBootStateForTests, bootSpatial } from '../runtime/boot'
-import { resetRuntimeCacheForTests } from '../runtime/capabilities'
+import { resetRuntimeCacheForTests } from '@webspatial/core-sdk/runtime'
 import {
   __getSpatialReadySubscriberCountForTests,
   __resetSpatialBridgeForTests,

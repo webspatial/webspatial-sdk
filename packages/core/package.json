@@ -10,6 +10,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    },
     "./install-polyfills": {
       "types": "./dist/install-polyfills.d.ts",
       "import": "./dist/install-polyfills.js"
