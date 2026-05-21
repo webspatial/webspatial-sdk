@@ -18,7 +18,6 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       'bootSpatial',
       'isSpatialReady',
       'useSpatialReady',
-      'useBootSpatial',
       'SpatialBoot',
       'onSpatialLoadError',
       'WebSpatialBootError',
@@ -115,6 +114,10 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
         expect(name in sdk).toBe(false)
       },
     )
+
+    it('does NOT export internal boot hook `useBootSpatial`', () => {
+      expect('useBootSpatial' in sdk).toBe(false)
+    })
 
     // Other internals that were previously surfaced via `export *` and MUST
     // now stay inside the spatial chunk.

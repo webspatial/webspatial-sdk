@@ -8,5 +8,4 @@ export {
 export { detectSpatialRuntime } from './detect'
 export { WebSpatialBootError } from './errors'
 export { SpatialBoot } from './SpatialBoot'
-export { useBootSpatial } from './useBootSpatial'
 export { useSpatialReady } from './useSpatialReady'
