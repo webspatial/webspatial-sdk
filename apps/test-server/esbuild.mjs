@@ -80,13 +80,6 @@ const buildOptions = {
     '@webspatial/react-sdk/internal/facades-client': path.resolve(
       `${packagesBasePath}/react/src/internal/facades-client.ts`,
     ),
-    // Server-safe public subpath (`detectSpatialRuntime`). Test-server is
-    // a pure CSR app and does NOT exercise this subpath today, but listing
-    // it here keeps future code paths from re-hitting the same prefix-match
-    // landmine.
-    '@webspatial/react-sdk/server': path.resolve(
-      `${packagesBasePath}/react/src/server/index.ts`,
-    ),
     // Test-server targets WebSpatial runtimes only — bundle the eager entry so
     // spatial is statically linked (no lazy `import('./spatial')` bridge in
     // this app). Plain-web / lazy-default consumer shape is exercised in

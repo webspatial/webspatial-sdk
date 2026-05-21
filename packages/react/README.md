@@ -168,8 +168,6 @@ The default entry carries `'use client'` at the top of its emitted `dist/index.j
 
 If you need to **branch server-rendered HTML** on the incoming request (e.g. different hero for WebSpatial-capable shells vs plain browsers), base that decision on the **HTTP `User-Agent`** string and the **official WebSpatial documentation** for how to interpret it — for example [Introduction](https://webspatial.dev/docs/introduction) and [Development Guide](https://webspatial.dev/docs/development-guide). **Do not rely on undocumented SDK helpers** for environment detection in application code.
 
-The npm package may ship an internal `@webspatial/react-sdk/server` module for WebSpatial’s own demos, tests, and tooling. That subpath is **not** part of the supported public developer surface and may change without a semver migration guide.
-
 ## SpatialDiv `onSpatialContentReady` runtime note
 
 When using nested `SpatialDiv` (`enable-xr`) with `onSpatialContentReady`, callback ordering differs by runtime:

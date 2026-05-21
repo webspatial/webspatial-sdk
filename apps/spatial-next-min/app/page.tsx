@@ -49,10 +49,8 @@ export default function HomePage() {
           <Link href="/server-only-util">
             <strong>/server-only-util</strong>
           </Link>{' '}
-          — internal validation: RSC calling the non–public{' '}
-          <code>@webspatial/react-sdk/server</code> entry (see package README).
-          For real apps, branch on <code>User-Agent</code> per WebSpatial docs —
-          not this demo pattern.
+          — pure RSC: branch on <code>User-Agent</code> per WebSpatial docs (no
+          SDK server detection API).
         </li>
       </ul>
       <p>

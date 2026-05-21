@@ -41,10 +41,6 @@ export default defineConfig({
         XRSDKBaseDir,
         'react/src/internal/facades-client.ts',
       ),
-      '@webspatial/react-sdk/server': path.join(
-        XRSDKBaseDir,
-        'react/src/server/index.ts',
-      ),
       '@webspatial/react-sdk': path.join(XRSDKBaseDir, 'react/src'),
       '@webspatial/core-sdk': path.join(XRSDKBaseDir, 'core/src'),
     },

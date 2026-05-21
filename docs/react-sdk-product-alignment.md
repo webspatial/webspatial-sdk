@@ -264,8 +264,8 @@ Decisions from product sync (record for docs/SDK scope):
 | **P0-4** Boot timing           | **Pre-await and fallback-then-upgrade both OK**; document trade-offs (CSR vs SSR/hydration).                                                                                                                                         |
 | **P0-5** Boot failure          | **SDK degrades** (facades stay on fallbacks); **apps own UX** via `WebSpatialBootError`, `onSpatialLoadError`, `catch` / `onError`, optional retry. No mandatory SDK error page.                                                    |
 | **P0-6** Parity                | **Public quality goal**; align facade vs real-impl **per component** (§15.8 backlog), not single big-bang.                                                                                                                        |
-| `@webspatial/react-sdk/server` | **Not part of the public developer surface.** The subpath may remain in the package for **internal WebSpatial demos, CI, and R&D**; do not document it as a supported integration API in customer-facing materials.                |
-| Runtime detection in app code  | **`detectSpatialRuntime` is not a supported public API** for third-party integrators. Developers classify environments using the **User-Agent string** and **official WebSpatial site documentation** — not SDK detection helpers. |
+| `@webspatial/react-sdk/server` | **Not shipped in v1.** No server subpath or `detectSpatialRuntime` export for RSC; reintroduce when product needs it. Integrators use **User-Agent + official WebSpatial documentation** for request-time branching. |
+| Runtime detection in app code  | **No supported public detection API** for third-party integrators (client or server). The SDK uses UA parsing **internally** for `bootSpatial` / bridge gating only. Apps branch on **User-Agent** per official docs. |
 | `SSRProvider` removal          | **Agreed.** No app-level provider for hydration gating; SDK handles this internally (`useSpatialReady`, `withSSRSupported`).                                                                                                       |
 | `Reality` plain-web / fallback | **Keep the `<div>` placeholder** (layout-preserving degraded rendering). Do not change the facade/impl contract to `null` or alternate tags without an explicit product + spec revision. Children use **scene-graph** APIs (`Entity`, `*Entity`, materials) — not the top-level `Model` facade. |
 | `bootSpatial()` on plain web   | **Recommend** one call at startup in integration docs (harmless no-op without WebSpatial UA).                                                                                                                                      |
@@ -276,8 +276,9 @@ Decisions from product sync (record for docs/SDK scope):
 
 - Introduced for cross-team alignment alongside lazy-load v1 and the eager
   entry. Update this file when P0 answers change materially.
-- **§11** added after product sign-off on server subpath visibility, public
-  detection API, `SSRProvider`, and `Reality` fallback.
+- **§11** added after product sign-off on server/RSC branching, `SSRProvider`,
+  and `Reality` fallback. **`./server` subpath removed** (2026-05): UA-only for
+  integrators until product reintroduces server helpers.
 - **§2 P0 table decided** (2026-05): web-first, eager internal-only, plain-web
   bar (§4.1), dual boot timings, app-owned boot-failure UX, incremental parity.
 - **SpatialBoot phase 1** (2026-05): public story = boot then mount; boot failure
