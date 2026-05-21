@@ -46,7 +46,7 @@ pnpm --filter spatial-next-min test     # tsc --noEmit
 | `/lazy-gate` | `components/LazyGateDemo.tsx` | Same contract with optional `<SpatialBoot fallback={…}>` while boot is in flight. Boot failure: `onError`; children stay unmounted. |
 | `/eager` | `components/EagerDemo.tsx` | Eager entry (`@webspatial/react-sdk/eager`). **Same source** as `LazyDemo.tsx` modulo the import root. Spatial implementation is statically linked into this page&apos;s bundle. `bootSpatial()` is a no-op stub but is still awaited for migration parity. |
 | `/capability-wrapper` | `components/CapabilityDemo.tsx` | Application-side custom degraded UI. Uses `useSpatialReady()` directly to branch between a flat poster card (plain web) and a real `<Model>` (WebSpatial). The pattern to reach for when the SDK&apos;s documented facade fallback is not aesthetic enough for your product. |
-| `/server-only-util` | `app/server-only-util/page.tsx` | **Engineering validation** only: pure RSC importing the internal `@webspatial/react-sdk/server` entry to prove the server bundle does not pull facades. **Not** a recommended customer pattern — use **`User-Agent` + official WebSpatial docs** for request-time branching in real apps. |
+| `/server-only-util` | `app/server-only-util/page.tsx` | **Engineering demo:** pure RSC reads **`User-Agent` only** (no SDK import). Shows the supported request-time branching pattern — official WebSpatial UA docs, not `detectSpatialRuntime` or other server helpers. |
 
 ## The `'use client'` boundary rule (read this!)
 

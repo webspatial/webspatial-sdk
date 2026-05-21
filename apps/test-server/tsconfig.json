@@ -32,9 +32,6 @@
       "@webspatial/react-sdk/internal/facades-client": [
         "../../packages/react/src/internal/facades-client.ts"
       ],
-      "@webspatial/react-sdk/server": [
-        "../../packages/react/src/server/index.ts"
-      ],
       "web-spatial": ["../npmLib/src"]
     }
   },

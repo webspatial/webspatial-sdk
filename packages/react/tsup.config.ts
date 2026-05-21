@@ -107,7 +107,7 @@ const ensureRscClientBoundary = (filePath: string): void => {
 }
 
 export default defineConfig([
-  // Bundle — default entry + spatial chunk + eager entry + server/internal
+  // Bundle — default entry + spatial chunk + eager entry + internal
   // support subpaths + JSX runtime entries. The JSX runtime reaches the
   // facade trio only through the external package self-reference
   // `@webspatial/react-sdk/internal/facades-client`, so even though all
@@ -155,14 +155,6 @@ export default defineConfig([
       // SAME module-level binding (and therefore the SAME function
       // identity) that the JSX runtime sees via the external subpath.
       'internal/facades-client': 'src/internal/facades-client.ts',
-      // Server-safe public subpath. Designed to be importable from RSC
-      // server modules, so its emitted file MUST NOT carry the
-      // `'use client'` directive (the `ensureRscClientBoundary` injection
-      // below intentionally skips it). Currently a thin wrapper around
-      // the local runtime-capability parser used by the default entry, so
-      // the emitted `dist/server/index.js` contains no React imports, no
-      // hook references, and no runtime import from `@webspatial/core-sdk`.
-      'server/index': 'src/server/index.ts',
       'jsx/jsx-runtime': 'src/jsx/jsx-runtime.ts',
       'jsx/jsx-dev-runtime': 'src/jsx/jsx-dev-runtime.ts',
     },
