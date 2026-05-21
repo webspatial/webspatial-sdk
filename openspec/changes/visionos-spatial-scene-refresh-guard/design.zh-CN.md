@@ -1,64 +1,65 @@
-# 设计：VisionOS SpatialScene 刷新代际保护
+# 设计：VisionOS SpatialScene 刷新保护
 
-## 上下文
+## 背景
 
-VisionOS native `SpatialScene` 注册 web view 状态监听，并在 `.didStartLoad` 时销毁 spatial objects。它也处理 `webspatial` open-window 请求，并为 SpatialDiv 内容创建 `Spatialized2DElement` 实例。
-
-与 Android 的壳/runtime 分层不同，VisionOS 在 `WKUIDelegate` open-window 流程中同步处理 `WKWebView` 创建。即便如此，native 层仍应消费同一套前端 request metadata 契约，让 stale request 语义显式且可测试。
+VisionOS `SpatialScene` 持有 native scene 对象，并接收前端驱动的 SpatialDiv 创建请求。页面刷新 cleanup 只发生在某个时间点，而请求到达可能存在延迟，因此 native scene 必须拒绝属于旧页面代际的请求。
 
 ## 目标 / 非目标
 
 **目标：**
 
-- 在 VisionOS `SpatialScene` 中跟踪当前页面 generation。
-- 在 generation 边界清理已有 spatial objects。
-- 消费 SpatialDiv / attachment 协议 URL 中的 `wsepoch`。
-- 按兼容策略拒绝或警告明确 stale 的请求。
-- 在 inspect 输出中暴露 generation 和 object ids，便于调试。
+- 让 VisionOS `SpatialScene` 成为当前页面 generation 的权威持有者。
+- 使用 `wsepoch` 作为 stale 请求拒收的 freshness 唯一裁决字段。
+- 将 `rid` 仅用于关联与诊断。
+- 对不携带 `wsepoch` 的请求保持兼容。
+- 增强 inspect 输出，便于刷新问题诊断。
 
 **非目标：**
 
-- 本变更不定义前端 request id 生成。
-- 本变更不影响 Android 壳工程或 runtime 行为。
-- 本变更不修改公开 JavaScript API。
+- 本 change 不重新定义前端请求构造方式。
+- 本 change 不使用 `rid` 做 freshness 判断。
+- 本 change 不要求 compatibility mode 下所有请求都必须携带 `wsepoch`。
 
 ## 决策
 
-### 决策 1：`SpatialScene` 拥有当前 generation
+### 决策 1：`SpatialScene` 持有当前页面 generation
 
-`SpatialScene` 必须维护 `currentPageGeneration`。该值在主页面进入 `.didStartLoad` 时递增，并在 `resetForNavigation()` 执行明确导航清理时递增。
+`SpatialScene` 必须维护 `currentPageGeneration`，并在页面重新加载开始时、scene 对象 cleanup 之前递增该值。
 
-### 决策 2：创建处理器消费 request epoch
+### 决策 2：native freshness 判断只使用 `wsepoch`
 
-`onOpenWindowHandler` 必须在 `webspatial://createSpatialized2DElement` 和 `webspatial://createAttachment` URL 存在 `wsepoch` 时解析它。
+请求处理路径在字段存在时必须解析 `rid` 与 `wsepoch`。
 
-如果 `wsepoch` 存在且与 `currentPageGeneration` 不匹配，handler 必须将该请求视为 stale，且不得将对应 SpatialDiv 内容挂到当前 scene。
+如果 `wsepoch` 存在且与 `currentPageGeneration` 不匹配，该请求必须被视为 stale，且不得将内容挂载到当前 scene。
 
-### 决策 3：缺失 metadata 使用兼容模式
+### 决策 3：compatibility mode 对缺失 `wsepoch` 的请求告警并接受
 
-迁移期内，缺失 `wsepoch` 应产生 debug 日志并继续接受请求，避免破坏旧前端 bundle。所有支持的 SDK bundle 都发出 `wsepoch` 后，后续变更可拒绝 malformed metadata。
+如果请求未携带 `wsepoch`，VisionOS 必须记录兼容性 warning，并继续接受该请求。
 
-### 决策 4：Inspect 暴露 generation 和 object ids
+这样可以保持旧前端 bundle 的兼容性，但 stale 请求拒收仅在 `wsepoch` 存在时生效。
 
-VisionOS `SpatialScene` inspect 输出必须包含足够字段，用于区分 scene children 和全局 object registry 内容：
+### 决策 4：inspect 输出暴露 generation 与对象标识
 
-- `currentPageGeneration`
-- `childrenIds`
-- `spatialObjectList`
-- `spatialObjectCount`
+Inspect 输出必须包含当前页面 generation，以及能够让评审者对比 scene children 与 retained objects 的对象标识诊断。
 
-### 决策 5：Attachment 处理遵循同一 epoch 边界
+### 决策 5：日志关联 generation 与请求标识
 
-Attachment 创建 web view 使用同一类协议，应在存在 request metadata 时具备 generation 感知。Attachment metadata 初始化仍通过现有 JSB 路径完成。
+日志必须能够在单次刷新周期内回答以下问题：
 
-## 风险 / 折衷
+- 页面 generation 何时递增
+- 哪个 `rid` / `wsepoch` 被接受
+- 哪个 `rid` / `wsepoch` 被判定为 stale 并拒绝
+- cleanup 后 scene 中剩余哪些对象 id
 
-- **[风险] WKWebView open-window 流程是同步的**：generation guard 初期可能很少真正 drop 请求，但它能固化生命周期边界。
-- **[风险] rollout 期间缺失 epoch**：先采用 warn-and-accept 兼容模式。
-- **[风险] Inspect 输出变多**：当前 inspect 已包含 debug-only object list，因此增加 debug 字段可接受。
+## 风险 / 取舍
+
+- **[风险] 旧前端 bundle 不发 `wsepoch`** -> 在 compatibility mode 下告警并接受。
+- **[风险] 请求到达与刷新 cleanup 存在竞态** -> 使用页面 generation 作为权威 freshness 边界。
+- **[风险] 错误地将 `rid` 用于 freshness** -> 文档与实现都明确 `rid` 只用于关联。
 
 ## 验证
 
-- 尽可能为 URL metadata 解析增加单元或集成覆盖。
-- 增加刷新后 SpatialDiv 创建的测试或手动场景。
-- 校验 navigation reset 前后的 inspect 输出。
+- 验证 `wsepoch` 匹配的请求仍然成功挂载。
+- 验证 stale `wsepoch` 请求会被丢弃。
+- 验证缺失 `wsepoch` 的请求保持兼容并产生 warning。
+- 验证普通重复刷新后的 inspect 输出保持稳定。

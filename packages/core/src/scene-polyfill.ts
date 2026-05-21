@@ -196,7 +196,7 @@ class SceneManager {
           const finalURL = `${protocol}//${host}/${token}/?command=${command}`
           const sourceParams = new URL(url).searchParams
           const final = new URL(finalURL)
-          for (const key of ['rid', 'wsrid', 'wsepoch']) {
+          for (const key of ['rid', 'wsepoch']) {
             const value = sourceParams.get(key)
             if (value) final.searchParams.set(key, value)
           }

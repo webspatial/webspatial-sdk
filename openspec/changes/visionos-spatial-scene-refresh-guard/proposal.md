@@ -1,25 +1,31 @@
-# Proposal: VisionOS SpatialScene refresh generation guard
+# Proposal: VisionOS SpatialScene refresh guard
 
 ## Why
 
-VisionOS native code owns a `SpatialScene` implementation with its own `WKWebView` lifecycle, `Spatialized2DElement` creation, and scene object registry. On page navigation or refresh, `SpatialScene` currently destroys registered spatial objects when the main page starts loading. However, `webspatial://` window-open requests can create new native `Spatialized2DElement` instances through `onOpenWindowHandler`.
+VisionOS native `SpatialScene` can receive SpatialDiv and attachment creation requests after a page refresh cleanup boundary. Without a page-generation check, stale requests may attach content that does not belong to the current page.
 
-The VisionOS native layer should explicitly model the page lifecycle generation so SpatialDiv creation requests are associated with the page generation that initiated them. This keeps VisionOS aligned with the frontend request metadata contract and prevents stale creation from being attached to the wrong scene generation.
+VisionOS should use `wsepoch` as the freshness discriminator, while keeping `rid` only for correlation and diagnostics.
 
 ## What Changes
 
-- Add a page generation / epoch state to VisionOS `SpatialScene`.
-- Increment the generation when the main web view starts loading and when navigation reset explicitly clears scene objects.
-- Read request metadata from `webspatial://createSpatialized2DElement` and `webspatial://createAttachment` open-window URLs.
-- Compare request epoch with current scene generation before accepting generation-aware creation requests.
-- Add debug / inspect fields for page generation and spatial object ids.
-- **BREAKING**: none. Initial malformed metadata handling should remain compatible unless a request is explicitly stale.
+- Maintain `currentPageGeneration` inside VisionOS `SpatialScene`.
+- Increment page generation before refresh cleanup.
+- Parse `rid` and optional `wsepoch` from SpatialDiv and attachment requests.
+- Reject stale requests when `wsepoch` is present and mismatches the current page generation.
+- Keep compatibility mode for requests that do not carry `wsepoch`.
+- Enhance inspect and logs with generation and object identity diagnostics.
+
+## Boundaries
+
+- This change covers VisionOS native scene lifecycle and request freshness checks.
+- `rid` is used for request correlation and diagnostics only.
+- `wsepoch` is the only freshness discriminator.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `visionos-spatial-scene-refresh-guard`: specifies VisionOS native page generation tracking, request metadata consumption, stale SpatialDiv handling, and inspect visibility.
+- `visionos-spatial-scene-refresh-guard`: specifies page-generation tracking and stale-request rejection for VisionOS SpatialDiv handling.
 
 ### Modified Capabilities
 
@@ -28,7 +34,4 @@ The VisionOS native layer should explicitly model the page lifecycle generation 
 ## Impact
 
 - `packages/visionOS/web-spatial/model/SpatialScene.swift`
-- `packages/visionOS/web-spatial/model/Spatialized2DElement.swift`
-- `packages/visionOS/web-spatial/webview/SpatialWebController.swift`
-- `packages/visionOS/web-spatial/webview/SpatialWebViewModel.swift`
-- `packages/visionOS/web-spatialTests/*`
+- related VisionOS inspect / logging paths

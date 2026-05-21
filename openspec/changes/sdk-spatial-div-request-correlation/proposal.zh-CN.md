@@ -1,27 +1,33 @@
-# 提案：刷新安全的 SpatialDiv 请求关联
+# 提案：SDK SpatialDiv 请求关联
 
-## 背景与动机
+## 为什么
 
-`createSpatialized2DElement` 和 attachment 创建在 native 内容宿主可用之前，会通过 `webspatial://` 的 window-open 协议发起请求。当前前端平台适配层里的请求关联基本依赖短生命周期的递增 id。页面刷新后，新的 JavaScript 执行上下文可能重新生成相同的递增 id，而刷新前发起的 native 创建结果仍可能在之后完成。
+SpatialDiv 与 attachment 创建需要两个相互独立的信号：
 
-SDK 需要提供一个由前端负责的 request metadata 契约，让每一次 SpatialDiv / attachment 创建请求都具备刷新安全的关联能力，并便于宿主平台进行回调匹配。该契约必须保持在前端 SDK 和平台适配层内部自包含：它只定义需要发出的 metadata，不定义任何具体宿主如何接收或拒绝 stale native 对象。
+- `rid`：用于异步完成回调与日志关联的请求标识。
+- `wsepoch`：用于宿主 runtime 执行 freshness 判断的页面归属 metadata。
+
+本轮协议继续以 `rid` 作为唯一的请求关联字段，同时将其生成值升级为在实际使用中对刷新安全且 opaque 的形式。这样既能保持现有宿主集成的兼容性，也能让已升级的宿主在拿到 `wsepoch` 时启用 stale 请求拒收。
 
 ## 变更内容
 
-- 为 `webspatial://createSpatialized2DElement` 和 `webspatial://createAttachment` 协议 URL 增加刷新安全的 request metadata 契约。
-- 引入两个协议字段：
-  - `wsrid`：不透明的唯一请求 id，用于异步回调关联。
-  - `wsepoch`：页面生命周期 epoch，由宿主 runtime 提供时携带。
-- 更新 PicoOS 前端平台适配层的协议 URL，使其携带 `wsrid` 和 `wsepoch`，迁移期保留现有 `rid` 回调兼容。
-- 更新 VisionOS 前端平台适配层的协议 URL，使其携带同一套 metadata 契约。
-- 为 pending request receiver 增加超时清理，避免未完成的协议请求长期持有 callback。
-- **破坏性变更**：无。现有公开 API 保持不变。
+- 为 SpatialDiv 与 attachment 请求生成刷新安全的 opaque `rid`。
+- 当宿主向 SDK 暴露页面 epoch 信息时，发出 `wsepoch`。
+- 继续以 `rid` 作为请求完成回调的关联 key。
+- 更新前端平台适配层，统一发出 `rid` 与可选的 `wsepoch`。
+- 增加针对 `rid` 刷新安全性与请求 metadata 发出的测试。
 
-## 能力定义
+## 边界
+
+- 本 change 仅覆盖前端 SDK 的请求构造与回调关联。
+- 本 change 不定义 native 侧的 stale 拒收行为；宿主 runtime 决定如何消费 `wsepoch`。
+- 本 change 不引入新的请求关联字段名。
+
+## 能力
 
 ### 新增能力
 
-- `spatial-div-request-correlation`：定义 SpatialDiv 与 attachment 创建协议的 request metadata、请求 id 唯一性、可选 epoch 透传，以及 pending callback 清理。
+- `spatial-div-request-correlation`：规定前端创建 SpatialDiv 请求时，使用刷新安全的 `rid` 与可选的 `wsepoch`。
 
 ### 修改能力
 
@@ -29,9 +35,7 @@ SDK 需要提供一个由前端负责的 request metadata 契约，让每一次 
 
 ## 影响范围
 
-- `packages/core/src/platform-adapter/pico-os/PicoOSPlatform.ts`
-- `packages/core/src/platform-adapter/vision-os/VisionOSPlatform.ts`
-- `packages/core/src/SpatialWebEvent.ts`
+- `packages/core/src/platform-adapter/*`
 - `packages/core/src/scene-polyfill.ts`
-- `packages/core/src/SpatializedElementCreator.ts`
-- `packages/core` 中相关单元测试
+- `packages/core/src/types/global.ts`
+- 前端请求 / 回调测试

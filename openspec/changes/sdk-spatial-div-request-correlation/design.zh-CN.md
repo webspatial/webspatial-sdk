@@ -1,74 +1,76 @@
-# 设计：刷新安全的前端请求关联
+# 设计：SDK SpatialDiv 请求关联
 
-## 上下文
+## 背景
 
-从前端视角看，SpatialDiv 创建是异步过程。前端打开一个平台协议 URL，之后收到与 request id 关联的创建结果。递增 request id 在单个 JavaScript 执行上下文内足够，但跨页面刷新边界时较弱。
+前端 SDK 在 native 宿主接收到请求之前就负责构造 SpatialDiv 与 attachment 请求。宿主当前已经将 `rid` 作为请求关联值使用，而升级后的宿主还可以额外消费 `wsepoch` 来执行 freshness 判断。
 
-SDK 应该让请求身份在实际使用中具备全局唯一性，同时不把生成细节暴露给宿主平台。页面生命周期归属应通过单独的 epoch 字段表达。
+因此，SDK 应继续使用 `rid` 作为请求关联字段，并将其升级为刷新安全的形式；只有在页面 epoch 信息可用时才发出 `wsepoch`。
 
 ## 目标 / 非目标
 
 **目标：**
 
-- 生成不透明的 `wsrid`，在实际使用中跨页面刷新不冲突。
-- 当宿主 runtime 向 JavaScript 暴露 page lifecycle epoch 时，携带 `wsepoch`。
-- 将 `wsrid` 和 `wsepoch` 明确区分：请求身份 vs 页面归属。
-- 为 pending request receiver 增加超时清理。
-- 在迁移期保持现有协议处理兼容。
+- 本轮继续以 `rid` 作为唯一请求关联字段。
+- 让发出的 `rid` 在实际使用中对页面刷新安全且 opaque。
+- 当宿主提供页面 epoch 时发出 `wsepoch`。
+- 保持前端回调关联仍然基于 `rid`。
+- 对尚未消费 `wsepoch` 的宿主保持兼容。
 
 **非目标：**
 
-- 本变更不定义宿主 runtime 如何拒绝 stale native 对象。
-- 本变更不修改公开的 `SpatialSession` 或 React API。
-- 本变更不让前端 unmount cleanup 成为页面刷新时的权威清理机制。
+- 本 change 不负责 native 侧 stale 拒收决策。
+- 本 change 不要求宿主解析 `rid` 的内部结构。
+- 本 change 不新增第二个请求关联字段。
 
 ## 决策
 
-### 决策 1：使用两个协议字段
+### 决策 1：`rid` 继续作为请求关联字段
 
-`wsrid` 是不透明 request id。它必须由前端 SDK 生成，并且不得要求宿主平台解析其内部结构。
+SDK 必须继续为 SpatialDiv 与 attachment 请求发出 `rid`。在本轮 rollout 中，`rid` 是唯一的请求关联字段。
 
-`wsepoch` 是可比较的页面生命周期值。它可以由宿主 runtime 注入到 `window.__webspatialsdk__.pageEpoch` 或等价的 SDK 可读字段中。如果不存在，SDK 仍然发出 `wsrid`，并省略或留空 `wsepoch`。
+### 决策 2：`rid` 升级为刷新安全且 opaque
 
-协议示例：
+SDK 可以使用“每个 JavaScript context 一个 nonce + 递增序号”或等价策略来生成 `rid`，以避免在实际使用中跨页面刷新发生碰撞。
+
+宿主必须将 `rid` 视为 opaque 字符串，不得依赖其内部结构。
+
+### 决策 3：`wsepoch` 是可选的页面归属 metadata
+
+如果宿主向 JavaScript 暴露了页面 epoch 信息，SDK 必须发出对应的 `wsepoch`。
+
+如果页面 epoch 信息不可用，SDK 必须省略 `wsepoch`，但仍然发出有效的 `rid`。
+
+### 决策 4：回调关联继续使用 `rid`
+
+前端的完成回调与超时处理必须继续以 `rid` 作为关联 key。
+
+这样可以保持对仅通过 `rid` 完成请求的宿主路径的兼容性。
+
+### 决策 5：请求 URL 统一携带 `rid` 与可选 `wsepoch`
+
+SDK 发出的请求 URL 形态如下：
 
 ```text
-webspatial://createSpatialized2DElement?wsrid=wsreq_k8f3a2_12&wsepoch=7
-webspatial://createAttachment?wsrid=wsreq_k8f3a2_13&wsepoch=7
+webspatial://createSpatialized2DElement?rid=<opaque-rid>&wsepoch=<epoch>
+webspatial://createAttachment?rid=<opaque-rid>&wsepoch=<epoch>
 ```
 
-### 决策 2：`wsrid` 保持不透明且刷新安全
+当页面 epoch 不可用时，可以不发出 `wsepoch` 查询参数。
 
-SDK 可以用“每个 JS context 一个随机 nonce + 递增序号”来构造 `wsrid`。最终结果是单个不透明协议字段。宿主平台只把它当作关联 key 使用。
+## 兼容性
 
-### 决策 3：保留现有 callback id 路径兼容
+- 尚未消费 `wsepoch` 的宿主仍然保持兼容，因为请求完成仍然通过 `rid` 关联。
+- 只有宿主链路端到端保留并消费 `wsepoch` 时，才能完整启用 stale 请求拒收。
+- 仅升级 SDK 可以保持兼容，但不能保证旧宿主链路具备 stale 请求拒收能力。
 
-迁移期内，平台适配层可以同时发出 legacy `rid` 参数，或让 `rid` 等于 `wsrid`，以便旧 native host 仍然可以解析 pending 请求。
+## 风险 / 取舍
 
-首选 callback key 是 `wsrid`。只有在所有支持的宿主都消费新字段后，才应移除 legacy `rid` 路径。
+- **[风险] 宿主对 `rid` 格式存在隐藏假设** -> 保持 `rid` 仍为字符串字段，并通过定向测试验证。
+- **[风险] 宿主链路丢失 `wsepoch`** -> 继续通过 `rid` 完成请求以保持兼容。
+- **[风险] `rid` 语义过载** -> 明确 `rid` 只用于关联，`wsepoch` 只用于页面归属。
 
-### 决策 4：增加 pending receiver 超时清理
+## 验证
 
-为协议创建注册的 pending request receiver 必须在有界超时后移除。超时时应通过结构化失败结果或等价错误路径让请求 settle，而不是无限持有 callback。
-
-### 决策 5：React cleanup 契约保持不变
-
-React unmount cleanup 仍然是 best-effort，并继续对已创建的 spatial element 调用 `destroy()`。页面刷新清理仍是宿主生命周期职责，不由此前端变更变成权威机制。
-
-## 风险 / 折衷
-
-- **[风险] 宿主尚未消费 `wsepoch`**：保持旧行为兼容，先通过日志和测试验证 metadata 发出。
-- **[风险] 超时时间对慢速宿主创建过短**：选择保守默认值，并允许内部调整而不改变公开 API。
-- **[风险] 重复协议参数导致歧义**：文档明确 `wsrid` 为首选，`rid` 仅用于兼容。
-
-## 迁移计划
-
-1. 发出 `wsrid` 和 `wsepoch`，同时保留 legacy `rid` 兼容。
-2. 增加测试，模拟模块重载后 request id 不冲突。
-3. 增加 pending receiver 超时清理测试。
-4. 所有宿主平台消费 `wsrid` 后，在后续变更中移除 legacy-only 假设。
-
-## 开放问题
-
-- native 内容宿主创建的默认超时时间应是多少？
-- 超时行为是否需要为自动化测试提供内部可配置能力？
+- 增加测试，验证生成的 `rid` 在模拟页面刷新 / 模块重建后不发生实际碰撞。
+- 增加测试，验证页面 epoch 可用时发出的 URL 包含 `rid` 与 `wsepoch`。
+- 增加测试，验证页面 epoch 缺失时仍发出有效 `rid`，并保持回调关联能力。

@@ -1,25 +1,31 @@
-# 提案：VisionOS SpatialScene 刷新代际保护
+# 提案：VisionOS SpatialScene 刷新保护
 
-## 背景与动机
+## 为什么
 
-VisionOS native 代码拥有独立的 `SpatialScene` 实现，负责 `WKWebView` 生命周期、`Spatialized2DElement` 创建和 scene object registry。页面导航或刷新时，`SpatialScene` 当前会在主页面开始加载时销毁已注册的 spatial objects。但 `webspatial://` window-open 请求仍可能通过 `onOpenWindowHandler` 创建新的 native `Spatialized2DElement` 实例。
+VisionOS native `SpatialScene` 可能在页面刷新 cleanup 边界之后，仍然收到 SpatialDiv 与 attachment 创建请求。如果没有页面代际检查，stale 请求就可能把不属于当前页面的内容挂载到当前 scene 上。
 
-VisionOS native 层应显式建模页面生命周期 generation，让 SpatialDiv 创建请求与发起它的页面 generation 关联起来。这可以让 VisionOS 与前端 request metadata 契约保持一致，并防止 stale 创建被挂到错误的 scene generation 上。
+VisionOS 应将 `wsepoch` 作为 freshness 的唯一裁决字段，同时仅将 `rid` 用于关联与诊断。
 
 ## 变更内容
 
-- 为 VisionOS `SpatialScene` 增加 page generation / epoch 状态。
-- 主 web view 开始加载时，以及 navigation reset 明确清理 scene objects 时，递增 generation。
-- 从 `webspatial://createSpatialized2DElement` 和 `webspatial://createAttachment` open-window URL 中读取 request metadata。
-- 对 generation-aware 创建请求，在接受前比较 request epoch 和当前 scene generation。
-- 增加 page generation 和 spatial object ids 的 debug / inspect 字段。
-- **破坏性变更**：无。初期对 malformed metadata 的处理应保持兼容，除非请求明确 stale。
+- 在 VisionOS `SpatialScene` 内维护 `currentPageGeneration`。
+- 在刷新 cleanup 前先递增页面 generation。
+- 从 SpatialDiv 与 attachment 请求中解析 `rid` 与可选的 `wsepoch`。
+- 当 `wsepoch` 存在且与当前页面 generation 不匹配时拒绝 stale 请求。
+- 对不携带 `wsepoch` 的请求保持 compatibility mode。
+- 增强 inspect 与日志中的 generation 和对象标识诊断。
 
-## 能力定义
+## 边界
+
+- 本 change 覆盖 VisionOS native scene 生命周期与请求 freshness 判断。
+- `rid` 仅用于请求关联与诊断。
+- `wsepoch` 是 freshness 的唯一裁决字段。
+
+## 能力
 
 ### 新增能力
 
-- `visionos-spatial-scene-refresh-guard`：定义 VisionOS native 的页面 generation 跟踪、request metadata 消费、stale SpatialDiv 处理和 inspect 可观测性。
+- `visionos-spatial-scene-refresh-guard`：规定 VisionOS SpatialDiv 处理中的页面代际跟踪与 stale 请求拒收。
 
 ### 修改能力
 
@@ -28,7 +34,4 @@ VisionOS native 层应显式建模页面生命周期 generation，让 SpatialDiv
 ## 影响范围
 
 - `packages/visionOS/web-spatial/model/SpatialScene.swift`
-- `packages/visionOS/web-spatial/model/Spatialized2DElement.swift`
-- `packages/visionOS/web-spatial/webview/SpatialWebController.swift`
-- `packages/visionOS/web-spatial/webview/SpatialWebViewModel.swift`
-- `packages/visionOS/web-spatialTests/*`
+- 相关 VisionOS inspect / 日志路径

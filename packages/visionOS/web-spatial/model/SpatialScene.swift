@@ -515,15 +515,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private struct SpatialRequestMetadata {
-        let requestId: String?
+        let rid: String?
         let pageEpoch: String?
     }
 
     private func parseSpatialRequestMetadata(_ url: URL) -> SpatialRequestMetadata {
         let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
-        let requestId = items.first { $0.name == "wsrid" }?.value ?? items.first { $0.name == "rid" }?.value
+        let rid = items.first { $0.name == "rid" }?.value
         let pageEpoch = items.first { $0.name == "wsepoch" }?.value
-        return SpatialRequestMetadata(requestId: requestId, pageEpoch: pageEpoch)
+        return SpatialRequestMetadata(rid: rid, pageEpoch: pageEpoch)
     }
 
     private func shouldAcceptSpatialRequest(_ url: URL, command: String) -> Bool {
@@ -532,7 +532,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         guard let pageEpoch = metadata.pageEpoch, !pageEpoch.isEmpty else {
             // Compatibility mode for older frontend bundles that do not emit
             // request epoch yet.
-            logger.warning("SpatialScene accepts \(command) without wsepoch in compatibility mode, wsrid=\(metadata.requestId ?? "nil")")
+            logger.warning("SpatialScene accepts \(command) without wsepoch in compatibility mode, rid=\(metadata.rid ?? "nil")")
             return true
         }
 
@@ -540,11 +540,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if pageEpoch != currentEpoch {
             // Drop requests that were initiated by an older page generation so
             // they cannot recreate stale 2D content after refresh.
-            logger.warning("SpatialScene drops stale \(command), wsrid=\(metadata.requestId ?? "nil"), requestEpoch=\(pageEpoch), currentEpoch=\(currentEpoch)")
+            logger.warning("SpatialScene drops stale \(command), rid=\(metadata.rid ?? "nil"), requestEpoch=\(pageEpoch), currentEpoch=\(currentEpoch)")
             return false
         }
 
-        logger.debug("SpatialScene accepts \(command), wsrid=\(metadata.requestId ?? "nil"), epoch=\(pageEpoch)")
+        logger.debug("SpatialScene accepts \(command), rid=\(metadata.rid ?? "nil"), epoch=\(pageEpoch)")
         return true
     }
 

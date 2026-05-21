@@ -38,9 +38,6 @@ export function buildSpatialRequestQuery(
   pageEpoch = getCurrentPageEpoch(),
 ): string {
   const params = new URLSearchParams()
-  params.set('wsrid', requestId)
-  // Keep the legacy rid key during rollout so older native hosts can still
-  // resolve the async creation callback.
   params.set('rid', requestId)
 
   if (pageEpoch !== undefined) {

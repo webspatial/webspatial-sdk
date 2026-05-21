@@ -1,64 +1,65 @@
-# Design: VisionOS SpatialScene refresh generation guard
+# Design: VisionOS SpatialScene refresh guard
 
 ## Context
 
-VisionOS native `SpatialScene` registers web view state listeners and destroys spatial objects on `.didStartLoad`. It also handles `webspatial` open-window requests and creates `Spatialized2DElement` instances for SpatialDiv content.
-
-Unlike Android shell/runtime separation, VisionOS handles `WKWebView` creation synchronously in `WKUIDelegate` open-window flow. Even so, the native layer should consume the same frontend request metadata contract so stale request semantics are explicit and testable.
+VisionOS `SpatialScene` owns native scene objects and receives frontend-driven SpatialDiv creation requests. Page refresh cleanup is point-in-time, but request delivery can be delayed. The native scene must reject requests that belong to an older page generation.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Track current page generation in VisionOS `SpatialScene`.
-- Clean existing spatial objects at generation boundaries.
-- Consume `wsepoch` from SpatialDiv/attachment protocol URLs.
-- Reject or warn on explicitly stale requests according to compatibility mode.
-- Expose generation and object ids in inspect output for debugging.
+- Make VisionOS `SpatialScene` own the authoritative current page generation.
+- Use `wsepoch` as the freshness discriminator for stale-request rejection.
+- Keep `rid` for correlation and diagnostics.
+- Preserve compatibility for requests that do not carry `wsepoch`.
+- Improve inspect output for refresh diagnosis.
 
 **Non-Goals:**
 
-- This change does not define frontend request id generation.
-- This change does not affect Android shell or runtime behavior.
-- This change does not change public JavaScript APIs.
+- This change does not redefine frontend request construction.
+- This change does not use `rid` for freshness checks.
+- This change does not require every request to carry `wsepoch` during compatibility mode.
 
 ## Decisions
 
-### Decision 1: `SpatialScene` owns the current generation
+### Decision 1: `SpatialScene` owns current page generation
 
-`SpatialScene` SHALL maintain a `currentPageGeneration` value. The value increments when the main page enters `.didStartLoad` and when `resetForNavigation()` performs an explicit navigation cleanup.
+`SpatialScene` SHALL maintain `currentPageGeneration` and advance it at the start of page reload before cleaning up scene-owned objects.
 
-### Decision 2: Creation handlers consume request epoch
+### Decision 2: Native freshness checks use `wsepoch` only
 
-`onOpenWindowHandler` SHALL parse `wsepoch` from `webspatial://createSpatialized2DElement` and `webspatial://createAttachment` URLs when present.
+Request handlers SHALL parse `rid` and `wsepoch` when present.
 
-If `wsepoch` is present and does not match `currentPageGeneration`, the handler SHALL treat the request as stale and SHALL NOT attach the resulting SpatialDiv content to the current scene.
+If `wsepoch` is present and does not match `currentPageGeneration`, the request SHALL be treated as stale and SHALL NOT attach content to the current scene.
 
-### Decision 3: Compatibility mode for missing metadata
+### Decision 3: Compatibility mode warns and accepts missing `wsepoch`
 
-During migration, missing `wsepoch` SHOULD produce debug logging and continue to accept the request. This avoids breaking older frontend bundles. A later change may reject malformed metadata after all supported SDK bundles emit `wsepoch`.
+If a request arrives without `wsepoch`, VisionOS SHALL log a compatibility warning and continue to accept the request.
 
-### Decision 4: Inspect exposes generation and object ids
+This keeps older frontend bundles compatible, but stale-request rejection is active only when `wsepoch` is present.
 
-VisionOS `SpatialScene` inspect output SHALL include enough fields to distinguish scene children from global object registry contents:
+### Decision 4: Inspect output exposes generation and object identities
 
-- `currentPageGeneration`
-- `childrenIds`
-- `spatialObjectList`
-- `spatialObjectCount`
+Inspect output SHALL include current page generation and object identity diagnostics that let reviewers compare scene children against retained objects.
 
-### Decision 5: Attachment handling follows the same epoch boundary
+### Decision 5: Logs correlate generation and request identity
 
-Attachment creation web views use the same protocol family and should be generation-aware where request metadata exists. Attachment metadata initialization still occurs through its existing JSB path.
+Logs SHALL make it possible to answer the following from one refresh cycle:
+
+- when page generation advanced
+- which request `rid` / `wsepoch` was accepted
+- which request `rid` / `wsepoch` was rejected as stale
+- what scene object ids remained after cleanup
 
 ## Risks / Trade-offs
 
-- **[Risk] WKWebView open-window flow is synchronous** -> generation guard may rarely drop requests initially, but it still codifies lifecycle boundaries.
-- **[Risk] Missing epoch during rollout** -> use warn-and-accept compatibility mode first.
-- **[Risk] Inspect output grows** -> debug fields are acceptable because current inspect already includes debug-only object lists.
+- **[Risk] Older frontend bundles do not emit `wsepoch`** -> warn and accept in compatibility mode.
+- **[Risk] Request delivery races with refresh cleanup** -> use page generation as the authoritative freshness boundary.
+- **[Risk] Misusing `rid` for freshness** -> document and enforce that `rid` is correlation only.
 
 ## Verification
 
-- Add unit or integration coverage where possible for URL metadata parsing.
-- Add tests or manual scenarios for refresh followed by SpatialDiv creation.
-- Validate inspect output before and after navigation reset.
+- Validate that matching `wsepoch` requests still attach successfully.
+- Validate that stale `wsepoch` requests are dropped.
+- Validate that requests without `wsepoch` remain compatible and log warnings.
+- Validate inspect output remains stable across repeated ordinary refreshes.

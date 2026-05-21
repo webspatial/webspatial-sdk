@@ -1,27 +1,33 @@
-# Proposal: Refresh-safe SpatialDiv request correlation
+# Proposal: SDK SpatialDiv request correlation
 
 ## Why
 
-`createSpatialized2DElement` and attachment creation use `webspatial://` window-open style protocols before a native content host is available. The current request correlation is effectively a short-lived incremental id in the frontend platform adapter. After a page reload, the JavaScript execution context may recreate the same incremental ids, while previously initiated native creation results may still complete later.
+SpatialDiv and attachment creation need two independent signals:
 
-The SDK needs a frontend-owned request metadata contract that makes every SpatialDiv/attachment creation request refresh-safe and easy for host platforms to correlate. The contract must stay self-contained in the frontend SDK and platform adapters: it defines what metadata is emitted, not how any specific host implementation accepts or rejects stale native objects.
+- `rid`: request correlation for async completion and logging.
+- `wsepoch`: page ownership metadata used by host runtimes for freshness checks.
+
+The SDK should keep `rid` as the only request-correlation field in this rollout, while making its generated value refresh-safe and opaque in practical usage. This preserves compatibility with existing host integrations and lets upgraded hosts reject stale requests when `wsepoch` is available.
 
 ## What Changes
 
-- Add a refresh-safe request metadata contract for `webspatial://createSpatialized2DElement` and `webspatial://createAttachment` protocol URLs.
-- Introduce two protocol fields:
-  - `wsrid`: opaque unique request id used for async callback correlation.
-  - `wsepoch`: page lifecycle epoch value, when provided by the host runtime.
-- Update PicoOS frontend platform adapter protocol URLs to include `wsrid` and `wsepoch` while retaining compatibility with existing `rid` callback behavior during migration.
-- Update VisionOS frontend platform adapter protocol URLs to carry the same metadata contract for consistency.
-- Add timeout cleanup for pending request receivers so unresolved protocol requests do not retain callbacks indefinitely.
-- **BREAKING**: none. Existing public APIs remain unchanged.
+- Generate refresh-safe opaque `rid` values for SpatialDiv and attachment requests.
+- Emit `wsepoch` when the host exposes page epoch metadata to the SDK.
+- Keep request completion keyed by `rid`.
+- Update frontend platform adapters to emit `rid` and optional `wsepoch` consistently.
+- Add tests for `rid` refresh safety and emitted request metadata.
+
+## Boundaries
+
+- This change covers frontend SDK request construction and callback correlation only.
+- This change does not define native stale-rejection behavior; host runtimes decide how to consume `wsepoch`.
+- This change does not introduce a new request-correlation field name.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `spatial-div-request-correlation`: specifies request metadata for SpatialDiv and attachment creation protocols, request id uniqueness, optional epoch propagation, and pending callback cleanup.
+- `spatial-div-request-correlation`: specifies refresh-safe `rid` generation and optional `wsepoch` emission for frontend-created SpatialDiv requests.
 
 ### Modified Capabilities
 
@@ -29,9 +35,7 @@ The SDK needs a frontend-owned request metadata contract that makes every Spatia
 
 ## Impact
 
-- `packages/core/src/platform-adapter/pico-os/PicoOSPlatform.ts`
-- `packages/core/src/platform-adapter/vision-os/VisionOSPlatform.ts`
-- `packages/core/src/SpatialWebEvent.ts`
+- `packages/core/src/platform-adapter/*`
 - `packages/core/src/scene-polyfill.ts`
-- `packages/core/src/SpatializedElementCreator.ts`
-- Relevant unit tests in `packages/core`
+- `packages/core/src/types/global.ts`
+- frontend request / callback tests

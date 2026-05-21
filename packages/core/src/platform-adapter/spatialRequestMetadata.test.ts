@@ -20,7 +20,6 @@ describe('spatial request metadata', () => {
     expect(first).not.toBe(second)
 
     const params = new URLSearchParams(buildSpatialRequestQuery(first))
-    expect(params.get('wsrid')).toBe(first)
     expect(params.get('rid')).toBe(first)
     expect(params.get('wsepoch')).toBe('7')
   })
@@ -33,7 +32,7 @@ describe('spatial request metadata', () => {
 
     const requestId = createSpatialRequestId()
     const params = new URLSearchParams(buildSpatialRequestQuery(requestId))
-    expect(params.get('wsrid')).toBe(requestId)
+    expect(params.get('rid')).toBe(requestId)
     expect(params.get('wsepoch')).toBeNull()
   })
 })
@@ -47,7 +46,7 @@ describe('PicoOSPlatform SpatialDiv request correlation', () => {
     delete (window as any).__SpatialWebEvent
   })
 
-  it('opens SpatialDiv protocol with wsrid and wsepoch', async () => {
+  it('opens SpatialDiv protocol with rid and wsepoch', async () => {
     window.__webspatialsdk__ = { pageEpoch: '3' }
     const { SpatialWebEvent } = await import('../SpatialWebEvent')
     SpatialWebEvent.init()
@@ -60,11 +59,10 @@ describe('PicoOSPlatform SpatialDiv request correlation', () => {
 
     const openedUrl = (open.mock.calls[0] as unknown[])[0] as string
     const url = new URL(openedUrl)
-    const requestId = url.searchParams.get('wsrid')
+    const requestId = url.searchParams.get('rid')
     expect(url.protocol).toBe('webspatial:')
     expect(url.host).toBe('createSpatialized2DElement')
     expect(requestId).toBeTruthy()
-    expect(url.searchParams.get('rid')).toBe(requestId)
     expect(url.searchParams.get('wsepoch')).toBe('3')
 
     window.__SpatialWebEvent({
