@@ -32,7 +32,7 @@ function setPuppeteerUserAgent(): void {
   })
 }
 
-describe('useBootSpatial / SpatialBoot', () => {
+describe('useBootSpatial (internal) / SpatialBoot', () => {
   beforeEach(() => {
     __resetSpatialBridgeForTests()
     __resetBootStateForTests()

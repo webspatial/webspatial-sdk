@@ -1,8 +1,8 @@
-# WebSpatial React SDK：`SpatialBoot` / `useBootSpatial` 产品对齐稿
+# WebSpatial React SDK：`SpatialBoot` 产品对齐稿
 
-> **Status:** Implemented in `@webspatial/react-sdk` (see `packages/react/src/runtime/useBootSpatial.ts`, `SpatialBoot.tsx`)  
+> **Status:** Implemented in `@webspatial/react-sdk` (see `packages/react/src/runtime/SpatialBoot.tsx`; boot state via internal `useBootSpatial.ts`)  
 > **Phase 1 (public):** Boot completes before spatial UI mounts; boot failure → `onError`, no children  
-> **Phase 2 (planned):** Document render-first-then-boot (`gate={false}`) as advanced progressive enhancement
+> **Phase 2 (planned):** `gate={false}`, optional public `useBootSpatial`, richer boot-progress APIs
 
 **Related material**
 
@@ -17,17 +17,24 @@
 **Tell developers one workflow:**
 
 1. Wrap the spatial app (or route subtree) in **`<SpatialBoot>`**.
-2. The SDK calls **`bootSpatial()`** after mount.
+2. The SDK calls **`bootSpatial()`** after mount (internal implementation detail).
 3. **`children` mount only after boot succeeds** (WebSpatial: spatial chunk loaded; plain web: immediate resolve).
-4. If boot fails with **`WebSpatialBootError`**, **`onError` runs** and **`children` do not mount** — the app shows error UI in `onError` (toast, full-page error, retry via `bootSpatial()` / `useBootSpatial().boot()`).
+4. If boot fails with **`WebSpatialBootError`**, **`onError` runs** and **`children` do not mount** — show error UI in `onError` and retry with **`bootSpatial()`** if needed.
+
+**Phase 1 public surface (two tiers):**
+
+| Tier | API |
+| ---- | --- |
+| Recommended (React) | `<SpatialBoot>` |
+| Advanced (imperative) | `bootSpatial()`, `onSpatialLoadError`, `WebSpatialBootError` |
+
+**Not exported in phase 1:** `useBootSpatial` (internal only; phase 2 MAY add a public hook).
 
 **Phase 1 public docs do not teach:**
 
-- `gate` (behavior is always “boot then mount”; default `gate={true}` in code)
-- `fallback` (optional advanced prop — blank screen while boot if omitted)
-- Render-first-then-boot / facade fallback flash (`gate={false}`, phase 2)
-
-**Canonical imperative API remains `bootSpatial()`** — `<SpatialBoot>` only wraps it for React trees.
+- `gate` (default `gate={true}` in code — boot then mount)
+- `fallback` (optional loading UI while boot is in flight)
+- Render-first-then-boot (`gate={false}`, phase 2)
 
 ---
 
@@ -45,7 +52,6 @@ export function SpatialAppRoot() {
     <SpatialBoot
       onReady={() => console.log('spatial ready')}
       onError={(err: WebSpatialBootError) => {
-        // Required UX path on failure — children are NOT mounted
         showBootError(err)
       }}
     >
@@ -60,47 +66,33 @@ export function SpatialAppRoot() {
 | `children` | Yes | Spatial UI; mounts **only** after successful boot |
 | `onReady` | Optional | After `bootSpatial()` resolves |
 | `onError` | **Strongly recommended** | On `WebSpatialBootError`; **children stay unmounted** |
-| `fallback` | Advanced / fixtures only | Shown while boot is in flight; default **blank** if omitted |
+| `fallback` | Advanced / fixtures | Shown while boot is in flight; default **blank** if omitted |
 
-### 2.2 `bootSpatial()` (still required conceptually)
+### 2.2 `bootSpatial()` (advanced / imperative)
 
-Callable outside React. `<SpatialBoot>` invokes it automatically. Apps may still call it for retries:
+Callable outside React. `<SpatialBoot>` invokes it automatically after mount. Use directly for entry-level pre-await, retries after `onError`, or non-React orchestration.
 
 ```ts
 import { bootSpatial } from '@webspatial/react-sdk'
 
-await bootSpatial() // retry after onError
+await bootSpatial()
 ```
 
-**CSR optional optimization:** `await bootSpatial()` before `createRoot().render(<SpatialBoot>…)` — reduces time with an empty subtree; phase-1 docs can mention in a footnote, not as the main Next/Remix path.
+**CSR optional optimization:** `await bootSpatial()` before `createRoot().render(<SpatialBoot>…)` — footnote only for pure CSR apps.
 
-### 2.3 `useBootSpatial()` (advanced)
+### 2.3 `useSpatialReady()` (advanced)
 
-Exposes `status`, `error`, `boot()`. Phase-1 docs: use when you need boot progress UI without wrapping in `<SpatialBoot>`, or for custom gating. Most apps should use `<SpatialBoot>` only.
-
-### 2.4 `useSpatialReady()`
-
-Read-only: is the bridge loaded? Use for **custom** degraded UI (`CapabilityDemo` pattern) or debugging. Facades already use it internally.
+Read-only bridge readiness. Use for custom degraded UI (`CapabilityDemo` pattern) when not using `<SpatialBoot>` gating. Facades use it internally.
 
 ---
 
 ## 3. Implementation notes (engineering)
 
-```
-bootSpatial()
-     ↑
-useBootSpatial()   — status / onError / boot()
-     ↑
-SpatialBoot        — default gate={true}: showChildren = (status === 'ready')
-```
+`SpatialBoot` is built with `createSpatialBoot(useBootSpatial)`; the hook is **not** re-exported from `@webspatial/react-sdk` or `@webspatial/react-sdk/eager`.
 
-| `status` | `children` (default gate) | `onError` |
-| -------- | ------------------------- | --------- |
-| `idle` / `booting` | Not mounted | — |
-| `ready` | Mounted | — |
-| `failed` | **Not mounted** | Called |
+Default: `showChildren = (status === 'ready')`; on failure, `onError` and children stay unmounted.
 
-**Phase 2:** `gate={false}` → `showChildren = true` immediately; facades use fallback until ready (today’s pre-phase-1 demos).
+**Phase 2:** `gate={false}`; optional public `useBootSpatial` for custom status UI without `<SpatialBoot>`.
 
 ---
 
@@ -109,20 +101,16 @@ SpatialBoot        — default gate={true}: showChildren = (status === 'ready')
 - Server **page** imports a **`'use client'`** module that returns `<SpatialBoot>…</SpatialBoot>`.
 - **SSR does not run `bootSpatial()`** (`useEffect` is client-only).
 - With default gate, **spatial `children` are usually absent from server HTML**; they mount on the client after boot.
-- Layout chrome (non-spatial) can still SSR normally.
-
-Do **not** claim phase-1 `<SpatialBoot>` eliminates SSR or provides full spatial facade HTML on the server.
 
 ---
 
-## 5. Phase 2 (planned, not phase-1 docs)
+## 5. Phase 2 (planned)
 
 | Topic | Phase 2 |
 | ----- | ------- |
 | `gate={false}` | Mount immediately; facade fallback → real after boot |
+| Public `useBootSpatial` | Custom boot progress / manual `boot()` if product requests it |
 | Document `fallback` in main guide | Loading shells during boot |
-| `useBootSpatial` + status UI | First-class boot progress patterns |
-| P0-4 full matrix | Pre-await vs in-tree vs gate |
 
 ---
 
@@ -130,7 +118,7 @@ Do **not** claim phase-1 `<SpatialBoot>` eliminates SSR or provides full spatial
 
 | # | Decision |
 | - | -------- |
-| Ship scope | `useBootSpatial` + `<SpatialBoot>`; phase-1 docs center on `<SpatialBoot>` |
+| Ship scope | Phase 1 exports `<SpatialBoot>` only (React sugar); `useBootSpatial` internal |
 | Boot failure | **`onError` only; children do not mount** |
 | Default gate | **`true`**; phase-1 public docs omit the prop name |
 | Plain web | Boot resolves immediately; children mount on first client tick after mount |
@@ -141,5 +129,6 @@ Do **not** claim phase-1 `<SpatialBoot>` eliminates SSR or provides full spatial
 
 | Date | Notes |
 | ---- | ----- |
-| 2026-05-19 | Initial draft (Option A: explicit `gate`, default false) |
-| 2026-05-19 | **Phase 1 alignment:** default `gate={true}`, boot failure does not mount children, simplified public docs |
+| 2026-05-19 | Initial draft |
+| 2026-05-19 | Phase 1: default `gate={true}`, boot failure does not mount children |
+| 2026-05-19 | **Position B:** `useBootSpatial` not on public export surface |

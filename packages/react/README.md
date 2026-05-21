@@ -52,7 +52,7 @@ createRoot(el).render(
 )
 ```
 
-Advanced: `useBootSpatial()` for custom status UI; `useSpatialReady()` for capability gating. See `docs/design/spatial-boot-component.md`.
+Advanced: imperative `bootSpatial()` / `onSpatialLoadError`; `useSpatialReady()` for custom capability UI without `<SpatialBoot>`. See `docs/design/spatial-boot-component.md`.
 
 ### Default fallbacks per component
 
