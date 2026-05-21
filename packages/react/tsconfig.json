@@ -26,7 +26,8 @@
       "@webspatial/react-sdk/internal/facades-client": [
         "./src/internal/facades-client.ts"
       ],
-      "@webspatial/core-sdk": ["../core/src"]
+      "@webspatial/core-sdk": ["../core/src"],
+      "@webspatial/core-sdk/runtime": ["../core/src/runtime/index.ts"]
     }
   },
   "include": ["src", "esbuild.mjs"],

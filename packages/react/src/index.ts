@@ -36,19 +36,21 @@ export { useSpatialReady } from './runtime/useSpatialReady'
 export { WebSpatialBootError } from './runtime/errors'
 export type { SpatialBootProps } from './runtime/SpatialBoot'
 
-// --- Runtime capability infrastructure (local, core-free at runtime) ---------
+// --- Runtime capability infrastructure (from @webspatial/core-sdk/runtime) ----
 export { WebSpatialRuntime } from './webSpatialRuntime'
-export { WebSpatialRuntimeError } from './runtime/capabilities'
-export type {
-  CapabilityKey,
-  WebSpatialRuntimeSnapshot,
-  WebSpatialRuntimeType,
-} from './runtime/capabilities'
+export {
+  WebSpatialRuntimeError,
+  type CapabilityKey,
+  type WebSpatialRuntimeSnapshot,
+  type WebSpatialRuntimeType,
+} from '@webspatial/core-sdk/runtime'
 
 // --- Core-sdk type re-exports (zero runtime cost) ---------------------------
 // `@webspatial/core-sdk` remains a regular dependency of this package because
 // the spatial/eager implementation graphs use its real runtime classes.
-// The default entry, however, MUST NOT emit runtime imports from core-sdk.
+// The default entry bundles `@webspatial/core-sdk/runtime` at build time
+// (not a runtime `import '@webspatial/core-sdk'`). It MUST NOT reach the
+// spatial implementation modules or the core-sdk main entry graph.
 // To keep the "single-package installation, single-package import" TypeScript
 // experience, the documented user-facing TYPE surface of core-sdk is still
 // re-exported here as declaration-only API.

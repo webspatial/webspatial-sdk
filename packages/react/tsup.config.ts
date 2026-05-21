@@ -49,10 +49,11 @@ const versionDefine = {
 
 // Treat React + React DOM as external — they are required peer dependencies
 // per `package.json` and contribute zero bytes to the SDK's own bundle.
-// `@webspatial/core-sdk` is external for the spatial/eager implementation
-// graph only. The default entry owns a tiny local runtime-capability helper
-// and MUST NOT emit runtime imports from core-sdk; the dist identifier scan
-// enforces that boundary.
+// `@webspatial/core-sdk` is external for the spatial implementation graph.
+// `@webspatial/core-sdk/runtime` is bundled into the default/eager chunks
+// (inlined at build time) so capability detection is single-sourced in
+// core-sdk without leaving a runtime `import '@webspatial/core-sdk'` in
+// `dist/index.js` (see dist-identifier-scan).
 //
 // `@webspatial/react-sdk/internal/facades-client` is treated as external too:
 // `src/jsx/jsx-shared.ts` reaches the facade trio through that subpath so
@@ -77,6 +78,7 @@ const baseConfig: Options = {
   sourcemap: true,
   dts: true,
   external: externals,
+  noExternal: [/^@webspatial\/core-sdk\/runtime$/],
   banner: { js: sharedBanner },
   esbuildOptions(options) {
     options.define = {

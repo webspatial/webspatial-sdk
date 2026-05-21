@@ -31,7 +31,7 @@ import { Model as ModelFacade } from '../facades/Model'
 import { Model as ModelReal } from '../Model'
 import { useMetricsPlaceholder } from '../hooks-web/useMetrics-placeholder'
 import { useMetrics as useMetricsReal } from '../useMetrics'
-import { resetRuntimeCacheForTests } from '../runtime/capabilities'
+import { resetRuntimeCacheForTests } from '@webspatial/core-sdk/runtime'
 import {
   __resetSpatialBridgeForTests,
   __setSpatialImplLoaderForTests,

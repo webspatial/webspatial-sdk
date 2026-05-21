@@ -209,10 +209,10 @@ describe('dist identifier scan — spatial-only identifiers absent from default 
   })
 
   it('default-entry static-graph closure contains no runtime import of @webspatial/core-sdk', () => {
-    // Core SDK runtime code is spatial-only from the React default entry's
-    // perspective. The default graph may expose core-sdk TYPE declarations in
-    // `.d.ts`, but emitted JS must not import core-sdk unless the spatial
-    // chunk is the one being loaded.
+    // Capability detection is inlined from `@webspatial/core-sdk/runtime` at
+    // react-sdk build time (`tsup` `noExternal`). Emitted JS must not retain a
+    // bare `import '@webspatial/core-sdk'` (spatial main entry); the spatial
+    // chunk alone may import the full core-sdk graph.
     expect(findCoreSdkRuntimeReferences(report.files)).toEqual([])
   })
 

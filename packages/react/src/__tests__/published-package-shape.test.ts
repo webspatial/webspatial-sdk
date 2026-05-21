@@ -152,5 +152,19 @@ describe('packages/react/package.json — published shape (spec tasks.md §8.7 /
       const pkg = loadPackageJson()
       expect(pkg.exports?.['./server']).toBeUndefined()
     })
+
+    it('exports["./runtime"] on @webspatial/core-sdk resolves to dist/runtime/index.js', () => {
+      const corePkgPath = resolve(__dirname, '../../../core/package.json')
+      const corePkg = JSON.parse(readFileSync(corePkgPath, 'utf8')) as {
+        exports?: Record<string, unknown>
+      }
+      const sub = corePkg.exports?.['./runtime'] as
+        | Record<string, string>
+        | string
+        | undefined
+      expect(sub).toBeDefined()
+      const file = typeof sub === 'string' ? sub : sub?.import ?? sub?.default
+      expect(file).toBe('./dist/runtime/index.js')
+    })
   })
 })

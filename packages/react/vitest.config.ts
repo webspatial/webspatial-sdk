@@ -39,6 +39,10 @@ export default defineConfig({
         find: '@webspatial/react-sdk/internal/facades-client',
         replacement: resolve(__dirname, 'src/internal/facades-client.ts'),
       },
+      {
+        find: '@webspatial/core-sdk/runtime',
+        replacement: resolve(__dirname, '../core/src/runtime/index.ts'),
+      },
     ],
   },
   test: {
