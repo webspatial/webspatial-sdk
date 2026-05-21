@@ -28,16 +28,15 @@ export default function Home() {
           <Link to="/lazy">
             <strong>/lazy</strong>
           </Link>{' '}
-          — default lazy entry, <code>useBootSpatial()</code> after mount,{' '}
-          <code>Model</code> + <code>enable-xr</code> (set{' '}
-          <code>jsxImportSource</code> in tsconfig).
+          — lazy entry + <code>&lt;SpatialBoot&gt;</code>, <code>Model</code> +{' '}
+          <code>enable-xr</code> (set <code>jsxImportSource</code> in tsconfig).
         </li>
         <li>
           <Link to="/lazy-gate">
             <strong>/lazy-gate</strong>
           </Link>{' '}
-          — <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code>;
-          spatial subtree mounts only after <code>bootSpatial()</code> resolves.
+          — <code>&lt;SpatialBoot fallback=&#123;…&#125;&gt;</code>; optional
+          loading UI while boot completes before children mount.
         </li>
         <li>
           <Link to="/server-ua">

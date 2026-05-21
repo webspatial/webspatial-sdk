@@ -45,8 +45,8 @@ small USDZ used by `apps/test-server` demos (served at **`/modelasset/cone.usdz`
 | Path         | Purpose                                                           |
 | ------------ | ----------------------------------------------------------------- |
 | `/`          | Index with links                                                  |
-| `/lazy`      | WebSpatial lazy entry + `useBootSpatial()` + `Model` + `enable-xr` |
-| `/lazy-gate` | `<SpatialBoot gate fallback={…}>` — spatial subtree after boot      |
+| `/lazy`      | `<SpatialBoot>` + lazy entry + `Model` + `enable-xr` |
+| `/lazy-gate` | `<SpatialBoot fallback={…}>` — optional loading UI; children after boot |
 | `/server-ua` | `loader` returns `{ userAgent, hasWebSpatialToken }` for SSR HTML |
 
 ## See also

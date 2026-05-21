@@ -96,17 +96,7 @@ describe('useBootSpatial / SpatialBoot', () => {
     expect(onError).toHaveBeenCalledWith(result.current.error)
   })
 
-  it('SpatialBoot without gate renders children immediately', () => {
-    render(
-      <SpatialBoot>
-        <span data-testid="child">child</span>
-      </SpatialBoot>,
-    )
-
-    expect(screen.getByTestId('child')).toBeTruthy()
-  })
-
-  it('SpatialBoot with gate hides children until boot completes', async () => {
+  it('SpatialBoot (default gate) hides children until boot succeeds', async () => {
     setPuppeteerUserAgent()
     let resolveLoad!: (impl: SpatialImplementation) => void
     __setSpatialImplLoaderForTests(
@@ -117,7 +107,7 @@ describe('useBootSpatial / SpatialBoot', () => {
     )
 
     const view = render(
-      <SpatialBoot gate fallback={<span data-testid="loading">loading</span>}>
+      <SpatialBoot fallback={<span data-testid="loading">loading</span>}>
         <span data-testid="child-gated">child</span>
       </SpatialBoot>,
     )
@@ -136,14 +126,15 @@ describe('useBootSpatial / SpatialBoot', () => {
     expect(scoped.queryByTestId('loading')).toBeNull()
   })
 
-  it('SpatialBoot with gate mounts children after boot failure', async () => {
+  it('SpatialBoot (default gate) does not mount children on boot failure; onError runs', async () => {
     setPuppeteerUserAgent()
     __setSpatialImplLoaderForTests(() => Promise.reject(new Error('fail')))
+    const onError = vi.fn()
 
     const view = render(
       <SpatialBoot
-        gate
         fallback={<span data-testid="loading-fail">loading</span>}
+        onError={onError}
       >
         <span data-testid="child-fail">child</span>
       </SpatialBoot>,
@@ -154,14 +145,27 @@ describe('useBootSpatial / SpatialBoot', () => {
       await Promise.resolve()
     })
 
-    expect(within(view.container).getByTestId('child-fail')).toBeTruthy()
+    const scoped = within(view.container)
+    expect(scoped.queryByTestId('child-fail')).toBeNull()
+    expect(onError).toHaveBeenCalledTimes(1)
+    expect(onError.mock.calls[0][0]).toBeInstanceOf(WebSpatialBootError)
   })
 
-  it('warns in dev when fallback is passed without gate', () => {
+  it('SpatialBoot with gate={false} renders children immediately (phase-2)', () => {
+    render(
+      <SpatialBoot gate={false}>
+        <span data-testid="child">child</span>
+      </SpatialBoot>,
+    )
+
+    expect(screen.getByTestId('child')).toBeTruthy()
+  })
+
+  it('warns in dev when fallback is passed with gate={false}', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
     render(
-      <SpatialBoot fallback={<span>ignored</span>}>
+      <SpatialBoot gate={false} fallback={<span>ignored</span>}>
         <span>child</span>
       </SpatialBoot>,
     )

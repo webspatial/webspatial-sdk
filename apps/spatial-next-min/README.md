@@ -42,8 +42,8 @@ pnpm --filter spatial-next-min test     # tsc --noEmit
 | Route | Component file | Demonstrates |
 |---|---|---|
 | `/` | `app/page.tsx` | Pure RSC home with links. Zero SDK bytes — the page&apos;s server bundle does not import the SDK at all. |
-| `/lazy` | `components/LazyDemo.tsx` | **Recommended pattern.** Default lazy entry + `useBootSpatial()` after mount. On plain web the boot is a microtask no-op and the facade fallback DOM stays put. In WebSpatial (AVP / PICO / Puppeteer) the bridge dynamically imports the spatial chunk and the facades swap to real implementations. |
-| `/lazy-gate` | `components/LazyGateDemo.tsx` | `<SpatialBoot gate fallback={…}>` — delays mounting spatial children until `bootSpatial()` resolves (or mounts after boot failure for degraded path). |
+| `/lazy` | `components/LazyDemo.tsx` | **Recommended pattern.** `<SpatialBoot>` — boot after mount; spatial `children` mount only when ready. Plain web: microtask boot. WebSpatial: dynamic spatial chunk. |
+| `/lazy-gate` | `components/LazyGateDemo.tsx` | Same contract with optional `<SpatialBoot fallback={…}>` while boot is in flight. Boot failure: `onError`; children stay unmounted. |
 | `/eager` | `components/EagerDemo.tsx` | Eager entry (`@webspatial/react-sdk/eager`). **Same source** as `LazyDemo.tsx` modulo the import root. Spatial implementation is statically linked into this page&apos;s bundle. `bootSpatial()` is a no-op stub but is still awaited for migration parity. |
 | `/capability-wrapper` | `components/CapabilityDemo.tsx` | Application-side custom degraded UI. Uses `useSpatialReady()` directly to branch between a flat poster card (plain web) and a real `<Model>` (WebSpatial). The pattern to reach for when the SDK&apos;s documented facade fallback is not aesthetic enough for your product. |
 | `/server-only-util` | `app/server-only-util/page.tsx` | **Engineering validation** only: pure RSC importing the internal `@webspatial/react-sdk/server` entry to prove the server bundle does not pull facades. **Not** a recommended customer pattern — use **`User-Agent` + official WebSpatial docs** for request-time branching in real apps. |
