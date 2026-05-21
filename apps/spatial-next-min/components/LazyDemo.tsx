@@ -1,101 +1,46 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { CSSProperties } from 'react'
 import {
-  bootSpatial,
   Model,
+  SpatialBoot,
   useSpatialReady,
   WebSpatialBootError,
 } from '@webspatial/react-sdk'
 import { LazyRealityScene } from '@/components/LazyRealityScene'
 
-// Why 'use client': this component imports facades (`Model`) and a hook
-// (`useSpatialReady`) from the default entry. Per spec every facade file
-// and every public-hook file carries `'use client'`, which means a
-// Server Component CANNOT import them directly without crossing the
-// boundary. This file IS the boundary — every spatial primitive lives
-// inside a 'use client' subtree by construction.
+// Why 'use client': facades and hooks from the default entry require a client
+// boundary. Server pages import this module only.
 //
-// `<div enable-xr>` works because the workspace `tsconfig.json` sets
-// `"jsxImportSource": "@webspatial/react-sdk"`, so SWC compiles JSX as
-// `jsx(...)` calls against the SDK's JSX runtime. The runtime strips
-// `enable-xr` and wraps the element with `withSpatialized2DElementContainer`
-// on the client; during SSR (where the facades resolve to RSC Client
-// References) the runtime safely degrades to "strip only" and the
-// server-rendered DOM matches the post-hydration fallback DOM. See
-// `packages/react/src/internal/facades-client.ts` for the RSC boundary
-// design.
-//
-// Why boot in useEffect: in Next.js App Router the App is hydrated by
-// the framework; we do not control `hydrateRoot`. The recommended
-// pattern is therefore "boot AFTER hydrate" (spec tasks.md §13.5):
-// hydration commits with `useSpatialReady() === false` (facade
-// fallback HTML matches server-rendered HTML — no mismatch warning),
-// then the post-hydrate `useEffect` calls `bootSpatial()`, the bridge
-// flips, and a subsequent commit swaps facades to real implementations.
-//
-// `onSpatialTap` (and sibling spatial gestures) lives only on this client
-// subtree: the façade strips it from SSR / plain-web DOM like other spatial-only
-// props so markup stays hydration-safe (`withSpatialized2DElementContainer`).
+// Phase-1 integration: wrap spatial UI in `<SpatialBoot>`. Boot runs after
+// mount; children mount only after `bootSpatial()` succeeds. On failure,
+// `onError` runs and children stay unmounted — handle UX in `onError` (toast,
+// error page, retry via `bootSpatial()`).
 
-export function LazyDemo() {
+function LazyDemoContent() {
   const [spatialTapCount, setSpatialTapCount] = useState(0)
   const onFirstCellSpatialTap = useCallback(() => {
     setSpatialTapCount(c => c + 1)
   }, [])
-
-  const [bootState, setBootState] = useState<
-    'idle' | 'booting' | 'ready' | 'failed'
-  >('idle')
   const ready = useSpatialReady()
 
-  useEffect(() => {
-    setBootState('booting')
-    bootSpatial()
-      .then(() => setBootState('ready'))
-      .catch((err: unknown) => {
-        setBootState('failed')
-        if (err instanceof WebSpatialBootError) {
-          // eslint-disable-next-line no-console
-          console.error('[spatial-next-min /lazy] bootSpatial rejected', err)
-        } else {
-          throw err
-        }
-      })
-  }, [])
-
   return (
-    <section>
-      <h1>Lazy default entry</h1>
+    <>
       <p>
-        <code>
-          import &#123; Reality, BoxEntity, Model, bootSpatial, useSpatialReady
-          &#125; from &apos;@webspatial/react-sdk&apos;
-        </code>
+        useSpatialReady: <strong>{ready ? 'true' : 'false'}</strong> (true once
+        this subtree has mounted after boot)
       </p>
       <p>
-        boot state: <strong>{bootState}</strong>, useSpatialReady:{' '}
-        <strong>{ready ? 'true' : 'false'}</strong>
-      </p>
-      <p>
-        On plain web both stay <code>false</code> / <code>idle→ready</code>{' '}
-        (boot is a microtask no-op). In a WebSpatial runtime the boot promise
-        resolves only after the spatial chunk lands.
+        On plain web, boot resolves quickly. In a WebSpatial runtime the spatial
+        chunk must load before this content appears.
       </p>
 
       <h2 style={{ marginTop: 24 }}>SpatialDiv grid</h2>
       <p>
-        These <code>&lt;div enable-xr&gt;</code> elements are stripped and
-        wrapped by the SDK&apos;s JSX runtime (configured via{' '}
-        <code>tsconfig.jsxImportSource</code>). The marker disappears at compile
-        time and the host element is wrapped with{' '}
-        <code>withSpatialized2DElementContainer</code> on the client; the same
-        JSX in a Server Component renders as a bare <code>&lt;div&gt;</code> via
-        the RSC server-bypass path so the SSR HTML and the post-hydration
-        fallback DOM stay in sync. Cell <strong>1</strong> uses{' '}
-        <code>onSpatialTap</code> (counter below); taps fire when the slab
-        receives a spatial tap in a WebSpatial runtime.
+        These <code>&lt;div enable-xr&gt;</code> elements use the SDK JSX
+        runtime (<code>tsconfig.jsxImportSource</code>). Cell <strong>1</strong>{' '}
+        uses <code>onSpatialTap</code> (counter below).
       </p>
       <p style={{ marginTop: 8, marginBottom: 0, fontSize: 14 }}>
         <code>onSpatialTap</code> count (cell 1):{' '}
@@ -140,12 +85,6 @@ export function LazyDemo() {
       <LazyRealityScene />
 
       <h2 style={{ marginTop: 32 }}>Model</h2>
-      <p>
-        The <code>&lt;Model&gt;</code> facade strips spatial-only event props on
-        plain web and renders a degraded native <code>&lt;model&gt;</code> tag
-        (per spec &quot;Model fallback&quot; Scenario). In a WebSpatial runtime,
-        after boot resolves it swaps to the real spatial 3D primitive.
-      </p>
       <Model
         enable-xr
         src="/modelasset/cone.usdz"
@@ -156,6 +95,29 @@ export function LazyDemo() {
           background: '#ddd',
         }}
       />
+    </>
+  )
+}
+
+export function LazyDemo() {
+  return (
+    <section>
+      <h1>Lazy default entry</h1>
+      <p>
+        <code>
+          import &#123; SpatialBoot, Model, useSpatialReady &#125; from
+          &apos;@webspatial/react-sdk&apos;
+        </code>
+      </p>
+
+      <SpatialBoot
+        onError={(err: WebSpatialBootError) => {
+          // eslint-disable-next-line no-console
+          console.error('[spatial-next-min /lazy] bootSpatial rejected', err)
+        }}
+      >
+        <LazyDemoContent />
+      </SpatialBoot>
     </section>
   )
 }

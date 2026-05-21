@@ -12,7 +12,7 @@ export type SpatialAppProps = {
    * - `lazy` — default package entry + real `bootSpatial()`.
    * - `eager-boot` — `@webspatial/react-sdk/eager` + still `await bootSpatial()` (migration parity).
    * - `eager-lean` — eager entry only; no `bootSpatial()` call (typical spatial-only app).
-   * - `lazy-gate` — lazy entry; parent wraps this tree in `<SpatialBoot gate>`.
+   * - `lazy-gate` — lazy entry; parent wraps this tree in `<SpatialBoot>` (optional fallback).
    */
   mode: 'lazy' | 'lazy-gate' | 'eager-boot' | 'eager-lean'
   /** Real `Model` from either `@webspatial/react-sdk` or `@webspatial/react-sdk/eager`. */
@@ -44,7 +44,7 @@ const cellStyle = {
 
 const fixtureTitles: Record<SpatialAppProps['mode'], string> = {
   lazy: 'Lazy default entry',
-  'lazy-gate': 'Lazy + SpatialBoot gate',
+  'lazy-gate': 'Lazy + SpatialBoot (optional fallback)',
   'eager-boot': 'Eager entry + await bootSpatial()',
   'eager-lean': 'Eager entry, no bootSpatial()',
 }
@@ -77,9 +77,9 @@ export function SpatialApp({ mode, Model, RealityScene }: SpatialAppProps) {
       {mode === 'lazy-gate' ? (
         <p style={{ marginBottom: 16, fontSize: 14, color: '#444' }}>
           This page is wrapped by{' '}
-          <code>&lt;SpatialBoot gate fallback=&#123;…&#125;&gt;</code> in{' '}
+          <code>&lt;SpatialBoot fallback=&#123;…&#125;&gt;</code> in{' '}
           <code>main-lazy-gate.tsx</code>. Until <code>bootSpatial()</code>{' '}
-          resolves, only the loading fallback is shown; then this tree mounts.
+          succeeds, the optional fallback is shown; then this tree mounts.
         </p>
       ) : null}
 

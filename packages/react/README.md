@@ -18,32 +18,41 @@ The React SDK from the WebSpatial SDK makes the WebSpatial API immediately avail
 
 `@webspatial/react-sdk` v1 ships as a **lean default entry plus a dynamically loaded spatial chunk**. Plain web users (Chrome, Safari, Firefox — anywhere `navigator.userAgent` does not match a WebSpatial runtime) pay only the small default bundle and see the documented per-component fallback markup. The spatial implementation is fetched over the network only when the application opts in via `bootSpatial()` from a WebSpatial-capable runtime (Apple Vision Pro / PICO OS WebSpatial shells).
 
-```ts
-import { bootSpatial, isSpatialReady, useSpatialReady } from '@webspatial/react-sdk'
-
-// Recommended: await bootSpatial() BEFORE the first React render.
-// In plain browsers it resolves immediately and never fetches the spatial chunk.
-await bootSpatial()
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
-```
-
-If you cannot pre-await (e.g. you're inside an existing render cycle), call `bootSpatial()` later: facades will mount their fallback first and swap to the real implementation on the React commit immediately after the bridge resolves.
-
-Optional sugar for in-tree boot (SSR / Remix client subtrees):
+**Recommended (React):** wrap spatial UI in `<SpatialBoot>` — the SDK calls `bootSpatial()` after mount and mounts `children` only after boot succeeds. On `WebSpatialBootError`, handle `onError`; `children` stay unmounted.
 
 ```tsx
-import { SpatialBoot, useBootSpatial } from '@webspatial/react-sdk'
+import { SpatialBoot, WebSpatialBootError } from '@webspatial/react-sdk'
 
-// Auto-boot after mount; children render immediately (default gate={false})
-<SpatialBoot>
-  <App />
-</SpatialBoot>
-
-// Or expose boot status in your own UI
-const { status } = useBootSpatial()
+export function AppRoot() {
+  return (
+    <SpatialBoot
+      onError={(err: WebSpatialBootError) => {
+        // show error UI; retry with bootSpatial() if needed
+        console.error(err)
+      }}
+    >
+      <App />
+    </SpatialBoot>
+  )
+}
 ```
 
-See `docs/design/spatial-boot-component.md` for `gate` / `fallback` semantics. Lazy CSR apps that want minimal fallback flash should still `await bootSpatial()` before `createRoot().render()`.
+Optional loading UI while the spatial chunk loads: pass `fallback={…}` (default is blank).
+
+**CSR-only optimization:** you may `await bootSpatial()` before `createRoot().render(<SpatialBoot>…)` to shorten the blank period; Next.js / Remix typically use `<SpatialBoot>` inside a `'use client'` subtree instead.
+
+```ts
+import { bootSpatial } from '@webspatial/react-sdk'
+
+await bootSpatial() // plain web: immediate; WebSpatial: loads chunk
+createRoot(el).render(
+  <SpatialBoot>
+    <App />
+  </SpatialBoot>,
+)
+```
+
+Advanced: `useBootSpatial()` for custom status UI; `useSpatialReady()` for capability gating. See `docs/design/spatial-boot-component.md`.
 
 ### Default fallbacks per component
 

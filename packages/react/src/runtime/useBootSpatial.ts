@@ -25,7 +25,8 @@ export type UseBootSpatialResult = {
 
 /**
  * Client hook that wraps `bootSpatial()` with boot progress state.
- * Does not gate rendering — use `<SpatialBoot gate>` or branch in JSX.
+ * Does not gate rendering by itself — prefer `<SpatialBoot>` (default: boot
+ * then mount children) or branch on `status` / `useSpatialReady()` in JSX.
  */
 export function useBootSpatial(
   options: UseBootSpatialOptions = {},

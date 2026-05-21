@@ -11,13 +11,13 @@ without calling `bootSpatial()`).
 - The SDK's JSX runtime (resolved via `tsconfig "jsxImportSource"`) strips
   the `enable-xr` marker and wraps the host element with
   `withSpatialized2DElementContainer('div')` — no build plugin needed.
-- **Lazy page (`index.html` → `src/main.tsx`):** `bootSpatial()` is the
-  primary runtime hook. In plain web browsers it resolves on the next
-  microtask; in WebSpatial-capable runtimes it dynamically loads
-  `@webspatial/react-sdk/spatial`.
-- **Lazy + gate (`lazy-gate.html` → `src/main-lazy-gate.tsx`):** wraps the
-  app in `<SpatialBoot gate fallback={…}>` so the spatial subtree mounts only
-  after boot (see `docs/design/spatial-boot-component.md`).
+- **Lazy page (`index.html` → `src/main.tsx`):** wraps the app in
+  `<SpatialBoot>` (boot after mount; children mount when ready). In plain web
+  browsers boot resolves on the next microtask; in WebSpatial runtimes the
+  spatial chunk loads dynamically.
+- **Lazy + fallback (`lazy-gate.html` → `src/main-lazy-gate.tsx`):** same
+  contract with an optional `fallback` node while boot is in flight (see
+  `docs/design/spatial-boot-component.md`).
 - **Lazy production graph:** Vite's default code-splitting emits the spatial
   chunk as a separate `dist/assets/spatial-*.js` file that is fetched on
   demand by the bridge — confirming the published-bundle shape works
@@ -94,7 +94,7 @@ pnpm --filter spatial-vite-min dev      # dev server
 
 # Then open any page (nav links exist in the UI):
 #   Lazy default:          http://localhost:5173/
-#   Lazy + SpatialBoot gate: http://localhost:5173/lazy-gate.html
+#   Lazy + SpatialBoot fallback: http://localhost:5173/lazy-gate.html
 #   enable-xr-monitor:     http://localhost:5173/xr-monitor.html
 #   Eager + bootSpatial:   http://localhost:5173/eager.html
 #   Eager, no bootSpatial: http://localhost:5173/eager-lean.html

@@ -1,41 +1,28 @@
 import { useCallback, useState } from 'react'
-import { Model, useBootSpatial, useSpatialReady } from '@webspatial/react-sdk'
+import {
+  Model,
+  SpatialBoot,
+  useSpatialReady,
+  WebSpatialBootError,
+} from '@webspatial/react-sdk'
 import { LazyRealityScene } from './LazyRealityScene'
 
-/**
- * Client subtree for `@webspatial/react-sdk` (lazy default entry).
- * Boot runs after mount (recommended “boot after hydrate” pattern).
- */
-export function LazySpatialDemo() {
+function LazySpatialContent() {
   const [spatialTapCount, setSpatialTapCount] = useState(0)
   const onPanelSpatialTap = useCallback(() => {
     setSpatialTapCount(c => c + 1)
   }, [])
-
-  const { status: bootState } = useBootSpatial({
-    onError: err => {
-      console.error('[spatial-remix-min /lazy] bootSpatial rejected', err)
-    },
-  })
   const ready = useSpatialReady()
 
   return (
-    <section style={{ maxWidth: 720 }}>
-      <h1>Lazy default entry (`@webspatial/react-sdk`)</h1>
+    <>
       <p>
-        <code>
-          import &#123; Reality, BoxEntity, Model, useBootSpatial,
-          useSpatialReady &#125; from &apos;@webspatial/react-sdk&apos;
-        </code>
+        useSpatialReady: <strong>{ready ? 'true' : 'false'}</strong> (after{' '}
+        <code>&lt;SpatialBoot&gt;</code> mounts this subtree)
       </p>
       <p>
-        boot state: <strong>{bootState}</strong>, useSpatialReady:{' '}
-        <strong>{ready ? 'true' : 'false'}</strong>
-      </p>
-      <p>
-        On plain web, boot resolves quickly and the facade fallback stays. In a
-        WebSpatial runtime the spatial chunk loads after{' '}
-        <code>bootSpatial()</code> (via <code>useBootSpatial()</code>).
+        On plain web, boot resolves quickly. In a WebSpatial runtime the spatial
+        chunk loads before this content mounts.
       </p>
 
       <LazyRealityScene />
@@ -77,8 +64,7 @@ export function LazySpatialDemo() {
           }}
         >
           The JSX runtime strips <code>enable-xr</code> from the emitted DOM,
-          wraps this host with the spatial 2D container in client bundles, and
-          keeps SSR/hydrate markup aligned with facade fallbacks.{' '}
+          wraps this host with the spatial 2D container in client bundles.{' '}
           <code>onSpatialTap</code> count: <strong>{spatialTapCount}</strong>{' '}
           (WebSpatial runtime).
         </figcaption>
@@ -109,10 +95,37 @@ export function LazySpatialDemo() {
               : {}),
           }}
         >
-          Spatial panel (plain web fallback)
+          Spatial panel
           {spatialTapCount > 0 ? ` — taps: ${spatialTapCount}` : ''}
         </div>
       </figure>
+    </>
+  )
+}
+
+/**
+ * Phase-1 lazy integration: wrap spatial UI in `<SpatialBoot>` so
+ * `bootSpatial()` completes before children mount. Boot failure invokes
+ * `onError` and does not render children.
+ */
+export function LazySpatialDemo() {
+  return (
+    <section style={{ maxWidth: 720 }}>
+      <h1>Lazy default entry (`@webspatial/react-sdk`)</h1>
+      <p>
+        <code>
+          import &#123; SpatialBoot, Model, useSpatialReady &#125; from
+          &apos;@webspatial/react-sdk&apos;
+        </code>
+      </p>
+
+      <SpatialBoot
+        onError={(err: WebSpatialBootError) => {
+          console.error('[spatial-remix-min /lazy] bootSpatial rejected', err)
+        }}
+      >
+        <LazySpatialContent />
+      </SpatialBoot>
     </section>
   )
 }

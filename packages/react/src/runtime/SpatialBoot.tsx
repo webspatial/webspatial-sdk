@@ -15,8 +15,24 @@ type SpatialBootBaseProps = {
 }
 
 export type SpatialBootProps =
-  | (SpatialBootBaseProps & { gate?: false; fallback?: ReactNode })
-  | (SpatialBootBaseProps & { gate: true; fallback?: ReactNode })
+  | (SpatialBootBaseProps & {
+      /**
+       * Phase-2 / advanced: mount `children` immediately and let facades
+       * show fallback until boot completes. Public docs (phase 1) do not
+       * document this prop — default is `true`.
+       */
+      gate?: false
+      fallback?: ReactNode
+    })
+  | (SpatialBootBaseProps & {
+      /**
+       * When `true` (default), `children` mount only after `bootSpatial()`
+       * succeeds. On failure, `onError` runs and `children` stay unmounted.
+       */
+      gate?: true
+      /** Shown while boot is in flight; defaults to blank when omitted. */
+      fallback?: ReactNode
+    })
 
 function warnFallbackWithoutGate(): void {
   if (
@@ -32,16 +48,17 @@ function warnFallbackWithoutGate(): void {
 }
 
 /**
- * Runs `bootSpatial()` after mount. By default (`gate={false}`) children render
- * immediately; facades handle fallback → real. With `gate={true}`, children
- * mount only after boot succeeds or fails (degraded path still mounts children).
+ * Runs `bootSpatial()` after mount. Default (`gate={true}`): does not mount
+ * `children` until boot succeeds; on `WebSpatialBootError`, invokes `onError`
+ * and keeps `children` unmounted. Phase-2 integrators may pass `gate={false}` to
+ * mount immediately with facade fallback → real upgrade.
  */
 export function createSpatialBoot(
   useBootHook: (options: UseBootSpatialOptions) => UseBootSpatialResult,
 ): (props: SpatialBootProps) => ReactNode {
   function SpatialBootComponent({
     children,
-    gate = false,
+    gate = true,
     fallback,
     onReady,
     onError,
@@ -52,7 +69,7 @@ export function createSpatialBoot(
 
     const { status } = useBootHook({ onReady, onError })
 
-    const showChildren = !gate || status === 'ready' || status === 'failed'
+    const showChildren = gate ? status === 'ready' : true
 
     if (!showChildren) {
       return fallback ?? null
