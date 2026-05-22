@@ -878,12 +878,6 @@ The eager entry MUST coexist with the lazy-load default entry without polluting 
 - **AND** publishing the eager entry MUST NOT add even one byte to the default entry's published `dist/index.js`
 - **AND** the consumer's bundler MUST NOT reach the eager entry's static spatial implementation through any import chain rooted at the default entry
 
-#### Scenario: Eager entry has its own size-budget proxy
-
-- **WHEN** the published `dist/eager.js` is gzipped on its own (independent of any consumer build)
-- **THEN** the size MUST be at most 30720 bytes (30 KB), acknowledging that the eager entry inlines the full spatial implementation that the lazy-load default entry pushes into the dynamic `dist/spatial.js` chunk
-- **AND** this proxy is a fail-fast SDK-side check; the consumer-side measurement is approximated by the gzipped sum of the eager entry's static-import closure (currently bounded by the lazy-load `dist/spatial.js` chunk size at parity)
-
 #### Scenario: Migration from default to eager is import-root-only
 
 - **WHEN** an application written against the lazy-load default entry replaces every `from '@webspatial/react-sdk'` (and `from '@webspatial/react-sdk/spatial'` if any) with `from '@webspatial/react-sdk/eager'`
@@ -915,7 +909,7 @@ The packaging-hygiene contracts that apply to both forms are:
 
 The contracts that are **specific to the lazy-load default entry** and do NOT apply to the eager entry are:
 
-- The 8 KB marginal-delta budget on `dist/index.js` (per "Default entry MUST NOT bundle spatial implementation") — the eager entry has its own 30 KB budget per "Eager-mode entry for spatial-only consumers".
+- The 8 KB marginal-delta budget on `dist/index.js` (per "Default entry MUST NOT bundle spatial implementation") — the eager entry inlines spatial code by design and is **not** subject to a separate product size cap; only the lazy-load default entry is budgeted.
 - The dynamic-import boundary, bridge singleton, and `bootSpatial()` activation contract — the eager entry replaces these with compatibility stubs per "Eager-mode entry for spatial-only consumers".
 - The facade fallback rendering, hook placeholder values, and dev-mode "boot was forgotten" warning — the eager entry's facades are real implementations from first render, so there is no fallback to render and no warning to issue.
 - Full SSR + hydration guarantees for **spatial primitives** (facade fallbacks, `useSpatialReady` server snapshots, first-client-render swap timing) — the eager entry documents spatial UI as **CSR-only**; those guarantees apply only when consumers import primitives from `@webspatial/react-sdk`.
