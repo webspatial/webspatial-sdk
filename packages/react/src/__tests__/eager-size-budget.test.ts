@@ -25,7 +25,7 @@
 // to the budget we are without reading the assertion code.
 // =============================================================================
 
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
@@ -34,6 +34,9 @@ import { describe, expect, it } from 'vitest'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const distDir = resolve(__dirname, '../../dist')
 const eagerJsPath = resolve(distDir, 'eager.js')
+const staticFromImportRe =
+  /\b(?:import|export)\s*[\s\S]*?from\s*['"](\.[^'"]+)['"]/g
+const staticSideEffectImportRe = /\bimport\s*['"](\.[^'"]+)['"]/g
 
 // 30 KB gzipped. Rationale documented in the file header comment above
 // and in the spec's "Eager entry has its own size-budget proxy" Scenario.
@@ -44,6 +47,52 @@ function gzipSize(filePath: string): number {
   return gzipSync(raw).length
 }
 
+function resolveDistImport(fromFile: string, specifier: string): string {
+  const withExtension = specifier.endsWith('.js')
+    ? specifier
+    : `${specifier}.js`
+  return resolve(dirname(fromFile), withExtension)
+}
+
+function collectStaticImportClosure(entryPath: string): string[] {
+  const visited = new Set<string>()
+  const queue = [entryPath]
+
+  while (queue.length > 0) {
+    const filePath = queue.shift()!
+    if (visited.has(filePath)) continue
+    visited.add(filePath)
+    if (!existsSync(filePath)) continue
+
+    const source = readFileSync(filePath, 'utf8')
+    const matches: RegExpExecArray[] = []
+    staticFromImportRe.lastIndex = 0
+    staticSideEffectImportRe.lastIndex = 0
+    let match: RegExpExecArray | null
+    while ((match = staticFromImportRe.exec(source)) !== null) {
+      matches.push(match)
+    }
+    while ((match = staticSideEffectImportRe.exec(source)) !== null) {
+      matches.push(match)
+    }
+
+    for (const match of matches) {
+      queue.push(resolveDistImport(filePath, match[1]))
+    }
+  }
+
+  return [...visited].sort()
+}
+
+function gzipClosureSize(entryPath: string): {
+  files: string[]
+  size: number
+} {
+  const files = collectStaticImportClosure(entryPath)
+  const size = files.reduce((total, filePath) => total + gzipSize(filePath), 0)
+  return { files, size }
+}
+
 describe('eager-mode entry — SDK-side size-budget proxy (spec tasks.md §16.7)', () => {
   it('dist/eager.js exists (run `tsup` first)', () => {
     expect(
@@ -52,15 +101,20 @@ describe('eager-mode entry — SDK-side size-budget proxy (spec tasks.md §16.7)
     ).toBe(true)
   })
 
-  it('dist/eager.js gzipped size is at most 30720 bytes (30 KB — the eager-entry proxy budget)', () => {
-    const size = gzipSize(eagerJsPath)
+  it('dist/eager.js static-import closure gzipped size is at most 30720 bytes (30 KB — the eager-entry proxy budget)', () => {
+    const { files, size } = gzipClosureSize(eagerJsPath)
     // Informational telemetry per §9.9: print headroom (positive) or
     // overrun (negative) before the assertion so the number is visible
     // even when the assertion passes.
     const headroom = EAGER_PROXY_BUDGET_BYTES - size
+    const relativeFiles = files.map(filePath =>
+      filePath.startsWith(distDir + '/')
+        ? filePath.slice(distDir.length + 1)
+        : filePath,
+    )
     // eslint-disable-next-line no-console
     console.log(
-      `[eager-size-budget] dist/eager.js gzipped = ${size} bytes (budget ${EAGER_PROXY_BUDGET_BYTES}; headroom ${headroom})`,
+      `[eager-size-budget] dist/eager.js static closure gzipped = ${size} bytes (budget ${EAGER_PROXY_BUDGET_BYTES}; headroom ${headroom}); files: ${relativeFiles.join(', ')}`,
     )
     expect(size).toBeLessThanOrEqual(EAGER_PROXY_BUDGET_BYTES)
   })
@@ -80,14 +134,20 @@ describe('eager-mode entry — SDK-side size-budget proxy (spec tasks.md §16.7)
     // bootstrap and spatial features will silently fail at runtime —
     // exactly the regression this proxy guards against.
     const importMarker = '@webspatial/core-sdk/install-polyfills'
-    const allDistJs = readdirSync(distDir).filter(f => f.endsWith('.js'))
-    const matchingFiles = allDistJs.filter(f => {
-      const content = readFileSync(resolve(distDir, f), 'utf8')
-      return content.includes(importMarker)
-    })
+    const matchingFiles = collectStaticImportClosure(eagerJsPath).filter(
+      filePath => {
+        const content = readFileSync(filePath, 'utf8')
+        return content.includes(importMarker)
+      },
+    )
+    const relativeMatches = matchingFiles.map(filePath =>
+      filePath.startsWith(distDir + '/')
+        ? filePath.slice(distDir.length + 1)
+        : filePath,
+    )
     expect(
       matchingFiles.length,
-      `Expected at least one dist/*.js file to contain the polyfill import "${importMarker}" reachable from the eager entry. Found in: [${matchingFiles.join(', ')}]`,
+      `Expected at least one eager-entry closure file to contain the polyfill import "${importMarker}". Found in: [${relativeMatches.join(', ')}]`,
     ).toBeGreaterThan(0)
   })
 })

@@ -30,7 +30,7 @@ import type {
   UseBootSpatialOptions,
   UseBootSpatialResult,
 } from './useBootSpatial'
-import { createSpatialBoot } from './SpatialBoot'
+import { createSpatialBoot } from './createSpatialBoot'
 
 let bootWarned = false
 
@@ -50,10 +50,7 @@ export function bootSpatialEager(): Promise<void> {
     bootWarned = true
     // eslint-disable-next-line no-console
     console.warn(
-      '[WebSpatial] bootSpatial() is a no-op on the eager entry ' +
-        '(@webspatial/react-sdk/eager) — the spatial implementation is ' +
-        'already statically linked. You can safely remove this call when ' +
-        'using the eager entry.',
+      '[WebSpatial] bootSpatial() is a no-op on @webspatial/react-sdk/eager.',
     )
   }
   return Promise.resolve()

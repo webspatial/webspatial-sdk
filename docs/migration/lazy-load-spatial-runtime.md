@@ -4,7 +4,7 @@ This guide covers the upgrade from `@webspatial/react-sdk` `1.5.x` (or earlier) 
 
 The new architecture removes the dual-build (`dist/web` + `dist/default`) plus the alias-switching `@webspatial/vite-plugin` in favor of a single flat `dist/` layout where the spatial implementation lives in a dynamically importable subpath (`@webspatial/react-sdk/spatial`). Plain browsers pay only the lean default entry; the spatial chunk is fetched only when an application opts in via `bootSpatial()` from a WebSpatial-capable runtime.
 
-The full normative contract lives in [`openspec/specs/spatial-lazy-load/spec.md`](../../openspec/specs/spatial-lazy-load/spec.md) and [`openspec/specs/runtime-capabilities/spec.md`](../../openspec/specs/runtime-capabilities/spec.md). This guide is the human-readable summary plus the migration recipes.
+The full normative contract lives in [`openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md`](../../openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md) and [`openspec/specs/runtime-capabilities/spec.md`](../../openspec/specs/runtime-capabilities/spec.md). This guide is the human-readable summary plus the migration recipes.
 
 ---
 
@@ -12,7 +12,7 @@ The full normative contract lives in [`openspec/specs/spatial-lazy-load/spec.md`
 
 1. **Remove `@webspatial/vite-plugin`** from your build pipeline (uninstall + delete the plugin entry from `vite.config.ts` / `webpack.config.js` / etc.).
 2. **Add `await bootSpatial()` before your first React render** in WebSpatial-runtime entry points. In plain browsers it resolves immediately and never fetches the spatial chunk; in WebSpatial shells it loads the spatial chunk over the network.
-3. **Stop importing the four internal containers** (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`) — use the public `withSpatialized2DElementContainer(Comp)` / `withSpatialMonitor(Comp)` HOCs instead.
+3. **Stop importing the four internal containers** (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`) — use JSX markers (`enable-xr` / `enable-xr-monitor`) or a tiny `forwardRef` shim around those markers when you need a component value.
 4. **Replace `@webspatial/react-sdk/web` and `@webspatial/react-sdk/default` imports** with the default `@webspatial/react-sdk` entry. Both legacy subpaths are removed.
 5. **Confirm React `>=18.0`** is installed. React 18's `useSyncExternalStore` is a hard requirement.
 
@@ -101,16 +101,16 @@ Both timings produce identical hydration safety because `useSpatialReady` is imp
 
 ---
 
-## Step 3 — Use HOC facades instead of internal containers
+## Step 3 — Use JSX markers instead of internal containers
 
 The four internal container classes are no longer publicly exported:
 
-| Removed (BREAKING)                    | Replacement                                                                                                                                             |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SpatializedContainer`                | Use `withSpatialized2DElementContainer(Comp)` HOC; the facade decides at render time whether to mount the real container or the transparent passthrough |
-| `Spatialized2DElementContainer`       | Same as above                                                                                                                                           |
-| `SpatializedStatic3DElementContainer` | Use `<Model {...} />`; the `Model` facade owns this internally                                                                                          |
-| `SpatialMonitor`                      | Use `withSpatialMonitor(El)` HOC                                                                                                                        |
+| Removed (BREAKING)                    | Replacement                                                                                                                                                |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SpatializedContainer`                | Use the JSX marker `<div enable-xr />`; the SDK JSX runtime wraps it with the internal facade HOC at compile time                                          |
+| `Spatialized2DElementContainer`       | Same as above                                                                                                                                              |
+| `SpatializedStatic3DElementContainer` | Use `<Model {...} />`; the `Model` facade owns this internally                                                                                             |
+| `SpatialMonitor`                      | Use the JSX marker `<div enable-xr-monitor />`                                                                                                             |
 
 Before:
 
@@ -129,16 +129,25 @@ function MyContainer() {
 After:
 
 ```tsx
-import { withSpatialized2DElementContainer } from '@webspatial/react-sdk'
-
-const SpatializedDiv = withSpatialized2DElementContainer('div')
-
 function MyContainer() {
-  return <SpatializedDiv>...</SpatializedDiv>
+  return <div enable-xr>...</div>
 }
 ```
 
-The HOCs cache their wrapper output by raw component reference (per-render identity preserved), so `withSpatialized2DElementContainer('div')` always returns the same wrapper across renders.
+If you need a component value to pass into a third-party HOC, write a small shim whose JSX call site contains the marker:
+
+```tsx
+import { forwardRef } from 'react'
+
+const SpatializedDiv = forwardRef<
+  HTMLDivElement,
+  React.ComponentPropsWithRef<'div'>
+>(function SpatializedDiv(props, ref) {
+  return <div enable-xr ref={ref} {...props} />
+})
+```
+
+The factory HOCs (`withSpatialized2DElementContainer` / `withSpatialMonitor`) still exist inside the SDK for JSX-runtime implementation details, but they are not public exports.
 
 ---
 
@@ -262,7 +271,7 @@ The placeholder return value is unchanged: `pointToPhysical(pt) === pt / 1360`, 
 
 - **BREAKING**: removed `@webspatial/react-sdk/web` and `@webspatial/react-sdk/default` subpaths — use the default `@webspatial/react-sdk` entry.
 - **BREAKING**: `@webspatial/vite-plugin` is no longer required and the SDK no longer participates in any plugin-driven import rewriting.
-- **BREAKING**: removed public exports `SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor` — use the `withSpatialized2DElementContainer(Comp)` / `withSpatialMonitor(Comp)` HOCs.
+- **BREAKING**: removed public exports `SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor` — use the `enable-xr` / `enable-xr-monitor` JSX markers.
 - **BREAKING**: `react` and `react-dom` are now required peer dependencies (`>=18.0`); React 17 and earlier are no longer supported.
 - **BREAKING**: spatial code is now lazy-loaded via `bootSpatial()`; applications that previously relied on spatial primitives mounting real implementations on first render MUST `await bootSpatial()` before `ReactDOM.createRoot(...).render(...)` (or accept the documented fallback-to-real swap on the next React commit after `bootSpatial()` resolves later).
 - **BREAKING**: a component instance that calls `useMetrics()` (and any future spatial Hooks) now pins the placeholder-vs-real choice for its lifetime; remount required to switch to the real implementation after a late `bootSpatial()`.

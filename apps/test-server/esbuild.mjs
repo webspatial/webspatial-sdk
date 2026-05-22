@@ -84,6 +84,9 @@ const buildOptions = {
     // spatial is statically linked (no lazy `import('./spatial')` bridge in
     // this app). Plain-web / lazy-default consumer shape is exercised in
     // `apps/spatial-vite-min` instead.
+    '@webspatial/react-sdk/eager': path.resolve(
+      `${packagesBasePath}/react/src/eager.ts`,
+    ),
     '@webspatial/react-sdk': path.resolve(
       `${packagesBasePath}/react/src/eager.ts`,
     ),

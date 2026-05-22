@@ -21,8 +21,9 @@
 //
 // All other surface (stateless utilities, type re-exports, JSX runtime
 // behavior, `'use client'` RSC boundary) aligns with the default entry by
-// re-exporting from `./index` BY REFERENCE — never redeclaring a symbol — so
-// the two entries stay in lockstep.
+// re-exporting the same source modules the default entry uses, so the two
+// entries stay in lockstep without pulling the default-entry facade chunk into
+// the eager static closure.
 //
 // Normative product routing (see `openspec/.../spatial-lazy-load/spec.md`:
 // "Entry routing", "CSR-only for spatial primitives"): spatial primitives
@@ -114,21 +115,19 @@ export {
 // boot errors generically.
 export { WebSpatialBootError } from './runtime/errors'
 
-// --- Step 4: stateless utilities — re-export from default entry by ref -----
+// --- Step 4: stateless utilities — shared source modules with default entry -
 // Per the "Two distribution forms share packaging hygiene" Requirement
-// these MUST be the same module-level references the default entry
-// exposes (re-export, not redeclare) so behavior parity is byte-identical
-// and future Group B / Group C additions automatically appear on the
-// eager entry without manual sync.
-export {
-  enableDebugTool,
-  convertCoordinate,
-  initScene,
-  WebSpatialRuntime,
-  WebSpatialRuntimeError,
-  version,
-  createElement,
-} from './index'
+// these MUST reuse the same source modules the default entry exposes (no
+// redeclaration) so behavior parity remains byte-identical without importing
+// the whole default-entry facade graph into the eager size-budget closure.
+export { enableDebugTool } from './utils/debugTool'
+export { convertCoordinate } from './utils/convertCoordinate'
+export { initScene } from './initScene'
+export { WebSpatialRuntime } from './webSpatialRuntime'
+export { WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
+export { createElement } from './jsx/jsx-shared'
+
+export const version = __WEBSPATIAL_REACT_SDK_VERSION__
 
 // --- Step 5: type-only re-exports — match the default entry surface --------
 // `export type *` re-exports the type-side of every default-entry export

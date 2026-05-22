@@ -64,7 +64,7 @@ function App() {
       <button
         className={btnCls}
         onClick={() => {
-          location.href = './index.html'
+          location.href = '/#/reality'
         }}
       >
         back

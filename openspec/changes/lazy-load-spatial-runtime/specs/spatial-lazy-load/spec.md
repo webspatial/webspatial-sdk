@@ -134,6 +134,12 @@ The default entry MUST also export:
 - `onSpatialLoadError(cb: (err: WebSpatialBootError) => void): () => void` — registers a callback invoked on every failed load attempt. Multiple callbacks MAY be registered concurrently; the returned function unsubscribes the corresponding callback. Callbacks MUST be invoked in registration order. Successful retries after a prior failure MUST NOT replay earlier errors to listeners. The wrapping into `WebSpatialBootError` is performed inside the bridge's internal `loadSpatialImpl()` (per "Bridge singleton"); listeners always receive the same `WebSpatialBootError` instance that `bootSpatial()` would reject with.
 - `WebSpatialBootError` — an `Error` subclass used as the rejection value of `bootSpatial()` and the argument to `onSpatialLoadError` callbacks. Instances MUST satisfy `name === 'WebSpatialBootError'`, MUST set `cause` to the original error thrown by the dynamic `import()`, and MUST expose `attempt: number` (1-based) indicating which retry the failure corresponds to.
 
+#### Scenario: `bootSpatial()` is the activation path
+
+- **WHEN** an application runs in a WebSpatial runtime and awaits `bootSpatial()`
+- **THEN** the SDK MUST load the spatial implementation through the bridge before resolving
+- **AND** facades and hook placeholders MUST NOT independently trigger that load before `bootSpatial()` is called
+
 Recommended integration patterns (non-normative):
 
 - **React (preferred):** wrap spatial UI in `<SpatialBoot>` from the default entry so the SDK invokes `bootSpatial()` after mount and mounts `children` only after a successful boot (see "`SpatialBoot` React integration").

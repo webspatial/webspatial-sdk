@@ -83,6 +83,20 @@ describe('packages/react/package.json — published shape (spec tasks.md §8.7 /
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       expect(pkg.sideEffects === true).toBe(false)
     })
+
+    it('"sideEffects" allow-list covers every side-effectful published entry', () => {
+      const pkg = loadPackageJson()
+      if (pkg.sideEffects === false) return
+      expect(pkg.sideEffects).toEqual(
+        expect.arrayContaining([
+          './dist/index.js',
+          './dist/eager.js',
+          './dist/spatial.js',
+          './src/eager.ts',
+          './src/spatial/index.ts',
+        ]),
+      )
+    })
   })
 
   describe('Lazy-load v1 published exports (§8.3 / §8.4)', () => {
@@ -163,7 +177,7 @@ describe('packages/react/package.json — published shape (spec tasks.md §8.7 /
         | string
         | undefined
       expect(sub).toBeDefined()
-      const file = typeof sub === 'string' ? sub : sub?.import ?? sub?.default
+      const file = typeof sub === 'string' ? sub : (sub?.import ?? sub?.default)
       expect(file).toBe('./dist/runtime/index.js')
     })
   })
