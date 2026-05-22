@@ -18,6 +18,7 @@
     "codeql:js": "node tools/scripts/run-codeql-js.js",
     "test:workflows": "node tools/scripts/check-release-workflows.js",
     "test:react-compat": "pnpm --filter react18-compat test && pnpm --filter react19-compat test",
+    "test:rspack-compat": "pnpm --filter spatial-rspack-min --fail-if-no-match build",
     "test:auto": "cd tests/autoTest/ && pnpm run test",
     "test:auto:setup-local": "cd tests/autoTest/ && pnpm run setup-local",
     "test:size-budget": "pnpm --filter @webspatial/react-sdk build && pnpm --filter marginal-delta-vite test",
