@@ -96,7 +96,7 @@ SpatializedStatic3DElementContainer, SpatialMonitor
 | **B** | `enableDebugTool` | SSR-safe noop; attaches diagnostics in WebSpatial runtime | "Stateless utility APIs" |
 | **C** (pure / type) | `WebSpatialRuntime.supports`, `WebSpatialRuntimeError`, `CapabilityKey`, `version`, type-only re-exports (`SSRProvider` was originally on this row but has since been removed — see `remove-ssr-provider`; `getAbsoluteUrl` was originally on this row but has since been demoted to an internal helper — see the `remove-getabsoluteurl` changeset) | Live in default entry; counted toward 8KB size budget; no spatial-chunk dependency | "Stateless utility APIs" |
 
-**Subtle consequence to call out**: in a WebSpatial runtime, an application that **forgets** to call `bootSpatial()` will see Group A facades render fallback and Group B utilities gracefully degrade because both read from the same unready bridge. This keeps `bootSpatial()` as the single activation path and keeps the default entry free of core-sdk runtime imports.
+**Subtle consequence to call out**: in a WebSpatial runtime, an application that **forgets** to call `bootSpatial()` will see Group A facades render fallback and Group B utilities gracefully degrade because both read from the same unready bridge. This keeps `bootSpatial()` as the single activation path and keeps the emitted default-entry closure free of core-sdk runtime imports.
 
 ## Per-component default fallback (normative, from spec)
 

@@ -171,7 +171,7 @@ describe('useBootSpatial (internal) / SpatialBoot', () => {
     )
 
     expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('unless `gate` is true'),
+      expect.stringContaining('requires gate={true}'),
     )
   })
 

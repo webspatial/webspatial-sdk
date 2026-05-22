@@ -30,12 +30,19 @@ import { resolve } from 'node:path'
 import { defineConfig, type Options } from 'tsup'
 import { version } from './package.json'
 
-// Banner injected into every emitted bundle. Per spec task §8.2 the legacy
+// Version stamp injected into selected published entry files. Per spec task
+// §8.2 the legacy
 // `XR_ENV` (`web` / `avp`) global write is removed — there is no longer a
 // per-build flavor distinction. We only stamp the SDK version onto
 // `window.__webspatialsdk__['react-sdk-version']` so existing diagnostic
 // tools that read it keep working.
-const sharedBanner = `
+//
+// This is intentionally NOT a tsup `banner`: applying the IIFE to shared
+// `chunk-*.js` files makes every chunk top-level side-effectful and forces
+// esbuild to retain otherwise-empty side-effect imports, inflating the eager
+// static-import closure. The onSuccess hook below writes the stamp only to
+// public runtime entry files that users import directly.
+const versionBanner = `
 (function(){
   if(typeof window === 'undefined') return;
   if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
@@ -79,12 +86,17 @@ const baseConfig: Options = {
   dts: true,
   external: externals,
   noExternal: [/^@webspatial\/core-sdk\/runtime$/],
-  banner: { js: sharedBanner },
   esbuildOptions(options) {
     options.define = {
       ...options.define,
       ...versionDefine,
     }
+    // Keep identifiers stable for build-output scans while removing comments
+    // and redundant whitespace from published JS. This gives the eager
+    // static-closure budget real headroom without relying on stale chunk
+    // undercounting or changing exported symbol names.
+    options.minifyWhitespace = true
+    options.minifySyntax = true
   },
 }
 
@@ -95,17 +107,28 @@ const baseConfig: Options = {
 //   'use client' → banner → body
 const directive = `'use client';\n`
 const bannerRe = /^\(function\(\)\{[\s\S]*?\}\)\(\)\s*\n/
-const useClientRe = /^['"]use client['"];\s*\n/gm
-const ensureRscClientBoundary = (filePath: string): void => {
+const useClientRe = /^['"]use client['"];?\s*/gm
+const ensureRscClientBoundary = (
+  filePath: string,
+  { stampVersion = false }: { stampVersion?: boolean } = {},
+): void => {
   let current = readFileSync(filePath, 'utf8')
-  let banner = ''
   const bannerMatch = current.match(bannerRe)
   if (bannerMatch) {
-    banner = bannerMatch[0]
-    current = current.slice(banner.length)
+    current = current.slice(bannerMatch[0].length)
   }
   current = current.replace(useClientRe, '')
+  const banner = stampVersion ? `${versionBanner}\n` : ''
   writeFileSync(filePath, directive + banner + current)
+}
+
+const ensureVersionStamp = (filePath: string): void => {
+  let current = readFileSync(filePath, 'utf8')
+  const bannerMatch = current.match(bannerRe)
+  if (bannerMatch) {
+    current = current.slice(bannerMatch[0].length)
+  }
+  writeFileSync(filePath, `${versionBanner}\n${current}`)
 }
 
 export default defineConfig([
@@ -186,13 +209,21 @@ export default defineConfig([
       // The §13.1 build-output assertion enforces both polarities.
 
       // Default entry — RSC client boundary.
-      ensureRscClientBoundary(resolve(__dirname, 'dist/index.js'))
+      ensureRscClientBoundary(resolve(__dirname, 'dist/index.js'), {
+        stampVersion: true,
+      })
       // Eager entry per spec tasks.md §16 — also a public RSC boundary
       // because consumers may import facade-equivalent symbols + the
       // `useSpatialReady` stub from a Server Component file. Without
       // the directive the RSC compiler would attempt server execution
       // of the underlying hook code and fail at the first hook call.
-      ensureRscClientBoundary(resolve(__dirname, 'dist/eager.js'))
+      ensureRscClientBoundary(resolve(__dirname, 'dist/eager.js'), {
+        stampVersion: true,
+      })
+      // Spatial entry — no RSC directive (dynamic-import target), but it
+      // still stamps the version when spatial/eager consumers load the real
+      // implementation directly.
+      ensureVersionStamp(resolve(__dirname, 'dist/spatial.js'))
       // Internal facade boundary — the entire point of this entry is to
       // be a `'use client'` stop for the JSX runtime (see
       // `src/internal/facades-client.ts` and Bundle 2's external config).
