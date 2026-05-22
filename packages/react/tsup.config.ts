@@ -92,9 +92,8 @@ const baseConfig: Options = {
       ...versionDefine,
     }
     // Keep identifiers stable for build-output scans while removing comments
-    // and redundant whitespace from published JS. This gives the eager
-    // static-closure budget real headroom without relying on stale chunk
-    // undercounting or changing exported symbol names.
+    // and redundant whitespace from published JS (smaller default-entry proxy
+    // and cleaner dist output) without changing exported symbol names.
     options.minifyWhitespace = true
     options.minifySyntax = true
   },
