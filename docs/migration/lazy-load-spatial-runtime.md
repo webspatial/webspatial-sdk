@@ -210,11 +210,17 @@ These bundlers / frameworks satisfy all three capabilities and are exercised in 
 - Vite ≥ 4
 - Webpack ≥ 5
 - Rollup ≥ 3
-- Rspack ≥ 1
+- Rspack ≥ 1 — see `apps/spatial-rspack-min`
 - esbuild ≥ 0.18 with `splitting: true`
 - **Next.js App Router** (Webpack mode) — canonical RSC framework target
 - **Next.js Pages Router**
 - **React Router 7** (Remix-style SSR + Vite) — see `apps/spatial-remix-min/`
+
+Rspack note: `apps/spatial-rspack-min/rspack.config.mjs` sets
+`resolve.fullySpecified: false` for JavaScript modules because the current
+`@webspatial/core-sdk` ESM build preserves extensionless package-internal
+relative imports. Keep that setting in custom Rspack apps until the core SDK
+emits fully specified `.js` import specifiers.
 
 ### Out-of-scope environments (v1)
 
