@@ -23,7 +23,7 @@ export default function TransformTranslatePage() {
       transform: { translate: { x: 0, y: 0, z: 0 } },
     },
     to: {
-      transform: { translate: { x: 100, y: 10, z: 0 } },
+      transform: { translate: { x: 100, y: 10, z: 100 } },
     },
     duration: 2.0,
     timingFunction: 'easeInOut',
