@@ -91,6 +91,8 @@ import SpatialDivReverseLoopPage from './src/pages/spatial-div-animation/reverse
 import SpatialDivCapabilityCheckPage from './src/pages/spatial-div-animation/capability-check'
 import SpatialDivPlayStatePage from './src/pages/spatial-div-animation/play-state'
 import SpatialDivPerfComparisonPage from './src/pages/spatial-div-animation/perf-comparison'
+import SpatialDivLoopAnimationPage from './src/pages/spatial-div-animation/loop-animation'
+import SpatialDivNestedAnimationPage from './src/pages/spatial-div-animation/nested-animation'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -242,6 +244,14 @@ function App() {
                 <Route
                   path="/spatial-div-animation/perf-comparison"
                   element={<SpatialDivPerfComparisonPage />}
+                />
+                <Route
+                  path="/spatial-div-animation/loop-animation"
+                  element={<SpatialDivLoopAnimationPage />}
+                />
+                <Route
+                  path="/spatial-div-animation/nested-animation"
+                  element={<SpatialDivNestedAnimationPage />}
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />

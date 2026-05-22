@@ -69,4 +69,16 @@ export const spatialDivAnimationRoutes: SpatialDivAnimationRoute[] = [
     description:
       'JS-driven (rAF) vs declarative (useAnimation) side-by-side FPS benchmark.',
   },
+  {
+    path: '/spatial-div-animation/loop-animation',
+    label: 'Loop Animation',
+    description:
+      'Choose JS-driven or declarative mode, loop animation continuously until stopped.',
+  },
+  {
+    path: '/spatial-div-animation/nested-animation',
+    label: 'Nested Animation',
+    description:
+      'Independent animations on nested enable-xr divs (parent/child/grandchild).',
+  },
 ]

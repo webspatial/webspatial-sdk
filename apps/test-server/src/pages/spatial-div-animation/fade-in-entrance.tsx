@@ -39,11 +39,11 @@ export default function FadeInEntrancePage() {
 function FadeInScene({ log }: { log: (msg: string) => void }) {
   const [animation] = useAnimation({
     from: {
-      transform: { translate: { z: -50 } },
+      transform: { translate: { z: 0 } },
       opacity: 0,
     },
     to: {
-      transform: { translate: { z: 0 } },
+      transform: { translate: { z: 100 } },
       opacity: 1,
     },
     duration: 0.6,
