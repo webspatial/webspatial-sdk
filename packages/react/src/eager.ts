@@ -119,7 +119,7 @@ export { WebSpatialBootError } from './runtime/errors'
 // Per the "Two distribution forms share packaging hygiene" Requirement
 // these MUST reuse the same source modules the default entry exposes (no
 // redeclaration) so behavior parity remains byte-identical without importing
-// the whole default-entry facade graph into the eager size-budget closure.
+// the whole default-entry facade graph into the eager static closure.
 export { enableDebugTool } from './utils/debugTool'
 export { convertCoordinate } from './utils/convertCoordinate'
 export { initScene } from './initScene'
