@@ -600,7 +600,7 @@ Applications MUST be able to use `@webspatial/react-sdk` without any build plugi
 2. **`exports` package.json field**: subpath resolution for `'.'`, `./eager`, `./jsx-runtime`, `./jsx-dev-runtime`, `./spatial`, and the SDK-internal `./internal/facades-client` boundary reached by the JSX runtime.
 3. **Dynamic `import()` with code-splitting**: when the bridge invokes `import('@webspatial/react-sdk/spatial')`, the bundler MUST emit the spatial chunk as a separate output that is fetched on demand. Bundlers without code-splitting (e.g. bare esbuild without `splitting: true`) will inline the chunk into the main bundle; the SDK still functions correctly but the size-budget benefit defined by "Default entry MUST NOT bundle spatial implementation" is lost on the consumer side.
 
-Bundlers and frameworks that satisfy all three capabilities form the **non-normative tested-targets list** (maintained in the migration guide, not in this spec): Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1, esbuild ≥ 0.18 with `splitting: true`. Next.js App Router (Webpack mode) and Next.js Pages Router are the canonical tested framework targets.
+Bundlers and frameworks that satisfy all three capabilities form the **non-normative tested-targets list** (maintained in the migration guide, not in this spec): Vite ≥ 4, Webpack ≥ 5, Rollup ≥ 3, Rspack ≥ 1 (covered by `apps/spatial-rspack-min`), esbuild ≥ 0.18 with `splitting: true`. Next.js App Router (Webpack mode) and Next.js Pages Router are the canonical tested framework targets.
 
 **Peer dependency contract** — the package's `peerDependencies` MUST list `react: ">=18.0"` and `react-dom: ">=18.0"` (the version that introduced `useSyncExternalStore`, on which `useSpatialReady` depends). Both peers MUST be **required** (`peerDependenciesMeta.<peer>.optional` MUST be `false` or absent — `optional: true` is forbidden in v1). React 18.x and React 19+ both satisfy the version constraint; the `'use client'` directive used by hook-using files (per "SSR and hydration safety") is honored by React 18.0+ in RSC contexts and is a benign no-op everywhere else.
 
@@ -622,10 +622,12 @@ The hard-peer decision reflects the v1 product reality: the default entry's prim
 
 #### Scenario: Webpack 5+ or Rspack project (capability-equivalent)
 
-- **WHEN** an application uses Webpack 5+ or Rspack as its bundler with default ESM and dynamic-import handling
-- **THEN** the build MUST succeed without any SDK-specific configuration
+- **WHEN** an application uses Webpack 5+ or Rspack as its bundler with ESM, package `exports`, and dynamic-import code-splitting enabled
+- **THEN** the build MUST succeed without `@webspatial/vite-plugin` or any WebSpatial-specific bundler plugin
 - **AND** the spatial chunk MUST be emitted as a separate Webpack/Rspack chunk (e.g. via the framework's standard chunk-splitting heuristics)
-- **AND** Next.js App Router (which uses Webpack 5 by default) is the canonical tested framework instance for this Scenario
+- **AND** the Rspack fixture (`apps/spatial-rspack-min`) MUST build both the lazy default entry and the eager entry
+- **AND** the Rspack fixture MAY use resolver configuration required by the current SDK package output (for example `resolve.fullySpecified: false` for JavaScript modules while `@webspatial/core-sdk` preserves extensionless package-internal ESM imports)
+- **AND** Next.js App Router (which uses Webpack 5 by default) is the canonical tested Webpack framework instance for this Scenario
 
 #### Scenario: ESM-only consumption
 
