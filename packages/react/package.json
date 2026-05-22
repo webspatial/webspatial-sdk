@@ -6,7 +6,10 @@
   "type": "module",
   "types": "./dist/index.d.ts",
   "sideEffects": [
+    "./dist/index.js",
+    "./dist/eager.js",
     "./dist/spatial.js",
+    "./src/eager.ts",
     "./src/spatial/index.ts"
   ],
   "exports": {

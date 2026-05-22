@@ -1,7 +1,7 @@
 import { postMochaResult } from './api'
 import './main.css'
 
-import { enableDebugTool } from '@webspatial/react-sdk'
+import { bootSpatial, enableDebugTool } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
@@ -46,6 +46,7 @@ async function waitWindowLoaded() {
 }
 
 async function main() {
+  await bootSpatial()
   const p1 = waitWindowLoaded()
   const p2 = runMocha()
   await Promise.allSettled([p1, p2])

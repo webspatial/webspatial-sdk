@@ -1,6 +1,6 @@
 'use client'
 
-import { useSyncExternalStore } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { isSpatialReady, subscribeSpatialReady } from './bridge'
 import { detectSpatialRuntime } from './detect'
 
@@ -13,7 +13,7 @@ const noopSubscribe = (): (() => void) => noopUnsubscribe
 const alwaysFalse = (): false => false
 
 export function useSpatialReady(): boolean {
-  const hasSpatialRuntime = detectSpatialRuntime() !== null
+  const [hasSpatialRuntime] = useState(() => detectSpatialRuntime() !== null)
 
   return useSyncExternalStore(
     hasSpatialRuntime ? subscribeSpatialReady : noopSubscribe,

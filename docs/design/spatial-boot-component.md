@@ -2,7 +2,8 @@
 
 > **Status:** Implemented in `@webspatial/react-sdk` (see `packages/react/src/runtime/SpatialBoot.tsx`; boot state via internal `useBootSpatial.ts`)  
 > **Phase 1 (public):** Boot completes before spatial UI mounts; boot failure → `onError`, no children  
-> **Phase 2 (planned):** `gate={false}`, optional public `useBootSpatial`, richer boot-progress APIs
+> **Advanced (implemented):** `gate={false}` mounts children immediately and lets facades upgrade after boot  
+> **Phase 2 (planned):** optional public `useBootSpatial`, richer boot-progress APIs
 
 **Related material**
 
@@ -30,11 +31,11 @@
 
 **Not exported in phase 1:** `useBootSpatial` (internal only; phase 2 MAY add a public hook).
 
-**Phase 1 public docs do not teach:**
+**Phase 1 public docs keep advanced options secondary:**
 
 - `gate` (default `gate={true}` in code — boot then mount)
 - `fallback` (optional loading UI while boot is in flight)
-- Render-first-then-boot (`gate={false}`, phase 2)
+- Render-first-then-boot (`gate={false}`, implemented advanced mode)
 
 ---
 
@@ -92,7 +93,7 @@ Read-only bridge readiness. Use for custom degraded UI (`CapabilityDemo` pattern
 
 Default: `showChildren = (status === 'ready')`; on failure, `onError` and children stay unmounted.
 
-**Phase 2:** `gate={false}`; optional public `useBootSpatial` for custom status UI without `<SpatialBoot>`.
+**Advanced:** `gate={false}` mounts children immediately. **Phase 2:** optional public `useBootSpatial` for custom status UI without `<SpatialBoot>`.
 
 ---
 
@@ -104,13 +105,13 @@ Default: `showChildren = (status === 'ready')`; on failure, `onError` and childr
 
 ---
 
-## 5. Phase 2 (planned)
+## 5. Advanced / Phase 2
 
-| Topic | Phase 2 |
-| ----- | ------- |
-| `gate={false}` | Mount immediately; facade fallback → real after boot |
-| Public `useBootSpatial` | Custom boot progress / manual `boot()` if product requests it |
-| Document `fallback` in main guide | Loading shells during boot |
+| Topic | Status |
+| ----- | ------ |
+| `gate={false}` | Implemented advanced mode: mount immediately; facade fallback → real after boot |
+| Public `useBootSpatial` | Phase 2 if product requests custom boot progress / manual `boot()` |
+| Document `fallback` in main guide | Implemented as optional loading UI during boot |
 
 ---
 

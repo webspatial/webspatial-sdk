@@ -186,6 +186,19 @@ describe('lazy-load runtime foundation', () => {
     expect(__getSpatialReadySubscriberCountForTests()).toBe(0)
   })
 
+  it('useSpatialReady decides the runtime class once per component instance', () => {
+    const { result, rerender } = renderHook(() => useSpatialReady())
+
+    expect(result.current).toBe(false)
+    expect(__getSpatialReadySubscriberCountForTests()).toBe(0)
+
+    setPuppeteerUserAgent()
+    rerender()
+
+    expect(result.current).toBe(false)
+    expect(__getSpatialReadySubscriberCountForTests()).toBe(0)
+  })
+
   it('useSpatialReady subscribes in WebSpatial runtimes and reflects readiness flips', async () => {
     setPuppeteerUserAgent()
     __setSpatialImplLoaderForTests(() => Promise.resolve(spatialImpl))

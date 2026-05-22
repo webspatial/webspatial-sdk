@@ -66,7 +66,7 @@ Every facade in the default entry has a documented fallback rendered in plain we
 | `Material` / `Texture` / `ModelAsset` / `AttachmentAsset` / `UnlitMaterial`    | `null`                                                                      |
 | `SceneGraph` / `World`                                                         | `null` (children NOT mounted)                                               |
 
-The full normative table lives in [`openspec/specs/spatial-lazy-load/spec.md`](../../openspec/specs/spatial-lazy-load/spec.md) — search for "Component facades" and "Hook placeholders".
+The full normative table lives in [`openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md`](../../openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md) — search for "Component facades" and "Hook placeholders".
 
 > The factory HOCs `withSpatialized2DElementContainer` and `withSpatialMonitor` are **internal-only** in v2 — the documented public mechanism for wrapping intrinsic elements is the `enable-xr` / `enable-xr-monitor` JSX marker (see "JSX markers" below). For the rare case where you need a wrapped component as a value (e.g. to compose with another HOC like react-spring's `animated(...)`), use the recipe in "Advanced: composing with third-party HOCs" further down.
 
@@ -160,7 +160,7 @@ A subset of the public API works without `bootSpatial()` ever being called and i
 | `enableDebugTool()`                                                                                         | SSR-safe no-op; in browsers attaches `inspectCurrentSpatialScene` and `getSpatialized2DElement` to `window` (the diagnostics themselves require `bootSpatial()` to be awaited) |
 | `version`                                                                                                   | Package version constant (build-time injected)                                                                                                                                 |
 
-The full normative contract lives in [`openspec/specs/spatial-lazy-load/spec.md`](../../openspec/specs/spatial-lazy-load/spec.md) — search for "Stateless utility APIs and pure re-exports". Internal `Model` / `SpatializedContainer` host wrappers use `useSyncExternalStore` for SSR + hydration — you do **not** wrap the app in a provider for that.
+The full normative contract lives in [`openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md`](../../openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md) — search for "Stateless utility APIs and pure re-exports". Internal `Model` / `SpatializedContainer` host wrappers use `useSyncExternalStore` for SSR + hydration — you do **not** wrap the app in a provider for that.
 
 ### RSC, server requests, and runtime detection
 

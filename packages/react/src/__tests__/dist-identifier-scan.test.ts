@@ -87,7 +87,7 @@ function findStaticImportPaths(source: string): string[] {
   // here (`./` or `../`) — bare specifiers (`react`, `@webspatial/...`) are
   // external peer / leaf packages and cannot pull in spatial-only code.
   const importRe =
-    /(?:^|\s)(?:import|export)\s+[^'";]*?from\s+['"]([^'"]+)['"]/g
+    /(?:^|\s)(?:import|export)\s*[^'";]*?from\s*['"]([^'"]+)['"]/g
   let match: RegExpExecArray | null
   while ((match = importRe.exec(source)) !== null) {
     const spec = match[1]
@@ -96,7 +96,7 @@ function findStaticImportPaths(source: string): string[] {
     }
   }
   // bare side-effect import: `import "./chunk-XXX.js"`
-  const sideEffectRe = /(?:^|\s)import\s+['"]([^'"]+)['"]/g
+  const sideEffectRe = /(?:^|\s)import\s*['"]([^'"]+)['"]/g
   while ((match = sideEffectRe.exec(source)) !== null) {
     const spec = match[1]
     if (spec.startsWith('./') || spec.startsWith('../')) {
