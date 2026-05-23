@@ -151,6 +151,36 @@ function App() {
         </span>
       </section>
       <Logger logs={logs} clearLog={clearLog} />
+      <Model
+        enable-xr
+        autoPlay
+        loading="lazy"
+        style={{
+          height: '200px',
+          '--xr-depth': '100px',
+          '--xr-back': '50px',
+          marginBottom: '20px',
+        }}
+      >
+        <source
+          src="https://developer.apple.com/augmented-reality/quick-look/models/drummertoy/toy_drummer.usdz"
+          type="model/vnd.usdz+zip"
+        />
+        <img
+          src="/img/toy_drummer.png"
+          className="w-full h-[200px] object-contain"
+        />
+      </Model>
+      <Model
+        poster="/img/toy_drummer.png"
+        enable-xr
+        style={{
+          height: '200px',
+          '--xr-depth': '100px',
+          '--xr-back': '50px',
+          marginBottom: '20px',
+        }}
+      />
     </div>
   )
 }

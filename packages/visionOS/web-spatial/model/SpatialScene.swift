@@ -550,6 +550,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let sources = command.sources {
             spatialObject.sources = sources
         }
+        if let loading = command.loading {
+            spatialObject.loading = loading
+        }
 
         resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
     }
@@ -637,6 +640,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         if let posterURL = command.posterURL {
             spatializedElement.posterURL = posterURL.isEmpty ? nil : posterURL
+        }
+
+        if let loading = command.loading {
+            spatializedElement.loading = loading
         }
 
         resolve(.success(baseReplyData))

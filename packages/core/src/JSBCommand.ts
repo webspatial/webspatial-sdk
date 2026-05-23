@@ -23,6 +23,7 @@ import {
   Vec3,
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
+  ModelLoadingMode,
   ModelSource,
   SpatialTextureResourceOptions,
 } from './types/types'
@@ -291,14 +292,20 @@ export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
   constructor(
     readonly modelURL?: string,
     readonly sources?: ModelSource[],
+    readonly loading: ModelLoadingMode = 'eager',
   ) {
     super()
     this.modelURL = modelURL
     this.sources = sources
+    this.loading = loading
   }
 
   protected getParams() {
-    return { modelURL: this.modelURL, sources: this.sources }
+    return {
+      modelURL: this.modelURL,
+      sources: this.sources,
+      loading: this.loading,
+    }
   }
 }
 

@@ -1891,6 +1891,7 @@ describe('SpatializedStatic3DElementContainer', () => {
     expect(createSpatializedStatic3DElement).toHaveBeenCalledWith(
       window.location.origin + '/m.glb',
       [],
+      'eager',
     )
 
     expect(updateProperties).toHaveBeenCalledWith({
@@ -1899,6 +1900,7 @@ describe('SpatializedStatic3DElementContainer', () => {
       autoplay: undefined,
       loop: undefined,
       posterURL: '',
+      loading: 'eager',
     })
 
     spatializedStatic3DElement.onLoadCallback?.()

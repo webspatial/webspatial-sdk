@@ -100,6 +100,8 @@ export interface ModelSource {
   type?: string
 }
 
+export type ModelLoadingMode = 'eager' | 'lazy'
+
 export interface SpatializedStatic3DElementProperties
   extends SpatializedElementProperties {
   modelURL: string
@@ -111,6 +113,7 @@ export interface SpatializedStatic3DElementProperties
   playbackRate?: number
   currentTime?: number
   posterURL?: string
+  loading?: ModelLoadingMode
 }
 
 export interface SpatialSceneCreationOptions {
