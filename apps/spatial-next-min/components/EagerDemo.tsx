@@ -1,32 +1,19 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { CSSProperties } from 'react'
-import {
-  bootSpatial,
-  Model,
-  useSpatialReady,
-  WebSpatialBootError,
-} from '@webspatial/react-sdk/eager'
+import { Model } from '@webspatial/react-sdk/eager'
 
-// Same source shape as `LazyDemo.tsx` — only the import root flips from
-// `@webspatial/react-sdk` to `@webspatial/react-sdk/eager`. This is the
-// migration story spec pins as "Migration from default to eager is
-// import-root-only" Scenario.
+// Eager entry: spatial is statically linked when this module evaluates
+// (`import './spatial'` + bridge preload). Render `<Model />` / `enable-xr`
+// markers directly — no `bootSpatial()` or `useSpatialReady()` required.
 //
-// Runtime differences (vs lazy):
+// `bootSpatial`, `useSpatialReady`, and `<SpatialBoot>` still exist on the
+// eager entry as no-op compatibility stubs for lazy → eager migration
+// (change the import root only). This demo omits them on purpose.
 //
-//  - `bootSpatial()` is a no-op stub that resolves on the next microtask
-//    (spec "Eager bootSpatial is a no-op stub" Scenario). We still await
-//    it so this file mirrors `LazyDemo.tsx` byte-for-byte modulo the
-//    import root, making the migration story visible.
-//  - `useSpatialReady()` returns `true` on the first render in a
-//    WebSpatial runtime (eager preloads the bridge at module-evaluation
-//    time via `__internalSetSpatialImpl`). On plain web `useSpatialReady`
-//    still returns `false`.
-//  - The full spatial implementation is in this page's main bundle.
-//    Open the Network panel: there is NO separate `chunk-XXXX.js`
-//    fetch on first navigation, unlike `/lazy`.
+// Compare with `/lazy`: open Network — eager has no separate spatial chunk
+// fetch on first navigation.
 
 export function EagerDemo() {
   const [spatialTapCount, setSpatialTapCount] = useState(0)
@@ -34,44 +21,21 @@ export function EagerDemo() {
     setSpatialTapCount(c => c + 1)
   }, [])
 
-  const [bootState, setBootState] = useState<
-    'idle' | 'booting' | 'ready' | 'failed'
-  >('idle')
-  const ready = useSpatialReady()
-
-  useEffect(() => {
-    setBootState('booting')
-    bootSpatial()
-      .then(() => setBootState('ready'))
-      .catch((err: unknown) => {
-        setBootState('failed')
-        if (err instanceof WebSpatialBootError) {
-          // eslint-disable-next-line no-console
-          console.error('[spatial-next-min /eager] bootSpatial rejected', err)
-        } else {
-          throw err
-        }
-      })
-  }, [])
-
   return (
     <section>
       <h1>Eager entry</h1>
       <p>
         <code>
-          import &#123; Model, bootSpatial, useSpatialReady &#125; from
+          import &#123; Model &#125; from
           &apos;@webspatial/react-sdk/eager&apos;
         </code>
       </p>
       <p>
-        boot state: <strong>{bootState}</strong>, useSpatialReady:{' '}
-        <strong>{ready ? 'true' : 'false'}</strong>
-      </p>
-      <p>
-        On plain web the eager entry behaves visually like the lazy entry (same
-        facade fallback). The trade-off is that the spatial implementation is in
-        the first JS payload, not behind a dynamic import — appropriate for
-        spatial-only consumers.
+        Spatial primitives mount immediately — the real implementation is in
+        this page&apos;s first JS payload, not behind{' '}
+        <code>await bootSpatial()</code>. Use this entry for spatial-only apps;
+        use the default entry when you need SSR façade HTML or the 8&nbsp;KB
+        lazy sync budget.
       </p>
 
       <h2 style={{ marginTop: 24 }}>SpatialDiv grid</h2>

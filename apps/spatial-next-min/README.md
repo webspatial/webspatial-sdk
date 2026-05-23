@@ -44,7 +44,7 @@ pnpm --filter spatial-next-min test     # tsc --noEmit
 | `/` | `app/page.tsx` | Pure RSC home with links. Zero SDK bytes — the page&apos;s server bundle does not import the SDK at all. |
 | `/lazy` | `components/LazyDemo.tsx` | **Recommended pattern.** `<SpatialBoot>` — boot after mount; spatial `children` mount only when ready. Plain web: microtask boot. WebSpatial: dynamic spatial chunk. |
 | `/lazy-gate` | `components/LazyGateDemo.tsx` | Same contract with optional `<SpatialBoot fallback={…}>` while boot is in flight. Boot failure: `onError`; children stay unmounted. |
-| `/eager` | `components/EagerDemo.tsx` | Eager entry (`@webspatial/react-sdk/eager`). **Same source** as `LazyDemo.tsx` modulo the import root. Spatial implementation is statically linked into this page&apos;s bundle. `bootSpatial()` is a no-op stub but is still awaited for migration parity. |
+| `/eager` | `components/EagerDemo.tsx` | Eager entry (`@webspatial/react-sdk/eager`). Spatial implementation is statically linked — render `<Model />` directly; no `bootSpatial()` / `useSpatialReady()` required (those APIs remain as optional migration stubs). Compare Network panel with `/lazy`. |
 | `/capability-wrapper` | `components/CapabilityDemo.tsx` | Application-side custom degraded UI. Uses `useSpatialReady()` directly to branch between a flat poster card (plain web) and a real `<Model>` (WebSpatial). The pattern to reach for when the SDK&apos;s documented facade fallback is not aesthetic enough for your product. |
 | `/server-only-util` | `app/server-only-util/page.tsx` | **Engineering demo:** pure RSC reads **`User-Agent` only** (no SDK import). Shows the supported request-time branching pattern — official WebSpatial UA docs, not `detectSpatialRuntime` or other server helpers. |
 
