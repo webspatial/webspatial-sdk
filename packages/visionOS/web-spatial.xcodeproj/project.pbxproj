@@ -75,13 +75,14 @@
 				dynamic3d/SpatialTextureResource.swift,
 				MaterialSceneRefresh.swift,
 				SpatialApp.swift,
+				spatialdiv/SpatialDivAnimationManager.swift,
+				spatialdiv/SpatialDivAnimationSession.swift,
+				spatialdiv/SpatialDivTimelineEvaluator.swift,
 				Spatialized2DElement.swift,
 				SpatializedDynamic3DElement.swift,
 				SpatializedElement.swift,
 				SpatializedStatic3DElement.swift,
 				SpatialScene.swift,
-				spatialdiv/SpatialDivAnimationManager.swift,
-				spatialdiv/SpatialDivAnimationSession.swift,
 			);
 			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
 		};
