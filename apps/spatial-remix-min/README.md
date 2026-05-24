@@ -47,6 +47,7 @@ small USDZ used by `apps/test-server` demos (served at **`/modelasset/cone.usdz`
 | `/`          | Index with links                                                  |
 | `/lazy`      | `<SpatialBoot>` + lazy entry + `Model` + `enable-xr` |
 | `/lazy-gate` | `<SpatialBoot fallback={…}>` — optional loading UI; children after boot |
+| `/eager-ssr` | SSR loader + `<ClientOnly>` + `@webspatial/react-sdk/eager` client island |
 | `/server-ua` | `loader` returns `{ userAgent, hasWebSpatialToken }` for SSR HTML |
 
 ## See also
