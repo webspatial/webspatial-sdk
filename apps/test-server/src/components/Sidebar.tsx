@@ -77,6 +77,21 @@ export const routes = [
       })),
     ],
   },
+  {
+    path: '/spatial-div-motion',
+    label: 'SpatialDiv Motion (RFC)',
+    children: [
+      { path: '/spatial-div-motion', label: 'Plan A vs B hub' },
+      {
+        path: '/spatial-div-motion/multi-track',
+        label: 'Multi-track (Plan B)',
+      },
+      {
+        path: '/spatial-div-motion/simple-entrance',
+        label: 'simple() entrance',
+      },
+    ],
+  },
   { path: '/unit-convert', label: 'Unit Convert' },
   {
     path: '/scene',

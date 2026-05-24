@@ -84,6 +84,8 @@ struct AnimateSpatialized2DElementCommand: CommandDataProtocol {
     let delay: Double?
     let playbackRate: Double?
     let loop: SpatialDivLoopConfig?
+    /// Multi-track timeline (Phase 2b). When present, segment from/to are ignored.
+    let timeline: SpatialDivMotionTimelinePayload?
 }
 
 // MARK: - Resolved SRT Values
@@ -221,6 +223,13 @@ class SpatialDivAnimationSession {
 
     /// Loop configuration.
     let loopConfig: SpatialDivLoopConfig
+
+    /// Timeline evaluator when `timeline` play payload is used (Phase 2b).
+    var timelineEvaluator: SpatialDivTimelineEvaluator?
+
+    /// Snapshot at t=0 for timeline cancel restore.
+    var timelineStartSRT: ResolvedSRT = .identity
+    var timelineStartOpacity: Double = 1.0
 
     // MARK: - Loop State
 
