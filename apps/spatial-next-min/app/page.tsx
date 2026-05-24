@@ -34,8 +34,17 @@ export default function HomePage() {
             <strong>/eager</strong>
           </Link>{' '}
           — eager entry (<code>@webspatial/react-sdk/eager</code>). Spatial
-          implementation is statically linked. Same source as <code>/lazy</code>
-          , only the import root changed.
+          implementation is statically linked. Pure client route (no SSR shell).
+        </li>
+        <li>
+          <Link href="/eager-ssr">
+            <strong>/eager-ssr</strong>
+          </Link>{' '}
+          — <strong>SSR + eager:</strong> RSC shell reads{' '}
+          <code>User-Agent</code>; spatial UI via{' '}
+          <code>dynamic(..., &#123; ssr: false &#125;)</code> client island.
+          Supported pattern for Next.js apps that want eager without
+          server-rendering spatial primitives.
         </li>
         <li>
           <Link href="/capability-wrapper">
