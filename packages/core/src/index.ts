@@ -14,6 +14,7 @@ export * from './reality'
 export * from './types/types'
 export * from './types/animation'
 export * from './types/spatialDivAnimation'
+export * from './types/spatialDivMotion'
 export * from './runtime'
 
 export { composeSRT, decomposeSRT } from './utils'

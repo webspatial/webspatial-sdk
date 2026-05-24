@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { enableDebugTool } from '@webspatial/react-sdk'
 import { AnimeTest } from './AnimeTest'
 import { GSAPTest } from './GSAPTest'
@@ -13,6 +14,20 @@ export default function AnimateTest() {
   return (
     <div className="w-full h-full ">
       <div className="m-10">
+        <p className="text-gray-300 mb-4 text-sm">
+          Plan B RFC:{' '}
+          <Link className="text-blue-400 underline" to="/spatial-div-motion">
+            SpatialDiv Motion (timeline + single style)
+          </Link>
+          {' · '}
+          Plan A reference:{' '}
+          <Link
+            className="text-amber-400 underline"
+            to="/spatial-div-animation"
+          >
+            Session API (animation prop)
+          </Link>
+        </p>
         <PopmotionTest />
 
         <TeenjsTest />

@@ -1,4 +1,5 @@
 import type { TimingFunction } from './animation'
+import type { SpatialDivMotionTimeline } from './spatialDivMotion'
 
 // ---- SpatialDiv Transform sub-fields ----
 
@@ -150,6 +151,11 @@ export interface AnimateSpatialDivCommand {
   delay?: number
   loop?: boolean | { reverse?: boolean }
   playbackRate?: number
+  /**
+   * Multi-track timeline (Phase 2b). When set, native ignores `from`/`to` for
+   * interpolation. Mutually exclusive with segment fields on the native side.
+   */
+  timeline?: SpatialDivMotionTimeline
 }
 
 // ---- Cross-layer result ----
