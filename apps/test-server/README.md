@@ -10,7 +10,8 @@ This app hosts test pages under `apps/test-server/src`.
 
 ## Running
 
-- `npm run testServer` (root): Start dev server.
+- `npm run testServer` (root): Start dev server at **http://localhost:5190** (default port; override with `PORT=...` in `apps/test-server`).
+- `cd apps/test-server && npm run dev:web`: Plain-web mode (no `XR_ENV=avp`), same default port.
 - `npm run test` (root): Typecheck.
 - `cd apps/test-server && npm run build`: Build for production.
 

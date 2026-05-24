@@ -139,6 +139,17 @@ class SpatialDivAnimationManager: NSObject {
             return
         }
 
+        if let timeline = command.timeline {
+            handleTimelinePlay(
+                command: command,
+                timeline: timeline,
+                element: element,
+                elementId: elementId,
+                resolve: resolve
+            )
+            return
+        }
+
         let session = SpatialDivAnimationSession(
             animationId: command.animationId,
             elementId: elementId,
@@ -212,6 +223,51 @@ class SpatialDivAnimationManager: NSObject {
         resolve(.success(nil))
     }
 
+    private func handleTimelinePlay(
+        command: AnimateSpatialized2DElementCommand,
+        timeline: SpatialDivMotionTimelinePayload,
+        element: SpatializedElement,
+        elementId: String,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        let baselineSRT = Self.decomposeSRT(from: element.transform)
+        let baselineOpacity = element.opacity
+        let evaluator = SpatialDivTimelineEvaluator(
+            timeline: timeline,
+            baselineSRT: baselineSRT,
+            baselineOpacity: baselineOpacity
+        )
+        let session = SpatialDivAnimationSession(
+            animationId: command.animationId,
+            elementId: elementId,
+            to: nil,
+            from: nil,
+            duration: timeline.duration,
+            timingFunction: "linear",
+            delay: command.delay ?? timeline.delay ?? 0,
+            speed: command.playbackRate ?? timeline.playbackRate ?? 1.0,
+            loopConfig: command.loop ?? timeline.loop ?? .none
+        )
+
+        session.timelineEvaluator = evaluator
+        session.animatesTransform = evaluator.animatesTransform
+        session.animatesOpacity = evaluator.animatesOpacity
+
+        let start = evaluator.sampleSRTAndOpacity(at: 0)
+        session.timelineStartSRT = start.srt
+        session.timelineStartOpacity = start.opacity
+
+        if session.animatesTransform {
+            element.transform = Self.composeSRT(start.srt)
+        }
+        if session.animatesOpacity {
+            element.opacity = start.opacity
+        }
+
+        addSession(session)
+        resolve(.success(nil))
+    }
+
     // MARK: - Pause
 
     func handlePause(
@@ -271,11 +327,20 @@ class SpatialDivAnimationManager: NSObject {
         session.markCanceled()
 
         // Cancel restores element to the "from" values (Web Animation API cancel semantics).
-        if session.animatesTransform {
-            element.transform = Self.composeSRT(session.resolvedFromSRT)
-        }
-        if session.animatesOpacity {
-            element.opacity = session.resolvedFromOpacity
+        if let evaluator = session.timelineEvaluator {
+            if session.animatesTransform {
+                element.transform = Self.composeSRT(session.timelineStartSRT)
+            }
+            if session.animatesOpacity {
+                element.opacity = session.timelineStartOpacity
+            }
+        } else {
+            if session.animatesTransform {
+                element.transform = Self.composeSRT(session.resolvedFromSRT)
+            }
+            if session.animatesOpacity {
+                element.opacity = session.resolvedFromOpacity
+            }
         }
 
         sendCanceledEvent(session: session)
@@ -288,6 +353,18 @@ class SpatialDivAnimationManager: NSObject {
 
     private func applyInterpolatedValues(session: SpatialDivAnimationSession, progress: Double) {
         guard let element = findElement(session.elementId) else { return }
+
+        if let evaluator = session.timelineEvaluator {
+            let timeSec = progress * session.duration
+            let sample = evaluator.sampleSRTAndOpacity(at: timeSec)
+            if session.animatesTransform {
+                element.transform = Self.composeSRT(sample.srt)
+            }
+            if session.animatesOpacity {
+                element.opacity = sample.opacity
+            }
+            return
+        }
 
         if session.animatesTransform {
             let fromSRT = session.resolvedFromSRT
@@ -316,6 +393,17 @@ class SpatialDivAnimationManager: NSObject {
     private func applyFinalValues(session: SpatialDivAnimationSession) {
         guard let element = findElement(session.elementId) else { return }
 
+        if let evaluator = session.timelineEvaluator {
+            let sample = evaluator.sampleSRTAndOpacity(at: session.duration)
+            if session.animatesTransform {
+                element.transform = Self.composeSRT(sample.srt)
+            }
+            if session.animatesOpacity {
+                element.opacity = sample.opacity
+            }
+            return
+        }
+
         if session.animatesTransform {
             element.transform = Self.composeSRT(session.resolvedToSRT)
         }
@@ -327,6 +415,16 @@ class SpatialDivAnimationManager: NSObject {
     /// Apply the "from" values to the element (used in reset loop snap-back).
     private func applyFromValues(session: SpatialDivAnimationSession) {
         guard let element = findElement(session.elementId) else { return }
+
+        if let evaluator = session.timelineEvaluator {
+            if session.animatesTransform {
+                element.transform = Self.composeSRT(session.timelineStartSRT)
+            }
+            if session.animatesOpacity {
+                element.opacity = session.timelineStartOpacity
+            }
+            return
+        }
 
         if session.animatesTransform {
             element.transform = Self.composeSRT(session.resolvedFromSRT)

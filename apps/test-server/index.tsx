@@ -91,6 +91,9 @@ import SpatialDivPlayStatePage from './src/pages/spatial-div-animation/play-stat
 import SpatialDivPerfComparisonPage from './src/pages/spatial-div-animation/perf-comparison'
 import SpatialDivLoopAnimationPage from './src/pages/spatial-div-animation/loop-animation'
 import SpatialDivNestedAnimationPage from './src/pages/spatial-div-animation/nested-animation'
+import SpatialDivMotionHubPage from './src/pages/spatial-div-motion/index'
+import { SpatialDivMotionMultiTrackPage } from './src/pages/spatial-div-motion/multi-track'
+import { SpatialDivMotionSimpleEntrancePage } from './src/pages/spatial-div-motion/simple-entrance'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -239,6 +242,18 @@ function App() {
                   path="/spatial-div-animation/nested-animation"
                   element={<SpatialDivNestedAnimationPage />}
                 />
+                <Route
+                  path="/spatial-div-motion"
+                  element={<SpatialDivMotionHubPage />}
+                />
+                <Route
+                  path="/spatial-div-motion/multi-track"
+                  element={<SpatialDivMotionMultiTrackPage />}
+                />
+                <Route
+                  path="/spatial-div-motion/simple-entrance"
+                  element={<SpatialDivMotionSimpleEntrancePage />}
+                />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
                 <Route path="/scene/xrapp" element={<SceneXRApp />} />
@@ -367,7 +382,18 @@ function App() {
   )
 }
 
+/** HashRouter ignores pathname; deep links without `#` would otherwise show Home. */
+function syncHashFromPathname() {
+  const { pathname, search, hash } = window.location
+  if (hash || pathname === '/' || pathname === '/index.html') return
+  window.location.replace(
+    `${window.location.origin}${pathname}${search}#${pathname}${search}`,
+  )
+}
+
 const init = () => {
+  syncHashFromPathname()
+
   const rootElement = document.getElementById('root')
   if (!rootElement) {
     console.error('Root element not found')

@@ -5,6 +5,7 @@ import {
 } from './context/PortalInstanceContext'
 import { Spatialized2DElement } from '@webspatial/core-sdk'
 import type { SpatialDivAnimatedPropsInternal } from '@webspatial/core-sdk'
+import type { SpatialDivMotionBindingInternal } from './motion/motionBindingTypes'
 import {
   PortalSpatializedContainerProps,
   SpatialContentReadyCallback,
@@ -109,6 +110,13 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     delete (restProps as any).animation
   }
 
+  const motion = (restProps as any).motion as
+    | SpatialDivMotionBindingInternal
+    | undefined
+  if (motion) {
+    delete (restProps as any).motion
+  }
+
   const spatializedContainerObject: SpatializedContainerObject = useContext(
     SpatializedContainerContext,
   )!
@@ -179,6 +187,36 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     if (!animation || !spatializedElement) return
     const animProps = animation as SpatialDivAnimatedPropsInternal
     const suppressedFields = animProps.__getSuppressedFields?.()
+    portalInstanceObject.setSuppressedFields(suppressedFields ?? null)
+  })
+
+  // ---- SpatialDiv Motion binding (Plan B native path) ----
+  useEffect(() => {
+    if (!motion || !spatializedElement) return
+
+    if (motion.__setElement) {
+      motion.__setElement(
+        spatializedElement as unknown as import('@webspatial/core-sdk').Spatialized2DElement,
+      )
+    }
+
+    const suppressedFields = motion.__getSuppressedFields?.()
+    if (suppressedFields) {
+      portalInstanceObject.setSuppressedFields(suppressedFields)
+    }
+
+    return () => {
+      motion.__onUnbind?.()
+      if (motion.__setElement) {
+        motion.__setElement(null)
+      }
+      portalInstanceObject.setSuppressedFields(null)
+    }
+  }, [motion, spatializedElement, portalInstanceObject])
+
+  useEffect(() => {
+    if (!motion || !spatializedElement) return
+    const suppressedFields = motion.__getSuppressedFields?.()
     portalInstanceObject.setSuppressedFields(suppressedFields ?? null)
   })
 
