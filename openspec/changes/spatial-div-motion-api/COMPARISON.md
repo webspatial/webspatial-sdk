@@ -2,6 +2,8 @@
 
 This document supports design review on branch `proposal/spatial-div-motion-timeline`. It does **not** modify `openspec/changes/spatial-div-animation-api/`.
 
+**Product / PM (中文 API 摘要):** [API.zh.md](./API.zh.md)
+
 | | **Plan A — Session** (`spatial-div-animation-api`) | **Plan B — Motion** (`spatial-div-motion-api`, this change) |
 | --- | --- | --- |
 | **OpenSpec** | `openspec/changes/spatial-div-animation-api/` | `openspec/changes/spatial-div-motion-api/` |
