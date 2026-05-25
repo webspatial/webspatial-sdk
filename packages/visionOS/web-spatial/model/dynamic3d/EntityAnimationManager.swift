@@ -60,11 +60,13 @@ class EntityAnimationManager {
         entity: SpatialEntity,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
+        let resolvedFromTransform =
+            command.fromTransform ?? float4x4ToArray(entity.transform.matrix)
         let session = EntityAnimationSession(
             animationId: command.animationId,
             entityId: entity.spatialId,
             toTransform: command.toTransform,
-            fromTransform: command.fromTransform,
+            fromTransform: resolvedFromTransform,
             duration: command.duration ?? 0.3,
             timingFunction: command.timingFunction ?? "easeInOut",
             delay: command.delay ?? 0,
@@ -165,14 +167,15 @@ class EntityAnimationManager {
         // "Failed to set override status for bind point component member".
         // Using move(to:relativeTo:duration:0) creates a zero-duration animation
         // that properly takes over the bind-point ownership.
-        if let fromArray = session.fromTransform, fromArray.count == 16 {
+        let restoredTransform = session.fromTransform
+        if let fromArray = restoredTransform, fromArray.count == 16 {
             let fromMatrix = arrayToFloat4x4(fromArray)
             let fromTransform = Transform(matrix: fromMatrix)
             entity.move(to: fromTransform, relativeTo: entity.parent, duration: 0, timingFunction: .linear)
         }
 
         // Send canceled event to JS with the restored transform
-        sendCanceledEvent(session: session, entity: entity)
+        sendCanceledEvent(session: session)
         removeSession(command.animationId)
 
         resolve(.success(nil))
@@ -275,10 +278,10 @@ class EntityAnimationManager {
         scene.sendWebMsg("\(session.animationId)_completed", payload)
     }
 
-    /// Send the `{animationId}_canceled` event to JS with the entity's restored transform.
-    private func sendCanceledEvent(session: EntityAnimationSession, entity: SpatialEntity) {
+    /// Send the `{animationId}_canceled` event to JS with the resolved restore target.
+    private func sendCanceledEvent(session: EntityAnimationSession) {
         guard let scene = scene else { return }
-        let transform = float4x4ToArray(entity.transform.matrix)
+        guard let transform = session.fromTransform, transform.count == 16 else { return }
         let payload = AnimationCanceledPayload(type: "canceled", transform: transform)
         scene.sendWebMsg("\(session.animationId)_canceled", payload)
     }
