@@ -27,7 +27,7 @@ const { style, api } = useSpatialDivMotion({
 ## 变更摘要
 
 - 新增规范能力 **`spatial-div-motion`**：timeline 配置、`useSpatialDivMotion`、`MotionApi`、Web JS 后端、native timeline bridge（演进现有 `AnimateSpatialized2DElement`）。
-- **公开集成**仅通过 **`style`** 输出白名单动画字段；motion 路径不使用 `animation` prop。
+- **公开集成**以 **`style` + `api`** 为作者契约；不使用 Plan A 的 `animation` prop。spatial 原生路径另需内部 **`motion` 绑定**（或未来的 `MotionSpatialDiv` 封装），详见 `design.md` § Integration & documentation。
 - **双后端**：具备 `supports('useAnimation', ['element'])` 的 spatial 运行时走 native + 抑制；其余环境走 **Web 后端**（RAF 写 `style`），保证 Chrome/Safari 可播。
 - 复用会话实现分支的基础设施：抑制、bridge、Manager、SRT 合成等。
 - 新增 **`COMPARISON.md`** 对比方案 A（会话）与方案 B（motion）。

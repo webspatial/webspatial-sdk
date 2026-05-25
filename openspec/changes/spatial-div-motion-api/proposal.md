@@ -41,7 +41,7 @@ Simple fades remain one-liners via `useSpatialDivMotion.simple({ from, to, durat
 ## What Changes
 
 - Add normative capability **`spatial-div-motion`**: timeline config, `useSpatialDivMotion` hook, `MotionApi`, Web JS backend, and native timeline bridge payload (evolving existing `AnimateSpatialized2DElement`).
-- **Public integration** uses **`style` only** for whitelisted animated fields; no `animation` prop on the motion path.
+- **Public integration** uses **`style` + `api`** as the authoring contract; no Plan A `animation` prop. Spatial native runtimes also require internal **`motion` binding** (or a future `MotionSpatialDiv` wrapper); see `design.md` § Integration & documentation.
 - **Dual backend**: spatial runtimes with `supports('useAnimation', ['element'])` use native timeline playback + existing suppression rules; all other environments use the **Web backend** (RAF keyframes writing `style`) so the same config animates in Chrome/Safari.
 - Reuse infrastructure from the session implementation branch: `PortalInstanceObject` suppression, `Spatialized2DElement.animateSpatialDiv`, JSBridge events, `SpatialDivAnimationManager`, SRT compose on native.
 - Add **`COMPARISON.md`** documenting session API (plan A) vs motion API (plan B) for design review.
