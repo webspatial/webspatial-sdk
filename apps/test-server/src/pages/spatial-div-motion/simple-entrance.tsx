@@ -5,14 +5,14 @@ import { btnCls } from '../spatial-div-animation/shared'
 /** Match Plan A fade-in depth semantics: approach from z=-50 to rest (z=0), not larger +z. */
 const SIMPLE_ENTRANCE = {
   from: {
-    opacity: 0,
-    transform: { translate: { z: -50 } },
+    opacity: 0.6,
+    transform: { translate: { z: 10 } },
   },
   to: {
     opacity: 1,
-    transform: { translate: { z: 0 } },
+    transform: { translate: { z: 100 } },
   },
-  duration: 0.8,
+  duration: 3.8,
   timingFunction: 'easeOut' as const,
   autoStart: true,
 }

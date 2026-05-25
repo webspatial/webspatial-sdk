@@ -6,13 +6,23 @@ This document supports design review on branch `proposal/spatial-div-motion-time
 | --- | --- | --- |
 | **OpenSpec** | `openspec/changes/spatial-div-animation-api/` | `openspec/changes/spatial-div-motion-api/` |
 | **Hook** | `useAnimation(config)` → `[animation, api]` | `useSpatialDivMotion(config)` → `{ style, api }` |
-| **Integration** | `<div enable-xr animation={animation} style={...} />` | `<div enable-xr style={{ ...layout, ...style }} />` |
+| **Integration** | `<div enable-xr animation={animation} style={...} />` | `<div enable-xr style={{ ...layout, ...style }} />` (spatial native: also `motion={motion}` or `MotionSpatialDiv`) |
 | **Config shape** | Single `from` / `to`, one `duration`, one `delay` | `duration` + `tracks[]` with per-property keyframes |
 | **Multi-track overlap** | Not supported (chain `play` or multiple hooks) | **First-class** |
 | **Plain Web** | `play()` no-op + warning | **Web backend MUST animate** (RAF keyframes) |
 | **Native path** | `AnimateSpatialized2DElement` session | Timeline payload (reuse bridge/Manager; evaluator extended) |
 | **State channels** | `style` + `animation` (suppression) | **Single `style` outlet** for animated fields |
 | **Entity animation** | Same `useAnimation` entry (entity keys) | Unchanged; entity stays on entity path |
+
+### Integration footnote (Plan B)
+
+**Public DX:** `{ style, api }` — enough in plain Web. **Spatial native** also needs an internal runtime binding (`motion` prop from the hook, or a future `MotionSpatialDiv` that passes it internally). This is not the same as `@react-spring/web`, where `animated()` hides binding and the app only spreads spring `style` (see `design.md` § Integration & documentation).
+
+| Binding | Plan A | Plan B |
+| --- | --- | --- |
+| Portal prop | `animation` | `motion` |
+| Animated values | `animation` + `style` | **`style` only** |
+| Plain Web | `play()` no-op | Web RAF backend |
 
 ## Canonical acceptance scenario (Plan B)
 
