@@ -8,6 +8,8 @@
 
 本变更提出 **`useSpatialDivMotion`**：**以 timeline 为中心**、**单一 `style` 出口**、**双后端**（spatial 能力具备时走 native timeline，否则走 Web JS keyframe）。这是对会话 API 作为长期公开契约的 **替代方案**；**不修改** `openspec/changes/spatial-div-animation-api/`。
 
+**产品沟通：** 对外 API 与集成说明见 [API.zh.md](./API.zh.md)。
+
 ## 一览
 
 ```jsx
@@ -30,7 +32,7 @@ const { style, api } = useSpatialDivMotion({
 - **公开集成**以 **`style` + `api`** 为作者契约；不使用 Plan A 的 `animation` prop。spatial 原生路径另需内部 **`motion` 绑定**（或未来的 `MotionSpatialDiv` 封装），详见 `design.md` § Integration & documentation。
 - **双后端**：具备 `supports('useAnimation', ['element'])` 的 spatial 运行时走 native + 抑制；其余环境走 **Web 后端**（RAF 写 `style`），保证 Chrome/Safari 可播。
 - 复用会话实现分支的基础设施：抑制、bridge、Manager、SRT 合成等。
-- 新增 **`COMPARISON.md`** 对比方案 A（会话）与方案 B（motion）。
+- 新增 **`COMPARISON.md`** 对比方案 A（会话）与方案 B（motion）；**`API.zh.md`** 供产品/设计查阅 API 清单。
 - test-server 增加 `/spatial-div-motion` 对比路由与多轨验收 demo。
 
 ## 能力
