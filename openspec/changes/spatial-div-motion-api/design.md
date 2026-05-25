@@ -24,7 +24,12 @@ SpatialDiv sync uses host + probe DOM with field-level and transform-wide suppre
 ```typescript
 function useSpatialDivMotion(
   config: SpatialDivMotionConfig,
-): { style: SpatialDivMotionStyle; api: SpatialDivMotionApi }
+): {
+  style: SpatialDivMotionStyle
+  api: SpatialDivMotionApi
+  /** Spatial runtime only — runtime binding; see "Integration & documentation". */
+  motion?: SpatialDivMotionBindingInternal
+}
 
 namespace useSpatialDivMotion {
   function simple(config: SpatialDivMotionSimpleConfig): ReturnType<typeof useSpatialDivMotion>
@@ -112,6 +117,61 @@ Extend `AnimateSpatialized2DElement` `play` payload:
 ## simple() sugar
 
 `simple({ from, to, duration, ... })` → one timeline with tracks inferred from keys present in `from`/`to`, each track keyframes `[{ at: 0, value: from }, { at: duration, value: to }]`.
+
+## Integration & documentation
+
+### Public surface vs runtime binding
+
+The **authoring contract** for applications is `{ style, api }` (and `useSpatialDivMotion.simple()` sugar). Animated values MUST be merged via `style` only; the motion path MUST NOT use Plan A’s `animation` prop.
+
+**Native WebSpatial runtime** additionally requires an internal **element binding** so `useSpatialDivMotion` can attach to the `Spatialized2DElement` created by `PortalSpatializedContainer` and apply suppression. Today this is exposed as an optional third hook return and DOM prop:
+
+| Field / prop | Audience | Role |
+| --- | --- | --- |
+| `style` | All environments | Animated `opacity` / `transform` outlet (Web RAF or display during native run) |
+| `api` | All environments | `play`, `pause`, `cancel`, lifecycle |
+| `motion` (hook) / `motion` (prop) | Spatial + `supports('useAnimation', ['element'])` | **Runtime binding handle** — not timeline config, not CSS |
+
+When `supports('useAnimation', ['element'])` is `false` (plain browser), `motion` is `undefined` and applications need only `style` + `api`.
+
+### Documenting `motion` for developers
+
+Docs MUST present:
+
+1. **Quick start (default):** hook + `<div enable-xr style={{ ...layout, ...style }} />` — sufficient in Chrome/Safari.
+2. **Spatial runtime (advanced):** same node also passes `motion={motion}` from the hook when defined — described as **SDK runtime wiring**, analogous to Plan A’s `animation={animation}` but separate from animated values (which live in `style`).
+3. **Do not:** mutate `__setElement` / `__getSuppressedFields`; treat `motion` as a second style object; confuse with Framer Motion’s `<motion.div>`.
+
+Recommended doc titles: “Runtime binding (`motion`, spatial only)”, “Why Web does not need `motion`”.
+
+### Optional `MotionSpatialDiv` wrapper (recommended DX)
+
+The SDK MAY ship a thin `MotionSpatialDiv` (or equivalent) that:
+
+- Calls `useSpatialDivMotion` internally **or** accepts `{ style, api, motion }` from the caller
+- Renders `<div enable-xr motion={motion} style={{ ...layout, ...style }} />` internally
+
+When using the wrapper, **application code does not pass `motion` manually**; binding remains required inside the SDK. This mirrors `@react-spring/web`’s `animated(Component)` pattern (binding inside the wrapper; app only spreads spring `style`).
+
+`MotionSpatialDiv` is optional; low-level `motion` prop remains supported for custom trees and test-server demos until the wrapper is the documented default.
+
+### Comparison to React Spring (documentation only)
+
+`@react-spring/web` interop in test-server uses `useSpring` → `style` on `animated(withSpatialized2DElementContainer('div'))`. There is **no** separate `binding` prop: `animated()` owns the DOM/ref attachment.
+
+WebSpatial differs because the spatial target is a **Portal-created `Spatialized2DElement`**, not the same React DOM node as the hook’s callsite. Hence an explicit binding channel (`motion` or Plan A `animation`).
+
+Plan B Web backend is ergonomically similar to Spring (style-driven keyframes in the browser); native playback still uses the WebSpatial bridge, not Spring driving visionOS entities.
+
+### Relationship to Plan A `animation` prop
+
+| | Plan A session | Plan B motion |
+| --- | --- | --- |
+| Animated values | `style` + `animation` channel | **`style` only** |
+| Portal binding prop | `animation` | `motion` |
+| Plain Web `play()` | no-op | Web backend MUST animate |
+
+Binding mechanism is reused; only the prop name and value channel split differ.
 
 ## Decisions
 

@@ -34,7 +34,7 @@ export function SpatialDivMotionMultiTrackPage() {
       {
         property: 'opacity',
         keyframes: [
-          { at: 3, value: 0 },
+          { at: 3, value: 0.5 },
           { at: DURATION, value: 1 },
         ],
         easing: 'easeOut',

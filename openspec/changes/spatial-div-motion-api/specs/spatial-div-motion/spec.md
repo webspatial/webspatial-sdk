@@ -8,13 +8,14 @@
 
 ### Requirement: Provide SpatialDiv motion API with a single style outlet
 
-The SDK MUST provide `useSpatialDivMotion(config)` returning `{ style, api }`. The `style` object MUST carry only whitelisted animated fields (`opacity` and structured `transform` as a CSS string composed translate → rotate → scale). Applications MUST integrate motion by merging `style` onto spatialized HTML nodes (e.g. `<div enable-xr style={{ ...layout, ...motion.style }} />`). The motion API MUST NOT require an `animation` prop.
+The SDK MUST provide `useSpatialDivMotion(config)` returning at least `{ style, api }`. The `style` object MUST carry only whitelisted animated fields (`opacity` and structured `transform` as a CSS string composed translate → rotate → scale). Applications MUST integrate motion by merging `style` onto spatialized HTML nodes (e.g. `<div enable-xr style={{ ...layout, ...motionStyle }} />`). The motion API MUST NOT require Plan A’s `animation` prop.
 
 #### Scenario: Hook return shape
 
 - **WHEN** application code calls `useSpatialDivMotion(config)`
 - **THEN** the hook MUST return an object with `style` and `api`
 - **AND** `api` MUST expose `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, `finished`, and `playState`
+- **AND** when `supports('useAnimation', ['element'])` is `true`, the hook MAY return an optional native binding handle (e.g. `motion`) for Portal wiring; it MUST NOT be required for the public authoring contract when an SDK wrapper hides it
 
 #### Scenario: simple sugar desugars to a timeline
 
@@ -86,11 +87,38 @@ When the native motion backend is not active, the SDK MUST use a **Web backend**
 
 ---
 
+### Requirement: Native runtime binding via optional motion prop
+
+When the native motion backend is active, the SDK MUST expose an internal binding handle from `useSpatialDivMotion` that MUST be passed to the same `enable-xr` SpatialDiv as `style` (today: optional hook field `motion` and matching DOM prop consumed by `PortalSpatializedContainer`). Applications MUST NOT treat this handle as animation configuration.
+
+#### Scenario: Plain Web omits motion
+
+- **GIVEN** `supports('useAnimation', ['element'])` is `false`
+- **WHEN** application uses `useSpatialDivMotion` with only `style` merged onto `<div enable-xr />`
+- **THEN** the binding handle MUST be undefined and playback MUST use the Web backend without requiring a binding prop
+
+#### Scenario: Spatial runtime passes motion binding
+
+- **GIVEN** `supports('useAnimation', ['element'])` is `true` and the hook returns a defined binding handle
+- **WHEN** application targets native playback on a SpatialDiv
+- **THEN** the binding handle MUST be passed to that SpatialDiv (e.g. `motion={motion}`) so `__setElement` can attach before or when `api.play()` runs
+- **AND** suppression MUST follow `__getSuppressedFields()` while native is animating
+
+#### Scenario: Optional wrapper hides motion from app code
+
+- **GIVEN** the SDK provides `MotionSpatialDiv` (or equivalent documented wrapper)
+- **WHEN** application uses only the wrapper’s public props (`config` or layout + children)
+- **THEN** the wrapper MUST pass the binding handle internally
+- **AND** application documentation MAY describe integration as `{ style, api }` only
+
+---
+
 ### Requirement: Motion does not use animation prop binding
 
-The motion path MUST NOT require binding an opaque `animation` object to the element. Suppression and native binding MUST be owned by the motion controller internal to the SDK.
+The motion path MUST NOT require Plan A’s opaque `animation` object on the element. Suppression and native binding MUST be owned by the motion controller. Binding MAY use a separate `motion` handle or an SDK wrapper; it MUST NOT conflate animated values into `animation`.
 
 #### Scenario: No animation prop on motion path
 
-- **WHEN** an application uses only `useSpatialDivMotion` and `style`
+- **WHEN** an application uses `useSpatialDivMotion` for motion
 - **THEN** the element MUST NOT need an `animation` prop for motion to function
+- **AND** animated fields MUST be driven through `style` (Web backend or documented merge rules during native run)
