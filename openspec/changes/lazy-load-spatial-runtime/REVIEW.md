@@ -12,6 +12,8 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 
 This guide originally accompanied the spec-only proposal. The active branch now includes implementation commits as well; use `tasks.md` as the source of truth for which implementation slices are complete and which follow-ups remain.
 
+**Internal Feishu review (one page):** [`FEISHU-REVIEW.md`](./FEISHU-REVIEW.md) — decision summary + links here; paste §1–§7 into Lark, do not duplicate normative spec text.
+
 ## What you're reviewing
 
 | Artifact | What it answers |
