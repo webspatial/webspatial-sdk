@@ -8,6 +8,8 @@ The parallel OpenSpec change `spatial-div-animation-api` defines a **session-bas
 
 This change proposes **`useSpatialDivMotion`**: a **timeline-first**, **single `style` outlet** API with a **dual backend** (native timeline on capable spatial runtimes, JS keyframe driver on Web). It is an **alternative** to adopting the session API as the long-term public contract; it does **not** modify `openspec/changes/spatial-div-animation-api/`.
 
+**Product / PM (中文 API 摘要):** [API.zh.md](./API.zh.md)
+
 ## At a Glance
 
 ```jsx
