@@ -66,12 +66,20 @@ When the native motion backend is not active, the SDK MUST use a **Web backend**
 - **AND** `api.isAnimating` MUST be `true` while the timeline is running
 - **AND** `onComplete` MUST fire when a non-looping timeline finishes
 
-#### Scenario: Native backend when capable
+#### Scenario: WebSpatial runtime uses native backend only
 
-- **GIVEN** `supports('useAnimation', ['element'])` is `true` and the motion controller has bound a `Spatialized2DElement`
-- **WHEN** `api.play()` is called
-- **THEN** the SDK MUST send a timeline `play` command through `animateSpatialDiv` (or successor) and apply suppression for animated fields per Plan A rules
-- **AND** the Web backend MUST NOT run concurrently for the same hook instance
+- **GIVEN** `supports('useAnimation', ['element'])` is `true` (WebSpatial / visionOS runtime)
+- **WHEN** `api.play()` is called on a valid timeline
+- **THEN** the SDK MUST use the native motion backend (segment or timeline `play` via `animateSpatialDiv`)
+- **AND** the Web RAF backend MUST NOT run for playback on the same hook instance
+- **AND** when a `Spatialized2DElement` is bound via `motion`, the SDK MUST apply suppression for animated fields per Plan A rules while native is driving
+
+#### Scenario: play before bind does not fall back to Web RAF
+
+- **GIVEN** `supports('useAnimation', ['element'])` is `true`
+- **AND** `api.play()` runs before the `motion` binding has attached an element
+- **THEN** the SDK MUST NOT start Web RAF playback as a fallback
+- **AND** native playback MUST begin once the element is bound (queued session)
 
 #### Scenario: Native running does not require per-frame style
 

@@ -71,17 +71,21 @@ interface SpatialDivMotionTrack {
 ```mermaid
 flowchart TD
   Hook[useSpatialDivMotion]
-  Hook --> Pick{native available?}
-  Pick -->|yes| Native[NativeMotionBackend]
-  Pick -->|no| Web[WebMotionBackend RAF]
-  Native --> Bridge[animateSpatialDiv timeline play]
-  Native --> Suppress[Portal suppression]
-  Web --> DOM[style on host/probe path]
+  Hook --> Pick{supports useAnimation element?}
+  Pick -->|false| Web[WebMotionBackend RAF]
+  Pick -->|true| Native[NativeMotionBackend only]
+  Native --> Bind{element bound?}
+  Bind -->|no| Queued[queued until motion bind]
+  Bind -->|yes| Bridge[animateSpatialDiv play]
+  Bridge --> Suppress[Portal suppression while running/paused]
+  Web --> DOM[style via RAF]
 ```
 
-**Native available** when: `supports('useAnimation', ['element']) === true` AND implementation has bound `Spatialized2DElement` (future: same binding hook as Plan A, driven by motion controller instead of `animation` prop).
+**WebSpatial runtime** (`supports('useAnimation', ['element']) === true`): playback MUST be native-only. Segment-equivalent timelines MAY use segment `from`/`to`; all others use `timeline`. If `play()` runs before bind, the session is **queued** until `motion` wires `__setElement` — there is **no** Web RAF fallback on visionOS.
 
-**Web backend** runs for plain browsers and as fallback before spatial bind; it MUST drive the same `style` shape.
+**Plain Web** (`supports === false`): only the Web RAF backend runs; it MUST drive the same `style` shape.
+
+**`style` on WebSpatial** remains the React merge target and is sampled at pause / complete / cancel boundaries; it is not the playback engine while native is running.
 
 **Native `style` outlet during playback:** While `running`, native owns animated fields and Portal suppression blocks DOM sync from intermediate `style` samples. The hook still exposes a single `style` merge target, but authors should treat **pause / complete / cancel** as the boundaries where `style` is sampled via `evaluateMotionTimeline` (pause uses wall-clock progress tracked in the motion session). Do not poll `style` mid-native-run for acceptance.
 
@@ -130,7 +134,7 @@ The **authoring contract** for applications is `{ style, api }` (and `useSpatial
 
 | Field / prop | Audience | Role |
 | --- | --- | --- |
-| `style` | All environments | Animated `opacity` / `transform` outlet (Web RAF or display during native run) |
+| `style` | All environments | Animated `opacity` / `transform` outlet (Web RAF in plain browser; boundary samples + layout merge on WebSpatial) |
 | `api` | All environments | `play`, `pause`, `cancel`, lifecycle |
 | `motion` (hook) / `motion` (prop) | Spatial + `supports('useAnimation', ['element'])` | **Runtime binding handle** — not timeline config, not CSS |
 
@@ -140,8 +144,8 @@ When `supports('useAnimation', ['element'])` is `false` (plain browser), `motion
 
 Docs MUST present:
 
-1. **Quick start (default):** hook + `<div enable-xr style={{ ...layout, ...style }} />` — sufficient in Chrome/Safari.
-2. **Spatial runtime (advanced):** same node also passes `motion={motion}` from the hook when defined — described as **SDK runtime wiring**, analogous to Plan A’s `animation={animation}` but separate from animated values (which live in `style`).
+1. **Quick start (plain browser):** hook + `<div enable-xr style={{ ...layout, ...style }} />` — sufficient in Chrome/Safari (Web RAF playback).
+2. **WebSpatial runtime (required wiring):** same node MUST pass `motion={motion}` when the hook returns it — **native-only playback** on visionOS; missing `motion` means no animation until bind. Described as **SDK runtime wiring**, analogous to Plan A’s `animation={animation}` but separate from animated values (which live in `style`).
 3. **Do not:** mutate `__setElement` / `__getSuppressedFields`; treat `motion` as a second style object; confuse with Framer Motion’s `<motion.div>`.
 
 Recommended doc titles: “Runtime binding (`motion`, spatial only)”, “Why Web does not need `motion`”.

@@ -200,6 +200,7 @@ function useSpatialDivMotionInternal(
   }, [applyAt, stopRaf])
 
   const play = useCallback(() => {
+    // WebSpatial: native-only playback (no Web RAF). Plain browser: webPlay only.
     if (nativeCapable && supports('useAnimation', ['element'])) {
       stopRaf()
       native.nativePlay()

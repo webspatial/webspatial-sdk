@@ -2,8 +2,10 @@
 
 ## Terminology
 
-- **WebSpatial runtime**: `supports('useAnimation', ['element']) === true` and a bound `Spatialized2DElement`.
-- **Web motion backend**: RAF keyframe evaluation driving the `style` outlet (Phase 1).
+- **WebSpatial runtime**: `supports('useAnimation', ['element']) === true` (visionOS / WebSpatial shell). Playback on this runtime MUST use the **native** backend only; the Web RAF backend MUST NOT run for timeline playback on the same hook instance.
+- **Bound element**: a `Spatialized2DElement` attached via the hook’s `motion` binding (`__setElement`) on the same `enable-xr` node as `style`.
+- **Queued session**: `api.play()` was called before bind; native playback starts when the element becomes available. This is **not** the Web motion backend.
+- **Web motion backend**: RAF keyframe evaluation driving the `style` outlet — **plain browser only** (`supports('useAnimation', ['element']) === false`).
 - **Native segment play**: existing `animateSpatialDiv` `play` with `from` / `to` (Phase 2a); MUST remain supported.
 - **Native timeline play**: `animateSpatialDiv` `play` with a `timeline` payload (this spec).
 - **Segment-equivalent timeline**: every track has exactly two keyframes at `at === 0` and `at === duration`, all tracks share one easing — MAY use native segment play instead of timeline play.
@@ -70,13 +72,18 @@ Native MUST sample each track independently at timeline time `t` (seconds, after
 
 ---
 
-### Requirement: Hook selects native timeline when segment compile fails
+### Requirement: WebSpatial runtime uses native playback only
 
-`useSpatialDivMotion` MUST prefer native playback in WebSpatial runtime when a `Spatialized2DElement` is bound. Backend selection MUST follow this order:
+When `supports('useAnimation', ['element'])` is `true`, `useSpatialDivMotion` MUST use the **native** motion backend for `play` / `pause` / `cancel`. The Web RAF backend MUST NOT drive timeline playback on the same hook instance (no fallback, no concurrent RAF).
+
+Native `play` payload selection on WebSpatial runtime:
 
 1. If segment-equivalent → native **segment** `play` (`from` / `to`) — Phase 2a.
-2. Else if native capable → native **timeline** `play` (`timeline` payload) — Phase 2b.
-3. Else → Web RAF backend.
+2. Else → native **timeline** `play` (`timeline` payload) — Phase 2b.
+
+When `supports('useAnimation', ['element'])` is `false` (plain browser), only the **Web RAF** backend MAY run.
+
+Applications on WebSpatial runtime MUST pass the `motion` binding handle on the same `enable-xr` node as `style` so the native session can attach before or when `api.play()` runs.
 
 #### Scenario: multi-track uses timeline on AVP
 
@@ -84,7 +91,7 @@ Native MUST sample each track independently at timeline time `t` (seconds, after
 - **AND** `supports('useAnimation', ['element'])` is `true`
 - **WHEN** the element is bound and `api.play()` runs
 - **THEN** the SDK MUST send `play` with `timeline` (not segment `from`/`to`)
-- **AND** the Web RAF backend MUST NOT run concurrently
+- **AND** the Web RAF backend MUST NOT run
 
 #### Scenario: simple entrance may use segment native path
 
@@ -93,11 +100,21 @@ Native MUST sample each track independently at timeline time `t` (seconds, after
 - **THEN** the SDK MAY send segment `from`/`to` instead of `timeline`
 - **AND** visual result MUST match timeline play within the tolerances above
 
-#### Scenario: Plain Web unchanged
+#### Scenario: Plain Web uses RAF only
 
 - **GIVEN** `supports('useAnimation', ['element'])` is `false`
 - **WHEN** `api.play()` runs on any valid timeline config
 - **THEN** only the Web RAF backend MUST run
+- **AND** native `animateSpatialDiv` MUST NOT be invoked for that hook instance
+
+#### Scenario: play before bind queues native session (not Web RAF)
+
+- **GIVEN** `supports('useAnimation', ['element'])` is `true`
+- **AND** `api.play()` runs before `motion` has bound a `Spatialized2DElement`
+- **WHEN** the session is in `queued`
+- **THEN** the SDK MUST NOT start the Web RAF backend for playback
+- **AND** native playback MUST start when `__setElement` attaches the element (or on a later `play()` after bind)
+- **AND** applications MUST treat missing `motion` on spatial nodes as an integration error (no animation until bind)
 
 ---
 

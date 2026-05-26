@@ -60,6 +60,7 @@ export function useNativeMotionSession(
   const elementRef = useRef<Spatialized2DElement | null>(null)
   const unmountedRef = useRef(false)
   const warnedRef = useRef(false)
+  const warnedQueuedRef = useRef(false)
   const nativeControllingRef = useRef(false)
   const playStartWallMsRef = useRef(0)
   const pausedElapsedMsRef = useRef(0)
@@ -273,6 +274,12 @@ export function useNativeMotionSession(
       const element = elementRef.current
       if (!element) {
         session.state = 'queued'
+        if (!warnedQueuedRef.current) {
+          warnedQueuedRef.current = true
+          console.warn(
+            '[useSpatialDivMotion] Native play is queued: pass motion={motion} on the same enable-xr node. WebSpatial uses native playback only (no Web RAF fallback).',
+          )
+        }
         bump()
         return
       }
@@ -391,9 +398,8 @@ export function useNativeMotionSession(
       },
       __getSuppressedFields() {
         const s = sessionRef.current
-        // Suppress only while native is actually driving the entity. During
-        // `queued` (waiting for Spatialized2DElement bind), Web RAF must still
-        // sync `style` to the probe → platform or the panel stays frozen.
+        // Suppress only while native is driving (running/paused). `queued` waits
+        // for motion bind — playback is still native-only; do not fall back to Web RAF.
         if (!s || (s.state !== 'running' && s.state !== 'paused')) return null
         return getMotionSuppressedFields(s.config)
       },
