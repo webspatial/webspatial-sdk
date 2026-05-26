@@ -191,6 +191,71 @@ describe('JSBCommand', () => {
       JSON.stringify({ id: 'so-1', color: '#fff' }),
     )
   })
+
+  it('serializes SpatialDiv timeline keyframes for native playback', async () => {
+    const { AnimateSpatialDivJSBCommand } = await import('./JSBCommand')
+
+    await new AnimateSpatialDivJSBCommand({
+      animationId: 'anim-1',
+      type: 'play',
+      elementId: 'element-1',
+      duration: 5,
+      timingFunction: 'linear',
+      timeline: {
+        duration: 5,
+        tracks: [
+          {
+            property: 'transform.translate.x',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 5, value: 100 },
+            ],
+            easing: 'linear',
+          },
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 3, value: 0 },
+              { at: 5, value: 1 },
+            ],
+            easing: 'easeOut',
+          },
+        ],
+      },
+    }).execute()
+
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'AnimateSpatialized2DElement',
+      JSON.stringify({
+        type: 'play',
+        animationId: 'anim-1',
+        elementId: 'element-1',
+        duration: 5,
+        timingFunction: 'linear',
+        timeline: {
+          duration: 5,
+          tracks: [
+            {
+              property: 'transform.translate.x',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 5, value: 100 },
+              ],
+              easing: 'linear',
+            },
+            {
+              property: 'opacity',
+              keyframes: [
+                { at: 3, value: 0 },
+                { at: 5, value: 1 },
+              ],
+              easing: 'easeOut',
+            },
+          ],
+        },
+      }),
+    )
+  })
 })
 
 describe('SpatialObject', () => {

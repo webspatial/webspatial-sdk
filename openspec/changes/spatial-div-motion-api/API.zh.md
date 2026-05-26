@@ -161,6 +161,18 @@ const { style, api, motion } = useSpatialDivMotion({ ... })
 - 它是 SDK 把 hook 和底层 SpatialDiv **绑在一起** 的「插头」，类似 Plan A 的 `animation={animation}`，但动画值仍在 `style` 里。
 - 未来可提供 **`MotionSpatialDiv` 组件**，应用侧不再手写 `motion`（spec 已预留，**尚未实现**）。
 
+### 5.2.1 Native 播放时 `style` 何时有意义
+
+| 阶段 | `style` 行为 |
+|------|----------------|
+| **播放中（running）** | Native 驱 entity；Portal 对动画字段 **suppression**，React `style` **不**逐帧追 native（勿用 `style` 做中间帧验收） |
+| **暂停（paused）** | Hook 按 timeline **采样当前进度** 写回 `style`（与画面一致，供恢复前 React/DOM 状态对齐） |
+| **结束（finished）** | `style` 落到 timeline 终点；释放 suppression 后 DOM 与 native 对齐 |
+| **取消（cancel）** | `style` 回到会话起点（t=0） |
+| **纯 Web 后端** | 全程由 RAF 驱动 `style` 逐帧更新 |
+
+作者仍只合并一份 `style`；spatial 下额外传 `motion` 完成绑定与 suppression。
+
 ### 5.3 与 React Spring 的关系
 
 test-server 里 Spring 用法是 `useSpring` + `animated(div)`，**没有**单独的 binding prop。

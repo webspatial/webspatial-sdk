@@ -571,9 +571,12 @@ class SpatialDivAnimationManager: NSObject {
     private func buildCurrentValuesPayload(session: SpatialDivAnimationSession, useTo: Bool) -> SpatialDivAnimationValuesPayload {
         var transformPayload: SpatialDivTransformPayload? = nil
         var opacityPayload: Double? = nil
+        let timelineSample = session.timelineEvaluator?.sampleSRTAndOpacity(
+            at: useTo ? session.duration : 0
+        )
 
         if session.animatesTransform {
-            let srt = useTo ? session.resolvedToSRT : session.resolvedFromSRT
+            let srt = timelineSample?.srt ?? (useTo ? session.resolvedToSRT : session.resolvedFromSRT)
             transformPayload = SpatialDivTransformPayload(
                 translate: Vec3Payload(x: srt.translateX, y: srt.translateY, z: srt.translateZ),
                 rotate: Vec3Payload(x: srt.rotateX, y: srt.rotateY, z: srt.rotateZ),
@@ -582,7 +585,7 @@ class SpatialDivAnimationManager: NSObject {
         }
 
         if session.animatesOpacity {
-            opacityPayload = useTo ? session.resolvedToOpacity : session.resolvedFromOpacity
+            opacityPayload = timelineSample?.opacity ?? (useTo ? session.resolvedToOpacity : session.resolvedFromOpacity)
         }
 
         return SpatialDivAnimationValuesPayload(

@@ -722,6 +722,8 @@ export class AnimateSpatialDivJSBCommand extends JSBCommand {
       if (this.command.loop !== undefined) params.loop = this.command.loop
       if (this.command.playbackRate !== undefined)
         params.playbackRate = this.command.playbackRate
+      if (this.command.timeline !== undefined)
+        params.timeline = this.command.timeline
     }
 
     return params
