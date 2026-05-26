@@ -13,9 +13,10 @@
 
 | 元素类型 | 本 change 是否交付 |
 |----------|-------------------|
-| `Spatialized2DElement`（SpatialDiv） | **是** |
-| `SpatializedStatic3DElement`（Model） | 否 → umbrella Phase 2 |
-| Reality Entity（Dynamic3D 内） | 否（仅 segment `useAnimation`）→ umbrella Phase 3 |
+| `Spatialized2DElement`（SpatialDiv） | **是**（`useSpatialDivMotion` = `useSpatializedMotion({ kind: 'spatialized2d' })`） |
+| `SpatializedStatic3DElement`（Model） | 否 → umbrella [已交付](../spatialized-element-motion-api/API.zh.md) |
+| `SpatializedDynamic3DElement`（Reality 容器） | 否 → umbrella [已交付](../spatialized-element-motion-api/API.zh.md) |
+| Reality 内 `SpatialEntity` | 否 → 继续 `useAnimation`（非 container motion） |
 
 ---
 
