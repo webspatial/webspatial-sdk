@@ -8,7 +8,7 @@ SpatialDiv sync uses host + probe DOM with field-level and transform-wide suppre
 
 - Timeline-first config with per-track keyframes and global `duration`.
 - `useSpatialDivMotion` returns `{ style, api }` for `<div enable-xr style={...} />`.
-- **Dual backend:** native timeline when `supports('useAnimation', ['element'])` and spatial binding exists; otherwise Web RAF backend (must not no-op).
+- **Dual backend:** WebSpatial runtime (`supports('useAnimation', ['element'])`) uses **native-only** playback; plain browser uses Web RAF (must not no-op). Requires `motion` binding on spatial nodes.
 - `useSpatialDivMotion.simple()` sugar for two-keyframe single-segment animations (parity with Plan A minimal case).
 - Reuse Plan A bridge, Manager, suppression, SRT compose on native.
 

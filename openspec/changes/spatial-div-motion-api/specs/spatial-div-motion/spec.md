@@ -15,6 +15,7 @@ The SDK MUST provide `useSpatialDivMotion(config)` returning at least `{ style, 
 - **WHEN** application code calls `useSpatialDivMotion(config)`
 - **THEN** the hook MUST return an object with `style` and `api`
 - **AND** `api` MUST expose `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, `finished`, and `playState`
+- **AND** when a native session is `queued` (play before `motion` bind), `playState` MAY surface as `running` until bind or terminal state (there is no separate `queued` value in the public type)
 - **AND** when `supports('useAnimation', ['element'])` is `true`, the hook MAY return an optional native binding handle (e.g. `motion`) for Portal wiring; it MUST NOT be required for the public authoring contract when an SDK wrapper hides it
 
 #### Scenario: simple sugar desugars to a timeline
