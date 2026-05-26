@@ -4,6 +4,7 @@ import {
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
 import { SpatialWebEvent } from './SpatialWebEvent'
+import { parseSpatialDivAnimatedValues } from './spatialdiv/parseSpatialDivAnimatedValues'
 import type {
   AnimateSpatialDivCommand,
   AnimateSpatialDivResult,
@@ -62,10 +63,13 @@ export class Spatialized2DElement extends SpatializedElement {
   animateSpatialDiv(
     command: AnimateSpatialDivCommand & { type: 'play' },
   ): Promise<AnimateSpatialDivResult>
+  animateSpatialDiv(
+    command: AnimateSpatialDivCommand & { type: 'pause' },
+  ): Promise<SpatialDivAnimatedValues>
   animateSpatialDiv(command: AnimateSpatialDivCommand): Promise<void>
   async animateSpatialDiv(
     command: AnimateSpatialDivCommand,
-  ): Promise<AnimateSpatialDivResult | void> {
+  ): Promise<AnimateSpatialDivResult | SpatialDivAnimatedValues | void> {
     const { animationId, type } = command
 
     if (type === 'play') {
@@ -157,6 +161,10 @@ export class Spatialized2DElement extends SpatializedElement {
         result.errorMessage ??
           `AnimateSpatialized2DElement ${type} command failed`,
       )
+    }
+
+    if (type === 'pause') {
+      return parseSpatialDivAnimatedValues(result.data)
     }
   }
 

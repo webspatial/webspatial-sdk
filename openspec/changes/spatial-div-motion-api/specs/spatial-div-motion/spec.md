@@ -93,8 +93,15 @@ When the native motion backend is not active, the SDK MUST use a **Web backend**
 
 - **GIVEN** a native timeline has been playing and `api.pause()` succeeds
 - **WHEN** the session enters `paused`
-- **THEN** the hook MUST update `style` to the timeline sample at the paused progress (same evaluator as the Web backend)
+- **THEN** the hook MUST update `style` from the native pause response values when provided
+- **AND** otherwise MAY fall back to the JS timeline evaluator at paused progress (Web backend uses evaluator only)
 - **AND** `style` MUST remain the authoritative React state for that progress until `play()` resumes or `cancel()` / completion resets it
+
+#### Scenario: Native onComplete uses bridge final values for style
+
+- **GIVEN** a native timeline completes
+- **WHEN** `onComplete(values)` fires
+- **THEN** the hook MUST set `style` from `values` (bridge-reported), not a separate JS-only snapshot that can diverge
 
 #### Scenario: Web pause syncs style to timeline sample
 
@@ -132,6 +139,13 @@ When the native motion backend is active, the SDK MUST expose an internal bindin
 - **WHEN** application targets native playback on a SpatialDiv
 - **THEN** the binding handle MUST be passed to that SpatialDiv (e.g. `motion={motion}`) so `__setElement` can attach before or when `api.play()` runs
 - **AND** suppression MUST follow `__getSuppressedFields()` while native is animating
+
+#### Scenario: Unbind does not invoke onCancel
+
+- **GIVEN** a native motion session is active on a bound element
+- **WHEN** the `motion` binding is torn down (`__onUnbind`) without an explicit `api.cancel()`
+- **THEN** the SDK MUST send native `cancel` and release the session
+- **AND** `onCancel` MUST NOT be called (aligned with Plan A `useSpatialDivAnimation` unbind semantics)
 
 #### Scenario: Optional wrapper hides motion from app code
 
