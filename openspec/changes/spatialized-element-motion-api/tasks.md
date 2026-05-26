@@ -14,9 +14,8 @@
 
 ## Phase 2 — Static3D + Dynamic3D native timelines
 
-- [x] Core: `AnimateSpatializedStatic3DCommand` + `SpatializedStatic3DElement.animateMotion()`
-- [x] Core: `AnimateSpatializedDynamic3DCommand` + `SpatializedDynamic3DElement.animateMotion()`
-- [x] Native: `Static3DMotionAnimationManager` + `Dynamic3DMotionAnimationManager` in Xcode target + JSB listeners
+- [x] Core: `SpatializedStatic3DElement.animateMotion()` / `SpatializedDynamic3DElement.animateMotion()` via unified `AnimateSpatializedElementMotion`
+- [x] Native: `SpatializedContainerMotionAnimationManager` + single JSB listener `AnimateSpatializedElementMotion` (`targetKind`: static3d | dynamic3d)
 - [x] React: Model / Reality `motion` binding; `useSpatializedMotion({ kind: 'static3d' | 'dynamic3d' })`
 - [x] test-server demos under **Spatialized Motion** (`model-container`, `reality-container`)
 
@@ -33,10 +32,11 @@
 - [ ] Entity transform timeline via existing `useAnimation` / `AnimateTransform` (not `SpatializedMotionController`)
 - [ ] Sub-spec `spatialized-entity-motion` remains informational only until product prioritizes
 
-## Phase 5 — Follow-ups (out of scope here)
+## Phase 5 — Native consolidation + public surface cleanup
 
-- [ ] Merge native Swift managers behind shared `TransformSink` (Static3D `modelTransform` vs element `transform`)
-- [ ] Optional unified JSB `AnimateSpatializedElementMotion` + `targetKind`
-- [ ] Remove deprecated Core controller class aliases (`SpatialDivMotionController`, etc.)
-- [ ] `supports('useSpatializedMotion', [kind])` dedicated top-level token
-- [ ] Web RAF for Static3D / Dynamic3D (if product requires)
+- [x] Merge native Swift Static3D/Dynamic3D managers → `SpatializedContainerMotionAnimationManager` + `SpatializedMotionTransformSink`
+- [x] Unified JSB `AnimateSpatializedElementMotion` + `targetKind` only (removed `AnimateSpatializedStatic3DElement` / `AnimateSpatializedDynamic3DElement`)
+- [ ] Merge 2D into `AnimateSpatializedElementMotion` (`targetKind: spatialized2d`) — deferred; keep `AnimateSpatialized2DElement` for now
+- [x] Remove deprecated Core controller class aliases (`SpatialDivMotionController`, `Static3DMotionController`, `Dynamic3DMotionController`)
+- [x] `supports('useSpatializedMotion', [kind])` top-level capability (mirrors `useAnimation` element/static3d/dynamic3d flags)
+- [ ] Web RAF for Static3D / Dynamic3D (deferred — product requires native-only for 3D containers)

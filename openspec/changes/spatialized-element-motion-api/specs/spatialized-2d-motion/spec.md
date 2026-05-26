@@ -17,5 +17,5 @@ The SDK MUST treat `Spatialized2DElement` motion as `kind: 'spatialized2d'`. Imp
 
 #### Scenario: Core controller parity
 
-- **WHEN** authors construct `SpatialDivMotionController` or `new SpatializedMotionController(config, 'spatialized2d')`
+- **WHEN** authors call `element.motion(config)` on a `Spatialized2DElement` or `new SpatializedMotionController(config, 'spatialized2d')`
 - **THEN** playback behavior MUST be equivalent for the same timeline config

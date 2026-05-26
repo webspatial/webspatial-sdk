@@ -7,7 +7,6 @@ export type {
   SpatializedPlaybackApi,
 } from './useSpatializedMotion'
 export {
-  SpatialDivMotionController,
   SpatializedMotionController,
   evaluateMotionTimeline,
   validateSpatialDivMotionConfig,

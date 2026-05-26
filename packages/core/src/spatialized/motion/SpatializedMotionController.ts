@@ -39,7 +39,7 @@ export interface SpatializedMotionControllerOptions {
   /** Initial element; may be set later via {@link attachElement}. */
   element?: MotionHostElement | null
   /**
-   * When set, overrides `supports('useAnimation', ['element'])` for backend selection.
+   * When set, overrides `supports('useSpatializedMotion', [kind])` for backend selection.
    * React passes the SDK `supports()` result so test mocks apply.
    */
   forceNativePlayback?: boolean
@@ -215,10 +215,7 @@ export class SpatializedMotionController
       if (this.policy.webPlayback === 'none') {
         if (!this.warnedNativeOnly) {
           this.warnedNativeOnly = true
-          warnNativeOnlyMotion(
-            this.policy.controllerLabel,
-            this.policy.capabilityToken,
-          )
+          warnNativeOnlyMotion(this.policy.controllerLabel, this.kind)
         }
         return
       }
@@ -274,7 +271,7 @@ export class SpatializedMotionController
     if (this.forceNativePlayback !== undefined) {
       return this.forceNativePlayback
     }
-    return supports('useAnimation', [this.policy.capabilityToken])
+    return supports('useSpatializedMotion', [this.kind])
   }
 
   private bump(): void {
@@ -583,7 +580,7 @@ export class SpatializedMotionController
       if (!this.warnedNative) {
         this.warnedNative = true
         console.warn(
-          `[${this.policy.controllerLabel}] Native motion requires supports(useAnimation, ['${this.policy.capabilityToken}']).`,
+          `[${this.policy.controllerLabel}] Native motion requires supports(useSpatializedMotion, ['${this.kind}']).`,
         )
       }
       return
