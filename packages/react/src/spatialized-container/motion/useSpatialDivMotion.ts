@@ -8,6 +8,7 @@ import {
 } from 'react'
 import type { CSSProperties } from 'react'
 import type {
+  SpatialDivAnimatedValues,
   SpatialDivMotionApi,
   SpatialDivMotionConfig,
   SpatialDivMotionPlayState,
@@ -61,11 +62,21 @@ function useSpatialDivMotionInternal(
     }
   }, [])
 
-  const applyAt = useCallback((timeSec: number) => {
-    const values = evaluateMotionTimeline(configRef.current, timeSec)
-    setStyle(valuesToMotionStyle(values))
-    return values
-  }, [])
+  const applyStyleFromValues = useCallback(
+    (values: SpatialDivAnimatedValues) => {
+      setStyle(valuesToMotionStyle(values))
+    },
+    [],
+  )
+
+  const applyAt = useCallback(
+    (timeSec: number) => {
+      const values = evaluateMotionTimeline(configRef.current, timeSec)
+      applyStyleFromValues(values)
+      return values
+    },
+    [applyStyleFromValues],
+  )
 
   const finishNaturally = useCallback(
     (values: ReturnType<typeof evaluateMotionTimeline>) => {
@@ -86,7 +97,7 @@ function useSpatialDivMotionInternal(
         stopRaf()
         playStateRef.current = 'finished'
         finishedRef.current = true
-        applyAt(config.duration)
+        applyStyleFromValues(values)
         tick()
         onComplete?.(values)
       },
@@ -95,7 +106,7 @@ function useSpatialDivMotionInternal(
         playStateRef.current = 'idle'
         finishedRef.current = false
         startedRef.current = false
-        applyAt(0)
+        applyStyleFromValues(values)
         tick()
         onCancel?.(values)
       },
@@ -107,9 +118,13 @@ function useSpatialDivMotionInternal(
       },
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- wrap latest user callbacks
-  }, [config, stopRaf, applyAt, tick])
+  }, [config, stopRaf, applyStyleFromValues, tick])
 
-  const native = useNativeMotionSession(nativeMotionConfig, tick, applyAt)
+  const native = useNativeMotionSession(
+    nativeMotionConfig,
+    tick,
+    applyStyleFromValues,
+  )
   const nativeCapable = !!native.motionBinding
 
   const runFrame = useCallback(() => {

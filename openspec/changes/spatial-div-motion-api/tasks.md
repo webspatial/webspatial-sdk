@@ -38,7 +38,7 @@ Spec: [specs/spatial-div-motion-native-timeline/spec.md](./specs/spatial-div-mot
 - [x] 4b.3 `TimelineEvaluator` in `SpatialDivAnimationSession.swift` (DisplayLink sampling)
 - [x] 4b.4 Portal suppression + `motion` binding for timeline sessions (reuse 4a)
 - [x] 4b.5 Unit parity: Web `evaluateMotionTimeline` + Swift `SpatialDivTimelineEvaluator` (canonical multi-track)
-- [ ] 4b.5b Simulator e2e on `/spatial-div-motion/multi-track` (ci-test harness — not yet added)
+- [x] 4b.5b Simulator e2e: `tests/ci-test/src/specs/spatial-div-motion.spec.tsx` (canonical translate.x advances)
 
 ## 5. Product decision
 

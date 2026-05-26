@@ -4,6 +4,7 @@ import {
   supports,
   type AnimateSpatialDivCommand,
   type AnimateSpatialDivResult,
+  type SpatialDivAnimatedValues,
   type SpatialDivMotionConfig,
   type SpatialDivMotionPlayState,
   type SpatialDivMotionTimeline,
@@ -42,8 +43,8 @@ function nextAnimationId(): string {
 export function useNativeMotionSession(
   config: SpatialDivMotionConfig,
   onNativeStateChange?: () => void,
-  /** Sync React `style` to timeline sample (pause / cancel / complete boundaries). */
-  syncStyleAtTimelineSec?: (timeSec: number) => void,
+  /** Sync React `style` from sampled or native-reported animated values. */
+  syncStyleFromValues?: (values: SpatialDivAnimatedValues) => void,
 ): {
   motionBinding: SpatialDivMotionBindingInternal | undefined
   getNativePlayState: () => SpatialDivMotionPlayState | 'queued'
@@ -65,12 +66,13 @@ export function useNativeMotionSession(
   const playStartWallMsRef = useRef(0)
   const pausedElapsedMsRef = useRef(0)
 
-  const syncStyleAtTimelineSecRef = useRef(syncStyleAtTimelineSec)
-  syncStyleAtTimelineSecRef.current = syncStyleAtTimelineSec
+  const syncStyleFromValuesRef = useRef(syncStyleFromValues)
+  syncStyleFromValuesRef.current = syncStyleFromValues
 
   const syncStyleAtElapsedMs = useCallback((elapsedMs: number) => {
     const t = motionTimeSec(elapsedMs, configRef.current)
-    syncStyleAtTimelineSecRef.current?.(t)
+    const values = evaluateMotionTimeline(configRef.current, t)
+    syncStyleFromValuesRef.current?.(values)
   }, [])
 
   const markPlayStart = useCallback(() => {
@@ -307,14 +309,18 @@ export function useNativeMotionSession(
       const element = elementRef.current
       if (!element) return
       try {
-        await element.animateSpatialDiv({
+        const values = await element.animateSpatialDiv({
           animationId: session.animationId,
           type: 'pause',
         })
         pausedElapsedMsRef.current =
           performance.now() - playStartWallMsRef.current
         session.state = 'paused'
-        syncStyleAtElapsedMs(pausedElapsedMsRef.current)
+        if (values) {
+          syncStyleFromValuesRef.current?.(values)
+        } else {
+          syncStyleAtElapsedMs(pausedElapsedMsRef.current)
+        }
         bump()
       } catch (e: any) {
         reportError({
@@ -418,9 +424,6 @@ export function useNativeMotionSession(
             element.cleanupSpatialDivAnimationListeners(session.animationId)
             session.unmounted = true
             session.state = 'idle'
-            configRef.current.onCancel?.(
-              evaluateMotionTimeline(session.config, 0),
-            )
           }
         }
         sessionRef.current = null
