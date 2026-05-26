@@ -1,6 +1,6 @@
 # Phase 2 — Minimal native integration (`simple` → spatial timeline)
 
-Status: **draft** for implementation planning on branch `proposal/spatial-div-motion-timeline`.
+Status: **implemented** on branch `proposal/spatial-div-motion-timeline` (2a segment + 2b timeline). This doc is kept for history; **authoritative behavior** is in `design.md`, `specs/spatial-div-motion/spec.md`, and `specs/spatial-div-motion-native-timeline/spec.md`.
 
 ## Problem
 
@@ -23,9 +23,12 @@ Ship **2a first** (days); **2b** is the original Phase 2 in `tasks.md` §4.
 flowchart TD
   Hook[useSpatialDivMotion]
   Hook --> Norm[simpleConfigToMotionConfig / validate]
-  Norm --> Pick{native gate}
-  Pick -->|no| Web[WebMotionBackend RAF]
-  Pick -->|yes| Seg{segment-equivalent?}
+  Norm --> Pick{supports useAnimation element?}
+  Pick -->|false| Web[WebMotionBackend RAF]
+  Pick -->|true| Native[Native only no Web RAF]
+  Native --> Bind{element bound via motion?}
+  Bind -->|no| Queued[session queued]
+  Bind -->|yes| Seg{segment-equivalent?}
   Seg -->|yes 2a| SegPlay[compile tracks → from/to]
   Seg -->|no 2b| TlPlay[timeline payload play]
   SegPlay --> Bridge[animateSpatialDiv play]
@@ -34,16 +37,20 @@ flowchart TD
   Web --> DOM[style merge on SpatialDiv]
 ```
 
-## Native gate (same as Plan A)
+## Native gate (shipped behavior)
+
+On **WebSpatial runtime** (`supports('useAnimation', ['element']) === true`):
+
+- `play()` **always** uses the native backend (segment or timeline). **No Web RAF fallback** on the same hook instance.
+- If `motion` has not bound a `Spatialized2DElement` yet, the session is **`queued`** until `__setElement` runs — the card stays at timeline `t=0` until bind (integration must pass `motion={motion}`).
+
+On **plain browser** (`supports === false`): only Web RAF runs.
 
 ```typescript
-function canUseNativeMotion(element: Spatialized2DElement | null): boolean {
-  return supports('useAnimation', ['element']) === true && element != null
-}
+// Playback picker (conceptual)
+if (supports('useAnimation', ['element'])) nativePlay() // includes queued when unbound
+else webPlay()
 ```
-
-- **Before bind:** run Web backend only (or hold at `t=0` values — see below).
-- **After bind:** if segment-equivalent → native play; else if 2b ready → timeline play; else Web RAF + `console.warn` once.
 
 ## Slice 2a — `simple` → existing native segment
 
@@ -186,19 +193,11 @@ Copy Plan A queue semantics:
 
 StrictMode: keep Web backend cleanup from Phase 1; native session must reset `playState` on unmount and send `cancel` if running.
 
-### Pre-bind behavior (2a)
+### Pre-bind behavior (shipped)
 
-| Option | Behavior | Recommendation |
-| --- | --- | --- |
-| A | Web RAF until bind, then restart native | Risky double-play |
-| B | Hold `style` at `evaluate(config, 0)` until bind, then native only | **Recommended** |
-| C | Web RAF always in parallel | Fight with suppression |
+**Decision:** native-only on WebSpatial — **no Web RAF** before bind. Hold React `style` at `evaluate(config, 0)` while `queued`; native `doPlay` runs when `motion` binds the element.
 
-Use **B** for AVP: card may appear at `from` pose, then native animates to `to`.
-
-## Slice 2b — true timeline (follow-up)
-
-Only after 2a ships.
+## Slice 2b — true timeline (shipped)
 
 ### Bridge extension
 
@@ -220,13 +219,12 @@ export interface AnimateSpatialDivCommand {
 
 **Do not** remove `from`/`to` path; 2a keeps using it.
 
-### Hook
+### Hook (shipped)
 
 ```typescript
-const segment = motionConfigToNativeSegment(config)
-if (segment) nativeSession.play(segment)
-else if (timeline) nativeSession.playTimeline(motionConfigToTimeline(config))
-else webBackend()
+// WebSpatial: native only (segment or timeline inside nativeSession.buildPlayCommand)
+if (supports('useAnimation', ['element'])) nativePlay()
+else webPlay()
 ```
 
 ## File checklist (2a MVP)

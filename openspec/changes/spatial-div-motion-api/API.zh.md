@@ -55,7 +55,7 @@
 | `isAnimating` | 是否正在播放 |
 | `isPaused` | 是否暂停 |
 | `finished` | 非循环是否已结束 |
-| `playState` | `'idle' \| 'running' \| 'paused' \| 'finished'` |
+| `playState` | `'idle' \| 'running' \| 'paused' \| 'finished'`（内部 `queued` 在 bind 前会 **映射为 `running`**，表示已请求播放、等待 `motion` 绑定） |
 
 **生命周期回调（写在 config 里）：** `onStart`、`onComplete(values)`、`onCancel(values)`、`onError`（native 异步失败）。
 
@@ -203,7 +203,7 @@ useSpatialDivMotion
 | 路由 | 场景 |
 |------|------|
 | `/spatial-div-motion` | Plan A vs B 入口 |
-| `/spatial-div-motion/multi-track` | canonical：0–5s 位移 + 3–5s 透明度 |
+| `/spatial-div-motion/multi-track` | canonical：0–5s 位移；opacity 0→1 自 3s 起 |
 | `/spatial-div-motion/simple-entrance` | `simple()` 入场 |
 | `/spatial-div-motion/translate-z` | 单轨 `translate.z` 深度轴 |
 | `/spatial-div-motion/rotate` | 多轨 `rotate.y` + `rotate.z` |
