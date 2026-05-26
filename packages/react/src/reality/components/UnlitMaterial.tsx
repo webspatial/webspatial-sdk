@@ -17,7 +17,10 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
   const ctx = useRealityContext()
   const materialRef = useRef<SpatialUnlitMaterial | undefined>(undefined)
   const isInitializedRef = useRef(false)
+  const latestTextureIdRef = useRef<string | undefined>(options.textureId)
   const [textureRevision, setTextureRevision] = useState(0)
+
+  latestTextureIdRef.current = options.textureId
 
   useEffect(() => {
     if (!ctx || !options.textureId) return
@@ -39,6 +42,20 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
             // Texture id was never declared: still create material so entities do not hang on
             // materialId; tint-only / no texture until the texture resolves in the future.
             textureIdForNative = ''
+            const targetTextureId = options.textureId
+            void resourceRegistry
+              .get(targetTextureId)
+              .then(textureResource => {
+                if (cancelled || latestTextureIdRef.current !== targetTextureId)
+                  return
+                const mat = materialRef.current
+                if (mat) {
+                  void mat
+                    .updateProperties({ textureId: textureResource.id })
+                    .catch(() => {})
+                }
+              })
+              .catch(() => {})
           } else {
             const texturePromise = resourceRegistry.get(options.textureId)
             try {
@@ -95,6 +112,20 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
           updates.textureId = ''
         } else if (!ctx.resourceRegistry.has(options.textureId)) {
           updates.textureId = ''
+          const targetTextureId = options.textureId
+          void ctx.resourceRegistry
+            .get(targetTextureId)
+            .then(textureResource => {
+              if (cancelled || latestTextureIdRef.current !== targetTextureId)
+                return
+              const mat = materialRef.current
+              if (mat) {
+                void mat
+                  .updateProperties({ textureId: textureResource.id })
+                  .catch(() => {})
+              }
+            })
+            .catch(() => {})
         } else {
           const texturePromise = ctx.resourceRegistry.get(options.textureId)
           try {
