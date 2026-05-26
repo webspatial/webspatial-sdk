@@ -49,6 +49,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     @ObservationIgnored
     lazy var spatialDivAnimationManager: SpatialDivAnimationManager = .init(scene: self)
 
+    @ObservationIgnored
+    lazy var static3dMotionAnimationManager: Static3DMotionAnimationManager = .init(scene: self)
+
+    @ObservationIgnored
+    lazy var dynamic3dMotionAnimationManager: Dynamic3DMotionAnimationManager = .init(scene: self)
+
     /// Enum
     enum WindowStyle: String, Codable, CaseIterable {
         case window
@@ -342,6 +348,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(AnimateTransformCommand.self, onAnimateTransform)
 
         spatialWebViewModel.addJSBListener(AnimateSpatialized2DElementCommand.self, onAnimateSpatialized2DElement)
+        spatialWebViewModel.addJSBListener(AnimateSpatializedStatic3DElementCommand.self, onAnimateSpatializedStatic3DElement)
+        spatialWebViewModel.addJSBListener(AnimateSpatializedDynamic3DElementCommand.self, onAnimateSpatializedDynamic3DElement)
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
         spatialWebViewModel
@@ -1419,6 +1427,72 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         default:
             resolve(.failure(JsbError(code: .TypeError, message: "AnimateSpatialized2DElement: unknown command type '\(command.type)'")))
+        }
+    }
+
+    private func onAnimateSpatializedStatic3DElement(command: AnimateSpatializedStatic3DElementCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        switch command.type {
+        case "play":
+            guard let elementId = command.elementId else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateSpatializedStatic3DElement play: elementId is required")))
+                return
+            }
+            guard let element: SpatializedElement = findSpatialObject(elementId) else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateSpatializedStatic3DElement play: element \(elementId) not found")))
+                return
+            }
+            static3dMotionAnimationManager.handlePlay(command: command, element: element, resolve: resolve)
+
+        case "pause":
+            static3dMotionAnimationManager.handlePause(command: command, resolve: resolve)
+
+        case "resume":
+            static3dMotionAnimationManager.handleResume(command: command, resolve: resolve)
+
+        case "cancel":
+            guard let session = static3dMotionAnimationManager.getSession(command.animationId),
+                  let element: SpatializedElement = findSpatialObject(session.elementId)
+            else {
+                resolve(.success(nil))
+                return
+            }
+            static3dMotionAnimationManager.handleCancel(command: command, element: element, resolve: resolve)
+
+        default:
+            resolve(.failure(JsbError(code: .TypeError, message: "AnimateSpatializedStatic3DElement: unknown command type '\(command.type)'")))
+        }
+    }
+
+    private func onAnimateSpatializedDynamic3DElement(command: AnimateSpatializedDynamic3DElementCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        switch command.type {
+        case "play":
+            guard let elementId = command.elementId else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateSpatializedDynamic3DElement play: elementId is required")))
+                return
+            }
+            guard let element: SpatializedElement = findSpatialObject(elementId) else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateSpatializedDynamic3DElement play: element \(elementId) not found")))
+                return
+            }
+            dynamic3dMotionAnimationManager.handlePlay(command: command, element: element, resolve: resolve)
+
+        case "pause":
+            dynamic3dMotionAnimationManager.handlePause(command: command, resolve: resolve)
+
+        case "resume":
+            dynamic3dMotionAnimationManager.handleResume(command: command, resolve: resolve)
+
+        case "cancel":
+            guard let session = dynamic3dMotionAnimationManager.getSession(command.animationId),
+                  let element: SpatializedElement = findSpatialObject(session.elementId)
+            else {
+                resolve(.success(nil))
+                return
+            }
+            dynamic3dMotionAnimationManager.handleCancel(command: command, element: element, resolve: resolve)
+
+        default:
+            resolve(.failure(JsbError(code: .TypeError, message: "AnimateSpatializedDynamic3DElement: unknown command type '\(command.type)'")))
         }
     }
 

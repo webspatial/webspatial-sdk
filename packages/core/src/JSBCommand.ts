@@ -30,6 +30,8 @@ import {
 import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
 import type { AnimateSpatialDivCommand } from './types/spatialDivAnimation'
+import type { AnimateSpatializedStatic3DCommand } from './types/spatializedStatic3dAnimation'
+import type { AnimateSpatializedDynamic3DCommand } from './types/spatializedDynamic3dAnimation'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -705,6 +707,70 @@ export class AnimateSpatialDivJSBCommand extends JSBCommand {
   commandType = 'AnimateSpatialized2DElement'
 
   constructor(private command: AnimateSpatialDivCommand) {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    const { type, animationId, elementId } = this.command
+    const params: Record<string, any> = { type, animationId }
+
+    if (elementId !== undefined) params.elementId = elementId
+
+    if (type === 'play') {
+      if (this.command.to !== undefined) params.to = this.command.to
+      if (this.command.from !== undefined) params.from = this.command.from
+      if (this.command.duration !== undefined)
+        params.duration = this.command.duration
+      if (this.command.timingFunction !== undefined)
+        params.timingFunction = this.command.timingFunction
+      if (this.command.delay !== undefined) params.delay = this.command.delay
+      if (this.command.loop !== undefined) params.loop = this.command.loop
+      if (this.command.playbackRate !== undefined)
+        params.playbackRate = this.command.playbackRate
+      if (this.command.timeline !== undefined)
+        params.timeline = this.command.timeline
+    }
+
+    return params
+  }
+}
+
+export class AnimateSpatializedStatic3DJSBCommand extends JSBCommand {
+  commandType = 'AnimateSpatializedStatic3DElement'
+
+  constructor(private command: AnimateSpatializedStatic3DCommand) {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    const { type, animationId, elementId } = this.command
+    const params: Record<string, any> = { type, animationId }
+
+    if (elementId !== undefined) params.elementId = elementId
+
+    if (type === 'play') {
+      if (this.command.to !== undefined) params.to = this.command.to
+      if (this.command.from !== undefined) params.from = this.command.from
+      if (this.command.duration !== undefined)
+        params.duration = this.command.duration
+      if (this.command.timingFunction !== undefined)
+        params.timingFunction = this.command.timingFunction
+      if (this.command.delay !== undefined) params.delay = this.command.delay
+      if (this.command.loop !== undefined) params.loop = this.command.loop
+      if (this.command.playbackRate !== undefined)
+        params.playbackRate = this.command.playbackRate
+      if (this.command.timeline !== undefined)
+        params.timeline = this.command.timeline
+    }
+
+    return params
+  }
+}
+
+export class AnimateSpatializedDynamic3DJSBCommand extends JSBCommand {
+  commandType = 'AnimateSpatializedDynamic3DElement'
+
+  constructor(private command: AnimateSpatializedDynamic3DCommand) {
     super()
   }
 

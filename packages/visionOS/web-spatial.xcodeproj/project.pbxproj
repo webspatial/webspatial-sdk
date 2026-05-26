@@ -45,7 +45,7 @@
 		2B2F1D702BEBFAAC006897EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2B2F1D752BEBFAAC006897EE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2B2F1D7A2BEBFAAD006897EE /* WebSpatial.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WebSpatial.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B2F1D7A2BEBFAAD006897EE /* WebSpatial.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = WebSpatial.xctest; path = "web-spatialTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B89E38B2E699104004079AA /* WebMsgCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebMsgCommand.swift; sourceTree = "<group>"; };
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -65,6 +65,8 @@
 		2B06AF312E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				dynamic3d/AnimateSpatializedDynamic3DElementCommand.swift,
+				dynamic3d/Dynamic3DMotionAnimationManager.swift,
 				dynamic3d/EntityAnimationManager.swift,
 				dynamic3d/EntityAnimationSession.swift,
 				dynamic3d/Geometry.swift,
@@ -80,6 +82,8 @@
 				spatialdiv/SpatialDivAnimationManager.swift,
 				spatialdiv/SpatialDivAnimationSession.swift,
 				spatialdiv/SpatialDivTimelineEvaluator.swift,
+				static3d/AnimateSpatializedStatic3DElementCommand.swift,
+				static3d/Static3DMotionAnimationManager.swift,
 				Spatialized2DElement.swift,
 				SpatializedDynamic3DElement.swift,
 				SpatializedElement.swift,

@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
-import { HashRouter as Router, Routes, Route } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { SpatialBoot, WebSpatialBootError } from '@webspatial/react-sdk'
 import Sidebar from './src/components/Sidebar'
 import Home from './src/pages/Home'
@@ -96,11 +96,12 @@ import SpatialDivPlayStatePage from './src/pages/spatial-div-animation/play-stat
 import SpatialDivPerfComparisonPage from './src/pages/spatial-div-animation/perf-comparison'
 import SpatialDivLoopAnimationPage from './src/pages/spatial-div-animation/loop-animation'
 import SpatialDivNestedAnimationPage from './src/pages/spatial-div-animation/nested-animation'
-import SpatialDivMotionHubPage from './src/pages/spatial-div-motion/index'
+import SpatializedMotionHubPage from './src/pages/spatial-div-motion/index'
 import { SpatialDivMotionMultiTrackPage } from './src/pages/spatial-div-motion/multi-track'
 import { SpatialDivMotionSimpleEntrancePage } from './src/pages/spatial-div-motion/simple-entrance'
 import { SpatialDivMotionTranslateZPage } from './src/pages/spatial-div-motion/translate-z'
 import { SpatialDivMotionRotatePage } from './src/pages/spatial-div-motion/rotate'
+import { SpatializedMotionRealityContainerPage } from './src/pages/spatial-div-motion/reality-container'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -306,7 +307,7 @@ function App() {
                 />
                 <Route
                   path="/spatial-div-motion"
-                  element={<SpatialDivMotionHubPage />}
+                  element={<SpatializedMotionHubPage />}
                 />
                 <Route
                   path="/spatial-div-motion/multi-track"
@@ -323,6 +324,19 @@ function App() {
                 <Route
                   path="/spatial-div-motion/rotate"
                   element={<SpatialDivMotionRotatePage />}
+                />
+                <Route
+                  path="/spatial-div-motion/reality-container"
+                  element={<SpatializedMotionRealityContainerPage />}
+                />
+                <Route
+                  path="/reality/dynamic3d-motion"
+                  element={
+                    <Navigate
+                      to="/spatial-div-motion/reality-container"
+                      replace
+                    />
+                  }
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />

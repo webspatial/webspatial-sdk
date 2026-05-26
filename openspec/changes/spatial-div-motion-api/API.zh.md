@@ -2,15 +2,26 @@
 
 > 分支：`proposal/spatial-div-motion-timeline`  
 > OpenSpec：`openspec/changes/spatial-div-motion-api/`  
-> 对比方案 A（会话式 `animation` API）：见 [COMPARISON.md](./COMPARISON.md)
+> 对比方案 A（会话式 `animation` API）：见 [COMPARISON.md](./COMPARISON.md)  
+> **全平台 umbrella（Static3D / Entity）：** [spatialized-element-motion-api](../spatialized-element-motion-api/API.zh.md) — **本 change 当前仅交付 2D。**
 
-本文档汇总 **当前 spec 已定义、实现中的对外能力**，便于与产品、设计对齐范围与集成方式。技术细节见 `design.md`、`specs/spatial-div-motion/spec.md`。
+本文档汇总 **当前 spec 已定义、实现中的对外能力**，便于与 product、设计对齐范围与集成方式。技术细节见 `design.md`、`specs/spatial-div-motion/spec.md`。
+
+---
+
+## 0. 实现范围（重要）
+
+| 元素类型 | 本 change 是否交付 |
+|----------|-------------------|
+| `Spatialized2DElement`（SpatialDiv） | **是** |
+| `SpatializedStatic3DElement`（Model） | 否 → umbrella Phase 2 |
+| Reality Entity（Dynamic3D 内） | 否（仅 segment `useAnimation`）→ umbrella Phase 3 |
 
 ---
 
 ## 1. 一句话定位
 
-**`useSpatialDivMotion`** 是 SpatialDiv 的 **时间线动画 API**：用一条 timeline（多轨、可重叠）驱动 **单一 `style` 出口**，在 **普通浏览器** 和 **WebSpatial 原生** 上都能播；与 Plan A 的 `useAnimation` + `animation` prop **并行提案**，供选型对比。
+**`useSpatialDivMotion`** 是 **Spatialized2DElement / SpatialDiv** 的 **时间线动画 API**（非全部 SpatializedElement）：用一条 timeline（多轨、可重叠）驱动 **单一 `style` 出口**，在 **普通浏览器** 和 **WebSpatial 原生** 上都能播；与 Plan A 的 `useAnimation` + `animation` prop **并行提案**，供选型对比。
 
 ---
 
