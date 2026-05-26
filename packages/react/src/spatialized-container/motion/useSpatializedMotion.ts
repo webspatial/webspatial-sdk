@@ -33,24 +33,21 @@ export type UseSpatializedMotionResult =
   | (UseStatic3DMotionResult & { kind: 'static3d' })
   | (UseDynamic3DMotionResult & { kind: 'dynamic3d' })
 
-function useSpatializedMotionTimeline(
+export function useSpatializedMotion(
   config: SpatializedMotionConfig,
 ): UseSpatializedMotionResult {
   switch (config.kind) {
     case 'spatialized2d': {
       const { kind: _k, ...motionConfig } = config
-      const result = useSpatialDivMotion(motionConfig)
-      return { kind: 'spatialized2d', ...result }
+      return { kind: 'spatialized2d', ...useSpatialDivMotion(motionConfig) }
     }
     case 'static3d': {
       const { kind: _k, ...motionConfig } = config
-      const result = useStatic3DMotion(motionConfig)
-      return { kind: 'static3d', ...result }
+      return { kind: 'static3d', ...useStatic3DMotion(motionConfig) }
     }
     case 'dynamic3d': {
       const { kind: _k, ...motionConfig } = config
-      const result = useDynamic3DMotion(motionConfig)
-      return { kind: 'dynamic3d', ...result }
+      return { kind: 'dynamic3d', ...useDynamic3DMotion(motionConfig) }
     }
     default: {
       const _exhaustive: never = config
@@ -61,30 +58,30 @@ function useSpatializedMotionTimeline(
   }
 }
 
-export function useSpatializedMotion(
-  config: SpatializedMotionConfig,
-): UseSpatializedMotionResult {
-  return useSpatializedMotionTimeline(config)
-}
-
 function useSpatializedMotionSimple(
   config: SpatializedMotionSegmentConfig,
 ): UseSpatializedMotionResult {
   switch (config.kind) {
     case 'spatialized2d': {
       const { kind: _k, ...simple } = config
-      const motionConfig = segmentConfigToMotionConfig(simple)
-      return useSpatializedMotion({ kind: 'spatialized2d', ...motionConfig })
+      return useSpatializedMotion({
+        kind: 'spatialized2d',
+        ...segmentConfigToMotionConfig(simple),
+      })
     }
     case 'static3d': {
       const { kind: _k, ...simple } = config
-      const motionConfig = segmentConfigToMotionConfig(simple)
-      return useSpatializedMotion({ kind: 'static3d', ...motionConfig })
+      return useSpatializedMotion({
+        kind: 'static3d',
+        ...segmentConfigToMotionConfig(simple),
+      })
     }
     case 'dynamic3d': {
       const { kind: _k, ...simple } = config
-      const motionConfig = segmentConfigToMotionConfig(simple)
-      return useSpatializedMotion({ kind: 'dynamic3d', ...motionConfig })
+      return useSpatializedMotion({
+        kind: 'dynamic3d',
+        ...segmentConfigToMotionConfig(simple),
+      })
     }
     default: {
       const _exhaustive: never = config
