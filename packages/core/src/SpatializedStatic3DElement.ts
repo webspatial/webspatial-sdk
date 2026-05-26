@@ -1,5 +1,22 @@
-import { UpdateSpatializedStatic3DElementProperties } from './JSBCommand'
+import {
+  AnimateSpatializedStatic3DJSBCommand,
+  UpdateSpatializedStatic3DElementProperties,
+} from './JSBCommand'
 import { ReceiveEventData, SpatializedElement } from './SpatializedElement'
+import { SpatialWebEvent } from './SpatialWebEvent'
+import { parseSpatialDivVisualValues } from './spatialdiv/parseSpatialDivVisualValues'
+import {
+  Static3DMotionController,
+  type Static3DMotionControllerOptions,
+} from './static3d/motion/Static3DMotionController'
+import type { SpatializedMotionHandle } from './spatialized/motion/SpatializedMotionHandle'
+import type { SpatialDivMotionConfig } from './types/spatialDivMotion'
+import type {
+  AnimateSpatializedStatic3DCommand,
+  AnimateSpatializedStatic3DResult,
+} from './types/spatializedStatic3dAnimation'
+import type { SpatialDivPlaybackError } from './types/spatialDivPlayback'
+import type { SpatialDivVisualValues } from './types/spatialDivVisual'
 import {
   ModelLoadingMode,
   ModelSource,
@@ -399,6 +416,121 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     this.updateProperties({
       modelTransform: Array.from(transform.toFloat64Array()),
     })
+  }
+
+  // ---- Static3D root transform motion (timeline) ----
+
+  animateMotion(
+    command: AnimateSpatializedStatic3DCommand & { type: 'play' },
+  ): Promise<AnimateSpatializedStatic3DResult>
+  animateMotion(
+    command: AnimateSpatializedStatic3DCommand & { type: 'pause' },
+  ): Promise<SpatialDivVisualValues>
+  animateMotion(command: AnimateSpatializedStatic3DCommand): Promise<void>
+  async animateMotion(
+    command: AnimateSpatializedStatic3DCommand,
+  ): Promise<AnimateSpatializedStatic3DResult | SpatialDivVisualValues | void> {
+    const { animationId, type } = command
+
+    if (type === 'play') {
+      let resolveFinished!: (val: SpatialDivVisualValues) => void
+      let resolveCancel!: (val: SpatialDivVisualValues) => void
+      let resolveFailed!: (val: SpatialDivPlaybackError) => void
+
+      const finished = new Promise<SpatialDivVisualValues>(r => {
+        resolveFinished = r
+      })
+      const canceled = new Promise<SpatialDivVisualValues>(r => {
+        resolveCancel = r
+      })
+      const failed = new Promise<SpatialDivPlaybackError>(r => {
+        resolveFailed = r
+      })
+
+      const cleanup = () => {
+        SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
+        SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
+        SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
+      }
+
+      SpatialWebEvent.addEventReceiver(
+        `${animationId}_completed`,
+        (data: any) => {
+          cleanup()
+          const finalValues: SpatialDivVisualValues =
+            data?.finalValues ?? data?.values ?? data ?? {}
+          resolveFinished(finalValues)
+        },
+      )
+
+      SpatialWebEvent.addEventReceiver(
+        `${animationId}_canceled`,
+        (data: any) => {
+          cleanup()
+          const currentValues: SpatialDivVisualValues =
+            data?.currentValues ?? data?.values ?? data ?? {}
+          resolveCancel(currentValues)
+        },
+      )
+
+      SpatialWebEvent.addEventReceiver(
+        `${animationId}_failed`,
+        (data: {
+          animationId: string
+          command: string
+          code?: string
+          reason: string
+        }) => {
+          cleanup()
+          resolveFailed({
+            animationId: data.animationId ?? animationId,
+            command: (data.command ??
+              'play') as SpatialDivPlaybackError['command'],
+            code: data.code,
+            reason: data.reason ?? 'Native static3d motion failed',
+          })
+        },
+      )
+
+      const playCommand: AnimateSpatializedStatic3DCommand = {
+        ...command,
+        elementId: command.elementId ?? this.id,
+      }
+
+      const result = await new AnimateSpatializedStatic3DJSBCommand(
+        playCommand,
+      ).execute()
+      if (!result.success) {
+        cleanup()
+        throw new Error(
+          result.errorMessage ??
+            'AnimateSpatializedStatic3DElement play command failed',
+        )
+      }
+
+      return { animationId, finished, canceled, failed }
+    }
+
+    const result = await new AnimateSpatializedStatic3DJSBCommand(
+      command,
+    ).execute()
+    if (!result.success) {
+      throw new Error(
+        result.errorMessage ??
+          `AnimateSpatializedStatic3DElement ${type} command failed`,
+      )
+    }
+
+    if (type === 'pause') {
+      return parseSpatialDivVisualValues(result.data)
+    }
+  }
+
+  motion(
+    config: SpatialDivMotionConfig,
+    options?: Omit<Static3DMotionControllerOptions, 'element'>,
+  ): SpatializedMotionHandle {
+    return new Static3DMotionController(config, { ...options, element: this })
   }
 }
 

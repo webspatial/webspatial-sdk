@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { entityAnimationRoutes } from '../pages/entity-animation/routes'
 import { spatialDivAnimationRoutes } from '../pages/spatial-div-animation/routes'
+import { spatializedMotionDemoRoutes } from '../pages/spatial-div-motion/routes'
 
 export const routes = [
   { path: '/', label: 'Home' },
@@ -79,25 +80,13 @@ export const routes = [
   },
   {
     path: '/spatial-div-motion',
-    label: 'SpatialDiv Motion (RFC)',
+    label: 'Spatialized Motion',
     children: [
-      { path: '/spatial-div-motion', label: 'Plan A vs B hub' },
-      {
-        path: '/spatial-div-motion/multi-track',
-        label: 'Multi-track (Plan B)',
-      },
-      {
-        path: '/spatial-div-motion/simple-entrance',
-        label: 'simple() entrance',
-      },
-      {
-        path: '/spatial-div-motion/translate-z',
-        label: 'translate.z (depth)',
-      },
-      {
-        path: '/spatial-div-motion/rotate',
-        label: 'rotate (y + z)',
-      },
+      { path: '/spatial-div-motion', label: 'Overview' },
+      ...spatializedMotionDemoRoutes.map(route => ({
+        path: route.path,
+        label: route.label,
+      })),
     ],
   },
   { path: '/unit-convert', label: 'Unit Convert' },

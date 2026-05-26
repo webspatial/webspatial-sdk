@@ -9,6 +9,7 @@ import {
   SpatialDivMotionController,
   type SpatialDivMotionControllerOptions,
 } from './spatialdiv/motion/SpatialDivMotionController'
+import type { SpatializedMotionHandle } from './spatialized/motion/SpatializedMotionHandle'
 import type { SpatialDivMotionConfig } from './types/spatialDivMotion'
 import type {
   AnimateSpatialDivCommand,
@@ -187,7 +188,7 @@ export class Spatialized2DElement extends SpatializedElement {
   motion(
     config: SpatialDivMotionConfig,
     options?: Omit<SpatialDivMotionControllerOptions, 'element'>,
-  ): SpatialDivMotionController {
+  ): SpatializedMotionHandle {
     return new SpatialDivMotionController(config, {
       ...options,
       element: this,
