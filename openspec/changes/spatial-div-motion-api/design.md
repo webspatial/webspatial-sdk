@@ -83,6 +83,8 @@ flowchart TD
 
 **Web backend** runs for plain browsers and as fallback before spatial bind; it MUST drive the same `style` shape.
 
+**Native `style` outlet during playback:** While `running`, native owns animated fields and Portal suppression blocks DOM sync from intermediate `style` samples. The hook still exposes a single `style` merge target, but authors should treat **pause / complete / cancel** as the boundaries where `style` is sampled via `evaluateMotionTimeline` (pause uses wall-clock progress tracked in the motion session). Do not poll `style` mid-native-run for acceptance.
+
 ## Timeline compilation
 
 - **Validation:** keyframes sorted by `at`; `at` in `[0, duration]`; at least two keyframes per track; no duplicate `property` paths across tracks; numeric ranges match Plan A whitelist rules.

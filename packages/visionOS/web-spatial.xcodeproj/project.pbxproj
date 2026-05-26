@@ -14,6 +14,7 @@
 		2B06AEE62E4C1AE8000327E9 /* JSBCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC02E4C1AE8000327E9 /* JSBCommand.swift */; };
 		2B06AEE92E4C1AE8000327E9 /* EventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEBF2E4C1AE8000327E9 /* EventEmitter.swift */; };
 		2B1008A22F0B000800000002 /* NavigationCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */; };
+		2B1008A52F0B000800000005 /* SpatialDivTimelineEvaluatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A42F0B000800000004 /* SpatialDivTimelineEvaluatorTests.swift */; };
 		2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D702BEBFAAC006897EE /* Assets.xcassets */; };
 		2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */; };
 		2B89E38C2E699104004079AA /* WebMsgCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B89E38B2E699104004079AA /* WebMsgCommand.swift */; };
@@ -38,6 +39,7 @@
 		2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSpatialApp.swift; sourceTree = "<group>"; };
 		2B06AEC42E4C1AE8000327E9 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationCleanupTests.swift; sourceTree = "<group>"; };
+		2B1008A42F0B000800000004 /* SpatialDivTimelineEvaluatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialDivTimelineEvaluatorTests.swift; sourceTree = "<group>"; };
 		2B2F1D632BEBFAAA006897EE /* WebSpatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebSpatial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2B2F1D702BEBFAAC006897EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -165,6 +167,7 @@
 			isa = PBXGroup;
 			children = (
 				2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */,
+				2B1008A42F0B000800000004 /* SpatialDivTimelineEvaluatorTests.swift */,
 			);
 			path = "web-spatialTests";
 			sourceTree = "<group>";
@@ -352,6 +355,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B1008A22F0B000800000002 /* NavigationCleanupTests.swift in Sources */,
+				2B1008A52F0B000800000005 /* SpatialDivTimelineEvaluatorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -548,13 +552,14 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.webspatial.test;
-				PRODUCT_NAME = WebSpatial;
+				PRODUCT_MODULE_NAME = WebSpatialTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/web-spatial.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/web-spatial";
-				XROS_DEPLOYMENT_TARGET = 1.1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WebSpatial.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WebSpatial";
+				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
 		};
@@ -567,13 +572,14 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.webspatial.test;
-				PRODUCT_NAME = WebSpatial;
+				PRODUCT_MODULE_NAME = WebSpatialTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/web-spatial.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/web-spatial";
-				XROS_DEPLOYMENT_TARGET = 1.1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WebSpatial.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WebSpatial";
+				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
 		};

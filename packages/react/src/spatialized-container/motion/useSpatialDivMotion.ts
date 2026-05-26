@@ -20,16 +20,7 @@ import { valuesToMotionStyle } from './style'
 import { validateSpatialDivMotionConfig } from './validate'
 import { useNativeMotionSession } from './nativeSession'
 import type { SpatialDivMotionBindingInternal } from './motionBindingTypes'
-
-function motionTimeSec(
-  elapsedMs: number,
-  config: SpatialDivMotionConfig,
-): number {
-  const delayMs = (config.delay ?? 0) * 1000
-  const rate = config.playbackRate ?? 1
-  if (elapsedMs <= delayMs) return 0
-  return ((elapsedMs - delayMs) / 1000) * rate
-}
+import { motionTimeSec } from './motionTiming'
 
 export type UseSpatialDivMotionResult = {
   style: CSSProperties
@@ -53,10 +44,6 @@ function useSpatialDivMotionInternal(
   const pausedElapsedRef = useRef(0)
   const finishedRef = useRef(false)
   const startedRef = useRef(false)
-  const useWebBackendRef = useRef(true)
-
-  const native = useNativeMotionSession(config, tick)
-  const nativeCapable = !!native.motionBinding
 
   const initialValues = useMemo(
     () => evaluateMotionTimeline(config, 0),
@@ -88,17 +75,48 @@ function useSpatialDivMotionInternal(
       tick()
       configRef.current.onComplete?.(values)
     },
-    [stopRaf],
+    [stopRaf, tick],
   )
 
+  const nativeMotionConfig = useMemo((): SpatialDivMotionConfig => {
+    const { onComplete, onCancel, onError, ...rest } = config
+    return {
+      ...rest,
+      onComplete: values => {
+        stopRaf()
+        playStateRef.current = 'finished'
+        finishedRef.current = true
+        applyAt(config.duration)
+        tick()
+        onComplete?.(values)
+      },
+      onCancel: values => {
+        stopRaf()
+        playStateRef.current = 'idle'
+        finishedRef.current = false
+        startedRef.current = false
+        applyAt(0)
+        tick()
+        onCancel?.(values)
+      },
+      onError: error => {
+        stopRaf()
+        playStateRef.current = 'idle'
+        tick()
+        onError?.(error)
+      },
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- wrap latest user callbacks
+  }, [config, stopRaf, applyAt, tick])
+
+  const native = useNativeMotionSession(nativeMotionConfig, tick, applyAt)
+  const nativeCapable = !!native.motionBinding
+
   const runFrame = useCallback(() => {
-    if (!useWebBackendRef.current) return
+    if (playStateRef.current !== 'running') return
 
     const cfg = configRef.current
-    const elapsed =
-      playStateRef.current === 'paused'
-        ? pausedElapsedRef.current
-        : performance.now() - startWallRef.current
+    const elapsed = performance.now() - startWallRef.current
     const t = motionTimeSec(elapsed, cfg)
 
     if (t >= cfg.duration) {
@@ -110,16 +128,25 @@ function useSpatialDivMotionInternal(
         rafRef.current = requestAnimationFrame(runFrame)
         return
       }
+      // Native session owns completion callbacks; keep last frame on style outlet.
+      if (nativeCapable && supports('useAnimation', ['element'])) {
+        const ns = native.getNativePlayState()
+        if (ns === 'running' || ns === 'queued') {
+          rafRef.current = requestAnimationFrame(runFrame)
+          return
+        }
+        stopRaf()
+        return
+      }
       finishNaturally(values)
       return
     }
 
     applyAt(t)
     rafRef.current = requestAnimationFrame(runFrame)
-  }, [applyAt, finishNaturally])
+  }, [applyAt, finishNaturally, nativeCapable, native, stopRaf])
 
   const webPlay = useCallback(() => {
-    useWebBackendRef.current = true
     const cfg = configRef.current
     const state = playStateRef.current
 
@@ -152,16 +179,15 @@ function useSpatialDivMotionInternal(
   }, [runFrame, stopRaf])
 
   const webPause = useCallback(() => {
-    if (!useWebBackendRef.current) return
     if (playStateRef.current !== 'running') return
     pausedElapsedRef.current = performance.now() - startWallRef.current
+    applyAt(motionTimeSec(pausedElapsedRef.current, configRef.current))
     playStateRef.current = 'paused'
     stopRaf()
     tick()
-  }, [stopRaf])
+  }, [applyAt, stopRaf])
 
   const webCancel = useCallback(() => {
-    if (!useWebBackendRef.current) return
     if (playStateRef.current === 'idle') return
     stopRaf()
     const values = applyAt(0)
@@ -175,7 +201,6 @@ function useSpatialDivMotionInternal(
 
   const play = useCallback(() => {
     if (nativeCapable && supports('useAnimation', ['element'])) {
-      useWebBackendRef.current = false
       stopRaf()
       native.nativePlay()
       return
@@ -184,22 +209,26 @@ function useSpatialDivMotionInternal(
   }, [nativeCapable, native, stopRaf, webPlay])
 
   const pause = useCallback(() => {
-    if (nativeCapable && !useWebBackendRef.current) {
-      native.nativePause()
-      return
+    if (nativeCapable && supports('useAnimation', ['element'])) {
+      const ns = native.getNativePlayState()
+      if (ns === 'running' || ns === 'queued') {
+        native.nativePause()
+        return
+      }
     }
     webPause()
   }, [nativeCapable, native, webPause])
 
   const cancel = useCallback(() => {
-    if (nativeCapable && !useWebBackendRef.current) {
-      native.nativeCancel()
-      useWebBackendRef.current = true
-      applyAt(0)
-      return
+    if (nativeCapable && supports('useAnimation', ['element'])) {
+      const ns = native.getNativePlayState()
+      if (ns !== 'idle' && ns !== 'finished') {
+        native.nativeCancel()
+        return
+      }
     }
     webCancel()
-  }, [nativeCapable, native, webCancel, applyAt])
+  }, [nativeCapable, native, webCancel])
 
   useEffect(() => {
     return () => {
@@ -208,7 +237,6 @@ function useSpatialDivMotionInternal(
       finishedRef.current = false
       startedRef.current = false
       pausedElapsedRef.current = 0
-      useWebBackendRef.current = true
     }
   }, [stopRaf])
 
@@ -245,6 +273,7 @@ function useSpatialDivMotionInternal(
       get playState() {
         if (nativeCapable) {
           const s = native.getNativePlayState()
+          if (s === 'queued') return 'running'
           if (s !== 'idle') return s
         }
         return playStateRef.current
@@ -253,13 +282,8 @@ function useSpatialDivMotionInternal(
     [play, pause, cancel, nativeCapable, native],
   )
 
-  const displayStyle =
-    nativeCapable && native.motionBinding?.__animating
-      ? valuesToMotionStyle(initialValues)
-      : style
-
   return {
-    style: displayStyle,
+    style,
     api,
     motion: native.motionBinding,
   }

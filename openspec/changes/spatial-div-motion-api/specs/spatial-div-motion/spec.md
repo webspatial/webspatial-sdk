@@ -73,6 +73,26 @@ When the native motion backend is not active, the SDK MUST use a **Web backend**
 - **THEN** the SDK MUST send a timeline `play` command through `animateSpatialDiv` (or successor) and apply suppression for animated fields per Plan A rules
 - **AND** the Web backend MUST NOT run concurrently for the same hook instance
 
+#### Scenario: Native running does not require per-frame style
+
+- **GIVEN** the native motion backend is actively driving a timeline (`running` or `paused` with suppression active for animated fields)
+- **WHEN** the application reads `style` during `running`
+- **THEN** the SDK MUST NOT require `style` to reflect the native entity’s intermediate frame (native owns playback; Portal suppression applies)
+- **AND** applications MUST NOT use per-frame `style` reads as the acceptance signal for native playback
+
+#### Scenario: Native pause syncs style to timeline sample
+
+- **GIVEN** a native timeline has been playing and `api.pause()` succeeds
+- **WHEN** the session enters `paused`
+- **THEN** the hook MUST update `style` to the timeline sample at the paused progress (same evaluator as the Web backend)
+- **AND** `style` MUST remain the authoritative React state for that progress until `play()` resumes or `cancel()` / completion resets it
+
+#### Scenario: Web pause syncs style to timeline sample
+
+- **GIVEN** the Web backend is `running`
+- **WHEN** `api.pause()` is called
+- **THEN** `style` MUST reflect the timeline sample at pause time (not a stale pre-play snapshot)
+
 ---
 
 ### Requirement: Imperative playback and lifecycle
