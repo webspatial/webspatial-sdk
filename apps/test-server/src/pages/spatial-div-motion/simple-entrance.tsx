@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSpatialDivMotion } from '@webspatial/react-sdk'
 import { btnCls } from '../spatial-div-animation/shared'
 
-/** Match Plan A fade-in depth semantics: approach from z=-50 to rest (z=0), not larger +z. */
+/** Segment-equivalent demo: opacity + translate.z over 0.8s (native segment path on AVP). */
 const SIMPLE_ENTRANCE = {
   from: {
     opacity: 0.6,
@@ -12,13 +12,13 @@ const SIMPLE_ENTRANCE = {
     opacity: 1,
     transform: { translate: { z: 100 } },
   },
-  duration: 3.8,
+  duration: 0.8,
   timingFunction: 'easeOut' as const,
   autoStart: true,
 }
 
 function SimpleEntranceCard() {
-  const { style, motion } = useSpatialDivMotion.simple(SIMPLE_ENTRANCE)
+  const { style, motion, api } = useSpatialDivMotion.simple(SIMPLE_ENTRANCE)
 
   return (
     <div
@@ -45,8 +45,9 @@ export function SpatialDivMotionSimpleEntrancePage() {
     <div className="p-6 text-gray-200">
       <h1 className="text-xl font-bold mb-2">Plan B — simple() entrance</h1>
       <p className="text-sm text-gray-400 mb-2">
-        Fade + depth entrance: translate.z -50→0, opacity 0→1 (same depth axis
-        as Plan A fade-in). Positive +z pushes the panel away on AVP.
+        Fade + depth via <code>simple()</code>: opacity 0.6→1, translate.z
+        10→100px over 0.8s (segment-native on AVP when <code>motion</code> is
+        wired). Larger +z moves the panel farther in depth on AVP.
       </p>
       <div className="mb-4">
         <button

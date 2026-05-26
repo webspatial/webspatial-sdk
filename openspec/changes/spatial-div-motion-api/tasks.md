@@ -37,7 +37,8 @@ Spec: [specs/spatial-div-motion-native-timeline/spec.md](./specs/spatial-div-mot
 - [x] 4b.2 `motionConfigToNativeTimeline` + hook branch when not segment-equivalent
 - [x] 4b.3 `TimelineEvaluator` in `SpatialDivAnimationSession.swift` (DisplayLink sampling)
 - [x] 4b.4 Portal suppression + `motion` binding for timeline sessions (reuse 4a)
-- [x] 4b.5 Parity tests: Web vs native canonical multi-track; simulator e2e on `/spatial-div-motion/multi-track`
+- [x] 4b.5 Unit parity: Web `evaluateMotionTimeline` + Swift `SpatialDivTimelineEvaluator` (canonical multi-track)
+- [ ] 4b.5b Simulator e2e on `/spatial-div-motion/multi-track` (ci-test harness — not yet added)
 
 ## 5. Product decision
 
