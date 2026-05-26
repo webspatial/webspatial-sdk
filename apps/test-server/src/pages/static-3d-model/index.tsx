@@ -12,6 +12,7 @@ function App() {
   const [currentTime, setCurrentTime] = useState(0.0)
   const [playbackRate, setPlaybackRate] = useState(1.0)
   const [loop, setLoop] = useState(true)
+  const [loading, setLoading] = useState<'eager' | 'lazy'>('eager')
   useEffect(() => {
     modelRef
       .current!.ready?.then(() => logLine('ref.current.ready success'))
@@ -128,6 +129,15 @@ function App() {
           />
           <span className="label-text m-1">Loop</span>
         </label>
+        <label className="inline-flex items-center align-middle">
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={loading === 'eager'}
+            onChange={() => setLoading(loading === 'eager' ? 'lazy' : 'eager')}
+          />
+          <span className="label-text m-1">Eager</span>
+        </label>
         <select
           className="select m-1"
           value={playbackRate}
@@ -154,7 +164,7 @@ function App() {
       <Model
         enable-xr
         autoPlay
-        loading="lazy"
+        loading={loading}
         style={{
           height: '200px',
           '--xr-depth': '100px',
