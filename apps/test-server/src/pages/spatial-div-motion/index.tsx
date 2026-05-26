@@ -1,50 +1,51 @@
 import { Link } from 'react-router-dom'
 import { enableDebugTool } from '@webspatial/react-sdk'
 import { spatialDivAnimationRoutes } from '../spatial-div-animation/routes'
+import { spatializedMotionDemoRoutes } from './routes'
 
 enableDebugTool()
 
-const motionRoutes = [
-  {
-    path: '/spatial-div-motion/multi-track',
-    label: 'Multi-track (canonical Plan B)',
-    description: 'canonical: translateX 0–5s, opacity 0→1 from 3s — auto-play',
-  },
-  {
-    path: '/spatial-div-motion/simple-entrance',
-    label: 'simple() entrance',
-    description: 'simple(): opacity + translate.z segment — auto-play',
-  },
-  {
-    path: '/spatial-div-motion/translate-z',
-    label: 'translate.z (depth)',
-    description: 'single-track depth axis 0 → -120px — auto-play',
-  },
-  {
-    path: '/spatial-div-motion/rotate',
-    label: 'rotate (y + z)',
-    description: 'rotate.y yaw + rotate.z spin — auto-play',
-  },
-]
+const demos2d = spatializedMotionDemoRoutes.filter(r => r.section === '2d')
+const demos3d = spatializedMotionDemoRoutes.filter(r => r.section === '3d')
 
-export default function SpatialDivMotionHubPage() {
+export default function SpatializedMotionHubPage() {
   return (
     <div className="p-6 text-gray-200 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-2">
-        SpatialDiv Motion API (Plan B)
-      </h1>
+      <h1 className="text-2xl font-bold mb-2">Spatialized Motion</h1>
       <p className="text-sm text-gray-400 mb-6">
-        RFC branch <code>proposal/spatial-div-motion-timeline</code>. See{' '}
-        <code>openspec/changes/spatial-div-motion-api/COMPARISON.md</code>.
+        Declarative timeline + playback API across spatialized containers.
+        OpenSpec: <code>spatial-div-motion-api</code>,{' '}
+        <code>spatialized-element-motion-api</code>.
       </p>
 
       <h2 className="text-lg font-semibold mb-2 text-blue-300">
-        Plan B — Motion
+        2D — SpatialDiv
       </h2>
+      <p className="text-xs text-gray-500 mb-3">
+        Web RAF in browser; native timeline on visionOS when <code>motion</code>{' '}
+        is bound.
+      </p>
       <ul className="space-y-2 mb-8">
-        {motionRoutes.map(r => (
+        {demos2d.map(r => (
           <li key={r.path}>
             <Link className="text-blue-400 hover:underline" to={r.path}>
+              {r.label}
+            </Link>
+            <span className="text-gray-500 text-sm ml-2">{r.description}</span>
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="text-lg font-semibold mb-2 text-violet-300">
+        3D containers — native only
+      </h2>
+      <p className="text-xs text-gray-500 mb-3">
+        Static3D Model and Dynamic3D Reality require visionOS shell ≥ 1.8.0.
+      </p>
+      <ul className="space-y-2 mb-8">
+        {demos3d.map(r => (
+          <li key={r.path}>
+            <Link className="text-violet-400 hover:underline" to={r.path}>
               {r.label}
             </Link>
             <span className="text-gray-500 text-sm ml-2">{r.description}</span>

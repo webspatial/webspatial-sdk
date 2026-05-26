@@ -11,6 +11,9 @@ export * from './reality'
 export { useAnimation } from './useAnimation'
 export {
   useSpatialDivMotion,
+  useStatic3DMotion,
+  useDynamic3DMotion,
+  useSpatializedMotion,
   SpatialDivMotionController,
 } from './spatialized-container/motion'
 export * from './Model'

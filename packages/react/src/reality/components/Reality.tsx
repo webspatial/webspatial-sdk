@@ -13,6 +13,7 @@ import { ResourceRegistry } from '../utils'
 import { AttachmentRegistry } from '../context/AttachmentContext'
 import { SpatializedElementRef } from '../../spatialized-container/types'
 import { SpatializedElement } from '@webspatial/core-sdk'
+import type { Dynamic3DMotionBindingInternal } from '../../spatialized-container/motion/dynamic3dMotionBindingTypes'
 import { EntityEventHandler } from '../type'
 import { useRealityEvents } from '../hooks'
 
@@ -20,7 +21,10 @@ export type RealityProps = Omit<
   React.ComponentPropsWithRef<'div'>,
   'onSpatialContentReady'
 > &
-  EntityEventHandler
+  EntityEventHandler & {
+    /** Native root-transform motion on the Reality container (`SpatializedDynamic3DElement`). */
+    motion?: Dynamic3DMotionBindingInternal
+  }
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
   function RealityBase({ children, ...inProps }, ref) {
@@ -40,6 +44,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       onSpatialRotateEnd,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
+      motion,
       ...props
     } = inProps
     const ctxRef = useRef<RealityContextValue | null>(null)
@@ -129,6 +134,17 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       onSpatialMagnify,
       onSpatialMagnifyEnd,
     })
+
+    useEffect(() => {
+      if (!isReady || !motion) return
+      const reality = ctxRef.current?.reality
+      if (!reality) return
+      motion.__setElement?.(reality)
+      return () => {
+        motion.__onUnbind?.()
+        motion.__setElement?.(null as any)
+      }
+    }, [motion, isReady])
 
     return (
       <RealityContext.Provider value={ctxRef.current}>

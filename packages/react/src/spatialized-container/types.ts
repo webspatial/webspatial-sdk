@@ -111,6 +111,8 @@ export type SpatializedStatic3DContainerProps =
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
       spatialEventOptions?: SpatialEventOptions
+      /** Native root-transform motion binding from `useStatic3DMotion` / `useSpatializedMotion`. */
+      motion?: import('./motion/static3dMotionBindingTypes').Static3DMotionBindingInternal
     }
 
 export type SpatializedStatic3DContentProps = {
@@ -123,6 +125,7 @@ export type SpatializedStatic3DContentProps = {
   children?: React.ReactNode
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void
+  motion?: import('./motion/static3dMotionBindingTypes').Static3DMotionBindingInternal
 }
 
 export const SpatialCustomStyleVars = {

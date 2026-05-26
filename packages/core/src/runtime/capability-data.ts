@@ -91,6 +91,8 @@ function matrixVision_1_7_0_Flags(): Record<string, boolean> {
 function matrixVision_1_8_0_Flags(): Record<string, boolean> {
   const flags = matrixVision_1_7_0_Flags()
   flags['useAnimation:element'] = true
+  flags['useAnimation:static3d'] = true
+  flags['useAnimation:dynamic3d'] = true
   return flags
 }
 
@@ -125,6 +127,8 @@ function matrixPico_0_2_2_Flags(): Record<string, boolean> {
   flags['useAnimation'] = true
   flags['useAnimation:entity'] = true
   flags['useAnimation:element'] = true
+  flags['useAnimation:static3d'] = true
+  flags['useAnimation:dynamic3d'] = true
   return flags
 }
 

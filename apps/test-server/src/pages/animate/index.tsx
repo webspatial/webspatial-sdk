@@ -17,7 +17,7 @@ export default function AnimateTest() {
         <p className="text-gray-300 mb-4 text-sm">
           Plan B RFC:{' '}
           <Link className="text-blue-400 underline" to="/spatial-div-motion">
-            SpatialDiv Motion (timeline + single style)
+            Spatialized Motion (2D + 3D containers)
           </Link>
           {' · '}
           Plan A reference:{' '}
