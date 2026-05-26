@@ -99,6 +99,7 @@ import { SpatialDivMotionMultiTrackPage } from './src/pages/spatial-div-motion/m
 import { SpatialDivMotionSimpleEntrancePage } from './src/pages/spatial-div-motion/simple-entrance'
 import { SpatialDivMotionTranslateZPage } from './src/pages/spatial-div-motion/translate-z'
 import { SpatialDivMotionRotatePage } from './src/pages/spatial-div-motion/rotate'
+import { SpatializedMotionModelContainerPage } from './src/pages/spatial-div-motion/model-container'
 import { SpatializedMotionRealityContainerPage } from './src/pages/spatial-div-motion/reality-container'
 
 class ErrorBoundary extends React.Component<
@@ -322,6 +323,10 @@ function App() {
                 <Route
                   path="/spatial-div-motion/rotate"
                   element={<SpatialDivMotionRotatePage />}
+                />
+                <Route
+                  path="/spatial-div-motion/model-container"
+                  element={<SpatializedMotionModelContainerPage />}
                 />
                 <Route
                   path="/spatial-div-motion/reality-container"

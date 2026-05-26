@@ -40,7 +40,8 @@ export default function SpatializedMotionHubPage() {
         3D containers — native only
       </h2>
       <p className="text-xs text-gray-500 mb-3">
-        Static3D Model and Dynamic3D Reality require visionOS shell ≥ 1.8.0.
+        Static3D Model and Dynamic3D Reality require visionOS shell ≥ 1.8.0
+        (rebuild WebSpatial.app after SDK changes).
       </p>
       <ul className="space-y-2 mb-8">
         {demos3d.map(r => (
