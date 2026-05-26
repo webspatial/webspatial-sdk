@@ -1,13 +1,13 @@
 import type {
-  SpatialDivAnimationConfig,
-  SpatialDivAnimatedValues,
-  SpatialDivTransform,
+  SpatialDivSegmentConfig,
+  SpatialDivVisualValues,
+  SpatialDivVisualTransform,
 } from '@webspatial/core-sdk'
 
 const VALID_TIMING_FUNCTIONS = ['linear', 'easeIn', 'easeOut', 'easeInOut']
 
-// Only these top-level keys are allowed in SpatialDivAnimatedValues per spec
-const VALID_TOP_KEYS: (keyof SpatialDivAnimatedValues)[] = [
+// Only these top-level keys are allowed in SpatialDivVisualValues per spec
+const VALID_TOP_KEYS: (keyof SpatialDivVisualValues)[] = [
   'transform',
   'opacity',
 ]
@@ -50,7 +50,7 @@ function validateXYZ(
  * Only translate, rotate, scale sub-keys are allowed.
  */
 function validateTransform(
-  transform: SpatialDivTransform,
+  transform: SpatialDivVisualTransform,
   label: string,
 ): void {
   const keys = Object.keys(transform)
@@ -74,10 +74,10 @@ function validateTransform(
 }
 
 /**
- * Validate a SpatialDivAnimatedValues object (to or from).
+ * Validate a SpatialDivVisualValues object (to or from).
  * Enforces the spec whitelist and numeric constraints.
  */
-function validateValues(values: SpatialDivAnimatedValues, label: string): void {
+function validateValues(values: SpatialDivVisualValues, label: string): void {
   const keys = Object.keys(values)
 
   // Check for entity keys (mutual exclusion)
@@ -101,7 +101,7 @@ function validateValues(values: SpatialDivAnimatedValues, label: string): void {
 
   // Check for any other invalid/unknown keys
   const invalidKeys = keys.filter(
-    k => !VALID_TOP_KEYS.includes(k as keyof SpatialDivAnimatedValues),
+    k => !VALID_TOP_KEYS.includes(k as keyof SpatialDivVisualValues),
   )
   if (invalidKeys.length > 0) {
     throw new Error(
@@ -126,11 +126,11 @@ function validateValues(values: SpatialDivAnimatedValues, label: string): void {
 }
 
 /**
- * Validate the full SpatialDivAnimationConfig.
+ * Validate the full SpatialDivSegmentConfig.
  * Throws on any violation of the spec requirements.
  */
-export function validateSpatialDivAnimationConfig(
-  config: SpatialDivAnimationConfig,
+export function validateSpatialDivSegmentConfig(
+  config: SpatialDivSegmentConfig,
 ): void {
   // config.to is required and must have at least one whitelisted field
   if (!config.to || Object.keys(config.to).length === 0) {

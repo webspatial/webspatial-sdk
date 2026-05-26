@@ -10,20 +10,20 @@ import type { CSSProperties } from 'react'
 import {
   SpatialDivMotionController,
   evaluateMotionTimeline,
-  simpleConfigToMotionConfig,
+  segmentConfigToMotionConfig,
   supports,
   validateSpatialDivMotionConfig,
-  type SpatialDivAnimatedValues,
-  type SpatialDivMotionApi,
+  type SpatialDivVisualValues,
+  type SpatialDivPlaybackApi,
   type SpatialDivMotionConfig,
-  type SpatialDivMotionSimpleConfig,
+  type SpatialDivSegmentConfig,
 } from '@webspatial/core-sdk'
 import { valuesToMotionStyle } from './style'
 import type { SpatialDivMotionBindingInternal } from './motionBindingTypes'
 
 export type UseSpatialDivMotionResult = {
   style: CSSProperties
-  api: SpatialDivMotionApi
+  api: SpatialDivPlaybackApi
   /** Present when `supports('useAnimation', ['element'])`; pass to `motion` on SpatialDiv. */
   motion?: SpatialDivMotionBindingInternal
   /** Core runtime controller (imperative playback + selective pause). */
@@ -46,12 +46,9 @@ function useSpatialDivMotionInternal(
     valuesToMotionStyle(initialValues),
   )
 
-  const applyStyleFromValues = useCallback(
-    (values: SpatialDivAnimatedValues) => {
-      setStyle(valuesToMotionStyle(values))
-    },
-    [],
-  )
+  const applyStyleFromValues = useCallback((values: SpatialDivVisualValues) => {
+    setStyle(valuesToMotionStyle(values))
+  }, [])
 
   const controllerRef = useRef<SpatialDivMotionController | null>(null)
   if (!controllerRef.current || controllerRef.current.isDestroyed) {
@@ -102,7 +99,7 @@ function useSpatialDivMotionInternal(
     return binding
   }, [controller, nativeCapable])
 
-  const api: SpatialDivMotionApi = useMemo(
+  const api: SpatialDivPlaybackApi = useMemo(
     () => ({
       play: () => controller.play(),
       pause: keys => controller.pause(keys),
@@ -144,7 +141,7 @@ export function useSpatialDivMotion(
 }
 
 function useSpatialDivMotionSimple(
-  simple: SpatialDivMotionSimpleConfig,
+  simple: SpatialDivSegmentConfig,
 ): UseSpatialDivMotionResult {
   const simpleKey = useMemo(
     () =>
@@ -170,7 +167,7 @@ function useSpatialDivMotionSimple(
     ],
   )
   const motionConfig = useMemo(
-    () => simpleConfigToMotionConfig(simple),
+    () => segmentConfigToMotionConfig(simple),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [simpleKey],
   )

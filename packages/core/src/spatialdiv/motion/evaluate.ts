@@ -1,4 +1,4 @@
-import type { SpatialDivAnimatedValues } from '../../types/spatialDivAnimation'
+import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
 import type {
   SpatialDivMotionConfig,
   SpatialDivMotionProperty,
@@ -7,7 +7,7 @@ import type {
 import { applyEasing } from './easing'
 
 function setScalar(
-  values: SpatialDivAnimatedValues,
+  values: SpatialDivVisualValues,
   property: SpatialDivMotionProperty,
   value: number,
 ): void {
@@ -53,9 +53,9 @@ function sampleTrack(track: SpatialDivMotionTrack, timeSec: number): number {
 export function evaluateMotionTimeline(
   config: SpatialDivMotionConfig,
   timeSec: number,
-): SpatialDivAnimatedValues {
+): SpatialDivVisualValues {
   const t = Math.max(0, Math.min(config.duration, timeSec))
-  const values: SpatialDivAnimatedValues = {}
+  const values: SpatialDivVisualValues = {}
   for (const track of config.tracks) {
     setScalar(values, track.property, sampleTrack(track, t))
   }

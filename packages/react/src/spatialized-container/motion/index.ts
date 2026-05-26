@@ -4,7 +4,7 @@ export {
   SpatialDivMotionController,
   evaluateMotionTimeline,
   validateSpatialDivMotionConfig,
-  simpleConfigToMotionConfig,
+  segmentConfigToMotionConfig,
 } from '@webspatial/core-sdk'
 export { valuesToMotionStyle } from './style'
 export type { SpatialDivMotionBindingInternal } from './motionBindingTypes'

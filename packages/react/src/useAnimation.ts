@@ -2,9 +2,9 @@ import type {
   AnimationConfig,
   AnimationApi,
   AnimatedProps,
-  SpatialDivAnimationConfig,
-  SpatialDivAnimationApi,
-  SpatialDivAnimatedProps,
+  SpatialDivSegmentConfig,
+  SpatialDivPlaybackApi,
+  SpatialDivAnimationBinding,
 } from '@webspatial/core-sdk'
 import { useEntityAnimation } from './reality/hooks/useAnimation'
 import { useSpatialDivAnimation } from './spatialized-container/hooks/useSpatialDivAnimation'
@@ -45,16 +45,16 @@ export function resolveAnimationKind(config: {
  * Dispatches to entity or SpatialDiv animation based on config.to keys.
  */
 export function useAnimation(
-  config: SpatialDivAnimationConfig,
-): [SpatialDivAnimatedProps, SpatialDivAnimationApi]
+  config: SpatialDivSegmentConfig,
+): [SpatialDivAnimationBinding, SpatialDivPlaybackApi]
 export function useAnimation(
   config: AnimationConfig,
 ): [AnimatedProps, AnimationApi]
 export function useAnimation(
-  config: AnimationConfig | SpatialDivAnimationConfig,
+  config: AnimationConfig | SpatialDivSegmentConfig,
 ): [
-  AnimatedProps | SpatialDivAnimatedProps,
-  AnimationApi | SpatialDivAnimationApi,
+  AnimatedProps | SpatialDivAnimationBinding,
+  AnimationApi | SpatialDivPlaybackApi,
 ] {
   const kind = resolveAnimationKind(config as { to: Record<string, any> })
 
@@ -64,7 +64,7 @@ export function useAnimation(
     kind === 'entity',
   )
   const spatialDivResult = useSpatialDivAnimation(
-    config as SpatialDivAnimationConfig,
+    config as SpatialDivSegmentConfig,
     kind === 'spatialDiv',
   )
 

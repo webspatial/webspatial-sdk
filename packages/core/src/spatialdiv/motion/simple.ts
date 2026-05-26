@@ -1,13 +1,13 @@
-import type { SpatialDivAnimatedValues } from '../../types/spatialDivAnimation'
+import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
 import type {
   SpatialDivMotionConfig,
   SpatialDivMotionProperty,
-  SpatialDivMotionSimpleConfig,
+  SpatialDivSegmentConfig,
   SpatialDivMotionTrack,
 } from '../../types/spatialDivMotion'
 
 function collectScalars(
-  values: SpatialDivAnimatedValues,
+  values: SpatialDivVisualValues,
   out: Array<{ property: SpatialDivMotionProperty; value: number }>,
 ): void {
   if (values.opacity !== undefined) {
@@ -31,8 +31,8 @@ function collectScalars(
 }
 
 /** Desugar simple from/to config into a timeline config. */
-export function simpleConfigToMotionConfig(
-  simple: SpatialDivMotionSimpleConfig,
+export function segmentConfigToMotionConfig(
+  simple: SpatialDivSegmentConfig,
 ): SpatialDivMotionConfig {
   const duration = simple.duration ?? 0.3
   const fromScalars: Array<{
