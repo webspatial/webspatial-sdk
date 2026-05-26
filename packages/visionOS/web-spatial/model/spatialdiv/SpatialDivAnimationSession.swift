@@ -185,6 +185,9 @@ class SpatialDivAnimationSession {
     let animationId: String
     let elementId: String
 
+    /// Native write path for container motion (Static3D `modelTransform` vs element `transform`).
+    var transformSink: SpatializedMotionTransformSink = .elementTransform
+
     /// Target values to animate to.
     let to: SpatialDivAnimationTarget?
 
