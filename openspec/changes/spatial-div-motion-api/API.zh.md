@@ -45,7 +45,18 @@
 | `api` | 是 | `play` / `pause` / `cancel` 及状态只读属性 |
 | `motion` | 仅 spatial 原生 | **运行时接线**，不是配置；见 §5 |
 
-### 3.2 命令式控制（`api`）
+### 3.2 Core 运行时（`@webspatial/core-sdk`）
+
+| API | 说明 |
+|-----|------|
+| `SpatialDivMotionController` | 单元素 timeline 播放控制器（Web + Native） |
+| `element.motion(config)` | 工厂：绑定 `Spatialized2DElement` 并返回 Controller |
+| `evaluateMotionTimeline` / `validateSpatialDivMotionConfig` | 纯函数工具（与 native evaluator 对齐） |
+
+`api` 与 Controller 方法对齐：`play()`、`pause(keys?)`、`resume(keys?)`、`cancel()`。  
+`pause(['opacity'])` 在 **Web** 上按属性冻结；Native 暂为整段 pause（后续可扩展 `properties` 桥接）。
+
+### 3.3 命令式控制（`api` / Controller）
 
 | 方法 / 属性 | 行为（与 Plan A 会话语义对齐） |
 |-------------|-------------------------------|
@@ -59,7 +70,7 @@
 
 **生命周期回调（写在 config 里）：** `onStart`、`onComplete(values)`、`onCancel(values)`、`onError`（native 异步失败）。
 
-### 3.3 配置：多轨 timeline（`SpatialDivMotionConfig`）
+### 3.4 配置：多轨 timeline（`SpatialDivMotionConfig`）
 
 | 字段 | 必填 | 说明 |
 |------|------|------|
@@ -78,7 +89,7 @@
 | `keyframes` | 至少 2 个 `{ at, value }`，`at` 为秒，落在 `[0, duration]` |
 | `easing` | 可选：`linear` / `easeIn` / `easeOut` / `easeInOut` |
 
-### 3.4 配置：简单入场（`SpatialDivMotionSimpleConfig`）
+### 3.5 配置：简单入场（`SpatialDivMotionSimpleConfig`）
 
 | 字段 | 说明 |
 |------|------|
@@ -90,7 +101,7 @@
 
 内部脱糖为「每个变化字段一条轨、两个关键帧 `at: 0` 与 `at: duration`」。
 
-### 3.5 类型包（`@webspatial/core-sdk`）
+### 3.6 类型包（`@webspatial/core-sdk`）
 
 产品/前端对齐契约时可引用以下类型名：
 

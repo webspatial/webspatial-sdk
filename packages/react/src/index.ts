@@ -9,7 +9,10 @@ export * from './spatialized-container'
 export * from './spatialized-container-monitor'
 export * from './reality'
 export { useAnimation } from './useAnimation'
-export { useSpatialDivMotion } from './spatialized-container/motion'
+export {
+  useSpatialDivMotion,
+  SpatialDivMotionController,
+} from './spatialized-container/motion'
 export * from './Model'
 export { SSRProvider } from './ssr'
 export { useMetrics } from './useMetrics'

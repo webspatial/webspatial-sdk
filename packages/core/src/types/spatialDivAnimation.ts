@@ -1,5 +1,8 @@
 import type { TimingFunction } from './animation'
-import type { SpatialDivMotionTimeline } from './spatialDivMotion'
+import type {
+  SpatialDivMotionProperty,
+  SpatialDivMotionTimeline,
+} from './spatialDivMotion'
 
 // ---- SpatialDiv Transform sub-fields ----
 
@@ -141,6 +144,11 @@ export interface SpatialDivAnimatedPropsInternal
 export interface AnimateSpatialDivCommand {
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'cancel'
+  /**
+   * Optional subset of animated properties for pause/resume/cancel.
+   * Native MAY ignore until supported; Web backend honors selective pause/resume.
+   */
+  properties?: SpatialDivMotionProperty[]
   /** Required when type is 'play'; the Spatialized2DElement id. */
   elementId?: string
   /** Animated property values (only for play). */
