@@ -7,11 +7,11 @@ import type { TimingFunction } from './animation'
 import type { SpatializedMotionKind } from './spatializedMotion'
 import type { SpatializedPlaybackError } from './spatializedPlayback'
 
-/** Unified JSB command for Static3D / Dynamic3D container motion. */
+/** Unified JSB command for spatialized2d / static3d / dynamic3d motion. */
 export interface AnimateSpatializedElementMotionCommand {
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'cancel'
-  targetKind: Exclude<SpatializedMotionKind, 'spatialized2d'>
+  targetKind: SpatializedMotionKind
   properties?: SpatialDivMotionProperty[]
   elementId?: string
   to?: SpatialDivVisualValues
@@ -31,7 +31,11 @@ export interface AnimateSpatializedElementMotionResult {
   failed: Promise<SpatializedPlaybackError>
 }
 
-export type ContainerElementMotionCommand = Omit<
+/** Motion command without `targetKind` (filled in by element / bridge). */
+export type ElementMotionCommand = Omit<
   AnimateSpatializedElementMotionCommand,
   'targetKind'
 >
+
+/** @deprecated Use {@link ElementMotionCommand}. */
+export type ContainerElementMotionCommand = ElementMotionCommand

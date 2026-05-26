@@ -344,7 +344,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addJSBListener(AnimateTransformCommand.self, onAnimateTransform)
 
-        spatialWebViewModel.addJSBListener(AnimateSpatialized2DElementCommand.self, onAnimateSpatialized2DElement)
         spatialWebViewModel.addJSBListener(AnimateSpatializedElementMotionCommand.self, onAnimateSpatializedElementMotion)
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
@@ -1405,46 +1404,52 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
-    private func onAnimateSpatialized2DElement(command: AnimateSpatialized2DElementCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        switch command.type {
-        case "play":
-            guard let elementId = command.elementId else {
-                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateSpatialized2DElement play: elementId is required")))
-                return
-            }
-            guard let element: SpatializedElement = findSpatialObject(elementId) else {
-                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateSpatialized2DElement play: element \(elementId) not found")))
-                return
-            }
-            spatialDivAnimationManager.handlePlay(command: command, element: element, resolve: resolve)
-
-        case "pause":
-            spatialDivAnimationManager.handlePause(command: command, resolve: resolve)
-
-        case "resume":
-            spatialDivAnimationManager.handleResume(command: command, resolve: resolve)
-
-        case "cancel":
-            guard let session = spatialDivAnimationManager.getSession(command.animationId),
-                  let element: SpatializedElement = findSpatialObject(session.elementId)
-            else {
-                resolve(.success(nil))
-                return
-            }
-            spatialDivAnimationManager.handleCancel(command: command, element: element, resolve: resolve)
-
-        default:
-            resolve(.failure(JsbError(code: .TypeError, message: "AnimateSpatialized2DElement: unknown command type '\(command.type)'")))
-        }
-    }
-
     private func onAnimateSpatializedElementMotion(command: AnimateSpatializedElementMotionCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        if command.targetKind == "spatialized2d" {
+            onAnimateSpatialized2DMotion(command: command, resolve: resolve)
+            return
+        }
         onAnimateSpatializedContainerMotion(
             command: command,
             transformSink: command.transformSink,
             commandLabel: "AnimateSpatializedElementMotion",
             resolve: resolve
         )
+    }
+
+    private func onAnimateSpatialized2DMotion(command: AnimateSpatializedElementMotionCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        let commandLabel = "AnimateSpatializedElementMotion"
+        let manager = spatialDivAnimationManager
+        switch command.type {
+        case "play":
+            guard let elementId = command.elementId else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "\(commandLabel) play: elementId is required")))
+                return
+            }
+            guard let element: SpatializedElement = findSpatialObject(elementId) else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "\(commandLabel) play: element \(elementId) not found")))
+                return
+            }
+            manager.handlePlay(command: command, element: element, resolve: resolve)
+
+        case "pause":
+            manager.handlePause(command: command, resolve: resolve)
+
+        case "resume":
+            manager.handleResume(command: command, resolve: resolve)
+
+        case "cancel":
+            guard let session = manager.getSession(command.animationId),
+                  let element: SpatializedElement = findSpatialObject(session.elementId)
+            else {
+                resolve(.success(nil))
+                return
+            }
+            manager.handleCancel(command: command, element: element, resolve: resolve)
+
+        default:
+            resolve(.failure(JsbError(code: .TypeError, message: "\(commandLabel): unknown command type '\(command.type)'")))
+        }
     }
 
     private func onAnimateSpatializedContainerMotion(

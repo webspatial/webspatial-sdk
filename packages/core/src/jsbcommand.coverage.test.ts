@@ -193,11 +193,14 @@ describe('JSBCommand', () => {
   })
 
   it('serializes SpatialDiv timeline keyframes for native playback', async () => {
-    const { AnimateSpatialDivJSBCommand } = await import('./JSBCommand')
+    const { AnimateSpatializedElementMotionJSBCommand } = await import(
+      './JSBCommand'
+    )
 
-    await new AnimateSpatialDivJSBCommand({
+    await new AnimateSpatializedElementMotionJSBCommand({
       animationId: 'anim-1',
       type: 'play',
+      targetKind: 'spatialized2d',
       elementId: 'element-1',
       duration: 5,
       timingFunction: 'linear',
@@ -225,10 +228,11 @@ describe('JSBCommand', () => {
     }).execute()
 
     expect(platformSpy.callJSB).toHaveBeenCalledWith(
-      'AnimateSpatialized2DElement',
+      'AnimateSpatializedElementMotion',
       JSON.stringify({
         type: 'play',
         animationId: 'anim-1',
+        targetKind: 'spatialized2d',
         elementId: 'element-1',
         duration: 5,
         timingFunction: 'linear',

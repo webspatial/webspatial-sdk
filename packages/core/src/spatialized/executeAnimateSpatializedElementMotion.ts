@@ -4,7 +4,7 @@ import { parseSpatialDivVisualValues } from '../spatialdiv/parseSpatialDivVisual
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
-  ContainerElementMotionCommand,
+  ElementMotionCommand,
 } from '../types/spatializedElementMotion'
 import type { SpatializedPlaybackError } from '../types/spatializedPlayback'
 import type { SpatialDivVisualValues } from '../types/spatialDivVisual'
@@ -12,8 +12,8 @@ import type { SpatializedMotionKind } from '../types/spatializedMotion'
 
 export async function executeAnimateSpatializedElementMotion(
   elementId: string,
-  targetKind: Exclude<SpatializedMotionKind, 'spatialized2d'>,
-  command: ContainerElementMotionCommand,
+  targetKind: SpatializedMotionKind,
+  command: ElementMotionCommand,
 ): Promise<
   AnimateSpatializedElementMotionResult | SpatialDivVisualValues | void
 > {

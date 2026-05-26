@@ -1,10 +1,3 @@
-import type { TimingFunction } from './animation'
-import type {
-  SpatialDivMotionProperty,
-  SpatialDivMotionTimeline,
-} from './spatialDivMotion'
-import type { SpatialDivVisualValues } from './spatialDivVisual'
-
 // ---- Plan A: `animation` prop binding (opaque handle) ----
 
 export interface SpatialDivAnimationBinding {
@@ -24,28 +17,13 @@ export interface SpatialDivAnimationBindingInternal
 
 // ---- Cross-layer bridge (internal; used by Spatialized2DElement) ----
 
-export interface AnimateSpatialDivCommand {
-  animationId: string
-  type: 'play' | 'pause' | 'resume' | 'cancel'
-  /**
-   * Optional subset of animated properties for pause/resume/cancel.
-   * Native MAY ignore until supported; Web backend honors selective pause/resume.
-   */
-  properties?: SpatialDivMotionProperty[]
-  elementId?: string
-  to?: SpatialDivVisualValues
-  from?: SpatialDivVisualValues
-  duration?: number
-  timingFunction?: TimingFunction
-  delay?: number
-  loop?: boolean | { reverse?: boolean }
-  playbackRate?: number
-  timeline?: SpatialDivMotionTimeline
-}
+import type {
+  AnimateSpatializedElementMotionResult,
+  ElementMotionCommand,
+} from './spatializedElementMotion'
 
-export interface AnimateSpatialDivResult {
-  animationId: string
-  finished: Promise<SpatialDivVisualValues>
-  canceled: Promise<SpatialDivVisualValues>
-  failed: Promise<import('./spatialDivPlayback').SpatialDivPlaybackError>
-}
+/** @deprecated Prefer {@link ElementMotionCommand} + `AnimateSpatializedElementMotion`. */
+export type AnimateSpatialDivCommand = ElementMotionCommand
+
+/** @deprecated Prefer {@link AnimateSpatializedElementMotionResult}. */
+export type AnimateSpatialDivResult = AnimateSpatializedElementMotionResult
