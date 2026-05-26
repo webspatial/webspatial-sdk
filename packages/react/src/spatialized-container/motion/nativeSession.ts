@@ -16,6 +16,7 @@ import {
   type NativeSegmentPlayPayload,
 } from './nativeCompile'
 import { evaluateMotionTimeline } from './evaluate'
+import { motionTimeSec } from './motionTiming'
 
 type SessionState = 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 
@@ -41,9 +42,11 @@ function nextAnimationId(): string {
 export function useNativeMotionSession(
   config: SpatialDivMotionConfig,
   onNativeStateChange?: () => void,
+  /** Sync React `style` to timeline sample (pause / cancel / complete boundaries). */
+  syncStyleAtTimelineSec?: (timeSec: number) => void,
 ): {
   motionBinding: SpatialDivMotionBindingInternal | undefined
-  getNativePlayState: () => SpatialDivMotionPlayState
+  getNativePlayState: () => SpatialDivMotionPlayState | 'queued'
   nativePlay: () => void
   nativePause: () => void
   nativeCancel: () => void
@@ -58,6 +61,24 @@ export function useNativeMotionSession(
   const unmountedRef = useRef(false)
   const warnedRef = useRef(false)
   const nativeControllingRef = useRef(false)
+  const playStartWallMsRef = useRef(0)
+  const pausedElapsedMsRef = useRef(0)
+
+  const syncStyleAtTimelineSecRef = useRef(syncStyleAtTimelineSec)
+  syncStyleAtTimelineSecRef.current = syncStyleAtTimelineSec
+
+  const syncStyleAtElapsedMs = useCallback((elapsedMs: number) => {
+    const t = motionTimeSec(elapsedMs, configRef.current)
+    syncStyleAtTimelineSecRef.current?.(t)
+  }, [])
+
+  const markPlayStart = useCallback(() => {
+    playStartWallMsRef.current = performance.now()
+  }, [])
+
+  const markResumeFromPause = useCallback(() => {
+    playStartWallMsRef.current = performance.now() - pausedElapsedMsRef.current
+  }, [])
 
   const [, forceUpdate] = useReducer((x: number) => x + 1, 0)
   const bump = useCallback(() => {
@@ -173,8 +194,11 @@ export function useNativeMotionSession(
             animationId: session.animationId,
             type: 'pause',
           })
+          pausedElapsedMsRef.current = 0
+          syncStyleAtElapsedMs(0)
         } else {
           session.state = 'running'
+          markPlayStart()
         }
 
         bump()
@@ -192,7 +216,7 @@ export function useNativeMotionSession(
         })
       }
     },
-    [buildPlayCommand, bump, reportError],
+    [buildPlayCommand, bump, markPlayStart, reportError, syncStyleAtElapsedMs],
   )
 
   const nativePlay = useCallback(() => {
@@ -219,6 +243,7 @@ export function useNativeMotionSession(
           })
           currentSession.state = 'running'
           nativeControllingRef.current = true
+          markResumeFromPause()
           bump()
         } catch (e: any) {
           reportError({
@@ -254,7 +279,7 @@ export function useNativeMotionSession(
 
       await doPlay(session, element)
     })
-  }, [enqueueCommand, doPlay, bump, reportError])
+  }, [enqueueCommand, doPlay, bump, markResumeFromPause, reportError])
 
   const nativePause = useCallback(() => {
     enqueueCommand(async () => {
@@ -264,6 +289,8 @@ export function useNativeMotionSession(
       if (session.state === 'queued') {
         session.queuedPause = true
         session.state = 'paused'
+        pausedElapsedMsRef.current = 0
+        syncStyleAtElapsedMs(0)
         bump()
         return
       }
@@ -277,7 +304,10 @@ export function useNativeMotionSession(
           animationId: session.animationId,
           type: 'pause',
         })
+        pausedElapsedMsRef.current =
+          performance.now() - playStartWallMsRef.current
         session.state = 'paused'
+        syncStyleAtElapsedMs(pausedElapsedMsRef.current)
         bump()
       } catch (e: any) {
         reportError({
@@ -287,7 +317,7 @@ export function useNativeMotionSession(
         })
       }
     })
-  }, [enqueueCommand, bump, reportError])
+  }, [enqueueCommand, bump, reportError, syncStyleAtElapsedMs])
 
   const nativeCancel = useCallback(() => {
     enqueueCommand(async () => {
@@ -335,11 +365,16 @@ export function useNativeMotionSession(
           (session.state === 'queued' ||
             (session.state === 'paused' && session.queuedPause))
         ) {
-          doPlay(session, element)
+          void doPlay(session, element)
+          return
+        }
+        const cfg = configRef.current
+        if (cfg.autoStart !== false && !sessionRef.current) {
+          void nativePlay()
         }
       }
     },
-    [doPlay],
+    [doPlay, nativePlay],
   )
 
   const motionBinding = useMemo(():
@@ -352,39 +387,47 @@ export function useNativeMotionSession(
       __motionObjectId: motionObjectId,
       get __animating() {
         const s = sessionRef.current
-        return s ? !['idle', 'finished'].includes(s.state) : false
+        return s ? ['running', 'paused', 'queued'].includes(s.state) : false
       },
       __getSuppressedFields() {
         const s = sessionRef.current
-        if (!s || s.state === 'idle' || s.state === 'finished') return null
+        // Suppress only while native is actually driving the entity. During
+        // `queued` (waiting for Spatialized2DElement bind), Web RAF must still
+        // sync `style` to the probe → platform or the panel stays frozen.
+        if (!s || (s.state !== 'running' && s.state !== 'paused')) return null
         return getMotionSuppressedFields(s.config)
       },
       __setElement: setElement,
       __onUnbind: () => {
         const session = sessionRef.current
-        if (session && elementRef.current) {
+        const element = elementRef.current
+        if (session && element) {
           if (session.state !== 'idle' && session.state !== 'finished') {
-            elementRef.current
+            element
               .animateSpatialDiv({
                 animationId: session.animationId,
                 type: 'cancel',
               })
               .catch(() => {})
-            elementRef.current.cleanupSpatialDivAnimationListeners(
-              session.animationId,
+            element.cleanupSpatialDivAnimationListeners(session.animationId)
+            session.unmounted = true
+            session.state = 'idle'
+            configRef.current.onCancel?.(
+              evaluateMotionTimeline(session.config, 0),
             )
           }
         }
         sessionRef.current = null
         elementRef.current = null
         nativeControllingRef.current = false
+        bump()
       },
     }
     return binding
   }, [motionObjectId, setElement])
 
-  const getNativePlayState = (): SpatialDivMotionPlayState =>
-    (sessionRef.current?.state as SpatialDivMotionPlayState) ?? 'idle'
+  const getNativePlayState = (): SpatialDivMotionPlayState | 'queued' =>
+    sessionRef.current?.state ?? 'idle'
 
   return {
     motionBinding,
