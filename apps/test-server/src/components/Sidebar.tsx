@@ -90,6 +90,14 @@ export const routes = [
         path: '/spatial-div-motion/simple-entrance',
         label: 'simple() entrance',
       },
+      {
+        path: '/spatial-div-motion/translate-z',
+        label: 'translate.z (depth)',
+      },
+      {
+        path: '/spatial-div-motion/rotate',
+        label: 'rotate (y + z)',
+      },
     ],
   },
   { path: '/unit-convert', label: 'Unit Convert' },

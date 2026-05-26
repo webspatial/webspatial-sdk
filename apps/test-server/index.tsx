@@ -96,6 +96,8 @@ import SpatialDivNestedAnimationPage from './src/pages/spatial-div-animation/nes
 import SpatialDivMotionHubPage from './src/pages/spatial-div-motion/index'
 import { SpatialDivMotionMultiTrackPage } from './src/pages/spatial-div-motion/multi-track'
 import { SpatialDivMotionSimpleEntrancePage } from './src/pages/spatial-div-motion/simple-entrance'
+import { SpatialDivMotionTranslateZPage } from './src/pages/spatial-div-motion/translate-z'
+import { SpatialDivMotionRotatePage } from './src/pages/spatial-div-motion/rotate'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -267,6 +269,14 @@ function App() {
                 <Route
                   path="/spatial-div-motion/simple-entrance"
                   element={<SpatialDivMotionSimpleEntrancePage />}
+                />
+                <Route
+                  path="/spatial-div-motion/translate-z"
+                  element={<SpatialDivMotionTranslateZPage />}
+                />
+                <Route
+                  path="/spatial-div-motion/rotate"
+                  element={<SpatialDivMotionRotatePage />}
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
