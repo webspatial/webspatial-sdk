@@ -71,6 +71,10 @@ export class ResourceRegistry {
     }
   }
 
+  has(id: string): boolean {
+    return this.resources.has(id)
+  }
+
   get(id: string): Promise<SpatialObject> {
     const existing = this.resources.get(id)
     if (existing) {

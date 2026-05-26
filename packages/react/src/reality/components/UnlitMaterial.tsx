@@ -35,15 +35,21 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
       try {
         let textureIdForNative: string | undefined = options.textureId
         if (options.textureId) {
-          const texturePromise = resourceRegistry.get(options.textureId)
-          try {
-            const textureResource = await texturePromise
-            if (cancelled) return
-            textureIdForNative = textureResource.id
-          } catch {
-            // Texture failed: still create material so entities do not hang on materialId;
-            // tint-only / no texture until the texture resolves.
+          if (!resourceRegistry.has(options.textureId)) {
+            // Texture id was never declared: still create material so entities do not hang on
+            // materialId; tint-only / no texture until the texture resolves in the future.
             textureIdForNative = ''
+          } else {
+            const texturePromise = resourceRegistry.get(options.textureId)
+            try {
+              const textureResource = await texturePromise
+              if (cancelled) return
+              textureIdForNative = textureResource.id
+            } catch {
+              // Texture failed: still create material so entities do not hang on materialId;
+              // tint-only / no texture until the texture resolves.
+              textureIdForNative = ''
+            }
           }
         }
         if (cancelled) return
@@ -86,6 +92,8 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
       if (options.opacity !== undefined) updates.opacity = options.opacity
       if (options.textureId !== undefined) {
         if (options.textureId === '') {
+          updates.textureId = ''
+        } else if (!ctx.resourceRegistry.has(options.textureId)) {
           updates.textureId = ''
         } else {
           const texturePromise = ctx.resourceRegistry.get(options.textureId)
