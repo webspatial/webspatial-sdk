@@ -1,12 +1,12 @@
 import { describe, expect, test, vi } from 'vitest'
-import { SpatialDivMotionController } from './SpatialDivMotionController'
+import { SpatializedMotionController } from '../../spatialized/motion/SpatializedMotionController'
 
-describe('SpatialDivMotionController selective pause (Web)', () => {
+describe('SpatializedMotionController (spatialized2d) selective pause (Web)', () => {
   test('pause(["opacity"]) freezes opacity while translate continues', async () => {
     vi.useFakeTimers()
 
     const values: number[] = []
-    const controller = new SpatialDivMotionController(
+    const controller = new SpatializedMotionController(
       {
         duration: 2,
         autoStart: false,
@@ -29,6 +29,7 @@ describe('SpatialDivMotionController selective pause (Web)', () => {
           },
         ],
       },
+      'spatialized2d',
       {
         onValuesChange: v => {
           if (v.opacity !== undefined) values.push(v.opacity)

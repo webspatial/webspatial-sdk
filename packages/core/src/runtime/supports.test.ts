@@ -267,3 +267,31 @@ describe('getRuntime / supports', () => {
     expect(third).toBe(true)
   })
 })
+
+describe('supports("useSpatializedMotion", [kind])', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  test('visionOS WSAppShell/1.8.0: spatialized2d and 3d kinds', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useSpatializedMotion', ['spatialized2d'])).toBe(true)
+    expect(supports('useSpatializedMotion', ['static3d'])).toBe(true)
+    expect(supports('useSpatializedMotion', ['dynamic3d'])).toBe(true)
+  })
+
+  test('visionOS WSAppShell/1.7.0: spatialized2d false (element motion ships in 1.8.0)', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.7.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useSpatializedMotion', ['spatialized2d'])).toBe(false)
+  })
+})

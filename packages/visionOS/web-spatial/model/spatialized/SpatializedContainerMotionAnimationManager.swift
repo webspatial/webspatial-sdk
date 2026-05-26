@@ -2,15 +2,15 @@ import Foundation
 import QuartzCore
 import Spatial
 
-// MARK: - Static3D Animation Manager
+// MARK: - Spatialized container motion (Static3D + Dynamic3D)
 
-/// Manages active Static3D animation sessions.
+/// Manages active Static3D / Dynamic3D container motion sessions via `SpatializedMotionTransformSink`.
 /// Uses a single shared CADisplayLink to drive all animations at display refresh rate (90Hz on visionOS).
 /// Properties are interpolated per-frame and applied directly to SpatializedElement @Observable vars,
 /// which triggers SwiftUI view updates automatically.
 ///
 /// Per spec, only `transform` (translate/rotate/scale) and `opacity` are animatable.
-class Static3DMotionAnimationManager: NSObject {
+class SpatializedContainerMotionAnimationManager: NSObject {
     /// Active sessions keyed by animationId.
     private var sessions: [String: SpatialDivAnimationSession] = [:]
 
@@ -130,18 +130,20 @@ class Static3DMotionAnimationManager: NSObject {
     // MARK: - Play
 
     func handlePlay(
-        command: AnimateSpatializedStatic3DElementCommand,
+        command: some SpatializedContainerMotionCommand,
+        transformSink: SpatializedMotionTransformSink,
         element: SpatializedElement,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
         guard let elementId = command.elementId else {
-            resolve(.failure(JsbError(code: .CommandError, message: "AnimateSpatializedStatic3DElement play: elementId is required")))
+            resolve(.failure(JsbError(code: .CommandError, message: "Spatialized container motion play: elementId is required")))
             return
         }
 
         if let timeline = command.timeline {
             handleTimelinePlay(
                 command: command,
+                transformSink: transformSink,
                 timeline: timeline,
                 element: element,
                 elementId: elementId,
@@ -163,7 +165,7 @@ class Static3DMotionAnimationManager: NSObject {
         )
 
         // --- Resolve "from" SRT by snapshotting current element transform ---
-        let currentSRT = Self.decomposeSRT(from: currentAffineTransform(for: element))
+        let currentSRT = Self.decomposeSRT(from: transformSink.currentAffineTransform(for: element))
         let fromTarget = command.from
 
         session.resolvedFromSRT = ResolvedSRT(
@@ -179,7 +181,7 @@ class Static3DMotionAnimationManager: NSObject {
         )
 
         // --- Resolve "from" opacity ---
-        session.resolvedFromOpacity = fromTarget?.opacity ?? element.opacity
+        session.resolvedFromOpacity = fromTarget?.opacity ?? transformSink.baselineOpacity(for: element)
 
         // --- Resolve "to" SRT ---
         let toTarget = command.to
@@ -208,13 +210,14 @@ class Static3DMotionAnimationManager: NSObject {
         }
 
         // If "from" values are explicitly provided, apply them immediately to the element
+        session.transformSink = transformSink
         if fromTarget?.transform != nil {
             session.animatesTransform = true
-            applySRT(session.resolvedFromSRT, to: element)
+            transformSink.applyAffine(Self.composeSRT(session.resolvedFromSRT), to: element)
         }
         if fromTarget?.opacity != nil {
             session.animatesOpacity = true
-            applyOpacity(session.resolvedFromOpacity, to: element)
+            transformSink.applyOpacity(session.resolvedFromOpacity, to: element)
         }
 
         addSession(session)
@@ -224,14 +227,15 @@ class Static3DMotionAnimationManager: NSObject {
     }
 
     private func handleTimelinePlay(
-        command: AnimateSpatializedStatic3DElementCommand,
+        command: some SpatializedContainerMotionCommand,
+        transformSink: SpatializedMotionTransformSink,
         timeline: SpatialDivMotionTimelinePayload,
         element: SpatializedElement,
         elementId: String,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
-        let baselineSRT = Self.decomposeSRT(from: currentAffineTransform(for: element))
-        let baselineOpacity = (element as? SpatializedStatic3DElement) == nil ? element.opacity : 1.0
+        let baselineSRT = Self.decomposeSRT(from: transformSink.currentAffineTransform(for: element))
+        let baselineOpacity = transformSink.baselineOpacity(for: element)
         let evaluator = SpatialDivTimelineEvaluator(
             timeline: timeline,
             baselineSRT: baselineSRT,
@@ -257,11 +261,12 @@ class Static3DMotionAnimationManager: NSObject {
         session.timelineStartSRT = start.srt
         session.timelineStartOpacity = start.opacity
 
+        session.transformSink = transformSink
         if session.animatesTransform {
-            applySRT(start.srt, to: element)
+            transformSink.applyAffine(Self.composeSRT(start.srt), to: element)
         }
         if session.animatesOpacity {
-            applyOpacity(start.opacity, to: element)
+            transformSink.applyOpacity(start.opacity, to: element)
         }
 
         addSession(session)
@@ -271,7 +276,7 @@ class Static3DMotionAnimationManager: NSObject {
     // MARK: - Pause
 
     func handlePause(
-        command: AnimateSpatializedStatic3DElementCommand,
+        command: some SpatializedContainerMotionCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
         guard let session = getSession(command.animationId) else {
@@ -295,7 +300,7 @@ class Static3DMotionAnimationManager: NSObject {
     // MARK: - Resume
 
     func handleResume(
-        command: AnimateSpatializedStatic3DElementCommand,
+        command: some SpatializedContainerMotionCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
         guard let session = getSession(command.animationId) else {
@@ -314,7 +319,7 @@ class Static3DMotionAnimationManager: NSObject {
     // MARK: - Cancel
 
     func handleCancel(
-        command: AnimateSpatializedStatic3DElementCommand,
+        command: some SpatializedContainerMotionCommand,
         element: SpatializedElement,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
@@ -332,19 +337,20 @@ class Static3DMotionAnimationManager: NSObject {
         session.markCanceled()
 
         // Cancel restores element to the "from" values (Web Animation API cancel semantics).
+        let sink = session.transformSink
         if let evaluator = session.timelineEvaluator {
             if session.animatesTransform {
-                applySRT(session.timelineStartSRT, to: element)
+                sink.applyAffine(Self.composeSRT(session.timelineStartSRT), to: element)
             }
             if session.animatesOpacity {
-                applyOpacity(session.timelineStartOpacity, to: element)
+                sink.applyOpacity(session.timelineStartOpacity, to: element)
             }
         } else {
             if session.animatesTransform {
-                applySRT(session.resolvedFromSRT, to: element)
+                sink.applyAffine(Self.composeSRT(session.resolvedFromSRT), to: element)
             }
             if session.animatesOpacity {
-                applyOpacity(session.resolvedFromOpacity, to: element)
+                sink.applyOpacity(session.resolvedFromOpacity, to: element)
             }
         }
 
@@ -358,15 +364,16 @@ class Static3DMotionAnimationManager: NSObject {
 
     private func applyInterpolatedValues(session: SpatialDivAnimationSession, progress: Double) {
         guard let element = findElement(session.elementId) else { return }
+        let sink = session.transformSink
 
         if let evaluator = session.timelineEvaluator {
             let timeSec = progress * session.duration
             let sample = evaluator.sampleSRTAndOpacity(at: timeSec)
             if session.animatesTransform {
-                applySRT(sample.srt, to: element)
+                sink.applyAffine(Self.composeSRT(sample.srt), to: element)
             }
             if session.animatesOpacity {
-                applyOpacity(sample.opacity, to: element)
+                sink.applyOpacity(sample.opacity, to: element)
             }
             return
         }
@@ -385,11 +392,11 @@ class Static3DMotionAnimationManager: NSObject {
                 scaleY: SpatialDivAnimationSession.lerp(fromSRT.scaleY, toSRT.scaleY, progress),
                 scaleZ: SpatialDivAnimationSession.lerp(fromSRT.scaleZ, toSRT.scaleZ, progress)
             )
-            applySRT(interpolated, to: element)
+            sink.applyAffine(Self.composeSRT(interpolated), to: element)
         }
 
         if session.animatesOpacity {
-            applyOpacity(
+            sink.applyOpacity(
                 SpatialDivAnimationSession.lerp(
                     session.resolvedFromOpacity, session.resolvedToOpacity, progress
                 ),
@@ -400,45 +407,47 @@ class Static3DMotionAnimationManager: NSObject {
 
     private func applyFinalValues(session: SpatialDivAnimationSession) {
         guard let element = findElement(session.elementId) else { return }
+        let sink = session.transformSink
 
         if let evaluator = session.timelineEvaluator {
             let sample = evaluator.sampleSRTAndOpacity(at: session.duration)
             if session.animatesTransform {
-                applySRT(sample.srt, to: element)
+                sink.applyAffine(Self.composeSRT(sample.srt), to: element)
             }
             if session.animatesOpacity {
-                applyOpacity(sample.opacity, to: element)
+                sink.applyOpacity(sample.opacity, to: element)
             }
             return
         }
 
         if session.animatesTransform {
-            applySRT(session.resolvedToSRT, to: element)
+            sink.applyAffine(Self.composeSRT(session.resolvedToSRT), to: element)
         }
         if session.animatesOpacity {
-            applyOpacity(session.resolvedToOpacity, to: element)
+            sink.applyOpacity(session.resolvedToOpacity, to: element)
         }
     }
 
     /// Apply the "from" values to the element (used in reset loop snap-back).
     private func applyFromValues(session: SpatialDivAnimationSession) {
         guard let element = findElement(session.elementId) else { return }
+        let sink = session.transformSink
 
         if let evaluator = session.timelineEvaluator {
             if session.animatesTransform {
-                applySRT(session.timelineStartSRT, to: element)
+                sink.applyAffine(Self.composeSRT(session.timelineStartSRT), to: element)
             }
             if session.animatesOpacity {
-                applyOpacity(session.timelineStartOpacity, to: element)
+                sink.applyOpacity(session.timelineStartOpacity, to: element)
             }
             return
         }
 
         if session.animatesTransform {
-            applySRT(session.resolvedFromSRT, to: element)
+            sink.applyAffine(Self.composeSRT(session.resolvedFromSRT), to: element)
         }
         if session.animatesOpacity {
-            applyOpacity(session.resolvedFromOpacity, to: element)
+            sink.applyOpacity(session.resolvedFromOpacity, to: element)
         }
     }
 
@@ -678,26 +687,5 @@ class Static3DMotionAnimationManager: NSObject {
 
     private func findElement(_ elementId: String) -> SpatializedElement? {
         return scene?.findSpatialObject(elementId)
-    }
-
-    private func currentAffineTransform(for element: SpatializedElement) -> AffineTransform3D {
-        if let static3d = element as? SpatializedStatic3DElement {
-            return static3d.modelTransform
-        }
-        return element.transform
-    }
-
-    private func applySRT(_ srt: ResolvedSRT, to element: SpatializedElement) {
-        let affine = Self.composeSRT(srt)
-        if let static3d = element as? SpatializedStatic3DElement {
-            static3d.modelTransform = affine
-        } else {
-            element.transform = affine
-        }
-    }
-
-    private func applyOpacity(_ opacity: Double, to element: SpatializedElement) {
-        if element is SpatializedStatic3DElement { return }
-        element.opacity = opacity
     }
 }

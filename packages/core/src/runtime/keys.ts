@@ -41,6 +41,8 @@ export const GESTURE_KEYS = [
 
 export const ANIMATION_KEYS = ['useAnimation'] as const
 
+export const SPATIALIZED_MOTION_KEYS = ['useSpatializedMotion'] as const
+
 export const JS_SCENE_KEYS = [
   'useMetrics',
   'convertCoordinate',
@@ -71,6 +73,7 @@ export const TOP_LEVEL_KEYS = [
   ...CSS_KEYS,
   ...GESTURE_KEYS,
   ...ANIMATION_KEYS,
+  ...SPATIALIZED_MOTION_KEYS,
   ...JS_SCENE_KEYS,
   ...DOM_DEPTH_KEYS,
 ] as const
@@ -104,6 +107,7 @@ export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
   ],
   SpatialRotateEvent: ['constrainedToAxis'],
   useAnimation: ['entity', 'element', 'static3d', 'dynamic3d'],
+  useSpatializedMotion: ['spatialized2d', 'static3d', 'dynamic3d'],
   Model: [
     'autoplay',
     'loop',

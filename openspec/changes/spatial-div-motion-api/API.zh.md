@@ -61,7 +61,7 @@
 
 | API | 说明 |
 |-----|------|
-| `SpatialDivMotionController` | 单元素 timeline 播放控制器（Web + Native） |
+| `SpatializedMotionController` | 单元素 timeline 播放控制器（`kind: 'spatialized2d'`；Web + Native） |
 | `element.motion(config)` | 工厂：绑定 `Spatialized2DElement` 并返回 Controller |
 | `evaluateMotionTimeline` / `validateSpatialDivMotionConfig` | 纯函数工具（与 native evaluator 对齐） |
 

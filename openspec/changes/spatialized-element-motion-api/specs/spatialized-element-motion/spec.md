@@ -21,7 +21,7 @@ All kinds MUST accept a shared timeline structure: global `duration` + `tracks[]
 
 ### Requirement: Single Core controller implementation
 
-The SDK MUST implement container motion with one `SpatializedMotionController` class parameterized by `SpatializedMotionKind`. Per-kind public class names (`SpatialDivMotionController`, `Static3DMotionController`, `Dynamic3DMotionController`) MAY remain as thin aliases for backward compatibility.
+The SDK MUST implement container motion with one `SpatializedMotionController` class parameterized by `SpatializedMotionKind`. Per-kind controller class aliases MUST NOT be part of the public API.
 
 #### Scenario: React single hook
 

@@ -34,7 +34,7 @@ flowchart TB
 |--------|------|
 | `SpatializedMotionController` | Single TS controller; `MOTION_KIND_POLICIES` selects capability token, Web RAF vs native-only, suppressed fields |
 | `motionElementBridge` | Dispatches `animateSpatialDiv` vs `animateMotion` + listener cleanup |
-| `SpatialDivMotionController` / `Static3DMotionController` / `Dynamic3DMotionController` | Thin subclasses (`@deprecated` aliases) for typed `attachElement` |
+| `element.motion(config)` | Factory on each `Spatialized*Element`; returns `SpatializedMotionController` with the matching `kind` |
 
 **React modules (shipped):**
 
@@ -61,4 +61,4 @@ flowchart TB
 
 ## Phased delivery
 
-See [tasks.md](./tasks.md). Native Swift managers remain **three files** (shared session/timeline code); unifying native is Phase 5 (optional).
+See [tasks.md](./tasks.md). Native: **2D** `SpatialDivAnimationManager`; **Static3D/Dynamic3D** share `SpatializedContainerMotionAnimationManager` with `SpatializedMotionTransformSink` (Phase 5).

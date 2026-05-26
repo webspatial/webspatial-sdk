@@ -13,6 +13,17 @@ export type CapabilityVersionRow = {
   flags: Record<string, boolean>
 }
 
+/** Mirror `useAnimation:*` element/static3d/dynamic3d flags to `useSpatializedMotion:*` kind tokens. */
+function mirrorSpatializedMotionFlags(flags: Record<string, boolean>): void {
+  flags['useSpatializedMotion'] = flags['useAnimation'] === true
+  flags['useSpatializedMotion:spatialized2d'] =
+    flags['useAnimation:element'] === true
+  flags['useSpatializedMotion:static3d'] =
+    flags['useAnimation:static3d'] === true
+  flags['useSpatializedMotion:dynamic3d'] =
+    flags['useAnimation:dynamic3d'] === true
+}
+
 function baseTrueFlags(): Record<string, boolean> {
   const flags: Record<string, boolean> = {}
   for (const k of TOP_LEVEL_KEYS) {
@@ -23,6 +34,7 @@ function baseTrueFlags(): Record<string, boolean> {
       flags[`${name}:${t}`] = true
     }
   }
+  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
@@ -54,6 +66,7 @@ function matrixVision_1_5_0_Flags(): Record<string, boolean> {
   flags['useAnimation'] = false
   flags['useAnimation:entity'] = false
   flags['useAnimation:element'] = false
+  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
@@ -69,6 +82,7 @@ function matrixVision_1_6_0_Flags(): Record<string, boolean> {
   flags['SpatialRotateEvent:constrainedToAxis'] = true
   // useAnimation not supported until WSAppShell/1.7.0
   flags['useAnimation'] = false
+  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
@@ -81,6 +95,7 @@ function matrixVision_1_7_0_Flags(): Record<string, boolean> {
   flags['useAnimation'] = true
   flags['useAnimation:entity'] = true
   flags['useAnimation:element'] = false
+  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
@@ -93,6 +108,7 @@ function matrixVision_1_8_0_Flags(): Record<string, boolean> {
   flags['useAnimation:element'] = true
   flags['useAnimation:static3d'] = true
   flags['useAnimation:dynamic3d'] = true
+  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
@@ -129,6 +145,7 @@ function matrixPico_0_2_2_Flags(): Record<string, boolean> {
   flags['useAnimation:element'] = true
   flags['useAnimation:static3d'] = true
   flags['useAnimation:dynamic3d'] = true
+  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
