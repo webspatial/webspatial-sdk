@@ -8,12 +8,12 @@ const motionRoutes = [
   {
     path: '/spatial-div-motion/multi-track',
     label: 'Multi-track (canonical Plan B)',
-    description: 'translateX 0–5s + opacity 3–5s overlap — auto-play',
+    description: 'canonical: translateX 0–5s, opacity 0→1 from 3s — auto-play',
   },
   {
     path: '/spatial-div-motion/simple-entrance',
     label: 'simple() entrance',
-    description: 'fade + slide via sugar API — auto-play',
+    description: 'simple(): opacity + translate.z segment — auto-play',
   },
   {
     path: '/spatial-div-motion/translate-z',
