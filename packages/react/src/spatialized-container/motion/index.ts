@@ -1,7 +1,10 @@
 export { useSpatialDivMotion } from './useSpatialDivMotion'
 export type { UseSpatialDivMotionResult } from './useSpatialDivMotion'
-export { evaluateMotionTimeline } from './evaluate'
+export {
+  SpatialDivMotionController,
+  evaluateMotionTimeline,
+  validateSpatialDivMotionConfig,
+  simpleConfigToMotionConfig,
+} from '@webspatial/core-sdk'
 export { valuesToMotionStyle } from './style'
-export { simpleConfigToMotionConfig } from './simple'
-export { validateSpatialDivMotionConfig } from './validate'
 export type { SpatialDivMotionBindingInternal } from './motionBindingTypes'

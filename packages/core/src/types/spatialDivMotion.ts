@@ -74,12 +74,22 @@ export type SpatialDivMotionPlayState =
   | 'paused'
   | 'finished'
 
-export interface SpatialDivMotionApi {
+/** One property path or a list (react-spring-style selective control). */
+export type SpatialDivMotionPropertyKeys =
+  | SpatialDivMotionProperty
+  | readonly SpatialDivMotionProperty[]
+
+/** Imperative playback surface implemented by {@link SpatialDivMotionController}. */
+export interface SpatialDivMotionPlaybackApi {
   play(): void
-  pause(): void
-  cancel(): void
+  pause(keys?: SpatialDivMotionPropertyKeys): void
+  resume(keys?: SpatialDivMotionPropertyKeys): void
+  cancel(keys?: SpatialDivMotionPropertyKeys): void
   readonly isAnimating: boolean
   readonly isPaused: boolean
   readonly finished: boolean
   readonly playState: SpatialDivMotionPlayState
 }
+
+/** @deprecated Use {@link SpatialDivMotionPlaybackApi}. */
+export type SpatialDivMotionApi = SpatialDivMotionPlaybackApi
