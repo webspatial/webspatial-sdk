@@ -5,6 +5,11 @@ import {
 } from './JSBCommand'
 import { SpatialWebEvent } from './SpatialWebEvent'
 import { parseSpatialDivAnimatedValues } from './spatialdiv/parseSpatialDivAnimatedValues'
+import {
+  SpatialDivMotionController,
+  type SpatialDivMotionControllerOptions,
+} from './spatialdiv/motion/SpatialDivMotionController'
+import type { SpatialDivMotionConfig } from './types/spatialDivMotion'
 import type {
   AnimateSpatialDivCommand,
   AnimateSpatialDivResult,
@@ -172,5 +177,20 @@ export class Spatialized2DElement extends SpatializedElement {
     SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
     SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
     SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
+  }
+
+  /**
+   * Create a motion controller bound to this spatialized 2D element.
+   * Prefer {@link SpatialDivMotionController} for imperative playback; React apps
+   * typically use `useSpatialDivMotion` instead.
+   */
+  motion(
+    config: SpatialDivMotionConfig,
+    options?: Omit<SpatialDivMotionControllerOptions, 'element'>,
+  ): SpatialDivMotionController {
+    return new SpatialDivMotionController(config, {
+      ...options,
+      element: this,
+    })
   }
 }
