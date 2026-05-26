@@ -9,7 +9,7 @@
 ## Phase 1 — Unified naming + router (React)
 
 - [x] Export `Spatialized*` type aliases and `useSpatializedMotion({ kind })`
-- [x] Document `useSpatialDivMotion` / `useStatic3DMotion` / `useDynamic3DMotion` as `@deprecated` aliases
+- [x] Remove per-kind React hook aliases; public API is only `useSpatializedMotion` / `.simple`
 - [x] Shared React internals: `useMotionController`, `createMotionBinding`, `createPlaybackApi`
 
 ## Phase 2 — Static3D + Dynamic3D native timelines
@@ -37,6 +37,6 @@
 
 - [ ] Merge native Swift managers behind shared `TransformSink` (Static3D `modelTransform` vs element `transform`)
 - [ ] Optional unified JSB `AnimateSpatializedElementMotion` + `targetKind`
-- [ ] Remove deprecated public aliases (`useSpatialDivMotion`, per-kind controller class names)
+- [ ] Remove deprecated Core controller class aliases (`SpatialDivMotionController`, etc.)
 - [ ] `supports('useSpatializedMotion', [kind])` dedicated top-level token
 - [ ] Web RAF for Static3D / Dynamic3D (if product requires)

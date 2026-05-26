@@ -1,9 +1,10 @@
 import { describe, expect, test, vi } from 'vitest'
 import React, { StrictMode } from 'react'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { useSpatialDivMotion } from './useSpatialDivMotion'
+import { useSpatializedMotion } from './useSpatializedMotion'
 
 const SIMPLE_ENTRANCE_CONFIG = {
+  kind: 'spatialized2d' as const,
   from: {
     opacity: 0,
     transform: { translate: { y: 40 } },
@@ -17,17 +18,21 @@ const SIMPLE_ENTRANCE_CONFIG = {
   autoStart: true,
 }
 
-describe('useSpatialDivMotion integration', () => {
+describe('useSpatializedMotion (spatialized2d) integration', () => {
   test('simple() autoStart animates before finishing', async () => {
     const { result } = renderHook(() =>
-      useSpatialDivMotion.simple(SIMPLE_ENTRANCE_CONFIG),
+      useSpatializedMotion.simple(SIMPLE_ENTRANCE_CONFIG),
     )
 
+    expect(result.current.kind).toBe('spatialized2d')
+    if (result.current.kind !== 'spatialized2d') return
     expect(result.current.style.opacity).toBe(0)
     expect(String(result.current.style.transform)).toContain('40px')
 
     await waitFor(
       () => {
+        expect(result.current.kind).toBe('spatialized2d')
+        if (result.current.kind !== 'spatialized2d') return
         const opacity = result.current.style.opacity as number
         expect(opacity).toBeGreaterThan(0)
         expect(opacity).toBeLessThan(1)
@@ -37,6 +42,8 @@ describe('useSpatialDivMotion integration', () => {
 
     await waitFor(
       () => {
+        expect(result.current.kind).toBe('spatialized2d')
+        if (result.current.kind !== 'spatialized2d') return
         expect(result.current.style.opacity).toBe(1)
         expect(result.current.api.playState).toBe('finished')
       },
@@ -47,7 +54,8 @@ describe('useSpatialDivMotion integration', () => {
   test('web pause syncs style to timeline sample at elapsed progress', async () => {
     vi.useFakeTimers()
     const { result } = renderHook(() =>
-      useSpatialDivMotion({
+      useSpatializedMotion({
+        kind: 'spatialized2d',
         duration: 5,
         autoStart: false,
         tracks: [
@@ -74,6 +82,8 @@ describe('useSpatialDivMotion integration', () => {
       result.current.api.pause()
     })
 
+    expect(result.current.kind).toBe('spatialized2d')
+    if (result.current.kind !== 'spatialized2d') return
     expect(String(result.current.style.transform)).toContain('translate3d(30px')
     expect(result.current.api.playState).toBe('paused')
     vi.useRealTimers()
@@ -85,12 +95,14 @@ describe('useSpatialDivMotion integration', () => {
     )
 
     const { result } = renderHook(
-      () => useSpatialDivMotion.simple(SIMPLE_ENTRANCE_CONFIG),
+      () => useSpatializedMotion.simple(SIMPLE_ENTRANCE_CONFIG),
       { wrapper },
     )
 
     await waitFor(
       () => {
+        expect(result.current.kind).toBe('spatialized2d')
+        if (result.current.kind !== 'spatialized2d') return
         expect(result.current.style.opacity).toBe(1)
         expect(result.current.api.playState).toBe('finished')
       },

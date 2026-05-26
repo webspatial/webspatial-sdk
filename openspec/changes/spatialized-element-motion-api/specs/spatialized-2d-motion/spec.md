@@ -10,12 +10,12 @@
 
 The SDK MUST treat `Spatialized2DElement` motion as `kind: 'spatialized2d'`. Implementation uses the shared `SpatializedMotionController` with 2D policy (Web RAF + native `SpatialDivAnimationManager`).
 
-#### Scenario: Public aliases
+#### Scenario: Public React entry
 
-- **WHEN** authors import `useSpatializedMotion({ kind: 'spatialized2d', … })`
-- **THEN** behavior MUST match `useSpatialDivMotion` for the same timeline config
+- **WHEN** authors call `useSpatializedMotion({ kind: 'spatialized2d', … })` or `useSpatializedMotion.simple({ kind: 'spatialized2d', … })`
+- **THEN** the hook MUST return `{ kind, style, api, motion?, controller }` with Web RAF when native motion is unavailable
 
-#### Scenario: Deprecated hook parity
+#### Scenario: Core controller parity
 
-- **WHEN** authors import `useSpatialDivMotion` or construct `SpatialDivMotionController`
-- **THEN** behavior MUST match `useSpatializedMotion` / `SpatializedMotionController` with `kind: 'spatialized2d'`
+- **WHEN** authors construct `SpatialDivMotionController` or `new SpatializedMotionController(config, 'spatialized2d')`
+- **THEN** playback behavior MUST be equivalent for the same timeline config

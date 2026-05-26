@@ -9,8 +9,8 @@
 - [x] 2.1 Add `packages/core/src/types/spatialDivMotion.ts` (timeline types, property paths)
 - [x] 2.2 Export motion types from `@webspatial/core-sdk`
 - [x] 2.3 Implement `evaluateMotionTimeline`, `valuesToMotionStyle`, validation in react package
-- [x] 2.4 Implement `useSpatialDivMotion` + `useSpatialDivMotion.simple` with Web RAF backend
-- [x] 2.5 Export `useSpatialDivMotion` from `@webspatial/react-sdk`
+- [x] 2.4 Implement `useSpatializedMotion` + `useSpatializedMotion.simple` with Web RAF backend
+- [x] 2.5 Export `useSpatializedMotion` from `@webspatial/react-sdk`
 - [x] 2.6 Unit tests: multi-track evaluation, overlap scenario, simple sugar
 
 ## 3. Test server comparison demos
@@ -25,7 +25,7 @@ Spec: [PHASE2-MINIMAL-NATIVE.md](./PHASE2-MINIMAL-NATIVE.md)
 
 - [x] 4a.1 `motionConfigToNativeSegment` + tests
 - [x] 4a.2 Extract `nativeSession.ts` from `useSpatialDivAnimation`
-- [x] 4a.3 `useSpatialDivMotion`: native gate, bind, suppression, stop RAF when native runs
+- [x] 4a.3 `useSpatializedMotion`: native gate, bind, suppression, stop RAF when native runs
 - [x] 4a.4 `motion` prop binding in `PortalSpatializedContainer`
 - [x] 4a.5 Wire `simple-entrance` + manual AVP check
 

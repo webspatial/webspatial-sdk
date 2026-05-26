@@ -8,7 +8,7 @@ This design unifies **author-facing** config (`SpatializedMotionConfig`, `Spatia
 
 - One timeline config shape across 2D / Static3D / Dynamic3D container kinds.
 - **One** Core implementation: `SpatializedMotionController` (policy per `kind`) + `element.motion(config)` on each element class.
-- **One** React entry: `useSpatializedMotion({ kind, … })` (legacy per-kind hooks are thin aliases).
+- **One** React entry: `useSpatializedMotion({ kind, … })` and `useSpatializedMotion.simple({ kind, … })`.
 - Umbrella spec with per-kind sub-specs; 2D remains the reference for Web RAF + suppression behavior.
 
 ## Architecture
@@ -40,9 +40,8 @@ flowchart TB
 
 | Module | Role |
 |--------|------|
-| `useSpatializedMotion` | Public hook |
+| `useSpatializedMotion` | Public hook (`kind` discriminant + `.simple`) |
 | `useMotionController` + `createMotionBinding` + `createPlaybackApi` | Shared wiring |
-| `useSpatialDivMotion` / `useStatic3DMotion` / `useDynamic3DMotion` | `@deprecated` aliases |
 
 ## Shared types (Core)
 

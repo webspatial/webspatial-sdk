@@ -1,5 +1,5 @@
 import { supports } from '@webspatial/core-sdk'
-import { useSpatialDivMotion } from '@webspatial/react-sdk'
+import { useSpatializedMotion } from '@webspatial/react-sdk'
 import { useEffect, useState } from 'react'
 import {
   btnCls,
@@ -22,7 +22,8 @@ export function SpatialDivMotionRotatePage() {
 
   const elementAnim = supports('useAnimation', ['element'])
 
-  const { style, api, motion } = useSpatialDivMotion({
+  const { style, api, motion } = useSpatializedMotion({
+    kind: 'spatialized2d',
     duration: DURATION,
     autoStart: true,
     tracks: [

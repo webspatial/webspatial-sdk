@@ -4,7 +4,7 @@ Status: **implemented** on branch `proposal/spatial-div-motion-timeline` (2a seg
 
 ## Problem
 
-Phase 1 `useSpatialDivMotion` only runs the **Web RAF backend**: it updates React `style` on the spatial **host/probe** DOM path. In AVP / WebSpatial runtime the user sees the **native `Spatialized2DElement`**, not that DOM. Without native `animateSpatialDiv` + Portal **suppression**, Z/opacity motion does not appear in space.
+Phase 1 `useSpatializedMotion` only runs the **Web RAF backend**: it updates React `style` on the spatial **host/probe** DOM path. In AVP / WebSpatial runtime the user sees the **native `Spatialized2DElement`**, not that DOM. Without native `animateSpatialDiv` + Portal **suppression**, Z/opacity motion does not appear in space.
 
 Plan A already works on AVP via `useAnimation` → `animation` prop → bind → `play { from, to }` → `setSuppressedFields`.
 
@@ -21,7 +21,7 @@ Ship **2a first** (days); **2b** is the original Phase 2 in `tasks.md` §4.
 
 ```mermaid
 flowchart TD
-  Hook[useSpatialDivMotion]
+  Hook[useSpatializedMotion]
   Hook --> Norm[simpleConfigToMotionConfig / validate]
   Norm --> Pick{supports useAnimation element?}
   Pick -->|false| Web[WebMotionBackend RAF]
@@ -92,7 +92,7 @@ for (const track of config.tracks) {
 return { from, to, duration: config.duration, timingFunction: tracks[0].easing ?? 'easeInOut', ... }
 ```
 
-`useSpatialDivMotion.simple()` already produces this shape via `simpleConfigToMotionConfig` — no extra sugar work.
+`useSpatializedMotion.simple({ kind: 'spatialized2d', )` already produces this shape via `simpleConfigToMotionConfig` — no extra sugar work.
 
 **Examples that compile (2a):**
 
@@ -112,7 +112,7 @@ Extract shared module from `useSpatialDivAnimation.ts` (no behavior change to Pl
 - `createNativeMotionSession(config, callbacks)` — wraps `animationId`, `doPlay`, `pause`, `resume`, `cancel`, promise handlers (`finished` / `canceled` / `failed`).
 - Input: segment payload above + `SpatialDivAnimationConfig`-compatible callbacks (`onStart`, `onComplete`, `onCancel`, `onError`).
 
-`useSpatialDivMotionInternal` branches:
+`useSpatializedMotionInternal` branches:
 
 ```typescript
 if (nativeElement && segment) {
@@ -141,7 +141,7 @@ export interface SpatialDivMotionBinding {
 }
 ```
 
-`useSpatialDivMotion` returns:
+`useSpatializedMotion` returns:
 
 ```typescript
 { style, api, motionBinding?: SpatialDivMotionBinding }
@@ -152,7 +152,7 @@ export interface SpatialDivMotionBinding {
 **SpatialDiv usage (demo / app):**
 
 ```tsx
-const { style, api, motionBinding } = useSpatialDivMotion.simple({ ... })
+const { style, api, motionBinding } = useSpatializedMotion.simple({ kind: 'spatialized2d', { ... })
 
 <div
   enable-xr
@@ -233,7 +233,7 @@ else webPlay()
 | --- | --- |
 | `motion/nativeCompile.ts` | `motionConfigToNativeSegment`, `motionConfigToTimeline` (stub for 2b) |
 | `motion/nativeSession.ts` | Extract from `useSpatialDivAnimation` |
-| `motion/useSpatialDivMotion.ts` | Backend picker + `motionBinding` |
+| `motion/useSpatializedMotion.ts` | Backend picker + `motionBinding` |
 | `motion/getMotionSuppressedFields.ts` | Suppression set from tracks |
 | `PortalSpatializedContainer.tsx` | Bind `motion` prop |
 | `types` (react spatialized-container) | `motion?: SpatialDivMotionBinding` on props |
@@ -273,7 +273,7 @@ else webPlay()
 
 - [ ] 4a.1 `motionConfigToNativeSegment` + tests (simple + segment-equivalent timelines)
 - [ ] 4a.2 Extract `nativeSession.ts` from `useSpatialDivAnimation`
-- [ ] 4a.3 `useSpatialDivMotion`: native gate, bind, suppression, stop RAF when native runs
+- [ ] 4a.3 `useSpatializedMotion`: native gate, bind, suppression, stop RAF when native runs
 - [ ] 4a.4 `motion` prop binding in `PortalSpatializedContainer`
 - [ ] 4a.5 Wire `simple-entrance` (+ manual AVP check)
 
