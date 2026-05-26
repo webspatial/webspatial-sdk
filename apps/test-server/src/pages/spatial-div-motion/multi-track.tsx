@@ -1,3 +1,4 @@
+import { supports } from '@webspatial/core-sdk'
 import { useSpatialDivMotion } from '@webspatial/react-sdk'
 import { useEffect, useState } from 'react'
 import {
@@ -13,11 +14,13 @@ const DURATION = 5
 /**
  * Canonical Plan B acceptance demo:
  * - translate.x: 0 → 100 over 0–5s
- * - opacity: 0 → 1 over 3–5s
+ * - opacity: 0.5 → 1 over 3–5s
  */
 export function SpatialDivMotionMultiTrackPage() {
   const [lines, setLines] = useState<string[]>([])
   const [hint, setHint] = useState('Press Play or wait for auto-start')
+
+  const elementAnim = supports('useAnimation', ['element'])
 
   const { style, api, motion } = useSpatialDivMotion({
     duration: DURATION,
@@ -52,20 +55,21 @@ export function SpatialDivMotionMultiTrackPage() {
       setLines(l => [...l, `onCancel ${fmtValues(values)}`])
       setHint('Canceled — reset to start keyframes')
     },
+    onError: error => {
+      setLines(l => [...l, `onError ${error.reason}`])
+      setHint(`Native error — ${error.reason}`)
+    },
   })
 
   useEffect(() => {
-    if (api.playState !== 'running') return
-    const id = window.setInterval(() => {
-      const tx = (style.transform as string | undefined) ?? ''
-      const match = /translate3d\(([-\d.]+)px/.exec(tx)
-      const x = match ? Number(match[1]) : NaN
-      const o = style.opacity as number | undefined
-      setHint(
-        `t≈running · translate.x≈${fmtNum(x, 0)}px · opacity=${fmtNum(o, 2)}`,
-      )
-    }, 100)
-    return () => clearInterval(id)
+    if (api.playState !== 'paused') return
+    const tx = (style.transform as string | undefined) ?? ''
+    const match = /translate3d\(([-\d.]+)px/.exec(tx)
+    const x = match ? Number(match[1]) : NaN
+    const o = style.opacity as number | undefined
+    setHint(
+      `Paused — style at timeline sample · translate.x≈${fmtNum(x, 0)}px · opacity=${fmtNum(o, 2)}`,
+    )
   }, [api.playState, style.transform, style.opacity])
 
   return (
@@ -73,9 +77,15 @@ export function SpatialDivMotionMultiTrackPage() {
       <h1 className="text-xl font-bold mb-2">Plan B — Multi-track motion</h1>
       <p className="text-sm text-gray-400 mb-2">
         Auto-starts on load. Works in <strong>plain Chrome</strong> (Web
-        backend) and in spatial runtime.
+        backend) and in spatial runtime. On native, <code>style</code> updates
+        on pause / end / cancel — not every frame while running.
       </p>
       <p className="text-xs text-emerald-400/90 mb-4 font-mono">{hint}</p>
+      <p className="text-xs text-gray-500 mb-4 font-mono">
+        supports(useAnimation, element)={String(elementAnim)} · motion binding=
+        {motion ? 'yes' : 'no'} · backend=
+        {elementAnim && motion ? 'native timeline' : 'Web RAF'}
+      </p>
 
       <div
         enable-xr
@@ -84,6 +94,7 @@ export function SpatialDivMotionMultiTrackPage() {
         style={{
           width: 280,
           height: 160,
+          '--xr-back': 100,
           background: 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)',
           ...style,
         }}
