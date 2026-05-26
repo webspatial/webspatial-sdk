@@ -14,7 +14,7 @@ const DURATION = 5
 /**
  * Canonical Plan B acceptance demo (matches OpenSpec):
  * - translate.x: 0 → 100 over 0–5s
- * - opacity: 0 → 1 over 3–5s (held at 0 before t=3s)
+ * - opacity: 0.5 → 1 over 3–5s (linear; holds 0.5 before t=3s)
  */
 export function SpatialDivMotionMultiTrackPage() {
   const [lines, setLines] = useState<string[]>([])
@@ -37,10 +37,10 @@ export function SpatialDivMotionMultiTrackPage() {
       {
         property: 'opacity',
         keyframes: [
-          { at: 3, value: 0 },
+          { at: 3, value: 0.5 },
           { at: DURATION, value: 1 },
         ],
-        easing: 'easeOut',
+        easing: 'linear',
       },
     ],
     onStart: () => {
