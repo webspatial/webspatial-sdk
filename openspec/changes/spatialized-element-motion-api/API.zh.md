@@ -41,8 +41,9 @@ const result = useSpatializedMotion({
 |------|------|
 | **`SpatializedMotionController`** | 唯一控制器实现；构造时传入 `kind` |
 | **`SpatializedMotionHandle`** | imperative 接口（`play` / `pause` / `resume` / `cancel` / …） |
-| `SpatialDivMotionController` 等 | 薄子类，等价于 `new SpatializedMotionController(config, kind)` |
-| `element.motion(config)` | 各 `Spatialized*Element` 上的工厂，返回 `SpatializedMotionHandle` |
+| `SpatializedMotionController` | 唯一 Core 控制器；`new SpatializedMotionController(config, kind)` |
+| `element.motion(config)` | 各 `Spatialized*Element` 工厂，返回 `SpatializedMotionHandle` |
+| `supports('useSpatializedMotion', [kind])` | 能力探测（`spatialized2d` / `static3d` / `dynamic3d`） |
 
 ## 5. 与模型内嵌动画区分
 

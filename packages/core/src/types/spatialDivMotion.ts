@@ -83,7 +83,7 @@ export type SpatialDivMotionPropertyKeys =
   | SpatialDivMotionProperty
   | readonly SpatialDivMotionProperty[]
 
-/** Imperative playback surface (`SpatialDivMotionController`, hooks). */
+/** Imperative playback surface (`SpatializedMotionController`, hooks). */
 export interface SpatialDivPlaybackApi {
   play(): void
   pause(keys?: SpatialDivMotionPropertyKeys): void

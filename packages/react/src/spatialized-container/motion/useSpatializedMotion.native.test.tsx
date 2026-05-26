@@ -6,7 +6,7 @@ vi.mock('@webspatial/core-sdk', async () => {
   return {
     ...actual,
     supports: (name: string, tokens?: readonly string[]) =>
-      name === 'useAnimation' && !!tokens?.includes('element'),
+      name === 'useSpatializedMotion' && !!tokens?.includes('spatialized2d'),
   }
 })
 

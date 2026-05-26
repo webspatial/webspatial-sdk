@@ -8,19 +8,6 @@ import {
   type SpatializedMotionKind,
 } from '@webspatial/core-sdk'
 
-function capabilityTokenFor(
-  kind: SpatializedMotionKind,
-): 'element' | 'static3d' | 'dynamic3d' {
-  switch (kind) {
-    case 'spatialized2d':
-      return 'element'
-    case 'static3d':
-      return 'static3d'
-    case 'dynamic3d':
-      return 'dynamic3d'
-  }
-}
-
 export function useMotionController(
   kind: SpatializedMotionKind,
   config: SpatialDivMotionConfig,
@@ -31,12 +18,12 @@ export function useMotionController(
   validateSpatialDivMotionConfig(config)
 
   const [, tick] = useReducer((n: number) => n + 1, 0)
-  const token = capabilityTokenFor(kind)
+  const nativeCapable = supports('useSpatializedMotion', [kind])
 
   const controllerRef = useRef<SpatializedMotionHandle | null>(null)
   if (!controllerRef.current || controllerRef.current.isDestroyed) {
     controllerRef.current = new SpatializedMotionController(config, kind, {
-      forceNativePlayback: supports('useAnimation', [token]),
+      forceNativePlayback: nativeCapable,
       onStateChange: () => tick(),
       onValuesChange,
     })
@@ -53,8 +40,6 @@ export function useMotionController(
       active.destroy()
     }
   }, [controller])
-
-  const nativeCapable = supports('useAnimation', [token])
 
   return { controller, nativeCapable }
 }

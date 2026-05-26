@@ -6,9 +6,9 @@ import {
 import { SpatialWebEvent } from './SpatialWebEvent'
 import { parseSpatialDivVisualValues } from './spatialdiv/parseSpatialDivVisualValues'
 import {
-  SpatialDivMotionController,
-  type SpatialDivMotionControllerOptions,
-} from './spatialdiv/motion/SpatialDivMotionController'
+  SpatializedMotionController,
+  type SpatializedMotionControllerOptions,
+} from './spatialized/motion/SpatializedMotionController'
 import type { SpatializedMotionHandle } from './spatialized/motion/SpatializedMotionHandle'
 import type { SpatialDivMotionConfig } from './types/spatialDivMotion'
 import type {
@@ -182,14 +182,14 @@ export class Spatialized2DElement extends SpatializedElement {
 
   /**
    * Create a motion controller bound to this spatialized 2D element.
-   * Prefer {@link SpatialDivMotionController} for imperative playback; React apps
+   * Prefer {@link SpatializedMotionController} for imperative playback; React apps
    * typically use `useSpatializedMotion({ kind: 'spatialized2d' })` instead.
    */
   motion(
     config: SpatialDivMotionConfig,
-    options?: Omit<SpatialDivMotionControllerOptions, 'element'>,
+    options?: Omit<SpatializedMotionControllerOptions, 'element'>,
   ): SpatializedMotionHandle {
-    return new SpatialDivMotionController(config, {
+    return new SpatializedMotionController(config, 'spatialized2d', {
       ...options,
       element: this,
     })

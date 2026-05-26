@@ -5,13 +5,10 @@ import { SpatialWebEvent } from '../../SpatialWebEvent'
 import type { AnimateSpatialDivCommand } from '../../types/spatialDivAnimation'
 import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
 import type {
-  AnimateSpatializedStatic3DCommand,
-  AnimateSpatializedStatic3DResult,
-} from '../../types/spatializedStatic3dAnimation'
-import type {
-  AnimateSpatializedDynamic3DCommand,
-  AnimateSpatializedDynamic3DResult,
-} from '../../types/spatializedDynamic3dAnimation'
+  AnimateSpatializedElementMotionCommand,
+  AnimateSpatializedElementMotionResult,
+  ContainerElementMotionCommand,
+} from '../../types/spatializedElementMotion'
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 
 export type MotionHostElement =
@@ -21,18 +18,22 @@ export type MotionHostElement =
 
 type MotionPlayCommand =
   | (AnimateSpatialDivCommand & { type: 'play' })
-  | (AnimateSpatializedStatic3DCommand & { type: 'play' })
-  | (AnimateSpatializedDynamic3DCommand & { type: 'play' })
+  | (AnimateSpatializedElementMotionCommand & { type: 'play' })
 
 type MotionSessionCommand =
   | AnimateSpatialDivCommand
-  | AnimateSpatializedStatic3DCommand
-  | AnimateSpatializedDynamic3DCommand
+  | AnimateSpatializedElementMotionCommand
 
 export type MotionAnimatePlayResult =
   | import('../../types/spatialDivAnimation').AnimateSpatialDivResult
-  | AnimateSpatializedStatic3DResult
-  | AnimateSpatializedDynamic3DResult
+  | AnimateSpatializedElementMotionResult
+
+function containerMotionCommand(
+  kind: 'static3d' | 'dynamic3d',
+  command: ContainerElementMotionCommand,
+): AnimateSpatializedElementMotionCommand {
+  return { ...command, targetKind: kind }
+}
 
 export async function motionElementPlay(
   kind: SpatializedMotionKind,
@@ -46,11 +47,21 @@ export async function motionElementPlay(
       )
     case 'static3d':
       return (element as SpatializedStatic3DElement).animateMotion(
-        command as AnimateSpatializedStatic3DCommand & { type: 'play' },
+        containerMotionCommand(
+          'static3d',
+          command,
+        ) as AnimateSpatializedElementMotionCommand & {
+          type: 'play'
+        },
       )
     case 'dynamic3d':
       return (element as SpatializedDynamic3DElement).animateMotion(
-        command as AnimateSpatializedDynamic3DCommand & { type: 'play' },
+        containerMotionCommand(
+          'dynamic3d',
+          command,
+        ) as AnimateSpatializedElementMotionCommand & {
+          type: 'play'
+        },
       )
   }
 }
@@ -64,9 +75,13 @@ export async function motionElementSessionCommand(
     case 'spatialized2d':
       return (element as Spatialized2DElement).animateSpatialDiv(command)
     case 'static3d':
-      return (element as SpatializedStatic3DElement).animateMotion(command)
+      return (element as SpatializedStatic3DElement).animateMotion(
+        containerMotionCommand('static3d', command),
+      )
     case 'dynamic3d':
-      return (element as SpatializedDynamic3DElement).animateMotion(command)
+      return (element as SpatializedDynamic3DElement).animateMotion(
+        containerMotionCommand('dynamic3d', command),
+      )
   }
 }
 

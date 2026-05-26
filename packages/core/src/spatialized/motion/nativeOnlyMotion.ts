@@ -4,6 +4,6 @@ export function warnNativeOnlyMotion(
   token: string,
 ): void {
   console.warn(
-    `[${controllerName}] Declarative motion requires native runtime (supports('useAnimation', ['${token}'])). Web playback is not supported for this element kind.`,
+    `[${controllerName}] Declarative motion requires native runtime (supports('useSpatializedMotion', ['${token}'])). Web playback is not supported for this element kind.`,
   )
 }
