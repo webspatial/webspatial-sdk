@@ -22,7 +22,7 @@
 ## Phase 3 — Core + React consolidation (single controller)
 
 - [x] `SpatializedMotionController` — one implementation, `MOTION_KIND_POLICIES` per kind
-- [x] `motionElementBridge` — `animateSpatialDiv` vs `animateMotion` dispatch
+- [x] `motionElementBridge` — unified `animateMotion` + `targetKind` for all kinds (`animateSpatialDiv` retained as 2D alias)
 - [x] Thin subclasses: `SpatialDivMotionController`, `Static3DMotionController`, `Dynamic3DMotionController`
 - [x] `SpatializedMotionHandle` implemented by unified controller
 - [x] OpenSpec design / API.zh / tasks aligned with consolidated architecture
@@ -36,7 +36,14 @@
 
 - [x] Merge native Swift Static3D/Dynamic3D managers → `SpatializedContainerMotionAnimationManager` + `SpatializedMotionTransformSink`
 - [x] Unified JSB `AnimateSpatializedElementMotion` + `targetKind` only (removed `AnimateSpatializedStatic3DElement` / `AnimateSpatializedDynamic3DElement`)
-- [ ] Merge 2D into `AnimateSpatializedElementMotion` (`targetKind: spatialized2d`) — deferred; keep `AnimateSpatialized2DElement` for now
+- [x] Merge 2D into `AnimateSpatializedElementMotion` (`targetKind: spatialized2d`); removed `AnimateSpatialized2DElement` JSB
 - [x] Remove deprecated Core controller class aliases (`SpatialDivMotionController`, `Static3DMotionController`, `Dynamic3DMotionController`)
 - [x] `supports('useSpatializedMotion', [kind])` top-level capability (mirrors `useAnimation` element/static3d/dynamic3d flags)
 - [ ] Web RAF for Static3D / Dynamic3D (deferred — product requires native-only for 3D containers)
+
+## Phase 6 — Unified JSB for 2D
+
+- [x] Extend `AnimateSpatializedElementMotion` with `targetKind: spatialized2d`
+- [x] Route native 2D through `SpatialDivAnimationManager` in unified listener
+- [x] Core: `executeAnimateSpatializedElementMotion` for all kinds; remove `AnimateSpatialDivJSBCommand`
+- [x] Keep `animateSpatialDiv()` as deprecated alias on `Spatialized2DElement` for `useSpatialDivAnimation`

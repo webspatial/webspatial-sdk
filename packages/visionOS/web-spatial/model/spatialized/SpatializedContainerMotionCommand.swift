@@ -1,6 +1,6 @@
 import Foundation
 
-/// Shared JSB payload for Static3D / Dynamic3D container motion commands.
+/// Shared JSB payload for spatialized element motion (2D / Static3D / Dynamic3D).
 protocol SpatializedContainerMotionCommand {
     var animationId: String { get }
     var type: String { get }
@@ -15,13 +15,13 @@ protocol SpatializedContainerMotionCommand {
     var timeline: SpatialDivMotionTimelinePayload? { get }
 }
 
-/// Unified container motion command for Static3D / Dynamic3D (`targetKind` selects transform sink).
+/// Unified element motion command (`targetKind` selects native manager + transform sink).
 struct AnimateSpatializedElementMotionCommand: CommandDataProtocol, SpatializedContainerMotionCommand {
     static let commandType: String = "AnimateSpatializedElementMotion"
 
     let animationId: String
     let type: String
-    /// `static3d` | `dynamic3d` (2D continues to use `AnimateSpatialized2DElement`).
+    /// `spatialized2d` | `static3d` | `dynamic3d`
     let targetKind: String
 
     let elementId: String?
@@ -38,6 +38,8 @@ struct AnimateSpatializedElementMotionCommand: CommandDataProtocol, SpatializedC
         switch targetKind {
         case "static3d":
             return .modelTransform
+        case "spatialized2d", "dynamic3d":
+            return .elementTransform
         default:
             return .elementTransform
         }

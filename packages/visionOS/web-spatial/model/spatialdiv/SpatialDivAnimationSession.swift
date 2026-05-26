@@ -65,29 +65,6 @@ enum SpatialDivLoopConfig: Decodable {
     }
 }
 
-// MARK: - JSB Command
-
-/// Command received from the JS SDK via the bridge.
-/// Matches the `commandType = "AnimateSpatialized2DElement"` defined in core-sdk.
-struct AnimateSpatialized2DElementCommand: CommandDataProtocol {
-    static let commandType: String = "AnimateSpatialized2DElement"
-
-    let animationId: String
-    let type: String // "play" | "pause" | "resume" | "cancel"
-
-    // Fields present only when type == "play"
-    let elementId: String?
-    let to: SpatialDivAnimationTarget?
-    let from: SpatialDivAnimationTarget?
-    let duration: Double?
-    let timingFunction: String?
-    let delay: Double?
-    let playbackRate: Double?
-    let loop: SpatialDivLoopConfig?
-    /// Multi-track timeline (Phase 2b). When present, segment from/to are ignored.
-    let timeline: SpatialDivMotionTimelinePayload?
-}
-
 // MARK: - Resolved SRT Values
 
 /// Fully resolved translate/rotate/scale values for interpolation.
