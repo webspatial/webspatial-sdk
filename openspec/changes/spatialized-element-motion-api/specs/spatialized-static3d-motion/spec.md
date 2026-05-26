@@ -6,6 +6,8 @@
 
 The SDK MUST support `SpatializedStatic3DElement` timeline motion applying sampled values to `modelTransform` (translate/rotate/scale) and `opacity` without animating layout fields on the spatialized element shell.
 
+Implementation MUST use `SpatializedMotionController` with `kind: 'static3d'` (native-only; no Web RAF).
+
 #### Scenario: Native play sends timeline
 
 - **GIVEN** `supports('useAnimation', ['static3d'])` is true
@@ -14,8 +16,8 @@ The SDK MUST support `SpatializedStatic3DElement` timeline motion applying sampl
 
 #### Scenario: Model motion binding
 
-- **WHEN** `<Model motion={binding} />` is wired
-- **THEN** play before bind MAY queue; after bind native playback MUST drive transform without fighting React `entityTransform` writes (suppression rules analogous to 2D)
+- **WHEN** `<Model motion={binding} />` is wired from `useSpatializedMotion({ kind: 'static3d' })`
+- **THEN** play before bind MAY queue; after bind native playback MUST drive transform without fighting React layout writes (suppression rules analogous to 2D)
 
 ### Requirement: Clip playback stays separate
 

@@ -1,3 +1,4 @@
+export { useMotionController } from './useMotionController'
 export { useSpatialDivMotion } from './useSpatialDivMotion'
 export type { UseSpatialDivMotionResult } from './useSpatialDivMotion'
 export { useSpatializedMotion } from './useSpatializedMotion'
@@ -17,6 +18,7 @@ export {
   validateSpatialDivMotionConfig,
   segmentConfigToMotionConfig,
 } from '@webspatial/core-sdk'
+export type { SpatializedMotionHandle } from '@webspatial/core-sdk'
 export { valuesToMotionStyle } from './style'
 export type { SpatialDivMotionBindingInternal } from './motionBindingTypes'
 export type { Static3DMotionBindingInternal } from './static3dMotionBindingTypes'

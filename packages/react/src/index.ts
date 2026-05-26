@@ -15,7 +15,9 @@ export {
   useDynamic3DMotion,
   useSpatializedMotion,
   SpatialDivMotionController,
+  SpatializedMotionController,
 } from './spatialized-container/motion'
+export type { SpatializedMotionHandle } from '@webspatial/core-sdk'
 export * from './Model'
 export { SSRProvider } from './ssr'
 export { useMetrics } from './useMetrics'
