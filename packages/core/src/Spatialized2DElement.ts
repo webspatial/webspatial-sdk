@@ -1,10 +1,9 @@
 import {
   AddSpatializedElementToSpatialized2DElement,
-  AnimateSpatialDivJSBCommand,
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
 import { SpatialWebEvent } from './SpatialWebEvent'
-import { parseSpatialDivVisualValues } from './spatialdiv/parseSpatialDivVisualValues'
+import { executeAnimateSpatializedElementMotion } from './spatialized/executeAnimateSpatializedElementMotion'
 import {
   SpatializedMotionController,
   type SpatializedMotionControllerOptions,
@@ -15,7 +14,10 @@ import type {
   AnimateSpatialDivCommand,
   AnimateSpatialDivResult,
 } from './types/spatialDivAnimation'
-import type { SpatialDivPlaybackError } from './types/spatialDivPlayback'
+import type {
+  AnimateSpatializedElementMotionCommand,
+  AnimateSpatializedElementMotionResult,
+} from './types/spatializedElementMotion'
 import type { SpatialDivVisualValues } from './types/spatialDivVisual'
 import { hijackWindowATag } from './scene-polyfill'
 import { SpatializedElement } from './SpatializedElement'
@@ -64,8 +66,25 @@ export class Spatialized2DElement extends SpatializedElement {
     ).execute()
   }
 
-  // ---- SpatialDiv Animation ----
+  // ---- Spatialized element motion (unified JSB) ----
 
+  animateMotion(
+    command: AnimateSpatializedElementMotionCommand & { type: 'play' },
+  ): Promise<AnimateSpatializedElementMotionResult>
+  animateMotion(
+    command: AnimateSpatializedElementMotionCommand & { type: 'pause' },
+  ): Promise<SpatialDivVisualValues>
+  animateMotion(command: AnimateSpatializedElementMotionCommand): Promise<void>
+  async animateMotion(
+    command: AnimateSpatializedElementMotionCommand,
+  ): Promise<
+    AnimateSpatializedElementMotionResult | SpatialDivVisualValues | void
+  > {
+    const { targetKind, ...rest } = command
+    return executeAnimateSpatializedElementMotion(this.id, targetKind, rest)
+  }
+
+  /** @deprecated Use {@link animateMotion} — kept for `useSpatialDivAnimation` and legacy callers. */
   animateSpatialDiv(
     command: AnimateSpatialDivCommand & { type: 'play' },
   ): Promise<AnimateSpatialDivResult>
@@ -76,102 +95,11 @@ export class Spatialized2DElement extends SpatializedElement {
   async animateSpatialDiv(
     command: AnimateSpatialDivCommand,
   ): Promise<AnimateSpatialDivResult | SpatialDivVisualValues | void> {
-    const { animationId, type } = command
-
-    if (type === 'play') {
-      let resolveFinished!: (val: SpatialDivVisualValues) => void
-      let resolveCancel!: (val: SpatialDivVisualValues) => void
-      let resolveFailed!: (val: SpatialDivPlaybackError) => void
-
-      const finished = new Promise<SpatialDivVisualValues>(r => {
-        resolveFinished = r
-      })
-      const canceled = new Promise<SpatialDivVisualValues>(r => {
-        resolveCancel = r
-      })
-      const failed = new Promise<SpatialDivPlaybackError>(r => {
-        resolveFailed = r
-      })
-
-      const cleanup = () => {
-        SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
-        SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
-        SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
-      }
-
-      SpatialWebEvent.addEventReceiver(
-        `${animationId}_completed`,
-        (data: any) => {
-          cleanup()
-          // Native sends { type, values } - extract values as finalValues
-          const finalValues: SpatialDivVisualValues =
-            data?.finalValues ?? data?.values ?? data ?? {}
-          resolveFinished(finalValues)
-        },
-      )
-
-      SpatialWebEvent.addEventReceiver(
-        `${animationId}_canceled`,
-        (data: any) => {
-          cleanup()
-          // Native sends { type, values } - extract values as currentValues
-          const currentValues: SpatialDivVisualValues =
-            data?.currentValues ?? data?.values ?? data ?? {}
-          resolveCancel(currentValues)
-        },
-      )
-
-      SpatialWebEvent.addEventReceiver(
-        `${animationId}_failed`,
-        (data: {
-          animationId: string
-          command: string
-          code?: string
-          reason: string
-        }) => {
-          cleanup()
-          // Propagate async native failure to hook layer via failed promise
-          resolveFailed({
-            animationId: data.animationId ?? animationId,
-            command: (data.command ??
-              'play') as SpatialDivPlaybackError['command'],
-            code: data.code,
-            reason: data.reason ?? 'Native animation failed',
-          })
-        },
-      )
-
-      const playCommand: AnimateSpatialDivCommand = {
-        ...command,
-        elementId: command.elementId ?? this.id,
-      }
-
-      const result = await new AnimateSpatialDivJSBCommand(
-        playCommand,
-      ).execute()
-      if (!result.success) {
-        cleanup()
-        throw new Error(
-          result.errorMessage ??
-            'AnimateSpatialized2DElement play command failed',
-        )
-      }
-
-      return { animationId, finished, canceled, failed }
-    }
-
-    // pause / resume / cancel
-    const result = await new AnimateSpatialDivJSBCommand(command).execute()
-    if (!result.success) {
-      throw new Error(
-        result.errorMessage ??
-          `AnimateSpatialized2DElement ${type} command failed`,
-      )
-    }
-
-    if (type === 'pause') {
-      return parseSpatialDivVisualValues(result.data)
-    }
+    return executeAnimateSpatializedElementMotion(
+      this.id,
+      'spatialized2d',
+      command,
+    )
   }
 
   cleanupSpatialDivAnimationListeners(animationId: string) {

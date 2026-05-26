@@ -13,19 +13,22 @@ vi.mock('@webspatial/core-sdk', async () => {
 const { useSpatializedMotion } = await import('./useSpatializedMotion')
 
 function createMockElement(id = 'motion-element-1') {
+  const animateMotion = vi.fn().mockImplementation(async (cmd: any) => {
+    if (cmd.type === 'play') {
+      return {
+        animationId: cmd.animationId,
+        finished: new Promise(() => {}),
+        canceled: new Promise(() => {}),
+        failed: new Promise(() => {}),
+      }
+    }
+    return undefined
+  })
   return {
     id,
-    animateSpatialDiv: vi.fn().mockImplementation(async (cmd: any) => {
-      if (cmd.type === 'play') {
-        return {
-          animationId: cmd.animationId,
-          finished: new Promise(() => {}),
-          canceled: new Promise(() => {}),
-          failed: new Promise(() => {}),
-        }
-      }
-      return undefined
-    }),
+    animateMotion,
+    /** Legacy alias; motion bridge uses {@link animateMotion}. */
+    animateSpatialDiv: animateMotion,
     cleanupSpatialDivAnimationListeners: vi.fn(),
   }
 }
@@ -78,13 +81,14 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
     })
     await flushPromises()
 
-    const playCalls = element.animateSpatialDiv.mock.calls.filter(
+    const playCalls = element.animateMotion.mock.calls.filter(
       ([cmd]) => cmd.type === 'play',
     )
     expect(playCalls).toHaveLength(1)
     expect(playCalls[0][0]).toEqual(
       expect.objectContaining({
         type: 'play',
+        targetKind: 'spatialized2d',
         elementId: element.id,
         timeline: expect.objectContaining({
           duration: 5,
@@ -144,7 +148,7 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
 
   test('native pause prefers bridge-reported values over wall-clock estimate', async () => {
     const element = createMockElement()
-    element.animateSpatialDiv.mockImplementation(async (cmd: any) => {
+    element.animateMotion.mockImplementation(async (cmd: any) => {
       if (cmd.type === 'play') {
         return {
           animationId: cmd.animationId,
@@ -198,7 +202,7 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
       transform?: { translate?: { x?: number } }
     }) => void
     const element = createMockElement()
-    element.animateSpatialDiv.mockImplementation(async (cmd: any) => {
+    element.animateMotion.mockImplementation(async (cmd: any) => {
       if (cmd.type === 'play') {
         return {
           animationId: cmd.animationId,
@@ -287,8 +291,8 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
     await flushPromises()
 
     expect(onCancel).not.toHaveBeenCalled()
-    expect(element.animateSpatialDiv).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'cancel' }),
+    expect(element.animateMotion).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'cancel', targetKind: 'spatialized2d' }),
     )
   })
 })

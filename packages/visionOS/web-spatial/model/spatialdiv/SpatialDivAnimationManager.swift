@@ -130,12 +130,12 @@ class SpatialDivAnimationManager: NSObject {
     // MARK: - Play
 
     func handlePlay(
-        command: AnimateSpatialized2DElementCommand,
+        command: AnimateSpatializedElementMotionCommand,
         element: SpatializedElement,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
         guard let elementId = command.elementId else {
-            resolve(.failure(JsbError(code: .CommandError, message: "AnimateSpatialized2DElement play: elementId is required")))
+            resolve(.failure(JsbError(code: .CommandError, message: "AnimateSpatializedElementMotion play: elementId is required")))
             return
         }
 
@@ -224,7 +224,7 @@ class SpatialDivAnimationManager: NSObject {
     }
 
     private func handleTimelinePlay(
-        command: AnimateSpatialized2DElementCommand,
+        command: AnimateSpatializedElementMotionCommand,
         timeline: SpatialDivMotionTimelinePayload,
         element: SpatializedElement,
         elementId: String,
@@ -271,7 +271,7 @@ class SpatialDivAnimationManager: NSObject {
     // MARK: - Pause
 
     func handlePause(
-        command: AnimateSpatialized2DElementCommand,
+        command: AnimateSpatializedElementMotionCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
         guard let session = getSession(command.animationId) else {
@@ -295,7 +295,7 @@ class SpatialDivAnimationManager: NSObject {
     // MARK: - Resume
 
     func handleResume(
-        command: AnimateSpatialized2DElementCommand,
+        command: AnimateSpatializedElementMotionCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
         guard let session = getSession(command.animationId) else {
@@ -314,7 +314,7 @@ class SpatialDivAnimationManager: NSObject {
     // MARK: - Cancel
 
     func handleCancel(
-        command: AnimateSpatialized2DElementCommand,
+        command: AnimateSpatializedElementMotionCommand,
         element: SpatializedElement,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
