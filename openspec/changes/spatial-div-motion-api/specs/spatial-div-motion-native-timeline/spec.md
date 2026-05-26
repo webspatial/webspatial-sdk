@@ -107,6 +107,13 @@ Applications on WebSpatial runtime MUST pass the `motion` binding handle on the 
 - **THEN** only the Web RAF backend MUST run
 - **AND** native `animateSpatialDiv` MUST NOT be invoked for that hook instance
 
+#### Scenario: pause returns current sampled values
+
+- **GIVEN** a native timeline session is `running`
+- **WHEN** `api.pause()` succeeds on the bridge
+- **THEN** the JSB pause response MUST include current animated values at the paused position
+- **AND** the hook MUST apply those values to the public `style` outlet (not only a JS wall-clock estimate)
+
 #### Scenario: play before bind queues native session (not Web RAF)
 
 - **GIVEN** `supports('useAnimation', ['element'])` is `true`

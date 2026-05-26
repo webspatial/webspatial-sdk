@@ -283,8 +283,13 @@ class SpatialDivAnimationManager: NSObject {
             return
         }
 
+        let values = buildSampledValuesPayload(
+            session: session,
+            at: CACurrentMediaTime()
+        )
         session.markPaused()
-        resolve(.success(nil))
+        let payload = SpatialDivAnimationPausedPayload(type: "paused", values: values)
+        resolve(.success(payload))
     }
 
     // MARK: - Resume
@@ -566,6 +571,70 @@ class SpatialDivAnimationManager: NSObject {
         scene.sendWebMsg("\(session.animationId)_failed", payload)
     }
 
+    /// Sample animated values at the session's current playback position (for pause ack).
+    private func buildSampledValuesPayload(
+        session: SpatialDivAnimationSession,
+        at timestamp: CFTimeInterval
+    ) -> SpatialDivAnimationValuesPayload {
+        let progress = session.currentProgress(at: timestamp)
+
+        if let evaluator = session.timelineEvaluator {
+            let timeSec = progress * session.duration
+            let sample = evaluator.sampleSRTAndOpacity(at: timeSec)
+            return buildValuesPayload(
+                srt: sample.srt,
+                opacity: sample.opacity,
+                session: session
+            )
+        }
+
+        let fromSRT = session.resolvedFromSRT
+        let toSRT = session.resolvedToSRT
+        let srt = ResolvedSRT(
+            translateX: SpatialDivAnimationSession.lerp(fromSRT.translateX, toSRT.translateX, progress),
+            translateY: SpatialDivAnimationSession.lerp(fromSRT.translateY, toSRT.translateY, progress),
+            translateZ: SpatialDivAnimationSession.lerp(fromSRT.translateZ, toSRT.translateZ, progress),
+            rotateX: SpatialDivAnimationSession.lerp(fromSRT.rotateX, toSRT.rotateX, progress),
+            rotateY: SpatialDivAnimationSession.lerp(fromSRT.rotateY, toSRT.rotateY, progress),
+            rotateZ: SpatialDivAnimationSession.lerp(fromSRT.rotateZ, toSRT.rotateZ, progress),
+            scaleX: SpatialDivAnimationSession.lerp(fromSRT.scaleX, toSRT.scaleX, progress),
+            scaleY: SpatialDivAnimationSession.lerp(fromSRT.scaleY, toSRT.scaleY, progress),
+            scaleZ: SpatialDivAnimationSession.lerp(fromSRT.scaleZ, toSRT.scaleZ, progress)
+        )
+        let opacity = SpatialDivAnimationSession.lerp(
+            session.resolvedFromOpacity,
+            session.resolvedToOpacity,
+            progress
+        )
+        return buildValuesPayload(srt: srt, opacity: opacity, session: session)
+    }
+
+    private func buildValuesPayload(
+        srt: ResolvedSRT,
+        opacity: Double,
+        session: SpatialDivAnimationSession
+    ) -> SpatialDivAnimationValuesPayload {
+        var transformPayload: SpatialDivTransformPayload? = nil
+        var opacityPayload: Double? = nil
+
+        if session.animatesTransform {
+            transformPayload = SpatialDivTransformPayload(
+                translate: Vec3Payload(x: srt.translateX, y: srt.translateY, z: srt.translateZ),
+                rotate: Vec3Payload(x: srt.rotateX, y: srt.rotateY, z: srt.rotateZ),
+                scale: Vec3Payload(x: srt.scaleX, y: srt.scaleY, z: srt.scaleZ)
+            )
+        }
+
+        if session.animatesOpacity {
+            opacityPayload = opacity
+        }
+
+        return SpatialDivAnimationValuesPayload(
+            transform: transformPayload,
+            opacity: opacityPayload
+        )
+    }
+
     /// Build the event payload with current animated values.
     /// - Parameter useTo: if true, use the resolved "to" values (for completed); if false, use "from" (for canceled).
     private func buildCurrentValuesPayload(session: SpatialDivAnimationSession, useTo: Bool) -> SpatialDivAnimationValuesPayload {
@@ -575,8 +644,16 @@ class SpatialDivAnimationManager: NSObject {
             at: useTo ? session.duration : 0
         )
 
+        if let sample = timelineSample {
+            return buildValuesPayload(
+                srt: sample.srt,
+                opacity: sample.opacity,
+                session: session
+            )
+        }
+
         if session.animatesTransform {
-            let srt = timelineSample?.srt ?? (useTo ? session.resolvedToSRT : session.resolvedFromSRT)
+            let srt = useTo ? session.resolvedToSRT : session.resolvedFromSRT
             transformPayload = SpatialDivTransformPayload(
                 translate: Vec3Payload(x: srt.translateX, y: srt.translateY, z: srt.translateZ),
                 rotate: Vec3Payload(x: srt.rotateX, y: srt.rotateY, z: srt.rotateZ),
@@ -585,7 +662,7 @@ class SpatialDivAnimationManager: NSObject {
         }
 
         if session.animatesOpacity {
-            opacityPayload = timelineSample?.opacity ?? (useTo ? session.resolvedToOpacity : session.resolvedFromOpacity)
+            opacityPayload = useTo ? session.resolvedToOpacity : session.resolvedFromOpacity
         }
 
         return SpatialDivAnimationValuesPayload(

@@ -137,4 +137,147 @@ describe('useSpatialDivMotion native backend', () => {
 
     expect(String(result.current.style.transform)).toContain('translate3d(30px')
   })
+
+  test('native pause prefers bridge-reported values over wall-clock estimate', async () => {
+    const element = createMockElement()
+    element.animateSpatialDiv.mockImplementation(async (cmd: any) => {
+      if (cmd.type === 'play') {
+        return {
+          animationId: cmd.animationId,
+          finished: new Promise(() => {}),
+          canceled: new Promise(() => {}),
+          failed: new Promise(() => {}),
+        }
+      }
+      if (cmd.type === 'pause') {
+        return { transform: { translate: { x: 42 } } }
+      }
+      return undefined
+    })
+
+    const { result } = renderHook(() =>
+      useSpatialDivMotion({
+        duration: 5,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'transform.translate.x',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 5, value: 100 },
+            ],
+            easing: 'linear',
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current.motion!.__setElement!(element as any)
+      result.current.api.play()
+    })
+    await flushPromises()
+
+    await act(async () => {
+      result.current.api.pause()
+    })
+    await flushPromises()
+
+    expect(String(result.current.style.transform)).toContain('translate3d(42px')
+  })
+
+  test('native onComplete applies finalValues to style', async () => {
+    let resolveFinished!: (v: {
+      transform?: { translate?: { x?: number } }
+    }) => void
+    const element = createMockElement()
+    element.animateSpatialDiv.mockImplementation(async (cmd: any) => {
+      if (cmd.type === 'play') {
+        return {
+          animationId: cmd.animationId,
+          finished: new Promise(r => {
+            resolveFinished = r
+          }),
+          canceled: new Promise(() => {}),
+          failed: new Promise(() => {}),
+        }
+      }
+      return undefined
+    })
+
+    const onComplete = vi.fn()
+    const { result } = renderHook(() =>
+      useSpatialDivMotion({
+        duration: 5,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'transform.translate.x',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 5, value: 100 },
+            ],
+            easing: 'linear',
+          },
+        ],
+        onComplete,
+      }),
+    )
+
+    await act(async () => {
+      result.current.motion!.__setElement!(element as any)
+      result.current.api.play()
+    })
+    await flushPromises()
+
+    await act(async () => {
+      resolveFinished({ transform: { translate: { x: 99 } } })
+    })
+    await flushPromises()
+
+    expect(onComplete).toHaveBeenCalledWith(
+      expect.objectContaining({
+        transform: { translate: { x: 99 } },
+      }),
+    )
+    expect(String(result.current.style.transform)).toContain('translate3d(99px')
+  })
+
+  test('__onUnbind does not invoke onCancel', async () => {
+    const element = createMockElement()
+    const onCancel = vi.fn()
+
+    const { result } = renderHook(() =>
+      useSpatialDivMotion({
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+        onCancel,
+      }),
+    )
+
+    await act(async () => {
+      result.current.motion!.__setElement!(element as any)
+      result.current.api.play()
+    })
+    await flushPromises()
+
+    await act(async () => {
+      result.current.motion!.__onUnbind!()
+    })
+    await flushPromises()
+
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(element.animateSpatialDiv).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'cancel' }),
+    )
+  })
 })

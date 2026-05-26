@@ -385,6 +385,11 @@ struct SpatialDivAnimationCanceledPayload: Encodable {
     let values: SpatialDivAnimationValuesPayload
 }
 
+struct SpatialDivAnimationPausedPayload: Encodable {
+    let type: String
+    let values: SpatialDivAnimationValuesPayload
+}
+
 struct SpatialDivAnimationFailedPayload: Encodable {
     let type: String
     let animationId: String
