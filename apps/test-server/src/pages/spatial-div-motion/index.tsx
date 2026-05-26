@@ -15,6 +15,16 @@ const motionRoutes = [
     label: 'simple() entrance',
     description: 'fade + slide via sugar API — auto-play',
   },
+  {
+    path: '/spatial-div-motion/translate-z',
+    label: 'translate.z (depth)',
+    description: 'single-track depth axis 0 → -120px — auto-play',
+  },
+  {
+    path: '/spatial-div-motion/rotate',
+    label: 'rotate (y + z)',
+    description: 'rotate.y yaw + rotate.z spin — auto-play',
+  },
 ]
 
 export default function SpatialDivMotionHubPage() {

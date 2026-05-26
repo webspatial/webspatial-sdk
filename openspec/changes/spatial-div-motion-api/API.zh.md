@@ -202,6 +202,8 @@ useSpatialDivMotion
 | `/spatial-div-motion` | Plan A vs B 入口 |
 | `/spatial-div-motion/multi-track` | canonical：0–5s 位移 + 3–5s 透明度 |
 | `/spatial-div-motion/simple-entrance` | `simple()` 入场 |
+| `/spatial-div-motion/translate-z` | 单轨 `translate.z` 深度轴 |
+| `/spatial-div-motion/rotate` | 多轨 `rotate.y` + `rotate.z` |
 
 ---
 

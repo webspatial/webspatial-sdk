@@ -84,4 +84,41 @@ describe('motionConfigToNativeTimeline', () => {
     expect(tl.tracks).toHaveLength(2)
     expect(tl.tracks[1].easing).toBe('easeOut')
   })
+
+  test('builds timeline with translate.z and rotate tracks', () => {
+    const tl = motionConfigToNativeTimeline({
+      duration: 4,
+      tracks: [
+        {
+          property: 'transform.translate.z',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 4, value: -120 },
+          ],
+          easing: 'easeInOut',
+        },
+        {
+          property: 'transform.rotate.y',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 4, value: 90 },
+          ],
+        },
+        {
+          property: 'transform.rotate.z',
+          keyframes: [
+            { at: 1, value: 0 },
+            { at: 4, value: 180 },
+          ],
+          easing: 'linear',
+        },
+      ],
+    })
+    expect(tl.tracks).toHaveLength(3)
+    expect(tl.tracks.map(t => t.property)).toEqual([
+      'transform.translate.z',
+      'transform.rotate.y',
+      'transform.rotate.z',
+    ])
+  })
 })
