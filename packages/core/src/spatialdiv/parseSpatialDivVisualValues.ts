@@ -1,9 +1,9 @@
-import type { SpatialDivAnimatedValues } from '../types/spatialDivAnimation'
+import type { SpatialDivVisualValues } from '../types/spatialDivVisual'
 
-/** Parse native wire payload `{ values }` (or legacy flat shape) into animated values. */
-export function parseSpatialDivAnimatedValues(
+/** Parse native wire payload `{ values }` (or legacy flat shape) into visual values. */
+export function parseSpatialDivVisualValues(
   data: unknown,
-): SpatialDivAnimatedValues {
+): SpatialDivVisualValues {
   const raw =
     (data as { values?: unknown })?.values ??
     data ??
@@ -21,13 +21,13 @@ export function parseSpatialDivAnimatedValues(
     return Object.keys(out).length > 0 ? out : undefined
   }
 
-  const values: SpatialDivAnimatedValues = {}
+  const values: SpatialDivVisualValues = {}
   if (typeof record.opacity === 'number') {
     values.opacity = record.opacity
   }
 
   if (transformRaw) {
-    const transform: NonNullable<SpatialDivAnimatedValues['transform']> = {}
+    const transform: NonNullable<SpatialDivVisualValues['transform']> = {}
     const translate = readVec3(transformRaw.translate)
     const rotate = readVec3(transformRaw.rotate)
     const scale = readVec3(transformRaw.scale)

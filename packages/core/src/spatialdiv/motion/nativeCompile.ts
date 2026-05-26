@@ -1,4 +1,4 @@
-import type { SpatialDivAnimatedValues } from '../../types/spatialDivAnimation'
+import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
 import type { TimingFunction } from '../../types/animation'
 import type {
   SpatialDivMotionConfig,
@@ -10,8 +10,8 @@ import type {
 const EPS = 1e-6
 
 export interface NativeSegmentPlayPayload {
-  from: SpatialDivAnimatedValues
-  to: SpatialDivAnimatedValues
+  from: SpatialDivVisualValues
+  to: SpatialDivVisualValues
   duration: number
   timingFunction: TimingFunction
   delay?: number
@@ -20,7 +20,7 @@ export interface NativeSegmentPlayPayload {
 }
 
 function setScalar(
-  values: SpatialDivAnimatedValues,
+  values: SpatialDivVisualValues,
   property: SpatialDivMotionProperty,
   value: number,
 ): void {
@@ -41,11 +41,11 @@ function setScalar(
 }
 
 export function tracksToFromTo(tracks: SpatialDivMotionTrack[]): {
-  from: SpatialDivAnimatedValues
-  to: SpatialDivAnimatedValues
+  from: SpatialDivVisualValues
+  to: SpatialDivVisualValues
 } {
-  const from: SpatialDivAnimatedValues = {}
-  const to: SpatialDivAnimatedValues = {}
+  const from: SpatialDivVisualValues = {}
+  const to: SpatialDivVisualValues = {}
   for (const track of tracks) {
     const first = track.keyframes[0]
     const last = track.keyframes[track.keyframes.length - 1]

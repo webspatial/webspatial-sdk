@@ -1,24 +1,24 @@
 import { describe, expect, test } from 'vitest'
-import { validateSpatialDivAnimationConfig } from './spatialDivAnimationValidator'
-import type { SpatialDivAnimationConfig } from '@webspatial/core-sdk'
+import { validateSpatialDivSegmentConfig } from './spatialDivSegmentValidator'
+import type { SpatialDivSegmentConfig } from '@webspatial/core-sdk'
 
-const validConfig: SpatialDivAnimationConfig = {
+const validConfig: SpatialDivSegmentConfig = {
   to: { opacity: 0.5 },
   duration: 1.0,
 }
 
-describe('validateSpatialDivAnimationConfig', () => {
+describe('validateSpatialDivSegmentConfig', () => {
   // --- Whitelist Validation ---
   describe('whitelist fields', () => {
     test('accepts opacity only', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({ to: { opacity: 0.8 } }),
+        validateSpatialDivSegmentConfig({ to: { opacity: 0.8 } }),
       ).not.toThrow()
     })
 
     test('accepts transform.translate', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: { translate: { x: 10 } } },
         }),
       ).not.toThrow()
@@ -26,7 +26,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('accepts transform.rotate', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: { rotate: { z: 90 } } },
         }),
       ).not.toThrow()
@@ -34,7 +34,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('accepts transform.scale', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: { scale: { x: 2, y: 2, z: 1 } } },
         }),
       ).not.toThrow()
@@ -42,7 +42,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('accepts combined opacity + transform', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1, transform: { translate: { y: 50 } } },
         }),
       ).not.toThrow()
@@ -50,7 +50,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects layout-affecting fields: width', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 0.5, width: 100 } as any,
         }),
       ).toThrow(/layout-affecting/)
@@ -58,7 +58,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects layout-affecting fields: height', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1, height: 200 } as any,
         }),
       ).toThrow(/layout-affecting/)
@@ -66,7 +66,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects layout-affecting fields: depth', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 0.5, depth: 50 } as any,
         }),
       ).toThrow(/layout-affecting/)
@@ -74,7 +74,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects layout-affecting fields: back', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 0.5, back: 10 } as any,
         }),
       ).toThrow(/layout-affecting/)
@@ -82,7 +82,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects layout-affecting fields: backOffset', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 0.5, backOffset: 5 } as any,
         }),
       ).toThrow(/layout-affecting/)
@@ -90,7 +90,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects unsupported fields: backgroundMaterial', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 0.5, backgroundMaterial: 'glass' } as any,
         }),
       ).toThrow(/unsupported/)
@@ -98,7 +98,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects unsupported fields: cornerRadius', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 0.5, cornerRadius: 10 } as any,
         }),
       ).toThrow(/unsupported/)
@@ -106,7 +106,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects entity keys: position', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 0.5, position: { x: 1 } } as any,
         }),
       ).toThrow(/entity animation keys/)
@@ -114,7 +114,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects entity keys: rotation (entity)', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 0.5, rotation: { x: 90 } } as any,
         }),
       ).toThrow(/entity animation keys/)
@@ -122,21 +122,19 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects entity keys: scale (entity)', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 0.5, scale: { x: 2 } } as any,
         }),
       ).toThrow(/entity animation keys/)
     })
 
     test('rejects empty to', () => {
-      expect(() =>
-        validateSpatialDivAnimationConfig({ to: {} as any }),
-      ).toThrow()
+      expect(() => validateSpatialDivSegmentConfig({ to: {} as any })).toThrow()
     })
 
     test('rejects to with no meaningful fields', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: {} } as any,
         }),
       ).toThrow(/at least one/)
@@ -147,43 +145,43 @@ describe('validateSpatialDivAnimationConfig', () => {
   describe('numeric ranges', () => {
     test('opacity: rejects < 0', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({ to: { opacity: -0.1 } }),
+        validateSpatialDivSegmentConfig({ to: { opacity: -0.1 } }),
       ).toThrow(/\[0, 1\]/)
     })
 
     test('opacity: rejects > 1', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({ to: { opacity: 1.1 } }),
+        validateSpatialDivSegmentConfig({ to: { opacity: 1.1 } }),
       ).toThrow(/\[0, 1\]/)
     })
 
     test('opacity: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({ to: { opacity: NaN } }),
+        validateSpatialDivSegmentConfig({ to: { opacity: NaN } }),
       ).toThrow()
     })
 
     test('opacity: rejects Infinity', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({ to: { opacity: Infinity } }),
+        validateSpatialDivSegmentConfig({ to: { opacity: Infinity } }),
       ).toThrow()
     })
 
     test('opacity: accepts 0', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({ to: { opacity: 0 } }),
+        validateSpatialDivSegmentConfig({ to: { opacity: 0 } }),
       ).not.toThrow()
     })
 
     test('opacity: accepts 1', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({ to: { opacity: 1 } }),
+        validateSpatialDivSegmentConfig({ to: { opacity: 1 } }),
       ).not.toThrow()
     })
 
     test('translate: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: { translate: { x: NaN } } },
         }),
       ).toThrow(/finite/)
@@ -191,7 +189,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('translate: rejects Infinity', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: { translate: { y: Infinity } } },
         }),
       ).toThrow(/finite/)
@@ -199,7 +197,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rotate: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: { rotate: { z: NaN } } },
         }),
       ).toThrow(/finite/)
@@ -207,7 +205,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('scale: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: { scale: { x: NaN } } },
         }),
       ).toThrow(/finite/)
@@ -215,7 +213,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('scale: accepts 0 (exit animations)', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: { scale: { x: 0 } } },
         }),
       ).not.toThrow()
@@ -226,7 +224,7 @@ describe('validateSpatialDivAnimationConfig', () => {
   describe('timing parameters', () => {
     test('duration: rejects 0', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           duration: 0,
         }),
@@ -235,7 +233,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('duration: rejects negative', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           duration: -1,
         }),
@@ -244,7 +242,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('duration: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           duration: NaN,
         }),
@@ -253,7 +251,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('duration: rejects Infinity', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           duration: Infinity,
         }),
@@ -262,7 +260,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('delay: rejects negative', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           delay: -1,
         }),
@@ -271,7 +269,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('delay: accepts 0', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           delay: 0,
         }),
@@ -280,7 +278,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('delay: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           delay: NaN,
         }),
@@ -290,7 +288,7 @@ describe('validateSpatialDivAnimationConfig', () => {
     test('timingFunction: accepts valid values', () => {
       for (const tf of ['linear', 'easeIn', 'easeOut', 'easeInOut'] as const) {
         expect(() =>
-          validateSpatialDivAnimationConfig({
+          validateSpatialDivSegmentConfig({
             to: { opacity: 1 },
             timingFunction: tf,
           }),
@@ -300,7 +298,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('timingFunction: rejects invalid string', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           timingFunction: 'cubic-bezier(0,0,1,1)' as any,
         }),
@@ -309,7 +307,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('playbackRate: rejects 0', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           playbackRate: 0,
         }),
@@ -318,7 +316,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('playbackRate: rejects negative', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           playbackRate: -1,
         }),
@@ -327,7 +325,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('playbackRate: rejects Infinity', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           playbackRate: Infinity,
         }),
@@ -336,7 +334,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('playbackRate: accepts valid positive value', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           playbackRate: 2.5,
         }),
@@ -348,7 +346,7 @@ describe('validateSpatialDivAnimationConfig', () => {
   describe('loop config', () => {
     test('accepts true', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           loop: true,
         }),
@@ -357,7 +355,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('accepts false', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           loop: false,
         }),
@@ -366,7 +364,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('accepts { reverse: true }', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           loop: { reverse: true },
         }),
@@ -375,7 +373,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('accepts { reverse: false }', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           loop: { reverse: false },
         }),
@@ -384,7 +382,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('accepts {}', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           loop: {},
         }),
@@ -393,7 +391,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects invalid shape: number', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           loop: 3 as any,
         }),
@@ -402,7 +400,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects invalid shape: string', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           loop: 'infinite' as any,
         }),
@@ -411,7 +409,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects unknown keys in loop object', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           loop: { count: 5 } as any,
         }),
@@ -420,7 +418,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects non-boolean reverse', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { opacity: 1 },
           loop: { reverse: 'yes' } as any,
         }),
@@ -432,7 +430,7 @@ describe('validateSpatialDivAnimationConfig', () => {
   describe('transform sub-keys', () => {
     test('rejects invalid sub-keys in transform', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: { translate: { x: 0 }, skew: { x: 10 } } } as any,
         }),
       ).toThrow(/invalid sub-keys/)
@@ -440,7 +438,7 @@ describe('validateSpatialDivAnimationConfig', () => {
 
     test('rejects perspective in transform', () => {
       expect(() =>
-        validateSpatialDivAnimationConfig({
+        validateSpatialDivSegmentConfig({
           to: { transform: { translate: { x: 0 }, perspective: 500 } } as any,
         }),
       ).toThrow(/invalid sub-keys/)

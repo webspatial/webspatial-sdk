@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { evaluateMotionTimeline } from './evaluate'
-import { simpleConfigToMotionConfig } from './simple'
+import { segmentConfigToMotionConfig } from './simple'
 import { valuesToMotionStyle } from './style'
 import { validateSpatialDivMotionConfig } from './validate'
 
@@ -111,9 +111,9 @@ describe('valuesToMotionStyle', () => {
   })
 })
 
-describe('simpleConfigToMotionConfig', () => {
+describe('segmentConfigToMotionConfig', () => {
   test('builds tracks from from/to', () => {
-    const cfg = simpleConfigToMotionConfig({
+    const cfg = segmentConfigToMotionConfig({
       from: { opacity: 0 },
       to: { opacity: 1 },
       duration: 0.6,
