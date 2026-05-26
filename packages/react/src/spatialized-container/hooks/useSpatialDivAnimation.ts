@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useReducer } from 'react'
 import { Spatialized2DElement, supports } from '@webspatial/core-sdk'
 import type {
-  SpatialDivAnimationConfig,
-  SpatialDivAnimationApi,
-  SpatialDivAnimationPlayState,
-  SpatialDivAnimatedProps,
-  SpatialDivAnimatedPropsInternal,
-  SpatialDivAnimatedValues,
-  SpatialDivAnimationError,
+  SpatialDivSegmentConfig,
+  SpatialDivPlaybackApi,
+  SpatialDivPlayState,
+  SpatialDivAnimationBinding,
+  SpatialDivAnimationBindingInternal,
+  SpatialDivVisualValues,
+  SpatialDivPlaybackError,
   AnimateSpatialDivCommand,
   AnimateSpatialDivResult,
 } from '@webspatial/core-sdk'
-import { validateSpatialDivAnimationConfig } from './spatialDivAnimationValidator'
+import { validateSpatialDivSegmentConfig } from './spatialDivSegmentValidator'
 
 // ---- Internal types ----
 
@@ -20,7 +20,7 @@ type SessionState = 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 interface SpatialDivAnimationSession {
   animationId: string
   state: SessionState
-  config: SpatialDivAnimationConfig
+  config: SpatialDivSegmentConfig
   result?: AnimateSpatialDivResult
   queuedPause?: boolean
   unmounted?: boolean
@@ -42,9 +42,7 @@ function nextAnimationId(): string {
  * Per spec, only transform and opacity are animatable.
  * When transform is animated, the entire transform sync is suppressed.
  */
-function getSuppressedFieldNames(
-  config: SpatialDivAnimationConfig,
-): Set<string> {
+function getSuppressedFieldNames(config: SpatialDivSegmentConfig): Set<string> {
   const fields = new Set<string>()
   const to = config.to
   if (to.opacity !== undefined) fields.add('opacity')
@@ -60,16 +58,16 @@ function getSuppressedFieldNames(
  * Called unconditionally by the dispatcher; `active` controls whether effects run.
  */
 export function useSpatialDivAnimation(
-  config: SpatialDivAnimationConfig,
+  config: SpatialDivSegmentConfig,
   active: boolean,
-): [SpatialDivAnimatedProps, SpatialDivAnimationApi] {
+): [SpatialDivAnimationBinding, SpatialDivPlaybackApi] {
   // Validate config eagerly when active
   if (active) {
-    validateSpatialDivAnimationConfig(config)
+    validateSpatialDivSegmentConfig(config)
   }
 
   const animObjectId = useRef(nextAnimObjectId()).current
-  const configRef = useRef<SpatialDivAnimationConfig>(config)
+  const configRef = useRef<SpatialDivSegmentConfig>(config)
   configRef.current = config
 
   const sessionRef = useRef<SpatialDivAnimationSession | null>(null)
@@ -87,7 +85,7 @@ export function useSpatialDivAnimation(
   }, [])
 
   // ---- Helper: report error ----
-  const reportError = useCallback((error: SpatialDivAnimationError) => {
+  const reportError = useCallback((error: SpatialDivPlaybackError) => {
     if (unmountedRef.current) return
     const cfg = configRef.current
     if (cfg.onError) {
@@ -335,10 +333,11 @@ export function useSpatialDivAnimation(
   }, [active, enqueueCommand])
 
   // ---- Build API object ----
-  const api: SpatialDivAnimationApi = useMemo(
+  const api: SpatialDivPlaybackApi = useMemo(
     () => ({
       play,
       pause,
+      resume: play,
       cancel,
       get isAnimating() {
         const s = sessionRef.current
@@ -347,9 +346,8 @@ export function useSpatialDivAnimation(
       get isPaused() {
         return sessionRef.current?.state === 'paused'
       },
-      get playState(): SpatialDivAnimationPlayState {
-        return (sessionRef.current?.state ??
-          'idle') as SpatialDivAnimationPlayState
+      get playState(): SpatialDivPlayState {
+        return (sessionRef.current?.state ?? 'idle') as SpatialDivPlayState
       },
       get finished() {
         return sessionRef.current?.state === 'finished'
@@ -359,8 +357,8 @@ export function useSpatialDivAnimation(
   )
 
   // ---- Build animated props ----
-  const animatedProps: SpatialDivAnimatedPropsInternal = useMemo(() => {
-    const props: SpatialDivAnimatedPropsInternal = {
+  const animatedProps: SpatialDivAnimationBindingInternal = useMemo(() => {
+    const props: SpatialDivAnimationBindingInternal = {
       __animationObjectId: animObjectId,
       __kind: 'spatialDiv',
       get __animating() {

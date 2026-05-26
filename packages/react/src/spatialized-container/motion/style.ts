@@ -1,9 +1,9 @@
 import type { CSSProperties } from 'react'
-import type { SpatialDivAnimatedValues } from '@webspatial/core-sdk'
+import type { SpatialDivVisualValues } from '@webspatial/core-sdk'
 
 /** Convert evaluated values to React style for SpatialDiv host/probe. */
 export function valuesToMotionStyle(
-  values: SpatialDivAnimatedValues,
+  values: SpatialDivVisualValues,
 ): CSSProperties {
   const style: CSSProperties = {}
 

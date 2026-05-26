@@ -89,7 +89,7 @@
 | `keyframes` | 至少 2 个 `{ at, value }`，`at` 为秒，落在 `[0, duration]` |
 | `easing` | 可选：`linear` / `easeIn` / `easeOut` / `easeInOut` |
 
-### 3.5 配置：简单入场（`SpatialDivMotionSimpleConfig`）
+### 3.5 配置：单段入场（`SpatialDivSegmentConfig`）
 
 | 字段 | 说明 |
 |------|------|
@@ -105,11 +105,12 @@
 
 产品/前端对齐契约时可引用以下类型名：
 
-- `SpatialDivMotionConfig` / `SpatialDivMotionSimpleConfig`
-- `SpatialDivMotionTrack` / `SpatialDivMotionKeyframe`
+- `SpatialDivVisualValues` / `SpatialDivVisualTransform`（某一时刻的视觉快照）
+- `SpatialDivSegmentConfig`（`from`/`to` 单段，Plan A + `useSpatialDivMotion.simple`）
+- `SpatialDivMotionConfig` / `SpatialDivMotionTrack` / `SpatialDivMotionKeyframe`
 - `SpatialDivMotionProperty`
-- `SpatialDivMotionApi` / `SpatialDivMotionPlayState`
-- `SpatialDivMotionTimeline`（主要给 native bridge，一般应用不手写）
+- `SpatialDivPlaybackApi` / `SpatialDivPlayState`
+- `SpatialDivMotionTimeline`（native bridge，一般应用不手写）
 
 ---
 

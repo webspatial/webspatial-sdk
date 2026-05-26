@@ -3,13 +3,13 @@ import { supports } from '../../runtime/supports'
 import type {
   AnimateSpatialDivCommand,
   AnimateSpatialDivResult,
-  SpatialDivAnimatedValues,
-  SpatialDivAnimationError,
 } from '../../types/spatialDivAnimation'
+import type { SpatialDivPlaybackError } from '../../types/spatialDivPlayback'
+import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
 import type {
   SpatialDivMotionConfig,
-  SpatialDivMotionPlaybackApi,
-  SpatialDivMotionPlayState,
+  SpatialDivPlaybackApi,
+  SpatialDivPlayState,
   SpatialDivMotionProperty,
   SpatialDivMotionPropertyKeys,
   SpatialDivMotionTimeline,
@@ -35,7 +35,7 @@ export interface SpatialDivMotionControllerOptions {
    */
   forceNativePlayback?: boolean
   /** Fired when sampled values should update a style outlet. */
-  onValuesChange?: (values: SpatialDivAnimatedValues) => void
+  onValuesChange?: (values: SpatialDivVisualValues) => void
   /** Fired when {@link playState} changes (e.g. React re-render). */
   onStateChange?: () => void
 }
@@ -65,15 +65,15 @@ function nextAnimationId(): string {
  * Runtime controller for a SpatialDiv motion timeline on one element.
  * Implements react-spring-style selective `pause(['opacity'])` on the Web backend.
  */
-export class SpatialDivMotionController implements SpatialDivMotionPlaybackApi {
+export class SpatialDivMotionController implements SpatialDivPlaybackApi {
   readonly id: string
 
   private config: SpatialDivMotionConfig
   private element: Spatialized2DElement | null
-  private readonly onValuesChange?: (values: SpatialDivAnimatedValues) => void
+  private readonly onValuesChange?: (values: SpatialDivVisualValues) => void
   private readonly onStateChange?: () => void
 
-  private webState: SpatialDivMotionPlayState = 'idle'
+  private webState: SpatialDivPlayState = 'idle'
   private webFinished = false
   private webStarted = false
   private rafId: number | null = null
@@ -84,7 +84,7 @@ export class SpatialDivMotionController implements SpatialDivMotionPlaybackApi {
   /** Per-property freeze while clock may still run. */
   private readonly frozenByProperty = new Map<
     SpatialDivMotionProperty,
-    SpatialDivAnimatedValues
+    SpatialDivVisualValues
   >()
 
   private nativeSession: NativeSession | null = null
@@ -149,7 +149,7 @@ export class SpatialDivMotionController implements SpatialDivMotionPlaybackApi {
     this.detachNative({ cancelSession: true })
   }
 
-  get playState(): SpatialDivMotionPlayState {
+  get playState(): SpatialDivPlayState {
     if (this.nativeCapable) {
       const s = this.nativeSession?.state
       if (s === 'queued') return 'running'
@@ -252,7 +252,7 @@ export class SpatialDivMotionController implements SpatialDivMotionPlaybackApi {
     this.onStateChange?.()
   }
 
-  private emitValues(values: SpatialDivAnimatedValues): void {
+  private emitValues(values: SpatialDivVisualValues): void {
     this.onValuesChange?.(values)
   }
 
@@ -262,7 +262,7 @@ export class SpatialDivMotionController implements SpatialDivMotionPlaybackApi {
     return all.filter(p => !this.frozenByProperty.has(p))
   }
 
-  private sampleAt(timeSec: number): SpatialDivAnimatedValues {
+  private sampleAt(timeSec: number): SpatialDivVisualValues {
     let values = evaluateMotionTimeline(this.config, timeSec)
     for (const property of this.frozenByProperty.keys()) {
       const snap = this.frozenByProperty.get(property)!
@@ -460,7 +460,7 @@ export class SpatialDivMotionController implements SpatialDivMotionPlaybackApi {
     if (this.destroyed) return
     const cfg = this.config
     if (cfg.onError) {
-      cfg.onError(error as SpatialDivAnimationError)
+      cfg.onError(error as SpatialDivPlaybackError)
     } else {
       console.error('[SpatialDivMotionController] Native error:', error)
     }

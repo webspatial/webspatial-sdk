@@ -1,6 +1,6 @@
 import type { Spatialized2DElement } from '@webspatial/core-sdk'
 
-/** Internal binding surface for Portal (parallel to SpatialDivAnimatedPropsInternal). */
+/** Internal binding surface for Portal (parallel to SpatialDivAnimationBindingInternal). */
 export interface SpatialDivMotionBindingInternal {
   readonly __kind: 'spatialDivMotion'
   readonly __motionObjectId: string
