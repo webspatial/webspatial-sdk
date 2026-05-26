@@ -7,7 +7,7 @@ This document supports design review on branch `proposal/spatial-div-motion-time
 | | **Plan A — Session** (`spatial-div-animation-api`) | **Plan B — Motion** (`spatial-div-motion-api`, this change) |
 | --- | --- | --- |
 | **OpenSpec** | `openspec/changes/spatial-div-animation-api/` | `openspec/changes/spatial-div-motion-api/` |
-| **Hook** | `useAnimation(config)` → `[animation, api]` | `useSpatialDivMotion(config)` → `{ style, api }` |
+| **Hook** | `useAnimation(config)` → `[animation, api]` | `useSpatializedMotion(config)` → `{ style, api }` |
 | **Integration** | `<div enable-xr animation={animation} style={...} />` | `<div enable-xr style={{ ...layout, ...style }} />` (spatial native: also `motion={motion}` or `MotionSpatialDiv`) |
 | **Config shape** | Single `from` / `to`, one `duration`, one `delay` | `duration` + `tracks[]` with per-property keyframes |
 | **Multi-track overlap** | Not supported (chain `play` or multiple hooks) | **First-class** |
@@ -51,7 +51,7 @@ This document supports design review on branch `proposal/spatial-div-motion-time
 | Bridge / `animateSpatialDiv` | Existing command + events | **Extend** `play` payload with `timeline` |
 | Native DisplayLink session | `SpatialDivAnimationSession` | **Evolve** evaluator to per-track keyframes |
 | React session hook | `useSpatialDivAnimation` | Keep for Plan A demos; **do not** rename to Plan B |
-| React motion hook | — | **New** `useSpatialDivMotion` + Web backend |
+| React motion hook | — | **New** `useSpatializedMotion` + Web backend |
 | Tests | Session behavior tests | New motion tests + keep session tests for A |
 
 **Not a full rewrite.** ~70% infrastructure reuse, ~30% new timeline evaluator + 100% new public DX.
@@ -79,6 +79,6 @@ This document supports design review on branch `proposal/spatial-div-motion-time
 
 ## Phased delivery on this branch
 
-1. **Now:** OpenSpec + `useSpatialDivMotion` Web backend + comparison pages (Plan B multi-track in browser)
+1. **Now:** OpenSpec + `useSpatializedMotion` Web backend + comparison pages (Plan B multi-track in browser)
 2. **Next:** Native timeline evaluator + bridge schema; parity tests vs Web backend on spatial
 3. **Later:** Product decision to deprecate `animation` prop / session hook or keep both documented

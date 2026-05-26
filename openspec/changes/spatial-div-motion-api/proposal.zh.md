@@ -6,14 +6,14 @@
 2. **双通道控制** — `animation` 与 `style` 同时驱动，易与抑制/回调 flash-back 纠缠。
 3. **普通 Web** — `supports('useAnimation', ['element'])` 为 false 时，会话 API 规定 `play()` 为 **no-op**，同一套组件在浏览器中不播放。
 
-本变更提出 **`useSpatialDivMotion`**：**以 timeline 为中心**、**单一 `style` 出口**、**双后端**（spatial 能力具备时走 native timeline，否则走 Web JS keyframe）。这是对会话 API 作为长期公开契约的 **替代方案**；**不修改** `openspec/changes/spatial-div-animation-api/`。
+本变更提出 **`useSpatializedMotion`**：**以 timeline 为中心**、**单一 `style` 出口**、**双后端**（spatial 能力具备时走 native timeline，否则走 Web JS keyframe）。这是对会话 API 作为长期公开契约的 **替代方案**；**不修改** `openspec/changes/spatial-div-animation-api/`。
 
 **产品沟通：** 对外 API 与集成说明见 [API.zh.md](./API.zh.md)。
 
 ## 一览
 
 ```jsx
-const { style, api } = useSpatialDivMotion({
+const { style, api } = useSpatializedMotion({ kind: 'spatialized2d', 
   duration: 5,
   tracks: [
     { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], easing: 'linear' },
@@ -24,11 +24,11 @@ const { style, api } = useSpatialDivMotion({
 <div enable-xr style={{ width: 300, height: 200, ...style }}>...</div>
 ```
 
-简单淡入可用 `useSpatialDivMotion.simple({ from, to, duration })`，脱糖为两关键帧 timeline。
+简单淡入可用 `useSpatializedMotion.simple({ kind: 'spatialized2d', { from, to, duration })`，脱糖为两关键帧 timeline。
 
 ## 变更摘要
 
-- 新增规范能力 **`spatial-div-motion`**：timeline 配置、`useSpatialDivMotion`、`MotionApi`、Web JS 后端、native timeline bridge（演进现有 `AnimateSpatialized2DElement`）。
+- 新增规范能力 **`spatial-div-motion`**：timeline 配置、`useSpatializedMotion`、`MotionApi`、Web JS 后端、native timeline bridge（演进现有 `AnimateSpatialized2DElement`）。
 - **公开集成**以 **`style` + `api`** 为作者契约；不使用 Plan A 的 `animation` prop。spatial 原生路径另需内部 **`motion` 绑定**（或未来的 `MotionSpatialDiv` 封装），详见 `design.md` § Integration & documentation。
 - **双后端**：具备 `supports('useAnimation', ['element'])` 的 spatial 运行时走 native + 抑制；其余环境走 **Web 后端**（RAF 写 `style`），保证 Chrome/Safari 可播。
 - 复用会话实现分支的基础设施：抑制、bridge、Manager、SRT 合成等。

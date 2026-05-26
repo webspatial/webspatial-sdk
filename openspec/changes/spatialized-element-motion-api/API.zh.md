@@ -12,7 +12,7 @@
 
 | 类型 | 状态 |
 |------|------|
-| **Spatialized2DElement** | **已交付** — `useSpatializedMotion({ kind: 'spatialized2d' })`；别名 `useSpatialDivMotion` |
+| **Spatialized2DElement** | **已交付** — `useSpatializedMotion({ kind: 'spatialized2d' })` |
 | **SpatializedStatic3DElement** | **已交付** — `useSpatializedMotion({ kind: 'static3d' })` + `<Model motion>`；仅 native |
 | **SpatializedDynamic3DElement（Reality 容器）** | **已交付** — `useSpatializedMotion({ kind: 'dynamic3d' })` + `<Reality motion>`；仅 native |
 | **SpatialEntity（Reality 子节点）** | **不在本 change** — 继续 `useAnimation` |
@@ -34,8 +34,6 @@ const result = useSpatializedMotion({
 | `spatialized2d` | `motion` on `enable-xr` div，`style` 合并 | native `element.transform` + opacity；浏览器可 Web RAF |
 | `static3d` | `motion` on `<Model>` | native `modelTransform` + opacity |
 | `dynamic3d` | `motion` on `<Reality>` | native 容器 `element.transform` + opacity |
-
-**兼容别名（@deprecated，行为相同）：** `useSpatialDivMotion`、`useStatic3DMotion`、`useDynamic3DMotion`。
 
 ## 4. Core 统一实现
 
