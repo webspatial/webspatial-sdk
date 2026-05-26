@@ -10,7 +10,7 @@ vi.mock('@webspatial/core-sdk', async () => {
   }
 })
 
-const { useSpatialDivMotion } = await import('./useSpatialDivMotion')
+const { useSpatializedMotion } = await import('./useSpatializedMotion')
 
 function createMockElement(id = 'motion-element-1') {
   return {
@@ -36,7 +36,7 @@ async function flushPromises() {
   })
 }
 
-describe('useSpatialDivMotion native backend', () => {
+describe('useSpatializedMotion (spatialized2d) native backend', () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -46,7 +46,8 @@ describe('useSpatialDivMotion native backend', () => {
     const element = createMockElement()
 
     const { result } = renderHook(() =>
-      useSpatialDivMotion({
+      useSpatializedMotion({
+        kind: 'spatialized2d',
         duration: 5,
         autoStart: false,
         tracks: [
@@ -106,7 +107,8 @@ describe('useSpatialDivMotion native backend', () => {
     const element = createMockElement()
 
     const { result } = renderHook(() =>
-      useSpatialDivMotion({
+      useSpatializedMotion({
+        kind: 'spatialized2d',
         duration: 5,
         autoStart: false,
         tracks: [
@@ -135,6 +137,8 @@ describe('useSpatialDivMotion native backend', () => {
     })
     await flushPromises()
 
+    expect(result.current.kind).toBe('spatialized2d')
+    if (result.current.kind !== 'spatialized2d') return
     expect(String(result.current.style.transform)).toContain('translate3d(30px')
   })
 
@@ -156,7 +160,8 @@ describe('useSpatialDivMotion native backend', () => {
     })
 
     const { result } = renderHook(() =>
-      useSpatialDivMotion({
+      useSpatializedMotion({
+        kind: 'spatialized2d',
         duration: 5,
         autoStart: false,
         tracks: [
@@ -183,6 +188,8 @@ describe('useSpatialDivMotion native backend', () => {
     })
     await flushPromises()
 
+    expect(result.current.kind).toBe('spatialized2d')
+    if (result.current.kind !== 'spatialized2d') return
     expect(String(result.current.style.transform)).toContain('translate3d(42px')
   })
 
@@ -207,7 +214,8 @@ describe('useSpatialDivMotion native backend', () => {
 
     const onComplete = vi.fn()
     const { result } = renderHook(() =>
-      useSpatialDivMotion({
+      useSpatializedMotion({
+        kind: 'spatialized2d',
         duration: 5,
         autoStart: false,
         tracks: [
@@ -240,6 +248,8 @@ describe('useSpatialDivMotion native backend', () => {
         transform: { translate: { x: 99 } },
       }),
     )
+    expect(result.current.kind).toBe('spatialized2d')
+    if (result.current.kind !== 'spatialized2d') return
     expect(String(result.current.style.transform)).toContain('translate3d(99px')
   })
 
@@ -248,7 +258,8 @@ describe('useSpatialDivMotion native backend', () => {
     const onCancel = vi.fn()
 
     const { result } = renderHook(() =>
-      useSpatialDivMotion({
+      useSpatializedMotion({
+        kind: 'spatialized2d',
         duration: 1,
         autoStart: false,
         tracks: [

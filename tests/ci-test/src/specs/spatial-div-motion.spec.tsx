@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { expect } from 'chai'
-import { useSpatialDivMotion } from '@webspatial/react-sdk'
+import { useSpatializedMotion } from '@webspatial/react-sdk'
 import { render, unmount } from './render'
 import { AsyncPromise } from '../../utils/AsyncPromise'
 
@@ -17,7 +17,8 @@ function readTranslateX(child: { transform?: { translation?: number[] } }) {
 function MultiTrackMotionPanel() {
   const bindPromiseRef = React.useRef<AsyncPromise<boolean> | null>(null)
 
-  const { style, motion } = useSpatialDivMotion({
+  const { style, motion } = useSpatializedMotion({
+    kind: 'spatialized2d',
     duration: 5,
     autoStart: true,
     tracks: [

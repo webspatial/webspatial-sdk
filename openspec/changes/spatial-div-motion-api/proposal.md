@@ -6,14 +6,14 @@ The parallel OpenSpec change `spatial-div-animation-api` defines a **session-bas
 2. **Dual control channels** — animating via `animation` while layout/visual state also lives in `style` invites suppression edge cases and callback-time flash-back.
 3. **Plain Web** — when `supports('useAnimation', ['element'])` is `false`, the session API is specified as **no-op** (`play()` does nothing), so the same component code does not animate in a normal browser.
 
-This change proposes **`useSpatialDivMotion`**: a **timeline-first**, **single `style` outlet** API with a **dual backend** (native timeline on capable spatial runtimes, JS keyframe driver on Web). It is an **alternative** to adopting the session API as the long-term public contract; it does **not** modify `openspec/changes/spatial-div-animation-api/`.
+This change proposes **`useSpatializedMotion`**: a **timeline-first**, **single `style` outlet** API with a **dual backend** (native timeline on capable spatial runtimes, JS keyframe driver on Web). It is an **alternative** to adopting the session API as the long-term public contract; it does **not** modify `openspec/changes/spatial-div-animation-api/`.
 
 **Product / PM (中文 API 摘要):** [API.zh.md](./API.zh.md)
 
 ## At a Glance
 
 ```jsx
-const { style, api } = useSpatialDivMotion({
+const { style, api } = useSpatializedMotion({ kind: 'spatialized2d', 
   duration: 5,
   tracks: [
     {
@@ -38,11 +38,11 @@ const { style, api } = useSpatialDivMotion({
 <div enable-xr style={{ width: 300, height: 200, ...style }}>...</div>
 ```
 
-Simple fades remain one-liners via `useSpatialDivMotion.simple({ from, to, duration })`, which desugars to a two-keyframe timeline.
+Simple fades remain one-liners via `useSpatializedMotion.simple({ kind: 'spatialized2d', { from, to, duration })`, which desugars to a two-keyframe timeline.
 
 ## What Changes
 
-- Add normative capability **`spatial-div-motion`**: timeline config, `useSpatialDivMotion` hook, `MotionApi`, Web JS backend, and native timeline bridge payload (evolving existing `AnimateSpatialized2DElement`).
+- Add normative capability **`spatial-div-motion`**: timeline config, `useSpatializedMotion` hook, `MotionApi`, Web JS backend, and native timeline bridge payload (evolving existing `AnimateSpatialized2DElement`).
 - **Public integration** uses **`style` + `api`** as the authoring contract; no Plan A `animation` prop. Spatial native runtimes also require internal **`motion` binding** (or a future `MotionSpatialDiv` wrapper); see `design.md` § Integration & documentation.
 - **Dual backend**: spatial runtimes with `supports('useAnimation', ['element'])` use native timeline playback + existing suppression rules; all other environments use the **Web backend** (RAF keyframes writing `style`) so the same config animates in Chrome/Safari.
 - Reuse infrastructure from the session implementation branch: `PortalInstanceObject` suppression, `Spatialized2DElement.animateSpatialDiv`, JSBridge events, `SpatialDivAnimationManager`, SRT compose on native.

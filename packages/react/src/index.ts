@@ -10,12 +10,14 @@ export * from './spatialized-container-monitor'
 export * from './reality'
 export { useAnimation } from './useAnimation'
 export {
-  useSpatialDivMotion,
-  useStatic3DMotion,
-  useDynamic3DMotion,
   useSpatializedMotion,
   SpatialDivMotionController,
   SpatializedMotionController,
+} from './spatialized-container/motion'
+export type {
+  UseSpatializedMotionResult,
+  SpatializedMotionConfig,
+  SpatializedMotionSegmentConfig,
 } from './spatialized-container/motion'
 export type { SpatializedMotionHandle } from '@webspatial/core-sdk'
 export * from './Model'

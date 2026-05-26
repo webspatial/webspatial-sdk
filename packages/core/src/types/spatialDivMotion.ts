@@ -28,7 +28,7 @@ export interface SpatialDivMotionTrack {
   easing?: TimingFunction
 }
 
-/** Single-segment motion: `from` → `to` over `duration` (Plan A + `useSpatialDivMotion.simple`). */
+/** Single-segment motion: `from` → `to` over `duration` (Plan A + `useSpatializedMotion.simple`). */
 export interface SpatialDivSegmentConfig {
   to: SpatialDivVisualValues
   from?: SpatialDivVisualValues
