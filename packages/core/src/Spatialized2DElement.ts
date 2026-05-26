@@ -183,7 +183,7 @@ export class Spatialized2DElement extends SpatializedElement {
   /**
    * Create a motion controller bound to this spatialized 2D element.
    * Prefer {@link SpatialDivMotionController} for imperative playback; React apps
-   * typically use `useSpatialDivMotion` instead.
+   * typically use `useSpatializedMotion({ kind: 'spatialized2d' })` instead.
    */
   motion(
     config: SpatialDivMotionConfig,

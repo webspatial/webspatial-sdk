@@ -7,9 +7,9 @@ SpatialDiv sync uses host + probe DOM with field-level and transform-wide suppre
 **Goals:**
 
 - Timeline-first config with per-track keyframes and global `duration`.
-- `useSpatialDivMotion` returns `{ style, api }` for `<div enable-xr style={...} />`.
+- `useSpatializedMotion` returns `{ style, api }` for `<div enable-xr style={...} />`.
 - **Dual backend:** WebSpatial runtime (`supports('useAnimation', ['element'])`) uses **native-only** playback; plain browser uses Web RAF (must not no-op). Requires `motion` binding on spatial nodes.
-- `useSpatialDivMotion.simple()` sugar for two-keyframe single-segment animations (parity with Plan A minimal case).
+- `useSpatializedMotion.simple({ kind: 'spatialized2d', )` sugar for two-keyframe single-segment animations (parity with Plan A minimal case).
 - Reuse Plan A bridge, Manager, suppression, SRT compose on native.
 
 **Non-Goals:**
@@ -22,7 +22,7 @@ SpatialDiv sync uses host + probe DOM with field-level and transform-wide suppre
 ## API Surface
 
 ```typescript
-function useSpatialDivMotion(
+function useSpatializedMotion(
   config: SpatialDivMotionConfig,
 ): {
   style: SpatialDivMotionStyle
@@ -31,8 +31,8 @@ function useSpatialDivMotion(
   motion?: SpatialDivMotionBindingInternal
 }
 
-namespace useSpatialDivMotion {
-  function simple(config: SpatialDivMotionSimpleConfig): ReturnType<typeof useSpatialDivMotion>
+namespace useSpatializedMotion {
+  function simple(config: SpatialDivMotionSimpleConfig): ReturnType<typeof useSpatializedMotion>
 }
 ```
 
@@ -70,7 +70,7 @@ interface SpatialDivMotionTrack {
 
 ```mermaid
 flowchart TD
-  Hook[useSpatialDivMotion]
+  Hook[useSpatializedMotion]
   Hook --> Pick{supports useAnimation element?}
   Pick -->|false| Web[WebMotionBackend RAF]
   Pick -->|true| Native[NativeMotionBackend only]
@@ -128,9 +128,9 @@ Extend `AnimateSpatialized2DElement` `play` payload:
 
 ### Public surface vs runtime binding
 
-The **authoring contract** for applications is `{ style, api }` (and `useSpatialDivMotion.simple()` sugar). Animated values MUST be merged via `style` only; the motion path MUST NOT use Plan A’s `animation` prop.
+The **authoring contract** for applications is `{ style, api }` (and `useSpatializedMotion.simple({ kind: 'spatialized2d', )` sugar). Animated values MUST be merged via `style` only; the motion path MUST NOT use Plan A’s `animation` prop.
 
-**Native WebSpatial runtime** additionally requires an internal **element binding** so `useSpatialDivMotion` can attach to the `Spatialized2DElement` created by `PortalSpatializedContainer` and apply suppression. Today this is exposed as an optional third hook return and DOM prop:
+**Native WebSpatial runtime** additionally requires an internal **element binding** so `useSpatializedMotion` can attach to the `Spatialized2DElement` created by `PortalSpatializedContainer` and apply suppression. Today this is exposed as an optional third hook return and DOM prop:
 
 | Field / prop | Audience | Role |
 | --- | --- | --- |
@@ -154,7 +154,7 @@ Recommended doc titles: “Runtime binding (`motion`, spatial only)”, “Why W
 
 The SDK MAY ship a thin `MotionSpatialDiv` (or equivalent) that:
 
-- Calls `useSpatialDivMotion` internally **or** accepts `{ style, api, motion }` from the caller
+- Calls `useSpatializedMotion` internally **or** accepts `{ style, api, motion }` from the caller
 - Renders `<div enable-xr motion={motion} style={{ ...layout, ...style }} />` internally
 
 When using the wrapper, **application code does not pass `motion` manually**; binding remains required inside the SDK. This mirrors `@react-spring/web`’s `animated(Component)` pattern (binding inside the wrapper; app only spreads spring `style`).
@@ -181,7 +181,7 @@ Binding mechanism is reused; only the prop name and value channel split differ.
 
 ## Decisions
 
-1. **New hook name** — `useSpatialDivMotion` avoids overloading `useAnimation` semantics.
+1. **New hook name** — `useSpatializedMotion` avoids overloading `useAnimation` semantics.
 2. **No `animation` prop on motion path** — reduces dual-channel bugs; Plan A remains for comparison only.
 3. **Web backend is normative** — not a dev-only fallback.
 4. **Reuse `supports('useAnimation', ['element'])`** for native gate only.

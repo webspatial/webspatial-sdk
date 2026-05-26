@@ -74,7 +74,7 @@ Native MUST sample each track independently at timeline time `t` (seconds, after
 
 ### Requirement: WebSpatial runtime uses native playback only
 
-When `supports('useAnimation', ['element'])` is `true`, `useSpatialDivMotion` MUST use the **native** motion backend for `play` / `pause` / `cancel`. The Web RAF backend MUST NOT drive timeline playback on the same hook instance (no fallback, no concurrent RAF).
+When `supports('useAnimation', ['element'])` is `true`, `useSpatializedMotion` MUST use the **native** motion backend for `play` / `pause` / `cancel`. The Web RAF backend MUST NOT drive timeline playback on the same hook instance (no fallback, no concurrent RAF).
 
 Native `play` payload selection on WebSpatial runtime:
 
@@ -95,7 +95,7 @@ Applications on WebSpatial runtime MUST pass the `motion` binding handle on the 
 
 #### Scenario: simple entrance may use segment native path
 
-- **GIVEN** `useSpatialDivMotion.simple` with only `at: 0` and `at: duration` keyframes per property and one shared easing
+- **GIVEN** `useSpatializedMotion.simple` with only `at: 0` and `at: duration` keyframes per property and one shared easing
 - **WHEN** native play runs on AVP
 - **THEN** the SDK MAY send segment `from`/`to` instead of `timeline`
 - **AND** visual result MUST match timeline play within the tolerances above
@@ -182,7 +182,7 @@ Native timeline MUST use the same element binding mechanism as Phase 2a (`motion
 
 #### Scenario: Config updates do not affect alive session
 
-- **GIVEN** React re-renders with a new `useSpatialDivMotion` config object
+- **GIVEN** React re-renders with a new `useSpatializedMotion` config object
 - **WHEN** a timeline session is delaying, running, or paused
 - **THEN** the active session MUST continue with the config frozen at `play()` time
 

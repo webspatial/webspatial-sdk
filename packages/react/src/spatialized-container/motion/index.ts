@@ -1,16 +1,11 @@
 export { useMotionController } from './useMotionController'
-export { useSpatialDivMotion } from './useSpatialDivMotion'
-export type { UseSpatialDivMotionResult } from './useSpatialDivMotion'
 export { useSpatializedMotion } from './useSpatializedMotion'
 export type {
   UseSpatializedMotionResult,
   SpatializedMotionConfig,
   SpatializedMotionSegmentConfig,
+  SpatializedPlaybackApi,
 } from './useSpatializedMotion'
-export { useStatic3DMotion } from './useStatic3DMotion'
-export type { UseStatic3DMotionResult } from './useStatic3DMotion'
-export { useDynamic3DMotion } from './useDynamic3DMotion'
-export type { UseDynamic3DMotionResult } from './useDynamic3DMotion'
 export {
   SpatialDivMotionController,
   SpatializedMotionController,
