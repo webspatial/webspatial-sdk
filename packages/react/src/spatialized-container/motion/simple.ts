@@ -1,1 +1,1 @@
-export { simpleConfigToMotionConfig } from '@webspatial/core-sdk'
+export { segmentConfigToMotionConfig } from '@webspatial/core-sdk'

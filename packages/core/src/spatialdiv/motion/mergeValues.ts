@@ -1,8 +1,8 @@
-import type { SpatialDivAnimatedValues } from '../../types/spatialDivAnimation'
+import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
 import type { SpatialDivMotionProperty } from '../../types/spatialDivMotion'
 
 function setScalar(
-  values: SpatialDivAnimatedValues,
+  values: SpatialDivVisualValues,
   property: SpatialDivMotionProperty,
   value: number,
 ): void {
@@ -23,7 +23,7 @@ function setScalar(
 }
 
 function getScalar(
-  values: SpatialDivAnimatedValues,
+  values: SpatialDivVisualValues,
   property: SpatialDivMotionProperty,
 ): number | undefined {
   if (property === 'opacity') return values.opacity
@@ -37,11 +37,11 @@ function getScalar(
 
 /** Overlay frozen scalars onto a freshly sampled timeline value. */
 export function applyFrozenProperties(
-  sampled: SpatialDivAnimatedValues,
-  frozen: SpatialDivAnimatedValues,
+  sampled: SpatialDivVisualValues,
+  frozen: SpatialDivVisualValues,
   properties: Iterable<SpatialDivMotionProperty>,
-): SpatialDivAnimatedValues {
-  const out: SpatialDivAnimatedValues = {
+): SpatialDivVisualValues {
+  const out: SpatialDivVisualValues = {
     opacity: sampled.opacity,
     transform: sampled.transform
       ? {
@@ -65,10 +65,10 @@ export function applyFrozenProperties(
 }
 
 export function snapshotScalars(
-  values: SpatialDivAnimatedValues,
+  values: SpatialDivVisualValues,
   properties: Iterable<SpatialDivMotionProperty>,
-): SpatialDivAnimatedValues {
-  const out: SpatialDivAnimatedValues = {}
+): SpatialDivVisualValues {
+  const out: SpatialDivVisualValues = {}
   for (const property of properties) {
     const v = getScalar(values, property)
     if (v !== undefined) setScalar(out, property, v)

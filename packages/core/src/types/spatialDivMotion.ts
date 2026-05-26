@@ -1,5 +1,6 @@
 import type { TimingFunction } from './animation'
-import type { SpatialDivAnimatedValues } from './spatialDivAnimation'
+import type { SpatialDivPlaybackError } from './spatialDivPlayback'
+import type { SpatialDivVisualValues } from './spatialDivVisual'
 
 /** Scalar property path on the SpatialDiv visual whitelist. */
 export type SpatialDivMotionProperty =
@@ -20,14 +21,31 @@ export interface SpatialDivMotionKeyframe {
   value: number
 }
 
+/** One animatable property path and its keyframes (config-only, not a runtime handle). */
 export interface SpatialDivMotionTrack {
   property: SpatialDivMotionProperty
   keyframes: SpatialDivMotionKeyframe[]
   easing?: TimingFunction
 }
 
+/** Single-segment motion: `from` → `to` over `duration` (Plan A + `useSpatialDivMotion.simple`). */
+export interface SpatialDivSegmentConfig {
+  to: SpatialDivVisualValues
+  from?: SpatialDivVisualValues
+  duration?: number
+  timingFunction?: TimingFunction
+  delay?: number
+  autoStart?: boolean
+  loop?: boolean | { reverse?: boolean }
+  playbackRate?: number
+  onStart?: () => void
+  onComplete?: (values: SpatialDivVisualValues) => void
+  onCancel?: (values: SpatialDivVisualValues) => void
+  onError?: (error: SpatialDivPlaybackError) => void
+}
+
+/** Multi-track timeline motion (Plan B). */
 export interface SpatialDivMotionConfig {
-  /** Global timeline length in seconds. Must be > 0 and finite. */
   duration: number
   tracks: SpatialDivMotionTrack[]
   delay?: number
@@ -35,27 +53,12 @@ export interface SpatialDivMotionConfig {
   loop?: boolean | { reverse?: boolean }
   playbackRate?: number
   onStart?: () => void
-  onComplete?: (values: SpatialDivAnimatedValues) => void
-  onCancel?: (values: SpatialDivAnimatedValues) => void
-  onError?: (error: import('./animation').AnimationError) => void
+  onComplete?: (values: SpatialDivVisualValues) => void
+  onCancel?: (values: SpatialDivVisualValues) => void
+  onError?: (error: SpatialDivPlaybackError) => void
 }
 
-export interface SpatialDivMotionSimpleConfig {
-  from?: SpatialDivAnimatedValues
-  to: SpatialDivAnimatedValues
-  duration?: number
-  delay?: number
-  autoStart?: boolean
-  loop?: boolean | { reverse?: boolean }
-  playbackRate?: number
-  timingFunction?: TimingFunction
-  onStart?: () => void
-  onComplete?: (values: SpatialDivAnimatedValues) => void
-  onCancel?: (values: SpatialDivAnimatedValues) => void
-  onError?: (error: import('./animation').AnimationError) => void
-}
-
-/** Normalized timeline sent to native (Phase 2). */
+/** Normalized timeline wire payload for native playback. */
 export interface SpatialDivMotionTimeline {
   duration: number
   delay?: number
@@ -68,8 +71,9 @@ export interface SpatialDivMotionTimeline {
   }>
 }
 
-export type SpatialDivMotionPlayState =
+export type SpatialDivPlayState =
   | 'idle'
+  | 'queued'
   | 'running'
   | 'paused'
   | 'finished'
@@ -79,8 +83,8 @@ export type SpatialDivMotionPropertyKeys =
   | SpatialDivMotionProperty
   | readonly SpatialDivMotionProperty[]
 
-/** Imperative playback surface implemented by {@link SpatialDivMotionController}. */
-export interface SpatialDivMotionPlaybackApi {
+/** Imperative playback surface (`SpatialDivMotionController`, hooks). */
+export interface SpatialDivPlaybackApi {
   play(): void
   pause(keys?: SpatialDivMotionPropertyKeys): void
   resume(keys?: SpatialDivMotionPropertyKeys): void
@@ -88,8 +92,5 @@ export interface SpatialDivMotionPlaybackApi {
   readonly isAnimating: boolean
   readonly isPaused: boolean
   readonly finished: boolean
-  readonly playState: SpatialDivMotionPlayState
+  readonly playState: SpatialDivPlayState
 }
-
-/** @deprecated Use {@link SpatialDivMotionPlaybackApi}. */
-export type SpatialDivMotionApi = SpatialDivMotionPlaybackApi

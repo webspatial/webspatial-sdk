@@ -4,7 +4,7 @@ import {
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
 import { SpatialWebEvent } from './SpatialWebEvent'
-import { parseSpatialDivAnimatedValues } from './spatialdiv/parseSpatialDivAnimatedValues'
+import { parseSpatialDivVisualValues } from './spatialdiv/parseSpatialDivVisualValues'
 import {
   SpatialDivMotionController,
   type SpatialDivMotionControllerOptions,
@@ -13,9 +13,9 @@ import type { SpatialDivMotionConfig } from './types/spatialDivMotion'
 import type {
   AnimateSpatialDivCommand,
   AnimateSpatialDivResult,
-  SpatialDivAnimatedValues,
-  SpatialDivAnimationError,
 } from './types/spatialDivAnimation'
+import type { SpatialDivPlaybackError } from './types/spatialDivPlayback'
+import type { SpatialDivVisualValues } from './types/spatialDivVisual'
 import { hijackWindowATag } from './scene-polyfill'
 import { SpatializedElement } from './SpatializedElement'
 import { Spatialized2DElementProperties } from './types/types'
@@ -70,25 +70,25 @@ export class Spatialized2DElement extends SpatializedElement {
   ): Promise<AnimateSpatialDivResult>
   animateSpatialDiv(
     command: AnimateSpatialDivCommand & { type: 'pause' },
-  ): Promise<SpatialDivAnimatedValues>
+  ): Promise<SpatialDivVisualValues>
   animateSpatialDiv(command: AnimateSpatialDivCommand): Promise<void>
   async animateSpatialDiv(
     command: AnimateSpatialDivCommand,
-  ): Promise<AnimateSpatialDivResult | SpatialDivAnimatedValues | void> {
+  ): Promise<AnimateSpatialDivResult | SpatialDivVisualValues | void> {
     const { animationId, type } = command
 
     if (type === 'play') {
-      let resolveFinished!: (val: SpatialDivAnimatedValues) => void
-      let resolveCancel!: (val: SpatialDivAnimatedValues) => void
-      let resolveFailed!: (val: SpatialDivAnimationError) => void
+      let resolveFinished!: (val: SpatialDivVisualValues) => void
+      let resolveCancel!: (val: SpatialDivVisualValues) => void
+      let resolveFailed!: (val: SpatialDivPlaybackError) => void
 
-      const finished = new Promise<SpatialDivAnimatedValues>(r => {
+      const finished = new Promise<SpatialDivVisualValues>(r => {
         resolveFinished = r
       })
-      const canceled = new Promise<SpatialDivAnimatedValues>(r => {
+      const canceled = new Promise<SpatialDivVisualValues>(r => {
         resolveCancel = r
       })
-      const failed = new Promise<SpatialDivAnimationError>(r => {
+      const failed = new Promise<SpatialDivPlaybackError>(r => {
         resolveFailed = r
       })
 
@@ -103,7 +103,7 @@ export class Spatialized2DElement extends SpatializedElement {
         (data: any) => {
           cleanup()
           // Native sends { type, values } - extract values as finalValues
-          const finalValues: SpatialDivAnimatedValues =
+          const finalValues: SpatialDivVisualValues =
             data?.finalValues ?? data?.values ?? data ?? {}
           resolveFinished(finalValues)
         },
@@ -114,7 +114,7 @@ export class Spatialized2DElement extends SpatializedElement {
         (data: any) => {
           cleanup()
           // Native sends { type, values } - extract values as currentValues
-          const currentValues: SpatialDivAnimatedValues =
+          const currentValues: SpatialDivVisualValues =
             data?.currentValues ?? data?.values ?? data ?? {}
           resolveCancel(currentValues)
         },
@@ -133,7 +133,7 @@ export class Spatialized2DElement extends SpatializedElement {
           resolveFailed({
             animationId: data.animationId ?? animationId,
             command: (data.command ??
-              'play') as SpatialDivAnimationError['command'],
+              'play') as SpatialDivPlaybackError['command'],
             code: data.code,
             reason: data.reason ?? 'Native animation failed',
           })
@@ -169,7 +169,7 @@ export class Spatialized2DElement extends SpatializedElement {
     }
 
     if (type === 'pause') {
-      return parseSpatialDivAnimatedValues(result.data)
+      return parseSpatialDivVisualValues(result.data)
     }
   }
 

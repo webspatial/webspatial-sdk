@@ -10,7 +10,7 @@ export {
   type NativeSegmentPlayPayload,
 } from './nativeCompile'
 export { getMotionSuppressedFields } from './getMotionSuppressedFields'
-export { simpleConfigToMotionConfig } from './simple'
+export { segmentConfigToMotionConfig } from './simple'
 export { normalizeMotionPropertyKeys } from './propertyKeys'
 export type { SpatialDivMotionPropertyKeys } from '../../types/spatialDivMotion'
 export { SpatialDivMotionController } from './SpatialDivMotionController'

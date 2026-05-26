@@ -1,6 +1,6 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import type { SpatialDivAnimationConfig } from '@webspatial/core-sdk'
+import type { SpatialDivSegmentConfig } from '@webspatial/core-sdk'
 
 // Mock supports to enable SpatialDiv animation
 vi.mock('@webspatial/core-sdk', async () => {
@@ -337,13 +337,13 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
   describe('config updates and alive sessions', () => {
     test('config change during running does NOT affect the current session', async () => {
       const mock = createMockElement()
-      const config1: SpatialDivAnimationConfig = {
+      const config1: SpatialDivSegmentConfig = {
         to: { opacity: 1 },
         from: { opacity: 0 },
         duration: 1.0,
         autoStart: false,
       }
-      const config2: SpatialDivAnimationConfig = {
+      const config2: SpatialDivSegmentConfig = {
         to: { opacity: 0.5 },
         from: { opacity: 0.2 },
         duration: 2.0,
