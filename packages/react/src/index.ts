@@ -43,6 +43,14 @@ export type { SpatialBootProps } from './runtime/SpatialBoot'
 
 // --- Runtime capability infrastructure (from @webspatial/core-sdk/runtime) ----
 export { WebSpatialRuntime } from './webSpatialRuntime'
+export { WebSpatialRuntimeError } from '@webspatial/core-sdk'
+export type { CapabilityKey } from '@webspatial/core-sdk'
+export { enableDebugTool } from './utils'
+export * from './initScene'
+export * from './spatialized-container'
+export * from './spatialized-container-monitor'
+export * from './reality'
+export { useAnimation } from './useAnimation'
 export {
   WebSpatialRuntimeError,
   type CapabilityKey,

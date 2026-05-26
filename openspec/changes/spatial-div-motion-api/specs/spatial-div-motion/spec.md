@@ -1,5 +1,9 @@
 # SpatialDiv motion (timeline API)
 
+## Scope
+
+**This spec applies only to `Spatialized2DElement` (HTML SpatialDiv / `enable-xr`).** It does **not** cover `SpatializedStatic3DElement` or Reality entities. For the full-platform umbrella and roadmap, see `openspec/changes/spatialized-element-motion-api/`.
+
 ## Terminology
 
 **WebSpatial runtime** means `runtime-capabilities` snapshot `type !== null`. **Plain Web** means `type === null` or `supports('useAnimation', ['element']) === false`.

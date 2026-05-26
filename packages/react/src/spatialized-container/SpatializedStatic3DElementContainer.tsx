@@ -108,6 +108,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     loop,
     loading = 'eager',
     stagemode = 'none',
+    motion,
   } = props
   const portalInstanceObject = useContext(PortalInstanceContext)
   const wasVisible = useRef(false)
@@ -186,6 +187,15 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     }
   }, [onError, portalInstanceObject?.dom])
 
+  useEffect(() => {
+    if (!motion || !spatializedElement) return
+    motion.__setElement?.(spatializedElement)
+    return () => {
+      motion.__onUnbind?.()
+      motion.__setElement?.(null as any)
+    }
+  }, [motion, spatializedElement])
+
   return <></>
 }
 
@@ -193,6 +203,13 @@ function SpatializedStatic3DElementContainerBase(
   props: SpatializedStatic3DContainerProps,
   ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
+  const { motion, ...containerProps } = props
+  const spatializedContent = useMemo(() => {
+    function ContentWithMotion(contentProps: SpatializedStatic3DContentProps) {
+      return <SpatializedContent {...contentProps} motion={motion} />
+    }
+    return ContentWithMotion
+  }, [motion])
   const promiseRef = useRef<Promise<SpatializedStatic3DElement> | null>(null)
 
   const createSpatializedElement = useCallback(() => {
@@ -273,7 +290,7 @@ function SpatializedStatic3DElementContainerBase(
         },
       }
     },
-    [],
+    [motion],
   )
 
   return (
@@ -281,9 +298,9 @@ function SpatializedStatic3DElementContainerBase(
       ref={ref}
       component="div"
       createSpatializedElement={createSpatializedElement}
-      spatializedContent={SpatializedContent}
+      spatializedContent={spatializedContent}
       extraRefProps={extraRefProps}
-      {...props}
+      {...containerProps}
     />
   )
 }
