@@ -121,11 +121,16 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     }
   }, [])
 
-  useSync2DFrame(spatialId, portalInstanceObject, spatializedContainerObject)
-
   const spatializedElement = useSpatializedElement(
     createSpatializedElement,
     portalInstanceObject,
+  )
+
+  useSync2DFrame(
+    spatialId,
+    portalInstanceObject,
+    spatializedContainerObject,
+    spatializedElement,
   )
 
   const PlaceholderEl = renderPlaceholderInSubPortal(
@@ -201,8 +206,12 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>
-      {spatializedElement && portalInstanceObject.dom && (
-        <Content spatializedElement={spatializedElement} {...restProps} />
+      {spatializedElement && (
+        <Content
+          spatializedElement={spatializedElement}
+          portalInstanceObject={portalInstanceObject}
+          {...restProps}
+        />
       )}
       {PlaceholderEl}
     </PortalInstanceContext.Provider>

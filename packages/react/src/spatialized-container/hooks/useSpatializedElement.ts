@@ -16,24 +16,36 @@ export function useSpatializedElement(
   const elementRef = useRef<SpatializedElement | undefined>(undefined)
 
   useEffect(() => {
-    let isDestroyed = false
+    let cancelled = false
 
     createSpatializedElement().then(
       (inSpatializedElement: SpatializedElement | null) => {
-        // createSpatializedElement can resolve to null on cancellation/failure
         if (!inSpatializedElement) return
-        if (!isDestroyed) {
-          elementRef.current = inSpatializedElement
-          portalInstanceObject.attachSpatializedElement(inSpatializedElement)
-          setSpatializedElement(inSpatializedElement)
-        } else {
-          inSpatializedElement?.destroy()
+        if (cancelled) {
+          inSpatializedElement.destroy()
+          return
         }
+
+        const previous = elementRef.current
+        if (previous && previous !== inSpatializedElement) {
+          previous.destroy()
+        }
+
+        elementRef.current = inSpatializedElement
+        portalInstanceObject.attachSpatializedElement(inSpatializedElement)
+        setSpatializedElement(inSpatializedElement)
       },
     )
 
+    // HMR / effect re-run: cancel in-flight work only; keep the live element
+    // visible until a replacement is attached (see second effect for teardown).
     return () => {
-      isDestroyed = true
+      cancelled = true
+    }
+  }, [createSpatializedElement, portalInstanceObject])
+
+  useEffect(() => {
+    return () => {
       const el = elementRef.current
       if (el) {
         el.destroy()
@@ -41,7 +53,7 @@ export function useSpatializedElement(
         setSpatializedElement(undefined)
       }
     }
-  }, [createSpatializedElement, portalInstanceObject])
+  }, [portalInstanceObject])
 
   return spatializedElement
 }

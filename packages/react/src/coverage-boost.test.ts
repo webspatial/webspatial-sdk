@@ -484,7 +484,7 @@ describe('spatialized-container/hooks', () => {
       handler?.()
     })
 
-    expect(portalInstanceObject.notify2DFrameChange).toHaveBeenCalledTimes(1)
+    expect(portalInstanceObject.notify2DFrameChange).toHaveBeenCalledTimes(2)
     expect(renders).toBeGreaterThan(1)
 
     r.unmount()
@@ -1206,6 +1206,7 @@ describe('PortalSpatializedContainer', () => {
         computedStyle: any
         dom: HTMLElement | null
         attachSpatializedElement = vi.fn()
+        notify2DFrameChange = vi.fn()
         init = vi.fn(() => initCalls.push(this.spatialId))
         destroy = vi.fn(() => destroyCalls.push(this.spatialId))
         constructor(
@@ -1236,7 +1237,7 @@ describe('PortalSpatializedContainer', () => {
       return { useSpatializedElement: () => spatializedElement }
     })
     vi.doMock('./spatialized-container/hooks/useSync2DFrame', () => {
-      return { useSync2DFrame: vi.fn() }
+      return { useSync2DFrame: () => vi.fn() }
     })
 
     const { PortalInstanceContext } = await import(
@@ -1728,6 +1729,7 @@ describe('Spatialized2DElementContainer', () => {
             ? React.createElement(props.spatializedContent, {
                 component: 'div',
                 style: {},
+                portalInstanceObject,
                 'data-name': 'hello',
                 spatializedElement: el,
               })
