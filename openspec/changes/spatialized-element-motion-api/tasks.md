@@ -53,3 +53,17 @@
 - [x] Route native 2D through `SpatialDivAnimationManager` in unified listener
 - [x] Core: `executeAnimateSpatializedElementMotion` for all kinds; remove `AnimateSpatialDivJSBCommand`
 - [x] Keep `animateSpatialDiv()` as deprecated alias on `Spatialized2DElement` for `useSpatialDivAnimation`
+
+## Phase 7 — Spec merge + bilingual documentation
+
+- [x] Merge Plan A (`spatial-div-animation-api`) and Plan B (`spatial-div-motion-api`) into unified umbrella
+- [x] Archive `spatial-div-animation-api/` and `spatial-div-motion-api/` to `openspec/changes/archive/`
+- [x] Create `specs/legacy-session-animation/` sub-spec (EN + ZH) for Plan A compatibility layer
+- [x] Move feasibility docs to `references/`
+- [x] Rewrite `proposal.md` and `proposal.zh.md` with full historical narrative (Plan A → Plan B → unified)
+- [x] Rewrite `design.md` and `design.zh.md` with comprehensive unified design including legacy compatibility
+- [x] Integrate detailed 2D motion spec content into `specs/spatialized-2d-motion/spec.md` and `.zh.md`
+- [x] Add `.zh.md` versions for all sub-specs (`spatialized-element-motion`, `spatialized-static3d-motion`, `spatialized-dynamic3d-motion`)
+- [x] Add `CAPABILITY_MATRIX.zh.md`
+- [x] Remove `COMPARISON.md` (no longer needed after merge)
+- [x] Update `tasks.md` and create `tasks.zh.md`
