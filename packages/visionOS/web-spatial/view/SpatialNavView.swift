@@ -76,12 +76,10 @@ struct SpatialNavView: View {
     @State private var showEnter: Double = 1
     @State private var showNav: Double = 0
     @State private var showUrl: Double = 0
+    @State private var canGoBack = false
+    @State private var canGoForward = false
+    @State private var navigationStateListener: ((SpatialWebViewState) -> Void)?
     @Namespace var hoverNamespace
-
-    func checkButtonState() {
-        canGoBack = model!.getController().webview!.canGoBack
-        canGoForward = model!.getController().webview!.canGoForward
-    }
 
     func goBack() {
         spatialScene.resetForNavigation()
@@ -107,9 +105,35 @@ struct SpatialNavView: View {
         return model?.getController().webview?.url
     }
 
-    @State var canGoBack: Bool = false
+    func checkButtonState() {
+        canGoBack = model?.getController().webview?.canGoBack ?? false
+        canGoForward = model?.getController().webview?.canGoForward ?? false
+    }
 
-    @State var canGoForward: Bool = false
+    func registerNavigationStateListener() {
+        guard navigationStateListener == nil else { return }
+
+        let listener: (SpatialWebViewState) -> Void = { state in
+            switch state {
+            case .didUpdateNavigationState:
+                DispatchQueue.main.async {
+                    self.checkButtonState()
+                }
+            default:
+                break
+            }
+        }
+
+        navigationStateListener = listener
+        model?.addStateListener(listener)
+    }
+
+    func unregisterNavigationStateListener() {
+        guard let navigationStateListener else { return }
+
+        model?.removeStateListener(navigationStateListener)
+        self.navigationStateListener = nil
+    }
 
     var navHoverGroup: HoverEffectGroup {
         HoverEffectGroup(hoverNamespace)
@@ -128,6 +152,7 @@ struct SpatialNavView: View {
                             children: Image("arrow_left"),
                             clearBackGround: true
                         )
+                        .opacity(self.canGoBack ? 1 : 0.5)
                         .disabled(!(self.canGoBack))
                         NavButton(
                             action: { self.goForward()
@@ -135,7 +160,8 @@ struct SpatialNavView: View {
                             children: Image("arrow_right"),
                             clearBackGround: true
                         )
-                        .disabled(!(self.canGoBack))
+                        .opacity(self.canGoForward ? 1 : 0.5)
+                        .disabled(!(self.canGoForward))
                         NavButton(action: { self.reload() }, children: Image("refresh"), clearBackGround: true)
                         NavDivider()
                     }
@@ -160,13 +186,15 @@ struct SpatialNavView: View {
                         },
                         children: Image("arrow_left")
                     )
+                    .opacity(self.canGoBack ? 1 : 0.5)
                     .disabled(!(self.canGoBack))
                     NavButton(
                         action: { self.goForward()
                         },
                         children: Image("arrow_right")
                     )
-                    .disabled(!(self.canGoBack))
+                    .opacity(self.canGoForward ? 1 : 0.5)
+                    .disabled(!(self.canGoForward))
                     NavButton(action: { self.reload() }, children: Image("refresh"))
                     NavDivider()
                 }
@@ -238,9 +266,11 @@ struct SpatialNavView: View {
             .opacity(showUrl)
         }
         .onAppear {
-            model?.addStateListener(.didFinishLoad) {
-                self.checkButtonState()
-            }
+            checkButtonState()
+            registerNavigationStateListener()
+        }
+        .onDisappear {
+            unregisterNavigationStateListener()
         }
     }
 

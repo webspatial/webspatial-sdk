@@ -206,12 +206,16 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     func startObserving() {
         guard !isObserving else { return }
         webview?.addObserver(self, forKeyPath: #keyPath(WKWebView.url), options: .new, context: nil)
+        webview?.addObserver(self, forKeyPath: #keyPath(WKWebView.canGoBack), options: .new, context: nil)
+        webview?.addObserver(self, forKeyPath: #keyPath(WKWebView.canGoForward), options: .new, context: nil)
         isObserving = true
     }
 
     func stopObserving() {
         guard isObserving else { return }
         webview?.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
+        webview?.removeObserver(self, forKeyPath: #keyPath(WKWebView.canGoBack))
+        webview?.removeObserver(self, forKeyPath: #keyPath(WKWebView.canGoForward))
         isObserving = false
     }
 
@@ -221,12 +225,20 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         change: [NSKeyValueChangeKey: Any]?,
         context: UnsafeMutableRawPointer?
     ) {
+        guard let webView = object as? WKWebView else { return }
+
         if keyPath == #keyPath(WKWebView.url),
-           let url = (object as? WKWebView)?.url?.absoluteString
+           let url = webView.url?.absoluteString
         {
             DispatchQueue.main.async {
-//                print("url change", url)
                 self.model?.url = url
+                self.webviewStateChangeInvoke?(.didUpdateURL)
+            }
+        } else if keyPath == #keyPath(WKWebView.canGoBack) ||
+            keyPath == #keyPath(WKWebView.canGoForward)
+        {
+            DispatchQueue.main.async {
+                self.webviewStateChangeInvoke?(.didUpdateNavigationState)
             }
         }
     }

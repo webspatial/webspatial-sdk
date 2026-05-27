@@ -161,13 +161,13 @@ class SpatialWebViewModel {
         stateListeners[state]?.append(event)
     }
 
-    func removeStateListener(_ event: @escaping (_ type: String) -> Void) {
+    func removeStateListener(_ event: @escaping (_ type: SpatialWebViewState) -> Void) {
         stateChangeListeners.removeAll(where: {
             $0 as AnyObject === event as AnyObject
         })
     }
 
-    func removeStateListener(_ state: SpatialWebViewState, _ event: @escaping (_ object: Any, _ data: Any) -> Void) {
+    func removeStateListener(_ state: SpatialWebViewState, _ event: @escaping () -> Void) {
         stateListeners[state]?.removeAll(where: {
             $0 as AnyObject === event as AnyObject
         })
@@ -300,6 +300,8 @@ enum SpatialWebViewState: String, CaseIterable {
     case didReceive
     case didFinishLoad
     case didFailLoad
+    case didUpdateURL
+    case didUpdateNavigationState
     case didUnload
     case didClose
     case didMakeView
