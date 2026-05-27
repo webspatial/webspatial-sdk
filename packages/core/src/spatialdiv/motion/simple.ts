@@ -1,14 +1,14 @@
-import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
+import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
-  SpatialDivMotionConfig,
-  SpatialDivMotionProperty,
-  SpatialDivSegmentConfig,
-  SpatialDivMotionTrack,
-} from '../../types/spatialDivMotion'
+  SpatializedMotionConfig,
+  SpatializedMotionProperty,
+  SpatializedMotionSegmentConfig,
+  SpatializedMotionTrack,
+} from '../../types/spatializedMotion'
 
 function collectScalars(
-  values: SpatialDivVisualValues,
-  out: Array<{ property: SpatialDivMotionProperty; value: number }>,
+  values: SpatializedVisualValues,
+  out: Array<{ property: SpatializedMotionProperty; value: number }>,
 ): void {
   if (values.opacity !== undefined) {
     out.push({ property: 'opacity', value: values.opacity })
@@ -22,7 +22,7 @@ function collectScalars(
       const v = part[axis]
       if (v !== undefined) {
         out.push({
-          property: `transform.${group}.${axis}` as SpatialDivMotionProperty,
+          property: `transform.${group}.${axis}` as SpatializedMotionProperty,
           value: v,
         })
       }
@@ -32,15 +32,15 @@ function collectScalars(
 
 /** Desugar simple from/to config into a timeline config. */
 export function segmentConfigToMotionConfig(
-  simple: SpatialDivSegmentConfig,
-): SpatialDivMotionConfig {
+  simple: SpatializedMotionSegmentConfig,
+): SpatializedMotionConfig {
   const duration = simple.duration ?? 0.3
   const fromScalars: Array<{
-    property: SpatialDivMotionProperty
+    property: SpatializedMotionProperty
     value: number
   }> = []
   const toScalars: Array<{
-    property: SpatialDivMotionProperty
+    property: SpatializedMotionProperty
     value: number
   }> = []
 
@@ -48,7 +48,7 @@ export function segmentConfigToMotionConfig(
   collectScalars(simple.to, toScalars)
 
   const easing = simple.timingFunction ?? 'easeInOut'
-  const trackMap = new Map<SpatialDivMotionProperty, SpatialDivMotionTrack>()
+  const trackMap = new Map<SpatializedMotionProperty, SpatializedMotionTrack>()
 
   for (const { property, value } of toScalars) {
     const fromEntry = fromScalars.find(f => f.property === property)
@@ -66,7 +66,7 @@ export function segmentConfigToMotionConfig(
   const tracks = [...trackMap.values()]
   if (tracks.length === 0) {
     throw new Error(
-      '[SpatialDivMotion.simple] to must include at least one animatable field',
+      '[SpatializedMotion.simple] to must include at least one animatable field',
     )
   }
 

@@ -1,12 +1,12 @@
-import type { SpatialDivMotionConfig } from '../../types/spatialDivMotion'
-import type { SpatialDivPlaybackApi } from '../../types/spatialDivMotion'
+import type { SpatializedMotionConfig } from '../../types/spatializedMotion'
+import type { SpatializedPlaybackApi } from '../../types/spatializedMotion'
 
 /** Shared imperative surface for all SpatializedElement motion controllers. */
-export interface SpatializedMotionHandle extends SpatialDivPlaybackApi {
+export interface SpatializedMotionHandle extends SpatializedPlaybackApi {
   readonly id: string
   readonly isDestroyed: boolean
   readonly nativeSessionAnimating: boolean
-  updateDefinition(config: SpatialDivMotionConfig): void
+  updateDefinition(config: SpatializedMotionConfig): void
   attachElement(element: unknown): void
   destroy(): void
   getSuppressedFields(): Set<string> | null

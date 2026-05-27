@@ -1,27 +1,27 @@
-import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
+import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type { TimingFunction } from '../../types/animation'
 import type {
-  SpatialDivMotionConfig,
-  SpatialDivMotionProperty,
-  SpatialDivMotionTimeline,
-  SpatialDivMotionTrack,
-} from '../../types/spatialDivMotion'
+  SpatializedMotionConfig,
+  SpatializedMotionProperty,
+  SpatializedMotionTimeline,
+  SpatializedMotionTrack,
+} from '../../types/spatializedMotion'
 
 const EPS = 1e-6
 
 export interface NativeSegmentPlayPayload {
-  from: SpatialDivVisualValues
-  to: SpatialDivVisualValues
+  from: SpatializedVisualValues
+  to: SpatializedVisualValues
   duration: number
   timingFunction: TimingFunction
   delay?: number
-  loop?: SpatialDivMotionConfig['loop']
+  loop?: SpatializedMotionConfig['loop']
   playbackRate?: number
 }
 
 function setScalar(
-  values: SpatialDivVisualValues,
-  property: SpatialDivMotionProperty,
+  values: SpatializedVisualValues,
+  property: SpatializedMotionProperty,
   value: number,
 ): void {
   if (property === 'opacity') {
@@ -40,12 +40,12 @@ function setScalar(
   ;(values.transform[group] as Record<string, number>)[axis] = value
 }
 
-export function tracksToFromTo(tracks: SpatialDivMotionTrack[]): {
-  from: SpatialDivVisualValues
-  to: SpatialDivVisualValues
+export function tracksToFromTo(tracks: SpatializedMotionTrack[]): {
+  from: SpatializedVisualValues
+  to: SpatializedVisualValues
 } {
-  const from: SpatialDivVisualValues = {}
-  const to: SpatialDivVisualValues = {}
+  const from: SpatializedVisualValues = {}
+  const to: SpatializedVisualValues = {}
   for (const track of tracks) {
     const first = track.keyframes[0]
     const last = track.keyframes[track.keyframes.length - 1]
@@ -59,7 +59,7 @@ export function tracksToFromTo(tracks: SpatialDivMotionTrack[]): {
  * Plan A-compatible segment when every track is exactly [0, duration] with one easing.
  */
 export function motionConfigToNativeSegment(
-  config: SpatialDivMotionConfig,
+  config: SpatializedMotionConfig,
 ): NativeSegmentPlayPayload | null {
   const { duration, tracks } = config
   if (tracks.length === 0) return null
@@ -88,8 +88,8 @@ export function motionConfigToNativeSegment(
 
 /** Full timeline payload for native Phase 2b. */
 export function motionConfigToNativeTimeline(
-  config: SpatialDivMotionConfig,
-): SpatialDivMotionTimeline {
+  config: SpatializedMotionConfig,
+): SpatializedMotionTimeline {
   return {
     duration: config.duration,
     delay: config.delay,

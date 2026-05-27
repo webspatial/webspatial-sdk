@@ -1,13 +1,13 @@
 import { AnimateSpatializedElementMotionJSBCommand } from '../JSBCommand'
 import { SpatialWebEvent } from '../SpatialWebEvent'
-import { parseSpatialDivVisualValues } from '../spatialdiv/parseSpatialDivVisualValues'
+import { parseSpatializedVisualValues } from './parseSpatializedVisualValues'
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
   ElementMotionCommand,
 } from '../types/spatializedElementMotion'
 import type { SpatializedPlaybackError } from '../types/spatializedPlayback'
-import type { SpatialDivVisualValues } from '../types/spatialDivVisual'
+import type { SpatializedVisualValues } from '../types/spatializedVisual'
 import type { SpatializedMotionKind } from '../types/spatializedMotion'
 
 export async function executeAnimateSpatializedElementMotion(
@@ -15,7 +15,7 @@ export async function executeAnimateSpatializedElementMotion(
   targetKind: SpatializedMotionKind,
   command: ElementMotionCommand,
 ): Promise<
-  AnimateSpatializedElementMotionResult | SpatialDivVisualValues | void
+  AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
 > {
   const { animationId, type } = command
   const bridgeCommand: AnimateSpatializedElementMotionCommand = {
@@ -25,14 +25,14 @@ export async function executeAnimateSpatializedElementMotion(
   }
 
   if (type === 'play') {
-    let resolveFinished!: (val: SpatialDivVisualValues) => void
-    let resolveCancel!: (val: SpatialDivVisualValues) => void
+    let resolveFinished!: (val: SpatializedVisualValues) => void
+    let resolveCancel!: (val: SpatializedVisualValues) => void
     let resolveFailed!: (val: SpatializedPlaybackError) => void
 
-    const finished = new Promise<SpatialDivVisualValues>(r => {
+    const finished = new Promise<SpatializedVisualValues>(r => {
       resolveFinished = r
     })
-    const canceled = new Promise<SpatialDivVisualValues>(r => {
+    const canceled = new Promise<SpatializedVisualValues>(r => {
       resolveCancel = r
     })
     const failed = new Promise<SpatializedPlaybackError>(r => {
@@ -49,7 +49,7 @@ export async function executeAnimateSpatializedElementMotion(
       `${animationId}_completed`,
       (data: any) => {
         cleanup()
-        const finalValues: SpatialDivVisualValues =
+        const finalValues: SpatializedVisualValues =
           data?.finalValues ?? data?.values ?? data ?? {}
         resolveFinished(finalValues)
       },
@@ -57,7 +57,7 @@ export async function executeAnimateSpatializedElementMotion(
 
     SpatialWebEvent.addEventReceiver(`${animationId}_canceled`, (data: any) => {
       cleanup()
-      const currentValues: SpatialDivVisualValues =
+      const currentValues: SpatializedVisualValues =
         data?.currentValues ?? data?.values ?? data ?? {}
       resolveCancel(currentValues)
     })
@@ -106,6 +106,6 @@ export async function executeAnimateSpatializedElementMotion(
   }
 
   if (type === 'pause') {
-    return parseSpatialDivVisualValues(result.data)
+    return parseSpatializedVisualValues(result.data)
   }
 }

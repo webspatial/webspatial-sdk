@@ -41,7 +41,13 @@
 - [x] `supports('useSpatializedMotion', [kind])` top-level capability (mirrors `useAnimation` element/static3d/dynamic3d flags)
 - [ ] Web RAF for Static3D / Dynamic3D (deferred — product requires native-only for 3D containers)
 
-## Phase 6 — Unified JSB for 2D
+## Phase 6 — Unified JSB for 2D + `Spatialized*` type rename
+
+- [x] Canonical types in `types/spatializedMotion.ts`, `spatializedVisual.ts`, `spatializedPlayback.ts`, `spatializedMotionBinding.ts`
+- [x] Remove `SpatialDiv*` type modules and deprecated JSB aliases
+- [x] `parseSpatializedVisualValues`, `validateSpatializedMotionConfig`, `spatializedMotionSegmentValidator`
+
+## Phase 6b — Unified JSB for 2D (completed earlier in phase 6 commit)
 
 - [x] Extend `AnimateSpatializedElementMotion` with `targetKind: spatialized2d`
 - [x] Route native 2D through `SpatialDivAnimationManager` in unified listener

@@ -1,5 +1,5 @@
 import { supports } from '../../runtime/supports'
-import type { AnimateSpatialDivCommand } from '../../types/spatialDivAnimation'
+import type { ElementMotionCommand } from '../../types/spatializedElementMotion'
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 import type { SpatializedMotionHandle } from './SpatializedMotionHandle'
 import {
@@ -11,16 +11,16 @@ import {
 } from './motionElementBridge'
 import { MOTION_KIND_POLICIES, type MotionKindPolicy } from './motionKindPolicy'
 import { warnNativeOnlyMotion } from './nativeOnlyMotion'
-import type { SpatialDivPlaybackError } from '../../types/spatialDivPlayback'
-import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
+import type { SpatializedPlaybackError } from '../../types/spatializedPlayback'
+import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
-  SpatialDivMotionConfig,
-  SpatialDivPlaybackApi,
-  SpatialDivPlayState,
-  SpatialDivMotionProperty,
-  SpatialDivMotionPropertyKeys,
-  SpatialDivMotionTimeline,
-} from '../../types/spatialDivMotion'
+  SpatializedMotionConfig,
+  SpatializedPlaybackApi,
+  SpatializedMotionPlayState,
+  SpatializedMotionProperty,
+  SpatializedMotionPropertyKeys,
+  SpatializedMotionTimeline,
+} from '../../types/spatializedMotion'
 import { evaluateMotionTimeline } from '../../spatialdiv/motion/evaluate'
 import {
   applyFrozenProperties,
@@ -33,7 +33,7 @@ import {
 } from '../../spatialdiv/motion/nativeCompile'
 import { motionTimeSec } from '../../spatialdiv/motion/motionTiming'
 import { normalizeMotionPropertyKeys } from '../../spatialdiv/motion/propertyKeys'
-import { validateSpatialDivMotionConfig } from '../../spatialdiv/motion/validate'
+import { validateSpatializedMotionConfig } from '../../spatialdiv/motion/validate'
 
 export interface SpatializedMotionControllerOptions {
   /** Initial element; may be set later via {@link attachElement}. */
@@ -44,7 +44,7 @@ export interface SpatializedMotionControllerOptions {
    */
   forceNativePlayback?: boolean
   /** Fired when sampled values should update a style outlet. */
-  onValuesChange?: (values: SpatialDivVisualValues) => void
+  onValuesChange?: (values: SpatializedVisualValues) => void
   /** Fired when {@link playState} changes (e.g. React re-render). */
   onStateChange?: () => void
 }
@@ -54,7 +54,7 @@ type SessionState = 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 interface NativeSession {
   animationId: string
   state: SessionState
-  config: SpatialDivMotionConfig
+  config: SpatializedMotionConfig
   result?: MotionAnimatePlayResult
   queuedPause?: boolean
   unmounted?: boolean
@@ -71,22 +71,22 @@ function nextAnimationId(prefix: string): string {
 }
 
 /**
- * Runtime controller for a SpatialDiv motion timeline on one element.
+ * Runtime controller for a spatialized element motion timeline.
  * Implements react-spring-style selective `pause(['opacity'])` on the Web backend.
  */
 export class SpatializedMotionController
-  implements SpatialDivPlaybackApi, SpatializedMotionHandle
+  implements SpatializedPlaybackApi, SpatializedMotionHandle
 {
   readonly id: string
 
   private readonly kind: SpatializedMotionKind
   private readonly policy: MotionKindPolicy
-  private config: SpatialDivMotionConfig
+  private config: SpatializedMotionConfig
   private element: MotionHostElement | null
-  private readonly onValuesChange?: (values: SpatialDivVisualValues) => void
+  private readonly onValuesChange?: (values: SpatializedVisualValues) => void
   private readonly onStateChange?: () => void
 
-  private webState: SpatialDivPlayState = 'idle'
+  private webState: SpatializedMotionPlayState = 'idle'
   private webFinished = false
   private webStarted = false
   private rafId: number | null = null
@@ -96,8 +96,8 @@ export class SpatializedMotionController
   private fullPause = false
   /** Per-property freeze while clock may still run. */
   private readonly frozenByProperty = new Map<
-    SpatialDivMotionProperty,
-    SpatialDivVisualValues
+    SpatializedMotionProperty,
+    SpatializedVisualValues
   >()
 
   private nativeSession: NativeSession | null = null
@@ -112,11 +112,11 @@ export class SpatializedMotionController
   private readonly forceNativePlayback?: boolean
 
   constructor(
-    config: SpatialDivMotionConfig,
+    config: SpatializedMotionConfig,
     kind: SpatializedMotionKind,
     options: SpatializedMotionControllerOptions = {},
   ) {
-    validateSpatialDivMotionConfig(config)
+    validateSpatializedMotionConfig(config)
     this.kind = kind
     this.policy = MOTION_KIND_POLICIES[kind]
     this.config = config
@@ -132,12 +132,12 @@ export class SpatializedMotionController
     return this.destroyed
   }
 
-  get definition(): SpatialDivMotionConfig {
+  get definition(): SpatializedMotionConfig {
     return this.config
   }
 
-  updateDefinition(config: SpatialDivMotionConfig): void {
-    validateSpatialDivMotionConfig(config)
+  updateDefinition(config: SpatializedMotionConfig): void {
+    validateSpatializedMotionConfig(config)
     this.config = config
   }
 
@@ -166,7 +166,7 @@ export class SpatializedMotionController
     this.detachNative({ cancelSession: true })
   }
 
-  get playState(): SpatialDivPlayState {
+  get playState(): SpatializedMotionPlayState {
     if (this.nativeCapable) {
       const s = this.nativeSession?.state
       if (s === 'queued') return 'running'
@@ -226,7 +226,7 @@ export class SpatializedMotionController
     this.enqueueNative(() => this.nativePlay())
   }
 
-  pause(keys?: SpatialDivMotionPropertyKeys): void {
+  pause(keys?: SpatializedMotionPropertyKeys): void {
     if (!this.nativeCapable) {
       if (this.policy.webPlayback === 'raf') this.webPause(keys)
       return
@@ -237,7 +237,7 @@ export class SpatializedMotionController
     }
   }
 
-  resume(keys?: SpatialDivMotionPropertyKeys): void {
+  resume(keys?: SpatializedMotionPropertyKeys): void {
     if (!this.nativeCapable) {
       if (this.policy.webPlayback === 'raf') {
         this.webResume(normalizeMotionPropertyKeys(keys))
@@ -250,7 +250,7 @@ export class SpatializedMotionController
     }
   }
 
-  cancel(keys?: SpatialDivMotionPropertyKeys): void {
+  cancel(keys?: SpatializedMotionPropertyKeys): void {
     const normalized = normalizeMotionPropertyKeys(keys)
     if (normalized && normalized.length > 0) {
       console.warn(
@@ -278,17 +278,17 @@ export class SpatializedMotionController
     this.onStateChange?.()
   }
 
-  private emitValues(values: SpatialDivVisualValues): void {
+  private emitValues(values: SpatializedVisualValues): void {
     this.onValuesChange?.(values)
   }
 
-  private getActiveProperties(): SpatialDivMotionProperty[] {
+  private getActiveProperties(): SpatializedMotionProperty[] {
     const all = this.config.tracks.map(t => t.property)
     if (this.frozenByProperty.size === 0) return all
     return all.filter(p => !this.frozenByProperty.has(p))
   }
 
-  private sampleAt(timeSec: number): SpatialDivVisualValues {
+  private sampleAt(timeSec: number): SpatializedVisualValues {
     let values = evaluateMotionTimeline(this.config, timeSec)
     for (const property of this.frozenByProperty.keys()) {
       const snap = this.frozenByProperty.get(property)!
@@ -334,7 +334,7 @@ export class SpatializedMotionController
     this.scheduleWebFrame()
   }
 
-  private webPause(keys?: SpatialDivMotionPropertyKeys): void {
+  private webPause(keys?: SpatializedMotionPropertyKeys): void {
     const normalized = normalizeMotionPropertyKeys(keys)
 
     if (normalized === null) {
@@ -369,7 +369,7 @@ export class SpatializedMotionController
     this.bump()
   }
 
-  private webResume(keys: SpatialDivMotionProperty[] | null): void {
+  private webResume(keys: SpatializedMotionProperty[] | null): void {
     if (keys === null) {
       if (this.webState === 'paused' && this.fullPause) {
         this.webPlay()
@@ -446,7 +446,7 @@ export class SpatializedMotionController
   private buildPlayCommand(
     session: NativeSession,
     elementId: string,
-  ): (AnimateSpatialDivCommand & { type: 'play' }) | null {
+  ): (ElementMotionCommand & { type: 'play' }) | null {
     const cfg = session.config
     const segment: NativeSegmentPlayPayload | null =
       motionConfigToNativeSegment(cfg)
@@ -469,7 +469,8 @@ export class SpatializedMotionController
       }
     }
 
-    const timeline: SpatialDivMotionTimeline = motionConfigToNativeTimeline(cfg)
+    const timeline: SpatializedMotionTimeline =
+      motionConfigToNativeTimeline(cfg)
     return {
       ...base,
       timeline,
@@ -486,7 +487,7 @@ export class SpatializedMotionController
     if (this.destroyed) return
     const cfg = this.config
     if (cfg.onError) {
-      cfg.onError(error as SpatialDivPlaybackError)
+      cfg.onError(error as SpatializedPlaybackError)
     } else {
       console.error(`[${this.policy.controllerLabel}] Native error:`, error)
     }
@@ -640,7 +641,7 @@ export class SpatializedMotionController
   }
 
   private async nativePause(
-    keys?: SpatialDivMotionPropertyKeys,
+    keys?: SpatializedMotionPropertyKeys,
   ): Promise<void> {
     const properties = normalizeMotionPropertyKeys(keys)
     if (properties && properties.length > 0) {
@@ -689,7 +690,7 @@ export class SpatializedMotionController
   }
 
   private async nativeResume(
-    _keys: SpatialDivMotionProperty[] | null,
+    _keys: SpatializedMotionProperty[] | null,
   ): Promise<void> {
     await this.nativePlay()
   }

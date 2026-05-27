@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useReducer } from 'react'
 import { Spatialized2DElement, supports } from '@webspatial/core-sdk'
 import type {
-  SpatialDivSegmentConfig,
-  SpatialDivPlaybackApi,
-  SpatialDivPlayState,
-  SpatialDivAnimationBinding,
-  SpatialDivAnimationBindingInternal,
-  SpatialDivVisualValues,
-  SpatialDivPlaybackError,
-  AnimateSpatialDivCommand,
-  AnimateSpatialDivResult,
+  SpatializedMotionSegmentConfig,
+  SpatializedPlaybackApi,
+  SpatializedMotionPlayState,
+  SpatializedMotionBinding,
+  SpatializedMotionBindingInternal,
+  SpatializedVisualValues,
+  SpatializedPlaybackError,
+  ElementMotionCommand,
+  AnimateSpatializedElementMotionResult,
 } from '@webspatial/core-sdk'
-import { validateSpatialDivSegmentConfig } from './spatialDivSegmentValidator'
+import { validateSpatializedMotionSegmentConfig } from './spatializedMotionSegmentValidator'
 
 // ---- Internal types ----
 
@@ -20,8 +20,8 @@ type SessionState = 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 interface SpatialDivAnimationSession {
   animationId: string
   state: SessionState
-  config: SpatialDivSegmentConfig
-  result?: AnimateSpatialDivResult
+  config: SpatializedMotionSegmentConfig
+  result?: AnimateSpatializedElementMotionResult
   queuedPause?: boolean
   unmounted?: boolean
 }
@@ -42,7 +42,9 @@ function nextAnimationId(): string {
  * Per spec, only transform and opacity are animatable.
  * When transform is animated, the entire transform sync is suppressed.
  */
-function getSuppressedFieldNames(config: SpatialDivSegmentConfig): Set<string> {
+function getSuppressedFieldNames(
+  config: SpatializedMotionSegmentConfig,
+): Set<string> {
   const fields = new Set<string>()
   const to = config.to
   if (to.opacity !== undefined) fields.add('opacity')
@@ -58,16 +60,16 @@ function getSuppressedFieldNames(config: SpatialDivSegmentConfig): Set<string> {
  * Called unconditionally by the dispatcher; `active` controls whether effects run.
  */
 export function useSpatialDivAnimation(
-  config: SpatialDivSegmentConfig,
+  config: SpatializedMotionSegmentConfig,
   active: boolean,
-): [SpatialDivAnimationBinding, SpatialDivPlaybackApi] {
+): [SpatializedMotionBinding, SpatializedPlaybackApi] {
   // Validate config eagerly when active
   if (active) {
-    validateSpatialDivSegmentConfig(config)
+    validateSpatializedMotionSegmentConfig(config)
   }
 
   const animObjectId = useRef(nextAnimObjectId()).current
-  const configRef = useRef<SpatialDivSegmentConfig>(config)
+  const configRef = useRef<SpatializedMotionSegmentConfig>(config)
   configRef.current = config
 
   const sessionRef = useRef<SpatialDivAnimationSession | null>(null)
@@ -85,7 +87,7 @@ export function useSpatialDivAnimation(
   }, [])
 
   // ---- Helper: report error ----
-  const reportError = useCallback((error: SpatialDivPlaybackError) => {
+  const reportError = useCallback((error: SpatializedPlaybackError) => {
     if (unmountedRef.current) return
     const cfg = configRef.current
     if (cfg.onError) {
@@ -103,7 +105,7 @@ export function useSpatialDivAnimation(
     ) => {
       const cfg = session.config
 
-      const cmd: AnimateSpatialDivCommand = {
+      const cmd: ElementMotionCommand = {
         animationId: session.animationId,
         type: 'play',
         elementId: element.id,
@@ -118,7 +120,7 @@ export function useSpatialDivAnimation(
 
       try {
         const result = await element.animateSpatialDiv(
-          cmd as AnimateSpatialDivCommand & { type: 'play' },
+          cmd as ElementMotionCommand & { type: 'play' },
         )
         if (unmountedRef.current || session.unmounted) return
 
@@ -333,7 +335,7 @@ export function useSpatialDivAnimation(
   }, [active, enqueueCommand])
 
   // ---- Build API object ----
-  const api: SpatialDivPlaybackApi = useMemo(
+  const api: SpatializedPlaybackApi = useMemo(
     () => ({
       play,
       pause,
@@ -346,8 +348,9 @@ export function useSpatialDivAnimation(
       get isPaused() {
         return sessionRef.current?.state === 'paused'
       },
-      get playState(): SpatialDivPlayState {
-        return (sessionRef.current?.state ?? 'idle') as SpatialDivPlayState
+      get playState(): SpatializedMotionPlayState {
+        return (sessionRef.current?.state ??
+          'idle') as SpatializedMotionPlayState
       },
       get finished() {
         return sessionRef.current?.state === 'finished'
@@ -357,10 +360,10 @@ export function useSpatialDivAnimation(
   )
 
   // ---- Build animated props ----
-  const animatedProps: SpatialDivAnimationBindingInternal = useMemo(() => {
-    const props: SpatialDivAnimationBindingInternal = {
+  const animatedProps: SpatializedMotionBindingInternal = useMemo(() => {
+    const props: SpatializedMotionBindingInternal = {
       __animationObjectId: animObjectId,
-      __kind: 'spatialDiv',
+      __kind: 'spatializedMotion',
       get __animating() {
         const s = sessionRef.current
         return s ? !['idle', 'finished'].includes(s.state) : false

@@ -9,16 +9,13 @@ import {
   type SpatializedMotionControllerOptions,
 } from './spatialized/motion/SpatializedMotionController'
 import type { SpatializedMotionHandle } from './spatialized/motion/SpatializedMotionHandle'
-import type { SpatialDivMotionConfig } from './types/spatialDivMotion'
-import type {
-  AnimateSpatialDivCommand,
-  AnimateSpatialDivResult,
-} from './types/spatialDivAnimation'
+import type { SpatializedMotionConfig } from './types/spatializedMotion'
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
+  ElementMotionCommand,
 } from './types/spatializedElementMotion'
-import type { SpatialDivVisualValues } from './types/spatialDivVisual'
+import type { SpatializedVisualValues } from './types/spatializedVisual'
 import { hijackWindowATag } from './scene-polyfill'
 import { SpatializedElement } from './SpatializedElement'
 import { Spatialized2DElementProperties } from './types/types'
@@ -73,12 +70,12 @@ export class Spatialized2DElement extends SpatializedElement {
   ): Promise<AnimateSpatializedElementMotionResult>
   animateMotion(
     command: AnimateSpatializedElementMotionCommand & { type: 'pause' },
-  ): Promise<SpatialDivVisualValues>
+  ): Promise<SpatializedVisualValues>
   animateMotion(command: AnimateSpatializedElementMotionCommand): Promise<void>
   async animateMotion(
     command: AnimateSpatializedElementMotionCommand,
   ): Promise<
-    AnimateSpatializedElementMotionResult | SpatialDivVisualValues | void
+    AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
   > {
     const { targetKind, ...rest } = command
     return executeAnimateSpatializedElementMotion(this.id, targetKind, rest)
@@ -86,15 +83,17 @@ export class Spatialized2DElement extends SpatializedElement {
 
   /** @deprecated Use {@link animateMotion} — kept for `useSpatialDivAnimation` and legacy callers. */
   animateSpatialDiv(
-    command: AnimateSpatialDivCommand & { type: 'play' },
-  ): Promise<AnimateSpatialDivResult>
+    command: ElementMotionCommand & { type: 'play' },
+  ): Promise<AnimateSpatializedElementMotionResult>
   animateSpatialDiv(
-    command: AnimateSpatialDivCommand & { type: 'pause' },
-  ): Promise<SpatialDivVisualValues>
-  animateSpatialDiv(command: AnimateSpatialDivCommand): Promise<void>
+    command: ElementMotionCommand & { type: 'pause' },
+  ): Promise<SpatializedVisualValues>
+  animateSpatialDiv(command: ElementMotionCommand): Promise<void>
   async animateSpatialDiv(
-    command: AnimateSpatialDivCommand,
-  ): Promise<AnimateSpatialDivResult | SpatialDivVisualValues | void> {
+    command: ElementMotionCommand,
+  ): Promise<
+    AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
+  > {
     return executeAnimateSpatializedElementMotion(
       this.id,
       'spatialized2d',
@@ -114,7 +113,7 @@ export class Spatialized2DElement extends SpatializedElement {
    * typically use `useSpatializedMotion({ kind: 'spatialized2d' })` instead.
    */
   motion(
-    config: SpatialDivMotionConfig,
+    config: SpatializedMotionConfig,
     options?: Omit<SpatializedMotionControllerOptions, 'element'>,
   ): SpatializedMotionHandle {
     return new SpatializedMotionController(config, 'spatialized2d', {

@@ -1,14 +1,14 @@
-import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
+import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
-  SpatialDivMotionConfig,
-  SpatialDivMotionProperty,
-  SpatialDivMotionTrack,
-} from '../../types/spatialDivMotion'
+  SpatializedMotionConfig,
+  SpatializedMotionProperty,
+  SpatializedMotionTrack,
+} from '../../types/spatializedMotion'
 import { applyEasing } from './easing'
 
 function setScalar(
-  values: SpatialDivVisualValues,
-  property: SpatialDivMotionProperty,
+  values: SpatializedVisualValues,
+  property: SpatializedMotionProperty,
   value: number,
 ): void {
   if (property === 'opacity') {
@@ -28,7 +28,7 @@ function setScalar(
   ;(values.transform[group] as Record<string, number>)[axis] = value
 }
 
-function sampleTrack(track: SpatialDivMotionTrack, timeSec: number): number {
+function sampleTrack(track: SpatializedMotionTrack, timeSec: number): number {
   const frames = track.keyframes
   if (timeSec <= frames[0].at) return frames[0].value
   const last = frames[frames.length - 1]
@@ -51,11 +51,11 @@ function sampleTrack(track: SpatialDivMotionTrack, timeSec: number): number {
 
 /** Evaluate all tracks at `timeSec` (seconds from timeline start, before delay). */
 export function evaluateMotionTimeline(
-  config: SpatialDivMotionConfig,
+  config: SpatializedMotionConfig,
   timeSec: number,
-): SpatialDivVisualValues {
+): SpatializedVisualValues {
   const t = Math.max(0, Math.min(config.duration, timeSec))
-  const values: SpatialDivVisualValues = {}
+  const values: SpatializedVisualValues = {}
   for (const track of config.tracks) {
     setScalar(values, track.property, sampleTrack(track, t))
   }

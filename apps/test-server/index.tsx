@@ -90,7 +90,7 @@ import SpatialDivRotate3dPage from './src/pages/spatial-div-animation/rotate-3d'
 import SpatialDivTransformTranslatePage from './src/pages/spatial-div-animation/transform-translate'
 import SpatialDivReverseLoopPage from './src/pages/spatial-div-animation/reverse-loop'
 import SpatialDivCapabilityCheckPage from './src/pages/spatial-div-animation/capability-check'
-import SpatialDivPlayStatePage from './src/pages/spatial-div-animation/play-state'
+import SpatializedMotionPlayStatePage from './src/pages/spatial-div-animation/play-state'
 import SpatialDivPerfComparisonPage from './src/pages/spatial-div-animation/perf-comparison'
 import SpatialDivLoopAnimationPage from './src/pages/spatial-div-animation/loop-animation'
 import SpatialDivNestedAnimationPage from './src/pages/spatial-div-animation/nested-animation'
@@ -286,7 +286,7 @@ function App() {
                 />
                 <Route
                   path="/spatial-div-animation/play-state"
-                  element={<SpatialDivPlayStatePage />}
+                  element={<SpatializedMotionPlayStatePage />}
                 />
                 <Route
                   path="/spatial-div-animation/transform-translate"
