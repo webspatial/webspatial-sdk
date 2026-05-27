@@ -40,7 +40,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // `STRICT_BUDGET_BYTES` is the product-level marginal-delta contract from
 // the spec's "Marginal bundle delta on a typical consumer" Scenario:
-// `app-typical` MUST be ≤ 8192 bytes gzipped over `app-base`.
+// `app-typical` MUST be ≤ 5120 bytes gzipped over `app-base`.
 //
 // PR 5 originally shipped this fixture with a temporary
 // `REGRESSION_GUARD_BYTES = 24_576` ceiling because the measured delta
@@ -60,12 +60,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 //
 // After those three changes, the measured `app-typical` delta dropped
 // from 19433 bytes to ~1600 bytes (a ~92 % reduction, well under the
-// strict 8 KB budget) and the tree-shake ratio rose from 1.11× to
+// strict 5 KB budget) and the tree-shake ratio rose from 1.11× to
 // ~3.3× (squarely inside the spec's healthy 2–3× range). The temporary
 // regression-guard ceiling was therefore dropped: this assertion now
-// enforces the strict 8 KB budget directly, exactly as `tasks.md §9.2`
+// enforces the strict 5 KB budget directly, exactly as `tasks.md §9.2`
 // pins.
-const STRICT_BUDGET_BYTES = 8192
+const STRICT_BUDGET_BYTES = 5120
 
 // Sanity-check that the SDK has been built before we run — the fixture
 // uses the workspace symlink, which serves `dist/` files via the
@@ -226,7 +226,7 @@ describe('marginal-delta — consumer-side bundle measurement (spec tasks.md §9
     expect(measurements['app-base']!.totalGzipBytes).toBeGreaterThan(0)
   })
 
-  it('app-typical (named imports) marginal sync delta is at most 8192 bytes (§9.2)', () => {
+  it('app-typical (named imports) marginal sync delta is at most 5120 bytes (§9.2)', () => {
     const baseSync = measurements['app-base']!.totalGzipBytes
     const typicalSync = measurements['app-typical']!.totalGzipBytes
     const delta = typicalSync - baseSync
@@ -258,7 +258,7 @@ describe('marginal-delta — consumer-side bundle measurement (spec tasks.md §9
 
   it('telemetry: app-namespace worst-case absolute size is informational, NOT a hard budget (§9.3)', () => {
     // Per spec "Worst-case namespace / full-barrel import is
-    // informational" Scenario the absolute size MAY exceed 8 KB. Print
+    // informational" Scenario the absolute size MAY exceed 5 KB. Print
     // it so reviewers can see how close to / far from the budget the
     // worst case sits, but DO NOT fail the test on it.
     const baseSync = measurements['app-base']!.totalGzipBytes

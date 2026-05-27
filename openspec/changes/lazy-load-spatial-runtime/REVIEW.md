@@ -4,7 +4,7 @@
 
 This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/default`) + alias-switching plugin" architecture with a **runtime lazy-load model**:
 
-- One small default bundle for everyone — **≤ 8KB gzipped marginal delta** added to a typical consumer app (e.g. `import { Model, bootSpatial }`), with `dist/index.js` ≤ 8KB as the SDK-side proxy
+- One small default bundle for everyone — **≤ 5KB gzipped marginal delta** added to a typical consumer app (e.g. `import { Model, bootSpatial }`), with `dist/index.js` ≤ 5KB as the SDK-side proxy
 - Spatial implementation lives in a separate `@webspatial/react-sdk/spatial` chunk, loaded dynamically via `await bootSpatial()` only inside a WebSpatial runtime
 - Spatial-only consumers can opt into `@webspatial/react-sdk/eager`, a single-request entry that statically links the spatial implementation and exposes no-op boot compatibility stubs
 - Plain web users see documented per-component fallbacks (e.g. `Model` → degraded `<model>` tag) without any extra network requests
@@ -30,7 +30,7 @@ This guide originally accompanied the spec-only proposal. The active branch now 
 
 | # | Requirement | Scenarios | Anchor concern |
 | --- | --- | --- | --- |
-| 1 | Default entry MUST NOT bundle spatial implementation | 5 | Marginal delta ≤ 8KB on typical consumer (product contract); SDK-side `dist/index.js` ≤ 8KB proxy; worst-case namespace import is informational; symbol absence; complete fallback rendering self-contained in default entry |
+| 1 | Default entry MUST NOT bundle spatial implementation | 5 | Marginal delta ≤ 5KB on typical consumer (product contract); SDK-side `dist/index.js` ≤ 5KB proxy; worst-case namespace import is informational; symbol absence; complete fallback rendering self-contained in default entry |
 | 2 | Spatial implementation MUST live in a dynamically importable subpath | 3 | `import('@webspatial/react-sdk/spatial')`; web never fetches; spatial fetches once |
 | 3 | Bridge singleton | 3 | `getSpatialImpl` / `loadSpatialImpl` / SSR safety / load-failure observable |
 | 4 | `bootSpatial` is the only activation path | 13 | Single API; idempotent; retry-on-demand; multi-listener `onSpatialLoadError`; `WebSpatialBootError` shape; multi-root sharing; StrictMode safe; dev-mode warning differential (warn in WebSpatial when boot forgotten; silent in plain web) |
@@ -41,7 +41,7 @@ This guide originally accompanied the spec-only proposal. The active branch now 
 | 9 | Plugin-free integration | 11 | Capability contract (ESM + `exports` + code-splitting); React **hard peer** ≥ 18.0 (`optional: false`); React-less use NOT a v1 contract; bundler-without-splitting still functions; legacy `/web` `/default` subpaths removed; spatial container internals removal; `createElement` deprecation; out-of-scope: Module Federation, Turbopack, Webpack 4, CommonJS |
 | 10 | Stateless utility APIs and pure re-exports remain in the default entry | 5 | Group B (session-aware utilities, gracefully degrade via core-sdk) + Group C (pure constants, type re-exports, React Context) live in default entry, are independent of the spatial chunk |
 | 11 | Tree-shake friendliness | 5 | `package.json` `"sideEffects": false`; no **observable** top-level side effects (module-private pure init like `forwardRef` / `new Map` / `createContext` explicitly permitted); named re-exports preferred; fixture asserts named-import is materially smaller than namespace import |
-| 12 | Eager-mode entry for spatial-only consumers | 9 | `@webspatial/react-sdk/eager`; statically linked spatial implementation; no-op `bootSpatial`; readiness always true; no separate size cap (lazy default entry keeps 8 KB budget); import-root-only migration; mixed imports unsupported |
+| 12 | Eager-mode entry for spatial-only consumers | 9 | `@webspatial/react-sdk/eager`; statically linked spatial implementation; no-op `bootSpatial`; readiness always true; no separate size cap (lazy default entry keeps 5 KB budget); import-root-only migration; mixed imports unsupported |
 | 13 | Two distribution forms share packaging hygiene | 2 | Lazy and eager entries both retain ESM-only, hard React peers, tree-shake hygiene, type-only erasure, plugin-free integration, SSR/RSC safety, and shared stateless utilities |
 
 Plus an updated `runtime-capabilities` MODIFIED delta: the "Unsupported behavior contracts" Requirement now states hooks/utility functions MUST gracefully degrade (not throw) — replaces the prior contradictory "MUST throw" scenario for `useMetrics` and `convertCoordinate`.
@@ -96,7 +96,7 @@ SpatializedStatic3DElementContainer, SpatialMonitor
 | **B** (bridge-session-aware) | `initScene` | Reads the bridge session after `bootSpatial()`; gracefully degrades | "Stateless utility APIs and pure re-exports" |
 | **B** | `convertCoordinate` | Reads the bridge session after `bootSpatial()`; returns input + warn when no session | "Stateless utility APIs" + `runtime-capabilities` MODIFIED |
 | **B** | `enableDebugTool` | SSR-safe noop; attaches diagnostics in WebSpatial runtime | "Stateless utility APIs" |
-| **C** (pure / type) | `WebSpatialRuntime.supports`, `WebSpatialRuntimeError`, `CapabilityKey`, `version`, type-only re-exports (`SSRProvider` was originally on this row but has since been removed — see `remove-ssr-provider`; `getAbsoluteUrl` was originally on this row but has since been demoted to an internal helper — see the `remove-getabsoluteurl` changeset) | Live in default entry; counted toward 8KB size budget; no spatial-chunk dependency | "Stateless utility APIs" |
+| **C** (pure / type) | `WebSpatialRuntime.supports`, `WebSpatialRuntimeError`, `CapabilityKey`, `version`, type-only re-exports (`SSRProvider` was originally on this row but has since been removed — see `remove-ssr-provider`; `getAbsoluteUrl` was originally on this row but has since been demoted to an internal helper — see the `remove-getabsoluteurl` changeset) | Live in default entry; counted toward 5KB size budget; no spatial-chunk dependency | "Stateless utility APIs" |
 
 **Subtle consequence to call out**: in a WebSpatial runtime, an application that **forgets** to call `bootSpatial()` will see Group A facades render fallback and Group B utilities gracefully degrade because both read from the same unready bridge. This keeps `bootSpatial()` as the single activation path and keeps the emitted default-entry closure free of core-sdk runtime imports.
 
@@ -165,7 +165,7 @@ Reviewers, please confirm or push back on these BREAKING decisions:
 - [ ] **Per-facade `props.fallback` is intentionally NOT a v1 API.** Customization via user-side `useSpatialReady()` wrappers.
 - [ ] **`@webspatial/vite-plugin` retired** in a follow-up cross-repo issue (not blocking this PR).
 - [ ] **In-house apps (`apps/test-server`, `packages/autoTest`, `tests/ci-test`) are NOT migrated** in this change; tracked as follow-up tasks in §12.
-- [ ] **8KB gzip size budget framed as marginal delta on a typical consumer** (`import { Model, bootSpatial }` usage) — the user-facing product contract. The SDK-side `dist/index.js` ≤ 8KB is a proxy. Worst-case namespace imports MAY exceed; documented as informational. Calibration follow-up (`tasks.md §12.9`) tightens or files optimization issues against measured reality before v1.
+- [ ] **5KB gzip size budget framed as marginal delta on a typical consumer** (`import { Model, bootSpatial }` usage) — the user-facing product contract. The SDK-side `dist/index.js` ≤ 5KB is a proxy. Worst-case namespace imports MAY exceed; documented as informational. Calibration follow-up (`tasks.md §12.9`) tightens or files optimization issues against measured reality before v1.
 - [ ] **`"sideEffects": false`** declaration on the published `package.json` plus removal of all top-level side effects (notably the existing `if (typeof window) initPolyfill()`) is required to make tree-shaking actually achieve the marginal-delta budget. Pinned by the new "Tree-shake friendliness" Requirement.
 - [ ] **`'use client'` directive** required on every facade and every public hook file (RSC compatibility).
 - [ ] **Stateless utility APIs (Group B / C)** stay in the default entry and are NOT lazy-loaded. Group B (`initScene`, `convertCoordinate`, `enableDebugTool`) gracefully degrades before `bootSpatial()` and reads the bridge session after the spatial chunk loads. The default entry MUST NOT import core-sdk runtime code. The `runtime-capabilities` "Unsupported behavior contracts" Requirement is MODIFIED so hooks/utility APIs gracefully degrade rather than throw — resolving a prior pre-existing contradiction with the actual implementation.
@@ -177,7 +177,7 @@ Reviewers, please confirm or push back on these BREAKING decisions:
 
 (Tracked in `design.md` Open Questions; revisit after the first measurement / user-feedback wave)
 
-- Final number for the gzip size budget (target 8KB marginal-delta on typical consumer; calibrate against real measurements during implementation per `tasks.md §12.9`)
+- Final number for the gzip size budget (target 5KB marginal-delta on typical consumer; calibrate against real measurements during implementation per `tasks.md §12.9`)
 - Whether to expose `getBootStatus()` for finer state (v1 says no)
 - Whether `bootSpatial({ timeoutMs })` should be a v1 option (v1 says no)
 - Cadence for tightening size budget after release
@@ -218,7 +218,7 @@ This roadmap is historical guidance from the spec-only phase. The active branch 
 | 4. Default entry switchover (BREAKING) | `feat/lazy-load-default-entry` | §3.1 + §3.3 + §7 | **High** — entire BREAKING release activates here | One PR's worth of focused review attention on the user-visible changes: 4 internals removed; `createElement` `@deprecated`; top-level `initPolyfill()` deleted; facades go live; real spatial modules are moved/organized here instead of in PR 1 |
 | 5. Build config + size enforcement | `feat/lazy-load-build-size` | §8 + §9 | Medium — tsup rewrite + fixture infrastructure | Marginal-delta fixture (Vite consumer with `app-base` / `app-typical` / `app-namespace`) requires the published `dist/` from §8 |
 | 6. Validation + docs | `feat/lazy-load-validation-docs` | §10 + §13 + §14 + §15 | Low | Polish: SSR / hydration tests, stateless utility tests, facade ↔ real-impl unsupported parity tests, README, migration guide, CHANGELOG |
-| Follow-ups (parallel) | per-task branches | §11 + §12 | Low / mixed | Cross-repo plugin deprecation (`§11`); autoTest migration (`§12.2`); Webpack fixture (`§12.6`); Turbopack investigation (`§12.7`); Module Federation (`§12.8`); pre-v1 budget calibration (`§12.9`, **v1 release blocker** — must run before tagging v1 to confirm or adjust the 8 KB target) |
+| Follow-ups (parallel) | per-task branches | §11 + §12 | Low / mixed | Cross-repo plugin deprecation (`§11`); autoTest migration (`§12.2`); Webpack fixture (`§12.6`); Turbopack investigation (`§12.7`); Module Federation (`§12.8`); pre-v1 budget calibration (`§12.9`, **v1 release blocker** — must run before tagging v1 to confirm or adjust the 5 KB target) |
 
 ### Dependency graph
 

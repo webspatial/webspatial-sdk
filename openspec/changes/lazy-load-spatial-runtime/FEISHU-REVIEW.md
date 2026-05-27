@@ -22,7 +22,7 @@
 用 **runtime lazy-load** 替换「dual-build（`dist/web` vs `dist/default`）+ `@webspatial/vite-plugin` 切 alias」：
 
 - **默认入口** `@webspatial/react-sdk`：plain web **不拉** spatial chunk；WebSpatial 里 **`await bootSpatial()`** 后再用真实实现，否则走文档化 fallback。
-- **产品体积契约**：典型 `import { Model, bootSpatial }` 对应用 bundle 的 **gzip 边际增量 ≤ 8KB**（CI 锁死；实测 1.6-2.2KB，见 §2.2）。
+- **产品体积契约**：典型 `import { Model, bootSpatial }` 对应用 bundle 的 **gzip 边际增量 ≤ 5 KB**（CI 锁死；实测 1.6–2.2 KB，见 §2.2）。
 - **可选 eager** `@webspatial/react-sdk/eager`：spatial-only、单请求静态链接；`bootSpatial` 为 no-op；**禁止与 default 混 import**；spatial 组件 **CSR-only**。
 
 ---
@@ -35,11 +35,11 @@
 - WebSpatial runtime：**必须**在首屏 spatial UI 前 `await bootSpatial()`，否则 `Model` 等走 fallback（如 `<model>`、`Reality` 占位 div），**不 throw**。
 - 与旧架构差异：去掉 vite-plugin；bundler 需支持 ESM + `exports` + dynamic import code-splitting。
 
-### 2.2 8KB 是 lazy default 的产品契约，eager 无单独上限
+### 2.2 5 KB 是 lazy default 的产品契约，eager 无单独上限
 
-- 典型 consumer（Vite fixture `app-typical`）当前 CI 口径测得 **~2.2KB** gzip 边际增量（≤ 8KB，headroom 约 5.9KB）。
-- 同分支包体收益报告中，React 外置 / peer 场景测得 **1.66KB** gzip 边际增量；两者口径不同，但结论一致：default lazy 远低于 8KB 上限。
-- **`dist/index.js`** 侧 proxy ≤ 8KB；**eager** 故意 inline spatial，**不设** 30KB 类上限。
+- 典型 consumer（Vite fixture `app-typical`）当前 CI 口径测得 **~2.2 KB** gzip 边际增量（≤ 5 KB，headroom 约 **2.9 KB**）。
+- 同分支包体收益报告中，React 外置 / peer 场景测得 **1.66 KB** gzip 边际增量；两者口径不同，但结论一致：default lazy 远低于 5 KB 上限。
+- **`dist/index.js`** 侧 proxy ≤ 5 KB；**eager** 故意 inline spatial，**不设** 30 KB 类单独上限。
 
 ### 2.3 BREAKING（合入前业务需知）
 
@@ -76,7 +76,7 @@
 | 角色 | 重点看 |
 | --- | --- |
 | **负责人 / 产品** | 上文 §2 五点 + §2.3 BREAKING 对用户的影响 |
-| **SDK / 平台** | bridge / `bootSpatial`、8KB CI、`tsup` 三入口、去掉 plugin |
+| **SDK / 平台** | bridge / `bootSpatial`、5 KB CI、`tsup` 三入口、去掉 plugin |
 | **业务 App** | [迁移指南 TL;DR](https://github.com/webspatial/webspatial-sdk/blob/feat/eager-mode-entry/docs/migration/lazy-load-spatial-runtime.md) + eager vs default 选型 |
 | **QA / CI** | `pnpm --filter @webspatial/react-sdk test`；fixture：`spatial-vite-min`、`spatial-rspack-min`、`spatial-next-min` `/eager-ssr` |
 
@@ -94,7 +94,7 @@
 
 ## 5. 实现完成度（`tasks.md` 摘要）
 
-- **§1–§10、§13–§16**：核心实现与文档 **已完成**（含 eager、8KB 校准、SSR/hydration、parity .harness）。  
+- **§1–§10、§13–§16**：核心实现与文档 **已完成**（含 eager、5 KB 预算校准、SSR/hydration、parity .harness）。  
 - **§11**：vite-plugin 跨仓跟进 — **未做，非阻塞**。  
 - **§12**：test-server / autoTest / ci-test 深度迁移 — **部分**（见 §2.5）；**§12.6 Rspack fixture、§12.9 预算校准已完成**。  
 - **§15.8**：部分 parity — **`it.todo`**，CI 可见，不挡 v1。

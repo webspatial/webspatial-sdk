@@ -6,7 +6,7 @@
 //
 // - `dist/index.js`   — default-entry barrel (facades + bridge + boot +
 //                       hooks-web/useMetrics + Group B/C utilities). Size
-//                       budget proxy ≤ 8 KB gzipped per spec "SDK-side
+//                       budget proxy ≤ 5 KB gzipped per spec "SDK-side
 //                       `dist/index.js` size proxy" Scenario; enforced by
 //                       `src/__tests__/size-budget.test.ts` (§9.1).
 // - `dist/spatial.js` — bridge dynamic-import target. Owns the real spatial
@@ -20,7 +20,7 @@
 //   Requirement). The previously separate `*.web.ts` siblings are physically
 //   deleted in this PR per task §6.1.
 //
-// Code-splitting is the mechanism that keeps `dist/index.js` ≤ 8 KB: the
+// Code-splitting is the mechanism that keeps `dist/index.js` ≤ 5 KB: the
 // bridge's dynamic `import('../spatial')` is hoisted into the spatial chunk,
 // and shared modules that both `index` and the JSX runtime touch (notably
 // the facades + the strip helper) collapse into a small shared chunk emitted

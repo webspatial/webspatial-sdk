@@ -27,7 +27,7 @@
 
 **这些字节都是 plain-web 浏览器（非 WebSpatial 运行时）下用户必下载的字节**；spec 把 spatial 真实实现搬进了一个**动态 `import()` 才能到达**的二级 chunk，所以普通浏览器从此再也不会下载这部分代码。在 WebSpatial 设备上则会按需下载（异步、不阻塞首帧）。
 
-> 关键数据点："产品级 marginal-delta 合同"现在被 CI 锁死在 **gzip ≤ 8 KB**，实测只占了 **1.66 KB / 8 KB（20 %）**，剩余 6.5 KB 余量留给后续扩展。
+> 关键数据点："产品级 marginal-delta 合同"现在被 CI 锁死在 **gzip ≤ 5 KB**，实测只占了 **1.66 KB / 5 KB（约 33 %）**，剩余约 3.3 KB 余量留给后续扩展。
 
 ---
 
@@ -53,7 +53,7 @@
 
 - `apps/spatial-vite-min/src/main.tsx`：剔除 `bootSpatial` / `WebSpatialBootError` / `<await bootSpatial()>`（main 上不存在这些导出），删除 `eager.html` / `eager-lean.html` 两个入口（main 上没有 `/eager` 子路径）。
 - `tests/marginal-delta-vite/src/app-typical.tsx`：剔除 `bootSpatial` import；其余逻辑（mount `<Model>`）保持不变。
-- 测试本身改为 **telemetry-only**（不强制 8 KB 上限，因为那是 spec 合同，不是 main 的事实）。
+- 测试本身改为 **telemetry-only**（不强制 5 KB 上限，因为那是 spec 合同，不是 main 的事实）。
 
 业务代码、Vite 版本、esbuild 压缩、target、external 配置 100 % 对齐，唯一变量就是 SDK 自身。
 

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 // Per spatial-lazy-load spec tasks.md §9.1 ("SDK-side `dist/index.js` size
 // proxy" Scenario), the published default-entry bundle MUST be at most
-// 8192 bytes when gzipped on its own. This is the SDK-side proxy that
+// 5120 bytes when gzipped on its own. This is the SDK-side proxy that
 // runs inside the package's own test suite without a fixture build; the
 // downstream marginal-delta contract from §9.2 is enforced by the
 // fixture under `tests/marginal-delta-vite/` and gates the package size in
@@ -20,7 +20,7 @@ const distDir = resolve(__dirname, '../../dist')
 const indexJsPath = resolve(distDir, 'index.js')
 const spatialJsPath = resolve(distDir, 'spatial.js')
 
-const PROXY_BUDGET_BYTES = 8192
+const PROXY_BUDGET_BYTES = 5120
 
 function gzipSize(filePath: string): number {
   const raw = readFileSync(filePath)
@@ -36,7 +36,7 @@ describe('size-budget — SDK-side proxy (spec tasks.md §9.1 + §9.9)', () => {
     expect(existsSync(spatialJsPath)).toBe(true)
   })
 
-  it('dist/index.js gzipped size is at most 8192 bytes (the SDK-side proxy budget)', () => {
+  it('dist/index.js gzipped size is at most 5120 bytes (the SDK-side proxy budget)', () => {
     const size = gzipSize(indexJsPath)
     // Informational telemetry per §9.9: print headroom (positive) or
     // overrun (negative) before the assertion so the number is visible
