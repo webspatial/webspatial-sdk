@@ -390,6 +390,15 @@ function classifyTopLevelStatement(
       if (isComponentMetadataAssignment(expr, scope)) {
         return { ok: true }
       }
+      // Entry-root registration for mixed lazy/eager import detection (spec
+      // "Mixed-import shape is rejected"). Intentional module-eval side effect.
+      if (
+        expr.type === 'CallExpression' &&
+        expr.callee.type === 'Identifier' &&
+        expr.callee.name === 'registerReactSdkEntry'
+      ) {
+        return { ok: true }
+      }
       return {
         ok: false,
         reason: `bare expression statement (${expr.type})${expr.type === 'CallExpression' && expr.callee.type === 'Identifier' ? ` calling \`${expr.callee.name}()\`` : ''}`,

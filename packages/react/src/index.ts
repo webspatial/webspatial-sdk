@@ -28,8 +28,13 @@
 // import.
 // =============================================================================
 
+import { registerReactSdkEntry } from './runtime/entryRegistry'
+
+registerReactSdkEntry('lazy')
+
 // --- Lazy-load runtime: bridge / boot / readiness / error class --------------
 export { bootSpatial } from './runtime/boot'
+export { WebSpatialMixedEntryError } from './runtime/entryRegistry'
 export { isSpatialReady, onSpatialLoadError } from './runtime/bridge'
 export { SpatialBoot } from './runtime/SpatialBoot'
 export { useSpatialReady } from './runtime/useSpatialReady'
