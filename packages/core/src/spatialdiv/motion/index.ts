@@ -1,7 +1,7 @@
 export { applyEasing } from './easing'
 export { applyFrozenProperties, snapshotScalars } from './mergeValues'
 export { evaluateMotionTimeline } from './evaluate'
-export { validateSpatialDivMotionConfig } from './validate'
+export { validateSpatializedMotionConfig } from './validate'
 export { motionTimeSec } from './motionTiming'
 export {
   motionConfigToNativeSegment,
@@ -12,4 +12,4 @@ export {
 export { getMotionSuppressedFields } from './getMotionSuppressedFields'
 export { segmentConfigToMotionConfig } from './simple'
 export { normalizeMotionPropertyKeys } from './propertyKeys'
-export type { SpatialDivMotionPropertyKeys } from '../../types/spatialDivMotion'
+export type { SpatializedMotionPropertyKeys } from '../../types/spatializedMotion'

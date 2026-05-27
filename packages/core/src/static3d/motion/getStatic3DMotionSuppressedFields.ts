@@ -1,8 +1,8 @@
-import type { SpatialDivMotionConfig } from '../../types/spatialDivMotion'
+import type { SpatializedMotionConfig } from '../../types/spatializedMotion'
 
 /** Suppress `entityTransform` on Model when motion animates root transform. */
 export function getStatic3DMotionSuppressedFields(
-  config: SpatialDivMotionConfig,
+  config: SpatializedMotionConfig,
 ): Set<string> {
   const fields = new Set<string>()
   for (const track of config.tracks) {

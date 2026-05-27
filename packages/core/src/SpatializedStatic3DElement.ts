@@ -6,12 +6,12 @@ import {
   type SpatializedMotionControllerOptions,
 } from './spatialized/motion/SpatializedMotionController'
 import type { SpatializedMotionHandle } from './spatialized/motion/SpatializedMotionHandle'
-import type { SpatialDivMotionConfig } from './types/spatialDivMotion'
+import type { SpatializedMotionConfig } from './types/spatializedMotion'
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
 } from './types/spatializedElementMotion'
-import type { SpatialDivVisualValues } from './types/spatialDivVisual'
+import type { SpatializedVisualValues } from './types/spatializedVisual'
 import {
   ModelLoadingMode,
   ModelSource,
@@ -420,19 +420,19 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   ): Promise<AnimateSpatializedElementMotionResult>
   animateMotion(
     command: AnimateSpatializedElementMotionCommand & { type: 'pause' },
-  ): Promise<SpatialDivVisualValues>
+  ): Promise<SpatializedVisualValues>
   animateMotion(command: AnimateSpatializedElementMotionCommand): Promise<void>
   async animateMotion(
     command: AnimateSpatializedElementMotionCommand,
   ): Promise<
-    AnimateSpatializedElementMotionResult | SpatialDivVisualValues | void
+    AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
   > {
     const { targetKind, ...rest } = command
     return executeAnimateSpatializedElementMotion(this.id, targetKind, rest)
   }
 
   motion(
-    config: SpatialDivMotionConfig,
+    config: SpatializedMotionConfig,
     options?: Omit<SpatializedMotionControllerOptions, 'element'>,
   ): SpatializedMotionHandle {
     return new SpatializedMotionController(config, 'static3d', {

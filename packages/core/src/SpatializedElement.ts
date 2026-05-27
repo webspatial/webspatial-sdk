@@ -1,4 +1,4 @@
-import type { SpatialDivMotionConfig } from './types/spatialDivMotion'
+import type { SpatializedMotionConfig } from './types/spatializedMotion'
 import type { SpatializedMotionHandle } from './spatialized/motion/SpatializedMotionHandle'
 import { UpdateSpatializedElementTransform } from './JSBCommand'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
@@ -62,7 +62,7 @@ export abstract class SpatializedElement extends SpatialObject {
    * Implemented per element kind (2D / Static3D / Dynamic3D).
    */
   abstract motion(
-    config: SpatialDivMotionConfig,
+    config: SpatializedMotionConfig,
     options?: Record<string, unknown>,
   ): SpatializedMotionHandle
 

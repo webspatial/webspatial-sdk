@@ -1,9 +1,9 @@
-import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
-import type { SpatialDivMotionProperty } from '../../types/spatialDivMotion'
+import type { SpatializedVisualValues } from '../../types/spatializedVisual'
+import type { SpatializedMotionProperty } from '../../types/spatializedMotion'
 
 function setScalar(
-  values: SpatialDivVisualValues,
-  property: SpatialDivMotionProperty,
+  values: SpatializedVisualValues,
+  property: SpatializedMotionProperty,
   value: number,
 ): void {
   if (property === 'opacity') {
@@ -23,8 +23,8 @@ function setScalar(
 }
 
 function getScalar(
-  values: SpatialDivVisualValues,
-  property: SpatialDivMotionProperty,
+  values: SpatializedVisualValues,
+  property: SpatializedMotionProperty,
 ): number | undefined {
   if (property === 'opacity') return values.opacity
   const [, group, axis] = property.split('.') as [
@@ -37,11 +37,11 @@ function getScalar(
 
 /** Overlay frozen scalars onto a freshly sampled timeline value. */
 export function applyFrozenProperties(
-  sampled: SpatialDivVisualValues,
-  frozen: SpatialDivVisualValues,
-  properties: Iterable<SpatialDivMotionProperty>,
-): SpatialDivVisualValues {
-  const out: SpatialDivVisualValues = {
+  sampled: SpatializedVisualValues,
+  frozen: SpatializedVisualValues,
+  properties: Iterable<SpatializedMotionProperty>,
+): SpatializedVisualValues {
+  const out: SpatializedVisualValues = {
     opacity: sampled.opacity,
     transform: sampled.transform
       ? {
@@ -65,10 +65,10 @@ export function applyFrozenProperties(
 }
 
 export function snapshotScalars(
-  values: SpatialDivVisualValues,
-  properties: Iterable<SpatialDivMotionProperty>,
-): SpatialDivVisualValues {
-  const out: SpatialDivVisualValues = {}
+  values: SpatializedVisualValues,
+  properties: Iterable<SpatializedMotionProperty>,
+): SpatializedVisualValues {
+  const out: SpatializedVisualValues = {}
   for (const property of properties) {
     const v = getScalar(values, property)
     if (v !== undefined) setScalar(out, property, v)

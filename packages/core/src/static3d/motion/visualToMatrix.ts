@@ -1,9 +1,9 @@
 import { composeSRT } from '../../utils'
-import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
+import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 
 /** Map motion visual values to a model root matrix (same SRT order as SpatialDiv). */
 export function visualValuesToModelMatrix(
-  values: SpatialDivVisualValues,
+  values: SpatializedVisualValues,
 ): DOMMatrix {
   const t = values.transform
   return composeSRT(
