@@ -147,4 +147,3 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     )
   },
 )
-Reality.displayName = 'Reality'
