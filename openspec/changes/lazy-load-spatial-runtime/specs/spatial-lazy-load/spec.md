@@ -21,26 +21,26 @@ It MUST NOT contain any spatial implementation modules (containers, monitors, re
 
 The default entry MUST also contain the **complete** web-mode rendering for every public component facade and internal HOC wrapper facade — every per-component default fallback specified in "Component facades" — so that rendering any facade in a non-WebSpatial browser succeeds without loading additional modules over the network.
 
-**Size budget framing**: the **product-level contract** is that adding `@webspatial/react-sdk` to a downstream application following the SDK's recommended web-first integration pattern MUST NOT increase the application's gzipped bundle size by more than **8 KB** compared to the same application without the SDK. The default entry MUST NOT emit runtime imports from `@webspatial/core-sdk`; core-sdk runtime code belongs to the spatial/eager implementation graph. The "recommended integration pattern" is named-import of the spatial primitives the application actually uses (e.g. `import { Model, bootSpatial } from '@webspatial/react-sdk'`), NOT namespace import (`import * as W from ...`) or side-effect import. The marginal-delta contract is the user-facing measurement; an additional SDK-side proxy on `dist/index.js` size keeps the SDK build pipeline honest. Worst-case namespace / full-barrel imports MAY exceed the budget; that is informational, not a contract violation.
+**Size budget framing**: the **product-level contract** is that adding `@webspatial/react-sdk` to a downstream application following the SDK's recommended web-first integration pattern MUST NOT increase the application's gzipped bundle size by more than **5 KB** compared to the same application without the SDK. The default entry MUST NOT emit runtime imports from `@webspatial/core-sdk`; core-sdk runtime code belongs to the spatial/eager implementation graph. The "recommended integration pattern" is named-import of the spatial primitives the application actually uses (e.g. `import { Model, bootSpatial } from '@webspatial/react-sdk'`), NOT namespace import (`import * as W from ...`) or side-effect import. The marginal-delta contract is the user-facing measurement; an additional SDK-side proxy on `dist/index.js` size keeps the SDK build pipeline honest. Worst-case namespace / full-barrel imports MAY exceed the budget; that is informational, not a contract violation.
 
 #### Scenario: Marginal bundle delta on a typical consumer (product-level contract)
 
 - **WHEN** a downstream application imports the SDK using the recommended named-import pattern (e.g. `import { Model, bootSpatial } from '@webspatial/react-sdk'` and uses `<Model />` plus `await bootSpatial()` per the migration guide)
 - **AND** the application is built with one of the documented compatible bundlers (per "Plugin-free integration")
-- **THEN** the marginal gzipped bundle delta — the difference between the application bundle with the SDK imported and the same application bundle without the SDK imported — MUST be at most 8192 bytes (8 KB)
+- **THEN** the marginal gzipped bundle delta — the difference between the application bundle with the SDK imported and the same application bundle without the SDK imported — MUST be at most 5120 bytes (5 KB)
 - **AND** the default-entry build-output assertion MUST fail if importing `@webspatial/react-sdk` makes any runtime import from `@webspatial/core-sdk` reachable through the default entry's static module graph
 - **AND** the budget MUST be enforced by a CI fixture (a minimal Vite + React project under `tests/` or similar) that fails the build when exceeded
 
 #### Scenario: SDK-side `dist/index.js` size proxy
 
 - **WHEN** the published `dist/index.js` is gzipped on its own (independent of any consumer build)
-- **THEN** the size MUST be at most 8192 bytes (8 KB)
+- **THEN** the size MUST be at most 5120 bytes (5 KB)
 - **AND** this proxy is a necessary-but-not-sufficient condition for the marginal-delta contract; it is enforced at SDK build time so regressions surface inside the SDK's own test suite without requiring a fixture build
 
 #### Scenario: Worst-case namespace / full-barrel import is informational
 
 - **WHEN** a downstream application uses `import * as W from '@webspatial/react-sdk'` with non-static property access, side-effect-only `import '@webspatial/react-sdk'`, or explicit named-import of every public export at once
-- **THEN** the marginal gzipped bundle delta MAY exceed 8 KB (typical worst case projected at 9–11 KB before tree-shaking gains)
+- **THEN** the marginal gzipped bundle delta MAY exceed 5 KB (typical worst case projected at 9–11 KB before tree-shaking gains)
 - **AND** this is NOT a v1 spec violation; it is a documented limitation of the consumer's import shape
 - **AND** the migration guide MUST recommend named imports of only the spatial primitives the application actually uses
 
@@ -813,7 +813,7 @@ The contract has three normative parts:
 
 - **WHEN** the marginal-delta CI fixture (per "Default entry MUST NOT bundle spatial implementation") builds two consumer applications — one importing `Model` only, one importing the full set of public APIs — and compares their gzipped sizes
 - **THEN** the `Model`-only application's marginal delta MUST be substantially smaller than the all-imports application's marginal delta (a tree-shaking effectiveness check; a flat ratio close to 1.0 indicates broken tree-shaking even if the absolute number passes)
-- **AND** the recommended "named imports the user actually uses" pattern MUST satisfy the 8 KB budget per "Default entry MUST NOT bundle spatial implementation"
+- **AND** the recommended "named imports the user actually uses" pattern MUST satisfy the 5 KB budget per "Default entry MUST NOT bundle spatial implementation"
 
 ---
 
@@ -876,7 +876,7 @@ The eager entry MUST coexist with the lazy-load default entry without polluting 
 #### Scenario: Default entry's marginal-delta budget is not affected by eager entry's existence
 
 - **WHEN** the §9.2 marginal-delta CI fixture builds `app-typical` (which imports `{ Model, bootSpatial }` from the **default** entry, not the eager entry)
-- **THEN** the measured marginal sync delta MUST hold the same `≤ 8192 bytes` cap as before this Requirement was introduced
+- **THEN** the measured marginal sync delta MUST hold the same `≤ 5120 bytes` cap as before this Requirement was introduced
 - **AND** publishing the eager entry MUST NOT add even one byte to the default entry's published `dist/index.js`
 - **AND** the consumer's bundler MUST NOT reach the eager entry's static spatial implementation through any import chain rooted at the default entry
 
@@ -911,7 +911,7 @@ The packaging-hygiene contracts that apply to both forms are:
 
 The contracts that are **specific to the lazy-load default entry** and do NOT apply to the eager entry are:
 
-- The 8 KB marginal-delta budget on `dist/index.js` (per "Default entry MUST NOT bundle spatial implementation") — the eager entry inlines spatial code by design and is **not** subject to a separate product size cap; only the lazy-load default entry is budgeted.
+- The 5 KB marginal-delta budget on `dist/index.js` (per "Default entry MUST NOT bundle spatial implementation") — the eager entry inlines spatial code by design and is **not** subject to a separate product size cap; only the lazy-load default entry is budgeted.
 - The dynamic-import boundary, bridge singleton, and `bootSpatial()` activation contract — the eager entry replaces these with compatibility stubs per "Eager-mode entry for spatial-only consumers".
 - The facade fallback rendering, hook placeholder values, and dev-mode "boot was forgotten" warning — the eager entry's facades are real implementations from first render, so there is no fallback to render and no warning to issue.
 - Full SSR + hydration guarantees for **spatial primitives** (facade fallbacks, `useSpatialReady` server snapshots, first-client-render swap timing) — the eager entry documents spatial UI as **CSR-only**; those guarantees apply only when consumers import primitives from `@webspatial/react-sdk`.

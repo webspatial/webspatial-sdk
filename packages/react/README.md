@@ -132,7 +132,7 @@ The package publishes two entry roots with the **same export names**, so you can
 
 | Entry              | Import                        | Choose when                                                                                                                                                                                                                                             |
 | ------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Default (lazy)** | `@webspatial/react-sdk`       | Web-first progressive enhancement; **SSR**, streaming SSR, or any page whose **server-rendered HTML** should include façade fallbacks for spatial primitives. Smallest synchronous footprint (~8 KB marginal delta in the SDK’s §9.2 fixture).          |
+| **Default (lazy)** | `@webspatial/react-sdk`       | Web-first progressive enhancement; **SSR**, streaming SSR, or any page whose **server-rendered HTML** should include façade fallbacks for spatial primitives. Smallest synchronous footprint (~5 KB marginal delta in the SDK’s §9.2 fixture).          |
 | **Eager**          | `@webspatial/react-sdk/eager` | Spatial-first apps (fixed WebSpatial shells, internal AVP / PICO surfaces) where you want **one network request** and no real `bootSpatial()` work — at the cost of inlining the full spatial implementation (roughly the same bytes as lazy-loading `dist/spatial.js`; no separate product size cap). |
 
 **SSR / CSR routing**
