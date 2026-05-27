@@ -32,6 +32,10 @@ export default defineConfig({
         find: '@webspatial/core-sdk/runtime',
         replacement: resolve(__dirname, '../core/src/runtime/index.ts'),
       },
+      {
+        find: '@webspatial/core-sdk/install-polyfills',
+        replacement: resolve(__dirname, '../core/src/install-polyfills.ts'),
+      },
     ],
   },
   test: {

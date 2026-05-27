@@ -887,12 +887,13 @@ The eager entry MUST coexist with the lazy-load default entry without polluting 
 - **AND** behavior MUST converge to "single-request load, no boot indirection" per the Scenarios above
 - **AND** existing `await bootSpatial()` calls MUST become no-ops without breaking control flow
 
-#### Scenario: Mixed-import shape is not supported
+#### Scenario: Mixed-import shape is rejected
 
-- **WHEN** a consumer imports the same symbol name (e.g. `Model`) from both the default entry and the eager entry within the same application bundle
-- **THEN** the SDK does NOT guarantee well-defined behavior; the two imports resolve to physically different module instances (facade vs real-impl)
-- **AND** development builds SHOULD log a one-shot `console.warn` if the SDK can detect this at runtime (e.g. via a probe that runs at eager-entry module evaluation and inspects the default entry's bridge state)
-- **AND** the migration guide MUST document this limitation: consumers MUST pick one entry per application bundle
+- **WHEN** a consumer application bundle contains both entry roots (`@webspatial/react-sdk` and `@webspatial/react-sdk/eager`) for the same page runtime, including transitive dependency imports, and both entry modules are evaluated in that JS realm
+- **THEN** this configuration MUST be treated as an error (not a supported "best effort" mode), because symbol identities may resolve to physically different module instances (facade vs real implementation)
+- **AND** the SDK MUST reject mixed roots at runtime via `registerReactSdkEntry()` (throwing `WebSpatialMixedEntryError` in enforced environments) with a one-shot actionable diagnostic
+- **AND** consumer CI or application tooling MAY additionally scan import graphs or bundles for both roots; such checks are optional and bundler-specific — the SDK does not ship a normative build plugin for any single bundler in v1
+- **AND** the migration guide MUST document this as a hard rule: consumers MUST pick exactly one entry root per application bundle, including dependency trees
 
 ---
 

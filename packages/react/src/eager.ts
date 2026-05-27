@@ -1,4 +1,9 @@
 'use client'
+
+import { registerReactSdkEntry } from './runtime/entryRegistry'
+
+registerReactSdkEntry('eager')
+
 // =============================================================================
 // `@webspatial/react-sdk/eager` — eager-mode entry for spatial-only consumers.
 //
@@ -114,6 +119,7 @@ export {
 // importable for type-narrowing convenience and for consumers that catch
 // boot errors generically.
 export { WebSpatialBootError } from './runtime/errors'
+export { WebSpatialMixedEntryError } from './runtime/entryRegistry'
 
 // --- Step 4: stateless utilities — shared source modules with default entry -
 // Per the "Two distribution forms share packaging hygiene" Requirement
