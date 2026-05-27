@@ -23,7 +23,7 @@ describe('jsx-shared Reality handling', () => {
     expect(props).toHaveProperty(ENABLE_XR, true)
   })
 
-  it('strips enable-xr before Reality forwards props to its host element', () => {
+  it('strips enable-xr before SpatializedContainer forwards props to its host element', () => {
     const { getByTestId } = render(
       React.createElement(Reality, {
         [ENABLE_XR]: true,

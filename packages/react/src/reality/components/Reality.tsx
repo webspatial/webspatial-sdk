@@ -23,7 +23,7 @@ export type RealityProps = Omit<
   EntityEventHandler
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
-  function RealityBase(props, ref) {
+  function RealityBase({ children, ...inProps }, ref) {
     const insideAttachment = useInsideAttachment()
     if (insideAttachment) {
       console.warn(
@@ -32,8 +32,6 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       return null
     }
     const {
-      children,
-      'enable-xr': _enableXR,
       onSpatialTap,
       onSpatialDragStart,
       onSpatialDrag,
@@ -42,8 +40,8 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       onSpatialRotateEnd,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
-      ...divProps
-    } = props as Omit<RealityProps, 'ref'> & { 'enable-xr'?: boolean }
+      ...props
+    } = inProps
     const ctxRef = useRef<RealityContextValue | null>(null)
 
     const creationId = useRef(0)
@@ -140,7 +138,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
           // @ts-ignore
           createSpatializedElement={createReality}
           spatializedContent={content}
-          {...divProps}
+          {...props}
         />
         {isReady && children}
       </RealityContext.Provider>
