@@ -120,7 +120,12 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   useEffect(() => {
     if (effectiveLoading !== 'lazy') return
     const target = portalInstanceObject.dom
-    if (!target || typeof IntersectionObserver === 'undefined') {
+    // Missing DOM means 2D frame sync is not ready yet (e.g. HMR remount), not
+    // "in viewport" — wait for `dom` instead of promoting to eager.
+    if (!target) {
+      return
+    }
+    if (typeof IntersectionObserver === 'undefined') {
       setEffectiveLoading('eager')
       return
     }
@@ -132,7 +137,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     })
     observer.observe(target)
     return () => observer.disconnect()
-  }, [effectiveLoading, portalInstanceObject])
+  }, [effectiveLoading, portalInstanceObject, portalInstanceObject.dom])
 
   useEffect(() => {
     // If modelURL was previously set and now is undefined then a dummy
