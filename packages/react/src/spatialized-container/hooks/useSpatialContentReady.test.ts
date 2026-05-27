@@ -1,7 +1,12 @@
 import { renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { SpatializedElement } from '@webspatial/core-sdk'
+import type { PortalInstanceObject } from '../context/PortalInstanceContext'
 import { useSpatialContentReady } from './useSpatialContentReady'
+
+function mockPortal(dom?: HTMLElement): PortalInstanceObject {
+  return { dom } as unknown as PortalInstanceObject
+}
 
 describe('useSpatialContentReady', () => {
   it('does not throw when portalInstanceObject is null (HMR teardown)', () => {
@@ -22,14 +27,14 @@ describe('useSpatialContentReady', () => {
   })
 
   it('accepts portalInstanceObject from props without context', () => {
-    const portal = { dom: undefined } as { dom: HTMLElement | undefined }
+    const portal = mockPortal()
     const onSpatialContentReady = vi.fn()
 
     expect(() =>
       renderHook(() =>
         useSpatialContentReady({
           spatializedElement: {} as SpatializedElement,
-          portalInstanceObject: portal as never,
+          portalInstanceObject: portal,
           hostElement: null,
           onSpatialContentReady,
         }),
@@ -39,13 +44,13 @@ describe('useSpatialContentReady', () => {
 
   it('re-runs safely when portalInstanceObject transitions null → object', () => {
     const onSpatialContentReady = vi.fn()
-    const portal = { dom: undefined } as { dom: HTMLElement | undefined }
+    const portal = mockPortal()
 
     const { rerender } = renderHook(
       ({
         portalInstanceObject,
       }: {
-        portalInstanceObject: typeof portal | null
+        portalInstanceObject: PortalInstanceObject | null
       }) =>
         useSpatialContentReady({
           spatializedElement: {} as SpatializedElement,
@@ -53,10 +58,14 @@ describe('useSpatialContentReady', () => {
           hostElement: null,
           onSpatialContentReady,
         }),
-      { initialProps: { portalInstanceObject: null as typeof portal | null } },
+      {
+        initialProps: {
+          portalInstanceObject: null as PortalInstanceObject | null,
+        },
+      },
     )
 
-    rerender({ portalInstanceObject: portal })
+    rerender({ portalInstanceObject: portal as PortalInstanceObject | null })
     rerender({ portalInstanceObject: null })
 
     expect(onSpatialContentReady).not.toHaveBeenCalled()
