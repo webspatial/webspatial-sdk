@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { evaluateMotionTimeline } from './evaluate'
 import { segmentConfigToMotionConfig } from './simple'
 import { valuesToMotionStyle } from './style'
-import { validateSpatialDivMotionConfig } from './validate'
+import { validateSpatializedMotionConfig } from './validate'
 
 describe('evaluateMotionTimeline', () => {
   const multiTrack = {
@@ -127,10 +127,10 @@ describe('segmentConfigToMotionConfig', () => {
   })
 })
 
-describe('validateSpatialDivMotionConfig', () => {
+describe('validateSpatializedMotionConfig', () => {
   test('rejects duplicate property tracks', () => {
     expect(() =>
-      validateSpatialDivMotionConfig({
+      validateSpatializedMotionConfig({
         duration: 1,
         tracks: [
           {

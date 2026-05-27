@@ -8,7 +8,7 @@ import {
   useLog,
 } from './shared'
 
-export default function SpatialDivPlayStatePage() {
+export default function SpatializedMotionPlayStatePage() {
   const { lines, log, clear } = useLog()
 
   const [animation, api] = useAnimation({

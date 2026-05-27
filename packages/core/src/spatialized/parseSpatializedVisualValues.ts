@@ -1,9 +1,9 @@
-import type { SpatialDivVisualValues } from '../types/spatialDivVisual'
+import type { SpatializedVisualValues } from '../types/spatializedVisual'
 
 /** Parse native wire payload `{ values }` (or legacy flat shape) into visual values. */
-export function parseSpatialDivVisualValues(
+export function parseSpatializedVisualValues(
   data: unknown,
-): SpatialDivVisualValues {
+): SpatializedVisualValues {
   const raw =
     (data as { values?: unknown })?.values ??
     data ??
@@ -21,13 +21,13 @@ export function parseSpatialDivVisualValues(
     return Object.keys(out).length > 0 ? out : undefined
   }
 
-  const values: SpatialDivVisualValues = {}
+  const values: SpatializedVisualValues = {}
   if (typeof record.opacity === 'number') {
     values.opacity = record.opacity
   }
 
   if (transformRaw) {
-    const transform: NonNullable<SpatialDivVisualValues['transform']> = {}
+    const transform: NonNullable<SpatializedVisualValues['transform']> = {}
     const translate = readVec3(transformRaw.translate)
     const rotate = readVec3(transformRaw.rotate)
     const scale = readVec3(transformRaw.scale)

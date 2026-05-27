@@ -1,11 +1,11 @@
 import type {
-  SpatialDivPlaybackApi,
+  SpatializedPlaybackApi,
   SpatializedMotionHandle,
 } from '@webspatial/core-sdk'
 
 export function createPlaybackApi(
   controller: SpatializedMotionHandle,
-): SpatialDivPlaybackApi {
+): SpatializedPlaybackApi {
   return {
     play: () => controller.play(),
     pause: keys => controller.pause(keys),

@@ -2,20 +2,20 @@ import { useEffect, useReducer, useRef } from 'react'
 import {
   SpatializedMotionController,
   supports,
-  validateSpatialDivMotionConfig,
-  type SpatialDivMotionConfig,
+  validateSpatializedMotionConfig,
+  type SpatializedMotionConfig,
   type SpatializedMotionHandle,
   type SpatializedMotionKind,
 } from '@webspatial/core-sdk'
 
 export function useMotionController(
   kind: SpatializedMotionKind,
-  config: SpatialDivMotionConfig,
+  config: SpatializedMotionConfig,
   onValuesChange?: (
-    values: import('@webspatial/core-sdk').SpatialDivVisualValues,
+    values: import('@webspatial/core-sdk').SpatializedVisualValues,
   ) => void,
 ): { controller: SpatializedMotionHandle; nativeCapable: boolean } {
-  validateSpatialDivMotionConfig(config)
+  validateSpatializedMotionConfig(config)
 
   const [, tick] = useReducer((n: number) => n + 1, 0)
   const nativeCapable = supports('useSpatializedMotion', [kind])

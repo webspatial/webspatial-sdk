@@ -4,8 +4,7 @@ import {
   PortalInstanceContext,
 } from './context/PortalInstanceContext'
 import { Spatialized2DElement } from '@webspatial/core-sdk'
-import type { SpatialDivAnimationBindingInternal } from '@webspatial/core-sdk'
-import type { SpatialDivMotionBindingInternal } from './motion/motionBindingTypes'
+import type { SpatializedMotionBindingInternal } from './motion/motionBindingTypes'
 import {
   PortalSpatializedContainerProps,
   SpatialContentReadyCallback,
@@ -104,14 +103,14 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
 
   // Extract animation prop for SpatialDiv animation binding
   const animation = (restProps as any).animation as
-    | SpatialDivAnimationBindingInternal
+    | SpatializedMotionBindingInternal
     | undefined
   if (animation) {
     delete (restProps as any).animation
   }
 
   const motion = (restProps as any).motion as
-    | SpatialDivMotionBindingInternal
+    | SpatializedMotionBindingInternal
     | undefined
   if (motion) {
     delete (restProps as any).motion
@@ -156,7 +155,7 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   useEffect(() => {
     if (!animation || !spatializedElement) return
 
-    const animProps = animation as SpatialDivAnimationBindingInternal & {
+    const animProps = animation as SpatializedMotionBindingInternal & {
       __setElement?: (el: Spatialized2DElement | null) => void
     }
 
@@ -189,7 +188,7 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   // Keep suppressed fields in sync with animation state changes
   useEffect(() => {
     if (!animation || !spatializedElement) return
-    const animProps = animation as SpatialDivAnimationBindingInternal
+    const animProps = animation as SpatializedMotionBindingInternal
     const suppressedFields = animProps.__getSuppressedFields?.()
     portalInstanceObject.setSuppressedFields(suppressedFields ?? null)
   })

@@ -100,7 +100,7 @@ describe('useAnimation hook routing', () => {
     )
     const [animatedProps, api] = result.current
     // SpatialDiv branch returns __kind = 'spatialDiv'
-    expect((animatedProps as any).__kind).toBe('spatialDiv')
+    expect((animatedProps as any).__kind).toBe('spatializedMotion')
     expect(api).toHaveProperty('play')
     expect(api).toHaveProperty('pause')
     expect(api).toHaveProperty('cancel')
@@ -119,7 +119,7 @@ describe('useAnimation hook routing', () => {
       }),
     )
     const [animatedProps] = result.current
-    expect((animatedProps as any).__kind).toBe('spatialDiv')
+    expect((animatedProps as any).__kind).toBe('spatializedMotion')
   })
 
   test('mixed keys in useAnimation throws during render', () => {
@@ -133,7 +133,7 @@ describe('useAnimation hook routing', () => {
     })
   })
 
-  test('__kind binding validation: SpatialDiv animatedProps has __kind = spatialDiv', () => {
+  test('__kind binding validation: spatialized segment animatedProps has __kind = spatializedMotion', () => {
     const { result } = renderHook(() =>
       useAnimation({
         to: { opacity: 1 },
@@ -141,7 +141,7 @@ describe('useAnimation hook routing', () => {
       }),
     )
     const [animatedProps] = result.current
-    expect((animatedProps as any).__kind).toBe('spatialDiv')
+    expect((animatedProps as any).__kind).toBe('spatializedMotion')
     expect((animatedProps as any).__animationObjectId).toBeTruthy()
   })
 })
