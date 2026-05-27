@@ -1,8 +1,8 @@
-import type { SpatialDivMotionConfig } from '../../types/spatialDivMotion'
+import type { SpatializedMotionConfig } from '../../types/spatializedMotion'
 
 /** Portal suppression for native / Web motion (matches Plan A transform-wide rule). */
 export function getMotionSuppressedFields(
-  config: SpatialDivMotionConfig,
+  config: SpatializedMotionConfig,
 ): Set<string> {
   const fields = new Set<string>()
   for (const track of config.tracks) {

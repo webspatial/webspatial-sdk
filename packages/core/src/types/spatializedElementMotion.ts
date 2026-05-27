@@ -1,8 +1,8 @@
 import type {
-  SpatialDivMotionProperty,
-  SpatialDivMotionTimeline,
-} from './spatialDivMotion'
-import type { SpatialDivVisualValues } from './spatialDivVisual'
+  SpatializedMotionProperty,
+  SpatializedMotionTimeline,
+} from './spatializedMotion'
+import type { SpatializedVisualValues } from './spatializedVisual'
 import type { TimingFunction } from './animation'
 import type { SpatializedMotionKind } from './spatializedMotion'
 import type { SpatializedPlaybackError } from './spatializedPlayback'
@@ -12,22 +12,22 @@ export interface AnimateSpatializedElementMotionCommand {
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'cancel'
   targetKind: SpatializedMotionKind
-  properties?: SpatialDivMotionProperty[]
+  properties?: SpatializedMotionProperty[]
   elementId?: string
-  to?: SpatialDivVisualValues
-  from?: SpatialDivVisualValues
+  to?: SpatializedVisualValues
+  from?: SpatializedVisualValues
   duration?: number
   timingFunction?: TimingFunction
   delay?: number
   loop?: boolean | { reverse?: boolean }
   playbackRate?: number
-  timeline?: SpatialDivMotionTimeline
+  timeline?: SpatializedMotionTimeline
 }
 
 export interface AnimateSpatializedElementMotionResult {
   animationId: string
-  finished: Promise<SpatialDivVisualValues>
-  canceled: Promise<SpatialDivVisualValues>
+  finished: Promise<SpatializedVisualValues>
+  canceled: Promise<SpatializedVisualValues>
   failed: Promise<SpatializedPlaybackError>
 }
 
@@ -36,6 +36,3 @@ export type ElementMotionCommand = Omit<
   AnimateSpatializedElementMotionCommand,
   'targetKind'
 >
-
-/** @deprecated Use {@link ElementMotionCommand}. */
-export type ContainerElementMotionCommand = ElementMotionCommand

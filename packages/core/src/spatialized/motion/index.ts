@@ -7,6 +7,6 @@ export { MOTION_KIND_POLICIES } from './motionKindPolicy'
 
 export {
   evaluateMotionTimeline,
-  validateSpatialDivMotionConfig as validateSpatialized2DMotionConfig,
-  segmentConfigToMotionConfig as segmentConfigToSpatializedMotionConfig,
+  validateSpatializedMotionConfig as validateSpatializedMotionConfig,
+  segmentConfigToMotionConfig as segmentConfigToMotionConfig,
 } from '../../spatialdiv/motion'

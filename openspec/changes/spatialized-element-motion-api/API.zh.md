@@ -49,7 +49,26 @@ const result = useSpatializedMotion({
 
 `<Model ref.play()>` 播放 USD 片段；**不要**与 `motion.play()` timeline 混为同一 API。
 
-## 6. 演示页（test-server）
+## 6. 类型命名（Core / React 导出）
+
+容器运动统一使用 **`Spatialized*`**（不再导出 `SpatialDiv*` 类型名）：
+
+| 用途 | 类型名 |
+|------|--------|
+| 单段 `from→to` | `SpatializedMotionSegmentConfig` |
+| 多轨 timeline | `SpatializedMotionConfig` |
+| 轨道 / 关键帧 | `SpatializedMotionTrack`, `SpatializedMotionKeyframe` |
+| 属性路径 | `SpatializedMotionProperty` |
+| 瞬时视觉值 | `SpatializedVisualValues`, `SpatializedVisualTransform` |
+| 命令式播放 | `SpatializedPlaybackApi`, `SpatializedMotionPlayState` |
+| 异步失败 | `SpatializedPlaybackError` |
+| 容器 kind | `SpatializedMotionKind` |
+| Portal `animation` 绑定 | `SpatializedMotionBinding`（`__kind: 'spatializedMotion'`） |
+| JSB payload（无 targetKind） | `ElementMotionCommand` |
+
+Entity 动画仍用 **`AnimationConfig`** / **`AnimateTransform`**，与上表分离。
+
+## 7. 演示页（test-server）
 
 - Hub: `/#/spatial-div-motion`（侧栏 **Spatialized Motion**）
 - 2D: `multi-track` 等

@@ -1,4 +1,4 @@
-import type { SpatialDivMotionConfig } from '../../types/spatialDivMotion'
+import type { SpatializedMotionConfig } from '../../types/spatializedMotion'
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 import { getMotionSuppressedFields } from '../../spatialdiv/motion/getMotionSuppressedFields'
 import { getStatic3DMotionSuppressedFields } from '../../static3d/motion/getStatic3DMotionSuppressedFields'
@@ -10,7 +10,7 @@ export interface MotionKindPolicy {
   readonly motionObjectIdPrefix: string
   readonly sessionIdPrefix: string
   readonly controllerLabel: string
-  getSuppressedFields(config: SpatialDivMotionConfig): Set<string> | null
+  getSuppressedFields(config: SpatializedMotionConfig): Set<string> | null
 }
 
 export const MOTION_KIND_POLICIES: Record<

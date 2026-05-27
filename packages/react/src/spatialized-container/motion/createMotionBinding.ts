@@ -6,7 +6,7 @@ import type {
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 import type { Dynamic3DMotionBindingInternal } from './dynamic3dMotionBindingTypes'
-import type { SpatialDivMotionBindingInternal } from './motionBindingTypes'
+import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
 import type { Static3DMotionBindingInternal } from './static3dMotionBindingTypes'
 
 export function createMotionBinding(
@@ -14,7 +14,7 @@ export function createMotionBinding(
   controller: SpatializedMotionHandle,
   nativeCapable: boolean,
 ):
-  | SpatialDivMotionBindingInternal
+  | SpatializedMotionBindingInternal
   | Static3DMotionBindingInternal
   | Dynamic3DMotionBindingInternal
   | undefined {
@@ -40,7 +40,7 @@ export function createMotionBinding(
     case 'spatialized2d':
       return {
         ...base,
-        __kind: 'spatialDivMotion' as const,
+        __kind: 'spatializedMotion' as const,
         __setElement: (element: Spatialized2DElement | null) => {
           controller.attachElement(element)
         },

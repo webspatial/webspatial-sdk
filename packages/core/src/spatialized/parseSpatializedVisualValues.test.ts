@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest'
-import { parseSpatialDivVisualValues } from './parseSpatialDivVisualValues'
+import { parseSpatializedVisualValues } from './parseSpatializedVisualValues'
 
-describe('parseSpatialDivVisualValues', () => {
+describe('parseSpatializedVisualValues', () => {
   test('parses nested values payload', () => {
-    const values = parseSpatialDivVisualValues({
+    const values = parseSpatializedVisualValues({
       values: {
         opacity: 0.5,
         transform: { translate: { x: 1, y: 2, z: 3 } },

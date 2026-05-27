@@ -3,10 +3,10 @@ import type { CSSProperties } from 'react'
 import {
   evaluateMotionTimeline,
   segmentConfigToMotionConfig,
-  type SpatialDivMotionConfig,
-  type SpatialDivPlaybackApi,
-  type SpatialDivSegmentConfig,
-  type SpatialDivVisualValues,
+  type SpatializedMotionConfig as CoreSpatializedMotionConfig,
+  type SpatializedPlaybackApi,
+  type SpatializedMotionSegmentConfig as CoreSpatializedMotionSegmentConfig,
+  type SpatializedVisualValues,
   type SpatializedMotionHandle,
   type SpatializedMotionKind,
 } from '@webspatial/core-sdk'
@@ -14,24 +14,24 @@ import { createMotionBinding } from './createMotionBinding'
 import { createPlaybackApi } from './createPlaybackApi'
 import { useMotionController } from './useMotionController'
 import { valuesToMotionStyle } from './style'
-import type { SpatialDivMotionBindingInternal } from './motionBindingTypes'
+import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
 import type { Static3DMotionBindingInternal } from './static3dMotionBindingTypes'
 import type { Dynamic3DMotionBindingInternal } from './dynamic3dMotionBindingTypes'
 
 export type SpatializedMotionConfig =
-  | ({ kind: 'spatialized2d' } & SpatialDivMotionConfig)
-  | ({ kind: 'static3d' } & SpatialDivMotionConfig)
-  | ({ kind: 'dynamic3d' } & SpatialDivMotionConfig)
+  | ({ kind: 'spatialized2d' } & CoreSpatializedMotionConfig)
+  | ({ kind: 'static3d' } & CoreSpatializedMotionConfig)
+  | ({ kind: 'dynamic3d' } & CoreSpatializedMotionConfig)
 
 export type SpatializedMotionSegmentConfig =
-  | ({ kind: 'spatialized2d' } & SpatialDivSegmentConfig)
-  | ({ kind: 'static3d' } & SpatialDivSegmentConfig)
-  | ({ kind: 'dynamic3d' } & SpatialDivSegmentConfig)
+  | ({ kind: 'spatialized2d' } & CoreSpatializedMotionSegmentConfig)
+  | ({ kind: 'static3d' } & CoreSpatializedMotionSegmentConfig)
+  | ({ kind: 'dynamic3d' } & CoreSpatializedMotionSegmentConfig)
 
 type Spatialized2DMotionBody = {
   style: CSSProperties
   api: ReturnType<typeof createPlaybackApi>
-  motion?: SpatialDivMotionBindingInternal
+  motion?: SpatializedMotionBindingInternal
   controller: SpatializedMotionHandle
 }
 
@@ -50,16 +50,19 @@ export type UseSpatializedMotionResult =
       })
 
 function useSpatialized2DMotion(
-  config: SpatialDivMotionConfig,
+  config: CoreSpatializedMotionConfig,
 ): Spatialized2DMotionBody {
   const initialValues = useMemo(() => evaluateMotionTimeline(config, 0), [])
   const [style, setStyle] = useState<CSSProperties>(() =>
     valuesToMotionStyle(initialValues),
   )
 
-  const applyStyleFromValues = useCallback((values: SpatialDivVisualValues) => {
-    setStyle(valuesToMotionStyle(values))
-  }, [])
+  const applyStyleFromValues = useCallback(
+    (values: SpatializedVisualValues) => {
+      setStyle(valuesToMotionStyle(values))
+    },
+    [],
+  )
 
   const { controller, nativeCapable } = useMotionController(
     'spatialized2d',
@@ -70,7 +73,7 @@ function useSpatialized2DMotion(
   const motionBinding = useMemo(
     () =>
       createMotionBinding('spatialized2d', controller, nativeCapable) as
-        | SpatialDivMotionBindingInternal
+        | SpatializedMotionBindingInternal
         | undefined,
     [controller, nativeCapable],
   )
@@ -92,7 +95,7 @@ function useSpatialized2DMotion(
 
 function useSpatializedNativeMotion(
   kind: 'static3d' | 'dynamic3d',
-  config: SpatialDivMotionConfig,
+  config: CoreSpatializedMotionConfig,
 ): SpatializedNativeMotionBody & {
   motionBinding?: Static3DMotionBindingInternal | Dynamic3DMotionBindingInternal
 } {
@@ -196,4 +199,4 @@ function useSpatializedMotionSimple(
 
 useSpatializedMotion.simple = useSpatializedMotionSimple
 
-export type { SpatialDivPlaybackApi as SpatializedPlaybackApi }
+export type { SpatializedPlaybackApi as SpatializedPlaybackApi }

@@ -1,6 +1,6 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import type { SpatialDivSegmentConfig } from '@webspatial/core-sdk'
+import type { SpatializedMotionSegmentConfig } from '@webspatial/core-sdk'
 
 // Mock supports to enable SpatialDiv animation
 vi.mock('@webspatial/core-sdk', async () => {
@@ -337,13 +337,13 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
   describe('config updates and alive sessions', () => {
     test('config change during running does NOT affect the current session', async () => {
       const mock = createMockElement()
-      const config1: SpatialDivSegmentConfig = {
+      const config1: SpatializedMotionSegmentConfig = {
         to: { opacity: 1 },
         from: { opacity: 0 },
         duration: 1.0,
         autoStart: false,
       }
-      const config2: SpatialDivSegmentConfig = {
+      const config2: SpatializedMotionSegmentConfig = {
         to: { opacity: 0.5 },
         from: { opacity: 0.2 },
         duration: 2.0,
@@ -1112,7 +1112,7 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
   // animatedProps __kind and suppression
   // ============================================================
   describe('animatedProps properties', () => {
-    test('__kind is spatialDiv', () => {
+    test('__kind is spatializedMotion', () => {
       const config = {
         to: { opacity: 1 } as const,
         duration: 1.0,
@@ -1122,7 +1122,7 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
       const { result } = renderHook(() => useSpatialDivAnimation(config, true))
       const [animatedProps] = result.current
 
-      expect((animatedProps as any).__kind).toBe('spatialDiv')
+      expect((animatedProps as any).__kind).toBe('spatializedMotion')
     })
 
     test('__animating reflects alive session', async () => {

@@ -2,7 +2,7 @@ import type { Spatialized2DElement } from '../../Spatialized2DElement'
 import type { SpatializedStatic3DElement } from '../../SpatializedStatic3DElement'
 import type { SpatializedDynamic3DElement } from '../../SpatializedDynamic3DElement'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
-import type { SpatialDivVisualValues } from '../../types/spatialDivVisual'
+import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
@@ -32,7 +32,7 @@ type MotionElement = {
   animateMotion(
     command: AnimateSpatializedElementMotionCommand,
   ): Promise<
-    AnimateSpatializedElementMotionResult | SpatialDivVisualValues | void
+    AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
   >
 }
 
@@ -55,10 +55,10 @@ export async function motionElementSessionCommand(
   kind: SpatializedMotionKind,
   element: MotionHostElement,
   command: MotionSessionCommand,
-): Promise<SpatialDivVisualValues | void> {
+): Promise<SpatializedVisualValues | void> {
   return (await (element as MotionElement).animateMotion(
     elementMotionCommand(kind, command),
-  )) as SpatialDivVisualValues | void
+  )) as SpatializedVisualValues | void
 }
 
 export function motionElementCleanupListeners(

@@ -1,24 +1,24 @@
 import { describe, expect, test } from 'vitest'
-import { validateSpatialDivSegmentConfig } from './spatialDivSegmentValidator'
-import type { SpatialDivSegmentConfig } from '@webspatial/core-sdk'
+import { validateSpatializedMotionSegmentConfig } from './spatializedMotionSegmentValidator'
+import type { SpatializedMotionSegmentConfig } from '@webspatial/core-sdk'
 
-const validConfig: SpatialDivSegmentConfig = {
+const validConfig: SpatializedMotionSegmentConfig = {
   to: { opacity: 0.5 },
   duration: 1.0,
 }
 
-describe('validateSpatialDivSegmentConfig', () => {
+describe('validateSpatializedMotionSegmentConfig', () => {
   // --- Whitelist Validation ---
   describe('whitelist fields', () => {
     test('accepts opacity only', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({ to: { opacity: 0.8 } }),
+        validateSpatializedMotionSegmentConfig({ to: { opacity: 0.8 } }),
       ).not.toThrow()
     })
 
     test('accepts transform.translate', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: { translate: { x: 10 } } },
         }),
       ).not.toThrow()
@@ -26,7 +26,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('accepts transform.rotate', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: { rotate: { z: 90 } } },
         }),
       ).not.toThrow()
@@ -34,7 +34,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('accepts transform.scale', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: { scale: { x: 2, y: 2, z: 1 } } },
         }),
       ).not.toThrow()
@@ -42,7 +42,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('accepts combined opacity + transform', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1, transform: { translate: { y: 50 } } },
         }),
       ).not.toThrow()
@@ -50,7 +50,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects layout-affecting fields: width', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 0.5, width: 100 } as any,
         }),
       ).toThrow(/layout-affecting/)
@@ -58,7 +58,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects layout-affecting fields: height', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1, height: 200 } as any,
         }),
       ).toThrow(/layout-affecting/)
@@ -66,7 +66,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects layout-affecting fields: depth', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 0.5, depth: 50 } as any,
         }),
       ).toThrow(/layout-affecting/)
@@ -74,7 +74,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects layout-affecting fields: back', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 0.5, back: 10 } as any,
         }),
       ).toThrow(/layout-affecting/)
@@ -82,7 +82,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects layout-affecting fields: backOffset', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 0.5, backOffset: 5 } as any,
         }),
       ).toThrow(/layout-affecting/)
@@ -90,7 +90,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects unsupported fields: backgroundMaterial', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 0.5, backgroundMaterial: 'glass' } as any,
         }),
       ).toThrow(/unsupported/)
@@ -98,7 +98,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects unsupported fields: cornerRadius', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 0.5, cornerRadius: 10 } as any,
         }),
       ).toThrow(/unsupported/)
@@ -106,7 +106,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects entity keys: position', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 0.5, position: { x: 1 } } as any,
         }),
       ).toThrow(/entity animation keys/)
@@ -114,7 +114,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects entity keys: rotation (entity)', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 0.5, rotation: { x: 90 } } as any,
         }),
       ).toThrow(/entity animation keys/)
@@ -122,19 +122,21 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects entity keys: scale (entity)', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 0.5, scale: { x: 2 } } as any,
         }),
       ).toThrow(/entity animation keys/)
     })
 
     test('rejects empty to', () => {
-      expect(() => validateSpatialDivSegmentConfig({ to: {} as any })).toThrow()
+      expect(() =>
+        validateSpatializedMotionSegmentConfig({ to: {} as any }),
+      ).toThrow()
     })
 
     test('rejects to with no meaningful fields', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: {} } as any,
         }),
       ).toThrow(/at least one/)
@@ -145,43 +147,43 @@ describe('validateSpatialDivSegmentConfig', () => {
   describe('numeric ranges', () => {
     test('opacity: rejects < 0', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({ to: { opacity: -0.1 } }),
+        validateSpatializedMotionSegmentConfig({ to: { opacity: -0.1 } }),
       ).toThrow(/\[0, 1\]/)
     })
 
     test('opacity: rejects > 1', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({ to: { opacity: 1.1 } }),
+        validateSpatializedMotionSegmentConfig({ to: { opacity: 1.1 } }),
       ).toThrow(/\[0, 1\]/)
     })
 
     test('opacity: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({ to: { opacity: NaN } }),
+        validateSpatializedMotionSegmentConfig({ to: { opacity: NaN } }),
       ).toThrow()
     })
 
     test('opacity: rejects Infinity', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({ to: { opacity: Infinity } }),
+        validateSpatializedMotionSegmentConfig({ to: { opacity: Infinity } }),
       ).toThrow()
     })
 
     test('opacity: accepts 0', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({ to: { opacity: 0 } }),
+        validateSpatializedMotionSegmentConfig({ to: { opacity: 0 } }),
       ).not.toThrow()
     })
 
     test('opacity: accepts 1', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({ to: { opacity: 1 } }),
+        validateSpatializedMotionSegmentConfig({ to: { opacity: 1 } }),
       ).not.toThrow()
     })
 
     test('translate: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: { translate: { x: NaN } } },
         }),
       ).toThrow(/finite/)
@@ -189,7 +191,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('translate: rejects Infinity', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: { translate: { y: Infinity } } },
         }),
       ).toThrow(/finite/)
@@ -197,7 +199,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rotate: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: { rotate: { z: NaN } } },
         }),
       ).toThrow(/finite/)
@@ -205,7 +207,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('scale: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: { scale: { x: NaN } } },
         }),
       ).toThrow(/finite/)
@@ -213,7 +215,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('scale: accepts 0 (exit animations)', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: { scale: { x: 0 } } },
         }),
       ).not.toThrow()
@@ -224,7 +226,7 @@ describe('validateSpatialDivSegmentConfig', () => {
   describe('timing parameters', () => {
     test('duration: rejects 0', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           duration: 0,
         }),
@@ -233,7 +235,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('duration: rejects negative', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           duration: -1,
         }),
@@ -242,7 +244,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('duration: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           duration: NaN,
         }),
@@ -251,7 +253,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('duration: rejects Infinity', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           duration: Infinity,
         }),
@@ -260,7 +262,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('delay: rejects negative', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           delay: -1,
         }),
@@ -269,7 +271,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('delay: accepts 0', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           delay: 0,
         }),
@@ -278,7 +280,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('delay: rejects NaN', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           delay: NaN,
         }),
@@ -288,7 +290,7 @@ describe('validateSpatialDivSegmentConfig', () => {
     test('timingFunction: accepts valid values', () => {
       for (const tf of ['linear', 'easeIn', 'easeOut', 'easeInOut'] as const) {
         expect(() =>
-          validateSpatialDivSegmentConfig({
+          validateSpatializedMotionSegmentConfig({
             to: { opacity: 1 },
             timingFunction: tf,
           }),
@@ -298,7 +300,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('timingFunction: rejects invalid string', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           timingFunction: 'cubic-bezier(0,0,1,1)' as any,
         }),
@@ -307,7 +309,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('playbackRate: rejects 0', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           playbackRate: 0,
         }),
@@ -316,7 +318,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('playbackRate: rejects negative', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           playbackRate: -1,
         }),
@@ -325,7 +327,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('playbackRate: rejects Infinity', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           playbackRate: Infinity,
         }),
@@ -334,7 +336,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('playbackRate: accepts valid positive value', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           playbackRate: 2.5,
         }),
@@ -346,7 +348,7 @@ describe('validateSpatialDivSegmentConfig', () => {
   describe('loop config', () => {
     test('accepts true', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           loop: true,
         }),
@@ -355,7 +357,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('accepts false', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           loop: false,
         }),
@@ -364,7 +366,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('accepts { reverse: true }', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           loop: { reverse: true },
         }),
@@ -373,7 +375,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('accepts { reverse: false }', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           loop: { reverse: false },
         }),
@@ -382,7 +384,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('accepts {}', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           loop: {},
         }),
@@ -391,7 +393,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects invalid shape: number', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           loop: 3 as any,
         }),
@@ -400,7 +402,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects invalid shape: string', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           loop: 'infinite' as any,
         }),
@@ -409,7 +411,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects unknown keys in loop object', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           loop: { count: 5 } as any,
         }),
@@ -418,7 +420,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects non-boolean reverse', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { opacity: 1 },
           loop: { reverse: 'yes' } as any,
         }),
@@ -430,7 +432,7 @@ describe('validateSpatialDivSegmentConfig', () => {
   describe('transform sub-keys', () => {
     test('rejects invalid sub-keys in transform', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: { translate: { x: 0 }, skew: { x: 10 } } } as any,
         }),
       ).toThrow(/invalid sub-keys/)
@@ -438,7 +440,7 @@ describe('validateSpatialDivSegmentConfig', () => {
 
     test('rejects perspective in transform', () => {
       expect(() =>
-        validateSpatialDivSegmentConfig({
+        validateSpatializedMotionSegmentConfig({
           to: { transform: { translate: { x: 0 }, perspective: 500 } } as any,
         }),
       ).toThrow(/invalid sub-keys/)
