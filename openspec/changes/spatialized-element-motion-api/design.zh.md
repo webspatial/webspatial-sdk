@@ -22,7 +22,7 @@ Plan A 确立了架构原语：
 Plan B 扩展了架构：
 - **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe（灵感来自 Three.js AnimationClip）
 - **双后端**：native 不可用时 Web RAF，WebSpatial 运行时走 native timeline
-- **Style outlet**：用于 React 状态驱动渲染的 `style` 对象（与 `animation` prop 解耦）
+- **Style outlet**：回传给业务侧、用于 React 状态驱动渲染的 `style` 对象；Plan B 同时将 binding 从 `animation` 更名为 `motion`
 - **多 kind 支持**：基于策略的路由，覆盖 spatialized2d / static3d / dynamic3d
 
 ### 统一架构（本设计）
