@@ -9,7 +9,7 @@
 ## Phase 1 — Unified naming + router (React)
 
 - [x] Export `Spatialized*` type aliases and `useSpatializedMotion(config)`
-- [x] Remove per-kind React hook aliases; public API is only `useSpatializedMotion` / `.simple`
+- [x] Remove per-kind React hook aliases; public API is only `useSpatializedMotion`
 - [x] Shared React internals: `useMotionController`, `createMotionBinding`, `createPlaybackApi`
 
 ## Phase 2 — Static3D + Dynamic3D native timelines
@@ -79,7 +79,7 @@
 - [ ] `style` returns `{}` for native-only targets (static3d / dynamic3d); active CSSProperties for 2D
 - [ ] Pre-bind `api.play()` queues command; playback starts after target resolved
 - [ ] Single-bind constraint: warn/throw if same `animation` bound to multiple components
-- [ ] Update `useSpatializedMotion.simple()` to same tuple return shape
+- [ ] Remove `useSpatializedMotion.simple()` public surface; unified hook accepts `from/to` or `tracks` directly
 - [ ] Remove internal `switch (config.kind)` routing in `useSpatializedMotion.ts`
 - [ ] Update all test-server demo pages to new tuple API
 - [ ] Update unit tests (`useSpatializedMotion.behavior.test.tsx`, `.native.test.tsx`)

@@ -25,7 +25,7 @@ This sub-spec documents the **Plan A session-based animation API** (`useAnimatio
 |--------|-----------------|---------------------------|
 | Hook | `useAnimation(config)` | `useSpatializedMotion(config)` |
 | Binding | `animation` prop on `enable-xr` node | `style` merge + optional `motion` binding |
-| Config shape | `from` / `to` single segment | `tracks[]` with keyframes (or `.simple()` sugar) |
+| Config shape | `from` / `to` single segment | `from/to` (recommended) or `tracks[]` with keyframes (mutually exclusive) |
 | Playback backend | Native only | Web RAF + native (dual backend) |
 | Supported kinds | `spatialized2d` only | `spatialized2d`, `static3d`, `dynamic3d` |
 | Capability token | `supports('useAnimation', ['element'])` | `supports('useSpatializedMotion', [kind])` |
@@ -64,7 +64,7 @@ Alive sessions MUST be stopped/canceled on unmount without firing lifecycle call
 
 ## Segment Downgrade (interop with timeline API)
 
-When a `useSpatializedMotion.simple()` config has exactly two keyframes per property at `at: 0` and `at: duration` with one shared easing, the SDK MAY compile it to a legacy segment `play` command (`from`/`to`) for native playback. This is an internal optimization; the public API is `useSpatializedMotion`.
+When a `useSpatializedMotion({ from, to })` config compiles to tracks where each property has exactly two keyframes at `at: 0` and `at: duration` with one shared easing, the SDK MAY compile it to a legacy segment `play` command (`from`/`to`) for native playback. This is an internal optimization; the public API is `useSpatializedMotion`.
 
 ## Deprecation Path
 

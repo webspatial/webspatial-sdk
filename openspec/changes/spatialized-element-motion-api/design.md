@@ -33,7 +33,7 @@ The merge combines both into a single normative system with backward compatibili
 
 - One timeline config shape across 2D / Static3D / Dynamic3D container kinds.
 - **One** Core implementation: `SpatializedMotionController` (policy per `kind`) + `element.motion(config)` on each element class.
-- **One** React entry: `useSpatializedMotion(config)` and `useSpatializedMotion.simple(config)`. Target resolved at bind time (no `kind` in config).
+- **One** React entry: `useSpatializedMotion(config)` accepting `from/to` or `tracks` (mutually exclusive union). Target resolved at bind time (no `kind` in config). Internally, `from/to` compiles to `tracks`.
 - Legacy `useAnimation` + `animation` prop retained as deprecated path for 2D.
 - Umbrella spec with per-kind sub-specs; 2D remains the reference for Web RAF + suppression behavior.
 
@@ -74,7 +74,7 @@ flowchart TB
 
 | Module | Role |
 |--------|------|
-| `useSpatializedMotion` | Public hook (tuple return `[animation, api, style]` + `.simple`); target-agnostic until bind |
+| `useSpatializedMotion` | Public hook (tuple return `[animation, api, style]`); accepts `from/to` or `tracks` config; target-agnostic until bind |
 | `useMotionController` + `createMotionBinding` + `createPlaybackApi` | Shared wiring |
 
 ## Shared Types (Core)
@@ -111,7 +111,7 @@ The Plan A path (`useAnimation` + `animation` prop) is retained as a thin compat
 1. `useAnimation(config)` for SpatialDiv continues to work unchanged.
 2. Internally, simple configs MAY be compiled to the same native segment command.
 3. The `animation` prop path does NOT use `SpatializedMotionController`; it retains its own session management.
-4. New code SHOULD use `useSpatializedMotion.simple()` which provides the same single-segment experience.
+4. New code SHOULD use `useSpatializedMotion({ from, to, duration })` which provides the same single-segment experience.
 
 ## Portal Suppression (unified rules)
 

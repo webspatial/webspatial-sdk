@@ -14,7 +14,7 @@
 |------|---------------|---------------------|
 | Hook | `useAnimation(config)` | `useSpatializedMotion(config)` |
 | 绑定方式 | `animation` prop 传给 `enable-xr` 节点 | `style` 合并 + 可选 `motion` binding |
-| 配置形状 | `from` / `to` 单段 | `tracks[]` 带 keyframes（或 `.simple()` 语法糖） |
+| 配置形状 | `from` / `to` 单段 | `from/to`（推荐）或 `tracks[]` 带 keyframes（互斥） |
 | 播放后端 | 仅 native | Web RAF + native（双后端） |
 | 支持 kind | 仅 `spatialized2d` | `spatialized2d`、`static3d`、`dynamic3d` |
 | 能力 token | `supports('useAnimation', ['element'])` | `supports('useSpatializedMotion', [kind])` |
@@ -53,7 +53,7 @@ alive 会话在卸载时 MUST 被停止/取消，且 MUST NOT 触发生命周期
 
 ## 段降级（与 timeline API 互操作）
 
-当 `useSpatializedMotion.simple()` 配置每个属性恰好有两个 keyframe（`at: 0` 和 `at: duration`），且共享一个 easing 时，SDK MAY 将其编译为旧版段 `play` 命令（`from`/`to`）发送到 native。这是内部优化；公共 API 为 `useSpatializedMotion`。
+当 `useSpatializedMotion({ from, to })` 配置编译为 tracks 后，每个属性恰好有两个 keyframe（`at: 0` 和 `at: duration`）且共享一个 easing 时，SDK MAY 将其编译为旧版段 `play` 命令（`from`/`to`）发送到 native。这是内部优化；公共 API 为 `useSpatializedMotion`。
 
 ## 废弃路径
 
