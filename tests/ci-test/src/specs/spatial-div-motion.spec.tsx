@@ -17,8 +17,7 @@ function readTranslateX(child: { transform?: { translation?: number[] } }) {
 function MultiTrackMotionPanel() {
   const bindPromiseRef = React.useRef<AsyncPromise<boolean> | null>(null)
 
-  const { style, motion } = useSpatializedMotion({
-    kind: 'spatialized2d',
+  const [motion, , style] = useSpatializedMotion({
     duration: 5,
     autoStart: true,
     tracks: [

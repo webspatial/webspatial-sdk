@@ -34,6 +34,7 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
       onSpatialMagnify,
       onSpatialMagnifyEnd,
       spatialEventOptions: _spatialEventOptions,
+      motion: _motion,
       ...modelProps
     } = restProps
     // map to VisionOS26 model tag outside attachments

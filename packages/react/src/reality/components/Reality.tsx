@@ -13,7 +13,7 @@ import { ResourceRegistry } from '../utils'
 import { AttachmentRegistry } from '../context/AttachmentContext'
 import { SpatializedElementRef } from '../../spatialized-container/types'
 import { SpatializedElement } from '@webspatial/core-sdk'
-import type { Dynamic3DMotionBindingInternal } from '../../spatialized-container/motion/dynamic3dMotionBindingTypes'
+import type { SpatializedMotionBindingInternal } from '../../spatialized-container/motion/motionBindingTypes'
 import { EntityEventHandler } from '../type'
 import { useRealityEvents } from '../hooks'
 import { markWebSpatialPrimitive } from '../../jsx/primitive-marker'
@@ -24,7 +24,7 @@ export type RealityProps = Omit<
 > &
   EntityEventHandler & {
     /** Native root-transform motion on the Reality container (`SpatializedDynamic3DElement`). */
-    motion?: Dynamic3DMotionBindingInternal
+    motion?: SpatializedMotionBindingInternal
   }
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
@@ -140,10 +140,10 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       if (!isReady || !motion) return
       const reality = ctxRef.current?.reality
       if (!reality) return
-      motion.__setElement?.(reality)
+      motion.__setElement?.(reality, 'dynamic3d')
       return () => {
         motion.__onUnbind?.()
-        motion.__setElement?.(null as any)
+        motion.__setElement?.(null as any, 'dynamic3d')
       }
     }, [motion, isReady])
 

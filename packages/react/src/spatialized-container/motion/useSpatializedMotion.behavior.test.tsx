@@ -4,7 +4,6 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { useSpatializedMotion } from './useSpatializedMotion'
 
 const SIMPLE_ENTRANCE_CONFIG = {
-  kind: 'spatialized2d' as const,
   from: {
     opacity: 0,
     transform: { translate: { y: 40 } },
@@ -18,44 +17,73 @@ const SIMPLE_ENTRANCE_CONFIG = {
   autoStart: true,
 }
 
-describe('useSpatializedMotion (spatialized2d) integration', () => {
-  test('simple() autoStart animates before finishing', async () => {
+function createMockElement(id = 'motion-element-1') {
+  return { id }
+}
+
+describe('useSpatializedMotion tuple api', () => {
+  test('2D bind starts playback and updates style', async () => {
     const { result } = renderHook(() =>
-      useSpatializedMotion.simple(SIMPLE_ENTRANCE_CONFIG),
+      useSpatializedMotion(SIMPLE_ENTRANCE_CONFIG),
     )
 
-    expect(result.current.kind).toBe('spatialized2d')
-    if (result.current.kind !== 'spatialized2d') return
-    expect(result.current.style.opacity).toBe(0)
-    expect(String(result.current.style.transform)).toContain('40px')
+    expect(result.current[2].opacity).toBe(0)
+    expect(String(result.current[2].transform)).toContain('40px')
+
+    await act(async () => {
+      result.current[0].__setElement?.(
+        createMockElement() as any,
+        'spatialized2d',
+      )
+    })
 
     await waitFor(
       () => {
-        expect(result.current.kind).toBe('spatialized2d')
-        if (result.current.kind !== 'spatialized2d') return
-        const opacity = result.current.style.opacity as number
-        expect(opacity).toBeGreaterThan(0)
-        expect(opacity).toBeLessThan(1)
+        expect(result.current[2].opacity).toBeGreaterThan(0)
+        expect(result.current[2].opacity).toBeLessThan(1)
       },
       { timeout: 300 },
     )
 
     await waitFor(
       () => {
-        expect(result.current.kind).toBe('spatialized2d')
-        if (result.current.kind !== 'spatialized2d') return
-        expect(result.current.style.opacity).toBe(1)
-        expect(result.current.api.playState).toBe('finished')
+        expect(result.current[2].opacity).toBe(1)
+        expect(result.current[1].playState).toBe('finished')
       },
       { timeout: 800 },
     )
+  })
+
+  test('static3d binding resolves target and keeps style empty', async () => {
+    const { result } = renderHook(() =>
+      useSpatializedMotion({
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(createMockElement() as any, 'static3d')
+    })
+
+    await waitFor(() => {
+      expect(result.current[2]).toEqual({})
+    })
   })
 
   test('web pause syncs style to timeline sample at elapsed progress', async () => {
     vi.useFakeTimers()
     const { result } = renderHook(() =>
       useSpatializedMotion({
-        kind: 'spatialized2d',
         duration: 5,
         autoStart: false,
         tracks: [
@@ -72,20 +100,22 @@ describe('useSpatializedMotion (spatialized2d) integration', () => {
     )
 
     await act(async () => {
-      result.current.api.play()
+      result.current[0].__setElement?.(
+        createMockElement() as any,
+        'spatialized2d',
+      )
+      result.current[1].play()
     })
     await act(async () => {
       vi.advanceTimersByTime(1500)
       await Promise.resolve()
     })
     await act(async () => {
-      result.current.api.pause()
+      result.current[1].pause()
     })
 
-    expect(result.current.kind).toBe('spatialized2d')
-    if (result.current.kind !== 'spatialized2d') return
-    expect(String(result.current.style.transform)).toContain('translate3d(30px')
-    expect(result.current.api.playState).toBe('paused')
+    expect(String(result.current[2].transform)).toContain('translate3d(30px')
+    expect(result.current[1].playState).toBe('paused')
     vi.useRealTimers()
   })
 
@@ -95,16 +125,21 @@ describe('useSpatializedMotion (spatialized2d) integration', () => {
     )
 
     const { result } = renderHook(
-      () => useSpatializedMotion.simple(SIMPLE_ENTRANCE_CONFIG),
+      () => useSpatializedMotion(SIMPLE_ENTRANCE_CONFIG),
       { wrapper },
     )
 
+    await act(async () => {
+      result.current[0].__setElement?.(
+        createMockElement() as any,
+        'spatialized2d',
+      )
+    })
+
     await waitFor(
       () => {
-        expect(result.current.kind).toBe('spatialized2d')
-        if (result.current.kind !== 'spatialized2d') return
-        expect(result.current.style.opacity).toBe(1)
-        expect(result.current.api.playState).toBe('finished')
+        expect(result.current[2].opacity).toBe(1)
+        expect(result.current[1].playState).toBe('finished')
       },
       { timeout: 1200 },
     )
