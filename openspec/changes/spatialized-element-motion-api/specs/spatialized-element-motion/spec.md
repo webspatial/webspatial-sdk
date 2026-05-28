@@ -13,12 +13,66 @@ The platform MUST document and implement declarative timeline motion for these t
 
 ### Requirement: Shared playback API shape
 
-All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (`play`, `pause`, `resume`, `cancel`, `playState`, `isAnimating`, `isPaused`, `finished`). Kinds MAY support selective `pause(keys?)` where the backend allows.
+All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (`play`, `pause`, `resume`, `stop`, `reset`, `finish`, `playState`, `isAnimating`, `isPaused`, `finished`). Kinds MAY support selective `pause(keys?)` where the backend allows.
 
 #### Scenario: Playback API is available regardless of binding target
 
 - **WHEN** authors obtain a motion tuple from `useSpatializedMotion(config)`
-- **THEN** the returned `api` MUST expose `play`, `pause`, `resume`, `cancel`, `playState`, `isAnimating`, `isPaused`, and `finished` regardless of which component the `animation` is later bound to
+- **THEN** the returned `api` MUST expose `play`, `pause`, `resume`, `stop`, `reset`, `finish`, `playState`, `isAnimating`, `isPaused`, and `finished` regardless of which component the `animation` is later bound to
+
+#### Scenario: stop() freezes at current values
+
+- **WHEN** `api.stop()` is called while the animation is running or paused
+- **THEN** the style MUST freeze at the sampled values of the current playback time, `playState` MUST become `idle`, and `onStop` MUST be invoked with the frozen values
+
+#### Scenario: reset() reverts to initial values
+
+- **WHEN** `api.reset()` is called while the animation is running, paused, or finished
+- **THEN** the style MUST revert to the `from` (initial) values, `playState` MUST become `idle`, and `onReset` MUST be invoked with the initial values
+
+#### Scenario: finish() jumps to final values
+
+- **WHEN** `api.finish()` is called while the animation is running or paused
+- **THEN** the style MUST jump to the `to` (final) values, `playState` MUST become `finished`, and `onComplete` MUST be invoked with the final values
+
+#### Scenario: Style value source is backend-symmetric
+
+- **WHEN** a termination method (`stop`, `reset`, `finish`) is invoked
+- **THEN** on Web backend the style values MUST be computed by the JS timeline evaluator; on native backend the style values MUST be provided by the native runtime (with JS evaluator as fallback if native does not return values)
+
+### Requirement: Shared lifecycle callbacks
+
+The config MUST support the following lifecycle callbacks:
+
+| Callback | Trigger | Parameter |
+|----------|---------|-----------|
+| `onStart` | First frame of playback after `play()` | none |
+| `onComplete` | Natural playback end **or** `finish()` | `values: SpatializedVisualValues` (to values) |
+| `onStop` | `stop()` invoked | `values: SpatializedVisualValues` (current values) |
+| `onReset` | `reset()` invoked | `values: SpatializedVisualValues` (from values) |
+| `onError` | Native bridge async failure | `error: SpatializedPlaybackError` |
+
+Callbacks MUST be mutually exclusive per session termination: exactly one of `onComplete`, `onStop`, or `onReset` fires per session end. `onError` MAY fire independently on native failure.
+
+#### Scenario: onComplete fires on natural end
+
+- **WHEN** the animation reaches its `duration` without interruption
+- **THEN** `onComplete` MUST be invoked with the final values and `playState` MUST be `finished`
+
+#### Scenario: onComplete fires on finish()
+
+- **WHEN** `api.finish()` is called
+- **THEN** `onComplete` MUST be invoked with the `to` values (same as natural end)
+
+#### Scenario: onStop fires on stop()
+
+- **WHEN** `api.stop()` is called
+- **THEN** `onStop` MUST be invoked with the current sampled values
+
+#### Scenario: onReset fires on reset()
+
+- **WHEN** `api.reset()` is called
+- **THEN** `onReset` MUST be invoked with the initial (`from`) values
 
 ### Requirement: Unified config accepts from/to or tracks (mutually exclusive)
 
