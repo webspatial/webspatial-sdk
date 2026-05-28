@@ -189,10 +189,10 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
 
   useEffect(() => {
     if (!motion || !spatializedElement) return
-    motion.__setElement?.(spatializedElement)
+    motion.__setElement?.(spatializedElement, 'static3d')
     return () => {
       motion.__onUnbind?.()
-      motion.__setElement?.(null as any)
+      motion.__setElement?.(null as any, 'static3d')
     }
   }, [motion, spatializedElement])
 

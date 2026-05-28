@@ -70,17 +70,17 @@
 
 ## Phase 8 — Bind-time target resolution (API reshape)
 
-- [ ] Remove `kind` from `SpatializedMotionConfig` public type (config no longer carries target)
-- [ ] Change `useSpatializedMotion` return from object `{ style, api, motion, controller }` to tuple `[animation, api, style]`
-- [ ] Implement deferred target slot in `animation` binding (target unknown until mount)
-- [ ] `<div enable-xr motion={animation}>` → resolve target to `spatialized2d`, activate Web RAF + native policy
-- [ ] `<Model motion={animation}>` → resolve target to `static3d`, activate native-only policy
-- [ ] `<Reality motion={animation}>` → resolve target to `dynamic3d`, activate native-only policy
-- [ ] `style` returns `{}` for native-only targets (static3d / dynamic3d); active CSSProperties for 2D
-- [ ] Pre-bind `api.play()` queues command; playback starts after target resolved
-- [ ] Single-bind constraint: warn/throw if same `animation` bound to multiple components
-- [ ] Remove `useSpatializedMotion.simple()` public surface; unified hook accepts `from/to` or `tracks` directly
-- [ ] Remove internal `switch (config.kind)` routing in `useSpatializedMotion.ts`
-- [ ] Update all test-server demo pages to new tuple API
-- [ ] Update unit tests (`useSpatializedMotion.behavior.test.tsx`, `.native.test.tsx`)
-- [ ] Update `@webspatial/core-sdk` exports: remove `SpatializedMotionKind` from public surface (internal only)
+- [x] Remove `kind` from `SpatializedMotionConfig` public type (config no longer carries target)
+- [x] Change `useSpatializedMotion` return from object `{ style, api, motion, controller }` to tuple `[animation, api, style]`
+- [x] Implement deferred target slot in `animation` binding (target unknown until mount)
+- [x] `<div enable-xr motion={animation}>` → resolve target to `spatialized2d`, activate Web RAF + native policy
+- [x] `<Model motion={animation}>` → resolve target to `static3d`, activate native-only policy
+- [x] `<Reality motion={animation}>` → resolve target to `dynamic3d`, activate native-only policy
+- [x] `style` returns `{}` for native-only targets (static3d / dynamic3d); active CSSProperties for 2D
+- [x] Pre-bind `api.play()` queues command; playback starts after target resolved
+- [x] Single-bind constraint: warn/throw if same `animation` bound to multiple components
+- [x] Remove `useSpatializedMotion.simple()` public surface; unified hook accepts `from/to` or `tracks` directly
+- [x] Remove internal `switch (config.kind)` routing in `useSpatializedMotion.ts`
+- [x] Update all test-server demo pages to new tuple API
+- [x] Update unit tests (`useSpatializedMotion.behavior.test.tsx`, `.native.test.tsx`)
+- [x] Update `@webspatial/core-sdk` exports: remove `SpatializedMotionKind` from public surface (internal only)

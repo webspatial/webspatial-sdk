@@ -18,8 +18,7 @@ export function SpatialDivMotionTranslateZPage() {
 
   const elementAnim = supports('useAnimation', ['element'])
 
-  const { style, api, motion } = useSpatializedMotion({
-    kind: 'spatialized2d',
+  const [motion, api, style] = useSpatializedMotion({
     duration: DURATION,
     autoStart: true,
     tracks: [
@@ -37,11 +36,11 @@ export function SpatialDivMotionTranslateZPage() {
       setHint('Playing — depth (translate.z toward viewer)')
     },
     onComplete: values => {
-      setLines(l => [...l, `onComplete ${fmtValues(values)}`])
+      setLines(l => [...l, `onComplete ${fmtValues(values as any)}`])
       setHint('Done — translate.z at end keyframe')
     },
     onCancel: values => {
-      setLines(l => [...l, `onCancel ${fmtValues(values)}`])
+      setLines(l => [...l, `onCancel ${fmtValues(values as any)}`])
       setHint('Canceled — back to z=0')
     },
     onError: error => {
@@ -72,7 +71,7 @@ export function SpatialDivMotionTranslateZPage() {
 
       <div
         enable-xr
-        motion={motion}
+        {...{ motion: motion as any }}
         className="box mb-4 rounded-xl border-2 border-sky-500/50"
         style={{
           width: 280,
