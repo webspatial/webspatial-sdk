@@ -25,7 +25,7 @@
 
 ### Requirement: 旧版 useAnimation hook 返回 [animation, api]
 
-应用代码为 SpatialDiv 调用 `useAnimation(config)` 时，hook MUST 返回 `[animation, api]`，其中 `api` 暴露 `play`、`pause`、`cancel`、`isAnimating`、`isPaused`、`finished`、`playState`。
+应用代码为 SpatialDiv 调用 `useAnimation(config)` 时，hook MUST 返回 `[animation, api]`，其中 `api` 暴露 `play`、`pause`、`stop`、`reset`、`finish`、`isAnimating`、`isPaused`、`finished`、`playState`。
 
 ### Requirement: animation prop 仅绑定 SpatialDiv
 
@@ -41,15 +41,15 @@
 
 ### Requirement: 命令式播放与生命周期
 
-`play`、`pause`、`cancel` 和生命周期回调（`onStart`、`onComplete`、`onCancel`、`onError`）MUST 遵循归档 spec 中记录的相同语义。
+`play`、`pause`、`stop`、`reset`、`finish` 和生命周期回调（`onStart`、`onComplete`、`onStop`、`onReset`、`onError`）MUST 遵循归档 spec 中记录的相同语义。
 
 ### Requirement: 播放期间 Portal 抑制
 
-`opacity` 的属性级抑制和 transform 整体抑制 MUST 防止普通 DOM 同步覆盖动画中间态。抑制释放时机和 `cancel` 恢复到 `from` 保持不变。
+`opacity` 的属性级抑制和 transform 整体抑制 MUST 防止普通 DOM 同步覆盖动画中间态。抑制释放时机和 `reset` 恢复到 `from` 保持不变。
 
 ### Requirement: 卸载时清理
 
-alive 会话在卸载时 MUST 被停止/取消，且 MUST NOT 触发生命周期回调。
+alive 会话在卸载时 MUST 被终止，且 MUST NOT 触发生命周期回调。
 
 ## 段降级（与 timeline API 互操作）
 

@@ -79,7 +79,8 @@ export function segmentConfigToMotionConfig(
     playbackRate: simple.playbackRate,
     onStart: simple.onStart,
     onComplete: simple.onComplete,
-    onCancel: simple.onCancel,
+    onStop: simple.onStop,
+    onReset: simple.onReset,
     onError: simple.onError,
   }
 }

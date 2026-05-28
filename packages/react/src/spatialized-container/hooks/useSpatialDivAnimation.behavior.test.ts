@@ -152,17 +152,17 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
   })
 
   // ============================================================
-  // Queued play: pause/cancel while queued
+  // Queued play: pause/reset while queued
   // ============================================================
   describe('queued play interactions', () => {
-    test('cancel while queued invokes onCancel with from values', async () => {
-      const onCancel = vi.fn()
+    test('reset while queued invokes onReset with from values', async () => {
+      const onReset = vi.fn()
       const config = {
         to: { opacity: 1 } as const,
         from: { opacity: 0.5 } as const,
         duration: 1.0,
         autoStart: false,
-        onCancel,
+        onReset,
       }
 
       const { result } = renderHook(() => useSpatialDivAnimation(config, true))
@@ -175,14 +175,14 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
       expect(api.playState).toBe('queued')
 
       await act(async () => {
-        api.cancel()
+        api.reset()
       })
       await flushPromises()
 
       expect(api.playState).toBe('idle')
       expect(api.isAnimating).toBe(false)
-      expect(onCancel).toHaveBeenCalledTimes(1)
-      expect(onCancel).toHaveBeenCalledWith({ opacity: 0.5 })
+      expect(onReset).toHaveBeenCalledTimes(1)
+      expect(onReset).toHaveBeenCalledWith({ opacity: 0.5 })
     })
 
     test('pause while queued, then bind → session starts in paused state', async () => {
@@ -388,7 +388,7 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
   // Command serialization
   // ============================================================
   describe('command serialization', () => {
-    test('rapid play/pause/cancel are sent in call order', async () => {
+    test('rapid play/pause/reset are sent in call order', async () => {
       const mock = createMockElement()
       const config = {
         to: { opacity: 1 } as const,
@@ -509,20 +509,20 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
   })
 
   // ============================================================
-  // onComplete / onCancel mutual exclusion
+  // onComplete / onReset mutual exclusion
   // ============================================================
   describe('lifecycle callback mutual exclusion', () => {
-    test('natural completion fires onComplete only (not onCancel)', async () => {
+    test('natural completion fires onComplete only (not onReset)', async () => {
       const mock = createMockElement()
       const onComplete = vi.fn()
-      const onCancel = vi.fn()
+      const onReset = vi.fn()
       const config = {
         to: { opacity: 1 } as const,
         from: { opacity: 0 } as const,
         duration: 1.0,
         autoStart: false,
         onComplete,
-        onCancel,
+        onReset,
       }
 
       const { result } = renderHook(() => useSpatialDivAnimation(config, true))
@@ -545,20 +545,20 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
 
       expect(onComplete).toHaveBeenCalledTimes(1)
       expect(onComplete).toHaveBeenCalledWith({ opacity: 1 })
-      expect(onCancel).not.toHaveBeenCalled()
+      expect(onReset).not.toHaveBeenCalled()
     })
 
-    test('cancel fires onCancel only (not onComplete)', async () => {
+    test('reset fires onReset only (not onComplete)', async () => {
       const mock = createMockElement()
       const onComplete = vi.fn()
-      const onCancel = vi.fn()
+      const onReset = vi.fn()
       const config = {
         to: { opacity: 1 } as const,
         from: { opacity: 0 } as const,
         duration: 1.0,
         autoStart: false,
         onComplete,
-        onCancel,
+        onReset,
       }
 
       const { result } = renderHook(() => useSpatialDivAnimation(config, true))
@@ -575,7 +575,7 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
       await flushPromises()
 
       await act(async () => {
-        api.cancel()
+        api.reset()
       })
       await flushPromises()
 
@@ -584,8 +584,8 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
       })
       await flushPromises()
 
-      expect(onCancel).toHaveBeenCalledTimes(1)
-      expect(onCancel).toHaveBeenCalledWith({ opacity: 0 })
+      expect(onReset).toHaveBeenCalledTimes(1)
+      expect(onReset).toHaveBeenCalledWith({ opacity: 0 })
       expect(onComplete).not.toHaveBeenCalled()
     })
   })
@@ -745,7 +745,7 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
       })
       await flushPromises()
 
-      // Should have sent cancel to native
+      // Should have sent the internal cleanup cancel to native
       expect(mock.element.animateSpatialDiv).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'cancel' }),
       )
@@ -896,7 +896,7 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
       expect(api.isAnimating).toBe(true)
     })
 
-    test('finished resets to false on cancel()', async () => {
+    test('finished resets to false on reset()', async () => {
       const mock = createMockElement()
       const config = {
         to: { opacity: 1 } as const,
@@ -925,7 +925,7 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
       expect(api.finished).toBe(true)
 
       await act(async () => {
-        api.cancel()
+        api.reset()
       })
       await flushPromises()
       expect(api.finished).toBe(false)
@@ -955,7 +955,7 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
       expect(api.playState).toBe('idle')
     })
 
-    test('cancel when idle is no-op', async () => {
+    test('reset when idle is no-op', async () => {
       const config = {
         to: { opacity: 1 } as const,
         from: { opacity: 0 } as const,
@@ -967,7 +967,7 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
       const [, api] = result.current
 
       await act(async () => {
-        api.cancel()
+        api.reset()
       })
       await flushPromises()
       expect(api.playState).toBe('idle')

@@ -12,7 +12,7 @@ Implementation MUST use `SpatializedMotionController` with the `static3d` target
 
 - **GIVEN** `supports('useAnimation', ['static3d'])` is true
 - **WHEN** `SpatializedStatic3DElement.animateMotion({ type: 'play', timeline })` runs
-- **THEN** native MUST sample the timeline and update `modelTransform` / `opacity` until complete or cancel
+- **THEN** native MUST sample the timeline and update `modelTransform` / `opacity` until completion or session termination
 
 #### Scenario: Model motion binding
 

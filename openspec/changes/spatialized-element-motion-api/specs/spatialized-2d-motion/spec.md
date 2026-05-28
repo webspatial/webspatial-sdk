@@ -30,7 +30,7 @@ The SDK MUST provide `useSpatializedMotion(config)` returning `[animation, api, 
 
 - **WHEN** application code calls `useSpatializedMotion(config)` and binds `animation` to an `enable-xr` node
 - **THEN** the hook MUST return a tuple with `animation`, `api`, and `style`
-- **AND** `api` MUST expose `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, `finished`, and `playState`
+- **AND** `api` MUST expose `play`, `pause`, `stop`, `reset`, `finish`, `isAnimating`, `isPaused`, `finished`, and `playState`
 
 #### Scenario: from/to config compiles to tracks internally
 
@@ -142,12 +142,12 @@ Native MUST sample each track independently at timeline time `t`, then assemble 
 
 ### Requirement: Imperative playback and lifecycle
 
-`play`, `pause`, `cancel`, and lifecycle callbacks MUST follow session semantics: paused `play` resumes; running `play` is no-op; `cancel` restores start-of-session values; `onComplete`/`onCancel` mutual exclusion; `onError` for async native failures.
+`play`, `pause`, `stop`, `reset`, `finish`, and lifecycle callbacks MUST follow session semantics: paused `play` resumes; running `play` is no-op; `stop` freezes the current sampled values; `reset` restores start-of-session values; `finish` jumps to terminal values; `onComplete`/`onStop`/`onReset` mutual exclusion; `onError` for async native failures.
 
 #### Scenario: play is no-op while running
 
 - **GIVEN** a non-looping timeline is actively playing
-- **WHEN** `api.play()` is called again without `cancel()`
+- **WHEN** `api.play()` is called again without `reset()`
 - **THEN** the call MUST be a no-op
 
 ---
@@ -163,7 +163,7 @@ While a native session is alive, the SDK MUST suppress Portal DOM sync for anima
 
 #### Scenario: Suppression cleared on terminal state
 
-- **WHEN** session reaches finished or idle after cancel → suppression cleared
+- **WHEN** session reaches finished or idle after stop/reset/finish → suppression cleared
 
 ---
 
@@ -175,7 +175,7 @@ Native sessions MUST use `motion` prop / `SpatializedMotionBinding`, not the leg
 
 - **GIVEN** an active native session
 - **WHEN** motion binding unbinds
-- **THEN** SDK MUST cancel session; `onCancel` MUST NOT fire (aligned with unbind semantics)
+- **THEN** SDK MUST tear down the session; `onReset` MUST NOT fire (aligned with unbind semantics)
 
 ---
 

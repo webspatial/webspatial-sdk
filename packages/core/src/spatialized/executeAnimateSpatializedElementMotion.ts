@@ -105,7 +105,12 @@ export async function executeAnimateSpatializedElementMotion(
     )
   }
 
-  if (type === 'pause') {
-    return parseSpatializedVisualValues(result.data)
+  if (
+    type === 'pause' ||
+    type === 'stop' ||
+    type === 'reset' ||
+    type === 'finish'
+  ) {
+    return result.data ? parseSpatializedVisualValues(result.data) : undefined
   }
 }

@@ -342,40 +342,75 @@ export class SpatializedMotionController
     }
   }
 
-  cancel(keys?: SpatializedMotionPropertyKeys): void {
-    const normalized = normalizeMotionPropertyKeys(keys)
-    if (normalized && normalized.length > 0) {
-      console.warn(
-        `[${getPolicy(this.kind).controllerLabel}] cancel(keys) is not supported; canceling entire session.`,
-      )
-    }
-
+  stop(): void {
+    if (this.destroyed) return
     if (!this.kind) {
-      if (!this.pendingPlay && this.webState === 'idle') return
-      this.pendingPlay = false
-      this.webState = 'idle'
-      this.webFinished = false
-      this.webStarted = false
-      this.bump()
+      this.webStop()
       return
     }
 
     if (!this.nativeCapable) {
       if (getPolicy(this.kind).webPlayback === 'raf') {
-        this.webCancel()
+        this.webStop()
         return
       }
       if (this.webState === 'queued' || this.pendingPlay) {
-        this.pendingPlay = false
-        this.webState = 'idle'
-        this.webFinished = false
-        this.bump()
+        this.webStop()
       }
       return
     }
+
     const ns = this.nativeSession?.state
     if (ns && ns !== 'idle' && ns !== 'finished') {
-      this.enqueueNative(() => this.nativeCancel())
+      this.enqueueNative(() => this.nativeStop())
+    }
+  }
+
+  reset(): void {
+    if (this.destroyed) return
+    if (!this.kind) {
+      this.webReset()
+      return
+    }
+
+    if (!this.nativeCapable) {
+      if (getPolicy(this.kind).webPlayback === 'raf') {
+        this.webReset()
+        return
+      }
+      this.webReset()
+      return
+    }
+
+    const ns = this.nativeSession?.state
+    if (ns && ns !== 'idle') {
+      this.enqueueNative(() => this.nativeReset())
+    } else if (this.pendingPlay || this.webState === 'queued') {
+      this.webReset()
+    }
+  }
+
+  finish(): void {
+    if (this.destroyed) return
+    if (!this.kind) {
+      this.webFinish()
+      return
+    }
+
+    if (!this.nativeCapable) {
+      if (getPolicy(this.kind).webPlayback === 'raf') {
+        this.webFinish()
+        return
+      }
+      this.webFinish()
+      return
+    }
+
+    const ns = this.nativeSession?.state
+    if (ns && ns !== 'idle' && ns !== 'finished') {
+      this.enqueueNative(() => this.nativeFinish())
+    } else if (this.pendingPlay || this.webState === 'queued') {
+      this.webFinish()
     }
   }
 
@@ -507,7 +542,7 @@ export class SpatializedMotionController
     else if (this.webState === 'paused' && this.fullPause) this.webPlay()
   }
 
-  private webCancel(): void {
+  private webReset(): void {
     if (this.webState === 'idle' && !this.pendingPlay) return
     this.stopWebRaf()
     this.frozenByProperty.clear()
@@ -520,7 +555,48 @@ export class SpatializedMotionController
     this.webStarted = false
     this.pausedElapsedMs = 0
     this.bump()
-    this.config.onCancel?.(values)
+    this.config.onReset?.(values)
+  }
+
+  private webStop(): void {
+    if (this.webState === 'idle' && !this.pendingPlay) return
+    this.stopWebRaf()
+    const wasFullPause = this.fullPause
+    const elapsedAtStop =
+      this.webState === 'queued'
+        ? 0
+        : wasFullPause
+          ? this.pausedElapsedMs
+          : this.pausedElapsedMs > 0
+            ? this.pausedElapsedMs
+            : performance.now() - this.startWallMs
+    this.frozenByProperty.clear()
+    this.fullPause = false
+    this.pendingPlay = false
+    const values = this.sampleAt(motionTimeSec(elapsedAtStop, this.config))
+    this.emitValues(values)
+    this.webState = 'idle'
+    this.webFinished = false
+    this.webStarted = false
+    this.pausedElapsedMs = 0
+    this.bump()
+    this.config.onStop?.(values)
+  }
+
+  private webFinish(): void {
+    if (this.webState === 'idle' && !this.pendingPlay) return
+    this.stopWebRaf()
+    this.frozenByProperty.clear()
+    this.fullPause = false
+    this.pendingPlay = false
+    const values = evaluateMotionTimeline(this.config, this.config.duration)
+    this.emitValues(values)
+    this.webState = 'finished'
+    this.webFinished = true
+    this.webStarted = false
+    this.pausedElapsedMs = 0
+    this.bump()
+    this.config.onComplete?.(values)
   }
 
   private scheduleWebFrame(): void {
@@ -547,6 +623,7 @@ export class SpatializedMotionController
       this.stopWebRaf()
       this.webState = 'finished'
       this.webFinished = true
+      this.webStarted = false
       this.bump()
       this.config.onComplete?.(values)
       return
@@ -647,7 +724,7 @@ export class SpatializedMotionController
         this.nativeSession = null
         this.nativeControlling = false
         this.bump()
-        this.config.onCancel?.(currentValues)
+        this.config.onReset?.(currentValues)
         this.emitValues(currentValues)
       })
 
@@ -818,15 +895,19 @@ export class SpatializedMotionController
     await this.nativePlay()
   }
 
-  private async nativeCancel(): Promise<void> {
+  private async nativeReset(): Promise<void> {
     if (!this.kind) return
     const session = this.nativeSession
     if (!session || session.state === 'idle') return
 
     if (session.state === 'finished') {
+      const values = evaluateMotionTimeline(session.config, 0)
+      session.state = 'idle'
       this.nativeSession = null
       this.nativeControlling = false
       this.bump()
+      this.emitValues(values)
+      this.config.onReset?.(values)
       return
     }
 
@@ -836,15 +917,29 @@ export class SpatializedMotionController
       this.nativeSession = null
       this.nativeControlling = false
       this.bump()
-      this.config.onCancel?.(evaluateMotionTimeline(session.config, 0))
+      const values = evaluateMotionTimeline(session.config, 0)
+      this.config.onReset?.(values)
+      this.emitValues(values)
       return
     }
 
     try {
-      await motionElementSessionCommand(this.kind, element, {
+      const values = await motionElementSessionCommand(this.kind, element, {
         animationId: session.animationId,
-        type: 'cancel',
+        type: 'reset',
       })
+      session.state = 'idle'
+      this.nativeSession = null
+      this.nativeControlling = false
+      this.bump()
+      if (values) {
+        this.emitValues(values)
+        this.config.onReset?.(values)
+      } else {
+        const fallback = evaluateMotionTimeline(session.config, 0)
+        this.emitValues(fallback)
+        this.config.onReset?.(fallback)
+      }
     } catch {
       session.state = 'idle'
       this.nativeSession = null
@@ -853,15 +948,116 @@ export class SpatializedMotionController
     }
   }
 
+  private async nativeStop(): Promise<void> {
+    if (!this.kind) return
+    const session = this.nativeSession
+    if (!session || session.state === 'idle' || session.state === 'finished')
+      return
+
+    const currentValues = this.sampleAt(
+      motionTimeSec(
+        session.state === 'queued'
+          ? 0
+          : this.nativePausedElapsedMs > 0
+            ? this.nativePausedElapsedMs
+            : performance.now() - this.playStartWallMs,
+        session.config,
+      ),
+    )
+
+    const element = this.element
+    if (!element) {
+      session.state = 'idle'
+      this.nativeSession = null
+      this.nativeControlling = false
+      this.bump()
+      this.emitValues(currentValues)
+      this.config.onStop?.(currentValues)
+      return
+    }
+
+    try {
+      const values = await motionElementSessionCommand(this.kind, element, {
+        animationId: session.animationId,
+        type: 'stop',
+      })
+      session.state = 'idle'
+      this.nativeSession = null
+      this.nativeControlling = false
+      this.bump()
+      const output = values ?? currentValues
+      this.emitValues(output)
+      this.config.onStop?.(output)
+    } catch {
+      session.state = 'idle'
+      this.nativeSession = null
+      this.nativeControlling = false
+      this.bump()
+      this.emitValues(currentValues)
+      this.config.onStop?.(currentValues)
+    }
+  }
+
+  private async nativeFinish(): Promise<void> {
+    if (!this.kind) return
+    const session = this.nativeSession
+    if (!session || session.state === 'idle' || session.state === 'finished')
+      return
+
+    const element = this.element
+    if (!element) {
+      session.state = 'finished'
+      this.nativeSession = null
+      this.nativeControlling = false
+      this.bump()
+      const values = evaluateMotionTimeline(
+        session.config,
+        session.config.duration,
+      )
+      this.emitValues(values)
+      this.config.onComplete?.(values)
+      return
+    }
+
+    try {
+      const values = await motionElementSessionCommand(this.kind, element, {
+        animationId: session.animationId,
+        type: 'finish',
+      })
+      session.state = 'finished'
+      this.nativeSession = null
+      this.nativeControlling = false
+      this.bump()
+      const output =
+        values ??
+        evaluateMotionTimeline(session.config, session.config.duration)
+      this.emitValues(output)
+      this.config.onComplete?.(output)
+    } catch {
+      session.state = 'finished'
+      this.nativeSession = null
+      this.nativeControlling = false
+      this.bump()
+      const fallback = evaluateMotionTimeline(
+        session.config,
+        session.config.duration,
+      )
+      this.emitValues(fallback)
+      this.config.onComplete?.(fallback)
+    }
+  }
+
   private detachNative(opts: { cancelSession: boolean }): void {
     const session = this.nativeSession
     const element = this.element
     if (this.kind && opts.cancelSession && session && element) {
       if (session.state !== 'idle' && session.state !== 'finished') {
-        motionElementSessionCommand(this.kind, element, {
-          animationId: session.animationId,
-          type: 'cancel',
-        }).catch(() => {})
+        ;(
+          motionElementSessionCommand(this.kind, element, {
+            animationId: session.animationId,
+            type: 'cancel',
+          } as any) as Promise<void>
+        ).catch(() => {})
         motionElementCleanupListeners(this.kind, element, session.animationId)
         session.unmounted = true
         session.state = 'idle'

@@ -147,11 +147,11 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
   // ============================================================
   // Canceled event
   // ============================================================
-  describe('canceled event', () => {
-    test('canceled event transitions state to idle and invokes onCancel', async () => {
+  describe('reset event', () => {
+    test('reset event transitions state to idle and invokes onReset', async () => {
       const mock = createMockElement()
-      const onCancel = vi.fn()
-      const config = { ...baseConfig, onCancel }
+      const onReset = vi.fn()
+      const config = { ...baseConfig, onReset }
 
       const { result } = renderHook(() => useSpatialDivAnimation(config, true))
       const [animatedProps, api] = result.current
@@ -167,7 +167,7 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       await flushPromises()
 
       await act(async () => {
-        api.cancel()
+        api.reset()
       })
       await flushPromises()
 
@@ -179,19 +179,19 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       expect(api.playState).toBe('idle')
       expect(api.isAnimating).toBe(false)
       expect(api.finished).toBe(false)
-      expect(onCancel).toHaveBeenCalledTimes(1)
-      expect(onCancel).toHaveBeenCalledWith({ opacity: 0 })
+      expect(onReset).toHaveBeenCalledTimes(1)
+      expect(onReset).toHaveBeenCalledWith({ opacity: 0 })
     })
 
-    test('cancel restores to from values (passed to onCancel)', async () => {
+    test('reset restores to from values (passed to onReset)', async () => {
       const mock = createMockElement()
-      const onCancel = vi.fn()
+      const onReset = vi.fn()
       const config = {
         to: { opacity: 1, transform: { translate: { x: 100 } } } as const,
         from: { opacity: 0.2, transform: { translate: { x: 0 } } } as const,
         duration: 2.0,
         autoStart: false,
-        onCancel,
+        onReset,
       }
 
       const { result } = renderHook(() => useSpatialDivAnimation(config, true))
@@ -208,7 +208,7 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       await flushPromises()
 
       await act(async () => {
-        api.cancel()
+        api.reset()
       })
       await flushPromises()
 
@@ -222,7 +222,7 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       })
       await flushPromises()
 
-      expect(onCancel).toHaveBeenCalledWith(restoredValues)
+      expect(onReset).toHaveBeenCalledWith(restoredValues)
     })
   })
 
@@ -365,8 +365,8 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
     test('completed and canceled are mutually exclusive for same session', async () => {
       const mock = createMockElement()
       const onComplete = vi.fn()
-      const onCancel = vi.fn()
-      const config = { ...baseConfig, onComplete, onCancel }
+      const onReset = vi.fn()
+      const config = { ...baseConfig, onComplete, onReset }
 
       const { result } = renderHook(() => useSpatialDivAnimation(config, true))
       const [animatedProps, api] = result.current
@@ -395,14 +395,14 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       })
       await flushPromises()
 
-      expect(onCancel).not.toHaveBeenCalled()
+      expect(onReset).not.toHaveBeenCalled()
     })
 
     test('canceled fires first → completed is ignored', async () => {
       const mock = createMockElement()
       const onComplete = vi.fn()
-      const onCancel = vi.fn()
-      const config = { ...baseConfig, onComplete, onCancel }
+      const onReset = vi.fn()
+      const config = { ...baseConfig, onComplete, onReset }
 
       const { result } = renderHook(() => useSpatialDivAnimation(config, true))
       const [animatedProps, api] = result.current
@@ -418,7 +418,7 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       await flushPromises()
 
       await act(async () => {
-        api.cancel()
+        api.reset()
       })
       await flushPromises()
 
@@ -428,7 +428,7 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       })
       await flushPromises()
 
-      expect(onCancel).toHaveBeenCalledTimes(1)
+      expect(onReset).toHaveBeenCalledTimes(1)
 
       // Late completed should be ignored
       await act(async () => {
@@ -619,7 +619,7 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       expect(id).toMatch(/^sdanim_/)
     })
 
-    test('pause/resume/cancel target the correct animationId', async () => {
+    test('pause/resume/reset target the correct animationId', async () => {
       const mock = createMockElement()
       const config = { ...baseConfig }
 
@@ -663,16 +663,16 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       )
       expect(resumeCall![0].animationId).toBe(sessionId)
 
-      // Cancel
+      // Reset
       await act(async () => {
-        api.cancel()
+        api.reset()
       })
       await flushPromises()
 
-      const cancelCall = mock.element.animateSpatialDiv.mock.calls.find(
-        (c: any) => c[0].type === 'cancel',
+      const resetCall = mock.element.animateSpatialDiv.mock.calls.find(
+        (c: any) => c[0].type === 'reset',
       )
-      expect(cancelCall![0].animationId).toBe(sessionId)
+      expect(resetCall![0].animationId).toBe(sessionId)
     })
   })
 
@@ -717,8 +717,8 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
 
     test('unmount prevents canceled callback from firing', async () => {
       const mock = createMockElement()
-      const onCancel = vi.fn()
-      const config = { ...baseConfig, onCancel }
+      const onReset = vi.fn()
+      const config = { ...baseConfig, onReset }
 
       const { result, unmount } = renderHook(() =>
         useSpatialDivAnimation(config, true),
@@ -745,7 +745,7 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       })
       await flushPromises()
 
-      expect(onCancel).not.toHaveBeenCalled()
+      expect(onReset).not.toHaveBeenCalled()
     })
 
     test('unmount prevents failed/onError from firing', async () => {
@@ -788,8 +788,8 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
     test('Promises do not resolve after unmount (no state transition)', async () => {
       const mock = createMockElement()
       const onComplete = vi.fn()
-      const onCancel = vi.fn()
-      const config = { ...baseConfig, onComplete, onCancel }
+      const onReset = vi.fn()
+      const config = { ...baseConfig, onComplete, onReset }
 
       const { result, unmount } = renderHook(() =>
         useSpatialDivAnimation(config, true),
@@ -818,7 +818,7 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       await flushPromises()
 
       expect(onComplete).not.toHaveBeenCalled()
-      expect(onCancel).not.toHaveBeenCalled()
+      expect(onReset).not.toHaveBeenCalled()
     })
   })
 
@@ -861,7 +861,7 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       })
       await flushPromises()
 
-      // onCancel should NOT fire because session already reached terminal
+      // onReset should NOT fire because session already reached terminal
       expect(onComplete).toHaveBeenCalledTimes(1) // no extra call
     })
 
@@ -898,8 +898,8 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       }
 
       const onComplete = vi.fn()
-      const onCancel = vi.fn()
-      const config = { ...baseConfig, onComplete, onCancel }
+      const onReset = vi.fn()
+      const config = { ...baseConfig, onComplete, onReset }
 
       const { result } = renderHook(() => useSpatialDivAnimation(config, true))
       const [animatedProps, api] = result.current
@@ -916,9 +916,9 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
       await flushPromises()
       expect(playCount).toBe(1)
 
-      // Cancel first session
+      // Reset first session
       await act(async () => {
-        api.cancel()
+        api.reset()
       })
       await flushPromises()
 
@@ -927,7 +927,7 @@ describe('SpatialDiv Animation Bridge/Native Session Tests (Task 5.5)', () => {
         resolvers[0].canceled({ opacity: 0 })
       })
       await flushPromises()
-      expect(onCancel).toHaveBeenCalledTimes(1)
+      expect(onReset).toHaveBeenCalledTimes(1)
 
       // Second play
       await act(async () => {

@@ -37,7 +37,6 @@ function nextAnimationId(): string {
 }
 
 /**
-/**
  * Computes the set of field names that will be suppressed during animation.
  * Per spec, only transform and opacity are animatable.
  * When transform is animated, the entire transform sync is suppressed.
@@ -137,7 +136,7 @@ export function useSpatialDivAnimation(
           configRef.current.onComplete?.(finalValues)
         })
 
-        // Listen for cancellation
+        // Listen for reset/stop completion from native.
         result.canceled.then(currentValues => {
           if (unmountedRef.current || session.unmounted) return
           if (sessionRef.current !== session) return
@@ -146,7 +145,7 @@ export function useSpatialDivAnimation(
           session.state = 'idle'
           sessionRef.current = null
           forceUpdate()
-          configRef.current.onCancel?.(currentValues)
+          configRef.current.onReset?.(currentValues)
         })
 
         // Listen for async native failure
@@ -231,7 +230,7 @@ export function useSpatialDivAnimation(
       }
 
       // Per spec: play() while running/delaying/queued is a no-op.
-      // To restart, application code must explicitly cancel() first.
+      // To restart, application code must explicitly reset() first.
       if (
         currentSession &&
         (currentSession.state === 'running' ||
@@ -294,13 +293,54 @@ export function useSpatialDivAnimation(
     })
   }, [active, enqueueCommand, reportError])
 
-  const cancel = useCallback(() => {
+  const reset = useCallback(() => {
     if (!active) return
     enqueueCommand(async () => {
       const session = sessionRef.current
       if (!session || session.state === 'idle') return
 
-      // If already finished, just reset state without sending cancel to native
+      // If already finished, just reset state without sending reset to native
+      if (session.state === 'finished') {
+        session.state = 'idle'
+        sessionRef.current = null
+        forceUpdate()
+        configRef.current.onReset?.(session.config.from ?? {})
+        return
+      }
+
+      const element = elementRef.current
+      if (!element) {
+        // Not yet bound (queued state); reset the queued play and invoke onReset
+        const canceledSession = session
+        session.state = 'idle'
+        sessionRef.current = null
+        forceUpdate()
+        // Per spec: reset while queued MUST invoke onReset with restored values
+        configRef.current.onReset?.(canceledSession.config.from ?? {})
+        return
+      }
+
+      try {
+        await element.animateSpatialDiv({
+          animationId: session.animationId,
+          type: 'reset',
+        })
+        // The reset promise handler will update state
+      } catch {
+        // Session may already be terminal
+        session.state = 'idle'
+        sessionRef.current = null
+        forceUpdate()
+      }
+    })
+  }, [active, enqueueCommand])
+
+  const stop = useCallback(() => {
+    if (!active) return
+    enqueueCommand(async () => {
+      const session = sessionRef.current
+      if (!session || session.state === 'idle') return
+
       if (session.state === 'finished') {
         sessionRef.current = null
         forceUpdate()
@@ -308,28 +348,67 @@ export function useSpatialDivAnimation(
       }
 
       const element = elementRef.current
+      const currentValues = session.config.from ?? session.config.to
       if (!element) {
-        // Not yet bound (queued state); cancel the queued play and invoke onCancel
-        const canceledSession = session
         session.state = 'idle'
         sessionRef.current = null
         forceUpdate()
-        // Per spec: cancel while queued MUST invoke onCancel with restored values
-        configRef.current.onCancel?.(canceledSession.config.from ?? {})
+        configRef.current.onStop?.(currentValues)
         return
       }
 
       try {
-        await element.animateSpatialDiv({
+        const values = await element.animateSpatialDiv({
           animationId: session.animationId,
-          type: 'cancel',
+          type: 'stop',
         })
-        // The canceled promise handler will update state
-      } catch {
-        // Session may already be terminal
         session.state = 'idle'
         sessionRef.current = null
         forceUpdate()
+        configRef.current.onStop?.((values as any) ?? currentValues)
+      } catch {
+        session.state = 'idle'
+        sessionRef.current = null
+        forceUpdate()
+        configRef.current.onStop?.(currentValues)
+      }
+    })
+  }, [active, enqueueCommand])
+
+  const finish = useCallback(() => {
+    if (!active) return
+    enqueueCommand(async () => {
+      const session = sessionRef.current
+      if (!session || session.state === 'idle') return
+
+      if (session.state === 'finished') {
+        return
+      }
+
+      const element = elementRef.current
+      const finalValues = session.config.to
+      if (!element) {
+        session.state = 'finished'
+        sessionRef.current = null
+        forceUpdate()
+        configRef.current.onComplete?.(finalValues)
+        return
+      }
+
+      try {
+        const values = await element.animateSpatialDiv({
+          animationId: session.animationId,
+          type: 'finish',
+        })
+        session.state = 'finished'
+        sessionRef.current = null
+        forceUpdate()
+        configRef.current.onComplete?.((values as any) ?? finalValues)
+      } catch {
+        session.state = 'finished'
+        sessionRef.current = null
+        forceUpdate()
+        configRef.current.onComplete?.(finalValues)
       }
     })
   }, [active, enqueueCommand])
@@ -340,7 +419,9 @@ export function useSpatialDivAnimation(
       play,
       pause,
       resume: play,
-      cancel,
+      stop,
+      reset,
+      finish,
       get isAnimating() {
         const s = sessionRef.current
         return s ? ['queued', 'running'].includes(s.state) : false
@@ -356,7 +437,7 @@ export function useSpatialDivAnimation(
         return sessionRef.current?.state === 'finished'
       },
     }),
-    [play, pause, cancel],
+    [play, pause, stop, reset, finish],
   )
 
   // ---- Build animated props ----
@@ -398,7 +479,7 @@ export function useSpatialDivAnimation(
           .animateSpatialDiv({
             animationId: session.animationId,
             type: 'cancel',
-          })
+          } as any)
           .catch(() => {})
         elementRef.current.cleanupSpatialDivAnimationListeners(
           session.animationId,
