@@ -133,7 +133,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     })
     observer.observe(target)
     return () => observer.disconnect()
-  }, [effectiveLoading, portalInstanceObject, portalInstanceObject.dom])
+  }, [effectiveLoading, portalInstanceObject?.dom])
 
   useEffect(() => {
     // If modelURL was previously set and now is undefined then a dummy
