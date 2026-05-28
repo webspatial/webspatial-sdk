@@ -87,18 +87,18 @@
 
 ## Phase 9 — Playback API 扩展（stop / reset / finish）
 
-- [ ] 类型：`SpatializedPlaybackApi` — 移除 `cancel(keys?)`，新增 `stop()`、`reset()`、`finish()`
-- [ ] 类型：Config callbacks — 移除 `onCancel`，新增 `onStop`、`onReset`；`finish()` 复用 `onComplete`
-- [ ] 类型：`SpatializedPlaybackError.command` — `'cancel'` 替换为 `'stop' | 'reset' | 'finish'`
-- [ ] Controller：`cancel()` 重命名为 `reset()`（逻辑不变：emit from 值 + idle + `onReset`）
-- [ ] Controller：实现 `stop()` — 冻结在当前采样值 + idle + `onStop`
-- [ ] Controller：实现 `finish()` — 跳到终态值 + finished + `onComplete`
-- [ ] Controller：`stop()`/`reset()`/`finish()` 不接受 `keys?` 参数（整体会话操作）
-- [ ] Native JSB：确认 `finish` 是否需要新命令类型，还是 JS-only 实现（cancel + emit to 值）
-- [ ] 全量代码：全局 rename `cancel`→`reset`、`onCancel`→`onReset`（Controller + tests + demo pages）
-- [ ] picoOS native：如需新 JSB 命令则同步
-- [ ] 单元测试：验证 stop/reset/finish 各自产生正确的 style 值、playState 和回调触发
-- [ ] 子 spec 更新（spatialized-2d-motion、spatialized-static3d-motion、spatialized-dynamic3d-motion）如引用了 `cancel` 则同步修改
+- [x] 类型：`SpatializedPlaybackApi` — 移除 `cancel(keys?)`，新增 `stop()`、`reset()`、`finish()`
+- [x] 类型：Config callbacks — 移除 `onCancel`，新增 `onStop`、`onReset`；`finish()` 复用 `onComplete`
+- [x] 类型：`SpatializedPlaybackError.command` — `'cancel'` 替换为 `'stop' | 'reset' | 'finish'`
+- [x] Controller：`cancel()` 重命名为 `reset()`（逻辑不变：emit from 值 + idle + `onReset`）
+- [x] Controller：实现 `stop()` — 冻结在当前采样值 + idle + `onStop`
+- [x] Controller：实现 `finish()` — 跳到终态值 + finished + `onComplete`
+- [x] Controller：`stop()`/`reset()`/`finish()` 不接受 `keys?` 参数（整体会话操作）
+- [x] Native JSB：确认 `finish` 是否需要新命令类型，还是 JS-only 实现（cancel + emit to 值）
+- [x] 全量代码：全局 rename `cancel`→`reset`、`onCancel`→`onReset`（Controller + tests + demo pages）
+- [x] picoOS native：如需新 JSB 命令则同步
+- [x] 单元测试：验证 stop/reset/finish 各自产生正确的 style 值、playState 和回调触发
+- [x] 子 spec 更新（spatialized-2d-motion、spatialized-static3d-motion、spatialized-dynamic3d-motion）如引用了 `cancel` 则同步修改
 
 ## Phase 10 — Timeline 百分比关键帧配置 + timingFunction 统一
 

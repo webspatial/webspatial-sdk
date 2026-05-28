@@ -12,7 +12,7 @@ Implementation MUST use `SpatializedMotionController` with the `dynamic3d` targe
 
 - **GIVEN** `supports('useAnimation', ['dynamic3d'])` is true
 - **WHEN** `SpatializedDynamic3DElement.animateMotion({ type: 'play', timeline })` runs
-- **THEN** native MUST sample the timeline and update container transform / opacity until complete or cancel
+- **THEN** native MUST sample the timeline and update container transform / opacity until completion or session termination
 
 #### Scenario: Reality motion binding
 

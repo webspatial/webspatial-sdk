@@ -316,6 +316,64 @@ class SpatializedContainerMotionAnimationManager: NSObject {
         resolve(.success(nil))
     }
 
+    // MARK: - Reset
+
+    func handleReset(
+        command: some SpatializedContainerMotionCommand,
+        element: SpatializedElement,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        guard let session = getSession(command.animationId) else {
+            resolve(.success(nil))
+            return
+        }
+
+        let values = buildCurrentValuesPayload(session: session, useTo: false)
+        session.markCanceled()
+        applyFromValues(session: session)
+        removeSession(command.animationId)
+        resolve(.success(values))
+    }
+
+    // MARK: - Stop
+
+    func handleStop(
+        command: some SpatializedContainerMotionCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        guard let session = getSession(command.animationId) else {
+            resolve(.success(nil))
+            return
+        }
+
+        let values = buildSampledValuesPayload(
+            session: session,
+            at: CACurrentMediaTime()
+        )
+        session.markCanceled()
+        removeSession(command.animationId)
+        resolve(.success(values))
+    }
+
+    // MARK: - Finish
+
+    func handleFinish(
+        command: some SpatializedContainerMotionCommand,
+        element: SpatializedElement,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        guard let session = getSession(command.animationId) else {
+            resolve(.success(nil))
+            return
+        }
+
+        let values = buildCurrentValuesPayload(session: session, useTo: true)
+        session.markCompleted()
+        applyFinalValues(session: session)
+        removeSession(command.animationId)
+        resolve(.success(values))
+    }
+
     // MARK: - Cancel
 
     func handleCancel(

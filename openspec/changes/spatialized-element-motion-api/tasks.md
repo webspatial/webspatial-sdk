@@ -87,18 +87,18 @@
 
 ## Phase 9 — Playback API expansion (stop / reset / finish)
 
-- [ ] Types: `SpatializedPlaybackApi` — remove `cancel(keys?)`, add `stop()`, `reset()`, `finish()`
-- [ ] Types: Config callbacks — remove `onCancel`, add `onStop`, `onReset`; `finish()` reuses `onComplete`
-- [ ] Types: `SpatializedPlaybackError.command` — replace `'cancel'` with `'stop' | 'reset' | 'finish'`
-- [ ] Controller: rename `cancel()`→`reset()` (same logic: emit from values + idle + `onReset`)
-- [ ] Controller: implement `stop()` — freeze at current sampled values + idle + `onStop`
-- [ ] Controller: implement `finish()` — jump to final values + finished + `onComplete`
-- [ ] Controller: `stop()`/`reset()`/`finish()` do NOT accept `keys?` parameter (whole-session operations)
-- [ ] Native JSB: determine if `finish` needs a new command type or can be JS-only (cancel + emit to values)
-- [ ] Codebase: global rename `cancel`→`reset`, `onCancel`→`onReset` (Controller + tests + demo pages)
-- [ ] picoOS native: sync if new JSB command needed
-- [ ] Unit tests: verify stop/reset/finish each produce correct style values, playState, and callback
-- [ ] Sub-spec updates (spatialized-2d-motion, spatialized-static3d-motion, spatialized-dynamic3d-motion) if they reference `cancel`
+- [x] Types: `SpatializedPlaybackApi` — remove `cancel(keys?)`, add `stop()`, `reset()`, `finish()`
+- [x] Types: Config callbacks — remove `onCancel`, add `onStop`, `onReset`; `finish()` reuses `onComplete`
+- [x] Types: `SpatializedPlaybackError.command` — replace `'cancel'` with `'stop' | 'reset' | 'finish'`
+- [x] Controller: rename `cancel()`→`reset()` (same logic: emit from values + idle + `onReset`)
+- [x] Controller: implement `stop()` — freeze at current sampled values + idle + `onStop`
+- [x] Controller: implement `finish()` — jump to final values + finished + `onComplete`
+- [x] Controller: `stop()`/`reset()`/`finish()` do NOT accept `keys?` parameter (whole-session operations)
+- [x] Native JSB: determine if `finish` needs a new command type or can be JS-only (cancel + emit to values)
+- [x] Codebase: global rename `cancel`→`reset`, `onCancel`→`onReset` (Controller + tests + demo pages)
+- [x] picoOS native: sync if new JSB command needed
+- [x] Unit tests: verify stop/reset/finish each produce correct style values, playState, and callback
+- [x] Sub-spec updates (spatialized-2d-motion, spatialized-static3d-motion, spatialized-dynamic3d-motion) if they reference `cancel`
 
 ## Phase 10 — Timeline percentage keyframe config + timingFunction unification
 
