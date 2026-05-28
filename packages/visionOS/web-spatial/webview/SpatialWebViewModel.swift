@@ -10,7 +10,7 @@ class SpatialWebViewModel {
     private var navigationList: [String: (_ data: URL) -> Bool] = [:]
     private var openWindowList: [String: (_ data: URL) -> WebViewElementInfo?] = [:]
     private var stateListeners: [SpatialWebViewState: [() -> Void]] = [:]
-    private var stateChangeListeners: [(_ type: SpatialWebViewState) -> Void] = []
+    private var stateChangeListeners: [(id: UUID, listener: (_ type: SpatialWebViewState) -> Void)] = []
     private var scrollUpdateListeners: [(_ type: ScrollState, _ point: CGPoint) -> Void] = []
     private var backgroundTransparent: Bool = false
 
@@ -150,8 +150,11 @@ class SpatialWebViewModel {
     }
 
     /// webview state event
-    func addStateListener(_ event: @escaping (_ type: SpatialWebViewState) -> Void) {
-        stateChangeListeners.append(event)
+    @discardableResult
+    func addStateListener(_ event: @escaping (_ type: SpatialWebViewState) -> Void) -> UUID {
+        let id = UUID()
+        stateChangeListeners.append((id: id, listener: event))
+        return id
     }
 
     func addStateListener(_ state: SpatialWebViewState, _ event: @escaping () -> Void) {
@@ -161,9 +164,9 @@ class SpatialWebViewModel {
         stateListeners[state]?.append(event)
     }
 
-    func removeStateListener(_ event: @escaping (_ type: SpatialWebViewState) -> Void) {
+    func removeStateListener(_ id: UUID) {
         stateChangeListeners.removeAll(where: {
-            $0 as AnyObject === event as AnyObject
+            $0.id == id
         })
     }
 
@@ -235,7 +238,7 @@ class SpatialWebViewModel {
             load()
         }
         for onStateChange in stateChangeListeners {
-            onStateChange(state)
+            onStateChange.listener(state)
         }
         stateListeners[state]?.forEach { onStateChange in
             onStateChange()

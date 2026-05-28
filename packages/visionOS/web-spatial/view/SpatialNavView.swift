@@ -78,7 +78,7 @@ struct SpatialNavView: View {
     @State private var showUrl: Double = 0
     @State private var canGoBack = false
     @State private var canGoForward = false
-    @State private var navigationStateListener: ((SpatialWebViewState) -> Void)?
+    @State private var navigationStateListenerID: UUID?
     @Namespace var hoverNamespace
 
     func goBack() {
@@ -111,7 +111,7 @@ struct SpatialNavView: View {
     }
 
     func registerNavigationStateListener() {
-        guard navigationStateListener == nil else { return }
+        guard navigationStateListenerID == nil else { return }
 
         let listener: (SpatialWebViewState) -> Void = { state in
             switch state {
@@ -124,15 +124,14 @@ struct SpatialNavView: View {
             }
         }
 
-        navigationStateListener = listener
-        model?.addStateListener(listener)
+        navigationStateListenerID = model?.addStateListener(listener)
     }
 
     func unregisterNavigationStateListener() {
-        guard let navigationStateListener else { return }
+        guard let navigationStateListenerID else { return }
 
-        model?.removeStateListener(navigationStateListener)
-        self.navigationStateListener = nil
+        model?.removeStateListener(navigationStateListenerID)
+        self.navigationStateListenerID = nil
     }
 
     var navHoverGroup: HoverEffectGroup {
