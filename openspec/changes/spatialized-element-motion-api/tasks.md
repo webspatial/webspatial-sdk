@@ -84,3 +84,18 @@
 - [x] Update all test-server demo pages to new tuple API
 - [x] Update unit tests (`useSpatializedMotion.behavior.test.tsx`, `.native.test.tsx`)
 - [x] Update `@webspatial/core-sdk` exports: remove `SpatializedMotionKind` from public surface (internal only)
+
+## Phase 9 — Playback API expansion (stop / reset / finish)
+
+- [ ] Types: `SpatializedPlaybackApi` — remove `cancel(keys?)`, add `stop()`, `reset()`, `finish()`
+- [ ] Types: Config callbacks — remove `onCancel`, add `onStop`, `onReset`; `finish()` reuses `onComplete`
+- [ ] Types: `SpatializedPlaybackError.command` — replace `'cancel'` with `'stop' | 'reset' | 'finish'`
+- [ ] Controller: rename `cancel()`→`reset()` (same logic: emit from values + idle + `onReset`)
+- [ ] Controller: implement `stop()` — freeze at current sampled values + idle + `onStop`
+- [ ] Controller: implement `finish()` — jump to final values + finished + `onComplete`
+- [ ] Controller: `stop()`/`reset()`/`finish()` do NOT accept `keys?` parameter (whole-session operations)
+- [ ] Native JSB: determine if `finish` needs a new command type or can be JS-only (cancel + emit to values)
+- [ ] Codebase: global rename `cancel`→`reset`, `onCancel`→`onReset` (Controller + tests + demo pages)
+- [ ] picoOS native: sync if new JSB command needed
+- [ ] Unit tests: verify stop/reset/finish each produce correct style values, playState, and callback
+- [ ] Sub-spec updates (spatialized-2d-motion, spatialized-static3d-motion, spatialized-dynamic3d-motion) if they reference `cancel`
