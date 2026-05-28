@@ -119,7 +119,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   // change while still requested as lazy.
   useEffect(() => {
     if (effectiveLoading !== 'lazy') return
-    const target = portalInstanceObject.dom
+    const target = portalInstanceObject?.dom
     if (!target) return
     if (typeof IntersectionObserver === 'undefined') {
       setEffectiveLoading('eager')
@@ -154,7 +154,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
       spatializedElement.onLoadCallback = () => {
         onLoad(
           createLoadSuccessEvent(
-            () => portalInstanceObject.dom as SpatializedStatic3DElementRef,
+            () => portalInstanceObject?.dom as SpatializedStatic3DElementRef,
           ),
         )
       }
@@ -168,7 +168,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
       spatializedElement.onLoadFailureCallback = () => {
         onError(
           createLoadFailureEvent(
-            () => portalInstanceObject.dom as SpatializedStatic3DElementRef,
+            () => portalInstanceObject?.dom as SpatializedStatic3DElementRef,
           ),
         )
       }
