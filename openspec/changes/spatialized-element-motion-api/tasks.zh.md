@@ -9,7 +9,7 @@
 ## Phase 1 — 统一命名 + 路由（React）
 
 - [x] 导出 `Spatialized*` 类型别名和 `useSpatializedMotion(config)`
-- [x] 移除按 kind 的 React hook 别名；公共 API 仅为 `useSpatializedMotion` / `.simple`
+- [x] 移除按 kind 的 React hook 别名；公共 API 仅为 `useSpatializedMotion`
 - [x] 共享 React 内部模块：`useMotionController`、`createMotionBinding`、`createPlaybackApi`
 
 ## Phase 2 — Static3D + Dynamic3D native timelines
@@ -79,7 +79,7 @@
 - [ ] `style` 对仅 native 目标（static3d / dynamic3d）返回 `{}`；对 2D 返回活跃 CSSProperties
 - [ ] 绑定前 `api.play()` 将命令排队；目标解析后播放开始
 - [ ] 单绑定约束：同一 `animation` 绑定到多个组件时警告/抛错
-- [ ] `useSpatializedMotion.simple()` 同样改为元组返回
+- [ ] 移除 `useSpatializedMotion.simple()` 公共接口；统一 hook 直接接受 `from/to` 或 `tracks`
 - [ ] 移除 `useSpatializedMotion.ts` 内部的 `switch (config.kind)` 路由
 - [ ] 更新所有 test-server 演示页为新元组 API
 - [ ] 更新单元测试（`useSpatializedMotion.behavior.test.tsx`、`.native.test.tsx`）
