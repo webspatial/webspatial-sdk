@@ -10,7 +10,7 @@ import type { SpatializedPlaybackError } from './spatializedPlayback'
 /** Unified JSB command for spatialized2d / static3d / dynamic3d motion. */
 export interface AnimateSpatializedElementMotionCommand {
   animationId: string
-  type: 'play' | 'pause' | 'resume' | 'cancel'
+  type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish'
   targetKind: SpatializedMotionKind
   properties?: SpatializedMotionProperty[]
   elementId?: string

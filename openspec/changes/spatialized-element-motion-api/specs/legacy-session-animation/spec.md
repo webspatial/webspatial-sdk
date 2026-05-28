@@ -36,7 +36,7 @@ The following requirements from the original `spatial-div-animation-api` spec re
 
 ### Requirement: Legacy useAnimation hook returns [animation, api]
 
-When application code calls `useAnimation(config)` for SpatialDiv, the hook MUST return `[animation, api]` where `api` exposes `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, `finished`, and `playState`.
+When application code calls `useAnimation(config)` for SpatialDiv, the hook MUST return `[animation, api]` where `api` exposes `play`, `pause`, `stop`, `reset`, `finish`, `isAnimating`, `isPaused`, `finished`, and `playState`.
 
 ### Requirement: animation prop binds to SpatialDiv only
 
@@ -52,15 +52,15 @@ Session states (`idle`, `queued`, `delaying`, `running`, `paused`, `finished`) a
 
 ### Requirement: Imperative playback and lifecycle
 
-`play`, `pause`, `cancel`, and lifecycle callbacks (`onStart`, `onComplete`, `onCancel`, `onError`) MUST follow the same semantics documented in the archived spec.
+`play`, `pause`, `stop`, `reset`, `finish`, and lifecycle callbacks (`onStart`, `onComplete`, `onStop`, `onReset`, `onError`) MUST follow the same semantics documented in the archived spec.
 
 ### Requirement: Portal suppression during playback
 
-Property-level suppression for `opacity` and transform-wide suppression MUST prevent regular DOM sync from overwriting animation mid-states. Suppression release timing and `cancel` restoring to `from` are unchanged.
+Property-level suppression for `opacity` and transform-wide suppression MUST prevent regular DOM sync from overwriting animation mid-states. Suppression release timing and `reset` restoring to `from` are unchanged.
 
 ### Requirement: Unmount cleanup
 
-Alive sessions MUST be stopped/canceled on unmount without firing lifecycle callbacks.
+Alive sessions MUST be torn down on unmount without firing lifecycle callbacks.
 
 ## Segment Downgrade (interop with timeline API)
 

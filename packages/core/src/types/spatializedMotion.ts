@@ -43,7 +43,8 @@ export interface SpatializedMotionSegmentConfig {
   playbackRate?: number
   onStart?: () => void
   onComplete?: (values: SpatializedVisualValues) => void
-  onCancel?: (values: SpatializedVisualValues) => void
+  onStop?: (values: SpatializedVisualValues) => void
+  onReset?: (values: SpatializedVisualValues) => void
   onError?: (error: SpatializedPlaybackError) => void
 }
 
@@ -57,7 +58,8 @@ export interface SpatializedMotionConfig {
   playbackRate?: number
   onStart?: () => void
   onComplete?: (values: SpatializedVisualValues) => void
-  onCancel?: (values: SpatializedVisualValues) => void
+  onStop?: (values: SpatializedVisualValues) => void
+  onReset?: (values: SpatializedVisualValues) => void
   onError?: (error: SpatializedPlaybackError) => void
 }
 
@@ -91,7 +93,9 @@ export interface SpatializedPlaybackApi {
   play(): void
   pause(keys?: SpatializedMotionPropertyKeys): void
   resume(keys?: SpatializedMotionPropertyKeys): void
-  cancel(keys?: SpatializedMotionPropertyKeys): void
+  stop(): void
+  reset(): void
+  finish(): void
   readonly isAnimating: boolean
   readonly isPaused: boolean
   readonly finished: boolean

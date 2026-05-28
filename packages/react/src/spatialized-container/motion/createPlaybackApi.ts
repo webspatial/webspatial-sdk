@@ -10,7 +10,9 @@ export function createPlaybackApi(
     play: () => controller.play(),
     pause: keys => controller.pause(keys),
     resume: keys => controller.resume(keys),
-    cancel: keys => controller.cancel(keys),
+    stop: () => controller.stop(),
+    reset: () => controller.reset(),
+    finish: () => controller.finish(),
     get isAnimating() {
       return controller.isAnimating
     },

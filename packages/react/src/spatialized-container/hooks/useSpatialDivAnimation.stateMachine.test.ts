@@ -40,7 +40,7 @@ function createMockElement() {
           }),
         }
       }
-      // pause/resume/cancel return void
+      // pause/resume/reset return void
       return undefined
     }),
     cleanupSpatialDivAnimationListeners: vi.fn(),
@@ -208,7 +208,7 @@ describe('SpatialDiv Animation State Machine', () => {
     expect(api.finished).toBe(true)
   })
 
-  test('cancel during running → idle state', async () => {
+  test('reset during running → idle state', async () => {
     const mock = createMockElement()
     const { result } = renderHook(() =>
       useSpatialDivAnimation(baseConfig, true),
@@ -225,11 +225,11 @@ describe('SpatialDiv Animation State Machine', () => {
     await flushPromises()
 
     await act(async () => {
-      api.cancel()
+      api.reset()
     })
     await flushPromises()
 
-    // cancel triggers native cancel → canceled event
+    // reset triggers native reset → canceled event
     await act(async () => {
       mock.triggerCanceled({ opacity: 0 })
     })
@@ -292,7 +292,7 @@ describe('SpatialDiv Animation State Machine', () => {
     expect(api.playState).toBe('queued')
   })
 
-  test('pause/cancel when idle → no-op', async () => {
+  test('pause/reset when idle → no-op', async () => {
     const { result } = renderHook(() =>
       useSpatialDivAnimation(baseConfig, true),
     )
@@ -306,7 +306,7 @@ describe('SpatialDiv Animation State Machine', () => {
     expect(api.playState).toBe('idle')
 
     await act(async () => {
-      api.cancel()
+      api.reset()
     })
     await flushPromises()
     expect(api.playState).toBe('idle')
@@ -343,7 +343,7 @@ describe('SpatialDiv Animation State Machine', () => {
     expect(api.isAnimating).toBe(true)
   })
 
-  test('cancel after finished → resets to idle', async () => {
+  test('reset after finished → resets to idle', async () => {
     const mock = createMockElement()
     const { result } = renderHook(() =>
       useSpatialDivAnimation(baseConfig, true),
@@ -367,7 +367,7 @@ describe('SpatialDiv Animation State Machine', () => {
     expect(api.playState).toBe('finished')
 
     await act(async () => {
-      api.cancel()
+      api.reset()
     })
     await flushPromises()
     expect(api.finished).toBe(false)

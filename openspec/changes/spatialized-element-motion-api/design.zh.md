@@ -9,10 +9,10 @@
 ### Plan A（会话动画）— 奠基
 
 Plan A 确立了架构原语：
-- **会话状态机**：idle → queued → delaying → running → paused → finished/canceled
+- **会话状态机**：idle → queued → delaying → running → paused → finished
 - **Portal 抑制**：opacity 属性级、transform 字段整体级
 - **Native 播放模型**：visionOS 上 CADisplayLink 驱动的逐帧采样
-- **生命周期契约**：onStart/onComplete/onCancel/onError 互斥
+- **生命周期契约**：onStart/onComplete/onStop/onReset/onError 互斥
 - **段插值**：单次 `from`/`to` + timing function
 
 这些在统一系统中保持规范性。
