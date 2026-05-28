@@ -5,27 +5,26 @@ import {
   validateSpatializedMotionConfig,
   type SpatializedMotionConfig,
   type SpatializedMotionHandle,
-  type SpatializedMotionKind,
 } from '@webspatial/core-sdk'
 
 export function useMotionController(
-  kind: SpatializedMotionKind,
   config: SpatializedMotionConfig,
   onValuesChange?: (
     values: import('@webspatial/core-sdk').SpatializedVisualValues,
   ) => void,
-): { controller: SpatializedMotionHandle; nativeCapable: boolean } {
+): SpatializedMotionHandle {
   validateSpatializedMotionConfig(config)
 
   const [, tick] = useReducer((n: number) => n + 1, 0)
-  const nativeCapable = supports('useSpatializedMotion', [kind])
-
   const controllerRef = useRef<SpatializedMotionHandle | null>(null)
   if (!controllerRef.current || controllerRef.current.isDestroyed) {
-    controllerRef.current = new SpatializedMotionController(config, kind, {
-      forceNativePlayback: nativeCapable,
+    controllerRef.current = new SpatializedMotionController(config, {
       onStateChange: () => tick(),
       onValuesChange,
+      supportsMotionKind: kind =>
+        supports('useSpatializedMotion', [
+          kind === 'spatialized2d' ? 'element' : kind,
+        ]),
     })
   }
   const controller = controllerRef.current
@@ -41,5 +40,5 @@ export function useMotionController(
     }
   }, [controller])
 
-  return { controller, nativeCapable }
+  return controller
 }

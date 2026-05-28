@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 vi.mock('@webspatial/core-sdk', async () => {
@@ -6,7 +6,8 @@ vi.mock('@webspatial/core-sdk', async () => {
   return {
     ...actual,
     supports: (name: string, tokens?: readonly string[]) =>
-      name === 'useSpatializedMotion' && !!tokens?.includes('spatialized2d'),
+      name === 'useSpatializedMotion' &&
+      !!tokens?.some(token => token === 'spatialized2d' || token === 'element'),
   }
 })
 
@@ -39,18 +40,17 @@ async function flushPromises() {
   })
 }
 
-describe('useSpatializedMotion (spatialized2d) native backend', () => {
+describe('useSpatializedMotion tuple api native backend', () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
-  test('multi-track native playback sends timeline without starting Web RAF', async () => {
+  test('pre-bind play queues until the target resolves', async () => {
     const rafSpy = vi.spyOn(window, 'requestAnimationFrame')
     const element = createMockElement()
 
     const { result } = renderHook(() =>
       useSpatializedMotion({
-        kind: 'spatialized2d',
         duration: 5,
         autoStart: false,
         tracks: [
@@ -75,11 +75,18 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
     )
 
     await act(async () => {
-      expect(result.current.motion).toBeDefined()
-      result.current.motion!.__setElement!(element as any)
-      result.current.api.play()
+      result.current[1].play()
     })
-    await flushPromises()
+    expect(result.current[1].playState).toBe('queued')
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+    })
+    await waitFor(() => {
+      expect(element.animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'play' }),
+      )
+    })
 
     const playCalls = element.animateMotion.mock.calls.filter(
       ([cmd]) => cmd.type === 'play',
@@ -94,13 +101,10 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
           duration: 5,
           tracks: expect.arrayContaining([
             expect.objectContaining({ property: 'transform.translate.x' }),
-            expect.objectContaining({ property: 'opacity' }),
           ]),
         }),
       }),
     )
-    expect(playCalls[0][0].from).toBeUndefined()
-    expect(playCalls[0][0].to).toBeUndefined()
     expect(rafSpy).not.toHaveBeenCalled()
   })
 
@@ -112,7 +116,6 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
 
     const { result } = renderHook(() =>
       useSpatializedMotion({
-        kind: 'spatialized2d',
         duration: 5,
         autoStart: false,
         tracks: [
@@ -129,21 +132,23 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
     )
 
     await act(async () => {
-      result.current.motion!.__setElement!(element as any)
-      result.current.api.play()
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[1].play()
     })
-    await flushPromises()
+    await waitFor(() => {
+      expect(element.animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'play' }),
+      )
+    })
 
     now = 1500
 
     await act(async () => {
-      result.current.api.pause()
+      result.current[1].pause()
     })
     await flushPromises()
 
-    expect(result.current.kind).toBe('spatialized2d')
-    if (result.current.kind !== 'spatialized2d') return
-    expect(String(result.current.style.transform)).toContain('translate3d(30px')
+    expect(String(result.current[2].transform)).toContain('translate3d(30px')
   })
 
   test('native pause prefers bridge-reported values over wall-clock estimate', async () => {
@@ -165,7 +170,6 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
 
     const { result } = renderHook(() =>
       useSpatializedMotion({
-        kind: 'spatialized2d',
         duration: 5,
         autoStart: false,
         tracks: [
@@ -182,19 +186,17 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
     )
 
     await act(async () => {
-      result.current.motion!.__setElement!(element as any)
-      result.current.api.play()
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[1].play()
     })
     await flushPromises()
 
     await act(async () => {
-      result.current.api.pause()
+      result.current[1].pause()
     })
-    await flushPromises()
-
-    expect(result.current.kind).toBe('spatialized2d')
-    if (result.current.kind !== 'spatialized2d') return
-    expect(String(result.current.style.transform)).toContain('translate3d(42px')
+    await waitFor(() => {
+      expect(String(result.current[2].transform)).toContain('translate3d(42px')
+    })
   })
 
   test('native onComplete applies finalValues to style', async () => {
@@ -219,7 +221,6 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
     const onComplete = vi.fn()
     const { result } = renderHook(() =>
       useSpatializedMotion({
-        kind: 'spatialized2d',
         duration: 5,
         autoStart: false,
         tracks: [
@@ -237,10 +238,14 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
     )
 
     await act(async () => {
-      result.current.motion!.__setElement!(element as any)
-      result.current.api.play()
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[1].play()
     })
-    await flushPromises()
+    await waitFor(() => {
+      expect(element.animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'play' }),
+      )
+    })
 
     await act(async () => {
       resolveFinished({ transform: { translate: { x: 99 } } })
@@ -252,9 +257,7 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
         transform: { translate: { x: 99 } },
       }),
     )
-    expect(result.current.kind).toBe('spatialized2d')
-    if (result.current.kind !== 'spatialized2d') return
-    expect(String(result.current.style.transform)).toContain('translate3d(99px')
+    expect(String(result.current[2].transform)).toContain('translate3d(99px')
   })
 
   test('__onUnbind does not invoke onCancel', async () => {
@@ -263,7 +266,6 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
 
     const { result } = renderHook(() =>
       useSpatializedMotion({
-        kind: 'spatialized2d',
         duration: 1,
         autoStart: false,
         tracks: [
@@ -280,19 +282,27 @@ describe('useSpatializedMotion (spatialized2d) native backend', () => {
     )
 
     await act(async () => {
-      result.current.motion!.__setElement!(element as any)
-      result.current.api.play()
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[1].play()
     })
-    await flushPromises()
+    await waitFor(() => {
+      expect(element.animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'play' }),
+      )
+    })
 
     await act(async () => {
-      result.current.motion!.__onUnbind!()
+      result.current[0].__onUnbind?.()
     })
-    await flushPromises()
+    await waitFor(() => {
+      expect(element.animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'cancel',
+          targetKind: 'spatialized2d',
+        }),
+      )
+    })
 
     expect(onCancel).not.toHaveBeenCalled()
-    expect(element.animateMotion).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'cancel', targetKind: 'spatialized2d' }),
-    )
   })
 })

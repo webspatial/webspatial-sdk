@@ -18,15 +18,12 @@ const SIMPLE_ENTRANCE = {
 }
 
 function SimpleEntranceCard() {
-  const { style, motion, api } = useSpatializedMotion.simple({
-    kind: 'spatialized2d',
-    ...SIMPLE_ENTRANCE,
-  })
+  const [motion, api, style] = useSpatializedMotion(SIMPLE_ENTRANCE)
 
   return (
     <div
       enable-xr
-      motion={motion}
+      {...{ motion: motion as any }}
       className="box rounded-lg"
       style={{
         width: 320,
@@ -40,7 +37,7 @@ function SimpleEntranceCard() {
   )
 }
 
-/** Fade + slide up via useSpatializedMotion.simple({ kind: 'spatialized2d', … }) */
+/** Fade + slide up via useSpatializedMotion({ from, to, duration, … }) */
 export function SpatialDivMotionSimpleEntrancePage() {
   const [key, setKey] = useState(0)
 

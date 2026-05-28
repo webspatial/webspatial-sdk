@@ -22,8 +22,7 @@ export function SpatialDivMotionMultiTrackPage() {
 
   const elementAnim = supports('useAnimation', ['element'])
 
-  const { style, api, motion } = useSpatializedMotion({
-    kind: 'spatialized2d',
+  const [motion, api, style] = useSpatializedMotion({
     duration: DURATION,
     autoStart: true,
     tracks: [
@@ -49,11 +48,11 @@ export function SpatialDivMotionMultiTrackPage() {
       setHint('Playing… (0–3s: move only; 3–5s: move + fade)')
     },
     onComplete: values => {
-      setLines(l => [...l, `onComplete ${fmtValues(values)}`])
+      setLines(l => [...l, `onComplete ${fmtValues(values as any)}`])
       setHint('Done — card fully visible at translate.x=100')
     },
     onCancel: values => {
-      setLines(l => [...l, `onCancel ${fmtValues(values)}`])
+      setLines(l => [...l, `onCancel ${fmtValues(values as any)}`])
       setHint('Canceled — reset to start keyframes')
     },
     onError: error => {
@@ -90,7 +89,7 @@ export function SpatialDivMotionMultiTrackPage() {
 
       <div
         enable-xr
-        motion={motion}
+        {...{ motion: motion as any }}
         className="box mb-4 rounded-xl border-2 border-emerald-500/50 shadow-lg shadow-emerald-900/30"
         style={{
           width: 280,

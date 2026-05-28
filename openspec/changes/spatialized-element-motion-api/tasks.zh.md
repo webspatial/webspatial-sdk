@@ -70,17 +70,17 @@
 
 ## Phase 8 — 绑定时目标解析（API 重塑）
 
-- [ ] 从 `SpatializedMotionConfig` 公共类型中移除 `kind`（config 不再携带目标）
-- [ ] `useSpatializedMotion` 返回值从对象 `{ style, api, motion, controller }` 改为元组 `[animation, api, style]`
-- [ ] 在 `animation` binding 中实现延迟目标槽位（挂载前目标未知）
-- [ ] `<div enable-xr motion={animation}>` → 解析目标为 `spatialized2d`，激活 Web RAF + native 策略
-- [ ] `<Model motion={animation}>` → 解析目标为 `static3d`，激活仅 native 策略
-- [ ] `<Reality motion={animation}>` → 解析目标为 `dynamic3d`，激活仅 native 策略
-- [ ] `style` 对仅 native 目标（static3d / dynamic3d）返回 `{}`；对 2D 返回活跃 CSSProperties
-- [ ] 绑定前 `api.play()` 将命令排队；目标解析后播放开始
-- [ ] 单绑定约束：同一 `animation` 绑定到多个组件时警告/抛错
-- [ ] 移除 `useSpatializedMotion.simple()` 公共接口；统一 hook 直接接受 `from/to` 或 `tracks`
-- [ ] 移除 `useSpatializedMotion.ts` 内部的 `switch (config.kind)` 路由
-- [ ] 更新所有 test-server 演示页为新元组 API
-- [ ] 更新单元测试（`useSpatializedMotion.behavior.test.tsx`、`.native.test.tsx`）
-- [ ] 更新 `@webspatial/core-sdk` 导出：`SpatializedMotionKind` 从公共接口移除（仅内部使用）
+- [x] 从 `SpatializedMotionConfig` 公共类型中移除 `kind`（config 不再携带目标）
+- [x] `useSpatializedMotion` 返回值从对象 `{ style, api, motion, controller }` 改为元组 `[animation, api, style]`
+- [x] 在 `animation` binding 中实现延迟目标槽位（挂载前目标未知）
+- [x] `<div enable-xr motion={animation}>` → 解析目标为 `spatialized2d`，激活 Web RAF + native 策略
+- [x] `<Model motion={animation}>` → 解析目标为 `static3d`，激活仅 native 策略
+- [x] `<Reality motion={animation}>` → 解析目标为 `dynamic3d`，激活仅 native 策略
+- [x] `style` 对仅 native 目标（static3d / dynamic3d）返回 `{}`；对 2D 返回活跃 CSSProperties
+- [x] 绑定前 `api.play()` 将命令排队；目标解析后播放开始
+- [x] 单绑定约束：同一 `animation` 绑定到多个组件时警告/抛错
+- [x] 移除 `useSpatializedMotion.simple()` 公共接口；统一 hook 直接接受 `from/to` 或 `tracks`
+- [x] 移除 `useSpatializedMotion.ts` 内部的 `switch (config.kind)` 路由
+- [x] 更新所有 test-server 演示页为新元组 API
+- [x] 更新单元测试（`useSpatializedMotion.behavior.test.tsx`、`.native.test.tsx`）
+- [x] 更新 `@webspatial/core-sdk` 导出：`SpatializedMotionKind` 从公共接口移除（仅内部使用）

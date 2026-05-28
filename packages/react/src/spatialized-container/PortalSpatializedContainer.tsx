@@ -200,6 +200,7 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     if (motion.__setElement) {
       motion.__setElement(
         spatializedElement as unknown as import('@webspatial/core-sdk').Spatialized2DElement,
+        'spatialized2d',
       )
     }
 
@@ -211,7 +212,7 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     return () => {
       motion.__onUnbind?.()
       if (motion.__setElement) {
-        motion.__setElement(null)
+        motion.__setElement(null, 'spatialized2d')
       }
       portalInstanceObject.setSuppressedFields(null)
     }

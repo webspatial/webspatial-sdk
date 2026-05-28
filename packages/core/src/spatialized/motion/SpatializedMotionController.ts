@@ -40,13 +40,15 @@ export interface SpatializedMotionControllerOptions {
   element?: MotionHostElement | null
   /**
    * When set, overrides `supports('useSpatializedMotion', [kind])` for backend selection.
-   * React passes the SDK `supports()` result so test mocks apply.
+   * Existing native element controllers can keep using this for tests.
    */
   forceNativePlayback?: boolean
   /** Fired when sampled values should update a style outlet. */
   onValuesChange?: (values: SpatializedVisualValues) => void
   /** Fired when {@link playState} changes (e.g. React re-render). */
   onStateChange?: () => void
+  /** Optional backend capability resolver, used by React tests to mock support checks. */
+  supportsMotionKind?: (kind: SpatializedMotionKind) => boolean
 }
 
 type SessionState = 'idle' | 'queued' | 'running' | 'paused' | 'finished'
@@ -70,6 +72,18 @@ function nextAnimationId(prefix: string): string {
   return `${prefix}${++_sessionCounter}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 }
 
+function getPolicy(kind: SpatializedMotionKind | null): MotionKindPolicy {
+  switch (kind) {
+    case 'static3d':
+      return MOTION_KIND_POLICIES.static3d
+    case 'dynamic3d':
+      return MOTION_KIND_POLICIES.dynamic3d
+    case 'spatialized2d':
+    default:
+      return MOTION_KIND_POLICIES.spatialized2d
+  }
+}
+
 /**
  * Runtime controller for a spatialized element motion timeline.
  * Implements react-spring-style selective `pause(['opacity'])` on the Web backend.
@@ -79,8 +93,7 @@ export class SpatializedMotionController
 {
   readonly id: string
 
-  private readonly kind: SpatializedMotionKind
-  private readonly policy: MotionKindPolicy
+  private kind: SpatializedMotionKind | null
   private config: SpatializedMotionConfig
   private element: MotionHostElement | null
   private readonly onValuesChange?: (values: SpatializedVisualValues) => void
@@ -109,22 +122,34 @@ export class SpatializedMotionController
   private warnedQueued = false
   private warnedNativeOnly = false
   private destroyed = false
+  private pendingPlay = false
   private readonly forceNativePlayback?: boolean
+  private readonly supportsMotionKind?: (kind: SpatializedMotionKind) => boolean
 
   constructor(
     config: SpatializedMotionConfig,
-    kind: SpatializedMotionKind,
+    kindOrOptions?: SpatializedMotionKind | SpatializedMotionControllerOptions,
     options: SpatializedMotionControllerOptions = {},
   ) {
     validateSpatializedMotionConfig(config)
-    this.kind = kind
-    this.policy = MOTION_KIND_POLICIES[kind]
+    const kind = typeof kindOrOptions === 'string' ? kindOrOptions : undefined
+    const resolvedOptions =
+      typeof kindOrOptions === 'string' ? options : (kindOrOptions ?? {})
+
+    this.kind = kind ?? null
     this.config = config
-    this.id = nextMotionObjectId(this.policy.motionObjectIdPrefix)
-    this.element = options.element ?? null
-    this.forceNativePlayback = options.forceNativePlayback
-    this.onValuesChange = options.onValuesChange
-    this.onStateChange = options.onStateChange
+    this.id = nextMotionObjectId(
+      this.kind === 'static3d'
+        ? MOTION_KIND_POLICIES.static3d.motionObjectIdPrefix
+        : this.kind === 'dynamic3d'
+          ? MOTION_KIND_POLICIES.dynamic3d.motionObjectIdPrefix
+          : MOTION_KIND_POLICIES.spatialized2d.motionObjectIdPrefix,
+    )
+    this.element = resolvedOptions.element ?? null
+    this.forceNativePlayback = resolvedOptions.forceNativePlayback
+    this.supportsMotionKind = resolvedOptions.supportsMotionKind
+    this.onValuesChange = resolvedOptions.onValuesChange
+    this.onStateChange = resolvedOptions.onStateChange
     this.emitValues(evaluateMotionTimeline(config, 0))
   }
 
@@ -136,55 +161,82 @@ export class SpatializedMotionController
     return this.config
   }
 
+  get targetKind(): SpatializedMotionKind | null {
+    return this.kind
+  }
+
   updateDefinition(config: SpatializedMotionConfig): void {
     validateSpatializedMotionConfig(config)
     this.config = config
   }
 
-  attachElement(element: MotionHostElement | null): void {
-    this.element = element
-    if (!element) return
+  attachElement(
+    element: MotionHostElement | null,
+    targetKind?: SpatializedMotionKind,
+  ): void {
+    const previousKind = this.kind
+    const previousElement = this.element
 
-    const session = this.nativeSession
-    if (
-      session &&
-      (session.state === 'queued' ||
-        (session.state === 'paused' && session.queuedPause))
-    ) {
-      void this.doNativePlay(session, element)
+    if (targetKind) {
+      if (this.kind && this.kind !== targetKind) {
+        console.warn(
+          `[${getPolicy(this.kind).controllerLabel}] motion binding already resolved to ${this.kind}; ignoring ${targetKind}.`,
+        )
+        return
+      }
+      if (!this.kind) {
+        this.kind = targetKind
+      }
+    }
+
+    if (element && this.element && this.element !== element) {
+      console.warn(
+        `[${getPolicy(this.kind).controllerLabel}] motion binding already attached to another component; ignoring subsequent bind.`,
+      )
       return
     }
 
-    if (this.config.autoStart !== false && !this.nativeSession) {
+    this.element = element
+    if (previousKind !== this.kind || previousElement !== this.element) {
+      this.bump()
+    }
+    if (!element) return
+
+    if (this.pendingPlay || this.config.autoStart !== false) {
       this.play()
     }
   }
 
   destroy(): void {
     this.destroyed = true
+    this.pendingPlay = false
     this.stopWebRaf()
     this.detachNative({ cancelSession: true })
   }
 
   get playState(): SpatializedMotionPlayState {
-    if (this.nativeCapable) {
-      const s = this.nativeSession?.state
-      if (s === 'queued') return 'running'
-      if (s && s !== 'idle') return s
+    if (!this.kind) {
+      if (this.pendingPlay) return 'queued'
+      return this.webState
     }
+
+    const s = this.nativeSession?.state
+    if (s === 'queued') return 'running'
+    if (s && s !== 'idle') return s
     return this.webState
   }
 
   get isAnimating(): boolean {
-    if (this.nativeCapable) {
-      const s = this.nativeSession?.state
-      if (s === 'running' || s === 'queued') return true
+    if (!this.kind) {
+      return this.pendingPlay || this.webState === 'running'
     }
-    return this.webState === 'running'
+    const s = this.nativeSession?.state
+    if (s === 'running' || s === 'queued') return true
+    return this.webState === 'running' || this.webState === 'queued'
   }
 
   get isPaused(): boolean {
-    if (this.nativeCapable && this.nativeSession?.state === 'paused') {
+    if (this.kind && this.nativeSession?.state === 'paused') {
       return true
     }
     return (
@@ -194,7 +246,7 @@ export class SpatializedMotionController
   }
 
   get finished(): boolean {
-    if (this.nativeCapable && this.nativeSession?.state === 'finished') {
+    if (this.kind && this.nativeSession?.state === 'finished') {
       return true
     }
     return this.webFinished
@@ -202,33 +254,72 @@ export class SpatializedMotionController
 
   /** Fields to suppress on the Portal while native drives playback. */
   getSuppressedFields(): Set<string> | null {
+    if (!this.kind) return null
+    if (this.kind === 'spatialized2d') {
+      const nativeState = this.nativeSession?.state
+      if (nativeState === 'running' || nativeState === 'paused') {
+        const active = this.getActiveProperties()
+        const subset = this.config.tracks.filter(t =>
+          active.includes(t.property),
+        )
+        if (subset.length === 0) return null
+        return getPolicy(this.kind).getSuppressedFields({
+          ...this.config,
+          tracks: subset,
+        })
+      }
+      if (this.webState !== 'running' && this.webState !== 'paused') return null
+      return getPolicy(this.kind).getSuppressedFields(this.config)
+    }
     const s = this.nativeSession?.state
     if (!s || (s !== 'running' && s !== 'paused')) return null
     const active = this.getActiveProperties()
     const subset = this.config.tracks.filter(t => active.includes(t.property))
     if (subset.length === 0) return null
-    return this.policy.getSuppressedFields({ ...this.config, tracks: subset })
+    return getPolicy(this.kind).getSuppressedFields({
+      ...this.config,
+      tracks: subset,
+    })
   }
 
   play(): void {
+    if (this.destroyed) return
+
+    if (!this.kind) {
+      if (!this.pendingPlay) {
+        this.pendingPlay = true
+        this.webState = 'queued'
+        this.webFinished = false
+        this.bump()
+      }
+      return
+    }
+
+    this.pendingPlay = false
+
+    const policy = getPolicy(this.kind)
     if (!this.nativeCapable) {
-      if (this.policy.webPlayback === 'none') {
+      if (policy.webPlayback === 'none') {
         if (!this.warnedNativeOnly) {
           this.warnedNativeOnly = true
-          warnNativeOnlyMotion(this.policy.controllerLabel, this.kind)
+          warnNativeOnlyMotion(policy.controllerLabel, this.kind)
         }
+        this.webState = 'queued'
+        this.bump()
         return
       }
       this.webPlay()
       return
     }
+
     this.stopWebRaf()
     this.enqueueNative(() => this.nativePlay())
   }
 
   pause(keys?: SpatializedMotionPropertyKeys): void {
+    if (!this.kind) return
     if (!this.nativeCapable) {
-      if (this.policy.webPlayback === 'raf') this.webPause(keys)
+      if (getPolicy(this.kind).webPlayback === 'raf') this.webPause(keys)
       return
     }
     const ns = this.nativeSession?.state
@@ -238,8 +329,9 @@ export class SpatializedMotionController
   }
 
   resume(keys?: SpatializedMotionPropertyKeys): void {
+    if (!this.kind) return
     if (!this.nativeCapable) {
-      if (this.policy.webPlayback === 'raf') {
+      if (getPolicy(this.kind).webPlayback === 'raf') {
         this.webResume(normalizeMotionPropertyKeys(keys))
       }
       return
@@ -254,11 +346,31 @@ export class SpatializedMotionController
     const normalized = normalizeMotionPropertyKeys(keys)
     if (normalized && normalized.length > 0) {
       console.warn(
-        `[${this.policy.controllerLabel}] cancel(keys) is not supported; canceling entire session.`,
+        `[${getPolicy(this.kind).controllerLabel}] cancel(keys) is not supported; canceling entire session.`,
       )
     }
+
+    if (!this.kind) {
+      if (!this.pendingPlay && this.webState === 'idle') return
+      this.pendingPlay = false
+      this.webState = 'idle'
+      this.webFinished = false
+      this.webStarted = false
+      this.bump()
+      return
+    }
+
     if (!this.nativeCapable) {
-      if (this.policy.webPlayback === 'raf') this.webCancel()
+      if (getPolicy(this.kind).webPlayback === 'raf') {
+        this.webCancel()
+        return
+      }
+      if (this.webState === 'queued' || this.pendingPlay) {
+        this.pendingPlay = false
+        this.webState = 'idle'
+        this.webFinished = false
+        this.bump()
+      }
       return
     }
     const ns = this.nativeSession?.state
@@ -268,8 +380,12 @@ export class SpatializedMotionController
   }
 
   private get nativeCapable(): boolean {
+    if (!this.kind) return false
     if (this.forceNativePlayback !== undefined) {
       return this.forceNativePlayback
+    }
+    if (this.supportsMotionKind) {
+      return this.supportsMotionKind(this.kind)
     }
     return supports('useSpatializedMotion', [this.kind])
   }
@@ -392,10 +508,11 @@ export class SpatializedMotionController
   }
 
   private webCancel(): void {
-    if (this.webState === 'idle') return
+    if (this.webState === 'idle' && !this.pendingPlay) return
     this.stopWebRaf()
     this.frozenByProperty.clear()
     this.fullPause = false
+    this.pendingPlay = false
     const values = evaluateMotionTimeline(this.config, 0)
     this.emitValues(values)
     this.webState = 'idle'
@@ -489,7 +606,10 @@ export class SpatializedMotionController
     if (cfg.onError) {
       cfg.onError(error as SpatializedPlaybackError)
     } else {
-      console.error(`[${this.policy.controllerLabel}] Native error:`, error)
+      console.error(
+        `[${getPolicy(this.kind).controllerLabel}] Native error:`,
+        error,
+      )
     }
   }
 
@@ -497,6 +617,7 @@ export class SpatializedMotionController
     session: NativeSession,
     element: MotionHostElement,
   ): Promise<void> {
+    if (!this.kind) return
     const cmd = this.buildPlayCommand(session, element.id)
     if (!cmd) return
 
@@ -577,11 +698,12 @@ export class SpatializedMotionController
   }
 
   private async nativePlay(): Promise<void> {
+    if (!this.kind) return
     if (!this.nativeCapable) {
       if (!this.warnedNative) {
         this.warnedNative = true
         console.warn(
-          `[${this.policy.controllerLabel}] Native motion requires supports(useSpatializedMotion, ['${this.kind}']).`,
+          `[${getPolicy(this.kind).controllerLabel}] Native motion requires supports(useSpatializedMotion, ['${this.kind}']).`,
         )
       }
       return
@@ -618,7 +740,7 @@ export class SpatializedMotionController
     }
 
     const session: NativeSession = {
-      animationId: nextAnimationId(this.policy.sessionIdPrefix),
+      animationId: nextAnimationId(getPolicy(this.kind).sessionIdPrefix),
       state: 'idle',
       config: this.config,
     }
@@ -630,7 +752,7 @@ export class SpatializedMotionController
       if (!this.warnedQueued) {
         this.warnedQueued = true
         console.warn(
-          `[${this.policy.controllerLabel}] Native play is queued until attachElement / motion bind.`,
+          `[${getPolicy(this.kind).controllerLabel}] Native play is queued until attachElement / motion bind.`,
         )
       }
       this.bump()
@@ -643,10 +765,11 @@ export class SpatializedMotionController
   private async nativePause(
     keys?: SpatializedMotionPropertyKeys,
   ): Promise<void> {
+    if (!this.kind) return
     const properties = normalizeMotionPropertyKeys(keys)
     if (properties && properties.length > 0) {
       console.warn(
-        `[${this.policy.controllerLabel}] Selective native pause is not yet supported; pausing entire session.`,
+        `[${getPolicy(this.kind).controllerLabel}] Selective native pause is not yet supported; pausing entire session.`,
       )
     }
 
@@ -696,6 +819,7 @@ export class SpatializedMotionController
   }
 
   private async nativeCancel(): Promise<void> {
+    if (!this.kind) return
     const session = this.nativeSession
     if (!session || session.state === 'idle') return
 
@@ -732,7 +856,7 @@ export class SpatializedMotionController
   private detachNative(opts: { cancelSession: boolean }): void {
     const session = this.nativeSession
     const element = this.element
-    if (opts.cancelSession && session && element) {
+    if (this.kind && opts.cancelSession && session && element) {
       if (session.state !== 'idle' && session.state !== 'finished') {
         motionElementSessionCommand(this.kind, element, {
           animationId: session.animationId,
@@ -745,6 +869,7 @@ export class SpatializedMotionController
     }
     this.nativeSession = null
     this.nativeControlling = false
+    this.pendingPlay = false
     this.bump()
   }
 
