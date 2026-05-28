@@ -104,6 +104,62 @@ The `animation` binding returned by `useSpatializedMotion` is **target-agnostic*
 
 **Single-bind constraint:** A binding instance MUST NOT be passed to multiple components simultaneously. The first bind wins; subsequent binds MUST warn/throw.
 
+## Termination Methods and Style Delivery
+
+Three imperative methods terminate a running (or paused) session. Each determines a distinct final style value, terminal `playState`, and lifecycle callback:
+
+| Method | Style value | playState | Callback | Suppression |
+|--------|-------------|-----------|----------|-------------|
+| `stop()` | Current frame (frozen at invocation time) | `idle` | `onStop(values)` | Released |
+| `reset()` | From values (initial state) | `idle` | `onReset(values)` | Released |
+| `finish()` | To values (final state) | `finished` | `onComplete(values)` | Released |
+| Natural end | To values (last frame reached) | `finished` | `onComplete(values)` | Released |
+
+### Backend-symmetric style delivery
+
+Style values for termination methods follow the same dual-backend pattern as regular playback:
+
+| Backend | Value source | Mechanism |
+|---------|-------------|-----------|
+| **Web** (RAF) | JS `evaluateMotionTimeline(config, t)` computes the target values | `emitValues()` → `onValuesChange` → React state update |
+| **Native** | Native runtime provides sampled values via promise resolution | `emitValues()` → `onValuesChange` → React state update |
+| **Native (fallback)** | If native does not return values, JS evaluator estimates | Same as Web path |
+
+For `stop()`: `t` = elapsed time at invocation. For `reset()`: `t` = 0. For `finish()`: `t` = duration.
+
+### State machine transitions
+
+```mermaid
+stateDiagram-v2
+    [*] --> idle
+    idle --> running : play()
+    running --> paused : pause()
+    running --> idle : stop() / reset()
+    running --> finished : finish() / natural end
+    paused --> running : resume()
+    paused --> idle : stop() / reset()
+    paused --> finished : finish()
+    finished --> idle : reset()
+    finished --> running : play()
+```
+
+## Lifecycle Callbacks
+
+| Callback | Trigger | Values passed |
+|----------|---------|---------------|
+| `onStart` | First frame after `play()` | none |
+| `onComplete` | Natural end **or** `finish()` | `SpatializedVisualValues` (to values) |
+| `onStop` | `stop()` | `SpatializedVisualValues` (current values) |
+| `onReset` | `reset()` | `SpatializedVisualValues` (from values) |
+| `onError` | Native bridge failure | `SpatializedPlaybackError` |
+
+**Mutual exclusion:** Per session termination, exactly one of `onComplete` / `onStop` / `onReset` fires. `onError` may fire independently on native failure.
+
+**Alignment with industry standards:**
+- `stop()` aligns with React Spring `api.stop()` and Framer Motion `controls.stop()`
+- `finish()` aligns with WAAPI `animation.finish()` (fires `onfinish`, same as natural end)
+- `reset()` aligns with WAAPI `animation.cancel()` (reverts to pre-animation state)
+
 ## Legacy Compatibility
 
 The Plan A path (`useAnimation` + `animation` prop) is retained as a thin compatibility layer:
@@ -117,10 +173,10 @@ The Plan A path (`useAnimation` + `animation` prop) is retained as a thin compat
 
 | Animated field | Suppression scope | Release trigger |
 |----------------|-------------------|-----------------|
-| `opacity` | Property-level: only `opacity` sync suppressed | Session terminal (finished/canceled) |
+| `opacity` | Property-level: only `opacity` sync suppressed | Session terminal (finished / stop / reset) |
 | Any `transform.*` | Transform-wide: entire `updateTransform(matrix)` suppressed | Session terminal |
 
-Suppression applies to both legacy `animation` prop sessions and `motion` binding sessions.
+Suppression applies to both legacy `animation` prop sessions and `motion` binding sessions. All three termination methods (`stop`, `reset`, `finish`) release suppression.
 
 ## Native Timeline Evaluation
 
@@ -135,4 +191,6 @@ See [tasks.md](./tasks.md). Summary:
 - Phase 4: Entity timeline (deferred)
 - Phase 5: Native consolidation (completed)
 - Phase 6: Unified JSB + type rename (completed)
-- Phase 7: Spec merge (this commit)
+- Phase 7: Spec merge (completed)
+- Phase 8: Bind-time target resolution (completed)
+- Phase 9: Playback API expansion — stop / reset / finish (proposed)
