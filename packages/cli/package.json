@@ -4,7 +4,7 @@
   "description": "Client CLI tool to Generate XRApp project for Apple Vision Pro",
   "type": "commonjs",
   "engines": {
-    "node": ">=22.22.2"
+    "node": ">=22"
   },
   "bin": {
     "webspatial-builder": "bin/bundlepwa.js"
