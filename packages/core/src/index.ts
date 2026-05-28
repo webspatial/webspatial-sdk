@@ -35,7 +35,17 @@ export * from './types/types'
 export * from './types/animation'
 export * from './types/spatializedVisual'
 export * from './types/spatializedPlayback'
-export * from './types/spatializedMotion'
+export type {
+  SpatializedMotionProperty,
+  SpatializedMotionKeyframe,
+  SpatializedMotionTrack,
+  SpatializedMotionSegmentConfig,
+  SpatializedMotionConfig,
+  SpatializedMotionTimeline,
+  SpatializedMotionPlayState,
+  SpatializedMotionPropertyKeys,
+  SpatializedPlaybackApi,
+} from './types/spatializedMotion'
 export * from './types/spatializedMotionBinding'
 export * from './types/spatializedStatic3dAnimation'
 export * from './types/spatializedDynamic3dAnimation'

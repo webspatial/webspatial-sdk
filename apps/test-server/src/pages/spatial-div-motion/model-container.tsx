@@ -19,8 +19,7 @@ export function SpatializedMotionModelContainerPage() {
 
   const static3dAnim = supports('useAnimation', ['static3d'])
 
-  const { api, motion } = useSpatializedMotion({
-    kind: 'static3d',
+  const [motion, api] = useSpatializedMotion({
     duration: DURATION,
     autoStart: true,
     tracks: [
@@ -46,11 +45,11 @@ export function SpatializedMotionModelContainerPage() {
       setHint('Playing — model root lifts + yaws (modelTransform)')
     },
     onComplete: values => {
-      setLines(l => [...l, `onComplete ${fmtValues(values)}`])
+      setLines(l => [...l, `onComplete ${fmtValues(values as any)}`])
       setHint('Done — translate.y≈0.12m, rotate.y=90°')
     },
     onCancel: values => {
-      setLines(l => [...l, `onCancel ${fmtValues(values)}`])
+      setLines(l => [...l, `onCancel ${fmtValues(values as any)}`])
       setHint('Canceled — snapped to start keyframes')
     },
     onError: error => {
@@ -65,10 +64,8 @@ export function SpatializedMotionModelContainerPage() {
         Static3D — Model container motion
       </h1>
       <p className="text-sm text-gray-400 mb-2">
-        <code>
-          useSpatializedMotion(&#123; kind: &apos;static3d&apos; &#125;)
-        </code>{' '}
-        + <code>&lt;Model motion&gt;</code>. Timeline drives{' '}
+        <code>useSpatializedMotion(&#123; from/to or tracks &#125;)</code> +{' '}
+        <code>&lt;Model motion&gt;</code>. Timeline drives{' '}
         <strong>modelTransform</strong> (not USD embedded clip playback).
         Separate from <code>ref.play()</code> on the model asset.
       </p>
@@ -86,7 +83,7 @@ export function SpatializedMotionModelContainerPage() {
       <div className="relative border border-gray-800 rounded-xl overflow-hidden bg-[#111] mb-4 p-6 flex justify-center">
         <Model
           enable-xr
-          motion={motion}
+          motion={motion as any}
           poster="/img/toy_drummer.png"
           style={{
             width: 320,

@@ -27,8 +27,7 @@ export function SpatializedMotionRealityContainerPage() {
 
   const dynamic3dAnim = supports('useAnimation', ['dynamic3d'])
 
-  const { api, motion } = useSpatializedMotion({
-    kind: 'dynamic3d',
+  const [motion, api] = useSpatializedMotion({
     duration: DURATION,
     autoStart: true,
     tracks: [
@@ -54,11 +53,11 @@ export function SpatializedMotionRealityContainerPage() {
       setHint('Playing — whole Reality container lifts + yaws')
     },
     onComplete: values => {
-      setLines(l => [...l, `onComplete ${fmtValues(values)}`])
+      setLines(l => [...l, `onComplete ${fmtValues(values as any)}`])
       setHint('Done — container at y≈0.18m, rotate.y=180°')
     },
     onCancel: values => {
-      setLines(l => [...l, `onCancel ${fmtValues(values)}`])
+      setLines(l => [...l, `onCancel ${fmtValues(values as any)}`])
       setHint('Canceled — snapped to start keyframes')
     },
     onError: error => {
@@ -73,10 +72,8 @@ export function SpatializedMotionRealityContainerPage() {
         Dynamic3D — Reality container motion
       </h1>
       <p className="text-sm text-gray-400 mb-2">
-        <code>
-          useSpatializedMotion(&#123; kind: &apos;dynamic3d&apos; &#125;)
-        </code>{' '}
-        + <code>&lt;Reality motion&gt;</code>. Timeline drives the{' '}
+        <code>useSpatializedMotion(&#123; from/to or tracks &#125;)</code> +{' '}
+        <code>&lt;Reality motion&gt;</code>. Timeline drives the{' '}
         <strong>Reality root</strong> (not child <code>Entity</code> nodes).
         Values are <strong>meters / degrees</strong>.
       </p>
@@ -93,7 +90,7 @@ export function SpatializedMotionRealityContainerPage() {
 
       <div className="relative border border-gray-800 rounded-xl overflow-hidden bg-[#111] mb-4">
         <Reality
-          motion={motion}
+          motion={motion as any}
           style={{
             width: '100%',
             height: 480,

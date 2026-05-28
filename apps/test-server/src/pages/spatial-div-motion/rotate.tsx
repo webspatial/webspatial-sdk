@@ -22,8 +22,7 @@ export function SpatialDivMotionRotatePage() {
 
   const elementAnim = supports('useAnimation', ['element'])
 
-  const { style, api, motion } = useSpatializedMotion({
-    kind: 'spatialized2d',
+  const [motion, api, style] = useSpatializedMotion({
     duration: DURATION,
     autoStart: true,
     tracks: [
@@ -49,11 +48,11 @@ export function SpatialDivMotionRotatePage() {
       setHint('Playing — yaw + spin')
     },
     onComplete: values => {
-      setLines(l => [...l, `onComplete ${fmtValues(values)}`])
+      setLines(l => [...l, `onComplete ${fmtValues(values as any)}`])
       setHint('Done — rotate.y=90°, rotate.z=180°')
     },
     onCancel: values => {
-      setLines(l => [...l, `onCancel ${fmtValues(values)}`])
+      setLines(l => [...l, `onCancel ${fmtValues(values as any)}`])
       setHint('Canceled — rotations reset')
     },
     onError: error => {
@@ -86,7 +85,7 @@ export function SpatialDivMotionRotatePage() {
 
       <div
         enable-xr
-        motion={motion}
+        {...{ motion: motion as any }}
         className="box mb-4 rounded-xl border-2 border-violet-500/50"
         style={{
           width: 280,
