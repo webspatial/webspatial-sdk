@@ -120,11 +120,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   useEffect(() => {
     if (effectiveLoading !== 'lazy') return
     const target = portalInstanceObject.dom
-    // Missing DOM means 2D frame sync is not ready yet (e.g. HMR remount), not
-    // "in viewport" — wait for `dom` instead of promoting to eager.
-    if (!target) {
-      return
-    }
+    if (!target) return
     if (typeof IntersectionObserver === 'undefined') {
       setEffectiveLoading('eager')
       return
