@@ -12,7 +12,7 @@ The SDK MUST treat `Spatialized2DElement` motion as the 2D target, resolved when
 
 #### Scenario: Public React entry
 
-- **WHEN** authors call `useSpatializedMotion(config)` or `useSpatializedMotion.simple(config)` and bind `animation` to an `enable-xr` node
+- **WHEN** authors call `useSpatializedMotion(config)` (with `from/to` or `tracks`) and bind `animation` to an `enable-xr` node
 - **THEN** the hook MUST return `[animation, api, style]` with Web RAF when native motion is unavailable
 
 #### Scenario: Core controller parity
@@ -32,10 +32,10 @@ The SDK MUST provide `useSpatializedMotion(config)` returning `[animation, api, 
 - **THEN** the hook MUST return a tuple with `animation`, `api`, and `style`
 - **AND** `api` MUST expose `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, `finished`, and `playState`
 
-#### Scenario: simple sugar desugars to a timeline
+#### Scenario: from/to config compiles to tracks internally
 
-- **WHEN** application code calls `useSpatializedMotion.simple({ from, to, duration, ... })` and binds to an `enable-xr` node
-- **THEN** the SDK MUST behave equivalently to a `useSpatializedMotion` call whose `tracks` contain one track per animated scalar with keyframes at `at: 0` and `at: duration`
+- **WHEN** application code calls `useSpatializedMotion({ from, to, duration, ... })` and binds to an `enable-xr` node
+- **THEN** the SDK MUST internally compile `from/to` to `tracks` containing one track per animated scalar with keyframes at `at: 0` and `at: duration`, then execute via the same timeline pipeline
 
 ---
 

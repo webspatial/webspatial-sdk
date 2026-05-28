@@ -20,20 +20,28 @@
 ## 3. 统一入口（推荐 API）
 
 ```typescript
-// hook 与目标无关 — 目标在绑定时自动解析
+// from/to 配置（推荐默认） — 目标在绑定时自动解析
 const [animation, api, style] = useSpatializedMotion({
-  duration: 5,
-  tracks: [/* … */],
+  from: { transform: { translate: { y: 24 } }, opacity: 0 },
+  to:   { transform: { translate: { y: 0 } }, opacity: 1 },
+  duration: 0.6,
+  timingFunction: 'easeOut',
 })
 
-// 2D — 绑定到 enable-xr 节点
-<div enable-xr style={{ ...style }} motion={animation} />
+// tracks 配置（高级） — 多轨 timeline
+const [animation, api, style] = useSpatializedMotion({
+  duration: 5,
+  tracks: [
+    { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], easing: 'linear' },
+  ],
+})
 
-// Static3D — 绑定到 <Model>
-<Model src="robot.usdz" motion={animation} />
+// 两种配置互斥（union type），内部 from/to 编译为 tracks 执行
 
-// Dynamic3D — 绑定到 <Reality>
-<Reality motion={animation}><Entity /></Reality>
+// 绑定目标：
+<div enable-xr style={{ ...style }} motion={animation} />  // → spatialized2d
+<Model src="robot.usdz" motion={animation} />               // → static3d
+<Reality motion={animation}><Entity /></Reality>             // → dynamic3d
 
 // style 行为：2D 返回活跃 CSSProperties；3D 返回空对象 {}（可安全展开）
 ```

@@ -33,7 +33,7 @@ Plan B 扩展了架构：
 
 - 2D / Static3D / Dynamic3D 三种容器 kind 共享一种 timeline 配置形状。
 - **一个** Core 实现：`SpatializedMotionController`（按 `kind` 策略）+ 各 element 类上的 `element.motion(config)`。
-- **一个** React 入口：`useSpatializedMotion(config)` 和 `useSpatializedMotion.simple(config)`。目标在绑定时解析（config 中无 `kind`）。
+- **一个** React 入口：`useSpatializedMotion(config)` 接受 `from/to` 或 `tracks`（互斥 union）。目标在绑定时解析（config 中无 `kind`）。内部 `from/to` 编译为 `tracks`。
 - 旧版 `useAnimation` + `animation` prop 作为 2D 废弃路径保留。
 - 伞式 spec + 按 kind 子 spec；2D 为 Web RAF + 抑制行为的参考。
 
@@ -73,7 +73,7 @@ flowchart TB
 
 | 模块 | 角色 |
 |------|------|
-| `useSpatializedMotion` | 公共 hook（tuple 返回 `[animation, api, style]` + `.simple`）；绑定前与目标无关 |
+| `useSpatializedMotion` | 公共 hook（tuple 返回 `[animation, api, style]`）；接受 `from/to` 或 `tracks` 配置；绑定前与目标无关 |
 | `useMotionController` + `createMotionBinding` + `createPlaybackApi` | 共享接线 |
 
 ## 共享类型（Core）
@@ -110,7 +110,7 @@ Plan A 路径（`useAnimation` + `animation` prop）作为薄兼容层保留：
 1. 用于 SpatialDiv 的 `useAnimation(config)` 继续正常工作。
 2. 内部实现中，简单配置 MAY 被编译为相同的 native 段命令。
 3. `animation` prop 路径不使用 `SpatializedMotionController`；保留自有会话管理。
-4. 新代码 SHOULD 使用 `useSpatializedMotion.simple()`，提供相同的单段体验。
+4. 新代码 SHOULD 使用 `useSpatializedMotion({ from, to, duration })`，提供相同的单段体验。
 
 ## Portal 抑制（统一规则）
 
