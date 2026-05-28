@@ -99,7 +99,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     loop,
     loading,
   } = props
-  const portalInstanceObject = useContext(PortalInstanceContext)!
+  const portalInstanceObject = useContext(PortalInstanceContext)
   const [effectiveLoading, setEffectiveLoading] = useState<ModelLoadingMode>(
     () => (loading === 'lazy' ? 'lazy' : 'eager'),
   )
