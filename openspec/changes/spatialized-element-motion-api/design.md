@@ -2,7 +2,7 @@
 
 Three `SpatializedElement` subclasses share scene placement but use **different native write paths**. The timeline evaluator, session state machine, and Portal suppression logic are shared in TypeScript; native applies samples to `element.transform` (2D / Dynamic3D) or `modelTransform` (Static3D). Entity animation remains a **separate** stack (`useAnimation` + `EntityAnimationManager`).
 
-This design unifies **author-facing** config (`SpatializedMotionConfig`, `SpatializedSegmentConfig`, `SpatializedPlaybackApi`) and routes by **`kind`** to one Core controller and one React hook.
+This design unifies **author-facing** config (`SpatializedMotionConfig`, `SpatializedSegmentConfig`, `SpatializedPlaybackApi`) and routes by the **binding target** (resolved when `animation` is passed as `motion` prop to a component) to one Core controller and one React hook.
 
 ## Design Evolution
 
@@ -33,7 +33,7 @@ The merge combines both into a single normative system with backward compatibili
 
 - One timeline config shape across 2D / Static3D / Dynamic3D container kinds.
 - **One** Core implementation: `SpatializedMotionController` (policy per `kind`) + `element.motion(config)` on each element class.
-- **One** React entry: `useSpatializedMotion({ kind, … })` and `useSpatializedMotion.simple({ kind, … })`.
+- **One** React entry: `useSpatializedMotion(config)` and `useSpatializedMotion.simple(config)`. Target resolved at bind time (no `kind` in config).
 - Legacy `useAnimation` + `animation` prop retained as deprecated path for 2D.
 - Umbrella spec with per-kind sub-specs; 2D remains the reference for Web RAF + suppression behavior.
 
@@ -41,13 +41,14 @@ The merge combines both into a single normative system with backward compatibili
 
 ```mermaid
 flowchart TB
-  Hook[useSpatializedMotion]
-  Hook --> K2D[kind spatialized2d]
-  Hook --> K3D[kind static3d]
-  Hook --> KD3[kind dynamic3d]
-  K2D --> Core[SpatializedMotionController]
-  K3D --> Core
-  KD3 --> Core
+  Hook["useSpatializedMotion(config)"] --> Binding["animation binding
+(target deferred)"]
+  Binding --> |"motion on enable-xr"| Resolve2D["target: spatialized2d"]
+  Binding --> |"motion on Model"| Resolve3D["target: static3d"]
+  Binding --> |"motion on Reality"| ResolveD3["target: dynamic3d"]
+  Resolve2D --> Core[SpatializedMotionController]
+  Resolve3D --> Core
+  ResolveD3 --> Core
   Core --> Bridge[motionElementBridge]
   Bridge --> N2D[SpatialDivAnimationManager]
   Bridge --> N3D[SpatializedContainerMotionAnimationManager + TransformSink]
@@ -62,9 +63,9 @@ flowchart TB
 
 | Module | Role |
 |--------|------|
-| `SpatializedMotionController` | Single TS controller; `MOTION_KIND_POLICIES` selects capability token, Web RAF vs native-only, suppressed fields |
+| `SpatializedMotionController` | Single TS controller; binding target selects capability token, Web RAF vs native-only, suppressed fields |
 | `motionElementBridge` | Dispatches `animateSpatialDiv` vs `animateMotion` + listener cleanup |
-| `element.motion(config)` | Factory on each `Spatialized*Element`; returns `SpatializedMotionController` with matching `kind` |
+| `element.motion(config)` | Factory on each `Spatialized*Element`; returns `SpatializedMotionController` with matching target kind |
 | `evaluateMotionTimeline` | Shared Web evaluator: per-track sampling, easing, lerp |
 | `SpatialDivTimelineEvaluator` (Swift) | Native parity evaluator: per-track 90Hz sampling via CADisplayLink |
 | `SpatializedMotionTransformSink` | Abstracts write path (elementTransform vs modelTransform) for Static3D/Dynamic3D |
@@ -73,7 +74,7 @@ flowchart TB
 
 | Module | Role |
 |--------|------|
-| `useSpatializedMotion` | Public hook (`kind` discriminant + `.simple`) |
+| `useSpatializedMotion` | Public hook (tuple return `[animation, api, style]` + `.simple`); target-agnostic until bind |
 | `useMotionController` + `createMotionBinding` + `createPlaybackApi` | Shared wiring |
 
 ## Shared Types (Core)
@@ -87,8 +88,21 @@ flowchart TB
 | Kind | React outlet | Binding prop | Native write path | Web RAF |
 |------|--------------|--------------|-------------------|---------|
 | 2D | `style` | `motion` on `enable-xr` node | `element.transform` + opacity + DOM | Yes |
-| Static3D | _(none — native drives view)_ | `motion` on `<Model>` | `modelTransform` + opacity | No |
-| Dynamic3D | _(none)_ | `motion` on `<Reality>` | `element.transform` + opacity | No |
+| Static3D | `style` unused | `motion` on `<Model>` | `modelTransform` + opacity | No |
+| Dynamic3D | `style` unused | `motion` on `<Reality>` | `element.transform` + opacity | No |
+
+## Target Resolution
+
+The `animation` binding returned by `useSpatializedMotion` is **target-agnostic**. Target is resolved at bind time:
+
+1. React component receives `motion={animation}` prop.
+2. Component type determines target: `enable-xr` → `spatialized2d`, `<Model>` → `static3d`, `<Reality>` → `dynamic3d`.
+3. Controller activates the matching `MOTION_KIND_POLICIES` entry.
+4. For 2D: `style` outlet is actively driven by Web RAF or native samples. For 3D: `style` remains `{}`.
+
+**Pre-bind playback:** If `api.play()` is called before the binding is mounted, the command is queued. Playback begins once the target is resolved.
+
+**Single-bind constraint:** A binding instance MUST NOT be passed to multiple components simultaneously. The first bind wins; subsequent binds MUST warn/throw.
 
 ## Legacy Compatibility
 
