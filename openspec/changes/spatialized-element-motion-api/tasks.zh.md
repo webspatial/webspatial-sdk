@@ -8,7 +8,7 @@
 
 ## Phase 1 — 统一命名 + 路由（React）
 
-- [x] 导出 `Spatialized*` 类型别名和 `useSpatializedMotion({ kind })`
+- [x] 导出 `Spatialized*` 类型别名和 `useSpatializedMotion(config)`
 - [x] 移除按 kind 的 React hook 别名；公共 API 仅为 `useSpatializedMotion` / `.simple`
 - [x] 共享 React 内部模块：`useMotionController`、`createMotionBinding`、`createPlaybackApi`
 
@@ -16,7 +16,7 @@
 
 - [x] Core：`SpatializedStatic3DElement.animateMotion()` / `SpatializedDynamic3DElement.animateMotion()` 通过统一的 `AnimateSpatializedElementMotion`
 - [x] Native：`SpatializedContainerMotionAnimationManager` + 单一 JSB 监听器 `AnimateSpatializedElementMotion`（`targetKind`: static3d | dynamic3d）
-- [x] React：Model / Reality `motion` 绑定；`useSpatializedMotion({ kind: 'static3d' | 'dynamic3d' })`
+- [x] React：Model / Reality `motion` 绑定；`useSpatializedMotion(config)` 绑定时目标解析
 - [x] test-server 演示页在 **Spatialized Motion** 下（`model-container`、`reality-container`）
 
 ## Phase 3 — Core + React 合并（单一控制器）
@@ -38,7 +38,7 @@
 - [x] 统一 JSB `AnimateSpatializedElementMotion` + 仅 `targetKind`（移除 `AnimateSpatializedStatic3DElement` / `AnimateSpatializedDynamic3DElement`）
 - [x] 将 2D 合入 `AnimateSpatializedElementMotion`（`targetKind: spatialized2d`）；移除 `AnimateSpatialized2DElement` JSB
 - [x] 移除废弃的 Core 控制器类别名（`SpatialDivMotionController`、`Static3DMotionController`、`Dynamic3DMotionController`）
-- [x] `supports('useSpatializedMotion', [kind])` 顶层能力（对应 `useAnimation` element/static3d/dynamic3d 标志）
+- [x] `supports('useSpatializedMotion', [target])` 顶层能力（对应 `useAnimation` element/static3d/dynamic3d 标志）
 - [ ] Static3D / Dynamic3D 的 Web RAF（推迟 — 产品要求 3D 容器仅 native）
 
 ## Phase 6 — 统一 JSB for 2D + `Spatialized*` 类型重命名
@@ -67,3 +67,20 @@
 - [x] 添加 `CAPABILITY_MATRIX.zh.md`
 - [x] 移除 `COMPARISON.md`（合并后不再需要）
 - [x] 更新 `tasks.md` 并创建 `tasks.zh.md`
+
+## Phase 8 — 绑定时目标解析（API 重塑）
+
+- [ ] 从 `SpatializedMotionConfig` 公共类型中移除 `kind`（config 不再携带目标）
+- [ ] `useSpatializedMotion` 返回值从对象 `{ style, api, motion, controller }` 改为元组 `[animation, api, style]`
+- [ ] 在 `animation` binding 中实现延迟目标槽位（挂载前目标未知）
+- [ ] `<div enable-xr motion={animation}>` → 解析目标为 `spatialized2d`，激活 Web RAF + native 策略
+- [ ] `<Model motion={animation}>` → 解析目标为 `static3d`，激活仅 native 策略
+- [ ] `<Reality motion={animation}>` → 解析目标为 `dynamic3d`，激活仅 native 策略
+- [ ] `style` 对仅 native 目标（static3d / dynamic3d）返回 `{}`；对 2D 返回活跃 CSSProperties
+- [ ] 绑定前 `api.play()` 将命令排队；目标解析后播放开始
+- [ ] 单绑定约束：同一 `animation` 绑定到多个组件时警告/抛错
+- [ ] `useSpatializedMotion.simple()` 同样改为元组返回
+- [ ] 移除 `useSpatializedMotion.ts` 内部的 `switch (config.kind)` 路由
+- [ ] 更新所有 test-server 演示页为新元组 API
+- [ ] 更新单元测试（`useSpatializedMotion.behavior.test.tsx`、`.native.test.tsx`）
+- [ ] 更新 `@webspatial/core-sdk` 导出：`SpatializedMotionKind` 从公共接口移除（仅内部使用）

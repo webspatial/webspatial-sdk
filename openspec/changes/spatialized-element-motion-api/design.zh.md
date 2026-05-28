@@ -2,7 +2,7 @@
 
 三个 `SpatializedElement` 子类共享场景定位，但使用**不同的 native 写入路径**。Timeline 评估器、会话状态机和 Portal 抑制逻辑在 TypeScript 中共享；native 将采样结果应用到 `element.transform`（2D / Dynamic3D）或 `modelTransform`（Static3D）。Entity 动画保持**独立**栈（`useAnimation` + `EntityAnimationManager`）。
 
-本设计统一了**面向开发者**的配置（`SpatializedMotionConfig`、`SpatializedSegmentConfig`、`SpatializedPlaybackApi`），并通过 **`kind`** 路由到单一 Core 控制器和单一 React hook。
+本设计统一了**面向开发者**的配置（`SpatializedMotionConfig`、`SpatializedSegmentConfig`、`SpatializedPlaybackApi`），并通过**绑定目标**（`animation` 被传给哪个组件的 `motion` prop 时自动确定）路由到单一 Core 控制器和单一 React hook。
 
 ## 设计演进
 
@@ -33,7 +33,7 @@ Plan B 扩展了架构：
 
 - 2D / Static3D / Dynamic3D 三种容器 kind 共享一种 timeline 配置形状。
 - **一个** Core 实现：`SpatializedMotionController`（按 `kind` 策略）+ 各 element 类上的 `element.motion(config)`。
-- **一个** React 入口：`useSpatializedMotion({ kind, … })` 和 `useSpatializedMotion.simple({ kind, … })`。
+- **一个** React 入口：`useSpatializedMotion(config)` 和 `useSpatializedMotion.simple(config)`。目标在绑定时解析（config 中无 `kind`）。
 - 旧版 `useAnimation` + `animation` prop 作为 2D 废弃路径保留。
 - 伞式 spec + 按 kind 子 spec；2D 为 Web RAF + 抑制行为的参考。
 
@@ -41,13 +41,13 @@ Plan B 扩展了架构：
 
 ```mermaid
 flowchart TB
-  Hook[useSpatializedMotion]
-  Hook --> K2D[kind spatialized2d]
-  Hook --> K3D[kind static3d]
-  Hook --> KD3[kind dynamic3d]
-  K2D --> Core[SpatializedMotionController]
-  K3D --> Core
-  KD3 --> Core
+  Hook["useSpatializedMotion(config)"] --> Binding["animation binding\n(目标延迟)"]
+  Binding --> |"motion on enable-xr"| Resolve2D["目标: spatialized2d"]
+  Binding --> |"motion on Model"| Resolve3D["目标: static3d"]
+  Binding --> |"motion on Reality"| ResolveD3["目标: dynamic3d"]
+  Resolve2D --> Core[SpatializedMotionController]
+  Resolve3D --> Core
+  ResolveD3 --> Core
   Core --> Bridge[motionElementBridge]
   Bridge --> N2D[SpatialDivAnimationManager]
   Bridge --> N3D[SpatializedContainerMotionAnimationManager + TransformSink]
@@ -62,9 +62,9 @@ flowchart TB
 
 | 模块 | 角色 |
 |------|------|
-| `SpatializedMotionController` | 单一 TS 控制器；`MOTION_KIND_POLICIES` 按 kind 选择能力 token、Web RAF vs 仅 native、被抑制字段 |
+| `SpatializedMotionController` | 单一 TS 控制器；由绑定目标选择能力 token、Web RAF vs 仅 native、被抑制字段 |
 | `motionElementBridge` | 分发 `animateSpatialDiv` vs `animateMotion` + 监听器清理 |
-| `element.motion(config)` | 各 `Spatialized*Element` 上的工厂；返回匹配 `kind` 的 `SpatializedMotionController` |
+| `element.motion(config)` | 各 `Spatialized*Element` 上的工厂；返回匹配目标 kind 的 `SpatializedMotionController` |
 | `evaluateMotionTimeline` | 共享 Web 评估器：逐轨采样、easing、lerp |
 | `SpatialDivTimelineEvaluator`（Swift） | Native 对等评估器：逐轨 90Hz 采样（CADisplayLink） |
 | `SpatializedMotionTransformSink` | 抽象写入路径（elementTransform vs modelTransform），用于 Static3D/Dynamic3D |
@@ -73,7 +73,7 @@ flowchart TB
 
 | 模块 | 角色 |
 |------|------|
-| `useSpatializedMotion` | 公共 hook（`kind` 判别 + `.simple`） |
+| `useSpatializedMotion` | 公共 hook（tuple 返回 `[animation, api, style]` + `.simple`）；绑定前与目标无关 |
 | `useMotionController` + `createMotionBinding` + `createPlaybackApi` | 共享接线 |
 
 ## 共享类型（Core）
@@ -87,8 +87,21 @@ flowchart TB
 | Kind | React outlet | 绑定 prop | Native 写入路径 | Web RAF |
 |------|--------------|-----------|----------------|---------|
 | 2D | `style` | `motion` 在 `enable-xr` 节点上 | `element.transform` + opacity + DOM | 有 |
-| Static3D | _（无 — native 驱动视图）_ | `motion` 在 `<Model>` 上 | `modelTransform` + opacity | 无 |
-| Dynamic3D | _（无）_ | `motion` 在 `<Reality>` 上 | `element.transform` + opacity | 无 |
+| Static3D | `style` 未使用 | `motion` 在 `<Model>` 上 | `modelTransform` + opacity | 无 |
+| Dynamic3D | `style` 未使用 | `motion` 在 `<Reality>` 上 | `element.transform` + opacity | 无 |
+
+## 目标解析（Target Resolution）
+
+`useSpatializedMotion` 返回的 `animation` binding 与**目标无关**。目标在绑定时解析：
+
+1. React 组件接收 `motion={animation}` prop。
+2. 组件类型决定目标：`enable-xr` → `spatialized2d`、`<Model>` → `static3d`、`<Reality>` → `dynamic3d`。
+3. Controller 激活匹配的 `MOTION_KIND_POLICIES` 条目。
+4. 对于 2D：`style` outlet 由 Web RAF 或 native 采样主动驱动。对于 3D：`style` 保持 `{}`。
+
+**绑定前播放：** 若在 binding 挂载前调用 `api.play()`，命令被排队。目标解析后播放开始。
+
+**单绑定约束：** 一个 binding 实例 MUST NOT 同时传给多个组件。第一次绑定生效；后续绑定 MUST 警告/抛错。
 
 ## 旧版兼容
 

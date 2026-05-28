@@ -2,18 +2,18 @@
 
 ## Scope
 
-`Spatialized2DElement` (HTML SpatialDiv / `enable-xr`) is the **reference kind** for the unified motion system. It is the only kind that supports the **dual backend** (Web RAF + native).
+`Spatialized2DElement` (HTML SpatialDiv / `enable-xr`) is the **reference target** for the unified motion system. When `animation` from `useSpatializedMotion` is bound to an `enable-xr` node via `motion` prop, the SDK resolves the target to `spatialized2d`. It is the only target that supports the **dual backend** (Web RAF + native).
 
 ## ADDED Requirements
 
 ### Requirement: 2D is the reference kind for timeline motion
 
-The SDK MUST treat `Spatialized2DElement` motion as `kind: 'spatialized2d'`. Implementation uses the shared `SpatializedMotionController` with 2D policy (Web RAF + native `SpatialDivAnimationManager`).
+The SDK MUST treat `Spatialized2DElement` motion as the 2D target, resolved when `animation` is bound to an `enable-xr` node. Implementation uses the shared `SpatializedMotionController` with 2D policy (Web RAF + native `SpatialDivAnimationManager`).
 
 #### Scenario: Public React entry
 
-- **WHEN** authors call `useSpatializedMotion({ kind: 'spatialized2d', … })` or `useSpatializedMotion.simple({ kind: 'spatialized2d', … })`
-- **THEN** the hook MUST return `{ kind, style, api, motion?, controller }` with Web RAF when native motion is unavailable
+- **WHEN** authors call `useSpatializedMotion(config)` or `useSpatializedMotion.simple(config)` and bind `animation` to an `enable-xr` node
+- **THEN** the hook MUST return `[animation, api, style]` with Web RAF when native motion is unavailable
 
 #### Scenario: Core controller parity
 
@@ -24,17 +24,17 @@ The SDK MUST treat `Spatialized2DElement` motion as `kind: 'spatialized2d'`. Imp
 
 ### Requirement: Provide SpatialDiv motion API with a single style outlet
 
-The SDK MUST provide `useSpatializedMotion(config)` returning at least `{ style, api }`. The `style` object MUST carry only whitelisted animated fields (`opacity` and structured `transform` as a CSS string composed translate → rotate → scale). Applications MUST integrate motion by merging `style` onto spatialized HTML nodes.
+The SDK MUST provide `useSpatializedMotion(config)` returning `[animation, api, style]`. For `spatialized2d` (binding to `enable-xr`), `style` carries active animated values. The `style` object MUST carry only whitelisted animated fields (`opacity` and structured `transform` as a CSS string composed translate → rotate → scale). Applications MUST integrate motion by merging `style` onto spatialized HTML nodes.
 
 #### Scenario: Hook return shape
 
-- **WHEN** application code calls `useSpatializedMotion(config)` with `kind: 'spatialized2d'`
-- **THEN** the hook MUST return an object with `style` and `api`
+- **WHEN** application code calls `useSpatializedMotion(config)` and binds `animation` to an `enable-xr` node
+- **THEN** the hook MUST return a tuple with `animation`, `api`, and `style`
 - **AND** `api` MUST expose `play`, `pause`, `cancel`, `isAnimating`, `isPaused`, `finished`, and `playState`
 
 #### Scenario: simple sugar desugars to a timeline
 
-- **WHEN** application code calls `useSpatializedMotion.simple({ kind: 'spatialized2d', from, to, duration, ... })`
+- **WHEN** application code calls `useSpatializedMotion.simple({ from, to, duration, ... })` and binds to an `enable-xr` node
 - **THEN** the SDK MUST behave equivalently to a `useSpatializedMotion` call whose `tracks` contain one track per animated scalar with keyframes at `at: 0` and `at: duration`
 
 ---
@@ -76,14 +76,14 @@ When the native motion backend is not active, the SDK MUST use a **Web backend**
 #### Scenario: Plain browser play animates style
 
 - **GIVEN** `supports('useSpatializedMotion', ['spatialized2d'])` is `false`
-- **WHEN** application calls `useSpatializedMotion` with valid tracks and `api.play()`
+- **WHEN** application binds `animation` to an `enable-xr` node with valid tracks and calls `api.play()`
 - **THEN** `style` MUST update over time until the timeline completes
 - **AND** `onComplete` MUST fire when a non-looping timeline finishes
 
 #### Scenario: WebSpatial runtime uses native backend only
 
 - **GIVEN** `supports('useSpatializedMotion', ['spatialized2d'])` is `true`
-- **WHEN** `api.play()` is called on a valid timeline
+- **WHEN** `api.play()` is called on a valid timeline bound to an `enable-xr` node
 - **THEN** the SDK MUST use the native motion backend
 - **AND** the Web RAF backend MUST NOT run for playback on the same hook instance
 

@@ -29,9 +29,8 @@ This **umbrella change** merges both into a single normative surface:
 ## At a Glance
 
 ```tsx
-// Unified API (recommended)
-const { style, api, motion } = useSpatializedMotion({
-  kind: 'spatialized2d',
+// Unified API — hook is target-agnostic; target resolved at bind time
+const [animation, api, style] = useSpatializedMotion({
   duration: 5,
   tracks: [
     { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], easing: 'linear' },
@@ -39,13 +38,21 @@ const { style, api, motion } = useSpatializedMotion({
   ],
 })
 
-<div enable-xr style={{ width: 300, height: 200, ...style }} motion={motion}>
+// 2D — target auto-resolved to spatialized2d when bound to enable-xr node
+<div enable-xr style={{ width: 300, height: 200, ...style }} motion={animation}>
   <h2>Hello Spatial</h2>
 </div>
 
+// Static3D — target auto-resolved to static3d when bound to <Model>
+<Model src="robot.usdz" motion={animation} />
+
+// Dynamic3D — target auto-resolved to dynamic3d when bound to <Reality>
+<Reality motion={animation}>
+  <Entity position={{ x: 0, y: 1, z: -2 }} />
+</Reality>
+
 // Simple sugar (single segment, equivalent to Plan A from/to)
-const { style, api, motion } = useSpatializedMotion.simple({
-  kind: 'spatialized2d',
+const [animation, api, style] = useSpatializedMotion.simple({
   from: { transform: { translate: { y: 24 } }, opacity: 0 },
   to:   { transform: { translate: { y: 0 } }, opacity: 1 },
   duration: 0.6,
@@ -59,9 +66,23 @@ const [animation, api] = useAnimation({
 <div enable-xr animation={animation} />
 ```
 
+## Target Resolution
+
+The hook is **target-agnostic** — it does not accept a `kind` parameter. The returned `animation` binding carries a **deferred target slot**. When React reconciles and the component accepting `motion={animation}` mounts, the SDK resolves the target automatically:
+
+| Component | Resolved target | `style` behavior |
+|-----------|-----------------|------------------|
+| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` | Active CSSProperties (Web RAF driven) |
+| `<Model>` | `static3d` | Empty `{}` (native-only, safe to spread) |
+| `<Reality>` | `dynamic3d` | Empty `{}` (native-only, safe to spread) |
+
+**Constraints:**
+- A single `animation` binding MUST NOT be shared across multiple components simultaneously (1:1 binding).
+- `api.play()` called before bind MAY queue; playback starts once the binding is resolved.
+
 ## What Changes
 
-- **Unified public API**: `useSpatializedMotion({ kind, duration, tracks })` and `.simple()` sugar for all three container kinds.
+- **Unified public API**: `useSpatializedMotion(config)` and `.simple()` sugar for all three container kinds.
 - **Timeline data model**: per-property tracks with absolute-time keyframes, per-track easing — the canonical config shape.
 - **Dual backend for 2D**: Web RAF when native unavailable; native timeline/segment when in WebSpatial runtime.
 - **Native-only for 3D**: Static3D and Dynamic3D use native `animateMotion` exclusively (no Web RAF fallback).
@@ -69,15 +90,14 @@ const [animation, api] = useAnimation({
 - **Legacy compatibility**: Plan A `useAnimation` + `animation` prop retained for SpatialDiv; segment downgrade path for simple timelines.
 - **Portal suppression**: animated fields suppressed during native playback (property-level for opacity, transform-wide for transform).
 - **Session semantics**: state machine, lifecycle callbacks, error handling unified across all paths.
-- **Capability detection**: `supports('useSpatializedMotion', [kind])` for `spatialized2d` | `static3d` | `dynamic3d`.
+- **Capability detection**: `supports('useSpatializedMotion', [target])` for `spatialized2d` | `static3d` | `dynamic3d`.
 
 ## Capabilities
 
 ### New
 
 - `spatialized-element-motion` — umbrella requirements and per-kind matrix.
-- `spatialized-2d-motion` — 2D timeline + dual backend (reference implementation).
-- `spatialized-static3d-motion` — Model root transform timeline (native-only).
+- `spatialized-2d-motion` — 2D timeline + dual backend (reference implementation).- `spatialized-static3d-motion` — Model root transform timeline (native-only).
 - `spatialized-dynamic3d-motion` — Reality container transform timeline (native-only).
 
 ### Modified
