@@ -260,9 +260,9 @@ describe('useSpatializedMotion tuple api native backend', () => {
     expect(String(result.current[2].transform)).toContain('translate3d(99px')
   })
 
-  test('__onUnbind does not invoke onCancel', async () => {
+  test('__onUnbind does not invoke onReset', async () => {
     const element = createMockElement()
-    const onCancel = vi.fn()
+    const onReset = vi.fn()
 
     const { result } = renderHook(() =>
       useSpatializedMotion({
@@ -277,7 +277,7 @@ describe('useSpatializedMotion tuple api native backend', () => {
             ],
           },
         ],
-        onCancel,
+        onReset,
       }),
     )
 
@@ -303,6 +303,6 @@ describe('useSpatializedMotion tuple api native backend', () => {
       )
     })
 
-    expect(onCancel).not.toHaveBeenCalled()
+    expect(onReset).not.toHaveBeenCalled()
   })
 })

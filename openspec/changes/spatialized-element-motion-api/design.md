@@ -9,10 +9,10 @@ This design unifies **author-facing** config (`SpatializedMotionConfig`, `Spatia
 ### Plan A (Session Animation) — Foundations
 
 Plan A established the architectural primitives:
-- **Session state machine**: idle → queued → delaying → running → paused → finished/canceled
+- **Session state machine**: idle → queued → delaying → running → paused → finished
 - **Portal suppression**: property-level for opacity, transform-wide for transform fields
 - **Native playback model**: CADisplayLink-driven per-frame sampling on visionOS
-- **Lifecycle contracts**: onStart/onComplete/onCancel/onError mutual exclusion
+- **Lifecycle contracts**: onStart/onComplete/onStop/onReset/onError mutual exclusion
 - **Segment interpolation**: single `from`/`to` with timing function
 
 These remain normative in the unified system.

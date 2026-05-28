@@ -1442,6 +1442,27 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         case "resume":
             manager.handleResume(command: command, resolve: resolve)
 
+        case "reset":
+            guard let session = manager.getSession(command.animationId),
+                  let element: SpatializedElement = findSpatialObject(session.elementId)
+            else {
+                resolve(.success(nil))
+                return
+            }
+            manager.handleReset(command: command, element: element, resolve: resolve)
+
+        case "stop":
+            manager.handleStop(command: command, resolve: resolve)
+
+        case "finish":
+            guard let session = manager.getSession(command.animationId),
+                  let element: SpatializedElement = findSpatialObject(session.elementId)
+            else {
+                resolve(.success(nil))
+                return
+            }
+            manager.handleFinish(command: command, element: element, resolve: resolve)
+
         case "cancel":
             guard let session = manager.getSession(command.animationId),
                   let element: SpatializedElement = findSpatialObject(session.elementId)
@@ -1480,6 +1501,27 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         case "resume":
             manager.handleResume(command: command, resolve: resolve)
+
+        case "reset":
+            guard let session = manager.getSession(command.animationId),
+                  let element: SpatializedElement = findSpatialObject(session.elementId)
+            else {
+                resolve(.success(nil))
+                return
+            }
+            manager.handleReset(command: command, element: element, resolve: resolve)
+
+        case "stop":
+            manager.handleStop(command: command, resolve: resolve)
+
+        case "finish":
+            guard let session = manager.getSession(command.animationId),
+                  let element: SpatializedElement = findSpatialObject(session.elementId)
+            else {
+                resolve(.success(nil))
+                return
+            }
+            manager.handleFinish(command: command, element: element, resolve: resolve)
 
         case "cancel":
             guard let session = manager.getSession(command.animationId),
