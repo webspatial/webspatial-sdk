@@ -22,7 +22,7 @@ These remain normative in the unified system.
 Plan B extended the architecture:
 - **Timeline data model**: per-property tracks with absolute-time keyframes (inspired by Three.js AnimationClip)
 - **Dual backend**: Web RAF when native unavailable, native timeline when in WebSpatial runtime
-- **Style outlet**: `style` object for React state-driven rendering (decoupled from `animation` prop)
+- **Style outlet**: `style` object returned to app code for React state-driven rendering; Plan B also renamed the binding from `animation` to `motion`
 - **Multi-kind support**: policy-based routing for spatialized2d / static3d / dynamic3d
 
 ### Unified Architecture (this design)

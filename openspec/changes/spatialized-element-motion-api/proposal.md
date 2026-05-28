@@ -19,7 +19,7 @@ This proposal unifies two prior efforts:
 2. **Plan B — Motion Timeline API** (`spatial-div-motion-api`, archived)
    - Introduced `useSpatializedMotion(config)` with multi-track timeline + `style` outlet
    - Dual backend: Web RAF fallback + native timeline playback
-   - Decoupled from `animation` prop via `motion` binding
+   - Renamed `animation` binding to `motion` binding, and started returning `style` with defined `style` sync semantics
 
 This **umbrella change** merges both into a single normative surface:
 - The **timeline data model** from Plan B is the canonical config shape
