@@ -13,12 +13,66 @@
 
 ### Requirement: 共享的播放 API 形状
 
-支持声明式动画的所有 kind MUST 暴露 `SpatializedPlaybackApi`（`play`、`pause`、`resume`、`cancel`、`playState`、`isAnimating`、`isPaused`、`finished`）。Kind MAY 在后端允许时支持选择性 `pause(keys?)`。
+支持声明式动画的所有 kind MUST 暴露 `SpatializedPlaybackApi`（`play`、`pause`、`resume`、`stop`、`reset`、`finish`、`playState`、`isAnimating`、`isPaused`、`finished`）。Kind MAY 在后端允许时支持选择性 `pause(keys?)`。
 
 #### Scenario: 播放 API 与绑定目标无关
 
 - **WHEN** 开发者从 `useSpatializedMotion(config)` 获得 motion 元组
-- **THEN** 返回的 `api` MUST 暴露 `play`、`pause`、`resume`、`cancel`、`playState`、`isAnimating`、`isPaused`、`finished`，无论 `animation` 后续绑定到哪个组件
+- **THEN** 返回的 `api` MUST 暴露 `play`、`pause`、`resume`、`stop`、`reset`、`finish`、`playState`、`isAnimating`、`isPaused`、`finished`，无论 `animation` 后续绑定到哪个组件
+
+#### Scenario: stop() 冻结在当前值
+
+- **WHEN** 动画正在运行或暂停时调用 `api.stop()`
+- **THEN** style MUST 冻结在当前播放时刻的采样值，`playState` MUST 变为 `idle`，且 MUST 调用 `onStop` 并传入冻结值
+
+#### Scenario: reset() 回滚到初始值
+
+- **WHEN** 动画正在运行、暂停或已完成时调用 `api.reset()`
+- **THEN** style MUST 回滚到 `from`（初始）值，`playState` MUST 变为 `idle`，且 MUST 调用 `onReset` 并传入初始值
+
+#### Scenario: finish() 跳到最终值
+
+- **WHEN** 动画正在运行或暂停时调用 `api.finish()`
+- **THEN** style MUST 跳到 `to`（最终）值，`playState` MUST 变为 `finished`，且 MUST 调用 `onComplete` 并传入最终值
+
+#### Scenario: Style 值来源遵循后端对称性
+
+- **WHEN** 调用终止方法（`stop`、`reset`、`finish`）
+- **THEN** Web 后端 MUST 由 JS timeline 评估器计算 style 值；Native 后端 MUST 由 native 运行时提供 style 值（native 未返回值时以 JS 评估器作为 fallback）
+
+### Requirement: 共享生命周期回调
+
+Config MUST 支持以下生命周期回调：
+
+| 回调 | 触发条件 | 参数 |
+|------|---------|------|
+| `onStart` | `play()` 后首帧播放 | 无 |
+| `onComplete` | 自然播放结束 **或** `finish()` | `values: SpatializedVisualValues`（to 值） |
+| `onStop` | 调用 `stop()` | `values: SpatializedVisualValues`（当前值） |
+| `onReset` | 调用 `reset()` | `values: SpatializedVisualValues`（from 值） |
+| `onError` | Native 桥异步失败 | `error: SpatializedPlaybackError` |
+
+每次会话终止时回调 MUST 互斥：`onComplete`、`onStop`、`onReset` 中恰好触发一个。`onError` MAY 在 native 失败时独立触发。
+
+#### Scenario: 自然结束触发 onComplete
+
+- **WHEN** 动画在未被中断的情况下到达 `duration`
+- **THEN** MUST 调用 `onComplete` 并传入最终值，`playState` MUST 为 `finished`
+
+#### Scenario: finish() 触发 onComplete
+
+- **WHEN** 调用 `api.finish()`
+- **THEN** MUST 调用 `onComplete` 并传入 `to` 值（与自然结束相同）
+
+#### Scenario: stop() 触发 onStop
+
+- **WHEN** 调用 `api.stop()`
+- **THEN** MUST 调用 `onStop` 并传入当前采样值
+
+#### Scenario: reset() 触发 onReset
+
+- **WHEN** 调用 `api.reset()`
+- **THEN** MUST 调用 `onReset` 并传入初始（`from`）值
 
 ### Requirement: 统一配置接受 from/to 或 tracks（互斥）
 

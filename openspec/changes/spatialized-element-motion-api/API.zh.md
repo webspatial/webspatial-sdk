@@ -52,21 +52,71 @@ const [animation, api, style] = useSpatializedMotion({
 | Static3D | `motion` on `<Model>` | native `modelTransform` + opacity |
 | Dynamic3D | `motion` on `<Reality>` | native 容器 `element.transform` + opacity |
 
-## 4. Core 统一实现
+## 4. Playback API
+
+```typescript
+interface SpatializedPlaybackApi {
+  play(): void
+  pause(keys?: SpatializedMotionPropertyKeys): void
+  resume(keys?: SpatializedMotionPropertyKeys): void
+  stop(): void       // 停在当前值 + idle
+  reset(): void      // 回到 from 值 + idle
+  finish(): void     // 跳到 to 值 + finished
+  readonly isAnimating: boolean
+  readonly isPaused: boolean
+  readonly finished: boolean
+  readonly playState: SpatializedMotionPlayState
+}
+
+type SpatializedMotionPlayState = 'idle' | 'queued' | 'running' | 'paused' | 'finished'
+```
+
+### 终止方法行为对比
+
+| 方法 | Style 输出 | playState | 触发回调 | 后端行为 |
+|------|-----------|-----------|---------|---------|
+| `stop()` | 当前帧值 | `idle` | `onStop` | Web: JS 计算当前 t；Native: native 回传当前值 |
+| `reset()` | from 值 | `idle` | `onReset` | Web: JS 计算 t=0；Native: native 回传/JS fallback |
+| `finish()` | to 值 | `finished` | `onComplete` | Web: JS 计算 t=duration；Native: native 回传/JS fallback |
+| 自然结束 | to 值 | `finished` | `onComplete` | 最后一帧自然到达 |
+
+## 5. Config Callbacks
+
+```typescript
+interface SpatializedMotionSegmentConfig {
+  // ... from, to, duration, timingFunction, delay, autoStart, loop, playbackRate ...
+  onStart?: () => void
+  onComplete?: (values: SpatializedVisualValues) => void
+  onStop?: (values: SpatializedVisualValues) => void
+  onReset?: (values: SpatializedVisualValues) => void
+  onError?: (error: SpatializedPlaybackError) => void
+}
+```
+
+| 回调 | 触发条件 | 参数 |
+|------|---------|------|
+| `onStart` | `play()` 后首帧播放 | 无 |
+| `onComplete` | 自然结束 **或** `finish()` | `values`（to 值） |
+| `onStop` | `stop()` | `values`（当前值） |
+| `onReset` | `reset()` | `values`（from 值） |
+| `onError` | Native 桥异步失败 | `error` |
+
+每次会话终止时 `onComplete`/`onStop`/`onReset` 互斥，恰好触发一个。
+
+## 6. Core 统一实现
 
 | 对外 | 说明 |
 |------|------|
 | **`SpatializedMotionController`** | 唯一控制器实现；由绑定目标（组件类型）决定 |
-| **`SpatializedMotionHandle`** | imperative 接口（`play` / `pause` / `resume` / `cancel` / …） |
-| `SpatializedMotionController` | 唯一 Core 控制器；`new SpatializedMotionController(config, kind)` |
+| **`SpatializedMotionHandle`** | imperative 接口（`play` / `pause` / `resume` / `stop` / `reset` / `finish` / …） |
 | `element.motion(config)` | 各 `Spatialized*Element` 工厂，返回 `SpatializedMotionHandle` |
 | `supports('useSpatializedMotion', [target])` | 能力探测（`spatialized2d` / `static3d` / `dynamic3d`） |
 
-## 5. 与模型内嵌动画区分
+## 7. 与模型内嵌动画区分
 
 `<Model ref.play()>` 播放 USD 片段；**不要**与 `motion.play()` timeline 混为同一 API。
 
-## 6. 类型命名（Core / React 导出）
+## 8. 类型命名（Core / React 导出）
 
 容器运动统一使用 **`Spatialized*`**（不再导出 `SpatialDiv*` 类型名）：
 
@@ -85,7 +135,7 @@ const [animation, api, style] = useSpatializedMotion({
 
 Entity 动画仍用 **`AnimationConfig`** / **`AnimateTransform`**，与上表分离。
 
-## 7. 演示页（test-server）
+## 9. 演示页（test-server）
 
 - Hub: `/#/spatial-div-motion`（侧栏 **Spatialized Motion**）
 - 2D: `multi-track` 等
