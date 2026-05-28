@@ -19,7 +19,7 @@
 2. **Plan B — Motion Timeline API**（`spatial-div-motion-api`，已归档）
    - 引入 `useSpatializedMotion(config)` 多轨 timeline + `style` outlet
    - 双后端：Web RAF 降级 + native timeline 播放
-   - 通过 `motion` binding 与 `animation` prop 解耦
+   - 将 `animation` binding 更名为 `motion` binding，并开始回传 `style`、定义 `style` 的同步规则
 
 本**伞式变更**将两者合并为单一规范 surface：
 - Plan B 的 **timeline 数据模型** 为规范配置形状
