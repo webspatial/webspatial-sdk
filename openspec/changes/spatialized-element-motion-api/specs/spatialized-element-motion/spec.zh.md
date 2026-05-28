@@ -2,9 +2,9 @@
 
 ## 新增需求
 
-### Requirement: 伞式定义按 kind 的声明式动画
+### Requirement: 伞式定义绑定时目标解析的声明式动画
 
-平台 MUST 为以下 kind 文档化和实现声明式 timeline 动画：`spatialized2d`、`static3d`、`dynamic3d`。每种 kind MUST 有子 spec 定义属性白名单、native 后端和 React 集成。`SpatialEntity` transform timeline 不在本伞式范围内（使用现有 `useAnimation`）。
+平台 MUST 为以下目标文档化和实现声明式 timeline 动画：`spatialized2d`、`static3d`、`dynamic3d`。每个目标 MUST 有子 spec 定义属性白名单、native 后端和 React 集成。公开 hook MUST NOT 需要 `config.kind`；目标在返回的 `animation` binding 作为 `motion` prop 传给组件时自动解析（`<div enable-xr>` → spatialized2d、`<Model>` → static3d、`<Reality>` → dynamic3d）。`SpatialEntity` transform timeline 不在本伞式范围内（使用现有 `useAnimation`）。
 
 #### Scenario: 能力矩阵为规范
 
@@ -21,12 +21,12 @@
 
 ### Requirement: 单一 Core 控制器实现
 
-SDK MUST 以一个 `SpatializedMotionController` 类（按 `SpatializedMotionKind` 参数化）实现容器动画。按 kind 的控制器类别名 MUST NOT 作为公共 API 的一部分。
+SDK MUST 以一个 `SpatializedMotionController` 类（按绑定目标参数化，`animation` 挂载到组件时解析）实现容器动画。按目标的控制器类别名 MUST NOT 作为公共 API 的一部分。
 
-#### Scenario: React 单一 hook
+#### Scenario: React 单一 hook + 绑定时解析
 
-- **WHEN** 开发者调用 `useSpatializedMotion({ kind, … })`
-- **THEN** SDK MUST 路由到匹配 kind 策略的同一控制器实现
+- **WHEN** 开发者调用 `useSpatializedMotion(config)` 并将 `animation` 通过 `motion` prop 传给组件
+- **THEN** SDK MUST 从组件类型解析目标，路由到匹配目标策略的同一控制器实现
 
 ### Requirement: Model 上 clip 播放独立
 

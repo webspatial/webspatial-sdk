@@ -29,9 +29,8 @@
 ## 概览
 
 ```tsx
-// 统一 API（推荐）
-const { style, api, motion } = useSpatializedMotion({
-  kind: 'spatialized2d',
+// 统一 API — hook 与目标无关；目标在绑定时自动解析
+const [animation, api, style] = useSpatializedMotion({
   duration: 5,
   tracks: [
     { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], easing: 'linear' },
@@ -39,13 +38,21 @@ const { style, api, motion } = useSpatializedMotion({
   ],
 })
 
-<div enable-xr style={{ width: 300, height: 200, ...style }} motion={motion}>
+// 2D — 绑定到 enable-xr 节点时自动解析为 spatialized2d
+<div enable-xr style={{ width: 300, height: 200, ...style }} motion={animation}>
   <h2>Hello Spatial</h2>
 </div>
 
+// Static3D — 绑定到 <Model> 时自动解析为 static3d
+<Model src="robot.usdz" motion={animation} />
+
+// Dynamic3D — 绑定到 <Reality> 时自动解析为 dynamic3d
+<Reality motion={animation}>
+  <Entity position={{ x: 0, y: 1, z: -2 }} />
+</Reality>
+
 // 简写语法糖（单段，等价于 Plan A 的 from/to）
-const { style, api, motion } = useSpatializedMotion.simple({
-  kind: 'spatialized2d',
+const [animation, api, style] = useSpatializedMotion.simple({
   from: { transform: { translate: { y: 24 } }, opacity: 0 },
   to:   { transform: { translate: { y: 0 } }, opacity: 1 },
   duration: 0.6,
@@ -59,9 +66,23 @@ const [animation, api] = useAnimation({
 <div enable-xr animation={animation} />
 ```
 
+## 目标解析（Target Resolution）
+
+Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding 携带一个**延迟目标槽位**。当 React 调和并挂载接受 `motion={animation}` 的组件时，SDK 自动解析目标：
+
+| 组件 | 解析目标 | `style` 行为 |
+|------|---------|------------------|
+| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` | 活跃 CSSProperties（Web RAF 驱动） |
+| `<Model>` | `static3d` | 空对象 `{}`（仅 native，可安全展开） |
+| `<Reality>` | `dynamic3d` | 空对象 `{}`（仅 native，可安全展开） |
+
+**约束：**
+- 单个 `animation` binding MUST NOT 同时绑定到多个组件（1:1 绑定）。
+- bind 前调用 `api.play()` MAY 排队；绑定解析后播放开始。
+
 ## 变更内容
 
-- **统一公共 API**：`useSpatializedMotion({ kind, duration, tracks })` 及 `.simple()` 语法糖，覆盖三种容器 kind。
+- **统一公共 API**：`useSpatializedMotion(config)` 及 `.simple()` 语法糖，返回 `[animation, api, style]`。
 - **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe + 每轨 easing — 规范配置形状。
 - **2D 双后端**：native 不可用时走 Web RAF；WebSpatial 运行时走 native timeline/segment。
 - **3D 仅 native**：Static3D 和 Dynamic3D 仅使用 native `animateMotion`（无 Web RAF 降级）。
@@ -69,15 +90,14 @@ const [animation, api] = useAnimation({
 - **旧版兼容**：Plan A `useAnimation` + `animation` prop 对 SpatialDiv 保留；简单 timeline 可降级为段命令。
 - **Portal 抑制**：native 播放期间抑制被动画控制的字段（opacity 属性级、transform 整体级）。
 - **会话语义**：状态机、生命周期回调、错误处理在所有路径上统一。
-- **能力探测**：`supports('useSpatializedMotion', [kind])`，支持 `spatialized2d` | `static3d` | `dynamic3d`。
+- **能力探测**：`supports('useSpatializedMotion', [target])`，支持 `spatialized2d` | `static3d` | `dynamic3d`。
 
 ## 能力
 
 ### 新增
 
 - `spatialized-element-motion` — 伞式需求与按 kind 矩阵。
-- `spatialized-2d-motion` — 2D timeline + 双后端（参考实现）。
-- `spatialized-static3d-motion` — Model 根 transform timeline（仅 native）。
+- `spatialized-2d-motion` — 2D timeline + 双后端（参考实现）。- `spatialized-static3d-motion` — Model 根 transform timeline（仅 native）。
 - `spatialized-dynamic3d-motion` — Reality 容器 transform timeline（仅 native）。
 
 ### 修改

@@ -1,5 +1,16 @@
 # Legacy Session Animation (Plan A compatibility)
 
+## ADDED Requirements
+
+### Requirement: Legacy session animation remains compatible
+
+The legacy `useAnimation(config)` + `animation` prop path MUST remain compatible for existing `Spatialized2DElement` integrations while the unified motion API is adopted.
+
+#### Scenario: Existing SpatialDiv animation stays valid
+
+- **WHEN** an application continues using `useAnimation` with an `animation` prop on `enable-xr`
+- **THEN** the legacy session semantics and portal suppression MUST continue to work as before
+
 ## Status
 
 **Superseded** by `useSpatializedMotion` (timeline API). Retained for backward compatibility with existing `useAnimation` + `animation` prop integrations on `Spatialized2DElement`.
