@@ -74,16 +74,17 @@ Callbacks MUST be mutually exclusive per session termination: exactly one of `on
 - **WHEN** `api.reset()` is called
 - **THEN** `onReset` MUST be invoked with the initial (`from`) values
 
-### Requirement: Unified config accepts from/to or tracks (mutually exclusive)
+### Requirement: Unified config accepts three mutually exclusive shapes
 
-The hook MUST accept a config that is one of two mutually exclusive shapes:
+The hook MUST accept a config that is one of three mutually exclusive shapes:
 
 1. **Segment config** (recommended default): `{ from, to, duration, timingFunction? }`
-2. **Timeline config** (advanced): `{ duration, tracks: [{ property, keyframes: [{ at, value }], easing? }] }`
+2. **Tracks config** (advanced): `{ duration, tracks: [{ property, keyframes: [{ at, value, timingFunction? }], timingFunction? }], timingFunction? }`
+3. **Timeline config** (CSS @keyframes style): `{ duration, timeline: { "0%": { ...values, timingFunction? }, ... "100%": { ...values } }, timingFunction? }`
 
-Passing both `from`/`to` and `tracks` in the same config object MUST be a type error (discriminated union). Internally, segment config MUST compile to tracks (one track per animated scalar, keyframes at `at: 0` and `at: duration`).
+Passing more than one of `from`/`to`, `tracks`, or `timeline` in the same config object MUST be a type error (discriminated union). Internally, segment config and timeline config MUST compile to tracks before execution.
 
-All kinds MUST use visual transform paths (`transform.translate.*`, `opacity`, etc.) in both config shapes.
+All kinds MUST use visual transform paths (`transform.translate.*`, `opacity`, etc.) in all config shapes.
 
 #### Scenario: from/to compiles to tracks
 
@@ -95,10 +96,115 @@ All kinds MUST use visual transform paths (`transform.translate.*`, `opacity`, e
 - **WHEN** authors pass `{ duration, tracks: [...] }`
 - **THEN** the SDK MUST execute the tracks directly without transformation
 
+#### Scenario: timeline config compiles to tracks
+
+- **WHEN** authors pass `{ duration: 2, timeline: { "0%": { opacity: 0 }, "50%": { opacity: 0.8 }, "100%": { opacity: 1 } } }`
+- **THEN** the SDK MUST compile this to a single track `{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 0.8 }, { at: 2, value: 1 }] }` before execution
+
+#### Scenario: passing both timeline and tracks is a type error
+
+- **WHEN** authors pass `{ duration, timeline: {...}, tracks: [...] }`
+- **THEN** the SDK MUST reject the config at type level and/or throw at validation
+
+#### Scenario: passing both timeline and from/to is a type error
+
+- **WHEN** authors pass `{ from, to, duration, timeline: {...} }`
+- **THEN** the SDK MUST reject the config at type level and/or throw at validation
+
 #### Scenario: Shared config shape is target-agnostic
 
-- **WHEN** authors submit the same config (either from/to or tracks) and the resulting `animation` is bound to any of `<div enable-xr>`, `<Model>`, or `<Reality>`
+- **WHEN** authors submit the same config (segment, tracks, or timeline) and the resulting `animation` is bound to any of `<div enable-xr>`, `<Model>`, or `<Reality>`
 - **THEN** validation MUST accept the same config structure before target-specific playback begins
+
+### Requirement: Timeline percentage keyframe config (CSS @keyframes style)
+
+The hook MUST accept a config with a `timeline` field containing percentage keys (strings matching `/^\d+(\.\d+)?%$/`) mapped to `SpatializedMotionKeyframeValues` (`SpatializedVisualValues` extended with optional `timingFunction`). The `timeline` object MUST NOT contain non-percentage keys; all config-level options (`duration`, `timingFunction`, `delay`, `loop`, `playbackRate`, callbacks) remain on the outer config.
+
+Desugaring rules:
+- Each percentage key is parsed to a normalized ratio in `[0, 1]` and multiplied by `duration` to obtain the `at` value in seconds.
+- Each animated property is independently collected across all percentage frames to form one track per property.
+- If a property is absent from a given percentage frame, no keyframe is generated for that property at that time point.
+- The `timeline` object MUST contain at least 2 percentage keys; fewer MUST cause a validation error.
+- Decimal percentages (e.g. `"30.33%"`) MUST be supported.
+
+#### Scenario: Decimal percentage parsing
+
+- **WHEN** authors pass `{ duration: 10, timeline: { "0%": { opacity: 0 }, "30.33%": { opacity: 0.5 }, "100%": { opacity: 1 } } }`
+- **THEN** the SDK MUST compile to `{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 3.033, value: 0.5 }, { at: 10, value: 1 }] }`
+
+#### Scenario: Per-property independent collection
+
+- **GIVEN** `{ duration: 2, timeline: { "0%": { opacity: 0, transform: { translate: { x: 0 } } }, "50%": { opacity: 1 }, "100%": { opacity: 0.5, transform: { translate: { x: 100 } } } } }`
+- **THEN** the SDK MUST produce two tracks:
+  - `opacity`: keyframes at `[{ at: 0, value: 0 }, { at: 1, value: 1 }, { at: 2, value: 0.5 }]`
+  - `transform.translate.x`: keyframes at `[{ at: 0, value: 0 }, { at: 2, value: 100 }]` (no keyframe at `at: 1` because `"50%"` did not declare `transform.translate.x`)
+
+#### Scenario: Missing property uses hold rule
+
+- **GIVEN** a track compiled from timeline has its first keyframe at `at: 1` (from `"50%"` with `duration: 2`)
+- **WHEN** evaluating at `t = 0.5`
+- **THEN** the track value MUST equal the first keyframe's value (hold rule)
+
+#### Scenario: Fewer than 2 percentage keys rejected
+
+- **WHEN** authors pass `{ duration: 1, timeline: { "50%": { opacity: 1 } } }`
+- **THEN** validation MUST throw before playback
+
+#### Scenario: Invalid key in timeline rejected
+
+- **WHEN** the `timeline` object contains a key that does not match `/^\d+(\.\d+)?%$/` (e.g. `"halfway"`, `"duration"`)
+- **THEN** validation MUST throw before playback
+
+#### Scenario: Per-keyframe timingFunction in timeline
+
+- **WHEN** authors pass `{ duration: 2, timeline: { "0%": { opacity: 0, timingFunction: "easeInOut" }, "100%": { opacity: 1 } } }`
+- **THEN** the compiled keyframe at `at: 0` MUST carry `timingFunction: "easeInOut"` (controlling interpolation from 0% to 100%)
+
+#### Scenario: Last keyframe timingFunction is ignored
+
+- **GIVEN** a timeline where only the `"100%"` frame has `timingFunction: "easeIn"`
+- **WHEN** the timeline is compiled and evaluated
+- **THEN** the `timingFunction` on the final keyframe MUST have no effect (there is no next keyframe to interpolate toward)
+
+---
+
+### Requirement: Three-level timingFunction cascade
+
+When evaluating the interpolation curve between two adjacent keyframes, the SDK MUST resolve `timingFunction` with the following priority (highest to lowest):
+
+1. `keyframe.timingFunction` -- per-keyframe (controls this keyframe -> next keyframe)
+2. `track.timingFunction` -- per-track default
+3. `config.timingFunction` -- global default
+4. `'linear'` -- built-in fallback
+
+This cascade applies uniformly to all three config shapes (segment, tracks, timeline). In timeline configs, the per-keyframe `timingFunction` within a percentage frame maps to level 1 after desugaring.
+
+#### Scenario: Default fallback is linear
+
+- **WHEN** no `timingFunction` is specified at any level
+- **THEN** interpolation between keyframes MUST use `'linear'`
+
+#### Scenario: Config-level timingFunction overrides default
+
+- **WHEN** config specifies `timingFunction: 'easeInOut'` and no track or keyframe overrides
+- **THEN** all keyframe pairs MUST use `'easeInOut'`
+
+#### Scenario: Track-level overrides config-level
+
+- **GIVEN** config `timingFunction: 'linear'` and a track with `timingFunction: 'easeIn'`
+- **THEN** that track's keyframe pairs MUST use `'easeIn'`
+
+#### Scenario: Keyframe-level overrides track-level
+
+- **GIVEN** a track with `timingFunction: 'easeIn'` and a keyframe with `timingFunction: 'easeOut'`
+- **THEN** the segment from that keyframe to the next MUST use `'easeOut'`
+
+#### Scenario: Last keyframe timingFunction has no effect
+
+- **GIVEN** the final keyframe (highest `at`) in a track has `timingFunction: 'easeIn'`
+- **THEN** it MUST be ignored (no subsequent keyframe exists)
+
+---
 
 ### Requirement: Single Core controller implementation
 

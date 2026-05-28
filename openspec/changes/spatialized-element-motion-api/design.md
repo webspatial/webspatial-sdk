@@ -33,7 +33,7 @@ The merge combines both into a single normative system with backward compatibili
 
 - One timeline config shape across 2D / Static3D / Dynamic3D container kinds.
 - **One** Core implementation: `SpatializedMotionController` (policy per `kind`) + `element.motion(config)` on each element class.
-- **One** React entry: `useSpatializedMotion(config)` accepting `from/to` or `tracks` (mutually exclusive union). Target resolved at bind time (no `kind` in config). Internally, `from/to` compiles to `tracks`.
+- **One** React entry: `useSpatializedMotion(config)` accepting `from/to`, `tracks`, or `timeline` (three mutually exclusive shapes). Target resolved at bind time (no `kind` in config). Internally, `from/to` and `timeline` compile to `tracks`.
 - Legacy `useAnimation` + `animation` prop retained as deprecated path for 2D.
 - Umbrella spec with per-kind sub-specs; 2D remains the reference for Web RAF + suppression behavior.
 
@@ -66,7 +66,7 @@ flowchart TB
 | `SpatializedMotionController` | Single TS controller; binding target selects capability token, Web RAF vs native-only, suppressed fields |
 | `motionElementBridge` | Dispatches `animateSpatialDiv` vs `animateMotion` + listener cleanup |
 | `element.motion(config)` | Factory on each `Spatialized*Element`; returns `SpatializedMotionController` with matching target kind |
-| `evaluateMotionTimeline` | Shared Web evaluator: per-track sampling, easing, lerp |
+| `evaluateMotionTimeline` | Shared Web evaluator: per-track sampling, timingFunction, lerp |
 | `SpatialDivTimelineEvaluator` (Swift) | Native parity evaluator: per-track 90Hz sampling via CADisplayLink |
 | `SpatializedMotionTransformSink` | Abstracts write path (elementTransform vs modelTransform) for Static3D/Dynamic3D |
 
@@ -194,3 +194,4 @@ See [tasks.md](./tasks.md). Summary:
 - Phase 7: Spec merge (completed)
 - Phase 8: Bind-time target resolution (completed)
 - Phase 9: Playback API expansion — stop / reset / finish (proposed)
+- Phase 10: Timeline percentage keyframe support — `timeline` config shape, `SpatializedMotionKeyframeValues`, three-level `timingFunction` cascade, `easing` → `timingFunction` rename (proposed)
