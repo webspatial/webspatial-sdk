@@ -126,20 +126,18 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
   inprops: SpatializedContainerProps<T>,
   ref: ForwardedRef<SpatializedElementRef<T>>,
 ) {
-  const { ['enable-xr']: _enableXR, ...containerProps } =
-    inprops as SpatializedContainerProps<T> & { 'enable-xr'?: unknown }
   const isWebSpatialEnv = getSession() !== null
   const insideAttachment = useInsideAttachment()
 
   if (!isWebSpatialEnv || insideAttachment) {
     if (insideAttachment) {
       console.warn(
-        `[WebSpatial] ${containerProps.component || 'Spatial element'} cannot be used inside AttachmentAsset. Rendering as plain HTML.`,
+        `[WebSpatial] ${inprops.component || 'Spatial element'} cannot be used inside AttachmentAsset. Rendering as plain HTML.`,
       )
     }
     return (
       <DegradedContainer
-        {...containerProps}
+        {...inprops}
         innerRef={ref}
         enableOnSpatialContentReadyFallback={
           !isWebSpatialEnv && !insideAttachment
@@ -176,7 +174,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
     onSpatialMagnifyEnd,
     extraRefProps,
     ...props
-  } = containerProps
+  } = inprops
 
   if (inSpatializedContainer) {
     if (inPortalInstanceEnv) {
