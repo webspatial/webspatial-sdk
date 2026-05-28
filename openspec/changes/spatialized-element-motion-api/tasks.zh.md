@@ -99,3 +99,21 @@
 - [ ] picoOS native：如需新 JSB 命令则同步
 - [ ] 单元测试：验证 stop/reset/finish 各自产生正确的 style 值、playState 和回调触发
 - [ ] 子 spec 更新（spatialized-2d-motion、spatialized-static3d-motion、spatialized-dynamic3d-motion）如引用了 `cancel` 则同步修改
+
+## Phase 10 — Timeline 百分比关键帧配置 + timingFunction 统一
+
+- [ ] 类型：`SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`
+- [ ] 类型：`SpatializedMotionTimelineConfig` — 含 `timeline: Record<string, SpatializedMotionKeyframeValues>` 的配置形状
+- [ ] 类型：`SpatializedMotionKeyframe.timingFunction?` — 每帧可选字段
+- [ ] 类型：`SpatializedMotionTrack` — 将 `easing` 重命名为 `timingFunction`
+- [ ] 类型：`SpatializedMotionConfig.timingFunction?` — 全局 config 级字段
+- [ ] 类型：`SpatializedMotionTimeline`（wire 格式）— track 的 `easing` 改为 `timingFunction`
+- [ ] Core：`desugarTimelineConfig()` — 解析 `timeline` 百分比 key 为 tracks
+- [ ] Core：配置判别器 — 检测 timeline vs tracks vs from/to，相应路由
+- [ ] Core：`evaluateMotionTimeline` — 实现三级 `timingFunction` 级联（keyframe > track > config > 'linear'）
+- [ ] Core：校验 — 拒绝少于 2 个百分比 key、非法 key、与 tracks/from-to 的互斥
+- [ ] Native wire：决定向后兼容策略（保持 wire `easing` + JS 层映射，或重命名）
+- [ ] 代码库：将源代码 + 测试中所有 `easing` 引用重命名为 `timingFunction`
+- [ ] 单元测试：timeline 配置解析、小数百分比、缺失属性、单帧拒绝
+- [ ] 单元测试：三级 timingFunction 级联
+- [ ] Demo 页面：新增 timeline 百分比关键帧示例
