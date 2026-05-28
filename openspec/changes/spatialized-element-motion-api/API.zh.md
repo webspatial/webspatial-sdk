@@ -12,38 +12,47 @@
 
 | 类型 | 状态 |
 |------|------|
-| **Spatialized2DElement** | **已交付** — `useSpatializedMotion({ kind: 'spatialized2d' })` |
-| **SpatializedStatic3DElement** | **已交付** — `useSpatializedMotion({ kind: 'static3d' })` + `<Model motion>`；仅 native |
-| **SpatializedDynamic3DElement（Reality 容器）** | **已交付** — `useSpatializedMotion({ kind: 'dynamic3d' })` + `<Reality motion>`；仅 native |
+| **Spatialized2DElement** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` |
+| **SpatializedStatic3DElement** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` + `<Model motion>`；仅 native |
+| **SpatializedDynamic3DElement（Reality 容器）** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` + `<Reality motion>`；仅 native |
 | **SpatialEntity（Reality 子节点）** | **不在本 change** — 继续 `useAnimation` |
 
 ## 3. 统一入口（推荐 API）
 
 ```typescript
-const result = useSpatializedMotion({
-  kind: 'spatialized2d', // | 'static3d' | 'dynamic3d'
+// hook 与目标无关 — 目标在绑定时自动解析
+const [animation, api, style] = useSpatializedMotion({
   duration: 5,
   tracks: [/* … */],
 })
-// spatialized2d: result.style + result.motion + result.api
-// static3d / dynamic3d: result.motion + result.api（无 style outlet）
+
+// 2D — 绑定到 enable-xr 节点
+<div enable-xr style={{ ...style }} motion={animation} />
+
+// Static3D — 绑定到 <Model>
+<Model src="robot.usdz" motion={animation} />
+
+// Dynamic3D — 绑定到 <Reality>
+<Reality motion={animation}><Entity /></Reality>
+
+// style 行为：2D 返回活跃 CSSProperties；3D 返回空对象 {}（可安全展开）
 ```
 
-| kind | React 绑定 | Core 写回 |
-|------|------------|-----------|
-| `spatialized2d` | `motion` on `enable-xr` div，`style` 合并 | native `element.transform` + opacity；浏览器可 Web RAF |
-| `static3d` | `motion` on `<Model>` | native `modelTransform` + opacity |
-| `dynamic3d` | `motion` on `<Reality>` | native 容器 `element.transform` + opacity |
+| 绑定目标 | React 绑定 | Core 写回 |
+|----------|------------|-----------|
+| 2D | `motion` on `enable-xr` div，`style` 合并 | native `element.transform` + opacity；浏览器可 Web RAF |
+| Static3D | `motion` on `<Model>` | native `modelTransform` + opacity |
+| Dynamic3D | `motion` on `<Reality>` | native 容器 `element.transform` + opacity |
 
 ## 4. Core 统一实现
 
 | 对外 | 说明 |
 |------|------|
-| **`SpatializedMotionController`** | 唯一控制器实现；构造时传入 `kind` |
+| **`SpatializedMotionController`** | 唯一控制器实现；由绑定目标（组件类型）决定 |
 | **`SpatializedMotionHandle`** | imperative 接口（`play` / `pause` / `resume` / `cancel` / …） |
 | `SpatializedMotionController` | 唯一 Core 控制器；`new SpatializedMotionController(config, kind)` |
 | `element.motion(config)` | 各 `Spatialized*Element` 工厂，返回 `SpatializedMotionHandle` |
-| `supports('useSpatializedMotion', [kind])` | 能力探测（`spatialized2d` / `static3d` / `dynamic3d`） |
+| `supports('useSpatializedMotion', [target])` | 能力探测（`spatialized2d` / `static3d` / `dynamic3d`） |
 
 ## 5. 与模型内嵌动画区分
 

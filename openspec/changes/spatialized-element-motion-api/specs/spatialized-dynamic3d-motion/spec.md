@@ -6,7 +6,7 @@
 
 The SDK MUST support `SpatializedDynamic3DElement` timeline motion applying sampled values to the **container** `element.transform` and `opacity`. Child `SpatialEntity` nodes MUST remain in local space (they move with the container).
 
-Implementation MUST use `SpatializedMotionController` with `kind: 'dynamic3d'` (native-only; no Web RAF).
+Implementation MUST use `SpatializedMotionController` with the `dynamic3d` target, resolved when `animation` is bound to a `<Reality>` component (native-only; no Web RAF).
 
 #### Scenario: Native play sends timeline
 
@@ -16,10 +16,12 @@ Implementation MUST use `SpatializedMotionController` with `kind: 'dynamic3d'` (
 
 #### Scenario: Reality motion binding
 
-- **WHEN** `<Reality motion={binding} />` is wired from `useSpatializedMotion({ kind: 'dynamic3d' })`
+- **WHEN** `<Reality motion={binding} />` receives `animation` from `useSpatializedMotion(config)`, resolving the target to `dynamic3d`
 - **THEN** play before bind MAY queue; after bind native playback MUST drive the Reality root without conflicting React transform writes (suppression analogous to 2D)
 
 ### Requirement: Entity motion stays separate
+
+Child `SpatialEntity` animation MUST continue to use the separate entity stack and MUST NOT route through the container motion controller.
 
 #### Scenario: useAnimation on Entity is not container motion
 
