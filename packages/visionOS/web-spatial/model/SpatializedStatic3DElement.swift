@@ -6,6 +6,15 @@ struct ModelSource: Codable, Equatable {
     let type: String?
 }
 
+enum Loading: String {
+    case eager
+    case lazy
+
+    init(stringValue value: String) {
+        self = Loading(rawValue: value) ?? .eager
+    }
+}
+
 @Observable
 class SpatializedStatic3DElement: SpatializedElement {
     var modelURL: String?
@@ -19,9 +28,7 @@ class SpatializedStatic3DElement: SpatializedElement {
     /// `SpatializedStatic3DView`, which clears it back to `nil`.
     var pendingSeekTime: Double?
     var posterURL: String?
-    /// `"eager"` (default) fetches the model immediately; `"lazy"` defers
-    /// fetching until the web layer flips it back to `"eager"`.
-    var loading: String = "eager"
+    var loading: Loading = .eager
     var allSources: [ModelSource] {
         if let modelURL { [ModelSource(src: modelURL, type: nil)] + sources }
         else { sources }
