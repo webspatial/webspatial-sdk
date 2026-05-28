@@ -34,7 +34,7 @@ plugins.push(sassPlugin())
 
 var outdir = 'dist'
 /** Default dev server port (override with PORT=...). Avoids 5173/5174 conflicts with other local apps. */
-const DEFAULT_DEV_PORT = 5190
+const DEFAULT_DEV_PORT = 5173
 var port = process.env.PORT ? Number(process.env.PORT) : DEFAULT_DEV_PORT
 const DEFAULT_LIVERELOAD_PORT = 35739
 var liveReloadServerPort = process.env.LIVERELOAD_PORT
