@@ -41,7 +41,7 @@ The SDK MUST provide `useSpatializedMotion(config)` returning `[animation, api, 
 
 ### Requirement: Timeline supports multi-track overlapping keyframes
 
-The config MUST include a global `duration` (seconds, `> 0`, finite) and a non-empty `tracks` array. Each track MUST specify a `property` from the visual whitelist, at least two `keyframes` with `at` in seconds in `[0, duration]`, and MAY specify per-track `easing`.
+The config MUST include a global `duration` (seconds, `> 0`, finite) and a non-empty `tracks` array. Each track MUST specify a `property` from the visual whitelist, at least two `keyframes` with `at` in seconds in `[0, duration]`, and MAY specify per-track `timingFunction`.
 
 #### Scenario: Overlapping tracks with different time ranges
 
@@ -104,7 +104,7 @@ The bridge `play` command MUST accept an optional `timeline` field. When `timeli
 
 - **WHEN** JS sends `play` with `timeline`
 - **THEN** `timeline` MUST include `duration`, optional `delay`, optional `playbackRate`, optional `loop`, and non-empty `tracks`
-- **AND** each track MUST include `property`, `keyframes` with `at` in seconds, and `easing`
+- **AND** each track MUST include `property`, `keyframes` with `at` in seconds, and `timingFunction`
 
 #### Scenario: Segment and timeline are mutually exclusive
 
@@ -113,7 +113,7 @@ The bridge `play` command MUST accept an optional `timeline` field. When `timeli
 
 #### Scenario: Segment-equivalent timeline optimization
 
-- **GIVEN** every track has exactly two keyframes at `at === 0` and `at === duration`, all tracks share one easing
+- **GIVEN** every track has exactly two keyframes at `at === 0` and `at === duration`, all tracks share one `timingFunction`
 - **THEN** the SDK MAY send native segment `from`/`to` instead of `timeline`
 
 ---
@@ -124,9 +124,9 @@ Native MUST sample each track independently at timeline time `t`, then assemble 
 
 #### Scenario: Per-track segment interpolation
 
-- **GIVEN** a track with keyframes `[{ at: a, value: va }, { at: b, value: vb }]` and easing `e`
+- **GIVEN** a track with keyframes `[{ at: a, value: va }, { at: b, value: vb }]` and `timingFunction` `e`
 - **WHEN** sampling at `t` with `a <= t <= b`
-- **THEN** native MUST compute linear progress `(t - a) / (b - a)`, apply easing, and lerp
+- **THEN** native MUST compute linear progress `(t - a) / (b - a)`, apply `timingFunction`, and lerp
 
 #### Scenario: Hold before first and after last keyframe
 

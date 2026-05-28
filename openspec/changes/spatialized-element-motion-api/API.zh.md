@@ -32,11 +32,22 @@ const [animation, api, style] = useSpatializedMotion({
 const [animation, api, style] = useSpatializedMotion({
   duration: 5,
   tracks: [
-    { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], easing: 'linear' },
+    { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], timingFunction: 'linear' },
   ],
 })
 
-// 两种配置互斥（union type），内部 from/to 编译为 tracks 执行
+// timeline 百分比关键帧配置（CSS @keyframes 风格） — 脱糖为 tracks 执行
+const [animation, api, style] = useSpatializedMotion({
+  duration: 2,
+  timeline: {
+    "0%":   { transform: { translate: { y: 24 } }, opacity: 0, timingFunction: 'easeOut' },
+    "50%":  { opacity: 1 },
+    "100%": { transform: { translate: { y: 0 } }, opacity: 1 },
+  },
+  timingFunction: 'easeInOut',  // config 级默认
+})
+
+// 三种配置互斥（union type），内部 from/to 和 timeline 均编译为 tracks 执行
 
 // 绑定目标：
 <div enable-xr style={{ ...style }} motion={animation} />  // → spatialized2d
@@ -132,6 +143,9 @@ interface SpatializedMotionSegmentConfig {
 | 容器 kind | `SpatializedMotionKind` |
 | Portal `animation` 绑定 | `SpatializedMotionBinding`（`__kind: 'spatializedMotion'`） |
 | JSB payload（无 targetKind） | `ElementMotionCommand` |
+| 百分比关键帧值 | `SpatializedMotionKeyframeValues`（`SpatializedVisualValues` + 可选 `timingFunction`） |
+| Timeline 配置 | `SpatializedMotionTimelineConfig` |
+| 缓动函数 | `TimingFunction`（`'linear' \| 'easeIn' \| 'easeOut' \| 'easeInOut'`） |
 
 Entity 动画仍用 **`AnimationConfig`** / **`AnimateTransform`**，与上表分离。
 

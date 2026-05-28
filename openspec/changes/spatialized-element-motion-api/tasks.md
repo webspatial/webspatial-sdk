@@ -99,3 +99,21 @@
 - [ ] picoOS native: sync if new JSB command needed
 - [ ] Unit tests: verify stop/reset/finish each produce correct style values, playState, and callback
 - [ ] Sub-spec updates (spatialized-2d-motion, spatialized-static3d-motion, spatialized-dynamic3d-motion) if they reference `cancel`
+
+## Phase 10 — Timeline percentage keyframe config + timingFunction unification
+
+- [ ] Types: `SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`
+- [ ] Types: `SpatializedMotionTimelineConfig` — config shape with `timeline: Record<string, SpatializedMotionKeyframeValues>`
+- [ ] Types: `SpatializedMotionKeyframe.timingFunction?` — per-keyframe optional field
+- [ ] Types: `SpatializedMotionTrack` — rename `easing` to `timingFunction`
+- [ ] Types: `SpatializedMotionConfig.timingFunction?` — global config-level field
+- [ ] Types: `SpatializedMotionTimeline` (wire format) — track `easing` to `timingFunction`
+- [ ] Core: `desugarTimelineConfig()` — parse `timeline` percentage keys into tracks
+- [ ] Core: Config discriminator — detect timeline vs tracks vs from/to, route accordingly
+- [ ] Core: `evaluateMotionTimeline` — implement 3-level `timingFunction` cascade (keyframe > track > config > 'linear')
+- [ ] Core: Validation — reject <2 percentage keys, invalid keys, mutual exclusion with tracks/from-to
+- [ ] Native wire: decide backward-compat strategy (keep wire `easing` + JS-layer mapping, or rename)
+- [ ] Codebase: rename all `easing` references to `timingFunction` in source + tests
+- [ ] Unit tests: timeline config parsing, decimal %, missing properties, single-frame rejection
+- [ ] Unit tests: 3-level timingFunction cascade
+- [ ] Demo pages: add timeline percentage keyframe examples

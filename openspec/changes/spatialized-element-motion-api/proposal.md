@@ -33,8 +33,8 @@ This **umbrella change** merges both into a single normative surface:
 const [animation, api, style] = useSpatializedMotion({
   duration: 5,
   tracks: [
-    { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], easing: 'linear' },
-    { property: 'opacity', keyframes: [{ at: 3, value: 0 }, { at: 5, value: 1 }], easing: 'easeOut' },
+    { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], timingFunction: 'linear' },
+    { property: 'opacity', keyframes: [{ at: 3, value: 0 }, { at: 5, value: 1 }], timingFunction: 'easeOut' },
   ],
 })
 
@@ -82,8 +82,8 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 
 ## What Changes
 
-- **Unified public API**: `useSpatializedMotion(config)` accepting either `from/to` (recommended) or `tracks` (advanced); both compile to tracks internally.
-- **Timeline data model**: per-property tracks with absolute-time keyframes, per-track easing — the canonical config shape.
+- **Unified public API**: `useSpatializedMotion(config)` accepting `from/to` (recommended), `tracks` (advanced), or `timeline` (CSS @keyframes style); all compile to tracks internally.
+- **Timeline data model**: per-property tracks with absolute-time keyframes, per-track timingFunction — the canonical config shape.
 - **Dual backend for 2D**: Web RAF when native unavailable; native timeline/segment when in WebSpatial runtime.
 - **Native-only for 3D**: Static3D and Dynamic3D use native `animateMotion` exclusively (no Web RAF fallback).
 - **One Core controller**: `SpatializedMotionController` with `MOTION_KIND_POLICIES` per kind.
@@ -117,7 +117,7 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 - Animating layout fields (`width`, `height`, `back`, `depth`) on any kind.
 - Replacing USD clip playback on Model (`ref.play()` / `pause()`).
 - Material / variant animation on Static3D in v1.
-- Full physics / spring simulation (easing + keyframes only).
+- Full physics / spring simulation (timingFunction + keyframes only).
 - Arbitrary CSS transform string interpolation or matrix/skew/perspective.
 
 ## Impact

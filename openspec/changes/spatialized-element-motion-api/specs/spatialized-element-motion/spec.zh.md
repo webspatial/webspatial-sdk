@@ -74,16 +74,17 @@ Config MUST 支持以下生命周期回调：
 - **WHEN** 调用 `api.reset()`
 - **THEN** MUST 调用 `onReset` 并传入初始（`from`）值
 
-### Requirement: 统一配置接受 from/to 或 tracks（互斥）
+### Requirement: 统一配置接受三种互斥形状
 
-Hook MUST 接受两种互斥配置形状之一：
+Hook MUST 接受三种互斥配置形状之一：
 
 1. **段配置**（推荐默认）：`{ from, to, duration, timingFunction? }`
-2. **Timeline 配置**（高级）：`{ duration, tracks: [{ property, keyframes: [{ at, value }], easing? }] }`
+2. **Tracks 配置**（高级）：`{ duration, tracks: [{ property, keyframes: [{ at, value, timingFunction? }], timingFunction? }], timingFunction? }`
+3. **Timeline 配置**（CSS @keyframes 风格）：`{ duration, timeline: { "0%": { ...values, timingFunction? }, ... "100%": { ...values } }, timingFunction? }`
 
-在同一配置对象中同时传递 `from`/`to` 和 `tracks` MUST 是类型错误（判别联合）。内部实现中，段配置 MUST 编译为 tracks（每个动画标量一条 track，keyframe 在 `at: 0` 和 `at: duration`）。
+在同一配置对象中同时传递 `from`/`to`、`tracks`、`timeline` 中多于一项 MUST 是类型错误（判别联合）。内部实现中，段配置和 timeline 配置 MUST 编译为 tracks 后再执行。
 
-所有 kind MUST 在两种配置形状中使用视觉 transform 路径（`transform.translate.*`、`opacity` 等）。
+所有 kind MUST 在所有配置形状中使用视觉 transform 路径（`transform.translate.*`、`opacity` 等）。
 
 #### Scenario: from/to 编译为 tracks
 
@@ -95,10 +96,115 @@ Hook MUST 接受两种互斥配置形状之一：
 - **WHEN** 开发者传入 `{ duration, tracks: [...] }`
 - **THEN** SDK MUST 直接执行 tracks 而无需变换
 
+#### Scenario: timeline 配置编译为 tracks
+
+- **WHEN** 开发者传入 `{ duration: 2, timeline: { "0%": { opacity: 0 }, "50%": { opacity: 0.8 }, "100%": { opacity: 1 } } }`
+- **THEN** SDK MUST 编译为单条 track `{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 0.8 }, { at: 2, value: 1 }] }` 后再执行
+
+#### Scenario: 同时传入 timeline 和 tracks 是类型错误
+
+- **WHEN** 开发者传入 `{ duration, timeline: {...}, tracks: [...] }`
+- **THEN** SDK MUST 在类型层面拒绝和/或在校验时抛错
+
+#### Scenario: 同时传入 timeline 和 from/to 是类型错误
+
+- **WHEN** 开发者传入 `{ from, to, duration, timeline: {...} }`
+- **THEN** SDK MUST 在类型层面拒绝和/或在校验时抛错
+
 #### Scenario: 共享配置形状与目标无关
 
-- **WHEN** 开发者提交相同配置（from/to 或 tracks），且结果 `animation` 绑定到 `<div enable-xr>`、`<Model>` 或 `<Reality>` 中的任何一个
+- **WHEN** 开发者提交相同配置（段、tracks 或 timeline），且结果 `animation` 绑定到 `<div enable-xr>`、`<Model>` 或 `<Reality>` 中的任何一个
 - **THEN** 校验 MUST 在目标特定播放开始前接受相同的配置结构
+
+### Requirement: Timeline 百分比关键帧配置（CSS @keyframes 风格）
+
+Hook MUST 接受含 `timeline` 字段的配置，该字段包含百分比 key（匹配 `/^\d+(\.\d+)?%$/` 的字符串）映射到 `SpatializedMotionKeyframeValues`（`SpatializedVisualValues` 扩展了可选 `timingFunction`）。`timeline` 对象 MUST NOT 包含非百分比 key；所有 config 级选项（`duration`、`timingFunction`、`delay`、`loop`、`playbackRate`、回调）保留在外层 config 上。
+
+脱糖规则：
+- 每个百分比 key 解析为 `[0, 1]` 归一化比例，乘以 `duration` 得到秒级 `at` 值。
+- 每个动画属性独立跨所有百分比帧收集，形成每属性一条 track。
+- 如果某属性在某百分比帧中未出现，该属性在该时间点不生成 keyframe。
+- `timeline` 对象 MUST 包含至少 2 个百分比 key；少于 2 个 MUST 校验报错。
+- 小数百分比（如 `"30.33%"`）MUST 被支持。
+
+#### Scenario: 小数百分比解析
+
+- **WHEN** 开发者传入 `{ duration: 10, timeline: { "0%": { opacity: 0 }, "30.33%": { opacity: 0.5 }, "100%": { opacity: 1 } } }`
+- **THEN** SDK MUST 编译为 `{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 3.033, value: 0.5 }, { at: 10, value: 1 }] }`
+
+#### Scenario: 每属性独立收集
+
+- **GIVEN** `{ duration: 2, timeline: { "0%": { opacity: 0, transform: { translate: { x: 0 } } }, "50%": { opacity: 1 }, "100%": { opacity: 0.5, transform: { translate: { x: 100 } } } } }`
+- **THEN** SDK MUST 生成两条 track：
+  - `opacity`：keyframes 为 `[{ at: 0, value: 0 }, { at: 1, value: 1 }, { at: 2, value: 0.5 }]`
+  - `transform.translate.x`：keyframes 为 `[{ at: 0, value: 0 }, { at: 2, value: 100 }]`（`at: 1` 无 keyframe，因为 `"50%"` 未声明 `transform.translate.x`）
+
+#### Scenario: 缺失属性使用 hold 规则
+
+- **GIVEN** 从 timeline 编译的 track 首个 keyframe 在 `at: 1`（来自 `"50%"`，`duration: 2`）
+- **WHEN** 在 `t = 0.5` 评估时
+- **THEN** track 值 MUST 等于首个 keyframe 的值（hold 规则）
+
+#### Scenario: 少于 2 个百分比 key 被拒绝
+
+- **WHEN** 开发者传入 `{ duration: 1, timeline: { "50%": { opacity: 1 } } }`
+- **THEN** 校验 MUST 在播放前抛错
+
+#### Scenario: timeline 中非法 key 被拒绝
+
+- **WHEN** `timeline` 对象包含不匹配 `/^\d+(\.\d+)?%$/` 的 key（如 `"halfway"`、`"duration"`）
+- **THEN** 校验 MUST 在播放前抛错
+
+#### Scenario: timeline 中 per-keyframe timingFunction
+
+- **WHEN** 开发者传入 `{ duration: 2, timeline: { "0%": { opacity: 0, timingFunction: "easeInOut" }, "100%": { opacity: 1 } } }`
+- **THEN** 编译后 `at: 0` 的 keyframe MUST 携带 `timingFunction: "easeInOut"`（控制从 0% 到 100% 的插值）
+
+#### Scenario: 最后一帧的 timingFunction 被忽略
+
+- **GIVEN** timeline 中仅 `"100%"` 帧有 `timingFunction: "easeIn"`
+- **WHEN** timeline 被编译和评估
+- **THEN** 最后一帧上的 `timingFunction` MUST 无效果（没有下一个 keyframe 可以插值）
+
+---
+
+### Requirement: 三级 timingFunction 级联
+
+评估两个相邻 keyframe 之间的插值曲线时，SDK MUST 按以下优先级（从高到低）解析 `timingFunction`：
+
+1. `keyframe.timingFunction` -- 每帧级（控制本帧 -> 下一帧）
+2. `track.timingFunction` -- 每轨默认
+3. `config.timingFunction` -- 全局默认
+4. `'linear'` -- 内置兜底
+
+此级联统一适用于所有三种配置形状（段、tracks、timeline）。在 timeline 配置中，百分比帧内的 per-keyframe `timingFunction` 在脱糖后映射为第 1 级。
+
+#### Scenario: 默认兜底为 linear
+
+- **WHEN** 任何层级都未指定 `timingFunction`
+- **THEN** keyframe 之间的插值 MUST 使用 `'linear'`
+
+#### Scenario: config 级 timingFunction 覆盖默认
+
+- **WHEN** config 指定 `timingFunction: 'easeInOut'` 且无 track 或 keyframe 覆盖
+- **THEN** 所有 keyframe 对 MUST 使用 `'easeInOut'`
+
+#### Scenario: track 级覆盖 config 级
+
+- **GIVEN** config `timingFunction: 'linear'` 且某 track 有 `timingFunction: 'easeIn'`
+- **THEN** 该 track 的 keyframe 对 MUST 使用 `'easeIn'`
+
+#### Scenario: keyframe 级覆盖 track 级
+
+- **GIVEN** 某 track 有 `timingFunction: 'easeIn'`，其中一个 keyframe 有 `timingFunction: 'easeOut'`
+- **THEN** 从该 keyframe 到下一个的段 MUST 使用 `'easeOut'`
+
+#### Scenario: 最后一个 keyframe 的 timingFunction 无效果
+
+- **GIVEN** track 中最终 keyframe（最高 `at`）有 `timingFunction: 'easeIn'`
+- **THEN** 它 MUST 被忽略（不存在后续 keyframe）
+
+---
 
 ### Requirement: 单一 Core 控制器实现
 

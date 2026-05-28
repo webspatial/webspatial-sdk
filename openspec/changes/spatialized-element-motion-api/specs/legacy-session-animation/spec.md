@@ -64,7 +64,7 @@ Alive sessions MUST be stopped/canceled on unmount without firing lifecycle call
 
 ## Segment Downgrade (interop with timeline API)
 
-When a `useSpatializedMotion({ from, to })` config compiles to tracks where each property has exactly two keyframes at `at: 0` and `at: duration` with one shared easing, the SDK MAY compile it to a legacy segment `play` command (`from`/`to`) for native playback. This is an internal optimization; the public API is `useSpatializedMotion`.
+When a `useSpatializedMotion({ from, to })` config compiles to tracks where each property has exactly two keyframes at `at: 0` and `at: duration` with one shared `timingFunction`, the SDK MAY compile it to a legacy segment `play` command (`from`/`to`) for native playback. This is an internal optimization; the public API is `useSpatializedMotion`.
 
 ## Deprecation Path
 
