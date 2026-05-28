@@ -51,8 +51,8 @@ const [animation, api, style] = useSpatializedMotion({
   <Entity position={{ x: 0, y: 1, z: -2 }} />
 </Reality>
 
-// Simple sugar (single segment, equivalent to Plan A from/to)
-const [animation, api, style] = useSpatializedMotion.simple({
+// from/to config (recommended default, equivalent to Plan A from/to)
+const [animation, api, style] = useSpatializedMotion({
   from: { transform: { translate: { y: 24 } }, opacity: 0 },
   to:   { transform: { translate: { y: 0 } }, opacity: 1 },
   duration: 0.6,
@@ -82,7 +82,7 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 
 ## What Changes
 
-- **Unified public API**: `useSpatializedMotion(config)` and `.simple()` sugar for all three container kinds.
+- **Unified public API**: `useSpatializedMotion(config)` accepting either `from/to` (recommended) or `tracks` (advanced); both compile to tracks internally.
 - **Timeline data model**: per-property tracks with absolute-time keyframes, per-track easing — the canonical config shape.
 - **Dual backend for 2D**: Web RAF when native unavailable; native timeline/segment when in WebSpatial runtime.
 - **Native-only for 3D**: Static3D and Dynamic3D use native `animateMotion` exclusively (no Web RAF fallback).

@@ -51,8 +51,8 @@ const [animation, api, style] = useSpatializedMotion({
   <Entity position={{ x: 0, y: 1, z: -2 }} />
 </Reality>
 
-// 简写语法糖（单段，等价于 Plan A 的 from/to）
-const [animation, api, style] = useSpatializedMotion.simple({
+// from/to 配置（推荐默认，等价于 Plan A 的 from/to）
+const [animation, api, style] = useSpatializedMotion({
   from: { transform: { translate: { y: 24 } }, opacity: 0 },
   to:   { transform: { translate: { y: 0 } }, opacity: 1 },
   duration: 0.6,
@@ -82,7 +82,7 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 
 ## 变更内容
 
-- **统一公共 API**：`useSpatializedMotion(config)` 及 `.simple()` 语法糖，返回 `[animation, api, style]`。
+- **统一公共 API**：`useSpatializedMotion(config)` 接受 `from/to`（推荐）或 `tracks`（高级）两种互斥配置，内部统一编译为 tracks 执行，返回 `[animation, api, style]`。
 - **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe + 每轨 easing — 规范配置形状。
 - **2D 双后端**：native 不可用时走 Web RAF；WebSpatial 运行时走 native timeline/segment。
 - **3D 仅 native**：Static3D 和 Dynamic3D 仅使用 native `animateMotion`（无 Web RAF 降级）。

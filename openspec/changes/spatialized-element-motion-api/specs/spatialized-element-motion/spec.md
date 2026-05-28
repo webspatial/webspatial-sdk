@@ -20,14 +20,31 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 - **WHEN** authors obtain a motion tuple from `useSpatializedMotion(config)`
 - **THEN** the returned `api` MUST expose `play`, `pause`, `resume`, `cancel`, `playState`, `isAnimating`, `isPaused`, and `finished` regardless of which component the `animation` is later bound to
 
-### Requirement: Timeline config shape
+### Requirement: Unified config accepts from/to or tracks (mutually exclusive)
 
-All kinds MUST accept a shared timeline structure: global `duration` + `tracks[]` with `property`, `keyframes[{ at, value }]`, optional per-track `easing`. 2D, Static3D, and Dynamic3D MUST use visual transform paths (`transform.translate.*`, `opacity`, etc.).
+The hook MUST accept a config that is one of two mutually exclusive shapes:
 
-#### Scenario: Shared timeline shape is target-agnostic
+1. **Segment config** (recommended default): `{ from, to, duration, timingFunction? }`
+2. **Timeline config** (advanced): `{ duration, tracks: [{ property, keyframes: [{ at, value }], easing? }] }`
 
-- **WHEN** authors submit the same `tracks[]` payload and the resulting `animation` is bound to any of `<div enable-xr>`, `<Model>`, or `<Reality>`
-- **THEN** validation MUST accept the same timeline structure before target-specific playback begins
+Passing both `from`/`to` and `tracks` in the same config object MUST be a type error (discriminated union). Internally, segment config MUST compile to tracks (one track per animated scalar, keyframes at `at: 0` and `at: duration`).
+
+All kinds MUST use visual transform paths (`transform.translate.*`, `opacity`, etc.) in both config shapes.
+
+#### Scenario: from/to compiles to tracks
+
+- **WHEN** authors pass `{ from: { opacity: 0 }, to: { opacity: 1 }, duration: 0.5 }`
+- **THEN** the SDK MUST internally compile this to a single track `{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 0.5, value: 1 }] }` before execution
+
+#### Scenario: tracks config executes directly
+
+- **WHEN** authors pass `{ duration, tracks: [...] }`
+- **THEN** the SDK MUST execute the tracks directly without transformation
+
+#### Scenario: Shared config shape is target-agnostic
+
+- **WHEN** authors submit the same config (either from/to or tracks) and the resulting `animation` is bound to any of `<div enable-xr>`, `<Model>`, or `<Reality>`
+- **THEN** validation MUST accept the same config structure before target-specific playback begins
 
 ### Requirement: Single Core controller implementation
 
