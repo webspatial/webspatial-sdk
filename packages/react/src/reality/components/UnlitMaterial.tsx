@@ -16,11 +16,8 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
 }) => {
   const ctx = useRealityContext()
   const materialRef = useRef<SpatialUnlitMaterial | undefined>(undefined)
-  const isInitializedRef = useRef(false)
-  const latestTextureIdRef = useRef<string | undefined>(options.textureId)
+  const [isInitialized, setIsInitialized] = useState(false)
   const [textureRevision, setTextureRevision] = useState(0)
-
-  latestTextureIdRef.current = options.textureId
 
   useEffect(() => {
     if (!ctx || !options.textureId) return
@@ -37,37 +34,20 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     const init = async () => {
       try {
         let textureIdForNative: string | undefined = options.textureId
-        if (options.textureId) {
-          if (!resourceRegistry.has(options.textureId)) {
-            // Texture id was never declared: still create material so entities do not hang on
-            // materialId; tint-only / no texture until the texture resolves in the future.
+        if (options.textureId && resourceRegistry.has(options.textureId)) {
+          try {
+            const textureResource = await resourceRegistry.get(
+              options.textureId,
+            )
+            if (cancelled) return
+            textureIdForNative = textureResource.id
+          } catch {
+            // failed texture → tint-only
             textureIdForNative = ''
-            const targetTextureId = options.textureId
-            void resourceRegistry
-              .get(targetTextureId)
-              .then(textureResource => {
-                if (cancelled || latestTextureIdRef.current !== targetTextureId)
-                  return
-                const mat = materialRef.current
-                if (mat) {
-                  void mat
-                    .updateProperties({ textureId: textureResource.id })
-                    .catch(() => {})
-                }
-              })
-              .catch(() => {})
-          } else {
-            const texturePromise = resourceRegistry.get(options.textureId)
-            try {
-              const textureResource = await texturePromise
-              if (cancelled) return
-              textureIdForNative = textureResource.id
-            } catch {
-              // Texture failed: still create material so entities do not hang on materialId;
-              // tint-only / no texture until the texture resolves.
-              textureIdForNative = ''
-            }
           }
+        } else if (options.textureId) {
+          // no Texture for this id yet → tint-only; subscribe picks up add() later
+          textureIdForNative = ''
         }
         if (cancelled) return
         const commandOptions: SpatialUnlitMaterialOptions = {
@@ -81,7 +61,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
         const mat = await materialPromise
         if (cancelled) return
         materialRef.current = mat
-        isInitializedRef.current = true
+        setIsInitialized(true)
       } catch (error) {
         console.error(' ~ UnlitMaterial ~ error:', error)
       }
@@ -93,13 +73,13 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
       // Use registry to schedule destruction after promise resolves
       resourceRegistry.removeAndDestroy(materialId)
       materialRef.current = undefined
-      isInitializedRef.current = false
+      setIsInitialized(false)
     }
   }, [ctx, options.id])
 
   // Dynamic property updates
   useEffect(() => {
-    if (!ctx || !isInitializedRef.current || !materialRef.current) return
+    if (!ctx || !isInitialized || !materialRef.current) return
     let cancelled = false
     void (async () => {
       const updates: Partial<SpatialUnlitMaterialOptions> = {}
@@ -112,20 +92,6 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
           updates.textureId = ''
         } else if (!ctx.resourceRegistry.has(options.textureId)) {
           updates.textureId = ''
-          const targetTextureId = options.textureId
-          void ctx.resourceRegistry
-            .get(targetTextureId)
-            .then(textureResource => {
-              if (cancelled || latestTextureIdRef.current !== targetTextureId)
-                return
-              const mat = materialRef.current
-              if (mat) {
-                void mat
-                  .updateProperties({ textureId: textureResource.id })
-                  .catch(() => {})
-              }
-            })
-            .catch(() => {})
         } else {
           const texturePromise = ctx.resourceRegistry.get(options.textureId)
           try {
@@ -148,6 +114,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     }
   }, [
     ctx,
+    isInitialized,
     options.color,
     options.textureId,
     options.transparent,
