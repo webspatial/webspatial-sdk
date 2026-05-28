@@ -97,44 +97,37 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     onError,
     autoPlay,
     loop,
-    loading,
+    loading = 'eager',
   } = props
   const portalInstanceObject = useContext(PortalInstanceContext)!
-  const [effectiveLoading, setEffectiveLoading] = useState<ModelLoadingMode>(
-    () => (loading === 'lazy' ? 'lazy' : 'eager'),
-  )
+  const wasVisible = useRef(false)
 
   const modelURL = useMemo(() => getAbsoluteURL(src), [src])
   const posterURL = useMemo(() => getAbsoluteURL(poster), [poster])
   const sources = useMemo(() => collectSources(children), [children])
   const sourcesKey = useMemo(() => JSON.stringify(sources), [sources])
 
+  // Observe when model becomes visible and then stop until sources change
   useEffect(() => {
-    setEffectiveLoading(loading === 'lazy' ? 'lazy' : 'eager')
-  }, [loading, modelURL, sourcesKey])
-
-  // `effectiveLoading` is `'lazy'` only while `loading === 'lazy'` and the
-  // portal element has not yet intersected the viewport. Once it flips to
-  // `'eager'` the observer disconnects and the value sticks until the sources
-  // change while still requested as lazy.
-  useEffect(() => {
-    if (effectiveLoading !== 'lazy') return
+    wasVisible.current = false
     const target = portalInstanceObject.dom
-    if (!target || typeof IntersectionObserver === 'undefined') {
-      setEffectiveLoading('eager')
+    if (loading !== 'lazy' || !target) {
+      wasVisible.current = true
       return
     }
     const observer = new IntersectionObserver(entries => {
       if (entries.some(entry => entry.isIntersecting)) {
-        setEffectiveLoading('eager')
+        wasVisible.current = true
         observer.disconnect()
+        spatializedElement.updateProperties({ loading: 'eager' })
       }
     })
     observer.observe(target)
     return () => observer.disconnect()
-  }, [effectiveLoading, portalInstanceObject])
+  }, [modelURL, sourcesKey, portalInstanceObject])
 
   useEffect(() => {
+    if (loading !== 'lazy') wasVisible.current = true
     // If modelURL was previously set and now is undefined then a dummy
     // value needs to be sent to clear the old value
     // TODO: Can native side handle null instead of ''
@@ -144,9 +137,9 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
       autoplay: autoPlay,
       loop,
       posterURL: posterURL ?? '',
-      loading: effectiveLoading,
+      loading: loading === 'lazy' && wasVisible.current ? 'eager' : loading,
     })
-  }, [modelURL, sourcesKey, autoPlay, loop, posterURL, effectiveLoading])
+  }, [modelURL, sourcesKey, autoPlay, loop, posterURL, loading])
 
   useEffect(() => {
     if (onLoad) {
