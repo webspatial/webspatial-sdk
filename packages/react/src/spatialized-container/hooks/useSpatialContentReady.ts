@@ -40,10 +40,6 @@ export function useSpatialContentReady(params: {
   callbackRef.current = onSpatialContentReady
 
   useLayoutEffect(() => {
-    if (!portalInstanceObject) {
-      return () => {}
-    }
-
     const dom = portalInstanceObject.dom
     const isReady = !!(
       spatializedElement &&
