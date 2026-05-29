@@ -119,8 +119,8 @@
 - [x] 更新 `specs/spatialized-2d-motion/spec.md` 和 `.zh.md`，移除 native segment fallback / optimization 表述，并要求 native `useSpatializedMotion` 走 canonical tracks 路径
 - [x] 更新 `specs/legacy-session-animation/spec.md` 和 `.zh.md`，将旧版 native segment 命令严格限定在 `useAnimation` 兼容路径内
 - [x] 更新 `specs/spatialized-element-motion/spec.md` 和 `.zh.md`，补充 native `useSpatializedMotion` 持续执行 canonical tracks 模型
-- [ ] Controller bridge native manager 跟进：移除 `useSpatializedMotion` 执行路径中的 segment downgrade，同时保持 legacy `useAnimation` 行为独立
-- [ ] Tests 跟进：覆盖 `from/to`、`timeline`、`tracks` 三种 authoring 形状最终进入同一 canonical tracks native 路径
+- [x] Controller bridge native manager 跟进：移除 `useSpatializedMotion` 执行路径中的 segment downgrade，同时保持 legacy `useAnimation` 行为独立
+- [x] Tests 跟进：覆盖 `from/to` 和 `tracks` 两种 authoring 形状最终进入同一 canonical tracks native 路径；百分比 key 的 `timeline` 覆盖仍保留在 Phase 10
 
 ## Phase 10 — Timeline 百分比关键帧配置 + timingFunction 统一
 

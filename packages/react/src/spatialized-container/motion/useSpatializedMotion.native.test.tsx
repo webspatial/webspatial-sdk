@@ -51,17 +51,16 @@ describe('useSpatializedMotion tuple api native backend', () => {
     const { result } = renderHook(() =>
       useSpatializedMotion({
         duration: 5,
+        from: {
+          opacity: 0,
+          transform: { translate: { x: 0 } },
+        },
+        to: {
+          opacity: 1,
+          transform: { translate: { x: 100 } },
+        },
+        timingFunction: 'linear',
         autoStart: false,
-        tracks: [
-          {
-            property: 'transform.translate.x',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 5, value: 100 },
-            ],
-            easing: 'linear',
-          },
-        ],
       }),
     )
 
@@ -77,6 +76,28 @@ describe('useSpatializedMotion tuple api native backend', () => {
         }),
       )
     })
+    const playCall = element.animateMotion.mock.calls.find(
+      ([cmd]) => cmd.type === 'play',
+    )?.[0]
+    expect(playCall).toEqual(
+      expect.objectContaining({
+        type: 'play',
+        targetKind: 'spatialized2d',
+        timeline: expect.objectContaining({
+          duration: 5,
+          tracks: expect.arrayContaining([
+            expect.objectContaining({
+              property: 'opacity',
+            }),
+            expect.objectContaining({
+              property: 'transform.translate.x',
+            }),
+          ]),
+        }),
+      }),
+    )
+    expect(playCall).not.toHaveProperty('from')
+    expect(playCall).not.toHaveProperty('to')
   })
 
   test('pre-bind play queues until the target resolves', async () => {
@@ -139,6 +160,8 @@ describe('useSpatializedMotion tuple api native backend', () => {
         }),
       }),
     )
+    expect(playCalls[0][0]).not.toHaveProperty('from')
+    expect(playCalls[0][0]).not.toHaveProperty('to')
     expect(rafSpy).not.toHaveBeenCalled()
   })
 

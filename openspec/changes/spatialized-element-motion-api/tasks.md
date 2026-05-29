@@ -119,8 +119,8 @@
 - [x] Update `specs/spatialized-2d-motion/spec.md` and `.zh.md` to remove native segment fallback / optimization language and require the canonical tracks path for native `useSpatializedMotion`
 - [x] Update `specs/legacy-session-animation/spec.md` and `.zh.md` so the legacy native segment command remains scoped to `useAnimation` compatibility only
 - [x] Update `specs/spatialized-element-motion/spec.md` and `.zh.md` to state that native `useSpatializedMotion` continues on the canonical tracks model
-- [ ] Controller / bridge / native manager follow-up: remove segment downgrade from the `useSpatializedMotion` execution path while keeping legacy `useAnimation` behavior separate
-- [ ] Tests follow-up: cover `from/to`, `timeline`, and `tracks` authoring shapes all reaching the same canonical tracks-native path
+- [x] Controller / bridge / native manager follow-up: remove segment downgrade from the `useSpatializedMotion` execution path while keeping legacy `useAnimation` behavior separate
+- [x] Tests follow-up: cover `from/to` and `tracks` authoring shapes reaching the same canonical tracks-native path; percentage-key `timeline` coverage remains in Phase 10
 
 ## Phase 10 — Timeline percentage keyframe config + timingFunction unification
 
