@@ -268,6 +268,26 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     await vi.waitFor(() => {
       expect(bridge.motionElementPlay).toHaveBeenCalledTimes(1)
     })
+    const playCall = bridge.motionElementPlay.mock.calls[0]?.[2] as {
+      timeline?: { duration: number; tracks: unknown[] }
+      from?: unknown
+      to?: unknown
+    }
+    expect(playCall).toEqual(
+      expect.objectContaining({
+        timeline: expect.objectContaining({
+          duration: 1,
+          tracks: expect.arrayContaining([
+            expect.objectContaining({
+              property: 'opacity',
+              easing: 'linear',
+            }),
+          ]),
+        }),
+      }),
+    )
+    expect(playCall).not.toHaveProperty('from')
+    expect(playCall).not.toHaveProperty('to')
     expect(controller.playState).toBe('running')
 
     controller.stop()
