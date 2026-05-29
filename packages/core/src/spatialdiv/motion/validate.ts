@@ -1,8 +1,11 @@
 import type {
   SpatializedMotionConfig,
   SpatializedMotionProperty,
+  SpatializedMotionSegmentConfig,
+  SpatializedMotionTimelineConfig,
   SpatializedMotionTrack,
 } from '../../types/spatializedMotion'
+import { normalizeMotionConfig } from './simple'
 
 const ALLOWED_PROPERTIES = new Set<SpatializedMotionProperty>([
   'opacity',
@@ -26,8 +29,16 @@ const FORBIDDEN_PREFIXES = [
 ] as const
 
 export function validateSpatializedMotionConfig(
-  config: SpatializedMotionConfig,
+  config:
+    | SpatializedMotionConfig
+    | SpatializedMotionSegmentConfig
+    | SpatializedMotionTimelineConfig,
 ): void {
+  const normalized = normalizeMotionConfig(config)
+  validateNormalizedMotionConfig(normalized)
+}
+
+function validateNormalizedMotionConfig(config: SpatializedMotionConfig): void {
   const { duration, tracks } = config
 
   if (

@@ -56,7 +56,7 @@ export function tracksToFromTo(tracks: SpatializedMotionTrack[]): {
 }
 
 /**
- * Plan A-compatible segment when every track is exactly [0, duration] with one easing.
+ * Plan A-compatible segment when every track is exactly [0, duration] with one timingFunction.
  */
 export function motionConfigToNativeSegment(
   config: SpatializedMotionConfig,
@@ -64,8 +64,16 @@ export function motionConfigToNativeSegment(
   const { duration, tracks } = config
   if (tracks.length === 0) return null
 
-  const easings = new Set(tracks.map(t => t.easing ?? 'easeInOut'))
-  if (easings.size > 1) return null
+  const timings = new Set(
+    tracks.map(
+      track =>
+        track.keyframes[0]?.timingFunction ??
+        track.timingFunction ??
+        config.timingFunction ??
+        'linear',
+    ),
+  )
+  if (timings.size > 1) return null
 
   for (const track of tracks) {
     const kf = track.keyframes
@@ -75,11 +83,12 @@ export function motionConfigToNativeSegment(
   }
 
   const { from, to } = tracksToFromTo(tracks)
+  const timingFunction = [...timings][0] ?? 'linear'
   return {
     from,
     to,
     duration,
-    timingFunction: tracks[0]?.easing ?? 'easeInOut',
+    timingFunction,
     delay: config.delay,
     loop: config.loop,
     playbackRate: config.playbackRate,
@@ -97,8 +106,14 @@ export function motionConfigToNativeTimeline(
     loop: config.loop,
     tracks: config.tracks.map(track => ({
       property: track.property,
-      keyframes: track.keyframes.map(k => ({ at: k.at, value: k.value })),
-      easing: track.easing ?? 'easeInOut',
+      keyframes: track.keyframes.map(k => ({
+        at: k.at,
+        value: k.value,
+        ...(k.timingFunction !== undefined
+          ? { timingFunction: k.timingFunction }
+          : {}),
+      })),
+      timingFunction: track.timingFunction ?? config.timingFunction ?? 'linear',
     })),
   }
 }

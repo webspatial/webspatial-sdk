@@ -25,7 +25,7 @@ function makeConfig(
     tracks: [
       {
         property: 'opacity' as const,
-        easing: 'linear' as const,
+        timingFunction: 'linear' as const,
         keyframes: [
           { at: 0, value: 0 },
           { at: 1, value: 1 },
@@ -280,7 +280,7 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
           tracks: expect.arrayContaining([
             expect.objectContaining({
               property: 'opacity',
-              easing: 'linear',
+              timingFunction: 'linear',
             }),
           ]),
         }),

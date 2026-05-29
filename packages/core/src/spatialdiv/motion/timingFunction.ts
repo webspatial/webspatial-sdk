@@ -1,9 +1,12 @@
 import type { TimingFunction } from '../../types/animation'
 
 /** Map normalized linear progress [0,1] to eased progress. */
-export function applyEasing(t: number, easing: TimingFunction): number {
+export function applyTimingFunction(
+  t: number,
+  timingFunction: TimingFunction,
+): number {
   const x = Math.min(1, Math.max(0, t))
-  switch (easing) {
+  switch (timingFunction) {
     case 'linear':
       return x
     case 'easeIn':

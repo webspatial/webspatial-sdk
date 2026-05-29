@@ -1,4 +1,4 @@
-export { applyEasing } from './easing'
+export { applyTimingFunction } from './timingFunction'
 export { applyFrozenProperties, snapshotScalars } from './mergeValues'
 export { evaluateMotionTimeline } from './evaluate'
 export { validateSpatializedMotionConfig } from './validate'
@@ -10,6 +10,10 @@ export {
   type NativeSegmentPlayPayload,
 } from './nativeCompile'
 export { getMotionSuppressedFields } from './getMotionSuppressedFields'
-export { segmentConfigToMotionConfig } from './simple'
+export {
+  desugarTimelineConfig,
+  normalizeMotionConfig,
+  segmentConfigToMotionConfig,
+} from './simple'
 export { normalizeMotionPropertyKeys } from './propertyKeys'
 export type { SpatializedMotionPropertyKeys } from '../../types/spatializedMotion'

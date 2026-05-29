@@ -1,1 +1,1 @@
-export { evaluateMotionTimeline } from '@webspatial/core-sdk'
+export { evaluateMotionTimeline } from '../../../../core/src/spatialdiv/motion'
