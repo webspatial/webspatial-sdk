@@ -105,14 +105,14 @@ flowchart TB
 
 ## 终止方法与 Style 下发
 
-三个命令式方法终止运行中（或暂停中）的会话。每个方法决定不同的最终 style 值、终态 `playState` 和生命周期回调：
+三个终止命令彼此独立。`stop()` 只终止 active session，而 `reset()` 和 `finish()` 即使在动画已经处于 `idle` 时也总是 seek 到确定端点。每个命令决定不同的最终 style 值、`playState`、`finished` 标记和生命周期回调：
 
-| 方法 | Style 值 | playState | 回调 | 抑制释放 |
-|------|----------|-----------|------|---------|
-| `stop()` | 当前帧（调用时刻冻结） | `idle` | `onStop(values)` | 释放 |
-| `reset()` | from 值（初始状态） | `idle` | `onReset(values)` | 释放 |
-| `finish()` | to 值（最终状态） | `finished` | `onComplete(values)` | 释放 |
-| 自然结束 | to 值（最后一帧到达） | `finished` | `onComplete(values)` | 释放 |
+| 方法 | 调用范围 | Style 值 | playState | finished | 回调 | 抑制释放 |
+|------|----------|----------|-----------|----------|------|---------|
+| `stop()` | 仅 active session | 当前帧（调用时刻冻结） | `idle` | `false` | `onStop(values)` | 释放 |
+| `reset()` | 无条件 | from 值（初始状态） | `idle` | `false` | `onReset(values)` | 释放 |
+| `finish()` | 无条件 | to 值（最终状态） | `finished` | `true` | `onComplete(values)` | 释放 |
+| 自然结束 | active 播放自然到达末尾 | to 值（最后一帧到达） | `finished` | `true` | `onComplete(values)` | 释放 |
 
 ### 后端对称的 style 下发
 
@@ -126,20 +126,27 @@ flowchart TB
 
 对于 `stop()`：`t` = 调用时刻已播放时间。对于 `reset()`：`t` = 0。对于 `finish()`：`t` = duration。
 
+`idle.reset()` MUST 继续发出 `from` 值。`idle.finish()` MUST 继续发出 `to` 值并将 `playState` 置为 `finished`。这些命令彼此不是别名，MUST NOT 互相吞掉语义。
+
 ### 状态机转换
 
 ```mermaid
 stateDiagram-v2
     [*] --> idle
-    idle --> running : play()
-    running --> paused : pause()
-    running --> idle : stop() / reset()
-    running --> finished : finish() / 自然结束
-    paused --> running : resume()
-    paused --> idle : stop() / reset()
-    paused --> finished : finish()
-    finished --> idle : reset()
-    finished --> running : play()
+    idle --> running : play
+    running --> paused : pause
+    running --> idle : stop
+    running --> idle : reset
+    running --> finished : finish
+    running --> finished : 自然结束
+    paused --> running : resume
+    paused --> idle : stop
+    paused --> idle : reset
+    paused --> finished : finish
+    idle --> idle : reset and emit start
+    idle --> finished : finish and emit end
+    finished --> idle : reset and emit start
+    finished --> running : play
 ```
 
 ## 生命周期回调
@@ -153,6 +160,8 @@ stateDiagram-v2
 | `onError` | Native 桥失败 | `SpatializedPlaybackError` |
 
 **互斥性：** 每次会话终止时，`onComplete` / `onStop` / `onReset` 中恰好触发一个。`onError` 可在 native 失败时独立触发。
+
+`stop()` 和 `reset()` MUST 始终令 `finished === false`。`finish()` 与自然完成 MUST 始终令 `finished === true`。
 
 **行业规范对齐：**
 - `stop()` 对齐 React Spring `api.stop()` 和 Framer Motion `controls.stop()`

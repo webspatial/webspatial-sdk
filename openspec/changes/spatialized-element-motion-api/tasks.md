@@ -100,6 +100,18 @@
 - [x] Unit tests: verify stop/reset/finish each produce correct style values, playState, and callback
 - [x] Sub-spec updates (spatialized-2d-motion, spatialized-static3d-motion, spatialized-dynamic3d-motion) if they reference `cancel`
 
+## Phase 9b — Playback API semantic correction follow-up
+
+- [x] Move semantic clarification tasks out of Phase 9 so Phase 9 remains scoped to the original stop/reset/finish expansion
+- [x] Update umbrella spec, 2D spec, design, and API summary so `idle.reset()` emits start values, `idle.finish()` emits end values, and the bilingual docs stay aligned
+- [ ] Controller: make `stop()` terminate active session only, without seeking to start or end values
+- [ ] Controller: make `reset()` emit start values even when current `playState` is `idle`
+- [ ] Controller: make `finish()` emit end values and enter `finished` even when current `playState` is `idle`
+- [ ] Controller: align `finished` flag semantics so `stop()` / `reset()` force `false` and `finish()` forces `true`
+- [ ] Web path: verify idle-state `reset()` / `finish()` still emit values through the style outlet
+- [ ] Native path: verify `stop()` / `reset()` / `finish()` semantics match Web path and do not absorb one another
+- [ ] Unit tests: add regression coverage for `idle.reset()`, `idle.finish()`, and terminal-command independence
+
 ## Phase 10 — Timeline percentage keyframe config + timingFunction unification
 
 - [ ] Types: `SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`
