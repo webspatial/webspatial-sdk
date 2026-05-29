@@ -2,7 +2,7 @@
 
 三个 `SpatializedElement` 子类共享场景定位，但使用**不同的 native 写入路径**。Timeline 评估器、会话状态机和 Portal 抑制逻辑在 TypeScript 中共享；native 将采样结果应用到 `element.transform`（2D / Dynamic3D）或 `modelTransform`（Static3D）。Entity 动画保持**独立**栈（`useAnimation` + `EntityAnimationManager`）。
 
-本设计统一了**面向开发者**的配置（`SpatializedMotionConfig`、`SpatializedSegmentConfig`、`SpatializedPlaybackApi`），并通过**绑定目标**（`animation` 被传给哪个组件的 `xr-animation` prop 时自动确定）路由到单一 Core 控制器和单一 React hook。
+本设计统一了**面向开发者**的配置（`SpatializedMotionConfig`、`SpatializedSegmentConfig`、`SpatializedPlaybackApi`），并通过**绑定目标**（`animation` 被传给哪个组件的 `xr-animation` prop 时自动确定）路由到单一 Core 控制器和单一 React hook。`useSpatializedMotion` 的所有 authoring 形状（`from/to`、`timeline`、`tracks`）都会在执行前归一化为同一个 canonical `tracks` 模型。
 
 ## 设计演进
 
@@ -13,7 +13,7 @@ Plan A 确立了架构原语：
 - **Portal 抑制**：opacity 属性级、transform 字段整体级
 - **Native 播放模型**：visionOS 上 CADisplayLink 驱动的逐帧采样
 - **生命周期契约**：onStart/onComplete/onStop/onReset/onError 互斥
-- **段插值**：单次 `from`/`to` + timing function
+- **authoring 便利形状**：单次 `from`/`to` + timing function，作为会编译为 tracks 的 sugar 形状
 
 这些在统一系统中保持规范性。
 
@@ -66,7 +66,7 @@ flowchart TB
 | `motionElementBridge` | 分发 `animateSpatialDiv` vs `animateMotion` + 监听器清理 |
 | `element.motion(config)` | 各 `Spatialized*Element` 上的工厂；返回匹配目标 kind 的 `SpatializedMotionController` |
 | `evaluateMotionTimeline` | 共享 Web 评估器：逐轨采样、timingFunction、lerp |
-| `SpatialDivTimelineEvaluator`（Swift） | Native 对等评估器：逐轨 90Hz 采样（CADisplayLink） |
+| `SpatialDivTimelineEvaluator`（Swift） | Native 对等评估器：针对 canonical tracks 路径进行逐轨 90Hz 采样（CADisplayLink） |
 | `SpatializedMotionTransformSink` | 抽象写入路径（elementTransform vs modelTransform），用于 Static3D/Dynamic3D |
 
 ## React 模块
@@ -173,7 +173,7 @@ stateDiagram-v2
 Plan A 路径（`useAnimation` + `animation` prop）作为薄兼容层保留：
 
 1. 用于 SpatialDiv 的 `useAnimation(config)` 继续正常工作。
-2. 内部实现中，简单配置 MAY 被编译为相同的 native 段命令。
+2. 旧版路径内部继续保留自己的 native segment 行为；`useSpatializedMotion` 不再降级进入该命令路径。
 3. `animation` prop 路径不使用 `SpatializedMotionController`；保留自有会话管理。
 4. 新代码 SHOULD 使用 `useSpatializedMotion({ from, to, duration })`，提供相同的单段体验。
 

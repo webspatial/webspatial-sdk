@@ -2,7 +2,7 @@
 
 Three `SpatializedElement` subclasses share scene placement but use **different native write paths**. The timeline evaluator, session state machine, and Portal suppression logic are shared in TypeScript; native applies samples to `element.transform` (2D / Dynamic3D) or `modelTransform` (Static3D). Entity animation remains a **separate** stack (`useAnimation` + `EntityAnimationManager`).
 
-This design unifies **author-facing** config (`SpatializedMotionConfig`, `SpatializedSegmentConfig`, `SpatializedPlaybackApi`) and routes by the **binding target** (resolved when `animation` is passed as `xr-animation` prop to a component) to one Core controller and one React hook.
+This design unifies **author-facing** config (`SpatializedMotionConfig`, `SpatializedSegmentConfig`, `SpatializedPlaybackApi`) and routes by the **binding target** (resolved when `animation` is passed as `xr-animation` prop to a component) to one Core controller and one React hook. All `useSpatializedMotion` authoring shapes (`from`/`to`, `timeline`, `tracks`) normalize to the same canonical `tracks` model before execution.
 
 ## Design Evolution
 
@@ -13,7 +13,7 @@ Plan A established the architectural primitives:
 - **Portal suppression**: property-level for opacity, transform-wide for transform fields
 - **Native playback model**: CADisplayLink-driven per-frame sampling on visionOS
 - **Lifecycle contracts**: onStart/onComplete/onStop/onReset/onError mutual exclusion
-- **Segment interpolation**: single `from`/`to` with timing function
+- **Authoring convenience**: single `from`/`to` with timing function as a sugar shape that compiles to tracks
 
 These remain normative in the unified system.
 
@@ -67,7 +67,7 @@ flowchart TB
 | `motionElementBridge` | Dispatches `animateSpatialDiv` vs `animateMotion` + listener cleanup |
 | `element.motion(config)` | Factory on each `Spatialized*Element`; returns `SpatializedMotionController` with matching target kind |
 | `evaluateMotionTimeline` | Shared Web evaluator: per-track sampling, timingFunction, lerp |
-| `SpatialDivTimelineEvaluator` (Swift) | Native parity evaluator: per-track 90Hz sampling via CADisplayLink |
+| `SpatialDivTimelineEvaluator` (Swift) | Native parity evaluator: per-track 90Hz sampling via CADisplayLink for the canonical tracks path |
 | `SpatializedMotionTransformSink` | Abstracts write path (elementTransform vs modelTransform) for Static3D/Dynamic3D |
 
 ## React Modules
@@ -174,7 +174,7 @@ stateDiagram-v2
 The Plan A path (`useAnimation` + `animation` prop) is retained as a thin compatibility layer:
 
 1. `useAnimation(config)` for SpatialDiv continues to work unchanged.
-2. Internally, simple configs MAY be compiled to the same native segment command.
+2. Internally, the legacy path keeps its own segment-native behavior; `useSpatializedMotion` does not downgrade into that command path.
 3. The `animation` prop path does NOT use `SpatializedMotionController`; it retains its own session management.
 4. New code SHOULD use `useSpatializedMotion({ from, to, duration })` which provides the same single-segment experience.
 
