@@ -112,6 +112,16 @@
 - [x] Native path: verify `stop()` / `reset()` / `finish()` semantics match Web path and do not absorb one another
 - [x] Unit tests: add regression coverage for `idle.reset()`, `idle.finish()`, and terminal-command independence
 
+## Phase 9c — Canonical tracks execution for useSpatializedMotion
+
+- [x] Update `proposal.md` and `proposal.zh.md` so all `useSpatializedMotion` authoring shapes (`from/to`, `timeline`, `tracks`) are documented as compiling to canonical `tracks`
+- [x] Update `design.md` and `design.zh.md` so the unified motion path is described as canonical `tracks` execution and no longer references native segment downgrade for `useSpatializedMotion`
+- [x] Update `specs/spatialized-2d-motion/spec.md` and `.zh.md` to remove native segment fallback / optimization language and require the canonical tracks path for native `useSpatializedMotion`
+- [x] Update `specs/legacy-session-animation/spec.md` and `.zh.md` so the legacy native segment command remains scoped to `useAnimation` compatibility only
+- [x] Update `specs/spatialized-element-motion/spec.md` and `.zh.md` to state that native `useSpatializedMotion` continues on the canonical tracks model
+- [ ] Controller / bridge / native manager follow-up: remove segment downgrade from the `useSpatializedMotion` execution path while keeping legacy `useAnimation` behavior separate
+- [ ] Tests follow-up: cover `from/to`, `timeline`, and `tracks` authoring shapes all reaching the same canonical tracks-native path
+
 ## Phase 10 — Timeline percentage keyframe config + timingFunction unification
 
 - [ ] Types: `SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`
