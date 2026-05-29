@@ -7,7 +7,7 @@ vi.mock('@webspatial/core-sdk', async () => {
     ...actual,
     supports: (name: string, tokens?: readonly string[]) =>
       name === 'useSpatializedMotion' &&
-      !!tokens?.some(token => token === 'spatialized2d' || token === 'element'),
+      !!tokens?.some(token => token === 'spatialized2d'),
   }
 })
 
@@ -43,6 +43,40 @@ async function flushPromises() {
 describe('useSpatializedMotion tuple api native backend', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+  })
+
+  test('uses native spatialized2d motion capability without legacy element token', async () => {
+    const element = createMockElement()
+
+    const { result } = renderHook(() =>
+      useSpatializedMotion({
+        duration: 5,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'transform.translate.x',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 5, value: 100 },
+            ],
+            easing: 'linear',
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[1].play()
+    })
+    await waitFor(() => {
+      expect(element.animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'play',
+          targetKind: 'spatialized2d',
+        }),
+      )
+    })
   })
 
   test('pre-bind play queues until the target resolves', async () => {
