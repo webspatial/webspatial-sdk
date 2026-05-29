@@ -44,7 +44,7 @@ export const spatialDivAnimationRoutes: SpatialDivAnimationRoute[] = [
     path: '/spatial-div-animation/transform-translate',
     label: 'Transform Translate',
     description:
-      'translate (0,0,0)→(100,50,-80) over 2s; covers play re-entry.',
+      'translate (0,0,0)→(100,10,100) over 2s; covers reset/play re-entry.',
   },
   {
     path: '/spatial-div-animation/reverse-loop',
