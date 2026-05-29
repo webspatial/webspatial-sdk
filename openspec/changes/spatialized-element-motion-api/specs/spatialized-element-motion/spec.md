@@ -20,20 +20,32 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 - **WHEN** authors obtain a motion tuple from `useSpatializedMotion(config)`
 - **THEN** the returned `api` MUST expose `play`, `pause`, `resume`, `stop`, `reset`, `finish`, `playState`, `isAnimating`, `isPaused`, and `finished` regardless of which component the `animation` is later bound to
 
-#### Scenario: stop() freezes at current values
+#### Scenario: stop() freezes active session at current values
 
 - **WHEN** `api.stop()` is called while the animation is running or paused
-- **THEN** the style MUST freeze at the sampled values of the current playback time, `playState` MUST become `idle`, and `onStop` MUST be invoked with the frozen values
+- **THEN** the active session MUST terminate, the style MUST freeze at the sampled values of the current playback time, `playState` MUST become `idle`, `finished` MUST become `false`, and `onStop` MUST be invoked with the frozen values
 
 #### Scenario: reset() reverts to initial values
 
-- **WHEN** `api.reset()` is called while the animation is running, paused, or finished
-- **THEN** the style MUST revert to the `from` (initial) values, `playState` MUST become `idle`, and `onReset` MUST be invoked with the initial values
+- **WHEN** `api.reset()` is called
+- **THEN** the style MUST revert to the `from` (initial) values, `playState` MUST become `idle`, `finished` MUST become `false`, and `onReset` MUST be invoked with the initial values
 
 #### Scenario: finish() jumps to final values
 
-- **WHEN** `api.finish()` is called while the animation is running or paused
-- **THEN** the style MUST jump to the `to` (final) values, `playState` MUST become `finished`, and `onComplete` MUST be invoked with the final values
+- **WHEN** `api.finish()` is called
+- **THEN** the style MUST jump to the `to` (final) values, `playState` MUST become `finished`, `finished` MUST become `true`, and `onComplete` MUST be invoked with the final values
+
+#### Scenario: reset() is not a no-op while idle
+
+- **GIVEN** the motion is already `idle`
+- **WHEN** `api.reset()` is called
+- **THEN** the SDK MUST still emit the `from` values and MUST keep `playState` at `idle`
+
+#### Scenario: finish() is not a no-op while idle
+
+- **GIVEN** the motion is already `idle`
+- **WHEN** `api.finish()` is called
+- **THEN** the SDK MUST still emit the `to` values and MUST transition `playState` to `finished`
 
 #### Scenario: Style value source is backend-symmetric
 
@@ -54,6 +66,8 @@ The config MUST support the following lifecycle callbacks:
 
 Callbacks MUST be mutually exclusive per session termination: exactly one of `onComplete`, `onStop`, or `onReset` fires per session end. `onError` MAY fire independently on native failure.
 
+The terminal methods MUST remain independent commands: `stop()` terminates an active session without seeking, `reset()` always seeks to the start values, and `finish()` always seeks to the end values. Calling one MUST NOT cause another terminal method's semantics to be skipped or absorbed.
+
 #### Scenario: onComplete fires on natural end
 
 - **WHEN** the animation reaches its `duration` without interruption
@@ -73,6 +87,16 @@ Callbacks MUST be mutually exclusive per session termination: exactly one of `on
 
 - **WHEN** `api.reset()` is called
 - **THEN** `onReset` MUST be invoked with the initial (`from`) values
+
+#### Scenario: finished flag resets on stop and reset
+
+- **WHEN** `api.stop()` or `api.reset()` is called
+- **THEN** the `finished` flag MUST be `false`
+
+#### Scenario: finished flag becomes true on finish
+
+- **WHEN** `api.finish()` is called
+- **THEN** the `finished` flag MUST be `true`
 
 ### Requirement: Unified config accepts three mutually exclusive shapes
 
