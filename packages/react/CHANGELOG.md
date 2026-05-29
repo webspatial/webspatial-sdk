@@ -1,5 +1,80 @@
 # @webspatial/react-sdk
 
+## 1.8.0
+
+### Minor Changes
+
+- 1eae2a7: The Core SDK lets you query WebSpatial runtime capabilities and shell versions at runtime (`supports`, `getRuntime`) and resolve JSB-style embedded shells via `resolveJsbAdapterPlatform`. The built-in Android platform adapter is removed from core—integrate Android through your host shell instead.
+
+  The React SDK adds runtime gating (`noRuntime`, `webSpatialRuntime`) and updates spatialized components and related hooks so behavior matches runtime availability.
+
+- 1eae2a7: Add lazy loading support to Model
+- 1eae2a7: **ResourceRegistry:** add `subscribe(id, listener)` and `notify(id)`. Subscribers run when a resource promise settles after `add()` (success or failure), and on `remove`, `removeAndDestroy`, and `destroy()`.
+
+  **React `<Texture>`:** call `notify(id)` after in-place `updateProperties({ url })` so materials refresh when the URL changes without a new `add()` for the same logical texture id.
+
+  **React `<UnlitMaterial>`:** subscribe to the bound `textureId` and bump an internal revision so the update path re-runs when the texture settles or is replaced; remove `surfaceSyncRev`. Material init still creates a tint-only material when the texture promise rejects so entities keep a valid material id until a later successful load.
+
+  **visionOS `Dynamic3DManager`:** coalesce remote downloads per URL string and write cache files under `Documents` using a SHA256-prefix plus basename so concurrent loads no longer `removeItem` the same path another reader is using.
+
+- 1eae2a7: Add currentTime property to Model to read and seek animation time
+- 1eae2a7: Export `CapabilityKey` from core runtime and re-export it from the React SDK so app code can type capability checks via `@webspatial/react-sdk` without importing `@webspatial/core-sdk` directly.
+- 1eae2a7: add poster attribute to <Model>
+- 1eae2a7: Add loadable texture resources for Dynamic 3D: core `SpatialTextureResource`, `CreateTexture` / `UpdateTextureProperties`, and `textureId` on unlit materials; React `<Texture>` plus `UnlitMaterial` wiring that resolves logical ids to platform ids; VisionOS async `TextureResource` loading and scene handlers. Test-server includes a textured unlit box demo; Dynamic 3D PRD documents textures and trims out-of-scope sections.
+
+### Patch Changes
+
+- 1eae2a7: Fix React 19 type compatibility for local builds by initializing internal `useRef` values explicitly while preserving React 18 support.
+- 1eae2a7: Remove unused local variables and imports flagged by CodeQL quality checks.
+- 1eae2a7: Avoid exporting `global.d.ts` as a runtime module from `@webspatial/core-sdk`, so stricter bundlers and local `file:`/workspace consumers can resolve the built package correctly.
+- 1eae2a7: Add a changeset for the Reality `enable-xr` follow-up: keep JSX runtime special-casing while not exposing `enable-xr` in the public `RealityProps` API.
+- 1eae2a7: Fix Model ready promise not working
+- 1eae2a7: Split **picoOS** capability rows from visionOS in `CAPABILITY_TABLE`: `supports('xrInnerDepth')` and `supports('xrOuterDepth')` are **false** for PicoWebApp **0.1.1** and **0.1.2**; visionOS shell rows are unchanged.
+- 1eae2a7: fix: Model reloads when switching from eager to lazy
+- 1eae2a7: Add React 18 and React 19 compatibility fixtures that type-check and build the WebSpatial JSX runtime against host app React types.
+- 1eae2a7: Bump direct esbuild devDependency to ^0.25.0 and extend pnpm.overrides
+  to pin patched versions for transitive packages flagged by Dependabot
+  (@xmldom/xmldom, basic-ftp, vite, lodash/lodash-es, path-to-regexp,
+  flatted, immutable, serialize-javascript, minimatch, rollup,
+  @modelcontextprotocol/sdk, @remix-run/router, react-router, validator,
+  glob, postcss, axios, follow-redirects, brace-expansion, picomatch,
+  ajv, markdown-it, mdast-util-to-hast, body-parser, js-yaml, qs, diff,
+  tmp, @eslint/plugin-kit, min-document, form-data). No code changes;
+  verified via pnpm test and visionOS Simulator build.
+
+  Follow up by upgrading the remaining direct dependency entry points that
+  were still resolving stale vulnerable lockfile paths: move
+  `react-router-dom` to ^6.30.2 in demo apps, upgrade the React SDK test
+  toolchain to vitest 3.1.2 / @vitejs/plugin-react 4.4.1, align the
+  builder package to rollup ^4.60.2, and add exact pnpm overrides for
+  stubborn `yaml`, `rollup`, `minimatch`, and `path-to-regexp` nodes so
+  the workspace lockfile resolves to patched versions consistently.
+
+- 1eae2a7: `ref.current` on spatial containers (`SpatialDiv`, `Model`, `Spatialized2DElementContainer`, `Reality` entities) is now the real underlying `HTMLElement` instead of a `Proxy` wrapper. As a result:
+
+  - `ref.current instanceof HTMLElement` (and `instanceof Node`) is `true`.
+  - Native APIs that brand-check `Element` now accept `ref.current` directly — `ResizeObserver.observe(ref.current)` (#1067), `IntersectionObserver.observe(ref.current)`, `MutationObserver.observe(ref.current, …)`, `parent.contains(ref.current)`, `document.querySelector(...) === ref.current`, and `getComputedStyle(ref.current)` all work without any polyfill.
+  - `ref.current.removeAttribute('id' /* or any name other than 'style' / 'class' */)` now correctly removes the attribute — previously it was silently dropped.
+  - `ref.current.style.setProperty('transform', value, 'important')` now preserves the `priority` argument when forwarding to the spatial transform layer.
+
+  Spatial behavior (auto `xr-spatial-default` className, `style.transform` / `style.visibility` proxying, `xrClientDepth` / `xrOffsetBack` accessors, `extraRefProps`) is unchanged.
+
+  Internally, the standard host's hidden-placeholder appearance (`visibility: hidden`, `transition: none`, `transform: none | translateZ(0)`) is no longer written as inline style — it is now applied via CSS rules keyed on the new `data-xr-host` and `data-xr-transform-active` attributes. This is required so that React commits do not write through the spatial style proxy and clobber the user's `style.transform` value on the probe. Visual behavior is unchanged.
+
+  The hidden-host stylesheet is now injected into each host's containing tree root on mount (including `ShadowRoot`s used by web components / micro-frontends / shadow-isolated design systems). Without this, the document-level stylesheet would not cross shadow boundaries and the bare 2D placeholder would show through — a side-effect of moving the hidden-placeholder rules out of inline style. The injection is idempotent per root via a `data-xr-spatial-default-style` marker on the `<style>` element. As an incidental fix, the `--xr-back` / `--xr-depth` / `--xr-z-index` / `--xr-background-material` defaults now also reach spatial containers mounted inside shadow roots.
+
+  Known limitation: the per-mount injection is currently keyed on `root === document` and so does not cover spatial hosts mounted inside same-origin iframes / other foreign `Document` instances — those will see the bare 2D placeholder until [#1197](https://github.com/webspatial/webspatial-sdk/issues/1197) ships. As a workaround, call `injectSpatialDefaultStyle()` once from inside the iframe's own realm.
+
+  The architectural invariants behind the standard-host / probe split, the spatial style proxy, and the `xr-spatial-default` / `data-xr-host` contracts are documented in `packages/react/src/spatialized-container/ARCHITECTURE.md` for future maintainers.
+
+  Note: the previously undocumented `ref.current.__raw` field is removed; use `ref.current` directly.
+
+- 1eae2a7: Sync CSS-in-JS style text updates into spatial child windows so dynamic class changes keep their matching styles in SpatialDiv and Attachment content.
+
+  Also scan the entire MutationObserver batch when deciding sync timing: if any record indicates an inline `<style>` change, the whole batch is scheduled as `immediate`, so a `<link rel=stylesheet>` record earlier in the same batch no longer downgrades co-occurring `<style>` text updates to the delayed path.
+
+- 1eae2a7: Add a SpatialDiv-only `onSpatialContentReady` lifecycle with layout-effect timing and cleanup, ensure ref dispatch is deduplicated and available before ready callbacks, and include a Three.js test-server page for nested ready/cleanup verification.
+
 ## 1.6.1
 
 ## 1.6.0

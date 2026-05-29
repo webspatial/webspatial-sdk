@@ -1,5 +1,42 @@
 # web-content
 
+## 0.2.0
+
+### Minor Changes
+
+- 1eae2a7: Add lazy loading support to Model
+- 1eae2a7: Add currentTime property to Model to read and seek animation time
+- 1eae2a7: add poster attribute to <Model>
+
+### Patch Changes
+
+- 1eae2a7: Fix Model ready promise not working
+- 1eae2a7: fix: incorrect load/error callbacks on Model
+- 1eae2a7: fix: Model reloads when switching from eager to lazy
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+  - @webspatial/react-sdk@1.8.0
+  - @webspatial/core-sdk@1.8.0
+
 ## 0.1.1
 
 ### Patch Changes

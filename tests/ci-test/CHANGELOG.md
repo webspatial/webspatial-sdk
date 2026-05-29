@@ -1,5 +1,41 @@
 # ci-test
 
+## 0.1.0
+
+### Minor Changes
+
+- 1eae2a7: Add lazy loading support to Model
+
+### Patch Changes
+
+- 1eae2a7: fix: incorrect load/error callbacks on Model
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+  - @webspatial/react-sdk@1.8.0
+  - @webspatial/builder@1.8.0
+  - @webspatial/core-sdk@1.8.0
+
 ## 0.0.24
 
 ### Patch Changes

@@ -1,5 +1,51 @@
 # @webspatial/builder
 
+## 1.8.0
+
+### Patch Changes
+
+- 1eae2a7: Remove unused local variables and imports flagged by CodeQL quality checks.
+- 1eae2a7: Upgrade the builder CLI image pipeline to `jimp` 1.x so the workspace no
+  longer resolves the vulnerable `jimp@0.22.x -> file-type@16.x` chain flagged
+  by Dependabot. This keeps the existing icon loading and generation flow while
+  refreshing the lockfile to patched transitive versions.
+
+  The published package metadata now declares Node.js 22+ support to match the
+  current dependency requirements, and CI verifies the workspace on Node.js 22,
+  24, and latest.
+
+  Verified with `pnpm -C packages/cli test` and `pnpm audit --json`.
+
+- 1eae2a7: Fix the builder TypeScript compile failure with Jimp 1.x by reading the Jimp class from the module namespace under Node16/CommonJS resolution.
+- 1eae2a7: Bump direct esbuild devDependency to ^0.25.0 and extend pnpm.overrides
+  to pin patched versions for transitive packages flagged by Dependabot
+  (@xmldom/xmldom, basic-ftp, vite, lodash/lodash-es, path-to-regexp,
+  flatted, immutable, serialize-javascript, minimatch, rollup,
+  @modelcontextprotocol/sdk, @remix-run/router, react-router, validator,
+  glob, postcss, axios, follow-redirects, brace-expansion, picomatch,
+  ajv, markdown-it, mdast-util-to-hast, body-parser, js-yaml, qs, diff,
+  tmp, @eslint/plugin-kit, min-document, form-data). No code changes;
+  verified via pnpm test and visionOS Simulator build.
+
+  Follow up by upgrading the remaining direct dependency entry points that
+  were still resolving stale vulnerable lockfile paths: move
+  `react-router-dom` to ^6.30.2 in demo apps, upgrade the React SDK test
+  toolchain to vitest 3.1.2 / @vitejs/plugin-react 4.4.1, align the
+  builder package to rollup ^4.60.2, and add exact pnpm overrides for
+  stubborn `yaml`, `rollup`, `minimatch`, and `path-to-regexp` nodes so
+  the workspace lockfile resolves to patched versions consistently.
+
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+- Updated dependencies [1eae2a7]
+  - @webspatial/platform-visionos@1.8.0
+
 ## 1.6.1
 
 ### Patch Changes
