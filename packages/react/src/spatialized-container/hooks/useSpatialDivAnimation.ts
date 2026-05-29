@@ -321,11 +321,17 @@ export function useSpatialDivAnimation(
       }
 
       try {
-        await element.animateSpatialDiv({
+        const values = await element.animateSpatialDiv({
           animationId: session.animationId,
           type: 'reset',
         })
-        // The reset promise handler will update state
+        const resetValues = (values ??
+          session.config.from ??
+          {}) as SpatializedVisualValues
+        session.state = 'idle'
+        sessionRef.current = null
+        forceUpdate()
+        configRef.current.onReset?.(resetValues)
       } catch {
         // Session may already be terminal
         session.state = 'idle'
