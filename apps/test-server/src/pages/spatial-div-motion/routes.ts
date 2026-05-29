@@ -25,6 +25,12 @@ export const spatializedMotionDemoRoutes = [
     section: '2d' as const,
   },
   {
+    path: '/spatial-div-motion/timeline-percent',
+    label: '2D — timeline % keyframes',
+    description: 'decimal %, missing properties, timingFunction cascade',
+    section: '2d' as const,
+  },
+  {
     path: '/spatial-div-motion/model-container',
     label: 'Static3D — Model container',
     description: 'translate.y + rotate.y on <Model motion> (native only)',

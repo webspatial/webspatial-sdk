@@ -1,1 +1,1 @@
-export { validateSpatializedMotionConfig } from '@webspatial/core-sdk'
+export { validateSpatializedMotionConfig } from '../../../../core/src/spatialdiv/motion'

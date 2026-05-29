@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
-import {
-  evaluateMotionTimeline,
-  segmentConfigToMotionConfig,
-  type SpatializedMotionConfig as CoreSpatializedMotionConfig,
-  type SpatializedMotionSegmentConfig as CoreSpatializedMotionSegmentConfig,
-  type SpatializedPlaybackApi,
-  type SpatializedVisualValues,
+import { evaluateMotionTimeline } from './evaluate'
+import { normalizeMotionConfig } from './simple'
+import type {
+  SpatializedMotionConfig as CoreSpatializedMotionConfig,
+  SpatializedMotionSegmentConfig as CoreSpatializedMotionSegmentConfig,
+  SpatializedMotionTimelineConfig as CoreSpatializedMotionTimelineConfig,
+  SpatializedPlaybackApi,
+  SpatializedVisualValues,
 } from '@webspatial/core-sdk'
 import { createMotionBinding } from './createMotionBinding'
 import { createPlaybackApi } from './createPlaybackApi'
@@ -17,6 +18,7 @@ import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
 export type SpatializedMotionConfig =
   | CoreSpatializedMotionSegmentConfig
   | CoreSpatializedMotionConfig
+  | CoreSpatializedMotionTimelineConfig
 
 export type SpatializedMotionSegmentConfig = CoreSpatializedMotionSegmentConfig
 
@@ -27,13 +29,6 @@ export type UseSpatializedMotionResult = readonly [
 ]
 
 const EMPTY_STYLE: CSSProperties = {}
-
-function normalizeMotionConfig(
-  config: SpatializedMotionConfig,
-): CoreSpatializedMotionConfig {
-  if ('tracks' in config) return config
-  return segmentConfigToMotionConfig(config)
-}
 
 export function useSpatializedMotion(
   config: SpatializedMotionConfig,

@@ -22,13 +22,18 @@ export interface SpatializedMotionKeyframe {
   /** Time in seconds from timeline start, in `[0, duration]`. */
   at: number
   value: number
+  timingFunction?: TimingFunction
+}
+
+export type SpatializedMotionKeyframeValues = SpatializedVisualValues & {
+  timingFunction?: TimingFunction
 }
 
 /** One animatable property path and its keyframes (config-only, not a runtime handle). */
 export interface SpatializedMotionTrack {
   property: SpatializedMotionProperty
   keyframes: SpatializedMotionKeyframe[]
-  easing?: TimingFunction
+  timingFunction?: TimingFunction
 }
 
 /** Single-segment motion: `from` → `to` over `duration` (Plan A + `useSpatializedMotion.simple`). */
@@ -52,6 +57,23 @@ export interface SpatializedMotionSegmentConfig {
 export interface SpatializedMotionConfig {
   duration: number
   tracks: SpatializedMotionTrack[]
+  timingFunction?: TimingFunction
+  delay?: number
+  autoStart?: boolean
+  loop?: boolean | { reverse?: boolean }
+  playbackRate?: number
+  onStart?: () => void
+  onComplete?: (values: SpatializedVisualValues) => void
+  onStop?: (values: SpatializedVisualValues) => void
+  onReset?: (values: SpatializedVisualValues) => void
+  onError?: (error: SpatializedPlaybackError) => void
+}
+
+/** Percentage-keyframe timeline authoring shape before desugaring. */
+export interface SpatializedMotionTimelineConfig {
+  duration: number
+  timeline: Record<string, SpatializedMotionKeyframeValues>
+  timingFunction?: TimingFunction
   delay?: number
   autoStart?: boolean
   loop?: boolean | { reverse?: boolean }
@@ -72,7 +94,7 @@ export interface SpatializedMotionTimeline {
   tracks: Array<{
     property: SpatializedMotionProperty
     keyframes: SpatializedMotionKeyframe[]
-    easing: TimingFunction
+    timingFunction: TimingFunction
   }>
 }
 

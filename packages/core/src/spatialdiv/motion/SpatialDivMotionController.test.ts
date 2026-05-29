@@ -13,7 +13,7 @@ describe('SpatializedMotionController (spatialized2d) selective pause (Web)', ()
         tracks: [
           {
             property: 'transform.translate.x',
-            easing: 'linear',
+            timingFunction: 'linear',
             keyframes: [
               { at: 0, value: 0 },
               { at: 2, value: 100 },
@@ -21,7 +21,7 @@ describe('SpatializedMotionController (spatialized2d) selective pause (Web)', ()
           },
           {
             property: 'opacity',
-            easing: 'linear',
+            timingFunction: 'linear',
             keyframes: [
               { at: 0, value: 0 },
               { at: 2, value: 1 },

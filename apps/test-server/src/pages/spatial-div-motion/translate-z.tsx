@@ -28,7 +28,7 @@ export function SpatialDivMotionTranslateZPage() {
           { at: 0, value: 0 },
           { at: DURATION, value: -120 },
         ],
-        easing: 'easeInOut',
+        timingFunction: 'easeInOut',
       },
     ],
     onStart: () => {

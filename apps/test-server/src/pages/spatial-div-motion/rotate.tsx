@@ -32,7 +32,7 @@ export function SpatialDivMotionRotatePage() {
           { at: 0, value: 0 },
           { at: DURATION, value: 90 },
         ],
-        easing: 'easeInOut',
+        timingFunction: 'easeInOut',
       },
       {
         property: 'transform.rotate.z',
@@ -40,7 +40,7 @@ export function SpatialDivMotionRotatePage() {
           { at: 1, value: 0 },
           { at: DURATION, value: 180 },
         ],
-        easing: 'linear',
+        timingFunction: 'linear',
       },
     ],
     onStart: () => {
