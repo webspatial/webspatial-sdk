@@ -26,11 +26,7 @@ import {
   applyFrozenProperties,
   snapshotScalars,
 } from '../../spatialdiv/motion/mergeValues'
-import {
-  motionConfigToNativeSegment,
-  motionConfigToNativeTimeline,
-  type NativeSegmentPlayPayload,
-} from '../../spatialdiv/motion/nativeCompile'
+import { motionConfigToNativeTimeline } from '../../spatialdiv/motion/nativeCompile'
 import { motionTimeSec } from '../../spatialdiv/motion/motionTiming'
 import { normalizeMotionPropertyKeys } from '../../spatialdiv/motion/propertyKeys'
 import { validateSpatializedMotionConfig } from '../../spatialdiv/motion/validate'
@@ -674,8 +670,8 @@ export class SpatializedMotionController
     elementId: string,
   ): (ElementMotionCommand & { type: 'play' }) | null {
     const cfg = session.config
-    const segment: NativeSegmentPlayPayload | null =
-      motionConfigToNativeSegment(cfg)
+    const timeline: SpatializedMotionTimeline =
+      motionConfigToNativeTimeline(cfg)
     const base = {
       animationId: session.animationId,
       type: 'play' as const,
@@ -684,19 +680,6 @@ export class SpatializedMotionController
       loop: cfg.loop,
       playbackRate: cfg.playbackRate,
     }
-
-    if (segment) {
-      return {
-        ...base,
-        from: segment.from,
-        to: segment.to,
-        duration: segment.duration,
-        timingFunction: segment.timingFunction,
-      }
-    }
-
-    const timeline: SpatializedMotionTimeline =
-      motionConfigToNativeTimeline(cfg)
     return {
       ...base,
       timeline,
