@@ -115,6 +115,7 @@ export class SpatializedMotionController
 
   private nativeSession: NativeSession | null = null
   private nativeControlling = false
+  private nativePlayToken = 0
   private playStartWallMs = 0
   private nativePausedElapsedMs = 0
   private commandQueue: Promise<void> = Promise.resolve()
@@ -313,6 +314,17 @@ export class SpatializedMotionController
     }
 
     this.stopWebRaf()
+    const sessionState = this.nativeSession?.state
+    if (
+      !sessionState ||
+      sessionState === 'idle' ||
+      sessionState === 'finished'
+    ) {
+      const token = ++this.nativePlayToken
+      this.enqueueNative(() => this.nativePlay(token))
+      return
+    }
+
     this.enqueueNative(() => this.nativePlay())
   }
 
@@ -363,7 +375,9 @@ export class SpatializedMotionController
     const ns = this.nativeSession?.state
     if (ns && ns !== 'idle' && ns !== 'finished') {
       this.enqueueNative(() => this.nativeStop())
+      return
     }
+    this.nativePlayToken++
   }
 
   reset(): void {
@@ -385,9 +399,10 @@ export class SpatializedMotionController
     const ns = this.nativeSession?.state
     if (ns && ns !== 'idle') {
       this.enqueueNative(() => this.nativeReset())
-    } else if (this.pendingPlay || this.webState === 'queued') {
-      this.webReset()
+      return
     }
+    this.nativePlayToken++
+    this.webReset()
   }
 
   finish(): void {
@@ -409,7 +424,10 @@ export class SpatializedMotionController
     const ns = this.nativeSession?.state
     if (ns && ns !== 'idle' && ns !== 'finished') {
       this.enqueueNative(() => this.nativeFinish())
-    } else if (this.pendingPlay || this.webState === 'queued') {
+      return
+    }
+    if (!ns || ns === 'idle') {
+      this.nativePlayToken++
       this.webFinish()
     }
   }
@@ -543,7 +561,6 @@ export class SpatializedMotionController
   }
 
   private webReset(): void {
-    if (this.webState === 'idle' && !this.pendingPlay) return
     this.stopWebRaf()
     this.frozenByProperty.clear()
     this.fullPause = false
@@ -561,6 +578,22 @@ export class SpatializedMotionController
   private webStop(): void {
     if (this.webState === 'idle' && !this.pendingPlay) return
     this.stopWebRaf()
+    const wasRunning = this.webState === 'running' || this.webState === 'paused'
+    const wasQueued = this.webState === 'queued' || this.pendingPlay
+    if (!wasRunning && wasQueued) {
+      this.frozenByProperty.clear()
+      this.fullPause = false
+      this.pendingPlay = false
+      this.webState = 'idle'
+      this.webFinished = false
+      this.webStarted = false
+      this.pausedElapsedMs = 0
+      this.bump()
+      return
+    }
+    if (!wasRunning) {
+      return
+    }
     const wasFullPause = this.fullPause
     const elapsedAtStop =
       this.webState === 'queued'
@@ -584,7 +617,6 @@ export class SpatializedMotionController
   }
 
   private webFinish(): void {
-    if (this.webState === 'idle' && !this.pendingPlay) return
     this.stopWebRaf()
     this.frozenByProperty.clear()
     this.fullPause = false
@@ -774,7 +806,7 @@ export class SpatializedMotionController
     this.emitValues(evaluateMotionTimeline(this.config, t))
   }
 
-  private async nativePlay(): Promise<void> {
+  private async nativePlay(expectedToken?: number): Promise<void> {
     if (!this.kind) return
     if (!this.nativeCapable) {
       if (!this.warnedNative) {
@@ -783,6 +815,10 @@ export class SpatializedMotionController
           `[${getPolicy(this.kind).controllerLabel}] Native motion requires supports(useSpatializedMotion, ['${this.kind}']).`,
         )
       }
+      return
+    }
+
+    if (expectedToken !== undefined && expectedToken !== this.nativePlayToken) {
       return
     }
 
@@ -1007,7 +1043,6 @@ export class SpatializedMotionController
     const element = this.element
     if (!element) {
       session.state = 'finished'
-      this.nativeSession = null
       this.nativeControlling = false
       this.bump()
       const values = evaluateMotionTimeline(
@@ -1025,7 +1060,6 @@ export class SpatializedMotionController
         type: 'finish',
       })
       session.state = 'finished'
-      this.nativeSession = null
       this.nativeControlling = false
       this.bump()
       const output =
@@ -1035,7 +1069,6 @@ export class SpatializedMotionController
       this.config.onComplete?.(output)
     } catch {
       session.state = 'finished'
-      this.nativeSession = null
       this.nativeControlling = false
       this.bump()
       const fallback = evaluateMotionTimeline(
@@ -1065,6 +1098,7 @@ export class SpatializedMotionController
     }
     this.nativeSession = null
     this.nativeControlling = false
+    this.nativePlayToken++
     this.pendingPlay = false
     this.bump()
   }
