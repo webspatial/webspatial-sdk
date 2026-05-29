@@ -1,5 +1,28 @@
 # @webspatial/core-sdk
 
+## 1.8.0
+
+### Minor Changes
+
+- fdc1e85: The Core SDK lets you query WebSpatial runtime capabilities and shell versions at runtime (`supports`, `getRuntime`) and resolve JSB-style embedded shells via `resolveJsbAdapterPlatform`. The built-in Android platform adapter is removed from core—integrate Android through your host shell instead.
+
+  The React SDK adds runtime gating (`noRuntime`, `webSpatialRuntime`) and updates spatialized components and related hooks so behavior matches runtime availability.
+
+- 9801a07: Add lazy loading support to Model
+- 550b3fe: Add currentTime property to Model to read and seek animation time
+- 23b353e: Export `CapabilityKey` from core runtime and re-export it from the React SDK so app code can type capability checks via `@webspatial/react-sdk` without importing `@webspatial/core-sdk` directly.
+- 9be9a9f: add poster attribute to <Model>
+- 68c3fdd: Add loadable texture resources for Dynamic 3D: core `SpatialTextureResource`, `CreateTexture` / `UpdateTextureProperties`, and `textureId` on unlit materials; React `<Texture>` plus `UnlitMaterial` wiring that resolves logical ids to platform ids; VisionOS async `TextureResource` loading and scene handlers. Test-server includes a textured unlit box demo; Dynamic 3D PRD documents textures and trims out-of-scope sections.
+
+### Patch Changes
+
+- 8e5209e: Remove unused local variables and imports flagged by CodeQL quality checks.
+- fa404a9: Avoid exporting `global.d.ts` as a runtime module from `@webspatial/core-sdk`, so stricter bundlers and local `file:`/workspace consumers can resolve the built package correctly.
+- 30357a3: fix: setting currentTime to greater than Model animation duration
+- e95d4bd: Fix Model ready promise not working
+- 0932bf3: Split **picoOS** capability rows from visionOS in `CAPABILITY_TABLE`: `supports('xrInnerDepth')` and `supports('xrOuterDepth')` are **false** for PicoWebApp **0.1.1** and **0.1.2**; visionOS shell rows are unchanged.
+- 04c42b5: Refactor spatial host integration by introducing explicit platform capability APIs and a shared `spatial-host` facade. This simplifies scene/div/attachment call paths, removes redundant command wrappers, and improves platform adapter robustness for VisionOS and Pico OS error handling.
+
 ## 1.6.1
 
 ### Patch Changes
