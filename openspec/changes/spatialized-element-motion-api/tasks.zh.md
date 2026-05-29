@@ -112,6 +112,16 @@
 - [x] Native 路径：校验 `stop()` / `reset()` / `finish()` 与 Web 路径语义一致，且不会互相吞指令
 - [x] 单元测试：补充 `idle.reset()`、`idle.finish()` 与终止命令独立性的回归覆盖
 
+## Phase 9c — useSpatializedMotion 的 canonical tracks 执行路径收敛
+
+- [x] 更新 `proposal.md` 和 `proposal.zh.md`，明确 `useSpatializedMotion` 的所有 authoring 形状（`from/to`、`timeline`、`tracks`）都会编译为 canonical `tracks`
+- [x] 更新 `design.md` 和 `design.zh.md`，明确统一 motion 路径执行 canonical `tracks`，并移除 `useSpatializedMotion` 会降级到 native segment 的描述
+- [x] 更新 `specs/spatialized-2d-motion/spec.md` 和 `.zh.md`，移除 native segment fallback / optimization 表述，并要求 native `useSpatializedMotion` 走 canonical tracks 路径
+- [x] 更新 `specs/legacy-session-animation/spec.md` 和 `.zh.md`，将旧版 native segment 命令严格限定在 `useAnimation` 兼容路径内
+- [x] 更新 `specs/spatialized-element-motion/spec.md` 和 `.zh.md`，补充 native `useSpatializedMotion` 持续执行 canonical tracks 模型
+- [ ] Controller bridge native manager 跟进：移除 `useSpatializedMotion` 执行路径中的 segment downgrade，同时保持 legacy `useAnimation` 行为独立
+- [ ] Tests 跟进：覆盖 `from/to`、`timeline`、`tracks` 三种 authoring 形状最终进入同一 canonical tracks native 路径
+
 ## Phase 10 — Timeline 百分比关键帧配置 + timingFunction 统一
 
 - [ ] 类型：`SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`

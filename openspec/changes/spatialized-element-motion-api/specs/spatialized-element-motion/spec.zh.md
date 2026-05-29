@@ -106,7 +106,7 @@ Hook MUST 接受三种互斥配置形状之一：
 2. **Tracks 配置**（高级）：`{ duration, tracks: [{ property, keyframes: [{ at, value, timingFunction? }], timingFunction? }], timingFunction? }`
 3. **Timeline 配置**（CSS @keyframes 风格）：`{ duration, timeline: { "0%": { ...values, timingFunction? }, ... "100%": { ...values } }, timingFunction? }`
 
-在同一配置对象中同时传递 `from`/`to`、`tracks`、`timeline` 中多于一项 MUST 是类型错误（判别联合）。内部实现中，段配置和 timeline 配置 MUST 编译为 tracks 后再执行。
+在同一配置对象中同时传递 `from`/`to`、`tracks`、`timeline` 中多于一项 MUST 是类型错误（判别联合）。内部实现中，段配置和 timeline 配置 MUST 编译为 tracks 后再执行。当 `useSpatializedMotion` 使用 native 播放时，这条统一路径 MUST 持续执行 canonical tracks 模型，且 MUST NOT 降级到旧版 native segment 命令。
 
 所有 kind MUST 在所有配置形状中使用视觉 transform 路径（`transform.translate.*`、`opacity` 等）。
 

@@ -96,25 +96,35 @@ When the native motion backend is not active, the SDK MUST use a **Web backend**
 
 ---
 
-### Requirement: Native timeline play (Phase 2b)
+### Requirement: Native play uses the canonical tracks path
 
-The bridge `play` command MUST accept an optional `timeline` field. When `timeline` is present, native MUST evaluate that document. When absent, native MUST use existing `from`/`to` segment interpolation.
+For `useSpatializedMotion`, the bridge `play` command MUST carry the canonical tracks document for native execution. Native MUST evaluate that tracks document and MUST NOT fall back to legacy `from`/`to` segment interpolation for this API.
 
-#### Scenario: Wire shape matches motion config
+#### Scenario: Wire shape matches the canonical tracks model
 
-- **WHEN** JS sends `play` with `timeline`
-- **THEN** `timeline` MUST include `duration`, optional `delay`, optional `playbackRate`, optional `loop`, and non-empty `tracks`
+- **WHEN** JS sends native `play` for `useSpatializedMotion`
+- **THEN** the payload MUST include the canonical tracks document with `duration`, optional `delay`, optional `playbackRate`, optional `loop`, and non-empty `tracks`
 - **AND** each track MUST include `property`, `keyframes` with `at` in seconds, and `timingFunction`
 
-#### Scenario: Segment and timeline are mutually exclusive
+#### Scenario: from/to authoring shape compiles to tracks before native send
 
-- **WHEN** `play` includes `timeline` — native MUST ignore `from`/`to`
-- **WHEN** `play` omits `timeline` — native MUST use `from`/`to` segment
+- **WHEN** application code calls `useSpatializedMotion({ from, to, duration, ... })`
+- **THEN** the SDK MUST compile that authoring shape to canonical `tracks` before sending native `play`
 
-#### Scenario: Segment-equivalent timeline optimization
+#### Scenario: timeline authoring shape compiles to tracks before native send
 
-- **GIVEN** every track has exactly two keyframes at `at === 0` and `at === duration`, all tracks share one `timingFunction`
-- **THEN** the SDK MAY send native segment `from`/`to` instead of `timeline`
+- **WHEN** application code calls `useSpatializedMotion({ duration, timeline, ... })`
+- **THEN** the SDK MUST compile that authoring shape to canonical `tracks` before sending native `play`
+
+#### Scenario: tracks authoring shape stays on the same execution path
+
+- **WHEN** application code calls `useSpatializedMotion({ duration, tracks, ... })`
+- **THEN** the SDK MUST execute native playback through the same canonical tracks path without a segment downgrade
+
+#### Scenario: Segment downgrade is forbidden for useSpatializedMotion
+
+- **WHEN** the canonical tracks document is ready for native playback
+- **THEN** the SDK MUST NOT replace it with a legacy native `from`/`to` segment command
 
 ---
 

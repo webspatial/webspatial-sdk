@@ -96,25 +96,35 @@ Track `property` MUST 限于：`opacity`、`transform.translate.x/y/z`、`transf
 
 ---
 
-### Requirement: Native timeline play（Phase 2b）
+### Requirement: Native 播放使用 canonical tracks 路径
 
-Bridge `play` 命令 MUST 接受可选 `timeline` 字段。`timeline` 存在时 native MUST 评估该文档；不存在时 MUST 使用现有 `from`/`to` 段插值。
+对于 `useSpatializedMotion`，Bridge `play` 命令 MUST 携带供 native 执行的 canonical tracks 文档。Native MUST 评估该 tracks 文档，且 MUST NOT 对这个 API 回退到旧版 `from`/`to` segment 插值。
 
-#### Scenario: 线格式匹配 motion 配置
+#### Scenario: 线格式匹配 canonical tracks 模型
 
-- **WHEN** JS 发送带 `timeline` 的 `play`
-- **THEN** `timeline` MUST 包含 `duration`、可选 `delay`、可选 `playbackRate`、可选 `loop`、非空 `tracks`
+- **WHEN** JS 为 `useSpatializedMotion` 发送 native `play`
+- **THEN** payload MUST 包含 canonical tracks 文档，其中有 `duration`、可选 `delay`、可选 `playbackRate`、可选 `loop`、非空 `tracks`
 - **AND** 每条 track MUST 包含 `property`、`keyframes`（`at` 单位秒）、`timingFunction`
 
-#### Scenario: segment 与 timeline 互斥
+#### Scenario: from/to authoring 形状在发送 native 前编译为 tracks
 
-- **WHEN** `play` 包含 `timeline` — native MUST 忽略 `from`/`to`
-- **WHEN** `play` 省略 `timeline` — native MUST 使用 `from`/`to` 段
+- **WHEN** 应用代码调用 `useSpatializedMotion({ from, to, duration, ... })`
+- **THEN** SDK MUST 先将该 authoring 形状编译为 canonical `tracks`，再发送 native `play`
 
-#### Scenario: 段等价 timeline 优化
+#### Scenario: timeline authoring 形状在发送 native 前编译为 tracks
 
-- **GIVEN** 每条 track 恰好有两个 keyframe（`at === 0` 和 `at === duration`），所有 track 共享一个 `timingFunction`
-- **THEN** SDK MAY 发送 native 段 `from`/`to` 代替 `timeline`
+- **WHEN** 应用代码调用 `useSpatializedMotion({ duration, timeline, ... })`
+- **THEN** SDK MUST 先将该 authoring 形状编译为 canonical `tracks`，再发送 native `play`
+
+#### Scenario: tracks authoring 形状保持在同一执行路径
+
+- **WHEN** 应用代码调用 `useSpatializedMotion({ duration, tracks, ... })`
+- **THEN** SDK MUST 通过同一个 canonical tracks 路径执行 native 播放，不得降级成 segment
+
+#### Scenario: useSpatializedMotion 禁止 segment 降级
+
+- **WHEN** canonical tracks 文档已经为 native 播放准备完成
+- **THEN** SDK MUST NOT 用旧版 native `from`/`to` segment 命令替换它
 
 ---
 
