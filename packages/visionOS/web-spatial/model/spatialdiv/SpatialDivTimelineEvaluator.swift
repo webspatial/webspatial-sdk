@@ -5,12 +5,13 @@ import Foundation
 struct SpatialDivMotionKeyframePayload: Decodable {
     let at: Double
     let value: Double
+    let timingFunction: String?
 }
 
 struct SpatialDivMotionTrackPayload: Decodable {
     let property: String
     let keyframes: [SpatialDivMotionKeyframePayload]
-    let easing: String?
+    let timingFunction: String?
 }
 
 struct SpatialDivMotionTimelinePayload: Decodable {
@@ -76,7 +77,9 @@ final class SpatialDivTimelineEvaluator {
                 let span = b.at - a.at
                 if span <= 0 { return b.value }
                 let linear = (timeSec - a.at) / span
-                let eased = SpatialDivTimingFunction.from(name: track.easing ?? "easeInOut").evaluate(linear)
+                let eased = SpatialDivTimingFunction
+                    .from(name: a.timingFunction ?? track.timingFunction ?? "linear")
+                    .evaluate(linear)
                 return a.value + (b.value - a.value) * eased
             }
         }

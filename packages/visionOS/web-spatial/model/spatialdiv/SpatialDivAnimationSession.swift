@@ -195,7 +195,7 @@ class SpatialDivAnimationSession {
     /// Delay in seconds before animation starts.
     let delay: TimeInterval
 
-    /// Timing function for easing.
+    /// Timing function used by interpolation.
     let timingFunction: SpatialDivTimingFunction
 
     /// Playback speed multiplier.

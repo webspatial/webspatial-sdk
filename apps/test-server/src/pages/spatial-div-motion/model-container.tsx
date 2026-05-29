@@ -29,7 +29,7 @@ export function SpatializedMotionModelContainerPage() {
           { at: 0, value: 0 },
           { at: DURATION, value: 0.12 },
         ],
-        easing: 'easeInOut',
+        timingFunction: 'easeInOut',
       },
       {
         property: 'transform.rotate.y',
@@ -37,7 +37,7 @@ export function SpatializedMotionModelContainerPage() {
           { at: 0, value: 0 },
           { at: DURATION, value: 90 },
         ],
-        easing: 'linear',
+        timingFunction: 'linear',
       },
     ],
     onStart: () => {

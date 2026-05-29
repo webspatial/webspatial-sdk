@@ -13,31 +13,29 @@ function readTranslateX(child: { transform?: { translation?: number[] } }) {
   return t?.[0] ?? 0
 }
 
-/** Canonical multi-track motion (matches OpenSpec acceptance). */
-function MultiTrackMotionPanel() {
+/** Canonical timeline authoring motion (matches Phase 10 acceptance). */
+function TimelinePercentMotionPanel() {
   const bindPromiseRef = React.useRef<AsyncPromise<boolean> | null>(null)
 
   const [motion, , style] = useSpatializedMotion({
-    duration: 5,
+    duration: 4,
     autoStart: true,
-    tracks: [
-      {
-        property: 'transform.translate.x',
-        keyframes: [
-          { at: 0, value: 0 },
-          { at: 5, value: 100 },
-        ],
-        easing: 'linear',
+    timingFunction: 'easeInOut',
+    timeline: {
+      '0%': {
+        opacity: 0,
+        transform: { translate: { x: 0 } },
       },
-      {
-        property: 'opacity',
-        keyframes: [
-          { at: 3, value: 0 },
-          { at: 5, value: 1 },
-        ],
-        easing: 'easeOut',
+      '50%': {
+        opacity: 0.6,
+        transform: { translate: { x: 100 } },
+        timingFunction: 'easeOut',
       },
-    ],
+      '100%': {
+        opacity: 1,
+        transform: { translate: { x: 200 } },
+      },
+    },
   })
 
   const refFC = useCallback((node: HTMLDivElement | null) => {
@@ -75,22 +73,28 @@ describe('SpatialDiv motion (Plan B)', function () {
     unmount()
   })
 
-  it('canonical multi-track translate.x advances on native timeline', async function () {
-    render(<MultiTrackMotionPanel />)
+  it('timeline authoring applies timingFunction on native timeline', async function () {
+    render(<TimelinePercentMotionPanel />)
 
-    await waitMS(800)
+    await waitMS(1000)
 
     const sceneEarly = await window.inspectCurrentSpatialScene()
     const childrenEarly = Object.values(sceneEarly.children)
     expect(childrenEarly.length).to.be.greaterThan(0)
-    const xEarly = readTranslateX(childrenEarly[0] as any)
+    const childEarly = childrenEarly[0] as any
+    const xEarly = readTranslateX(childEarly)
+    const opacityEarly = childEarly.material?.opacity ?? 0
 
-    await waitMS(2000)
+    await waitMS(1200)
 
     const sceneLater = await window.inspectCurrentSpatialScene()
     const childrenLater = Object.values(sceneLater.children)
-    const xLater = readTranslateX(childrenLater[0] as any)
+    const childLater = childrenLater[0] as any
+    const xLater = readTranslateX(childLater)
 
-    expect(xLater).to.be.greaterThan(xEarly + 5)
+    expect(xEarly).to.be.greaterThan(80)
+    expect(xEarly).to.be.lessThan(95)
+    expect(opacityEarly).to.be.greaterThan(0.45)
+    expect(xLater).to.be.greaterThan(xEarly)
   })
 })
