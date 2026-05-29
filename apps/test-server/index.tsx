@@ -96,6 +96,20 @@ import SpatializedMotionPlayStatePage from './src/pages/spatial-div-animation/pl
 import SpatialDivPerfComparisonPage from './src/pages/spatial-div-animation/perf-comparison'
 import SpatialDivLoopAnimationPage from './src/pages/spatial-div-animation/loop-animation'
 import SpatialDivNestedAnimationPage from './src/pages/spatial-div-animation/nested-animation'
+import SpatialElementMotionPage from './src/pages/spatial-element-motion/index'
+import SpatialElementMotionFadeInEntrancePage from './src/pages/spatial-element-motion/fade-in-entrance'
+import SpatialElementMotionScaleExpandPage from './src/pages/spatial-element-motion/scale-expand'
+import SpatialElementMotionOpacityFadePage from './src/pages/spatial-element-motion/opacity-fade'
+import SpatialElementMotionCombinedDelayPage from './src/pages/spatial-element-motion/combined-delay'
+import SpatialElementMotionPlaybackRatePage from './src/pages/spatial-element-motion/playback-rate'
+import SpatialElementMotionRotate3dPage from './src/pages/spatial-element-motion/rotate-3d'
+import SpatialElementMotionTransformTranslatePage from './src/pages/spatial-element-motion/transform-translate'
+import SpatialElementMotionReverseLoopPage from './src/pages/spatial-element-motion/reverse-loop'
+import SpatialElementMotionCapabilityCheckPage from './src/pages/spatial-element-motion/capability-check'
+import SpatialElementMotionPlayStatePage from './src/pages/spatial-element-motion/play-state'
+import SpatialElementMotionPerfComparisonPage from './src/pages/spatial-element-motion/perf-comparison'
+import SpatialElementMotionLoopAnimationPage from './src/pages/spatial-element-motion/loop-animation'
+import SpatialElementMotionNestedAnimationPage from './src/pages/spatial-element-motion/nested-animation'
 import SpatializedMotionHubPage from './src/pages/spatial-div-motion/index'
 import { SpatialDivMotionMultiTrackPage } from './src/pages/spatial-div-motion/multi-track'
 import { SpatialDivMotionSimpleEntrancePage } from './src/pages/spatial-div-motion/simple-entrance'
@@ -305,6 +319,62 @@ function App() {
                 <Route
                   path="/spatial-div-animation/nested-animation"
                   element={<SpatialDivNestedAnimationPage />}
+                />
+                <Route
+                  path="/spatial-element-motion"
+                  element={<SpatialElementMotionPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/fade-in-entrance"
+                  element={<SpatialElementMotionFadeInEntrancePage />}
+                />
+                <Route
+                  path="/spatial-element-motion/scale-expand"
+                  element={<SpatialElementMotionScaleExpandPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/opacity-fade"
+                  element={<SpatialElementMotionOpacityFadePage />}
+                />
+                <Route
+                  path="/spatial-element-motion/combined-delay"
+                  element={<SpatialElementMotionCombinedDelayPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/playback-rate"
+                  element={<SpatialElementMotionPlaybackRatePage />}
+                />
+                <Route
+                  path="/spatial-element-motion/rotate-3d"
+                  element={<SpatialElementMotionRotate3dPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/transform-translate"
+                  element={<SpatialElementMotionTransformTranslatePage />}
+                />
+                <Route
+                  path="/spatial-element-motion/reverse-loop"
+                  element={<SpatialElementMotionReverseLoopPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/capability-check"
+                  element={<SpatialElementMotionCapabilityCheckPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/play-state"
+                  element={<SpatialElementMotionPlayStatePage />}
+                />
+                <Route
+                  path="/spatial-element-motion/perf-comparison"
+                  element={<SpatialElementMotionPerfComparisonPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/loop-animation"
+                  element={<SpatialElementMotionLoopAnimationPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/nested-animation"
+                  element={<SpatialElementMotionNestedAnimationPage />}
                 />
                 <Route
                   path="/spatial-div-motion"
