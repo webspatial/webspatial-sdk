@@ -1,6 +1,8 @@
 import { jsxDEV as _jsxDEV, JSXSource } from 'react/jsx-dev-runtime'
-import reactJSXRuntime from 'react/jsx-runtime'
+import * as _reactJSXRuntime from 'react/jsx-runtime'
 import { createElement as reactCreateElement } from 'react'
+
+const reactJSXRuntime = (_reactJSXRuntime as any).default || _reactJSXRuntime
 // `Model`, `withSpatialized2DElementContainer`, and `withSpatialMonitor` MUST
 // resolve to the **facade** versions defined in `../facades` (not to a real
 // spatial implementation). Per spatial-lazy-load spec `tasks.md` §6.2 the
@@ -154,13 +156,15 @@ export function replaceToSpatialPrimitiveType(
 }
 
 export function jsxs(type: React.ElementType, props: unknown, key?: React.Key) {
+  console.log('--- SDK JSXS CALLED ---', type)
   type = replaceToSpatialPrimitiveType(type, props)
-  return reactJSXRuntime.jsxs(type, props, key)
+  return (reactJSXRuntime as any).jsxs(type, props, key)
 }
 
 export function jsx(type: React.ElementType, props: unknown, key?: React.Key) {
+  console.log('--- SDK JSX CALLED ---', type)
   type = replaceToSpatialPrimitiveType(type, props)
-  return reactJSXRuntime.jsx(type, props, key)
+  return (reactJSXRuntime as any).jsx(type, props, key)
 }
 
 export function jsxDEV(
