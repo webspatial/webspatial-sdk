@@ -16,10 +16,10 @@ import {
  * Verifies that independent animations on nested enable-xr divs
  * (parent / child / grandchild) work correctly:
  * - Each layer runs its own animation session independently
- * - Pause/cancel on one layer does NOT affect others
+ * - Pause/reset on one layer does NOT affect others
  * - Suppression is isolated per element
  * - Lifecycle callbacks fire independently per layer
- * - Unmounting a middle layer cancels its animation + unmounts children,
+ * - Unmounting a middle layer resets its animation + unmounts children,
  *   while the outer layer continues unaffected
  */
 
@@ -276,7 +276,7 @@ export default function NestedAnimationPage() {
             </li>
             <li>
               <strong>Interleaved control</strong>: Pause Middle → Outer and
-              Inner continue. Cancel Inner → Middle and Outer continue.
+              Inner continue. Reset Inner → Middle and Outer continue.
             </li>
             <li>
               <strong>Suppression isolation</strong>: Outer's translate.y
