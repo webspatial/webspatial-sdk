@@ -3,8 +3,8 @@
 | 元素 kind | Core 类型 | React surface | 已交付 timeline | Web RAF 降级 | Native 后端 | 能力 token |
 |-----------|-----------|---------------|----------------|-------------|-------------|-----------|
 | **2D** | `Spatialized2DElement` | `useSpatializedMotion(config)` → `[animation, api, style]` | 是 | 是 | `SpatialDivAnimationManager` | `supports('useSpatializedMotion', ['spatialized2d'])` |
-| **Static3D** | `SpatializedStatic3DElement` | `<Model motion={…}>` · `useSpatializedMotion(config)` → `[animation, api, style]` | 是 | **否** | `SpatializedContainerMotionAnimationManager` | `supports('useSpatializedMotion', ['static3d'])` |
-| **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality motion={…}>` · `useSpatializedMotion(config)` → `[animation, api, style]` | 是 | **否** | `SpatializedContainerMotionAnimationManager` | `supports('useSpatializedMotion', ['dynamic3d'])` |
+| **Static3D** | `SpatializedStatic3DElement` | `<Model xr-animation={…}>` · `useSpatializedMotion(config)` → `[animation, api, style]` | 是 | **否** | `SpatializedContainerMotionAnimationManager` | `supports('useSpatializedMotion', ['static3d'])` |
+| **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality xr-animation={…}>` · `useSpatializedMotion(config)` → `[animation, api, style]` | 是 | **否** | `SpatializedContainerMotionAnimationManager` | `supports('useSpatializedMotion', ['dynamic3d'])` |
 
 **实现说明：** TypeScript 使用**单一** `SpatializedMotionController` 覆盖三种 kind；native 侧 Static3D/Dynamic3D 共享 `SpatializedContainerMotionAnimationManager` + `SpatializedMotionTransformSink`，2D 使用独立的 `SpatialDivAnimationManager`。
 

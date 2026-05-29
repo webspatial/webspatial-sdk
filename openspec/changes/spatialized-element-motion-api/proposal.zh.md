@@ -19,7 +19,7 @@
 2. **Plan B — Motion Timeline API**（`spatial-div-motion-api`，已归档）
    - 引入 `useSpatializedMotion(config)` 多轨 timeline + `style` outlet
    - 双后端：Web RAF 降级 + native timeline 播放
-   - 将 `animation` binding 更名为 `motion` binding，并开始回传 `style`、定义 `style` 的同步规则
+   - 将 `animation` binding 更名为 `xr-animation` binding，并开始回传 `style`、定义 `style` 的同步规则
 
 本**伞式变更**将两者合并为单一规范 surface：
 - Plan B 的 **timeline 数据模型** 为规范配置形状
@@ -39,15 +39,15 @@ const [animation, api, style] = useSpatializedMotion({
 })
 
 // 2D — 绑定到 enable-xr 节点时自动解析为 spatialized2d
-<div enable-xr style={{ width: 300, height: 200, ...style }} motion={animation}>
+<div enable-xr style={{ width: 300, height: 200, ...style }} xr-animation={animation}>
   <h2>Hello Spatial</h2>
 </div>
 
 // Static3D — 绑定到 <Model> 时自动解析为 static3d
-<Model src="robot.usdz" motion={animation} />
+<Model src="robot.usdz" xr-animation={animation} />
 
 // Dynamic3D — 绑定到 <Reality> 时自动解析为 dynamic3d
-<Reality motion={animation}>
+<Reality xr-animation={animation}>
   <Entity position={{ x: 0, y: 1, z: -2 }} />
 </Reality>
 
@@ -68,7 +68,7 @@ const [animation, api] = useAnimation({
 
 ## 目标解析（Target Resolution）
 
-Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding 携带一个**延迟目标槽位**。当 React 调和并挂载接受 `motion={animation}` 的组件时，SDK 自动解析目标：
+Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding 携带一个**延迟目标槽位**。当 React 调和并挂载接受 `xr-animation={animation}` 的组件时，SDK 自动解析目标：
 
 | 组件 | 解析目标 | `style` 行为 |
 |------|---------|------------------|
@@ -123,6 +123,6 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 ## 影响
 
 - **包**：`@webspatial/react-sdk`、`@webspatial/core-sdk`、visionOS native bridge/runtime。
-- **公共 API**：`useSpatializedMotion` hook、`SpatializedMotionConfig`、`SpatializedPlaybackApi`、`<Model>` 和 `<Reality>` 上的 `motion` binding prop。
+- **公共 API**：`useSpatializedMotion` hook、`SpatializedMotionConfig`、`SpatializedPlaybackApi`、`<Model>` 和 `<Reality>` 上的 `xr-animation` binding prop。
 - **旧版 API**：用于 SpatialDiv 的 `useAnimation` 保持可用（无破坏性变更）。
 - **破坏性变更**：无。本变更为纯增量。

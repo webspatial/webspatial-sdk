@@ -4,7 +4,7 @@
 
 ### Requirement: Umbrella defines declarative motion with bind-time target resolution
 
-The platform MUST document and implement declarative timeline motion for these targets: `spatialized2d`, `static3d`, and `dynamic3d`. Each target MUST have a sub-spec defining property whitelists, native backend, and React integration. The public hook MUST NOT require `config.kind`; the target is resolved automatically when the returned `animation` binding is passed as `motion` prop to a component (`<div enable-xr>` → spatialized2d, `<Model>` → static3d, `<Reality>` → dynamic3d). `SpatialEntity` transform timelines are out of scope for this umbrella (use existing `useAnimation`).
+The platform MUST document and implement declarative timeline motion for these targets: `spatialized2d`, `static3d`, and `dynamic3d`. Each target MUST have a sub-spec defining property whitelists, native backend, and React integration. The public hook MUST NOT require `config.kind`; the target is resolved automatically when the returned `animation` binding is passed as `xr-animation` prop to a component (`<div enable-xr>` → spatialized2d, `<Model>` → static3d, `<Reality>` → dynamic3d). `SpatialEntity` transform timelines are out of scope for this umbrella (use existing `useAnimation`).
 
 #### Scenario: Capability matrix is normative
 
@@ -212,7 +212,7 @@ The SDK MUST implement container motion with one `SpatializedMotionController` c
 
 #### Scenario: React single hook with bind-time resolution
 
-- **WHEN** authors call `useSpatializedMotion(config)` and pass `animation` to a component via `motion` prop
+- **WHEN** authors call `useSpatializedMotion(config)` and pass `animation` to a component via `xr-animation` prop
 - **THEN** the SDK MUST resolve the target from the component type and route to the same controller implementation with the matching target policy
 
 ### Requirement: Separate clip playback on Model
@@ -226,7 +226,7 @@ USD embedded animation on `SpatializedStatic3DElement` (`play`/`pause` on model 
 
 ### Requirement: Target resolved at bind time
 
-The public hook `useSpatializedMotion(config)` MUST NOT require a `kind` field in config. The returned `animation` binding MUST carry a deferred target. Target resolution MUST occur when the binding is passed as `motion` prop to a component:
+The public hook `useSpatializedMotion(config)` MUST NOT require a `kind` field in config. The returned `animation` binding MUST carry a deferred target. Target resolution MUST occur when the binding is passed as `xr-animation` prop to a component:
 
 | Component | Resolved target |
 |-----------|-----------------|
@@ -236,17 +236,17 @@ The public hook `useSpatializedMotion(config)` MUST NOT require a `kind` field i
 
 #### Scenario: Binding to enable-xr resolves 2D
 
-- **WHEN** `animation` from `useSpatializedMotion(config)` is passed as `motion` to `<div enable-xr>`
+- **WHEN** `animation` from `useSpatializedMotion(config)` is passed as `xr-animation` to `<div enable-xr>`
 - **THEN** the SDK MUST resolve target to `spatialized2d` and activate the 2D policy (Web RAF + native)
 
 #### Scenario: Binding to Model resolves static3d
 
-- **WHEN** `animation` is passed as `motion` to `<Model>`
+- **WHEN** `animation` is passed as `xr-animation` to `<Model>`
 - **THEN** the SDK MUST resolve target to `static3d` and activate native-only policy
 
 #### Scenario: Binding to Reality resolves dynamic3d
 
-- **WHEN** `animation` is passed as `motion` to `<Reality>`
+- **WHEN** `animation` is passed as `xr-animation` to `<Reality>`
 - **THEN** the SDK MUST resolve target to `dynamic3d` and activate native-only policy
 
 #### Scenario: Single binding constraint

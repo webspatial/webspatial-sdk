@@ -2,7 +2,7 @@
 
 Three `SpatializedElement` subclasses share scene placement but use **different native write paths**. The timeline evaluator, session state machine, and Portal suppression logic are shared in TypeScript; native applies samples to `element.transform` (2D / Dynamic3D) or `modelTransform` (Static3D). Entity animation remains a **separate** stack (`useAnimation` + `EntityAnimationManager`).
 
-This design unifies **author-facing** config (`SpatializedMotionConfig`, `SpatializedSegmentConfig`, `SpatializedPlaybackApi`) and routes by the **binding target** (resolved when `animation` is passed as `motion` prop to a component) to one Core controller and one React hook.
+This design unifies **author-facing** config (`SpatializedMotionConfig`, `SpatializedSegmentConfig`, `SpatializedPlaybackApi`) and routes by the **binding target** (resolved when `animation` is passed as `xr-animation` prop to a component) to one Core controller and one React hook.
 
 ## Design Evolution
 
@@ -22,7 +22,7 @@ These remain normative in the unified system.
 Plan B extended the architecture:
 - **Timeline data model**: per-property tracks with absolute-time keyframes (inspired by Three.js AnimationClip)
 - **Dual backend**: Web RAF when native unavailable, native timeline when in WebSpatial runtime
-- **Style outlet**: `style` object returned to app code for React state-driven rendering; Plan B also renamed the binding from `animation` to `motion`
+- **Style outlet**: `style` object returned to app code for React state-driven rendering; Plan B also renamed the binding from `animation` to `xr-animation`
 - **Multi-kind support**: policy-based routing for spatialized2d / static3d / dynamic3d
 
 ### Unified Architecture (this design)
@@ -43,9 +43,9 @@ The merge combines both into a single normative system with backward compatibili
 flowchart TB
   Hook["useSpatializedMotion(config)"] --> Binding["animation binding
 (target deferred)"]
-  Binding --> |"motion on enable-xr"| Resolve2D["target: spatialized2d"]
-  Binding --> |"motion on Model"| Resolve3D["target: static3d"]
-  Binding --> |"motion on Reality"| ResolveD3["target: dynamic3d"]
+  Binding --> |"xr-animation on enable-xr"| Resolve2D["target: spatialized2d"]
+  Binding --> |"xr-animation on Model"| Resolve3D["target: static3d"]
+  Binding --> |"xr-animation on Reality"| ResolveD3["target: dynamic3d"]
   Resolve2D --> Core[SpatializedMotionController]
   Resolve3D --> Core
   ResolveD3 --> Core
@@ -87,15 +87,15 @@ flowchart TB
 
 | Kind | React outlet | Binding prop | Native write path | Web RAF |
 |------|--------------|--------------|-------------------|---------|
-| 2D | `style` | `motion` on `enable-xr` node | `element.transform` + opacity + DOM | Yes |
-| Static3D | `style` unused | `motion` on `<Model>` | `modelTransform` + opacity | No |
-| Dynamic3D | `style` unused | `motion` on `<Reality>` | `element.transform` + opacity | No |
+| 2D | `style` | `xr-animation` on `enable-xr` node | `element.transform` + opacity + DOM | Yes |
+| Static3D | `style` unused | `xr-animation` on `<Model>` | `modelTransform` + opacity | No |
+| Dynamic3D | `style` unused | `xr-animation` on `<Reality>` | `element.transform` + opacity | No |
 
 ## Target Resolution
 
 The `animation` binding returned by `useSpatializedMotion` is **target-agnostic**. Target is resolved at bind time:
 
-1. React component receives `motion={animation}` prop.
+1. React component receives `xr-animation={animation}` prop.
 2. Component type determines target: `enable-xr` → `spatialized2d`, `<Model>` → `static3d`, `<Reality>` → `dynamic3d`.
 3. Controller activates the matching `MOTION_KIND_POLICIES` entry.
 4. For 2D: `style` outlet is actively driven by Web RAF or native samples. For 3D: `style` remains `{}`.
@@ -176,7 +176,7 @@ The Plan A path (`useAnimation` + `animation` prop) is retained as a thin compat
 | `opacity` | Property-level: only `opacity` sync suppressed | Session terminal (finished / stop / reset) |
 | Any `transform.*` | Transform-wide: entire `updateTransform(matrix)` suppressed | Session terminal |
 
-Suppression applies to both legacy `animation` prop sessions and `motion` binding sessions. All three termination methods (`stop`, `reset`, `finish`) release suppression.
+Suppression applies to both legacy `animation` prop sessions and `xr-animation` binding sessions. All three termination methods (`stop`, `reset`, `finish`) release suppression.
 
 ## Native Timeline Evaluation
 
