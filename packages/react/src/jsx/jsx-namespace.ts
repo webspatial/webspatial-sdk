@@ -13,6 +13,7 @@ import {
   //@ts-ignore bypass ts check for external
 } from '@webspatial/react-sdk'
 import type { SpatializedMotionBinding } from '@webspatial/core-sdk'
+import type { SpatializedMotionBindingInternal } from '../spatialized-container/motion/motionBindingTypes'
 
 import 'react'
 
@@ -112,6 +113,7 @@ export namespace WebSpatialJSX {
     style?: React.CSSProperties
     'enable-xr'?: boolean
     animation?: SpatializedMotionBinding
+    motion?: SpatializedMotionBindingInternal
     onSpatialTap?: (e: SpatialTapEvent) => void
     onSpatialDragStart?: (e: SpatialDragStartEvent) => void
     onSpatialDrag?: (e: SpatialDragEvent) => void
