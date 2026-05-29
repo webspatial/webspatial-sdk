@@ -20,20 +20,32 @@
 - **WHEN** 开发者从 `useSpatializedMotion(config)` 获得 motion 元组
 - **THEN** 返回的 `api` MUST 暴露 `play`、`pause`、`resume`、`stop`、`reset`、`finish`、`playState`、`isAnimating`、`isPaused`、`finished`，无论 `animation` 后续绑定到哪个组件
 
-#### Scenario: stop() 冻结在当前值
+#### Scenario: stop() 将 active session 冻结在当前值
 
 - **WHEN** 动画正在运行或暂停时调用 `api.stop()`
-- **THEN** style MUST 冻结在当前播放时刻的采样值，`playState` MUST 变为 `idle`，且 MUST 调用 `onStop` 并传入冻结值
+- **THEN** active session MUST 被终止，style MUST 冻结在当前播放时刻的采样值，`playState` MUST 变为 `idle`，`finished` MUST 变为 `false`，且 MUST 调用 `onStop` 并传入冻结值
 
 #### Scenario: reset() 回滚到初始值
 
-- **WHEN** 动画正在运行、暂停或已完成时调用 `api.reset()`
-- **THEN** style MUST 回滚到 `from`（初始）值，`playState` MUST 变为 `idle`，且 MUST 调用 `onReset` 并传入初始值
+- **WHEN** 调用 `api.reset()`
+- **THEN** style MUST 回滚到 `from`（初始）值，`playState` MUST 变为 `idle`，`finished` MUST 变为 `false`，且 MUST 调用 `onReset` 并传入初始值
 
 #### Scenario: finish() 跳到最终值
 
-- **WHEN** 动画正在运行或暂停时调用 `api.finish()`
-- **THEN** style MUST 跳到 `to`（最终）值，`playState` MUST 变为 `finished`，且 MUST 调用 `onComplete` 并传入最终值
+- **WHEN** 调用 `api.finish()`
+- **THEN** style MUST 跳到 `to`（最终）值，`playState` MUST 变为 `finished`，`finished` MUST 变为 `true`，且 MUST 调用 `onComplete` 并传入最终值
+
+#### Scenario: idle.reset() 不得为 no-op
+
+- **GIVEN** 动画已经处于 `idle`
+- **WHEN** 调用 `api.reset()`
+- **THEN** SDK MUST 继续发出 `from` 值，并且 MUST 保持 `playState` 为 `idle`
+
+#### Scenario: idle.finish() 不得为 no-op
+
+- **GIVEN** 动画已经处于 `idle`
+- **WHEN** 调用 `api.finish()`
+- **THEN** SDK MUST 继续发出 `to` 值，并且 MUST 将 `playState` 切换为 `finished`
 
 #### Scenario: Style 值来源遵循后端对称性
 
@@ -54,6 +66,8 @@ Config MUST 支持以下生命周期回调：
 
 每次会话终止时回调 MUST 互斥：`onComplete`、`onStop`、`onReset` 中恰好触发一个。`onError` MAY 在 native 失败时独立触发。
 
+三个终止方法 MUST 保持相互独立：`stop()` 只终止 active session 且不 seek，`reset()` 总是 seek 到起点值，`finish()` 总是 seek 到终点值。调用其中任一方法 MUST NOT 被另一个终止方法的语义吞掉或替代。
+
 #### Scenario: 自然结束触发 onComplete
 
 - **WHEN** 动画在未被中断的情况下到达 `duration`
@@ -73,6 +87,16 @@ Config MUST 支持以下生命周期回调：
 
 - **WHEN** 调用 `api.reset()`
 - **THEN** MUST 调用 `onReset` 并传入初始（`from`）值
+
+#### Scenario: stop() 和 reset() 会清除 finished 标记
+
+- **WHEN** 调用 `api.stop()` 或 `api.reset()`
+- **THEN** `finished` 标记 MUST 为 `false`
+
+#### Scenario: finish() 会设置 finished 标记
+
+- **WHEN** 调用 `api.finish()`
+- **THEN** `finished` 标记 MUST 为 `true`
 
 ### Requirement: 统一配置接受三种互斥形状
 
