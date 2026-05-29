@@ -13,12 +13,12 @@
  * - clientX/Y/Z: tap position in SpatialScene global space
  * - Works for plain, rotated, scaled, nested SpatialDivs, and Model tap
  */
+import React, { useState } from 'react'
 import {
   enableDebugTool,
   Model,
   type ModelSpatialTapEvent,
 } from '@webspatial/react-sdk'
-import React, { useState } from 'react'
 
 enableDebugTool()
 

@@ -5,7 +5,6 @@ import {
   withSpatialMonitor,
   withSpatialized2DElementContainer,
   Model,
-  Reality,
   //@ts-ignore bypass ts check for external
 } from '@webspatial/react-sdk'
 const attributeFlag = 'enable-xr'
@@ -17,7 +16,7 @@ export function replaceToSpatialPrimitiveType(
   type: React.ElementType,
   props: unknown,
 ) {
-  if (type === Model || type === Reality) {
+  if (type === Model) {
     return type
   }
 

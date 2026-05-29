@@ -1,3 +1,4 @@
+import React from 'react'
 import { enableDebugTool } from '@webspatial/react-sdk'
 import AudioTest from './AudioTest'
 

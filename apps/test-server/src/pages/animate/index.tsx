@@ -1,11 +1,12 @@
+import ReactDOM from 'react-dom/client'
 import { enableDebugTool } from '@webspatial/react-sdk'
-import { AnimeTest } from './AnimeTest'
-import { GSAPTest } from './GSAPTest'
-import { PopmotionTest } from './PopmotionTest'
-import { ReactSpringModel3DTest } from './ReactSpringModel3DTest'
-import { ReactSpringTest } from './ReactSpringTest'
 import './style.scss'
+import { PopmotionTest } from './PopmotionTest'
 import { TeenjsTest } from './TeenjsTest'
+import { GSAPTest } from './GSAPTest'
+import { AnimeTest } from './AnimeTest'
+import { ReactSpringTest } from './ReactSpringTest'
+import { ReactSpringModel3DTest } from './ReactSpringModel3DTest'
 
 enableDebugTool()
 

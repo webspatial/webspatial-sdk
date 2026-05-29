@@ -1,6 +1,7 @@
+import React, { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   BoxEntity,
-  convertCoordinate,
   enableDebugTool,
   Entity,
   EntityRef,
@@ -9,8 +10,7 @@ import {
   SpatializedElementRef,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { convertCoordinate } from '@webspatial/react-sdk'
 
 enableDebugTool()
 

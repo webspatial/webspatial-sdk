@@ -6,7 +6,7 @@ Thank you for your interest in contributing to WebSpatial! This document provide
 
 ### Required Tools
 
-- [Node.js 22+](https://nodejs.org/en/download/package-manager) and pnpm 9+ to install dependencies and run the local test website
+- [NodeJS/NPM](https://nodejs.org/en/download/package-manager) to run local test website
 - [XCode >= 15.4](https://apps.apple.com/us/app/xcode/id497799835?mt=12) (If building for VisionOS)
 - [VSCode](https://code.visualstudio.com/) Text editor (recommended)
 
@@ -25,50 +25,28 @@ Know how to build/run an Apple vision pro app in XCode
 ## Development Setup
 
 1. Clone the repository:
-
 ```sh
 git clone https://github.com/webspatial/webspatial-sdk.git
 cd webspatial-sdk
 ```
 
-2. Enable pnpm:
-
+2. Install pnpm and setup the project:
 ```sh
-corepack enable
-corepack prepare pnpm@9.0.0 --activate
+npm install pnpm -g
+pnpm setup
 ```
 
 3. Install packages and link to workspace for local development:
-
 ```sh
 npm run setup
 ```
 
 4. Start the development server:
-
 ```sh
 npm run dev
 ```
 
 5. Verify that the server is started by going to http://localhost:5173/
-
-## Local CodeQL-Aligned Checks
-
-Run the fast unused-local check before opening a PR that changes TypeScript or JavaScript:
-
-```sh
-pnpm run check:unused
-```
-
-This runs `tsc --noUnusedLocals true --noEmit` across the package, test-server, and compatibility tsconfigs. It catches stale imports, local helpers, and bindings that would otherwise show up in CodeQL quality checks such as `js/unused-local-variable`.
-
-For a closer local match to GitHub code scanning, install the [CodeQL CLI](https://github.com/github/codeql-cli-binaries/releases), put `codeql` on your `PATH`, then run:
-
-```sh
-pnpm run codeql:js
-```
-
-The script creates a JavaScript/TypeScript database under `.codeql-db/` and writes SARIF results to `.codeql-results/javascript-security-and-quality.sarif`. Override paths with `CODEQL_DATABASE` or `CODEQL_OUTPUT`, or set `CODEQL=/path/to/codeql` if the binary is not on `PATH`.
 
 ## Testing on Apple Vision Pro Simulator
 
@@ -159,9 +137,9 @@ This project uses the following third-party libraries:
 - [semver@7.7.1](https://github.com/npm/node-semver) - Licensed under the ISC
 - [sharp@0.33.5](https://github.com/lovell/sharp) - Licensed under the Apache-2.0
 - [tslib@2.8.1](https://github.com/Microsoft/tslib) - Licensed under the 0BSD
-- [valid-url@1.0.9](https://github.com/ogt/valid-url) - Licensed under the MIT\*
+- [valid-url@1.0.9](https://github.com/ogt/valid-url) - Licensed under the MIT*
 - [xcode@3.0.1](https://github.com/apache/cordova-node-xcode) - Licensed under the Apache-2.0
-- [@gsap/react@2.1.2](https://github.com/greensock/react) - Licensed under the MIT\*
+- [@gsap/react@2.1.2](https://github.com/greensock/react) - Licensed under the MIT*
 - [@react-spring/web@9.7.5](https://github.com/pmndrs/react-spring) - Licensed under the MIT
 - [@reduxjs/toolkit@2.8.0](https://github.com/reduxjs/redux-toolkit) - Licensed under the MIT
 - [@tailwindcss/typography@0.5.16](https://github.com/tailwindlabs/tailwindcss-typography) - Licensed under the MIT

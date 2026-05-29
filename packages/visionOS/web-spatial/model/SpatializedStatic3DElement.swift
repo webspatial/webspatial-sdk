@@ -15,15 +15,7 @@ class SpatializedStatic3DElement: SpatializedElement {
     var loop: Bool = false
     var animationPaused: Bool = true
     var playbackRate: Double = 1.0
-    /// Requested seek position in seconds. Setting it triggers a seek in
-    /// `SpatializedStatic3DView`, which clears it back to `nil`.
-    var pendingSeekTime: Double?
-    var posterURL: String?
-    /// `"eager"` (default) fetches the model immediately; `"lazy"` defers
-    /// fetching until the web layer flips it back to `"eager"`.
-    var loading: String = "eager"
     var allSources: [ModelSource] {
-        guard loading == "eager" else { return [] }
         return if let modelURL {
             [ModelSource(src: modelURL, type: nil)] + sources
         } else { sources }

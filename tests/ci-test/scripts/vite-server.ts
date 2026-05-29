@@ -4,7 +4,7 @@ import { MOCHA_RESULT_API } from '../src/api'
 import { Server } from 'http'
 
 export async function runViteServer(
-  option: { port?: number; mochaResultCb?: (data: TestResults) => void } = {},
+  option: { port?: number; mochaResultCb?: any } = {},
 ): Promise<Server> {
   const app = express()
 
@@ -21,7 +21,7 @@ export async function runViteServer(
   app.post(MOCHA_RESULT_API, (req, res) => {
     const data = req.body
     res.status(200).json({ message: 'Data received successfully', data })
-    option.mochaResultCb?.(data)
+    option.mochaResultCb && option.mochaResultCb(data)
   })
 
   app.use(vite.middlewares)

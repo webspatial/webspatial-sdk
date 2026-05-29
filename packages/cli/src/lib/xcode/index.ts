@@ -1,4 +1,9 @@
-import { PROJECT_DIRECTORY, PROJECT_EXPORT_DIRECTORY } from '../resource'
+import * as fs from 'fs'
+import {
+  PROJECT_DIRECTORY,
+  PROJECT_BUILD_DIRECTORY,
+  PROJECT_EXPORT_DIRECTORY,
+} from '../resource'
 import XcodeProject from './xcodeproject'
 import Xcodebuild from './xcodebuild'
 import Xcrun from './xcrun'

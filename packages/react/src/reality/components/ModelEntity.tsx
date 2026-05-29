@@ -35,9 +35,11 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
 
       const apply = async () => {
         try {
-          const materialList = (
-            await Promise.all(next.map(mid => ctx.resourceRegistry.get(mid)))
-          ).filter(Boolean) as SpatialMaterial[]
+          const materialList: SpatialMaterial[] = (
+            await Promise.all(
+              next.map(mid => ctx.resourceRegistry.get<SpatialMaterial>(mid)),
+            )
+          ).filter(Boolean)
           if (entityRef.current) {
             await entityRef.current.setMaterials(materialList)
           }
@@ -72,11 +74,13 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
 
             // Apply initial materials if specified; always record baseline for later clears.
             if (materials && materials.length > 0) {
-              const materialList = (
+              const materialList: SpatialMaterial[] = (
                 await Promise.all(
-                  materials.map(mid => ctx!.resourceRegistry.get(mid)),
+                  materials.map(mid =>
+                    ctx!.resourceRegistry.get<SpatialMaterial>(mid),
+                  ),
                 )
-              ).filter(Boolean) as SpatialMaterial[]
+              ).filter(Boolean)
               if (materialList.length > 0 && !signal.aborted) {
                 await ent.setMaterials(materialList)
               }

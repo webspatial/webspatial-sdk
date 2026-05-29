@@ -1,26 +1,8 @@
 import { ForwardedRef, useCallback, useEffect, useRef } from 'react'
 import { SpatialCustomStyleVars, SpatializedElementRef } from '../types'
-import { supports } from '@webspatial/core-sdk'
+import { BackgroundMaterialType } from '@webspatial/core-sdk'
 import { extractAndRemoveCustomProperties, joinToCSSText } from '../utils'
-import { ensureSpatialDefaultStyleInRoot } from '../StandardSpatializedContainer'
 
-/**
- * Owns the spatialized behavior installed on the standard host element and
- * keeps the host ↔ probe pair (`StandardSpatializedContainer` ↔
- * `TransformVisibilityTaskContainer`) in sync.
- *
- * The host is exposed to consumers as `ref.current` — a real `HTMLElement` —
- * with property descriptors layered on via `Object.defineProperty` (style,
- * className, removeAttribute, xrClientDepth, xrOffsetBack, extraRefProps).
- * `style.transform` / `style.visibility` writes are forwarded to the probe
- * so they reach the platform via `useSpatialTransformVisibility`.
- *
- * Several non-trivial invariants must hold for the hidden-host CSS rules to
- * keep working — `xr-spatial-default` always present as a class token,
- * `data-xr-host` always present, transform/visibility never written inline
- * on the host. See `../ARCHITECTURE.md` (Invariants) for the full list and
- * the reasoning behind each.
- */
 export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private transformVisibilityTaskContainerDom: HTMLElement | null = null
   /** Raw Standard host element (styled root). Used to mirror class onto the transform probe. */
@@ -37,9 +19,7 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   private classSyncMicrotaskQueued = false
   private ref: ForwardedRef<SpatializedElementRef<T>>
   public domProxy?: T | null
-  /** Last value dispatched to `ref` (undefined = none yet); avoids duplicate null/proxy writes. */
-  private lastOutgoingToRef: T | null | undefined = undefined
-  private installedProperties: PropertyKey[] = []
+  private styleProxy?: CSSStyleDeclaration
 
   // extre ref props, used to add extra props to ref
   private extraRefProps?: ((domProxy: T) => Record<string, unknown>) | undefined
@@ -70,31 +50,12 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
       return
     }
     this.standardClassObserver = new MutationObserver(() => {
-      // The hidden-placeholder CSS rule is scoped to
-      // `.xr-spatial-default[data-xr-host]`, so any native path that strips
-      // the class (`setAttribute('class', …)`, `classList.remove(...)`,
-      // `classList.replace(...)`, third-party DOM helpers) would un-hide the
-      // 2D host. The className descriptor only intercepts `el.className =`
-      // assignment; restore the class here so all attribute-mutation paths
-      // converge on the same invariant.
-      this.ensureSpatialDefaultClass()
       this.scheduleSyncTransformClassFromStandard()
     })
     this.standardClassObserver.observe(this.standardRawDom, {
       attributes: true,
       attributeFilter: ['class'],
     })
-  }
-
-  private ensureSpatialDefaultClass() {
-    const dom = this.standardRawDom
-    if (!dom) return
-    // Token-based check via classList rather than `indexOf('xr-spatial-default')`,
-    // so a class like `foo-xr-spatial-default-theme` does not satisfy the
-    // invariant — the CSS rule is keyed on the real `.xr-spatial-default`
-    // class token, not a substring.
-    if (dom.classList.contains('xr-spatial-default')) return
-    dom.classList.add('xr-spatial-default')
   }
 
   /**
@@ -137,255 +98,231 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   }
 
   updateStandardSpatializedContainerDom(dom: HTMLElement | null) {
+    const self = this
+
     if (!dom) {
       this.disconnectStandardClassObserver()
-      this.clearInstalledProperties()
       this.standardRawDom = null
       this.lastMirroredClassName = null
       this.domProxy = undefined
+      this.styleProxy = undefined
       this.updateDomProxyToRef()
       return
     }
 
-    if (this.standardRawDom === dom && this.domProxy) {
-      this.scheduleSyncTransformClassFromStandard()
-      return
-    }
-
-    this.clearInstalledProperties()
     this.standardRawDom = dom
-    this.domProxy = dom as SpatializedElementRef<T>
-    this.installSpatialRefBehavior(dom as SpatializedElementRef<T>)
 
-    // Make sure the spatial default stylesheet is reachable from this host.
-    // initPolyfill() injects it into `document`, but document-level rules do
-    // not cross shadow boundaries — so a host mounted inside a ShadowRoot
-    // would otherwise miss the `.xr-spatial-default[data-xr-host]` hiding
-    // rule (and the spatial CSS variable defaults). The helper is idempotent
-    // per root.
-    const root = dom.getRootNode()
-    if (root === document || root instanceof ShadowRoot) {
-      ensureSpatialDefaultStyleInRoot(root as Document | ShadowRoot)
-    }
-
-    // Attach the class observer BEFORE publishing the ref. If a user-supplied
-    // callback ref synchronously mutates the class via a native API that
-    // bypasses the className descriptor (`node.setAttribute('class', …)`,
-    // `node.classList.remove('xr-spatial-default')`, …), the resulting
-    // MutationRecord must reach the self-heal in `attachStandardClassObserver`
-    // — otherwise xr-spatial-default would be lost without restoration and
-    // the host would un-hide. Do not reorder these two calls without a
-    // regression test.
-    this.attachStandardClassObserver()
-    this.updateDomProxyToRef()
-    this.scheduleSyncTransformClassFromStandard()
-  }
-
-  private clearInstalledProperties() {
-    const dom = this.standardRawDom
-    if (!dom) return
-    for (const prop of this.installedProperties) {
-      delete (dom as any)[prop]
-    }
-    this.installedProperties = []
-  }
-
-  private defineDomProperty(
-    dom: HTMLElement,
-    prop: PropertyKey,
-    descriptor: PropertyDescriptor,
-  ) {
-    Object.defineProperty(dom, prop, {
-      configurable: true,
-      ...descriptor,
-    })
-    this.installedProperties.push(prop)
-  }
-
-  private installSpatialRefBehavior(dom: SpatializedElementRef<T>) {
-    const self = this
-
-    const rawStyle = dom.style
-    const rawRemoveProperty = rawStyle.removeProperty.bind(rawStyle)
-    const rawGetPropertyValue = rawStyle.getPropertyValue.bind(rawStyle)
-    const rawRemoveAttribute = dom.removeAttribute.bind(dom)
-    const spatialStyleProperties = ['visibility', 'transform']
-    const styleProxy = new Proxy<CSSStyleDeclaration>(rawStyle, {
-      get(target, prop) {
-        if (prop === 'visibility' || prop === 'transform') {
-          return self.transformVisibilityTaskContainerDom?.style.getPropertyValue(
-            prop as string,
-          )
-        }
-        const value = Reflect.get(target, prop)
-        if (typeof value === 'function') {
-          if (
-            prop === 'setProperty' ||
-            prop === 'removeProperty' ||
-            prop === 'getPropertyValue'
-          ) {
-            return function (this: any, ...args: any[]) {
-              const [property] = args
-
-              if (spatialStyleProperties.includes(property)) {
-                if (prop === 'setProperty') {
-                  const [, kValue, priority] = args
-                  self.transformVisibilityTaskContainerDom?.style.setProperty(
-                    property,
-                    kValue as string,
-                    priority as string | undefined,
-                  )
-                } else if (prop === 'removeProperty') {
-                  return self.transformVisibilityTaskContainerDom?.style.removeProperty(
-                    property,
-                  )
-                } else if (prop === 'getPropertyValue') {
-                  return self.transformVisibilityTaskContainerDom?.style.getPropertyValue(
-                    property,
-                  )
-                }
-                return undefined
-              }
-              return value.apply(this, args)
-            }.bind(target)
+    let cacheExtraRefProps: Record<string, unknown> | undefined
+    const domProxy = new Proxy<SpatializedElementRef<T>>(
+      dom as SpatializedElementRef<T>,
+      {
+        get(target, prop) {
+          if (prop === '__raw') {
+            return target
           }
-          return value.bind(target)
-        }
-        return value
-      },
-      set(target, prop, value) {
-        if (prop === 'visibility') {
-          self.transformVisibilityTaskContainerDom?.style.setProperty(
-            'visibility',
-            value,
-          )
-          return true
-        }
-        if (prop === 'transform') {
-          self.transformVisibilityTaskContainerDom?.style.setProperty(
-            'transform',
-            value,
-          )
-          return true
-        }
+          if (prop === 'xrClientDepth') {
+            return target.style.getPropertyValue(SpatialCustomStyleVars.depth)
+          }
+          if (prop === 'xrOffsetBack') {
+            return target.style.getPropertyValue(SpatialCustomStyleVars.back)
+          }
+          if (prop === 'style') {
+            if (!self.styleProxy) {
+              self.styleProxy = new Proxy<CSSStyleDeclaration>(target.style, {
+                get(target, prop) {
+                  if (prop === 'visibility' || prop === 'transform') {
+                    return self.transformVisibilityTaskContainerDom?.style.getPropertyValue(
+                      prop as string,
+                    )
+                  }
+                  const value = Reflect.get(target, prop)
+                  if (typeof value === 'function') {
+                    if (
+                      prop === 'setProperty' ||
+                      prop === 'removeProperty' ||
+                      prop === 'getPropertyValue'
+                    ) {
+                      return function (this: any, ...args: any[]) {
+                        const validProperties = ['visibility', 'transform']
+                        const [property] = args
 
-        if (Object.values(SpatialCustomStyleVars).includes(prop as string)) {
-          target.setProperty(prop as string, value as string)
-          return true
-        }
-        if (prop === 'cssText') {
-          // parse cssText, filter out spatialStyle like transform/visibility
-          const { extractedValues, filteredCssText } =
-            extractAndRemoveCustomProperties(
-              value as string,
-              spatialStyleProperties,
-            )
+                        if (validProperties.includes(property)) {
+                          if (prop === 'setProperty') {
+                            const [, kValue] = args
+                            self.transformVisibilityTaskContainerDom?.style.setProperty(
+                              property,
+                              kValue as string,
+                            )
+                          } else if (prop === 'removeProperty') {
+                            self.transformVisibilityTaskContainerDom?.style.removeProperty(
+                              property,
+                            )
+                          } else if (prop === 'getPropertyValue') {
+                            return self.transformVisibilityTaskContainerDom?.style.getPropertyValue(
+                              property,
+                            )
+                          }
+                        } else {
+                          return value.apply(this, args)
+                        }
+                      }.bind(target)
+                    } else {
+                      return value.bind(target)
+                    }
+                  } else {
+                    return value
+                  }
+                },
+                set(target, prop, value) {
+                  if (prop === 'visibility') {
+                    self.transformVisibilityTaskContainerDom?.style.setProperty(
+                      'visibility',
+                      value,
+                    )
+                    return true
+                  }
+                  if (prop === 'transform') {
+                    self.transformVisibilityTaskContainerDom?.style.setProperty(
+                      'transform',
+                      value,
+                    )
+                    return true
+                  }
 
-          // update cssText for transformVisibilityTaskContainerDom
-          spatialStyleProperties.forEach(key => {
-            if (extractedValues[key]) {
-              self.transformVisibilityTaskContainerDom?.style.setProperty(
-                key,
-                extractedValues[key],
-              )
-            } else {
-              rawRemoveProperty(key)
+                  if (prop === SpatialCustomStyleVars.backgroundMaterial) {
+                    target.setProperty(
+                      SpatialCustomStyleVars.backgroundMaterial,
+                      value as BackgroundMaterialType,
+                    )
+                  } else if (prop === SpatialCustomStyleVars.back) {
+                    target.setProperty(
+                      SpatialCustomStyleVars.back,
+                      value as string,
+                    )
+                  } else if (prop === SpatialCustomStyleVars.xrZIndex) {
+                    target.setProperty(
+                      SpatialCustomStyleVars.xrZIndex,
+                      value as string,
+                    )
+                  } else if (prop === SpatialCustomStyleVars.depth) {
+                    target.setProperty(
+                      SpatialCustomStyleVars.depth,
+                      value as string,
+                    )
+                  } else if (prop === 'cssText') {
+                    // parse cssText, filter out spatialStyle like back/transform/visibility/xrZIndex/backgroundMaterial
+                    const toFilteredCSSProperties = ['transform', 'visibility']
+                    const { extractedValues, filteredCssText } =
+                      extractAndRemoveCustomProperties(
+                        value as string,
+                        toFilteredCSSProperties,
+                      )
+
+                    // update cssText for transformVisibilityTaskContainerDom
+                    toFilteredCSSProperties.forEach(key => {
+                      // update cssText for transformVisibilityTaskContainerDom according to extractedValues
+                      if (extractedValues[key]) {
+                        self.transformVisibilityTaskContainerDom?.style.setProperty(
+                          key,
+                          extractedValues[key],
+                        )
+                      } else {
+                        target.removeProperty(key)
+                      }
+                    })
+
+                    const appendedCSSText = joinToCSSText({
+                      transform: 'none',
+                      visibility: 'hidden',
+                    })
+
+                    // set cssText for spatialDiv
+                    return Reflect.set(
+                      target,
+                      prop,
+                      [appendedCSSText, filteredCssText].join(';'),
+                    )
+                  }
+                  return Reflect.set(target, prop, value)
+                },
+              })
             }
-          })
 
-          const appendedCSSText = joinToCSSText({
-            transform: 'none',
-            visibility: 'hidden',
-          })
+            return self.styleProxy
+          }
 
-          return Reflect.set(
-            target,
-            prop,
-            [appendedCSSText, filteredCssText].join(';'),
-          )
-        }
-        return Reflect.set(target, prop, value)
-      },
-    })
+          if (typeof prop === 'string' && self.extraRefProps) {
+            if (!cacheExtraRefProps) {
+              cacheExtraRefProps = self.extraRefProps(domProxy)
+            }
+            const extraProps = cacheExtraRefProps
+            if (extraProps.hasOwnProperty(prop)) {
+              return extraProps[prop]
+            }
+          }
+          const value = Reflect.get(target, prop)
+          if (typeof value === 'function') {
+            if ('removeAttribute' === prop) {
+              return function (this: any, ...args: any[]) {
+                const [property] = args
+                if (property === 'style') {
+                  dom.style.cssText =
+                    'visibility: hidden; transition: none; transform: none;'
+                  if (self.transformVisibilityTaskContainerDom) {
+                    self.transformVisibilityTaskContainerDom.style.visibility =
+                      ''
+                    self.transformVisibilityTaskContainerDom.style.transform =
+                      ''
+                  }
+                  return true
+                }
+                if (property === 'class') {
+                  domProxy.className = 'xr-spatial-default'
+                  return true
+                }
+              }
+            }
 
-    this.defineDomProperty(dom, 'style', {
-      get() {
-        return styleProxy
-      },
-      set(value) {
-        styleProxy.cssText = String(value)
-      },
-    })
-
-    this.defineDomProperty(dom, 'className', {
-      get() {
-        return dom.getAttribute('class') ?? ''
-      },
-      set(value) {
-        // Always preserve the real `xr-spatial-default` class token. Without
-        // it the host loses both the spatial CSS vars and the
-        // `.xr-spatial-default[data-xr-host]` hidden-placeholder rule, which
-        // would un-hide the 2D host. Apply the value first, then re-append
-        // via classList (which uses spec-correct token semantics) so values
-        // like `foo-xr-spatial-default-theme` — substring-matching but not a
-        // real token — still trigger restoration.
-        dom.setAttribute('class', String(value))
-        if (!dom.classList.contains('xr-spatial-default')) {
-          dom.classList.add('xr-spatial-default')
-        }
-        self.scheduleSyncTransformClassFromStandard()
-      },
-    })
-
-    this.defineDomProperty(dom, 'removeAttribute', {
-      value(property: string) {
-        if (property === 'style') {
-          rawStyle.cssText =
-            'visibility: hidden; transition: none; transform: none;'
-          self.transformVisibilityTaskContainerDom?.style.removeProperty(
-            'visibility',
-          )
-          self.transformVisibilityTaskContainerDom?.style.removeProperty(
-            'transform',
-          )
-          return
-        }
-        if (property === 'class') {
-          dom.className = 'xr-spatial-default'
-          return
-        }
-        return rawRemoveAttribute(property)
-      },
-    })
-
-    if (supports('xrClientDepth')) {
-      this.defineDomProperty(dom, 'xrClientDepth', {
-        get() {
-          return rawGetPropertyValue(SpatialCustomStyleVars.depth)
+            return value.bind(target)
+          }
+          return value
         },
-      })
-    }
-    if (supports('xrOffsetBack')) {
-      this.defineDomProperty(dom, 'xrOffsetBack', {
-        get() {
-          return rawGetPropertyValue(SpatialCustomStyleVars.back)
-        },
-      })
-    }
+        set(target, prop, value) {
+          if (prop === 'className') {
+            if (value && String(value).indexOf('xr-spatial-default') === -1) {
+              value = value + ' xr-spatial-default'
+            }
+          }
 
-    if (this.extraRefProps) {
-      const extraProps = this.extraRefProps(dom)
-      for (const prop of Object.keys(extraProps)) {
-        this.defineDomProperty(dom, prop, {
-          get() {
-            return extraProps[prop]
-          },
-          set(value) {
-            extraProps[prop] = value
-          },
-        })
-      }
-    }
+          // check extraRefProps setter
+          if (typeof prop === 'string' && self.extraRefProps) {
+            if (!cacheExtraRefProps) {
+              cacheExtraRefProps = self.extraRefProps(domProxy)
+            }
+            cacheExtraRefProps[prop] = value
+          }
+
+          const ok = Reflect.set(target, prop, value)
+          if (ok && prop === 'className') {
+            self.scheduleSyncTransformClassFromStandard()
+          }
+          return ok
+        },
+      },
+    )
+    this.domProxy = domProxy
+
+    // clear styleProxy
+    this.styleProxy = undefined
+    this.updateDomProxyToRef()
+
+    // assign domProxy to dom
+    Object.assign(dom, {
+      __targetProxy: domProxy,
+    })
+
+    this.attachStandardClassObserver()
+    this.scheduleSyncTransformClassFromStandard()
   }
 
   updateTransformVisibilityTaskContainerDom(dom: HTMLElement | null) {
@@ -402,19 +339,11 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
     if (!ref) {
       return
     }
-    const next: T | null =
-      this.domProxy && this.transformVisibilityTaskContainerDom
-        ? this.domProxy
-        : null
-    if (this.lastOutgoingToRef === next) {
-      return
-    }
-    this.lastOutgoingToRef = next
-    if (next) {
+    if (this.domProxy && this.transformVisibilityTaskContainerDom) {
       if (typeof ref === 'function') {
-        ref(next)
+        ref(this.domProxy)
       } else {
-        ref.current = next
+        ref.current = this.domProxy
       }
     } else {
       if (typeof ref === 'function') {
@@ -426,12 +355,20 @@ export class SpatialContainerRefProxy<T extends SpatializedElementRef> {
   }
 
   updateRef(ref: ForwardedRef<SpatializedElementRef<T>>) {
-    if (this.ref === ref) {
-      return
-    }
     this.ref = ref
-    this.lastOutgoingToRef = undefined
-    this.updateDomProxyToRef()
+  }
+}
+
+//  hijack getComputedStyle to get raw dom
+export function hijackGetComputedStyle() {
+  const rawFn = window.getComputedStyle.bind(window)
+  window.getComputedStyle = (element, pseudoElt) => {
+    const dom = (element as any).__raw
+
+    if (dom) {
+      return rawFn(dom, pseudoElt)
+    }
+    return rawFn(element, pseudoElt)
   }
 }
 

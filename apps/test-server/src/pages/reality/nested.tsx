@@ -1,3 +1,5 @@
+import React, { useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
   enableDebugTool,
@@ -5,11 +7,10 @@ import {
   EntityRef,
   ModelAsset,
   ModelEntity,
-  Reality,
   SceneGraph,
   UnlitMaterial,
+  Reality,
 } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState } from 'react'
 
 enableDebugTool()
 

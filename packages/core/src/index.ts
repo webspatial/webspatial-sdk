@@ -1,5 +1,3 @@
-export type {} from './types/global'
-
 export { SpatialObject } from './SpatialObject'
 export { Spatial } from './Spatial'
 export { SpatialSession } from './SpatialSession'
@@ -12,7 +10,7 @@ export * as PhysicalMetrics from './physicalMetrics'
 
 export * from './reality'
 export * from './types/types'
-export * from './runtime'
+export * from './types/global.d'
 
 // side effects
 import { injectSceneHook } from './scene-polyfill'

@@ -1,3 +1,5 @@
+import ReactDOM from 'react-dom/client'
+
 import { enableDebugTool, Model } from '@webspatial/react-sdk'
 
 enableDebugTool()

@@ -1,9 +1,13 @@
 // @ts-nocheck
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 import {
-  testAddMultipleSpatialized2DElement,
   testCreateSpatialized2DElement,
+  testSpatialSceneCorner,
+  testSpatialSceneMaterial,
+  testSpatialInspect,
   testSpatialSceneInspect,
+  testAddMultipleSpatialized2DElement,
+  testAddMultipleSpatializedStatic3DElement,
 } from './jsapi'
 
 export default function JSAPITest() {

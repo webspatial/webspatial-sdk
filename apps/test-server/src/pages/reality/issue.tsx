@@ -1,5 +1,18 @@
-import { enableDebugTool } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom/client'
+import {
+  BoxEntity,
+  enableDebugTool,
+  Entity,
+  EntityRef,
+  Model,
+  ModelAsset,
+  ModelEntity,
+  // Reality,
+  SceneGraph,
+  UnlitMaterial,
+} from '@webspatial/react-sdk'
+import { Reality } from '@webspatial/react-sdk'
 
 enableDebugTool()
 
@@ -34,7 +47,7 @@ function App() {
   }
 
   // const [position, setPosition] = useState({ x: 0, y: 0, z: 0 })
-  const [, setBoxPosition] = useState({ x: 0, y: 0, z: 0 })
+  const [boxPosition, setBoxPosition] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotation, setBoxRotation] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotationOn, setBoxRotationOn] = useState(false)
   const boxAnimationRef = useRef<any>()
@@ -58,6 +71,10 @@ function App() {
 
     return () => {}
   }, [boxRotationOn])
+
+  const myRef = useRef<EntityRef>(null)
+
+  const [showModelEntity, setShowModelEntity] = useState(true)
 
   return (
     <div className="pl-5 pt-2">

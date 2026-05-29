@@ -1,5 +1,5 @@
+import React, { useRef, useState } from 'react'
 import { enableDebugTool, type SpatialDragEvent } from '@webspatial/react-sdk'
-import { useRef, useState } from 'react'
 
 enableDebugTool()
 

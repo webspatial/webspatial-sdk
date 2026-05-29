@@ -29,8 +29,6 @@ coverage
 **/dist
 temp
 .vercel
-.codeql-db
-.codeql-results
 
 # test reports
 /packages/autoTest/reports/

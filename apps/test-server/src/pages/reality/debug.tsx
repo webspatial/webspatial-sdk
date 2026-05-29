@@ -1,3 +1,4 @@
+import React, { useEffect, useRef, useState } from 'react'
 import {
   BoxEntity,
   enableDebugTool,
@@ -10,7 +11,6 @@ import {
   SpatializedElementRef,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState } from 'react'
 
 enableDebugTool()
 
@@ -66,9 +66,9 @@ export default function RealityDebug() {
     })
   }
 
-  const [boxPosition] = useState({ x: 0, y: 0, z: 0 })
+  const [boxPosition, setBoxPosition] = useState({ x: 0, y: 0, z: 0 })
   const [boxRotation, setBoxRotation] = useState({ x: 0, y: 0, z: 0 })
-  const [boxRotationOn] = useState(false)
+  const [boxRotationOn, setBoxRotationOn] = useState(false)
   const boxAnimationRef = useRef<any>()
 
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function RealityDebug() {
   const modelEntRef = useRef<EntityRef>(null)
   const boxEntRef = useRef<EntityRef>(null)
   const realityRef = useRef<SpatializedElementRef<HTMLDivElement>>(null)
-  const [showModelEntity] = useState(true)
+  const [showModelEntity, setShowModelEntity] = useState(true)
   const [showEntity, setShowEntity] = useState(true)
 
   return (

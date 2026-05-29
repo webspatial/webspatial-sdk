@@ -1,4 +1,5 @@
-import { getPlatform } from './platform-runtime'
+import { createPlatform } from './platform-adapter'
+import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialComponent } from './reality/component/SpatialComponent'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
 import { SpatialMaterial } from './reality/material/SpatialMaterial'
@@ -23,11 +24,12 @@ import {
   Vec3,
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
-  ModelLoadingMode,
   ModelSource,
-  SpatialTextureResourceOptions,
 } from './types/types'
+import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import { composeSRT } from './utils'
+
+const platform = createPlatform()
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -36,7 +38,6 @@ abstract class JSBCommand {
   async execute() {
     const param = this.getParams()
     const msg = param ? JSON.stringify(param) : ''
-    const platform = await getPlatform()
     return platform.callJSB(this.commandType, msg)
   }
 }
@@ -292,20 +293,14 @@ export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
   constructor(
     readonly modelURL?: string,
     readonly sources?: ModelSource[],
-    readonly loading: ModelLoadingMode = 'eager',
   ) {
     super()
     this.modelURL = modelURL
     this.sources = sources
-    this.loading = loading
   }
 
   protected getParams() {
-    return {
-      modelURL: this.modelURL,
-      sources: this.sources,
-      loading: this.loading,
-    }
+    return { modelURL: this.modelURL, sources: this.sources }
   }
 }
 
@@ -563,7 +558,7 @@ export class ConvertCoordinateCommand extends JSBCommand {
   commandType = 'ConvertCoordinate'
 }
 
-export class CreateTextureCommand extends JSBCommand {
+export class CreateTextureResourceCommand extends JSBCommand {
   constructor(private url: string) {
     super()
   }
@@ -572,24 +567,7 @@ export class CreateTextureCommand extends JSBCommand {
       url: this.url,
     }
   }
-  commandType = 'CreateTexture'
-}
-
-export class UpdateTexturePropertiesCommand extends SpatializedElementCommand {
-  properties: Partial<SpatialTextureResourceOptions>
-  commandType = 'UpdateTextureProperties'
-
-  constructor(
-    spatialObject: SpatialObject,
-    properties: Partial<SpatialTextureResourceOptions>,
-  ) {
-    super(spatialObject)
-    this.properties = properties
-  }
-
-  protected getExtraParams() {
-    return this.properties
-  }
+  commandType = 'CreateTextureResource'
 }
 
 export class InspectCommand extends JSBCommand {
@@ -628,6 +606,88 @@ export class CheckWebViewCanCreateCommand extends JSBCommand {
   }
 }
 
+/* WebSpatial Protocol Begin */
+abstract class WebSpatialProtocolCommand extends JSBCommand {
+  target?: string
+  features?: string
+
+  async execute(): Promise<WebSpatialProtocolResult> {
+    const query = this.getQuery()
+    return platform.callWebSpatialProtocol(
+      this.commandType,
+      query,
+      this.target,
+      this.features,
+    )
+  }
+
+  executeSync(): WebSpatialProtocolResult {
+    const query = this.getQuery()
+    return platform.callWebSpatialProtocolSync(
+      this.commandType,
+      query,
+      this.target,
+      this.features,
+    )
+  }
+
+  private getQuery() {
+    let query = undefined
+    const params = this.getParams()
+    if (params) {
+      query = Object.keys(params)
+        .map(key => {
+          const value = params[key]
+          const finalValue =
+            typeof value === 'object' ? JSON.stringify(value) : value
+          return `${key}=${encodeURIComponent(finalValue)}`
+        })
+        .join('&')
+    }
+
+    return query
+  }
+}
+
+export class createSpatialized2DElementCommand extends WebSpatialProtocolCommand {
+  commandType = 'createSpatialized2DElement'
+  constructor() {
+    super()
+  }
+  protected getParams() {
+    return {}
+  }
+}
+
+export class createSpatialSceneCommand extends WebSpatialProtocolCommand {
+  commandType = 'createSpatialScene'
+
+  constructor(
+    private url: string,
+    private config: SpatialSceneCreationOptionsInternal | undefined,
+    public target?: string,
+    public features?: string,
+  ) {
+    super()
+  }
+  protected getParams() {
+    return {
+      url: this.url,
+      config: this.config,
+    }
+  }
+}
+
+export class CreateAttachmentEntityCommand extends WebSpatialProtocolCommand {
+  commandType = 'createAttachment'
+  constructor(private options: AttachmentEntityOptions) {
+    super()
+  }
+  protected getParams() {
+    return {} // No metadata — just trigger engine/webview creation
+  }
+}
+
 export class InitializeAttachmentCommand extends JSBCommand {
   commandType = 'InitializeAttachment'
   constructor(
@@ -662,3 +722,13 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     }
   }
 }
+
+// TODO: Can crypto.randomUUID be used instead including in dev environments without https
+function uuid(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
+  })
+}
+
+/* WebSpatial Protocol End */

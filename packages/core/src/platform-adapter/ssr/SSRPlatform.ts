@@ -3,8 +3,6 @@ import {
   PlatformAbility,
   WebSpatialProtocolResult,
 } from '../interface'
-import type { SpatialSceneCreationOptionsInternal } from '../../types/internal'
-import type { AttachmentEntityOptions } from '../../types/types'
 
 export class SSRPlatform implements PlatformAbility {
   callJSB(cmd: string, msg: string): Promise<CommandResult> {
@@ -15,32 +13,11 @@ export class SSRPlatform implements PlatformAbility {
       errorMessage: undefined,
     })
   }
-
-  openSpatialSceneSync(
-    _url: string,
-    _config: SpatialSceneCreationOptionsInternal | undefined,
-    _target?: string,
-    _features?: string,
-  ): WebSpatialProtocolResult {
-    return {
-      success: true,
-      data: undefined,
-      errorCode: undefined,
-      errorMessage: undefined,
-    }
-  }
-
-  createNativeSpatialDiv(): Promise<WebSpatialProtocolResult> {
-    return Promise.resolve({
-      success: true,
-      data: undefined,
-      errorCode: undefined,
-      errorMessage: undefined,
-    })
-  }
-
-  createNativeAttachment(
-    _options?: AttachmentEntityOptions,
+  callWebSpatialProtocol(
+    schema: string,
+    query?: string,
+    target?: string,
+    features?: string,
   ): Promise<WebSpatialProtocolResult> {
     return Promise.resolve({
       success: true,
@@ -48,5 +25,19 @@ export class SSRPlatform implements PlatformAbility {
       errorCode: undefined,
       errorMessage: undefined,
     })
+  }
+  callWebSpatialProtocolSync(
+    schema: string,
+    query?: string,
+    target?: string,
+    features?: string,
+    resultCallback?: (result: CommandResult) => void,
+  ): WebSpatialProtocolResult {
+    return {
+      success: true,
+      data: undefined,
+      errorCode: undefined,
+      errorMessage: undefined,
+    }
   }
 }

@@ -1,14 +1,20 @@
+import React, { useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
   enableDebugTool,
   Entity,
+  EntityRef,
   ModelAsset,
+  ModelEntity,
   Reality,
   SceneGraph,
   SpatializedElementRef,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState } from 'react'
+
+const btnCls =
+  'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
 
 enableDebugTool()
 
