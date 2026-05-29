@@ -106,14 +106,14 @@ The `animation` binding returned by `useSpatializedMotion` is **target-agnostic*
 
 ## Termination Methods and Style Delivery
 
-Three imperative methods terminate a running (or paused) session. Each determines a distinct final style value, terminal `playState`, and lifecycle callback:
+The three terminal commands are independent. `stop()` only terminates an active session, while `reset()` and `finish()` always seek to a deterministic endpoint even if the motion is already `idle`. Each command determines a distinct final style value, `playState`, `finished` flag, and lifecycle callback:
 
-| Method | Style value | playState | Callback | Suppression |
-|--------|-------------|-----------|----------|-------------|
-| `stop()` | Current frame (frozen at invocation time) | `idle` | `onStop(values)` | Released |
-| `reset()` | From values (initial state) | `idle` | `onReset(values)` | Released |
-| `finish()` | To values (final state) | `finished` | `onComplete(values)` | Released |
-| Natural end | To values (last frame reached) | `finished` | `onComplete(values)` | Released |
+| Method | Invocation scope | Style value | playState | finished | Callback | Suppression |
+|--------|------------------|-------------|-----------|----------|----------|-------------|
+| `stop()` | Active session only | Current frame (frozen at invocation time) | `idle` | `false` | `onStop(values)` | Released |
+| `reset()` | Unconditional | From values (initial state) | `idle` | `false` | `onReset(values)` | Released |
+| `finish()` | Unconditional | To values (final state) | `finished` | `true` | `onComplete(values)` | Released |
+| Natural end | End of active playback | To values (last frame reached) | `finished` | `true` | `onComplete(values)` | Released |
 
 ### Backend-symmetric style delivery
 
@@ -127,20 +127,27 @@ Style values for termination methods follow the same dual-backend pattern as reg
 
 For `stop()`: `t` = elapsed time at invocation. For `reset()`: `t` = 0. For `finish()`: `t` = duration.
 
+`idle.reset()` MUST still emit the `from` values. `idle.finish()` MUST still emit the `to` values and move `playState` to `finished`. These commands are not aliases for each other and MUST NOT absorb each other's semantics.
+
 ### State machine transitions
 
 ```mermaid
 stateDiagram-v2
     [*] --> idle
-    idle --> running : play()
-    running --> paused : pause()
-    running --> idle : stop() / reset()
-    running --> finished : finish() / natural end
-    paused --> running : resume()
-    paused --> idle : stop() / reset()
-    paused --> finished : finish()
-    finished --> idle : reset()
-    finished --> running : play()
+    idle --> running : play
+    running --> paused : pause
+    running --> idle : stop
+    running --> idle : reset
+    running --> finished : finish
+    running --> finished : natural end
+    paused --> running : resume
+    paused --> idle : stop
+    paused --> idle : reset
+    paused --> finished : finish
+    idle --> idle : reset and emit start
+    idle --> finished : finish and emit end
+    finished --> idle : reset and emit start
+    finished --> running : play
 ```
 
 ## Lifecycle Callbacks
@@ -154,6 +161,8 @@ stateDiagram-v2
 | `onError` | Native bridge failure | `SpatializedPlaybackError` |
 
 **Mutual exclusion:** Per session termination, exactly one of `onComplete` / `onStop` / `onReset` fires. `onError` may fire independently on native failure.
+
+`stop()` and `reset()` MUST always leave `finished === false`. `finish()` and natural completion MUST always leave `finished === true`.
 
 **Alignment with industry standards:**
 - `stop()` aligns with React Spring `api.stop()` and Framer Motion `controls.stop()`

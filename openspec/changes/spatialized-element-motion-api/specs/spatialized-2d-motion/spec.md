@@ -142,13 +142,25 @@ Native MUST sample each track independently at timeline time `t`, then assemble 
 
 ### Requirement: Imperative playback and lifecycle
 
-`play`, `pause`, `stop`, `reset`, `finish`, and lifecycle callbacks MUST follow session semantics: paused `play` resumes; running `play` is no-op; `stop` freezes the current sampled values; `reset` restores start-of-session values; `finish` jumps to terminal values; `onComplete`/`onStop`/`onReset` mutual exclusion; `onError` for async native failures.
+`play`, `pause`, `stop`, `reset`, `finish`, and lifecycle callbacks MUST follow session semantics: paused `play` resumes; running `play` is no-op; `stop` freezes the current sampled values and only terminates an active session; `reset` always seeks to start-of-session values; `finish` always seeks to terminal values; `onComplete`/`onStop`/`onReset` mutual exclusion; `onError` for async native failures.
 
 #### Scenario: play is no-op while running
 
 - **GIVEN** a non-looping timeline is actively playing
 - **WHEN** `api.play()` is called again without `reset()`
 - **THEN** the call MUST be a no-op
+
+#### Scenario: idle reset still emits start values
+
+- **GIVEN** the motion is already `idle`
+- **WHEN** `api.reset()` is called
+- **THEN** the SDK MUST emit the `from` values, MUST keep `playState` at `idle`, and MUST keep `finished` as `false`
+
+#### Scenario: idle finish still emits end values
+
+- **GIVEN** the motion is already `idle`
+- **WHEN** `api.finish()` is called
+- **THEN** the SDK MUST emit the `to` values, MUST move `playState` to `finished`, and MUST set `finished` to `true`
 
 ---
 

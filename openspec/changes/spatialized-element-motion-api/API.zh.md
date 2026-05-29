@@ -70,9 +70,9 @@ interface SpatializedPlaybackApi {
   play(): void
   pause(keys?: SpatializedMotionPropertyKeys): void
   resume(keys?: SpatializedMotionPropertyKeys): void
-  stop(): void       // 停在当前值 + idle
-  reset(): void      // 回到 from 值 + idle
-  finish(): void     // 跳到 to 值 + finished
+  stop(): void       // Stop active session, keep current value, then go idle
+  reset(): void      // Always seek to from value, emit start value, then go idle
+  finish(): void     // Always seek to to value, emit end value, then go finished
   readonly isAnimating: boolean
   readonly isPaused: boolean
   readonly finished: boolean
@@ -84,12 +84,21 @@ type SpatializedMotionPlayState = 'idle' | 'queued' | 'running' | 'paused' | 'fi
 
 ### 终止方法行为对比
 
-| 方法 | Style 输出 | playState | 触发回调 | 后端行为 |
-|------|-----------|-----------|---------|---------|
-| `stop()` | 当前帧值 | `idle` | `onStop` | Web: JS 计算当前 t；Native: native 回传当前值 |
-| `reset()` | from 值 | `idle` | `onReset` | Web: JS 计算 t=0；Native: native 回传/JS fallback |
-| `finish()` | to 值 | `finished` | `onComplete` | Web: JS 计算 t=duration；Native: native 回传/JS fallback |
-| 自然结束 | to 值 | `finished` | `onComplete` | 最后一帧自然到达 |
+| 方法 | 调用范围 | Style 输出 | playState | finished | 触发回调 | 后端行为 |
+|------|----------|-----------|-----------|----------|---------|---------|
+| `stop()` | 仅 active session | 当前帧值 | `idle` | `false` | `onStop` | Web: JS 计算当前 t；Native: native 回传当前值 |
+| `reset()` | 无条件 | from 值 | `idle` | `false` | `onReset` | Web: JS 计算 t=0；Native: native 回传/JS fallback |
+| `finish()` | 无条件 | to 值 | `finished` | `true` | `onComplete` | Web: JS 计算 t=duration；Native: native 回传/JS fallback |
+| 自然结束 | active 播放自然结束 | to 值 | `finished` | `true` | `onComplete` | 最后一帧自然到达 |
+
+补充语义：
+- `stop()` 后 `finished = false`
+- `reset()` 后 `finished = false`
+- `finish()` 后 `finished = true`
+- `idle.reset()` 不是 no-op，仍需发出起点值
+- `idle.finish()` 不是 no-op，仍需发出终点值并进入 `finished`
+- `idle.stop()` 维持现状，不新增语义
+- `stop()`、`reset()`、`finish()` 互相独立，不会互相吞指令
 
 ## 5. Config Callbacks
 

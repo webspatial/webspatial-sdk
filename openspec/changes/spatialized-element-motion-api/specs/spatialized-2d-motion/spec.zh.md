@@ -142,13 +142,25 @@ Native MUST 在 timeline 时间 `t` 独立采样每条 track，然后按与 Web 
 
 ### Requirement: 命令式播放和生命周期
 
-`play`、`pause`、`stop`、`reset`、`finish` 和生命周期回调 MUST 遵循会话语义：paused 时 `play` 恢复；running 时 `play` 为 no-op；`stop` 冻结当前采样值；`reset` 恢复会话起始值；`finish` 跳到终态值；`onComplete`/`onStop`/`onReset` 互斥；`onError` 用于异步 native 失败。
+`play`、`pause`、`stop`、`reset`、`finish` 和生命周期回调 MUST 遵循会话语义：paused 时 `play` 恢复；running 时 `play` 为 no-op；`stop` 冻结当前采样值且只终止 active session；`reset` 总是 seek 到会话起始值；`finish` 总是 seek 到终态值；`onComplete`/`onStop`/`onReset` 互斥；`onError` 用于异步 native 失败。
 
 #### Scenario: running 时 play 为 no-op
 
 - **GIVEN** 非循环 timeline 正在播放
 - **WHEN** 未 `reset()` 就再次调用 `api.play()`
 - **THEN** 该调用 MUST 为 no-op
+
+#### Scenario: idle.reset() 仍然发出起点值
+
+- **GIVEN** 动画已经处于 `idle`
+- **WHEN** 调用 `api.reset()`
+- **THEN** SDK MUST 发出 `from` 值，MUST 保持 `playState` 为 `idle`，且 MUST 保持 `finished` 为 `false`
+
+#### Scenario: idle.finish() 仍然发出终点值
+
+- **GIVEN** 动画已经处于 `idle`
+- **WHEN** 调用 `api.finish()`
+- **THEN** SDK MUST 发出 `to` 值，MUST 将 `playState` 置为 `finished`，且 MUST 将 `finished` 置为 `true`
 
 ---
 
