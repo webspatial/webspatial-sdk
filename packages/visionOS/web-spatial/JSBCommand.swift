@@ -16,7 +16,6 @@ struct CreateSpatializedStatic3DElement: CommandDataProtocol {
     static let commandType: String = "CreateSpatializedStatic3DElement"
     let modelURL: String?
     let sources: [ModelSource]?
-    let loading: String?
 }
 
 struct CreateSpatializedDynamic3DElement: CommandDataProtocol {
@@ -51,12 +50,6 @@ struct CreateUnlitMaterial: CommandDataProtocol {
 struct CreateTexture: CommandDataProtocol {
     static let commandType: String = "CreateTexture"
     let url: String
-}
-
-struct UpdateTextureProperties: CommandDataProtocol {
-    static let commandType: String = "UpdateTextureProperties"
-    let id: String
-    let url: String?
 }
 
 struct CreateModelAsset: CommandDataProtocol {
@@ -157,7 +150,6 @@ struct UpdateUnlitMaterialProperties: CommandDataProtocol {
     static let commandType: String = "UpdateUnlitMaterialProperties"
     let id: String
     let color: String?
-    let textureId: String?
     let transparent: Bool?
     let opacity: Float?
 }
@@ -275,9 +267,6 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let loop: Bool?
     let animationPaused: Bool?
     let playbackRate: Double?
-    let currentTime: Double?
-    let posterURL: String?
-    let loading: String?
 }
 
 struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties {

@@ -13,7 +13,7 @@ describe('E2E Test For Webspatial SDK', function () {
 
     try {
       const server = await runViteServer({
-        mochaResultCb: data => {
+        mochaResultCb: (data: any) => {
           promise.resolve(data)
         },
       })

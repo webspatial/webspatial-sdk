@@ -1,16 +1,16 @@
+import { useRef, useState } from 'react'
+import './index.css'
 import {
   enableDebugTool,
   Model,
-  ModelSpatialDragEndEvent,
   ModelSpatialDragEvent,
   ModelSpatialDragStartEvent,
-  ModelSpatialTapEvent,
+  ModelSpatialDragEndEvent,
   SpatialDragEvent,
-  SpatialTapEvent,
   type SpatialDragStartEvent,
+  ModelSpatialTapEvent,
+  SpatialTapEvent,
 } from '@webspatial/react-sdk'
-import { useRef, useState } from 'react'
-import './index.css'
 
 enableDebugTool()
 

@@ -2,7 +2,7 @@ export class AbortResourceManager {
   private resources: { destroy: () => Promise<void> | void }[] = []
   private aborted = false
 
-  constructor(signal: AbortSignal) {
+  constructor(private signal: AbortSignal) {
     signal.addEventListener('abort', () => {
       this.aborted = true
       void this.dispose()

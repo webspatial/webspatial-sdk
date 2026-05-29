@@ -1,7 +1,7 @@
 import React, { ElementType } from 'react'
 import { SpatialID } from './SpatialID'
 import {
-  ModelLoadingMode,
+  CubeInfo,
   SpatializedElement,
   SpatialTapEvent as CoreSpatialTapEvent,
   SpatialDragEvent as CoreSpatialDragEvent,
@@ -17,15 +17,6 @@ import {
 
 export type { Point3D, Vec3 } from '@webspatial/core-sdk'
 export type { Quaternion } from '@webspatial/core-sdk'
-
-/** Connected content root for imperative mounting (portal root or web fallback host). */
-export type SpatialContentReadyContext = {
-  host: HTMLElement
-}
-
-export type SpatialContentReadyCallback = (
-  ctx: SpatialContentReadyContext,
-) => void | (() => void)
 
 /** Options for spatial pointer/gesture behavior (not DOM attributes). */
 export type SpatialEventOptions = {
@@ -73,11 +64,6 @@ export type SpatializedContainerProps<T extends SpatializedElementRef> = Omit<
   typeof SpatialID | 'onLoad' | 'onError'
 > & {
   extraRefProps?: (domProxy: T) => Record<string, unknown>
-  /**
-   * SpatialDiv only — fired when `ctx.host` is connected (portal root or web fallback host).
-   * Not part of `Model` / `Reality` public APIs.
-   */
-  onSpatialContentReady?: SpatialContentReadyCallback
 }
 
 export type SpatializedContentProps<
@@ -85,8 +71,6 @@ export type SpatializedContentProps<
   P extends ElementType,
 > = Omit<PortalSpatializedContainerProps<T>, 'spatializedContent'> & {
   spatializedElement: SpatializedElement
-  /** SpatialDiv (2D) portal content only. */
-  onSpatialContentReady?: SpatialContentReadyCallback
 }
 
 export type Spatialized2DElementContainerProps<P extends ElementType> =
@@ -94,17 +78,14 @@ export type Spatialized2DElementContainerProps<P extends ElementType> =
     React.ComponentPropsWithRef<'div'> & {
       component: P
       spatialEventOptions?: SpatialEventOptions
-      onSpatialContentReady?: SpatialContentReadyCallback
     }
 
 export type SpatializedStatic3DContainerProps =
   SpatialEventProps<SpatializedStatic3DElementRef> &
     Omit<React.ComponentPropsWithoutRef<'div'>, 'onLoad' | 'onError'> & {
       src?: string
-      poster?: string
       autoPlay?: boolean
       loop?: boolean
-      loading?: ModelLoadingMode
       children?: React.ReactNode
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
@@ -114,10 +95,8 @@ export type SpatializedStatic3DContainerProps =
 export type SpatializedStatic3DContentProps = {
   spatializedElement: SpatializedStatic3DElement
   src?: string
-  poster?: string
   autoPlay?: boolean
   loop?: boolean
-  loading?: ModelLoadingMode
   children?: React.ReactNode
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void
@@ -148,7 +127,6 @@ export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
   readonly paused: boolean
   readonly duration: number
   playbackRate: number
-  currentTime: number
 }
 
 type CurrentTarget<T extends SpatializedElementRef> = {

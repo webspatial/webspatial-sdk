@@ -114,10 +114,10 @@ export async function checkIcons(
       image = !imgUrl.startsWith('http')
         ? await loadImageFromDisk(imgUrl)
         : await loadImageFromNet(imgUrl)
-      if (image.width >= 1024 && image.height >= 1024) {
+      if (image.getWidth() >= 1024 && image.getHeight() >= 1024) {
         has1024 = true
-        if (image.width > imageSize) {
-          imageSize = image.width
+        if (image.getWidth() > imageSize) {
+          imageSize = image.getWidth()
         }
       }
     }

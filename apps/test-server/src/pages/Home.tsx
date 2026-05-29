@@ -1,5 +1,5 @@
+import React, { useEffect, useRef } from 'react'
 import { Model } from '@webspatial/react-sdk'
-import { useEffect, useRef } from 'react'
 
 export default function Home() {
   const header = useRef<HTMLDivElement>(null)

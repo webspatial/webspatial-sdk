@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 
 function createScene(container: HTMLDivElement) {
@@ -43,6 +43,14 @@ function createScene(container: HTMLDivElement) {
   }
 }
 
+function destroyScene(
+  container: HTMLDivElement,
+  renderer: THREE.WebGLRenderer,
+) {
+  container.removeChild(renderer.domElement)
+  renderer.dispose()
+}
+
 const ThreeSceneOutsideDiv = () => {
   const containerRef = useRef(null)
 
@@ -71,7 +79,7 @@ const ThreeSceneOutsideDiv = () => {
     if (readyRef.current && spatialDivElement) {
       const container = containerRef.current as any
 
-      createScene(container)
+      const { renderer } = createScene(container)
     }
   }
 

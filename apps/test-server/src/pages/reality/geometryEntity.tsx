@@ -1,18 +1,21 @@
+import React, { useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
   ConeEntity,
-  CylinderEntity,
   enableDebugTool,
   Entity,
   EntityRef,
-  PlaneEntity,
+  ModelAsset,
+  ModelEntity,
   Reality,
   SceneGraph,
   SpatializedElementRef,
   SphereEntity,
+  CylinderEntity,
+  PlaneEntity,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState } from 'react'
 
 enableDebugTool()
 
@@ -175,9 +178,13 @@ function App() {
     return () => {}
   }, [cylinderRotationOn])
 
+  const entRef = useRef<EntityRef>(null)
+  const modelEntRef = useRef<EntityRef>(null)
   const boxEntRef = useRef<EntityRef>(null)
 
   const realityRef = useRef<SpatializedElementRef<HTMLDivElement>>(null)
+
+  const [showModelEntity, setShowModelEntity] = useState(true)
 
   return (
     <div className="pl-5 pt-2">

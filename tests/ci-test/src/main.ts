@@ -6,7 +6,10 @@ import { enableDebugTool } from '@webspatial/react-sdk'
 enableDebugTool()
 
 async function runMocha(): Promise<TestResults> {
-  import.meta.glob('./specs/*.spec.tsx', { eager: true })
+  const modules = import.meta.glob('./specs/*.spec.tsx', { eager: true })
+  for (const path in modules) {
+    modules[path]
+  }
   const runner = mocha.run()
 
   const results: TestResults = {
@@ -30,7 +33,7 @@ async function runMocha(): Promise<TestResults> {
     })
   })
 
-  return new Promise(resolve => {
+  return new Promise((resolve, _) => {
     runner.on('end', function () {
       resolve(results)
     })
@@ -38,7 +41,7 @@ async function runMocha(): Promise<TestResults> {
 }
 
 async function waitWindowLoaded() {
-  return new Promise(resolve => {
+  return new Promise((resolve, _) => {
     window.onload = () => {
       resolve(null)
     }

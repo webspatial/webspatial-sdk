@@ -9,6 +9,7 @@ import type { SpatializedElementRef } from '../spatialized-container/types'
 import type { EntityRef } from '../reality'
 import type { ModelRef } from '../Model'
 import { getSession } from './getSession'
+import { SpatialID } from '../spatialized-container/SpatialID'
 
 type CoordinateConvertible =
   | Window
@@ -33,8 +34,8 @@ function resolveSpatialObjectId(target: CoordinateConvertible): string | null {
     return maybeEntity.entity?.id ?? null
   }
 
-  // SpatializedElementRef / ModelRef -> underlying SpatializedElement.id
-  const dom: any = target as any
+  // SpatializedElementRef / ModelRef -> DOM proxy to underlying SpatializedElement.id
+  const dom: any = (target as any)?.__raw ?? (target as any)
   if (dom && typeof dom === 'object') {
     const spatializedElement =
       dom.__spatializedElement ?? dom.__innerSpatializedElement?.()

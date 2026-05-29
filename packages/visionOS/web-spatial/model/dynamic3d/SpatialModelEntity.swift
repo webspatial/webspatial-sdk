@@ -9,11 +9,9 @@ class SpatialModelEntity: SpatialEntity {
 
     required init(_ modelResource: SpatialModelResource, _ _name: String = "") {
         super.init(_name)
-        modelEntity = modelResource.resource?.clone(recursive: true)
-        if let modelEntity = modelEntity {
-            addChild(modelEntity)
-            generateCollisionShapes(recursive: true)
-        }
+        modelEntity = modelResource.resource
+        addChild(modelEntity!)
+        generateCollisionShapes(recursive: true)
     }
 
     required init() {

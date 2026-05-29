@@ -51,9 +51,7 @@ describe('SpatialDiv', function () {
     const children = Object.values(spatialSceneInfo.children)
 
     expect(children.length).to.be.equal(1)
-    const firstChild = children[0] as {
-      transform: { translation: number[] }
-    }
+    const firstChild: any = children[0]
 
     console.log('dbg firstChild', firstChild)
 

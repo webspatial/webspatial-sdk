@@ -90,11 +90,11 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
             return
           }
 
-          const materialList = (await Promise.all(
+          const materialList: SpatialMaterial[] = await Promise.all(
             materials
-              ?.map(mid => ctx.resourceRegistry.get(mid))
+              ?.map(mid => ctx.resourceRegistry.get<SpatialMaterial>(mid))
               .filter(Boolean) ?? [],
-          )) as SpatialMaterial[]
+          )
           if (gen !== mutableRef.current.rebuildGen) {
             await geometry.destroy()
             return
@@ -137,11 +137,11 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
               createGeometry(geometryOptions),
             )
 
-            const materialList = (await Promise.all(
+            const materialList: SpatialMaterial[] = await Promise.all(
               materials
-                ?.map(id => ctx!.resourceRegistry.get(id))
+                ?.map(id => ctx!.resourceRegistry.get<SpatialMaterial>(id))
                 .filter(Boolean) ?? [],
-            )) as SpatialMaterial[]
+            )
             const modelComponent = await manager.addResource(() =>
               ctx!.session.createModelComponent({
                 mesh: geometry,

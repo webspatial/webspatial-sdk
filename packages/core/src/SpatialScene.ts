@@ -1,4 +1,8 @@
-import { SpatialSceneProperties, Vec3 } from './types/types'
+import {
+  SpatialSceneCreationOptions,
+  SpatialSceneProperties,
+  Vec3,
+} from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import {
   AddSpatializedElementToSpatialScene,

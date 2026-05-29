@@ -1,6 +1,6 @@
 import { CommandResult } from './interface'
 
-export function CommandResultSuccess<TData>(data: TData): CommandResult<TData> {
+export function CommandResultSuccess(data: any): CommandResult {
   return {
     success: true,
     data,
@@ -12,7 +12,7 @@ export function CommandResultSuccess<TData>(data: TData): CommandResult<TData> {
 export function CommandResultFailure(
   errorCode: string,
   errorMessage = '',
-): CommandResult<undefined> {
+): CommandResult {
   return {
     success: false,
     data: undefined,

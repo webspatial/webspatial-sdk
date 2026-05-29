@@ -2,7 +2,11 @@ import { Spatialized2DElement, SpatializedElement } from '@webspatial/core-sdk'
 import { createContext } from 'react'
 import { SpatializedContainerObject } from './SpatializedContainerContext'
 import { parseTransformOrigin } from '../utils'
-import { SpatialCustomStyleVars, SpatialTransformVisibility } from '../types'
+import {
+  SpatialCustomStyleVars,
+  Point3D,
+  SpatialTransformVisibility,
+} from '../types'
 import { getSession } from '../../utils'
 
 type DomRect = {

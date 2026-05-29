@@ -1,16 +1,16 @@
+import React, { useRef, useState, useEffect } from 'react'
 import {
+  Reality,
+  World,
+  Entity,
   Box,
+  Plane,
+  Sphere,
   Cone,
   Cylinder,
-  Entity,
   Material,
-  Plane,
-  Reality,
-  Sphere,
-  World,
   enableDebugTool,
 } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState } from 'react'
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'

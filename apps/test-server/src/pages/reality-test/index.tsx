@@ -1,3 +1,5 @@
+import React, { useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom/client'
 import {
   BoxEntity,
   Reality,
@@ -5,7 +7,6 @@ import {
   UnlitMaterial,
   enableDebugTool,
 } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState } from 'react'
 import { Particle } from './particle'
 
 export interface EntityInfo {

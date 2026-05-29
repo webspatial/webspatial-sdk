@@ -1,7 +1,7 @@
 export class AsyncPromise<T> {
   private promise: Promise<T>
   private promiseResolve?: (value: T | PromiseLike<T>) => void
-  private promiseReject?: (reason?: unknown) => void
+  private promiseReject?: (reason?: any) => void
 
   constructor() {
     this.promise = new Promise((res, rej) => {
@@ -18,7 +18,7 @@ export class AsyncPromise<T> {
     this.promiseResolve!(data)
   }
 
-  reject(error: unknown) {
+  reject(error: any) {
     this.promiseReject!(error)
   }
 }

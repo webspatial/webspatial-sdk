@@ -23,9 +23,7 @@ jobs:
     timeout-minutes: 20
     env:
       BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-      START_TIME: ${{ github.run_started_at }}
       GITHUB_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      PUPPETEER_SKIP_DOWNLOAD: '1'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,24 +39,24 @@ jobs:
           node-version: 'latest'
           cache: 'pnpm'
 
-      - name: Setup Chrome for Puppeteer
-        id: setup-chrome
-        uses: browser-actions/setup-chrome@v2
-        with:
-          chrome-version: 145.0.7632.77
-          install-dependencies: true
-
-      - name: Export Chrome path
-        run: |
-          echo "PUPPETEER_EXECUTABLE_PATH=${{ steps.setup-chrome.outputs.chrome-path }}" >> $GITHUB_ENV
-          ${{ steps.setup-chrome.outputs.chrome-path }} --version
+      - name: Record START_TIME
+        run: echo "START_TIME=$(date -u '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
 
       - name: Install autotest and build required packages
-        run: pnpm run test:auto:setup-local
+        run: pnpm -F autotest run setup-local
+
+      - name: Cache Puppeteer browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/puppeteer
+          key: ${{ runner.os }}-puppeteer-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Chrome for Puppeteer
+        run: pnpm --filter autotest exec puppeteer browsers install chrome
 
       - name: Run mocha in autoTest package
         continue-on-error: true
-        run: pnpm run test:auto
+        run: pnpm --filter autotest run test
 
       - name: Upload test report artifact
         id: upload_report
@@ -66,7 +64,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: autotest-report
-          path: tests/autoTest/reports
+          path: packages/autoTest/reports
           if-no-files-found: ignore
 
       - name: Construct artifact download URL

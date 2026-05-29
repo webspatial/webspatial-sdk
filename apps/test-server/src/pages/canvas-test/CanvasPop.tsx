@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 
 function createScene(canvas: HTMLCanvasElement) {
@@ -42,7 +43,13 @@ function createScene(canvas: HTMLCanvasElement) {
   }
 }
 
+function destroyScene(renderer: THREE.WebGLRenderer) {
+  renderer.dispose()
+}
+
 const CanvasPop = () => {
+  const refCanvas = useRef(null)
+
   // useEffect(() => {
   //   const canvas = refCanvas.current as any
 
@@ -56,7 +63,7 @@ const CanvasPop = () => {
   const refCallback = (refCanvas: HTMLCanvasElement | null) => {
     console.log('dbg refCallback ', refCanvas)
     if (refCanvas) {
-      createScene(refCanvas)
+      const { renderer } = createScene(refCanvas)
     }
   }
 
