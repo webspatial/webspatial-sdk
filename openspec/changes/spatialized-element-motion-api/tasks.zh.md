@@ -104,13 +104,13 @@
 
 - [x] 将语义澄清任务从 Phase 9 挪出，保持 Phase 9 只覆盖原始 stop/reset/finish 扩展范围
 - [x] 更新伞式 spec、2D spec、design 与 API 摘要，明确 `idle.reset()` 发出起点值、`idle.finish()` 发出终点值，并保持双语文档一致
-- [ ] Controller：调整 `stop()`，确保其只终止 active session，不 seek 到起点或终点
-- [ ] Controller：调整 `reset()`，确保当前 `playState` 为 `idle` 时仍会 emit 起点值
-- [ ] Controller：调整 `finish()`，确保当前 `playState` 为 `idle` 时仍会 emit 终点值并进入 `finished`
-- [ ] Controller：对齐 `finished` 标记语义，确保 `stop()` / `reset()` 强制为 `false`，`finish()` 强制为 `true`
-- [ ] Web 路径：校验 idle 态 `reset()` / `finish()` 仍通过 style outlet 发值
-- [ ] Native 路径：校验 `stop()` / `reset()` / `finish()` 与 Web 路径语义一致，且不会互相吞指令
-- [ ] 单元测试：补充 `idle.reset()`、`idle.finish()` 与终止命令独立性的回归覆盖
+- [x] Controller：调整 `stop()`，确保其只终止 active session，不 seek 到起点或终点
+- [x] Controller：调整 `reset()`，确保当前 `playState` 为 `idle` 时仍会 emit 起点值
+- [x] Controller：调整 `finish()`，确保当前 `playState` 为 `idle` 时仍会 emit 终点值并进入 `finished`
+- [x] Controller：对齐 `finished` 标记语义，确保 `stop()` / `reset()` 强制为 `false`，`finish()` 强制为 `true`
+- [x] Web 路径：校验 idle 态 `reset()` / `finish()` 仍通过 style outlet 发值
+- [x] Native 路径：校验 `stop()` / `reset()` / `finish()` 与 Web 路径语义一致，且不会互相吞指令
+- [x] 单元测试：补充 `idle.reset()`、`idle.finish()` 与终止命令独立性的回归覆盖
 
 ## Phase 10 — Timeline 百分比关键帧配置 + timingFunction 统一
 
