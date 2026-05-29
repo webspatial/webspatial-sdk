@@ -124,21 +124,21 @@
 
 ## Phase 10 — Timeline percentage keyframe config + timingFunction unification
 
-- [ ] Types: `SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`
-- [ ] Types: `SpatializedMotionTimelineConfig` — config shape with `timeline: Record<string, SpatializedMotionKeyframeValues>`
-- [ ] Types: `SpatializedMotionKeyframe.timingFunction?` — per-keyframe optional field
-- [ ] Types: `SpatializedMotionTrack` — rename `easing` to `timingFunction`
-- [ ] Types: `SpatializedMotionConfig.timingFunction?` — global config-level field
-- [ ] Types: `SpatializedMotionTimeline` (wire format) — track `easing` to `timingFunction`
-- [ ] Core: `desugarTimelineConfig()` — parse `timeline` percentage keys into tracks
-- [ ] Core: Config discriminator — detect timeline vs tracks vs from/to, route accordingly
-- [ ] Core: `evaluateMotionTimeline` — implement 3-level `timingFunction` cascade (keyframe > track > config > 'linear')
-- [ ] Core: Validation — reject <2 percentage keys, invalid keys, mutual exclusion with tracks/from-to
-- [ ] Native wire: decide backward-compat strategy (keep wire `easing` + JS-layer mapping, or rename)
-- [ ] Codebase: rename all `easing` references to `timingFunction` in source + tests
-- [ ] Unit tests: timeline config parsing, decimal %, missing properties, single-frame rejection
-- [ ] Unit tests: 3-level timingFunction cascade
-- [ ] Demo pages: add timeline percentage keyframe examples
+- [x] Types: `SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`
+- [x] Types: `SpatializedMotionTimelineConfig` — config shape with `timeline: Record<string, SpatializedMotionKeyframeValues>`
+- [x] Types: `SpatializedMotionKeyframe.timingFunction?` — per-keyframe optional field
+- [x] Types: `SpatializedMotionTrack` — rename `easing` to `timingFunction`
+- [x] Types: `SpatializedMotionConfig.timingFunction?` — global config-level field
+- [x] Types: `SpatializedMotionTimeline` (wire format) — track `easing` to `timingFunction`
+- [x] Core: `desugarTimelineConfig()` — parse `timeline` percentage keys into tracks
+- [x] Core: Config discriminator — detect timeline vs tracks vs from/to, route accordingly
+- [x] Core: `evaluateMotionTimeline` — implement 3-level `timingFunction` cascade (keyframe > track > config > 'linear')
+- [x] Core: Validation — reject <2 percentage keys, invalid keys, mutual exclusion with tracks/from-to
+- [x] Native wire: decide backward-compat strategy (keep wire `easing` + JS-layer mapping, or rename)
+- [x] Codebase: rename all `easing` references to `timingFunction` in source + tests
+- [x] Unit tests: timeline config parsing, decimal %, missing properties, single-frame rejection
+- [x] Unit tests: 3-level timingFunction cascade
+- [x] Demo pages: add timeline percentage keyframe examples
 
 ## Phase 11 — Binding prop rename (`motion` → `xr-animation`)
 

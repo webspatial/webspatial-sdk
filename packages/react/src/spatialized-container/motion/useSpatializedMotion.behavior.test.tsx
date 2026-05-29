@@ -93,7 +93,7 @@ describe('useSpatializedMotion tuple api', () => {
               { at: 0, value: 0 },
               { at: 5, value: 100 },
             ],
-            easing: 'linear',
+            timingFunction: 'linear',
           },
         ],
       }),
@@ -117,6 +117,44 @@ describe('useSpatializedMotion tuple api', () => {
     expect(String(result.current[2].transform)).toContain('translate3d(30px')
     expect(result.current[1].playState).toBe('paused')
     vi.useRealTimers()
+  })
+
+  test('timeline authoring shape compiles before playback', async () => {
+    const { result } = renderHook(() =>
+      useSpatializedMotion({
+        duration: 4,
+        autoStart: false,
+        timeline: {
+          '0%': {
+            opacity: 0,
+            transform: { translate: { y: 24 } },
+            timingFunction: 'easeOut',
+          },
+          '12.5%': {
+            opacity: 0.25,
+          },
+          '100%': {
+            opacity: 1,
+            transform: { translate: { y: 0 } },
+          },
+        },
+      }),
+    )
+
+    expect(result.current[2].opacity).toBe(0)
+    expect(String(result.current[2].transform)).toContain('24px')
+
+    await act(async () => {
+      result.current[0].__setElement?.(
+        createMockElement() as any,
+        'spatialized2d',
+      )
+      result.current[1].play()
+    })
+
+    await waitFor(() => {
+      expect(result.current[1].playState).toBe('running')
+    })
   })
 
   test('autoStart works under React StrictMode (dev remount)', async () => {

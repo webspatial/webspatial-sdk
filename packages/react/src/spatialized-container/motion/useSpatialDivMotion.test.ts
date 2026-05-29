@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { evaluateMotionTimeline } from './evaluate'
-import { segmentConfigToMotionConfig } from './simple'
+import { desugarTimelineConfig, segmentConfigToMotionConfig } from './simple'
 import { valuesToMotionStyle } from './style'
 import { validateSpatializedMotionConfig } from './validate'
 
@@ -14,7 +14,7 @@ describe('evaluateMotionTimeline', () => {
           { at: 0, value: 0 },
           { at: 5, value: 100 },
         ],
-        easing: 'linear' as const,
+        timingFunction: 'linear' as const,
       },
       {
         property: 'opacity' as const,
@@ -22,7 +22,7 @@ describe('evaluateMotionTimeline', () => {
           { at: 3, value: 0 },
           { at: 5, value: 1 },
         ],
-        easing: 'linear' as const,
+        timingFunction: 'linear' as const,
       },
     ],
   }
@@ -54,7 +54,7 @@ describe('evaluateMotionTimeline', () => {
             { at: 0, value: 0 },
             { at: 4, value: -120 },
           ],
-          easing: 'linear' as const,
+          timingFunction: 'linear' as const,
         },
       ],
     }
@@ -74,7 +74,7 @@ describe('evaluateMotionTimeline', () => {
             { at: 0, value: 0 },
             { at: 4, value: 90 },
           ],
-          easing: 'linear' as const,
+          timingFunction: 'linear' as const,
         },
         {
           property: 'transform.rotate.z' as const,
@@ -82,7 +82,7 @@ describe('evaluateMotionTimeline', () => {
             { at: 1, value: 0 },
             { at: 4, value: 180 },
           ],
-          easing: 'linear' as const,
+          timingFunction: 'linear' as const,
         },
       ],
     }
@@ -124,6 +124,95 @@ describe('segmentConfigToMotionConfig', () => {
       { at: 0, value: 0 },
       { at: 0.6, value: 1 },
     ])
+  })
+})
+
+describe('timeline config parsing and timingFunction cascade', () => {
+  test('timeline parsing handles decimal percentages and missing properties', () => {
+    const normalized = desugarTimelineConfig({
+      duration: 10,
+      timeline: {
+        '0%': { opacity: 0, transform: { translate: { x: 0 } } },
+        '30.33%': { opacity: 0.5 },
+        '100%': { opacity: 1, transform: { translate: { x: 100 } } },
+      },
+    })
+    expect(normalized.tracks).toHaveLength(2)
+
+    const opacityTrack = normalized.tracks.find(
+      track => track.property === 'opacity',
+    )
+    expect(opacityTrack?.keyframes).toHaveLength(3)
+    expect(opacityTrack?.keyframes[0]).toMatchObject({ at: 0, value: 0 })
+    expect(opacityTrack?.keyframes[1].at).toBeCloseTo(3.033, 3)
+    expect(opacityTrack?.keyframes[1]).toMatchObject({ value: 0.5 })
+    expect(opacityTrack?.keyframes[2]).toMatchObject({ at: 10, value: 1 })
+
+    const translateXTrack = normalized.tracks.find(
+      track => track.property === 'transform.translate.x',
+    )
+    expect(translateXTrack?.keyframes).toHaveLength(2)
+    expect(translateXTrack?.keyframes[0]).toMatchObject({ at: 0, value: 0 })
+    expect(translateXTrack?.keyframes[1]).toMatchObject({ at: 10, value: 100 })
+  })
+
+  test('validate rejects single-frame timeline', () => {
+    expect(() =>
+      validateSpatializedMotionConfig({
+        duration: 1,
+        timeline: {
+          '50%': { opacity: 1 },
+        },
+      } as any),
+    ).toThrow(/at least 2 percentage keys/)
+  })
+
+  test('timingFunction cascade prefers keyframe over track over config over linear', () => {
+    const values = evaluateMotionTimeline(
+      {
+        duration: 1,
+        timingFunction: 'easeInOut',
+        tracks: [
+          {
+            property: 'opacity',
+            timingFunction: 'easeOut',
+            keyframes: [
+              { at: 0, value: 0, timingFunction: 'linear' },
+              { at: 1, value: 100 },
+            ],
+          },
+          {
+            property: 'transform.translate.x',
+            timingFunction: 'linear',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 100 },
+            ],
+          },
+          {
+            property: 'transform.translate.y',
+            timingFunction: 'easeOut',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 100 },
+            ],
+          },
+          {
+            property: 'transform.translate.z',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 100 },
+            ],
+          },
+        ],
+      },
+      0.5,
+    )
+
+    expect(values.opacity).toBe(50)
+    expect(values.transform?.translate?.x).toBe(50)
+    expect(values.transform?.translate?.y).toBeGreaterThan(50)
+    expect(values.transform?.translate?.z).toBe(50)
   })
 })
 

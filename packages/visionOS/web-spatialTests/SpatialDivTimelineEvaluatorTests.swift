@@ -12,18 +12,18 @@ final class SpatialDivTimelineEvaluatorTests: XCTestCase {
                 SpatialDivMotionTrackPayload(
                     property: "transform.translate.x",
                     keyframes: [
-                        SpatialDivMotionKeyframePayload(at: 0, value: 0),
-                        SpatialDivMotionKeyframePayload(at: 5, value: 100),
+                        SpatialDivMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                        SpatialDivMotionKeyframePayload(at: 5, value: 100, timingFunction: nil),
                     ],
-                    easing: "linear"
+                    timingFunction: "linear"
                 ),
                 SpatialDivMotionTrackPayload(
                     property: "opacity",
                     keyframes: [
-                        SpatialDivMotionKeyframePayload(at: 3, value: 0),
-                        SpatialDivMotionKeyframePayload(at: 5, value: 1),
+                        SpatialDivMotionKeyframePayload(at: 3, value: 0, timingFunction: "easeOut"),
+                        SpatialDivMotionKeyframePayload(at: 5, value: 1, timingFunction: nil),
                     ],
-                    easing: "easeOut"
+                    timingFunction: "linear"
                 ),
             ]
         )
@@ -53,10 +53,10 @@ final class SpatialDivTimelineEvaluatorTests: XCTestCase {
                 SpatialDivMotionTrackPayload(
                     property: "transform.translate.z",
                     keyframes: [
-                        SpatialDivMotionKeyframePayload(at: 0, value: 0),
-                        SpatialDivMotionKeyframePayload(at: 4, value: -120),
+                        SpatialDivMotionKeyframePayload(at: 0, value: 0, timingFunction: nil),
+                        SpatialDivMotionKeyframePayload(at: 4, value: -120, timingFunction: nil),
                     ],
-                    easing: "linear"
+                    timingFunction: "linear"
                 ),
             ]
         )
@@ -84,18 +84,18 @@ final class SpatialDivTimelineEvaluatorTests: XCTestCase {
                 SpatialDivMotionTrackPayload(
                     property: "transform.rotate.y",
                     keyframes: [
-                        SpatialDivMotionKeyframePayload(at: 0, value: 0),
-                        SpatialDivMotionKeyframePayload(at: 4, value: 90),
+                        SpatialDivMotionKeyframePayload(at: 0, value: 0, timingFunction: nil),
+                        SpatialDivMotionKeyframePayload(at: 4, value: 90, timingFunction: nil),
                     ],
-                    easing: "linear"
+                    timingFunction: "linear"
                 ),
                 SpatialDivMotionTrackPayload(
                     property: "transform.rotate.z",
                     keyframes: [
-                        SpatialDivMotionKeyframePayload(at: 1, value: 0),
-                        SpatialDivMotionKeyframePayload(at: 4, value: 180),
+                        SpatialDivMotionKeyframePayload(at: 1, value: 0, timingFunction: nil),
+                        SpatialDivMotionKeyframePayload(at: 4, value: 180, timingFunction: nil),
                     ],
-                    easing: "linear"
+                    timingFunction: "linear"
                 ),
             ]
         )

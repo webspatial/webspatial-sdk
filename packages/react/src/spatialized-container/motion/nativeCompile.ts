@@ -3,4 +3,4 @@ export {
   motionConfigToNativeTimeline,
   tracksToFromTo,
   type NativeSegmentPlayPayload,
-} from '@webspatial/core-sdk'
+} from '../../../../core/src/spatialdiv/motion'

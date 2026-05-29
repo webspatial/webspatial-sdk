@@ -18,8 +18,10 @@ export * from './types/spatializedPlayback'
 export type {
   SpatializedMotionProperty,
   SpatializedMotionKeyframe,
+  SpatializedMotionKeyframeValues,
   SpatializedMotionTrack,
   SpatializedMotionSegmentConfig,
+  SpatializedMotionTimelineConfig,
   SpatializedMotionConfig,
   SpatializedMotionTimeline,
   SpatializedMotionPlayState,

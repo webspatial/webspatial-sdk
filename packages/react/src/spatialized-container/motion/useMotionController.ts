@@ -1,11 +1,11 @@
 import { useEffect, useReducer, useRef } from 'react'
 import {
-  SpatializedMotionController,
   supports,
-  validateSpatializedMotionConfig,
   type SpatializedMotionConfig,
   type SpatializedMotionHandle,
 } from '@webspatial/core-sdk'
+import { validateSpatializedMotionConfig } from './validate'
+import { SpatializedMotionController } from '../../../../core/src/spatialized/motion/SpatializedMotionController'
 
 export function useMotionController(
   config: SpatializedMotionConfig,

@@ -37,7 +37,7 @@ export function SpatializedMotionRealityContainerPage() {
           { at: 0, value: 0 },
           { at: DURATION, value: 0.18 },
         ],
-        easing: 'easeInOut',
+        timingFunction: 'easeInOut',
       },
       {
         property: 'transform.rotate.y',
@@ -45,7 +45,7 @@ export function SpatializedMotionRealityContainerPage() {
           { at: 0, value: 0 },
           { at: DURATION, value: 180 },
         ],
-        easing: 'linear',
+        timingFunction: 'linear',
       },
     ],
     onStart: () => {

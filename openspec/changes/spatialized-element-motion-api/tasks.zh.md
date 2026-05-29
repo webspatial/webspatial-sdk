@@ -124,21 +124,21 @@
 
 ## Phase 10 — Timeline 百分比关键帧配置 + timingFunction 统一
 
-- [ ] 类型：`SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`
-- [ ] 类型：`SpatializedMotionTimelineConfig` — 含 `timeline: Record<string, SpatializedMotionKeyframeValues>` 的配置形状
-- [ ] 类型：`SpatializedMotionKeyframe.timingFunction?` — 每帧可选字段
-- [ ] 类型：`SpatializedMotionTrack` — 将 `easing` 重命名为 `timingFunction`
-- [ ] 类型：`SpatializedMotionConfig.timingFunction?` — 全局 config 级字段
-- [ ] 类型：`SpatializedMotionTimeline`（wire 格式）— track 的 `easing` 改为 `timingFunction`
-- [ ] Core：`desugarTimelineConfig()` — 解析 `timeline` 百分比 key 为 tracks
-- [ ] Core：配置判别器 — 检测 timeline vs tracks vs from/to，相应路由
-- [ ] Core：`evaluateMotionTimeline` — 实现三级 `timingFunction` 级联（keyframe > track > config > 'linear'）
-- [ ] Core：校验 — 拒绝少于 2 个百分比 key、非法 key、与 tracks/from-to 的互斥
-- [ ] Native wire：决定向后兼容策略（保持 wire `easing` + JS 层映射，或重命名）
-- [ ] 代码库：将源代码 + 测试中所有 `easing` 引用重命名为 `timingFunction`
-- [ ] 单元测试：timeline 配置解析、小数百分比、缺失属性、单帧拒绝
-- [ ] 单元测试：三级 timingFunction 级联
-- [ ] Demo 页面：新增 timeline 百分比关键帧示例
+- [x] 类型：`SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`
+- [x] 类型：`SpatializedMotionTimelineConfig` — 含 `timeline: Record<string, SpatializedMotionKeyframeValues>` 的配置形状
+- [x] 类型：`SpatializedMotionKeyframe.timingFunction?` — 每帧可选字段
+- [x] 类型：`SpatializedMotionTrack` — 将 `easing` 重命名为 `timingFunction`
+- [x] 类型：`SpatializedMotionConfig.timingFunction?` — 全局 config 级字段
+- [x] 类型：`SpatializedMotionTimeline`（wire 格式）— track 的 `easing` 改为 `timingFunction`
+- [x] Core：`desugarTimelineConfig()` — 解析 `timeline` 百分比 key 为 tracks
+- [x] Core：配置判别器 — 检测 timeline vs tracks vs from/to，相应路由
+- [x] Core：`evaluateMotionTimeline` — 实现三级 `timingFunction` 级联（keyframe > track > config > 'linear'）
+- [x] Core：校验 — 拒绝少于 2 个百分比 key、非法 key、与 tracks/from-to 的互斥
+- [x] Native wire：决定向后兼容策略（保持 wire `easing` + JS 层映射，或重命名）
+- [x] 代码库：将源代码 + 测试中所有 `easing` 引用重命名为 `timingFunction`
+- [x] 单元测试：timeline 配置解析、小数百分比、缺失属性、单帧拒绝
+- [x] 单元测试：三级 timingFunction 级联
+- [x] Demo 页面：新增 timeline 百分比关键帧示例
 
 ## Phase 11 — 绑定 prop 重命名（`motion` → `xr-animation`）
 

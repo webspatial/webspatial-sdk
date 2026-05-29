@@ -1,1 +1,5 @@
-export { segmentConfigToMotionConfig } from '@webspatial/core-sdk'
+export {
+  desugarTimelineConfig,
+  normalizeMotionConfig,
+  segmentConfigToMotionConfig,
+} from '../../../../core/src/spatialdiv/motion'

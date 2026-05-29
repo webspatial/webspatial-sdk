@@ -32,7 +32,7 @@ export function SpatialDivMotionMultiTrackPage() {
           { at: 0, value: 0 },
           { at: DURATION, value: 100 },
         ],
-        easing: 'linear',
+        timingFunction: 'linear',
       },
       {
         property: 'opacity',
@@ -40,7 +40,7 @@ export function SpatialDivMotionMultiTrackPage() {
           { at: 3, value: 0.5 },
           { at: DURATION, value: 1 },
         ],
-        easing: 'linear',
+        timingFunction: 'linear',
       },
     ],
     onStart: () => {
