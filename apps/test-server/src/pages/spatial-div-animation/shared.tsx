@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { enableDebugTool } from '@webspatial/react-sdk'
+import type { SpatializedVisualValues } from '@webspatial/core-sdk'
 import { spatialDivAnimationRoutes } from './routes'
 
 enableDebugTool()
@@ -18,7 +19,9 @@ export function fmtNum(n: number | undefined, digits = 2): string {
 }
 
 /** Pretty-print whitelisted SpatialDiv animated values for log lines. */
-export function fmtValues(values: Record<string, unknown> | undefined): string {
+export function fmtValues(
+  values: SpatializedVisualValues | Record<string, unknown> | undefined,
+): string {
   if (!values) return '-'
   const parts: string[] = []
 
