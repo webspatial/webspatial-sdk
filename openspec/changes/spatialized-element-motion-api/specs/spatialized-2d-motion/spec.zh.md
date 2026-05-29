@@ -2,7 +2,7 @@
 
 ## 范围
 
-`Spatialized2DElement`（HTML SpatialDiv / `enable-xr`）是统一动画系统的**参考目标**。当 `useSpatializedMotion` 返回的 `animation` 通过 `motion` prop 绑定到 `enable-xr` 节点时，SDK 将目标解析为 `spatialized2d`。它是唯一支持**双后端**（Web RAF + native）的目标。
+`Spatialized2DElement`（HTML SpatialDiv / `enable-xr`）是统一动画系统的**参考目标**。当 `useSpatializedMotion` 返回的 `animation` 通过 `xr-animation` prop 绑定到 `enable-xr` 节点时，SDK 将目标解析为 `spatialized2d`。它是唯一支持**双后端**（Web RAF + native）的目标。
 
 ## 新增需求
 
@@ -90,7 +90,7 @@ Track `property` MUST 限于：`opacity`、`transform.translate.x/y/z`、`transf
 #### Scenario: bind 前 play 不降级到 Web RAF
 
 - **GIVEN** `supports('useSpatializedMotion', ['spatialized2d'])` 为 `true`
-- **AND** `api.play()` 在 `motion` binding 绑定元素前执行
+- **AND** `api.play()` 在 `xr-animation` binding 绑定元素前执行
 - **THEN** SDK MUST NOT 启动 Web RAF 作为降级
 - **AND** native 播放 MUST 在元素绑定后开始
 
@@ -167,14 +167,14 @@ Native 会话 alive 期间，SDK MUST 抑制被动画字段的 Portal DOM 同步
 
 ---
 
-### Requirement: Native 会话使用 motion binding
+### Requirement: Native 会话使用 xr-animation binding
 
-Native 会话 MUST 使用 `motion` prop / `SpatializedMotionBinding`，而非旧版 `animation` prop。
+Native 会话 MUST 使用 `xr-animation` prop / `SpatializedMotionBinding`，而非旧版 `animation` prop。
 
 #### Scenario: 解绑取消会话
 
 - **GIVEN** 活跃的 native 会话
-- **WHEN** motion binding 解绑
+- **WHEN** xr-animation binding 解绑
 - **THEN** SDK MUST 终止会话；`onReset` MUST NOT 触发（与解绑语义对齐）
 
 ---

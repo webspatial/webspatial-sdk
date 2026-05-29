@@ -14,7 +14,7 @@ Implementation MUST use `SpatializedMotionController` with the `dynamic3d` targe
 - **WHEN** `SpatializedDynamic3DElement.animateMotion({ type: 'play', timeline })` runs
 - **THEN** native MUST sample the timeline and update container transform / opacity until completion or session termination
 
-#### Scenario: Reality motion binding
+#### Scenario: Reality xr-animation binding
 
 - **WHEN** `<Reality motion={binding} />` receives `animation` from `useSpatializedMotion(config)`, resolving the target to `dynamic3d`
 - **THEN** play before bind MAY queue; after bind native playback MUST drive the Reality root without conflicting React transform writes (suppression analogous to 2D)

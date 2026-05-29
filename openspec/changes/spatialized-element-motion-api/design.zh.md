@@ -2,7 +2,7 @@
 
 三个 `SpatializedElement` 子类共享场景定位，但使用**不同的 native 写入路径**。Timeline 评估器、会话状态机和 Portal 抑制逻辑在 TypeScript 中共享；native 将采样结果应用到 `element.transform`（2D / Dynamic3D）或 `modelTransform`（Static3D）。Entity 动画保持**独立**栈（`useAnimation` + `EntityAnimationManager`）。
 
-本设计统一了**面向开发者**的配置（`SpatializedMotionConfig`、`SpatializedSegmentConfig`、`SpatializedPlaybackApi`），并通过**绑定目标**（`animation` 被传给哪个组件的 `motion` prop 时自动确定）路由到单一 Core 控制器和单一 React hook。
+本设计统一了**面向开发者**的配置（`SpatializedMotionConfig`、`SpatializedSegmentConfig`、`SpatializedPlaybackApi`），并通过**绑定目标**（`animation` 被传给哪个组件的 `xr-animation` prop 时自动确定）路由到单一 Core 控制器和单一 React hook。
 
 ## 设计演进
 
@@ -22,7 +22,7 @@ Plan A 确立了架构原语：
 Plan B 扩展了架构：
 - **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe（灵感来自 Three.js AnimationClip）
 - **双后端**：native 不可用时 Web RAF，WebSpatial 运行时走 native timeline
-- **Style outlet**：回传给业务侧、用于 React 状态驱动渲染的 `style` 对象；Plan B 同时将 binding 从 `animation` 更名为 `motion`
+- **Style outlet**：回传给业务侧、用于 React 状态驱动渲染的 `style` 对象；Plan B 同时将 binding 从 `animation` 更名为 `xr-animation`
 - **多 kind 支持**：基于策略的路由，覆盖 spatialized2d / static3d / dynamic3d
 
 ### 统一架构（本设计）
@@ -42,9 +42,9 @@ Plan B 扩展了架构：
 ```mermaid
 flowchart TB
   Hook["useSpatializedMotion(config)"] --> Binding["animation binding\n(目标延迟)"]
-  Binding --> |"motion on enable-xr"| Resolve2D["目标: spatialized2d"]
-  Binding --> |"motion on Model"| Resolve3D["目标: static3d"]
-  Binding --> |"motion on Reality"| ResolveD3["目标: dynamic3d"]
+  Binding --> |"xr-animation on enable-xr"| Resolve2D["目标: spatialized2d"]
+  Binding --> |"xr-animation on Model"| Resolve3D["目标: static3d"]
+  Binding --> |"xr-animation on Reality"| ResolveD3["目标: dynamic3d"]
   Resolve2D --> Core[SpatializedMotionController]
   Resolve3D --> Core
   ResolveD3 --> Core
@@ -86,15 +86,15 @@ flowchart TB
 
 | Kind | React outlet | 绑定 prop | Native 写入路径 | Web RAF |
 |------|--------------|-----------|----------------|---------|
-| 2D | `style` | `motion` 在 `enable-xr` 节点上 | `element.transform` + opacity + DOM | 有 |
-| Static3D | `style` 未使用 | `motion` 在 `<Model>` 上 | `modelTransform` + opacity | 无 |
-| Dynamic3D | `style` 未使用 | `motion` 在 `<Reality>` 上 | `element.transform` + opacity | 无 |
+| 2D | `style` | `xr-animation` 在 `enable-xr` 节点上 | `element.transform` + opacity + DOM | 有 |
+| Static3D | `style` 未使用 | `xr-animation` 在 `<Model>` 上 | `modelTransform` + opacity | 无 |
+| Dynamic3D | `style` 未使用 | `xr-animation` 在 `<Reality>` 上 | `element.transform` + opacity | 无 |
 
 ## 目标解析（Target Resolution）
 
 `useSpatializedMotion` 返回的 `animation` binding 与**目标无关**。目标在绑定时解析：
 
-1. React 组件接收 `motion={animation}` prop。
+1. React 组件接收 `xr-animation={animation}` prop。
 2. 组件类型决定目标：`enable-xr` → `spatialized2d`、`<Model>` → `static3d`、`<Reality>` → `dynamic3d`。
 3. Controller 激活匹配的 `MOTION_KIND_POLICIES` 条目。
 4. 对于 2D：`style` outlet 由 Web RAF 或 native 采样主动驱动。对于 3D：`style` 保持 `{}`。
@@ -175,7 +175,7 @@ Plan A 路径（`useAnimation` + `animation` prop）作为薄兼容层保留：
 | `opacity` | 属性级：仅 `opacity` 同步被抑制 | 会话终态（finished / stop / reset） |
 | 任何 `transform.*` | Transform 整体级：整个 `updateTransform(matrix)` 被抑制 | 会话终态 |
 
-抑制同时适用于旧版 `animation` prop 会话和 `motion` binding 会话。三个终止方法（`stop`、`reset`、`finish`）均释放抑制。
+抑制同时适用于旧版 `animation` prop 会话和 `xr-animation` binding 会话。三个终止方法（`stop`、`reset`、`finish`）均释放抑制。
 
 ## Native Timeline 评估
 

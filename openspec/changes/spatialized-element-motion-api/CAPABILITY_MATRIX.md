@@ -3,8 +3,8 @@
 | Element kind | Core type | React surface | Shipped timeline | Web RAF fallback | Native backend | Capability token |
 |--------------|-----------|---------------|------------------|------------------|----------------|------------------|
 | **2D** | `Spatialized2DElement` | `useSpatializedMotion(config)` → `[animation, api, style]` | Yes | Yes | `SpatialDivAnimationManager` | `supports('useSpatializedMotion', ['spatialized2d'])` |
-| **Static3D** | `SpatializedStatic3DElement` | `<Model motion={…}>` · `useSpatializedMotion(config)` → `[animation, api, style]` | Yes | **No** | `Static3DMotionAnimationManager` | `supports('useSpatializedMotion', ['static3d'])` |
-| **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality motion={…}>` · `useSpatializedMotion(config)` → `[animation, api, style]` | Yes | **No** | `Dynamic3DMotionAnimationManager` | `supports('useSpatializedMotion', ['dynamic3d'])` |
+| **Static3D** | `SpatializedStatic3DElement` | `<Model xr-animation={…}>` · `useSpatializedMotion(config)` → `[animation, api, style]` | Yes | **No** | `Static3DMotionAnimationManager` | `supports('useSpatializedMotion', ['static3d'])` |
+| **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality xr-animation={…}>` · `useSpatializedMotion(config)` → `[animation, api, style]` | Yes | **No** | `Dynamic3DMotionAnimationManager` | `supports('useSpatializedMotion', ['dynamic3d'])` |
 
 **Implementation note:** TypeScript uses a **single** `SpatializedMotionController` for all three kinds; native remains three managers until a future Swift consolidation.
 
