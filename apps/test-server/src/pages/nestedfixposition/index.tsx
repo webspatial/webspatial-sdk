@@ -1,5 +1,4 @@
-import React, { CSSProperties, useState } from 'react'
-import ReactDOM from 'react-dom/client'
+import { CSSProperties, useState } from 'react'
 
 import { enableDebugTool } from '@webspatial/react-sdk'
 

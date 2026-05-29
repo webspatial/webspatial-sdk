@@ -5,6 +5,7 @@ import {
 } from './context/PortalInstanceContext'
 import {
   PortalSpatializedContainerProps,
+  SpatialContentReadyCallback,
   SpatialEventOptions,
   SpatializedElementRef,
 } from './types'
@@ -76,7 +77,10 @@ function renderPlaceholderInSubPortal(
 }
 
 export function PortalSpatializedContainer<T extends SpatializedElementRef>(
-  props: PortalSpatializedContainerProps<T>,
+  props: PortalSpatializedContainerProps<T> & {
+    /** Forwarded to 2D `SpatializedContent` only (SpatialDiv). Ignored elsewhere. */
+    onSpatialContentReady?: SpatialContentReadyCallback
+  },
 ) {
   const {
     spatializedContent: Content,

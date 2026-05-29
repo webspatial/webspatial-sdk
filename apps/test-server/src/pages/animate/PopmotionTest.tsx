@@ -1,5 +1,5 @@
-import { useRef } from 'react'
 import { animate } from 'popmotion'
+import { useRef } from 'react'
 
 export function PopmotionTest() {
   const ref = useRef<HTMLDivElement>(null)

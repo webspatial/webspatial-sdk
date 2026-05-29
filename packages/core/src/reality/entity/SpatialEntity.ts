@@ -12,9 +12,7 @@ import {
 } from '../../types/types'
 import {
   AddComponentToEntityCommand,
-  AddEntityToEntityCommand,
   RemoveComponentFromEntityCommand,
-  RemoveEntityFromParentCommand,
   UpdateEntityEventCommand,
   UpdateEntityPropertiesCommand,
 } from '../../JSBCommand'

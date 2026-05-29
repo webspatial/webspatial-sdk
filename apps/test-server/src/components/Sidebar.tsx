@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 export const routes = [
   { path: '/', label: 'Home' },
@@ -32,6 +31,10 @@ export const routes = [
         label: 'Model/Div Convert',
       },
       { path: '/reality/dynamicAssets', label: 'DynamicAssets' },
+      {
+        path: '/reality/textured-unlit-box',
+        label: 'Textures',
+      },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
   },
@@ -40,6 +43,7 @@ export const routes = [
   { path: '/spatialStyleTest', label: 'Spatial Style' },
   { path: '/canvas-test', label: 'Canvas Test' },
   { path: '/jsapi-test', label: 'JS API Test' },
+  { path: '/runtime-capabilities', label: 'Runtime capabilities' },
   { path: '/unit-convert', label: 'Unit Convert' },
   {
     path: '/scene',
@@ -78,10 +82,13 @@ export const routes = [
     children: [
       { path: '/head-style-sync', label: 'SpatialDiv Head Sync' },
       { path: '/spatial-div-test', label: 'SpatialDiv Test' },
+      {
+        path: '/spatial-content-ready-three',
+        label: 'SpatialDiv + Three (ready)',
+      },
       { path: '/dropdown-menu-test', label: 'Dropdown menu test' },
       { path: '/background-material', label: 'Background Material' },
       { path: '/fixed-position-test', label: 'Fixed Position' },
-      { path: '/android-bringup', label: 'Android Bringup' },
       { path: '/display-test', label: 'Display Test' },
       { path: '/memory-stats', label: 'Memory Stats' },
       { path: '/nested-fix-position', label: 'Nested Fix Position' },

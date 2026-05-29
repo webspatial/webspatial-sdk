@@ -124,7 +124,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     }
   }, [ctx, attachmentName])
 
-  useSyncHeadStyles(childWindow, { subtree: false })
+  useSyncHeadStyles(childWindow)
 
   // Update position/size when they change
   useEffect(() => {

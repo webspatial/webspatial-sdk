@@ -13,3 +13,12 @@ The React SDK from the WebSpatial SDK makes the WebSpatial API immediately avail
 - [Quick Example](https://webspatial.dev/docs/quick-example)
 - [Core Concepts](https://webspatial.dev/docs/core-concepts)
 - [Development Guide](https://webspatial.dev/docs/development-guide)
+
+## SpatialDiv `onSpatialContentReady` runtime note
+
+When using nested `SpatialDiv` (`enable-xr`) with `onSpatialContentReady`, callback ordering differs by runtime:
+
+- In WebSpatial runtime, parent `SpatialDiv` callback runs before child callback on the same ready edge.
+- In non-WebSpatial fallback (plain web DOM), callback ordering between parent and child is not a guaranteed contract and should be treated as unspecified.
+
+Recommended practice: initialize imperative renderers from each container's own `ctx.host` and avoid coupling setup logic to parent/child callback sequence in fallback web mode.

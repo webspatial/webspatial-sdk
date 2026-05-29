@@ -1,5 +1,84 @@
+import CryptoKit
 import Foundation
 import RealityKit
+
+/// Serializes remote URL → local file for each distinct URL string and uses a unique on-disk name
+/// (hash + basename) so concurrent loads never `removeItem` a path another `TextureResource` read
+/// is using (the old `Documents/lastPathComponent` scheme collided across scenes / retries).
+private actor RemoteResourceLoadCache {
+    static let shared = RemoteResourceLoadCache()
+
+    private var inFlight: [String: Task<URL, Error>] = [:]
+
+    func localFileURL(forRemote urlString: String) async throws -> URL {
+        if let existing = inFlight[urlString] {
+            return try await existing.value
+        }
+        let task = Task {
+            try await Self.downloadInstallIfNeeded(urlString: urlString)
+        }
+        inFlight[urlString] = task
+        do {
+            let url = try await task.value
+            inFlight[urlString] = nil
+            return url
+        } catch {
+            inFlight[urlString] = nil
+            throw error
+        }
+    }
+
+    private static func downloadInstallIfNeeded(urlString: String) async throws -> URL {
+        guard let remote = URL(string: urlString) else {
+            throw NSError(
+                domain: "Invalid URL",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to create URL from string: \(urlString)"]
+            )
+        }
+        guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw NSError(
+                domain: "Download Error",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "Documents directory is unavailable"]
+            )
+        }
+        let destination = cacheFileURL(documents: documents, urlString: urlString)
+        let fm = FileManager.default
+        if fm.fileExists(atPath: destination.path) {
+            return destination
+        }
+
+        print("start load")
+        let (tempURL, response) = try await URLSession.shared.download(from: remote)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NSError(
+                domain: "HTTP Error",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "Missing HTTP response"]
+            )
+        }
+        guard (200 ... 299).contains(httpResponse.statusCode) else {
+            throw NSError(
+                domain: "HTTP Error",
+                code: httpResponse.statusCode,
+                userInfo: [NSLocalizedDescriptionKey: "HTTP Error \(httpResponse.statusCode)"]
+            )
+        }
+        try await FileCoordinator.shared.moveReplacingIfExists(from: tempURL, to: destination)
+        print("load complete")
+        return destination
+    }
+
+    private static func cacheFileURL(documents: URL, urlString: String) -> URL {
+        let digest = SHA256.hash(data: Data(urlString.utf8))
+        let hex = digest.prefix(8).reduce(into: "") { $0.append(String(format: "%02x", $1)) }
+        var baseName = URL(string: urlString)?.lastPathComponent ?? "asset"
+        if baseName.isEmpty { baseName = "asset" }
+        let safe = baseName.replacingOccurrences(of: "/", with: "_")
+        return documents.appendingPathComponent("\(hex)_\(safe)")
+    }
+}
 
 enum GeometryCreationError: LocalizedError {
     case invalidType(String)
@@ -67,7 +146,17 @@ class Dynamic3DManager {
     // Error messages are thrown from createGeometry using GeometryCreationError
 
     static func createUnlitMaterial(_ props: CreateUnlitMaterial, _ tex: TextureResource? = nil) -> SpatialUnlitMaterial {
-        return SpatialUnlitMaterial(props.color ?? "#FFFFFF", tex, props.transparent ?? true, props.opacity ?? 1)
+        let textureSpatialId: String? = {
+            guard let tid = props.textureId, !tid.isEmpty else { return nil }
+            return tid
+        }()
+        return SpatialUnlitMaterial(
+            props.color ?? "#FFFFFF",
+            tex,
+            props.transparent ?? true,
+            props.opacity ?? 1,
+            textureSpatialId: textureSpatialId
+        )
     }
 
     static func loadResourceToLocal(_ urlString: String, loadComplete: @escaping (Result<URL, Error>) -> Void) {
@@ -80,43 +169,14 @@ class Dynamic3DManager {
             loadComplete(.success(localUrl))
             return
         }
-        // load net file
-        guard let url = URL(string: urlString) else {
-            loadComplete(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL from string: \(urlString)"])))
-            return
+        // load net file — coalesced per URL + unique cache filename (see RemoteResourceLoadCache).
+        Task {
+            do {
+                let url = try await RemoteResourceLoadCache.shared.localFileURL(forRemote: urlString)
+                loadComplete(.success(url))
+            } catch {
+                loadComplete(.failure(error))
+            }
         }
-        // Use an immutable URL to avoid capturing a mutable var in concurrent code
-        let documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(url.lastPathComponent)
-        let session = URLSession(configuration: URLSessionConfiguration.default)
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        print("start load")
-        let task = session.downloadTask(with: request, completionHandler: { location, response, error in
-            if let error = error {
-                loadComplete(.failure(error))
-                return
-            }
-            if let httpResponse = response as? HTTPURLResponse, !(200 ... 299).contains(httpResponse.statusCode) {
-                let error = NSError(domain: "HTTP Error", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP Error \(httpResponse.statusCode)"])
-                loadComplete(.failure(error))
-                return
-            }
-            guard let location = location else {
-                loadComplete(.failure(NSError(domain: "Download Error", code: 0, userInfo: [NSLocalizedDescriptionKey: "Download location is nil"])))
-                return
-            }
-            Task {
-                do {
-                    try await FileCoordinator.shared.moveReplacingIfExists(from: location, to: documentsUrl)
-                    print("load complete")
-                    loadComplete(.success(documentsUrl))
-                } catch {
-                    print("File operation error: \(error)")
-                    loadComplete(.failure(error))
-                }
-            }
-
-        })
-        task.resume()
     }
 }

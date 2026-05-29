@@ -1,0 +1,115 @@
+name: CodeQL
+
+on:
+  push:
+    branches:
+      - main
+      - stable
+  pull_request:
+    branches:
+      - main
+      - stable
+  schedule:
+    - cron: '31 4 * * 2'
+
+permissions:
+  security-events: write
+  packages: read
+  actions: read
+  contents: read
+
+jobs:
+  analyze-javascript-typescript:
+    name: Analyze JavaScript/TypeScript
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: '/language:javascript-typescript'
+
+  analyze-swift:
+    name: Analyze Swift
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 26
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: swift
+          build-mode: manual
+
+      - name: Build visionOS app
+        shell: bash
+        run: |
+          set -o pipefail
+          log_file="$RUNNER_TEMP/visionos-build.log"
+          set +e
+          xcodebuild build \
+            -project packages/visionOS/web-spatial.xcodeproj \
+            -scheme web-spatial \
+            -configuration Debug \
+            -sdk xrsimulator \
+            -destination "generic/platform=visionOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/webspatial-derived-data" \
+            ARCHS=arm64 \
+            ONLY_ACTIVE_ARCH=YES \
+            SWIFT_ENABLE_EXPLICIT_MODULES=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO 2>&1 | tee "$log_file"
+          status=${PIPESTATUS[0]}
+          set -e
+
+          if [[ "$status" -eq 0 ]]; then
+            exit 0
+          fi
+
+          # Tolerate ONLY known incompatibilities between CodeQL's libtrace
+          # (DYLD_INSERT_LIBRARIES) and Xcode 26 build phases that run under
+          # sandbox-exec on visionOS. Swift source compilation completes before
+          # these phases run, so the CodeQL Swift trap is already populated and
+          # the analyze step can still produce a useful SARIF.
+          # Upstream tracking: actions/runner-images#12592
+          tolerated_err_re='Failed to find newest available Device type for visionOS'
+          tolerated_cmd_re='^Command (GenerateAssetSymbols|RealityAssetsCompile) failed with a nonzero exit code'
+
+          unexpected_err=$(grep -E '^(error:|.+ error:)' "$log_file" | grep -Ev "$tolerated_err_re" || true)
+          unexpected_cmd=$(grep -E '^Command [A-Za-z]+ failed with a nonzero exit code' "$log_file" | grep -Ev "$tolerated_cmd_re" || true)
+
+          if [[ -n "$unexpected_err" || -n "$unexpected_cmd" ]]; then
+            echo "::error::xcodebuild failed (exit $status) with unexpected errors:"
+            [[ -n "$unexpected_err" ]] && printf '%s\n' "$unexpected_err"
+            [[ -n "$unexpected_cmd" ]] && printf '%s\n' "$unexpected_cmd"
+            exit "$status"
+          fi
+
+          if ! grep -qE "$tolerated_err_re|$tolerated_cmd_re" "$log_file"; then
+            echo "::error::xcodebuild failed (exit $status) but the log does not match any known tolerated failure pattern. Treating as a hard failure."
+            exit "$status"
+          fi
+
+          echo "::warning::xcodebuild exited $status, but the only failures match known CodeQL x visionOS RealityKit/actool sandbox-exec incompatibilities (actions/runner-images#12592). Swift compilation completed earlier, so the CodeQL trap is intact; continuing to the analyze step."
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: '/language:swift'

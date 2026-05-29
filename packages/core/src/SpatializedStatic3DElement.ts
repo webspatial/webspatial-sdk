@@ -1,6 +1,7 @@
 import { UpdateSpatializedStatic3DElementProperties } from './JSBCommand'
 import { ReceiveEventData, SpatializedElement } from './SpatializedElement'
 import {
+  ModelLoadingMode,
   ModelSource,
   SpatializedStatic3DElementProperties,
 } from './types/types'
@@ -24,11 +25,18 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * @param id Unique identifier for this element
    * @param modelURL URL of the 3D model
    * @param sources Optional fallback model sources
+   * @param loading Initial loading mode (`'eager'` by default)
    */
-  constructor(id: string, modelURL?: string, sources?: ModelSource[]) {
+  constructor(
+    id: string,
+    modelURL?: string,
+    sources?: ModelSource[],
+    loading: ModelLoadingMode = 'eager',
+  ) {
     super(id)
     this.modelURL = modelURL
     this.sources = sources
+    this._loading = loading
   }
 
   /**
@@ -42,6 +50,10 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * Used to reset the ready promise when the model URL changes.
    */
   private modelURL?: string
+  // @TODO: Deprecate modelURL property from Web and Swift code
+  get modelUrl(): string | undefined {
+    return this.modelURL
+  }
 
   /**
    * Caches the last sources array to detect changes.
@@ -109,7 +121,22 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       this._loop = properties.loop
     }
     if (properties.playbackRate !== undefined) {
+      // Re-anchor so extrapolation uses the new rate only for future elapsed
+      // time, not the window between the last sample and this change.
+      if (!this._paused) {
+        this._currentTime = this.currentTime
+        this._anchorTimestamp = Date.now()
+      }
       this._playbackRate = properties.playbackRate
+    }
+    if (properties.currentTime !== undefined) {
+      // Optimistically update the local anchor so subsequent reads reflect
+      // the requested seek without waiting for the next native sample.
+      this._currentTime = properties.currentTime
+      this._anchorTimestamp = Date.now()
+    }
+    if (properties.loading !== undefined) {
+      this._loading = properties.loading
     }
     return new UpdateSpatializedStatic3DElementProperties(
       this,
@@ -149,6 +176,49 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   }
 
   /**
+   * Last playback position sampled from native (seconds).
+   */
+  private _currentTime: number = 0
+
+  /**
+   * Unix epoch time (ms) corresponding to `_currentTime`. Sourced from the
+   * native `timestamp` on samples, or `Date.now()` on local seeks/transitions.
+   */
+  private _anchorTimestamp: number = 0
+
+  private clampTime(time: number): number {
+    if (!Number.isFinite(time) || time < 0) return 0
+    // When looping the current time is modulo the duration
+    if (time > this._duration) {
+      return this.loop && this.duration > 0
+        ? time % this._duration
+        : this.duration
+    }
+    return time
+  }
+
+  /**
+   * Returns the current (un-scaled) playback position in seconds. While
+   * playing, the value is extrapolated from the last anchor using
+   * `playbackRate` and clamped to `[0, duration]`; while paused it returns
+   * the anchor directly.
+   */
+  get currentTime(): number {
+    if (this._paused) return this._currentTime
+    const elapsed = (Date.now() - this._anchorTimestamp) / 1000
+    return this.clampTime(this._currentTime + elapsed * this._playbackRate)
+  }
+
+  /**
+   * Seeks the animation to `value` seconds (clamped to `[0, duration]`) and
+   * forwards the request to native.
+   */
+  set currentTime(value: number) {
+    const time = Number.isNaN(value) ? 0 : clamp(value, 0, this.duration)
+    this.updateProperties({ currentTime: time })
+  }
+
+  /**
    * Whether the animation is currently paused.
    */
   private _paused: boolean = true
@@ -181,6 +251,10 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * @returns Promise resolving when the command is sent
    */
   async play(): Promise<void> {
+    if (this._paused) {
+      // Start extrapolating from the last known position on resume.
+      this._anchorTimestamp = Date.now()
+    }
     this._paused = false
     await this.updateProperties({ animationPaused: false })
   }
@@ -190,6 +264,12 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    * @returns Promise resolving when the command is sent
    */
   async pause(): Promise<void> {
+    if (!this._paused) {
+      // Freeze the extrapolated position so reads remain stable until the
+      // next native sample arrives.
+      this._currentTime = this.currentTime
+      this._anchorTimestamp = Date.now()
+    }
     this._paused = true
     await this.updateProperties({ animationPaused: true })
   }
@@ -213,6 +293,9 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     } else if (data.type === SpatialWebMsgType.animationstatechange) {
       this._paused = data.detail.paused
       this._duration = data.detail.duration
+      // In unsupported environments currentTime is invalid
+      this._currentTime = data.detail.currentTime ?? 0
+      this._anchorTimestamp = data.detail.timestamp ?? Date.now()
       this._onAnimationStateChangeCallback?.(data.detail)
     } else {
       // Handle other spatial events using the base class implementation
@@ -230,6 +313,16 @@ export class SpatializedStatic3DElement extends SpatializedElement {
    */
   get autoplay(): boolean {
     return this._autoplay
+  }
+
+  /**
+   * Asset fetch policy. `'lazy'` defers fetching until the host signals the
+   * element is in view; `'eager'` fetches immediately.
+   */
+  private _loading: ModelLoadingMode = 'eager'
+
+  get loading(): ModelLoadingMode {
+    return this._loading
   }
 
   /**
@@ -274,6 +367,11 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     const modelTransform = Array.from(transform.toFloat64Array())
     this.updateProperties({ modelTransform })
   }
+}
+
+// Equivalent of proposed Math.clamp
+function clamp(num: number, min: number, max: number) {
+  return num <= min ? min : num >= max ? max : num
 }
 
 type Static3DReceiveEventData =
