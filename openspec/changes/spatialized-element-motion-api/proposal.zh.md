@@ -25,6 +25,7 @@
 - Plan B 的 **timeline 数据模型** 为规范配置形状
 - Plan A 的 **会话语义**（状态机、抑制、生命周期）保持规范性
 - 覆盖范围扩展到 Static3D 和 Dynamic3D（仅 native，无 Web RAF）
+- `useSpatializedMotion` 的所有 authoring 形状（`from/to`、`timeline`、`tracks`）都编译为同一个 canonical `tracks` 执行模型
 
 ## 概览
 
@@ -84,10 +85,10 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 
 - **统一公共 API**：`useSpatializedMotion(config)` 接受 `from/to`（推荐）、`tracks`（高级）或 `timeline`（CSS @keyframes 风格）三种互斥配置，内部统一编译为 tracks 执行，返回 `[animation, api, style]`。
 - **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe + 每轨 timingFunction — 规范配置形状。
-- **2D 双后端**：native 不可用时走 Web RAF；WebSpatial 运行时走 native timeline/segment。
+- **2D 双后端**：native 不可用时走 Web RAF；WebSpatial 运行时 native 侧统一走 canonical tracks 路径。
 - **3D 仅 native**：Static3D 和 Dynamic3D 仅使用 native `animateMotion`（无 Web RAF 降级）。
 - **单一 Core 控制器**：`SpatializedMotionController`，通过 `MOTION_KIND_POLICIES` 按 kind 分派。
-- **旧版兼容**：Plan A `useAnimation` + `animation` prop 对 SpatialDiv 保留；简单 timeline 可降级为段命令。
+- **旧版兼容**：Plan A `useAnimation` + `animation` prop 对 SpatialDiv 保留，但作为独立兼容路径存在。
 - **Portal 抑制**：native 播放期间抑制被动画控制的字段（opacity 属性级、transform 整体级）。
 - **会话语义**：状态机、生命周期回调、错误处理在所有路径上统一。
 - **能力探测**：`supports('useSpatializedMotion', [target])`，支持 `spatialized2d` | `static3d` | `dynamic3d`。

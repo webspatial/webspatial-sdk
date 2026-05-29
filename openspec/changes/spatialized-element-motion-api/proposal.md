@@ -25,6 +25,7 @@ This **umbrella change** merges both into a single normative surface:
 - The **timeline data model** from Plan B is the canonical config shape
 - The **session semantics** (state machine, suppression, lifecycle) from Plan A remain normative
 - Coverage extends to Static3D and Dynamic3D (native-only, no Web RAF)
+- All `useSpatializedMotion` authoring shapes (`from`/`to`, `timeline`, `tracks`) compile to the same canonical `tracks` execution model
 
 ## At a Glance
 
@@ -84,10 +85,10 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 
 - **Unified public API**: `useSpatializedMotion(config)` accepting `from/to` (recommended), `tracks` (advanced), or `timeline` (CSS @keyframes style); all compile to tracks internally.
 - **Timeline data model**: per-property tracks with absolute-time keyframes, per-track timingFunction — the canonical config shape.
-- **Dual backend for 2D**: Web RAF when native unavailable; native timeline/segment when in WebSpatial runtime.
+- **Dual backend for 2D**: Web RAF when native unavailable; native uses the canonical tracks path when in WebSpatial runtime.
 - **Native-only for 3D**: Static3D and Dynamic3D use native `animateMotion` exclusively (no Web RAF fallback).
 - **One Core controller**: `SpatializedMotionController` with `MOTION_KIND_POLICIES` per kind.
-- **Legacy compatibility**: Plan A `useAnimation` + `animation` prop retained for SpatialDiv; segment downgrade path for simple timelines.
+- **Legacy compatibility**: Plan A `useAnimation` + `animation` prop retained for SpatialDiv as a separate compatibility path.
 - **Portal suppression**: animated fields suppressed during native playback (property-level for opacity, transform-wide for transform).
 - **Session semantics**: state machine, lifecycle callbacks, error handling unified across all paths.
 - **Capability detection**: `supports('useSpatializedMotion', [target])` for `spatialized2d` | `static3d` | `dynamic3d`.

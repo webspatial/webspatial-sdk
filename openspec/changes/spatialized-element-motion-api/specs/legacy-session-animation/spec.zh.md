@@ -51,9 +51,9 @@
 
 alive 会话在卸载时 MUST 被终止，且 MUST NOT 触发生命周期回调。
 
-## 段降级（与 timeline API 互操作）
+## 与 useSpatializedMotion 的边界
 
-当 `useSpatializedMotion({ from, to })` 配置编译为 tracks 后，每个属性恰好有两个 keyframe（`at: 0` 和 `at: duration`）且共享一个 `timingFunction` 时，SDK MAY 将其编译为旧版段 `play` 命令（`from`/`to`）发送到 native。这是内部优化；公共 API 为 `useSpatializedMotion`。
+统一的 `useSpatializedMotion` 路径 MUST 与旧版 native segment 命令路径保持分离。`useSpatializedMotion` 的 authoring 形状可以归一化为 `tracks`，但 MUST NOT 再降级到本兼容层定义的旧版 native `from`/`to` 命令。
 
 ## 废弃路径
 

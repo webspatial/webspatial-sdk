@@ -106,7 +106,7 @@ The hook MUST accept a config that is one of three mutually exclusive shapes:
 2. **Tracks config** (advanced): `{ duration, tracks: [{ property, keyframes: [{ at, value, timingFunction? }], timingFunction? }], timingFunction? }`
 3. **Timeline config** (CSS @keyframes style): `{ duration, timeline: { "0%": { ...values, timingFunction? }, ... "100%": { ...values } }, timingFunction? }`
 
-Passing more than one of `from`/`to`, `tracks`, or `timeline` in the same config object MUST be a type error (discriminated union). Internally, segment config and timeline config MUST compile to tracks before execution.
+Passing more than one of `from`/`to`, `tracks`, or `timeline` in the same config object MUST be a type error (discriminated union). Internally, segment config and timeline config MUST compile to tracks before execution. When native playback is used for `useSpatializedMotion`, that unified path MUST continue executing the canonical tracks model and MUST NOT downgrade into a legacy native segment command.
 
 All kinds MUST use visual transform paths (`transform.translate.*`, `opacity`, etc.) in all config shapes.
 
