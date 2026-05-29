@@ -2,7 +2,7 @@
 
 ## Scope
 
-`Spatialized2DElement` (HTML SpatialDiv / `enable-xr`) is the **reference target** for the unified motion system. When `animation` from `useSpatializedMotion` is bound to an `enable-xr` node via `motion` prop, the SDK resolves the target to `spatialized2d`. It is the only target that supports the **dual backend** (Web RAF + native).
+`Spatialized2DElement` (HTML SpatialDiv / `enable-xr`) is the **reference target** for the unified motion system. When `animation` from `useSpatializedMotion` is bound to an `enable-xr` node via `xr-animation` prop, the SDK resolves the target to `spatialized2d`. It is the only target that supports the **dual backend** (Web RAF + native).
 
 ## ADDED Requirements
 
@@ -90,7 +90,7 @@ When the native motion backend is not active, the SDK MUST use a **Web backend**
 #### Scenario: play before bind does not fall back to Web RAF
 
 - **GIVEN** `supports('useSpatializedMotion', ['spatialized2d'])` is `true`
-- **AND** `api.play()` runs before the `motion` binding has attached an element
+- **AND** `api.play()` runs before the `xr-animation` binding has attached an element
 - **THEN** the SDK MUST NOT start Web RAF playback as a fallback
 - **AND** native playback MUST begin once the element is bound
 
@@ -169,12 +169,12 @@ While a native session is alive, the SDK MUST suppress Portal DOM sync for anima
 
 ### Requirement: Motion binding for native sessions
 
-Native sessions MUST use `motion` prop / `SpatializedMotionBinding`, not the legacy `animation` prop.
+Native sessions MUST use `xr-animation` prop / `SpatializedMotionBinding`, not the legacy `animation` prop.
 
 #### Scenario: Unbind cancels session
 
 - **GIVEN** an active native session
-- **WHEN** motion binding unbinds
+- **WHEN** xr-animation binding unbinds
 - **THEN** SDK MUST tear down the session; `onReset` MUST NOT fire (aligned with unbind semantics)
 
 ---

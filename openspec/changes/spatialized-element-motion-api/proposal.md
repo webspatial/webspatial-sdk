@@ -19,7 +19,7 @@ This proposal unifies two prior efforts:
 2. **Plan B — Motion Timeline API** (`spatial-div-motion-api`, archived)
    - Introduced `useSpatializedMotion(config)` with multi-track timeline + `style` outlet
    - Dual backend: Web RAF fallback + native timeline playback
-   - Renamed `animation` binding to `motion` binding, and started returning `style` with defined `style` sync semantics
+   - Renamed `animation` binding to `xr-animation` binding, and started returning `style` with defined `style` sync semantics
 
 This **umbrella change** merges both into a single normative surface:
 - The **timeline data model** from Plan B is the canonical config shape
@@ -39,15 +39,15 @@ const [animation, api, style] = useSpatializedMotion({
 })
 
 // 2D — target auto-resolved to spatialized2d when bound to enable-xr node
-<div enable-xr style={{ width: 300, height: 200, ...style }} motion={animation}>
+<div enable-xr style={{ width: 300, height: 200, ...style }} xr-animation={animation}>
   <h2>Hello Spatial</h2>
 </div>
 
 // Static3D — target auto-resolved to static3d when bound to <Model>
-<Model src="robot.usdz" motion={animation} />
+<Model src="robot.usdz" xr-animation={animation} />
 
 // Dynamic3D — target auto-resolved to dynamic3d when bound to <Reality>
-<Reality motion={animation}>
+<Reality xr-animation={animation}>
   <Entity position={{ x: 0, y: 1, z: -2 }} />
 </Reality>
 
@@ -68,7 +68,7 @@ const [animation, api] = useAnimation({
 
 ## Target Resolution
 
-The hook is **target-agnostic** — it does not accept a `kind` parameter. The returned `animation` binding carries a **deferred target slot**. When React reconciles and the component accepting `motion={animation}` mounts, the SDK resolves the target automatically:
+The hook is **target-agnostic** — it does not accept a `kind` parameter. The returned `animation` binding carries a **deferred target slot**. When React reconciles and the component accepting `xr-animation={animation}` mounts, the SDK resolves the target automatically:
 
 | Component | Resolved target | `style` behavior |
 |-----------|-----------------|------------------|
@@ -123,6 +123,6 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 ## Impact
 
 - **Packages**: `@webspatial/react-sdk`, `@webspatial/core-sdk`, visionOS native bridge/runtime.
-- **Public API**: `useSpatializedMotion` hook, `SpatializedMotionConfig`, `SpatializedPlaybackApi`, `motion` binding prop on `<Model>` and `<Reality>`.
+- **Public API**: `useSpatializedMotion` hook, `SpatializedMotionConfig`, `SpatializedPlaybackApi`, `xr-animation` binding prop on `<Model>` and `<Reality>`.
 - **Legacy API**: `useAnimation` for SpatialDiv remains functional (no breaking change).
 - **Breaking changes**: None. This change is additive.
