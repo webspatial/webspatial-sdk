@@ -50,18 +50,18 @@ const [animation, api, style] = useSpatializedMotion({
 // 三种配置互斥（union type），内部 from/to 和 timeline 均编译为 tracks 执行
 
 // 绑定目标：
-<div enable-xr style={{ ...style }} motion={animation} />  // → spatialized2d
-<Model src="robot.usdz" motion={animation} />               // → static3d
-<Reality motion={animation}><Entity /></Reality>             // → dynamic3d
+<div enable-xr style={{ ...style }} xr-animation={animation} />  // → spatialized2d
+<Model src="robot.usdz" xr-animation={animation} />               // → static3d
+<Reality xr-animation={animation}><Entity /></Reality>             // → dynamic3d
 
 // style 行为：2D 返回活跃 CSSProperties；3D 返回空对象 {}（可安全展开）
 ```
 
 | 绑定目标 | React 绑定 | Core 写回 |
 |----------|------------|-----------|
-| 2D | `motion` on `enable-xr` div，`style` 合并 | native `element.transform` + opacity；浏览器可 Web RAF |
-| Static3D | `motion` on `<Model>` | native `modelTransform` + opacity |
-| Dynamic3D | `motion` on `<Reality>` | native 容器 `element.transform` + opacity |
+| 2D | `xr-animation` on `enable-xr` div，`style` 合并 | native `element.transform` + opacity；浏览器可 Web RAF |
+| Static3D | `xr-animation` on `<Model>` | native `modelTransform` + opacity |
+| Dynamic3D | `xr-animation` on `<Reality>` | native 容器 `element.transform` + opacity |
 
 ## 4. Playback API
 

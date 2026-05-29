@@ -13,7 +13,7 @@
 | 方面 | 旧版（Plan A） | 当前（Plan B / 统一） |
 |------|---------------|---------------------|
 | Hook | `useAnimation(config)` | `useSpatializedMotion(config)` |
-| 绑定方式 | `animation` prop 传给 `enable-xr` 节点 | `style` 合并 + 可选 `motion` binding |
+| 绑定方式 | `animation` prop 传给 `enable-xr` 节点 | `style` 合并 + 可选 `xr-animation` binding |
 | 配置形状 | `from` / `to` 单段 | `from/to`（推荐）或 `tracks[]` 带 keyframes（互斥） |
 | 播放后端 | 仅 native | Web RAF + native（双后端） |
 | 支持 kind | 仅 `spatialized2d` | `spatialized2d`、`static3d`、`dynamic3d` |

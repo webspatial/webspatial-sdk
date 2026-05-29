@@ -14,7 +14,7 @@ Implementation MUST use `SpatializedMotionController` with the `static3d` target
 - **WHEN** `SpatializedStatic3DElement.animateMotion({ type: 'play', timeline })` runs
 - **THEN** native MUST sample the timeline and update `modelTransform` / `opacity` until completion or session termination
 
-#### Scenario: Model motion binding
+#### Scenario: Model xr-animation binding
 
 - **WHEN** `<Model motion={binding} />` receives `animation` from `useSpatializedMotion(config)`, resolving the target to `static3d`
 - **THEN** play before bind MAY queue; after bind native playback MUST drive transform without fighting React layout writes (suppression rules analogous to 2D)
@@ -26,4 +26,4 @@ USD embedded model playback (`ref.play()` / `pause()` on the model ref) MUST rem
 #### Scenario: ref.play does not start timeline
 
 - **WHEN** application calls model ref `play()` for USD clip
-- **THEN** timeline `motion` session MUST NOT be implied; separate APIs
+- **THEN** timeline `xr-animation` session MUST NOT be implied; separate APIs

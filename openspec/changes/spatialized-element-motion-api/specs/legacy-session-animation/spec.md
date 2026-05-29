@@ -24,7 +24,7 @@ This sub-spec documents the **Plan A session-based animation API** (`useAnimatio
 | Aspect | Legacy (Plan A) | Current (Plan B / unified) |
 |--------|-----------------|---------------------------|
 | Hook | `useAnimation(config)` | `useSpatializedMotion(config)` |
-| Binding | `animation` prop on `enable-xr` node | `style` merge + optional `motion` binding |
+| Binding | `animation` prop on `enable-xr` node | `style` merge + optional `xr-animation` binding |
 | Config shape | `from` / `to` single segment | `from/to` (recommended) or `tracks[]` with keyframes (mutually exclusive) |
 | Playback backend | Native only | Web RAF + native (dual backend) |
 | Supported kinds | `spatialized2d` only | `spatialized2d`, `static3d`, `dynamic3d` |
