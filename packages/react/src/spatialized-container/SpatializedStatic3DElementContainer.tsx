@@ -9,6 +9,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
 import { getSession } from '../utils'
@@ -18,11 +19,12 @@ import {
   SpatializedStatic3DContentProps,
   SpatializedStatic3DElementRef,
 } from './types'
-import { ModelSource, SpatializedStatic3DElement } from '@webspatial/core-sdk'
 import {
-  PortalInstanceObject,
-  PortalInstanceContext,
-} from './context/PortalInstanceContext'
+  ModelLoadingMode,
+  ModelSource,
+  SpatializedStatic3DElement,
+} from '@webspatial/core-sdk'
+import { PortalInstanceContext } from './context/PortalInstanceContext'
 
 function getAbsoluteURL(url: string): string
 function getAbsoluteURL(url: undefined): undefined
@@ -86,32 +88,65 @@ function collectSources(children: React.ReactNode): ModelSource[] {
 }
 
 function SpatializedContent(props: SpatializedStatic3DContentProps) {
-  const { src, children, spatializedElement, onLoad, onError, autoPlay, loop } =
-    props
-
+  const {
+    src,
+    poster,
+    children,
+    spatializedElement,
+    onLoad,
+    onError,
+    autoPlay,
+    loop,
+    loading = 'eager',
+  } = props
   const portalInstanceObject = useContext(PortalInstanceContext)!
+  const wasVisible = useRef(false)
 
   const modelURL = useMemo(() => getAbsoluteURL(src), [src])
+  const posterURL = useMemo(() => getAbsoluteURL(poster), [poster])
   const sources = useMemo(() => collectSources(children), [children])
+  const sourcesKey = useMemo(() => JSON.stringify(sources), [sources])
+
+  // Observe when model becomes visible and then stop until sources change
+  useEffect(() => {
+    wasVisible.current = false
+    const target = portalInstanceObject.dom
+    if (loading !== 'lazy' || !target) {
+      wasVisible.current = true
+      return
+    }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        wasVisible.current = true
+        observer.disconnect()
+        spatializedElement.updateProperties({ loading: 'eager' })
+      }
+    })
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [modelURL, sourcesKey, portalInstanceObject])
 
   useEffect(() => {
+    if (loading !== 'lazy') wasVisible.current = true
     // If modelURL was previously set and now is undefined then a dummy
     // value needs to be sent to clear the old value
     // TODO: Can native side handle null instead of ''
     spatializedElement.updateProperties({
-      modelURL: modelURL ?? '',
+      modelURL: modelURL ?? (spatializedElement.modelUrl ? '' : modelURL),
       sources,
       autoplay: autoPlay,
       loop,
+      posterURL: posterURL ?? '',
+      loading: loading === 'lazy' && wasVisible.current ? 'eager' : loading,
     })
-  }, [modelURL, JSON.stringify(sources), autoPlay, loop])
+  }, [modelURL, sourcesKey, autoPlay, loop, posterURL, loading])
 
   useEffect(() => {
     if (onLoad) {
       spatializedElement.onLoadCallback = () => {
         onLoad(
           createLoadSuccessEvent(
-            () => (portalInstanceObject.dom as any).__targetProxy,
+            () => portalInstanceObject.dom as SpatializedStatic3DElementRef,
           ),
         )
       }
@@ -125,7 +160,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
       spatializedElement.onLoadFailureCallback = () => {
         onError(
           createLoadFailureEvent(
-            () => (portalInstanceObject.dom as any).__targetProxy,
+            () => portalInstanceObject.dom as SpatializedStatic3DElementRef,
           ),
         )
       }
@@ -147,13 +182,13 @@ function SpatializedStatic3DElementContainerBase(
     promiseRef.current = getSession()!.createSpatializedStatic3DElement(
       getAbsoluteURL(props.src),
       collectSources(props.children),
+      props.loading === 'lazy' ? 'lazy' : 'eager',
     )
     return promiseRef.current
   }, [])
   const extraRefProps = useCallback(
     (domProxy: SpatializedStatic3DElementRef) => {
       let modelTransform = new DOMMatrixReadOnly()
-
       return {
         get currentSrc(): string {
           const spatializedElement = (domProxy as any).__spatializedElement as
@@ -215,6 +250,20 @@ function SpatializedStatic3DElementContainerBase(
             | undefined
           if (spatializedElement) {
             spatializedElement.playbackRate = value
+          }
+        },
+        get currentTime(): number {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          return spatializedElement?.currentTime ?? 0
+        },
+        set currentTime(value: number) {
+          const spatializedElement = (domProxy as any).__spatializedElement as
+            | SpatializedStatic3DElement
+            | undefined
+          if (spatializedElement) {
+            spatializedElement.currentTime = value
           }
         },
       }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import './CubeComponent.scss'
 import { CSSProperties } from 'styled-components'
+import './CubeComponent.scss'
 
 export interface CubeProps {
   depth: number

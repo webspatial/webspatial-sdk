@@ -1,5 +1,3 @@
-import React, { useRef } from 'react'
-import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import {
   AttachmentAsset,
@@ -7,11 +5,13 @@ import {
   BoxEntity,
   enableDebugTool,
   Entity,
+  Model,
   Reality,
   SceneGraph,
   UnlitMaterial,
-  Model,
 } from '@webspatial/react-sdk'
+import gsap from 'gsap'
+import React, { useRef } from 'react'
 
 gsap.registerPlugin(useGSAP)
 enableDebugTool()

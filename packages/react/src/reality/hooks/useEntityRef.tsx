@@ -1,6 +1,6 @@
-import { useEffect, useImperativeHandle, useRef } from 'react'
+import { useImperativeHandle } from 'react'
 import { Vec3, SpatialEntity } from '@webspatial/core-sdk'
-import { RealityContextValue, useRealityContext } from '../context'
+import { RealityContextValue } from '../context'
 
 export interface EntityRefShape {
   convertFromEntityToEntity: (

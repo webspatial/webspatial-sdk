@@ -1,15 +1,15 @@
 import {
-  createSpatialized2DElementCommand,
   CreateSpatializedDynamic3DElementCommand,
   CreateSpatializedStatic3DElementCommand,
 } from './JSBCommand'
 import { Spatialized2DElement } from './Spatialized2DElement'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
-import { ModelSource } from './types/types'
+import { createNativeSpatialDiv } from './spatial-host'
+import { ModelLoadingMode, ModelSource } from './types/types'
 
 export async function createSpatialized2DElement(): Promise<Spatialized2DElement> {
-  const result = await new createSpatialized2DElementCommand().execute()
+  const result = await createNativeSpatialDiv()
   if (!result.success) {
     throw new Error('createSpatialized2DElement failed')
   } else {
@@ -24,16 +24,18 @@ export async function createSpatialized2DElement(): Promise<Spatialized2DElement
 export async function createSpatializedStatic3DElement(
   modelURL?: string,
   sources?: ModelSource[],
+  loading: ModelLoadingMode = 'eager',
 ): Promise<SpatializedStatic3DElement> {
   const result = await new CreateSpatializedStatic3DElementCommand(
     modelURL,
     sources,
+    loading,
   ).execute()
   if (!result.success) {
     throw new Error('createSpatializedStatic3DElement failed')
   } else {
     const { id } = result.data
-    return new SpatializedStatic3DElement(id, modelURL, sources)
+    return new SpatializedStatic3DElement(id, modelURL, sources, loading)
   }
 }
 

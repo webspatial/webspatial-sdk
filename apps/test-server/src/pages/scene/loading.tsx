@@ -1,6 +1,6 @@
+import { initScene } from '@webspatial/react-sdk'
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { initScene } from '@webspatial/react-sdk'
 window.xrCurrentSceneDefaults = async () => {
   await new Promise<void>((resolve, _) => {
     setTimeout(resolve, 2000)

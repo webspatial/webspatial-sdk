@@ -1,4 +1,5 @@
-import { createSpatialSceneCommand, FocusScene } from './JSBCommand'
+import { FocusScene } from './JSBCommand'
+import { openSpatialSceneSync } from './spatial-host'
 import { SpatialScene } from './SpatialScene'
 import {
   SpatialSceneCreationOptions,
@@ -221,8 +222,12 @@ class SceneManager {
       cfg = { ...ans, type: 'window' }
     }
 
-    const cmd = new createSpatialSceneCommand(url!, cfg, target, features)
-    const result = cmd.executeSync()
+    const result = openSpatialSceneSync(
+      url!,
+      cfg as SpatialSceneCreationOptionsInternal,
+      target,
+      features,
+    )
 
     const id = result.data?.id
 
@@ -428,8 +433,6 @@ export function formatSceneConfig(
   // resizability should format into px
   // defaultSize should format into px if window
   // defaultSize should format into m if volume
-
-  const defaultSceneConfig = getSceneDefaultConfig(sceneType)
 
   const errors: string[] = []
 

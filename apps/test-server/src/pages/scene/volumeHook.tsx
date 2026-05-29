@@ -1,6 +1,6 @@
+import { initScene } from '@webspatial/react-sdk'
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { initScene } from '@webspatial/react-sdk'
 
 window.xrCurrentSceneType = 'volume'
 window.xrCurrentSceneDefaults = async () => {

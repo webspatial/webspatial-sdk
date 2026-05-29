@@ -1,8 +1,6 @@
-import ReactDOM from 'react-dom/client'
-
 import { enableDebugTool, Model, ModelRef } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState, RefObject } from 'react'
-import { useLogger, Logger } from './Logger'
+import { RefObject, useEffect, useRef, useState } from 'react'
+import { Logger, useLogger } from './Logger'
 
 enableDebugTool()
 
@@ -11,38 +9,44 @@ function App() {
   const [logs, logLine, clearLog] = useLogger()
   const [transform, setTransform] = useState('')
   const [dragTranslation, setDragTranslation] = useState({ x: 0, y: 0, z: 0 })
-  const [isPaused, setIsPaused] = useState(true)
+  const [currentTime, setCurrentTime] = useState(0.0)
   const [playbackRate, setPlaybackRate] = useState(1.0)
+  const [loop, setLoop] = useState(true)
+  const [loading, setLoading] = useState<'eager' | 'lazy'>('eager')
   useEffect(() => {
-    modelRef.current!.ready?.then(() => logLine('ref.current.ready success'))
+    modelRef
+      .current!.ready?.then(() => logLine('ref.current.ready success'))
+      .catch(() => logLine('ref.current.ready error'))
   }, [logLine])
   // Monitor duration and pause state since there is no playback lifecycle events
   useEffect(() => {
     const id = setInterval(
-      () => setIsPaused(modelRef.current?.paused ?? true),
+      () => setCurrentTime(modelRef.current?.currentTime ?? 0.0),
       200,
     )
     return () => clearInterval(id)
-  }, [setIsPaused])
+  }, [setCurrentTime])
 
   return (
-    <div className="prose max-w-none">
+    <div className="prose max-w-none p-10">
       <CSSTransform onChange={setTransform} />
       <EntityTransform model={modelRef} />
       <Model
         // src="/modelasset/cone.usdz"
+        poster="/img/toy_drummer.png"
         enable-xr
         autoPlay
-        loop
+        loop={loop}
         style={{
           height: '200px',
           '--xr-depth': '100px',
           '--xr-back': '50px',
+          marginBottom: '20px',
           transform,
         }}
         ref={modelRef}
         onError={e => logLine(`Model error ${modelRef.current?.currentSrc}`)}
-        onLoad={e => logLine(`Model success ${modelRef.current?.currentSrc}`)}
+        onLoad={e => logLine(`Model success ${e.target.currentSrc}`)}
         onSpatialTap={e => {
           logLine('model onSpatialTap', e.detail.location3D)
         }}
@@ -65,11 +69,15 @@ function App() {
           setDragTranslation({ x: 0, y: 0, z: 0 })
         }}
       >
-        <source src="/modelasset/Fox_animated.glb" type="model/gltf-binary" />
         <source
           src="https://webkit.org/demos/model-demos/models/stopwatch.usdz"
           type="model/vnd.usdz+zip"
         />
+        <source
+          src="https://developer.apple.com/augmented-reality/quick-look/models/drummertoy/toy_drummer.usdz"
+          type="model/vnd.usdz+zip"
+        />
+        <source src="/modelasset/Fox_animated.glb" type="model/gltf-binary" />
         <source
           src="https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane_realistic.usdz"
           type="model/vnd.usdz+zip"
@@ -80,6 +88,16 @@ function App() {
         />
       </Model>
       <section className="playbackControls">
+        <button
+          className="btn m-1"
+          onClick={() => {
+            if (modelRef.current?.currentTime) {
+              modelRef.current.currentTime -= 10
+            }
+          }}
+        >
+          ⏪
+        </button>
         <button
           className="btn btn-success m-1"
           onClick={() => modelRef.current?.play()}
@@ -92,6 +110,34 @@ function App() {
         >
           ⏸
         </button>
+        <button
+          className="btn m-1"
+          onClick={() => {
+            if (modelRef.current?.currentTime) {
+              modelRef.current.currentTime += 10
+            }
+          }}
+        >
+          ⏩
+        </button>
+        <label className="inline-flex items-center align-middle">
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={loop}
+            onChange={() => setLoop(!loop)}
+          />
+          <span className="label-text m-1">Loop</span>
+        </label>
+        <label className="inline-flex items-center align-middle">
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={loading === 'eager'}
+            onChange={() => setLoading(loading === 'eager' ? 'lazy' : 'eager')}
+          />
+          <span className="label-text m-1">Eager</span>
+        </label>
         <select
           className="select m-1"
           value={playbackRate}
@@ -108,11 +154,43 @@ function App() {
           <option value={100.0}>100.0</option>
         </select>
         <span className="m-1">
-          Duration {modelRef.current?.duration?.toFixed(2)}s, Paused:{' '}
-          {`${isPaused}`}, Rate: {modelRef.current?.playbackRate}
+          Time: {currentTime.toFixed(2)}/
+          {modelRef.current?.duration?.toFixed(2)}s, Paused:{' '}
+          {`${modelRef.current?.paused ?? true}`}, Rate:{' '}
+          {modelRef.current?.playbackRate}
         </span>
       </section>
       <Logger logs={logs} clearLog={clearLog} />
+      <Model
+        enable-xr
+        autoPlay
+        loading={loading}
+        style={{
+          height: '200px',
+          '--xr-depth': '100px',
+          '--xr-back': '50px',
+          marginBottom: '20px',
+        }}
+      >
+        <source
+          src="https://developer.apple.com/augmented-reality/quick-look/models/drummertoy/toy_drummer.usdz"
+          type="model/vnd.usdz+zip"
+        />
+        <img
+          src="/img/toy_drummer.png"
+          className="w-full h-[200px] object-contain"
+        />
+      </Model>
+      <Model
+        poster="/img/toy_drummer.png"
+        enable-xr
+        style={{
+          height: '200px',
+          '--xr-depth': '100px',
+          '--xr-back': '50px',
+          marginBottom: '20px',
+        }}
+      />
     </div>
   )
 }

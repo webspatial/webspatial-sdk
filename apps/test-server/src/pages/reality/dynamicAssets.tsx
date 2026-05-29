@@ -1,13 +1,13 @@
-import React, { useState } from 'react'
 import {
+  BoxEntity,
+  Entity,
+  ModelAsset,
+  ModelEntity,
   Reality,
   SceneGraph,
-  Entity,
-  BoxEntity,
-  ModelEntity,
-  ModelAsset,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
+import React, { useState } from 'react'
 
 // Simple test page for testing dynamic assets:
 // - recreateKey (removes/recreates BoxEntity)
@@ -33,7 +33,7 @@ export default function RealityDynamicAssets() {
   const [modelMaterials, setModelMaterials] = useState<string[] | undefined>([
     'matRed',
   ])
-  const [modelMaterialSet, setModelMaterialSet] = useState(0)
+  const [, setModelMaterialSet] = useState(0)
   const modelMaterialOptions: (string[] | undefined)[] = [
     ['matRed'],
     ['matGreen'],

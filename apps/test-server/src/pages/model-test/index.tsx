@@ -1,17 +1,16 @@
-import React, { CSSProperties, useRef, useState } from 'react'
-import * as THREE from 'three'
 import {
   enableDebugTool,
   Model,
   ModelRef,
-  ModelSpatialTapEvent,
-  ModelSpatialDragEvent,
   ModelSpatialDragEndEvent,
+  ModelSpatialDragEvent,
   ModelSpatialDragStartEvent,
-  ModelSpatialRotateEvent,
   ModelSpatialMagnifyEvent,
-  ModelLoadEvent,
+  ModelSpatialRotateEvent,
+  ModelSpatialTapEvent,
 } from '@webspatial/react-sdk'
+import { CSSProperties, useRef, useState } from 'react'
+import * as THREE from 'three'
 
 enableDebugTool()
 

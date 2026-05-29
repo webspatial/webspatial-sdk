@@ -1,4 +1,3 @@
-import { hijackGetComputedStyle } from './hooks/useDomProxy'
 import { injectSpatialDefaultStyle } from './StandardSpatializedContainer'
 import { initCSSParserDivContainer } from './TransformVisibilityTaskContainer'
 
@@ -31,10 +30,11 @@ export {
   type ModelSpatialMagnifyEndEvent,
   type ModelLoadEvent,
   type SpatialEventOptions,
+  type SpatialContentReadyContext,
+  type SpatialContentReadyCallback,
 } from './types'
 
 export function initPolyfill() {
-  hijackGetComputedStyle()
   injectSpatialDefaultStyle()
   initCSSParserDivContainer()
 }

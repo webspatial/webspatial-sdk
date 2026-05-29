@@ -13,6 +13,11 @@ WebSpatial is a set of [minimal extensions to HTML/CSS/DOM APIs](https://tpac202
 - [`@webspatial/builder`](./packages/cli/): tooling for previewing, building, and publishing packaged WebSpatial apps
 - [`@webspatial/platform-visionos`](./packages/visionOS/): the visionOS runtime package used by Builder
 
+## Requirements
+
+- Node.js 22 or newer
+- pnpm 9 or newer
+
 ## Documentation
 
 The current documentation lives at [webspatial.dev](https://webspatial.dev).
@@ -23,6 +28,10 @@ The current documentation lives at [webspatial.dev](https://webspatial.dev).
 - [API](https://webspatial.dev/docs/api): reference docs for the React SDK and WebSpatial Builder:
 - [React SDK API](https://webspatial.dev/docs/api/react-sdk): React components, CSS APIs, DOM APIs, events, JS APIs, and scene options
 - [Builder API](https://webspatial.dev/docs/api/builder): `run`, `build`, and `publish`
+
+### Runtime capabilities
+
+Apps can query the current shell with `WebSpatialRuntime.supports(name, tokens?)` from `@webspatial/react-sdk` (see package exports). For documented keys, sub-tokens, resolution rules, and fallback behavior (including the native `<model>` exception), see [`openspec/specs/runtime-capabilities/spec.md`](openspec/specs/runtime-capabilities/spec.md).
 
 ## Contributing
 

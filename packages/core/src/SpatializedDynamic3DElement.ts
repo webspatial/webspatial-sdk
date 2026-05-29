@@ -1,5 +1,4 @@
 import {
-  AddEntityToDynamic3DCommand,
   SetParentForEntityCommand,
   UpdateSpatializedDynamic3DElementProperties,
 } from './JSBCommand'

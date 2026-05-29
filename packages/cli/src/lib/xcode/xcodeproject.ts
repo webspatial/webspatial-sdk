@@ -177,12 +177,13 @@ export default class XcodeProject {
   private static async bindIcon(icon: any) {
     if (icon) {
       // The application icon of Apple Vision Pro requires at least 2 images, one of which is a completely opaque base image. Therefore, Spatial Web is required to provide the base image, and CLI will generate an additional completely transparent image as the middle layer.
+      const iconMime = icon.mime ?? 'image/png'
       const iconConfigDirectory = join(
         PROJECT_DIRECTORY,
         BACK_APPICON_DIRECTORY,
       )
       const iconConfigPath = join(iconConfigDirectory, 'Contents.json')
-      const iconFileName = 'icon.' + icon.getMIME().replace('image/', '')
+      const iconFileName = 'icon.' + iconMime.replace('image/', '')
       const iconFullPath = join(iconConfigDirectory, iconFileName)
 
       let iconConfig = await loadJsonFromDisk(iconConfigPath)
@@ -194,7 +195,7 @@ export default class XcodeProject {
           }
       */
       iconConfig.images[0]['filename'] = iconFileName
-      await icon.writeAsync(iconFullPath)
+      await icon.write(iconFullPath)
       await fs.writeFileSync(iconConfigPath, JSON.stringify(iconConfig))
 
       const middleIconConfigDirectory = join(
@@ -214,16 +215,16 @@ export default class XcodeProject {
       let middleConfig = await loadJsonFromDisk(middleIconConfigPath)
       let middleIcon = ImageHelper.createImg(512)
       middleConfig.images[0]['filename'] = middleIconFileName
-      await middleIcon.writeAsync(middleIconFullPath)
+      await middleIcon.write(middleIconFullPath as `${string}.${string}`)
       await fs.writeFileSync(middleIconConfigPath, JSON.stringify(middleConfig))
 
       const logoConfigDirectory = join(PROJECT_DIRECTORY, LOGO_DIRECTORY)
       const logoConfigPath = join(logoConfigDirectory, 'Contents.json')
       let logoConfig = await loadJsonFromDisk(logoConfigPath)
-      const logoFileName = 'logo.' + icon.getMIME().replace('image/', '')
+      const logoFileName = 'logo.' + iconMime.replace('image/', '')
       const logoFullPath = join(logoConfigDirectory, logoFileName)
       logoConfig.images[0]['filename'] = logoFileName
-      await icon.writeAsync(logoFullPath)
+      await icon.write(logoFullPath)
       await fs.writeFileSync(logoConfigPath, JSON.stringify(logoConfig))
     }
   }

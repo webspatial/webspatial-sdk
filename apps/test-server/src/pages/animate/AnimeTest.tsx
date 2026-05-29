@@ -1,5 +1,5 @@
-import { useRef } from 'react'
 import anime from 'animejs/lib/anime.es.js'
+import { useRef } from 'react'
 
 export function AnimeTest() {
   const ref = useRef<HTMLDivElement>(null)
