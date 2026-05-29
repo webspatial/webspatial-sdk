@@ -29,26 +29,25 @@ export default function TransformTranslatePage() {
     timingFunction: 'easeInOut',
     autoStart: false,
     onStart: () => log('translate: onStart'),
-    onComplete: (values: any) =>
-      log(`translate: onComplete → ${fmtValues(values)}`),
-    onCancel: (values: any) =>
-      log(`translate: onCancel → ${fmtValues(values)}`),
-    onError: (err: any) => log(`translate: onError → ${err.reason}`),
-  } as any)
+    onComplete: values => log(`translate: onComplete → ${fmtValues(values)}`),
+    onReset: values => log(`translate: onReset → ${fmtValues(values)}`),
+    onStop: values => log(`translate: onStop → ${fmtValues(values)}`),
+    onError: err => log(`translate: onError → ${err.reason}`),
+  })
 
-  // Demonstrates play re-entry: cancel + play in one click ensures a fresh
+  // Demonstrates play re-entry: reset + play in one click ensures a fresh
   // session even if a previous one is still alive (covers spec 3.5).
   const restart = () => {
-    ;(api as any).cancel()
-    ;(api as any).play()
-    log('restart: cancel() + play()')
+    api.reset()
+    api.play()
+    log('restart: reset() + play()')
   }
 
   // Suppression test: plays animation + rapidly triggers re-renders via state
   // changes. If transform suppression works, the animation should be smooth.
   // If not, the element will jitter as updateTransform overwrites mid-frames.
   const startSuppressionTest = () => {
-    ;(api as any).play()
+    api.play()
     log('suppression: started animation + re-render interference')
 
     let tick = 0
@@ -76,18 +75,18 @@ export default function TransformTranslatePage() {
       title="Transform Translate"
       description={
         <>
-          Translate (0,0,0)→(0.1, 0.05, -0.08)m over 2s. The SpatialDiv moves in
-          3D space: right (+X), up (+Y), and toward the user (-Z) in meters.
-          Restart proves play re-entry semantics. The Suppression Test rapidly
-          re-renders the component during animation — if transform suppression
-          works, motion stays smooth.
+          Translate (0,0,0)→(100, 10, 100) over 2s. The SpatialDiv moves in 3D
+          space: right (+X), down (+Y), and along +Z. Restart proves reset +
+          play re-entry semantics. The Suppression Test rapidly re-renders the
+          component during animation — if transform suppression works, motion
+          stays smooth.
         </>
       }
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div
           enable-xr
-          animation={animation as any}
+          animation={animation}
           style={{
             width: 200,
             height: 150,
@@ -104,20 +103,20 @@ export default function TransformTranslatePage() {
         </div>
 
         <div className="flex flex-wrap gap-2 mt-3">
-          <button className={btnPrimary} onClick={() => (api as any).play()}>
+          <button className={btnPrimary} onClick={() => api.play()}>
             Play
           </button>
-          <button className={btnCls} onClick={() => (api as any).pause()}>
+          <button className={btnCls} onClick={() => api.pause()}>
             Pause
           </button>
-          <button className={btnCls} onClick={() => (api as any).play()}>
+          <button className={btnCls} onClick={() => api.play()}>
             Resume
           </button>
-          <button className={btnCls} onClick={() => (api as any).cancel()}>
-            Cancel
+          <button className={btnCls} onClick={() => api.reset()}>
+            Reset
           </button>
           <button className={btnCls} onClick={restart}>
-            Restart (cancel + play)
+            Restart (reset + play)
           </button>
           <button
             className={btnCls + ' !bg-yellow-700 !text-white'}
@@ -130,11 +129,10 @@ export default function TransformTranslatePage() {
           </button>
         </div>
         <div className="mt-3 flex items-center gap-3">
-          <PlayStateBadge state={(api as any).playState} />
+          <PlayStateBadge state={api.playState} />
           <span className="text-xs font-mono text-gray-500">
-            isAnimating={String((api as any).isAnimating)} &nbsp; isPaused=
-            {String((api as any).isPaused)} &nbsp; finished=
-            {String((api as any).finished)}
+            isAnimating={String(api.isAnimating)} &nbsp; isPaused=
+            {String(api.isPaused)} &nbsp; finished={String(api.finished)}
           </span>
         </div>
         <Log lines={lines} />
@@ -151,7 +149,7 @@ export default function TransformTranslatePage() {
             </li>
             <li>
               <strong>Expected (suppression works):</strong> element moves
-              smoothly from origin to (0.1, 0.05, -0.08)m despite re-renders.
+              smoothly from origin to (100, 10, 100) despite re-renders.
             </li>
             <li>
               <strong>Broken (no suppression):</strong> element jitters or snaps
