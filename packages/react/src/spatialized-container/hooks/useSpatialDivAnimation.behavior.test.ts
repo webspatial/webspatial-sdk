@@ -265,6 +265,56 @@ describe('SpatialDiv Animation Behavior Tests (Task 5.3)', () => {
       expect(api.playState).toBe('running')
     })
 
+    test('play after pause then reset creates a fresh session instead of resuming the old one', async () => {
+      const mock = createMockElement()
+      const config = {
+        to: { opacity: 1 } as const,
+        from: { opacity: 0 } as const,
+        duration: 1.0,
+        autoStart: false,
+      }
+
+      const { result } = renderHook(() => useSpatialDivAnimation(config, true))
+      const [animatedProps, api] = result.current
+
+      await act(async () => {
+        ;(animatedProps as any).__setElement(mock.element)
+      })
+      await flushPromises()
+
+      await act(async () => {
+        api.play()
+      })
+      await flushPromises()
+      expect(api.playState).toBe('running')
+
+      await act(async () => {
+        api.pause()
+      })
+      await flushPromises()
+      expect(api.playState).toBe('paused')
+
+      await act(async () => {
+        api.reset()
+      })
+      await flushPromises()
+
+      expect(api.playState).toBe('idle')
+      expect(api.isAnimating).toBe(false)
+
+      await act(async () => {
+        api.play()
+      })
+      await flushPromises()
+
+      const commandTypes = mock.element.animateSpatialDiv.mock.calls.map(
+        (call: any) => call[0].type,
+      )
+      expect(commandTypes).toEqual(['play', 'pause', 'reset', 'play'])
+      expect(commandTypes).not.toContain('resume')
+      expect(api.playState).toBe('running')
+    })
+
     test('play while queued is a no-op', async () => {
       const config = {
         to: { opacity: 1 } as const,
