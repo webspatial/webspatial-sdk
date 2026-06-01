@@ -27,6 +27,7 @@ import ModelTest from './src/pages/model-test/index'
 import SpatialStyleTest from './src/pages/spatialStyleTest/index'
 import CanvasTest from './src/pages/canvas-test/index'
 import JSAPITest from './src/pages/jsapi-test/index'
+import SpatialDivRefreshValidation from './src/pages/jsapi-refresh-validation/index'
 import SceneTest from './src/pages/scene/index'
 import SceneVolume from './src/pages/scene/volume'
 import SceneXRApp from './src/pages/scene/xrapp'
@@ -125,6 +126,14 @@ function App() {
                 />
                 <Route path="/canvas-test" element={<CanvasTest />} />
                 <Route path="/jsapi-test" element={<JSAPITest />} />
+                <Route
+                  path="/spatial-div-refresh-validation"
+                  element={<SpatialDivRefreshValidation />}
+                />
+                <Route
+                  path="/jsapi-refresh-validation"
+                  element={<SpatialDivRefreshValidation />}
+                />
                 <Route
                   path="/runtime-capabilities"
                   element={<RuntimeCapabilitiesPage />}

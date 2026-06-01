@@ -40,6 +40,7 @@ declare global {
       'react-sdk-version'?: string
       'core-sdk-version'?: string
       physicalMetrics?: PhysicalMetricsValueShape
+      pageEpoch?: string | number
     }
 
     /** Present when `supports('xrInnerDepth')` is true; otherwise `undefined`. */

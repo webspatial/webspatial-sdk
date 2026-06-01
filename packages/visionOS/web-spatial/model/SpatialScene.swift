@@ -361,6 +361,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     var didFailLoad = false
+    private var currentPageGeneration = 0
 
     private func setupWebViewStateListener() {
         spatialWebViewModel.addStateListener(.didStartLoad) {
@@ -378,6 +379,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
 
         spatialWebViewModel.addStateListener(.didReceive) {
+            self.injectPageEpoch()
             if let meterToPtUnscaled = self.meterToPtUnscaled,
                let meterToPtScaled = self.meterToPtScaled
             {
@@ -425,11 +427,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return handleWindowOpenCustom(url)
         } else if host == "createAttachment" {
             return handleCreateAttachment(url)
-        } else {
+        } else if host == "createSpatialized2DElement" {
+            guard shouldAcceptSpatialRequest(url, command: host) else {
+                return nil
+            }
             let spatialized2DElement: Spatialized2DElement = createSpatializedElement(
                 .Spatialized2DElement
             )
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
+        } else {
+            logger.warning("Unknown webspatial open-window command: \(host)")
+            return nil
         }
     }
 
@@ -437,6 +445,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     private var pendingAttachmentWebViewModels = [String: SpatialWebViewModel]()
 
     private func handleCreateAttachment(_ url: URL) -> WebViewElementInfo? {
+        guard shouldAcceptSpatialRequest(url, command: "createAttachment") else {
+            return nil
+        }
         // Just create a bare webview — metadata arrives via InitializeAttachment JSB
         let id = UUID().uuidString
         let webViewModel = SpatialWebViewModel(url: nil)
@@ -481,6 +492,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onPageStartLoad() {
+        currentPageGeneration += 1
+        injectPageEpoch()
+        logger.debug("SpatialScene page generation advanced to \(currentPageGeneration)")
         // destroy all SpatialObject asset
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
@@ -488,6 +502,50 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         attachmentManager.destroyAll()
         backgroundMaterial = .None
+    }
+
+    private func injectPageEpoch() {
+        // Mirror the native page generation into JS so frontend-created
+        // webspatial:// requests can carry page ownership metadata.
+        let js = """
+        window.__webspatialsdk__ = window.__webspatialsdk__ || {};
+        window.__webspatialsdk__.pageEpoch = "\(currentPageGeneration)";
+        """
+        spatialWebViewModel.getController().callJS(js)
+    }
+
+    private struct SpatialRequestMetadata {
+        let rid: String?
+        let pageEpoch: String?
+    }
+
+    private func parseSpatialRequestMetadata(_ url: URL) -> SpatialRequestMetadata {
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        let rid = items.first { $0.name == "rid" }?.value
+        let pageEpoch = items.first { $0.name == "wsepoch" }?.value
+        return SpatialRequestMetadata(rid: rid, pageEpoch: pageEpoch)
+    }
+
+    private func shouldAcceptSpatialRequest(_ url: URL, command: String) -> Bool {
+        let metadata = parseSpatialRequestMetadata(url)
+
+        guard let pageEpoch = metadata.pageEpoch, !pageEpoch.isEmpty else {
+            // Compatibility mode for older frontend bundles that do not emit
+            // request epoch yet.
+            logger.warning("SpatialScene accepts \(command) without wsepoch in compatibility mode, rid=\(metadata.rid ?? "nil")")
+            return true
+        }
+
+        let currentEpoch = String(currentPageGeneration)
+        if pageEpoch != currentEpoch {
+            // Drop requests that were initiated by an older page generation so
+            // they cannot recreate stale 2D content after refresh.
+            logger.warning("SpatialScene drops stale \(command), rid=\(metadata.rid ?? "nil"), requestEpoch=\(pageEpoch), currentEpoch=\(currentEpoch)")
+            return false
+        }
+
+        logger.debug("SpatialScene accepts \(command), rid=\(metadata.rid ?? "nil"), epoch=\(pageEpoch)")
+        return true
     }
 
     /// Some SPA navigations (history back/forward) do not trigger a full WKNavigation
@@ -1402,7 +1460,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     enum CodingKeys: String, CodingKey {
-        case children, url, backgroundMaterial, cornerRadius, scrollOffset, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount, spatialObjectList
+        case children, url, backgroundMaterial, cornerRadius, scrollOffset, currentPageGeneration, childrenIds, sceneSpatialObjectIds, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount, spatialObjectList
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -1413,8 +1471,13 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         try container.encode(cornerRadius, forKey: .cornerRadius)
         try container.encode(scrollOffset, forKey: .scrollOffset)
         try container.encode(children, forKey: .children)
+        try container.encode(currentPageGeneration, forKey: .currentPageGeneration)
 
         // for debug only
+        let childrenIds = children.map { $0.key }
+        try container.encode(childrenIds, forKey: .childrenIds)
+        let sceneSpatialObjectIds = spatialObjects.map { $0.key }
+        try container.encode(sceneSpatialObjectIds, forKey: .sceneSpatialObjectIds)
         try container.encode(spatialWebViewModel.getController().webview?.isOpaque, forKey: .webviewIsOpaque)
         try container.encode(SpatialObject.objects.count, forKey: .spatialObjectCount)
 
