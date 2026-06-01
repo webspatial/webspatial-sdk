@@ -58,5 +58,6 @@
 // =============================================================================
 
 export { Model } from '../facades/Model'
+export { Reality } from '../facades/Reality'
 export { withSpatialized2DElementContainer } from '../facades/withSpatialized2DElementContainer'
 export { withSpatialMonitor } from '../facades/withSpatialMonitor'
