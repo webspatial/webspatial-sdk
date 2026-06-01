@@ -3,7 +3,7 @@
  *
  * Module-level frozen singleton with module-level constant function
  * references for `pointToPhysical` / `physicalToPoint`. The 1/1360 ratio
- * matches today's `noRuntime.ts` web fallback so consumers see no behavior
+ * matches the documented plain-browser fallback so consumers see no behavior
  * change after the lazy-load architecture lands.
  *
  * Per spatial-lazy-load spec "Hook placeholders" Requirement (the

@@ -141,7 +141,7 @@ describe('Model parity (spec tasks.md §15.3 + REVIEW.md "Two-scenario behavior 
 // ---------------------------------------------------------------------------
 // §15.4 — useMetrics parity (Path 1: placeholder constants / Path 2: real
 // useMetrics under non-WebSpatial / no-session conditions, which today
-// also returns the 1/1360 ratio constants from `noRuntime.ts`-style fallback)
+// also returns the 1/1360 ratio constants from the plain-browser fallback)
 // ---------------------------------------------------------------------------
 
 describe('useMetrics parity (spec tasks.md §15.4 + runtime-capabilities "useMetrics graceful degradation" Scenario)', () => {
