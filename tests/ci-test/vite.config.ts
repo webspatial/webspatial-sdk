@@ -1,55 +1,30 @@
-import { defineConfig, type UserConfig } from 'vite'
-import path from 'path'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import corePkg from '../../packages/core/package.json'
-import reactPkg from '../../packages/react/package.json'
 
-const packagesBasePath = '../../packages'
-const XRSDKBaseDir = path.join(__dirname, packagesBasePath)
-
-const tsconfig = {
-  compilerOptions: {
-    jsx: 'react-jsx',
-    jsxImportSource: '@webspatial/react-sdk/jsx',
-  },
-} satisfies NonNullable<
-  Exclude<NonNullable<UserConfig['esbuild']>, false>['tsconfigRaw']
->
-
+// Consumer-shaped config: resolve `@webspatial/*` through workspace
+// package exports (built `dist/`), not monorepo source aliases. Aliasing
+// SDK source + applying the WebSpatial JSX transform to those files
+// re-enters the SDK's own jsx-runtime through pre-compiled component
+// modules and produces Rollup circular-chunk warnings at build time.
+//
+// JSX runtime resolution: `tsconfig.app.json` sets
+// `"jsxImportSource": "@webspatial/react-sdk"`, so only this fixture's
+// app/spec TSX is compiled through the published jsx-runtime subpath.
 export default defineConfig({
-  // root: './',
-  // logLevel: 'silent',
   server: {
     port: 4000,
     open: false,
   },
 
-  plugins: [react()],
+  plugins: [
+    react({
+      // SDK dist is already compiled JS; never re-run the spatial JSX
+      // transform over workspace package files.
+      exclude: /node_modules\/@webspatial\//,
+    }),
+  ],
 
-  resolve: {
-    // IMPORTANT — every published SDK subpath this fixture may
-    // transitively reach MUST be listed here. Vite's `resolve.alias` is a
-    // prefix-match remap (same trap as esbuild's `alias`), so an alias
-    // `@webspatial/react-sdk` → `react/src` causes any longer specifier
-    // (e.g. `@webspatial/react-sdk/internal/facades-client`) to get the
-    // prefix replaced naively, producing a nonsense path. The fix is to
-    // list every subpath explicitly so the more-specific alias wins.
-    // Adding a new subpath to `packages/react/package.json#exports`
-    // requires adding a matching alias here.
-    alias: {
-      '@webspatial/react-sdk/internal/facades-client': path.join(
-        XRSDKBaseDir,
-        'react/src/internal/facades-client.ts',
-      ),
-      '@webspatial/react-sdk': path.join(XRSDKBaseDir, 'react/src'),
-      '@webspatial/core-sdk': path.join(XRSDKBaseDir, 'core/src'),
-    },
-  },
-  define: {
-    __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(corePkg.version),
-    __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
-  },
-  esbuild: {
-    tsconfigRaw: tsconfig,
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
   },
 })
