@@ -4,6 +4,10 @@ import { render } from '@testing-library/react'
 import { renderToString } from 'react-dom/server'
 import { Model, Reality } from '../facades'
 import {
+  getWebSpatialPrimitiveName,
+  markWebSpatialPrimitive,
+} from './primitiveMarker'
+import {
   __resetWithSpatialized2DElementContainerCacheForTests,
   withSpatialized2DElementContainer,
 } from '../facades/withSpatialized2DElementContainer'
@@ -372,6 +376,41 @@ describe('jsx-shared: replaceToSpatialPrimitiveType + JSX call sites', () => {
       )
 
       expect(getByTestId('reality-host').getAttribute('enable-xr')).toBeNull()
+    })
+  })
+
+  describe('eager real implementations bypass via the primitive marker (NOT facade reference equality)', () => {
+    it('the facade Model / Reality carry the primitive marker', () => {
+      expect(getWebSpatialPrimitiveName(Model)).toBe('Model')
+      expect(getWebSpatialPrimitiveName(Reality)).toBe('Reality')
+    })
+
+    it('a marked Model that is NOT the facade reference (eager real impl) is still bypassed with enable-xr present', () => {
+      // Simulates the eager entry: `<Model>` resolves to the REAL `Model`
+      // from `./spatial`, a different object identity than the facade the
+      // JSX runtime imports. Branding it as a primitive must short-circuit
+      // strip + wrap so it is never wrapped as a 2D spatialized container.
+      const EagerRealModel = markWebSpatialPrimitive(
+        React.forwardRef<HTMLElement>(() => null),
+        'Model',
+      )
+      expect(EagerRealModel).not.toBe(Model)
+
+      const props: Record<string, any> = { 'enable-xr': true }
+      const result = replaceToSpatialPrimitiveType(EagerRealModel, props)
+
+      expect(result).toBe(EagerRealModel)
+      // enable-xr is NOT stripped (bypass returns before the marker handling).
+      expect(props).toHaveProperty('enable-xr', true)
+    })
+
+    it('an unmarked component with enable-xr is still wrapped (control)', () => {
+      const Plain = React.forwardRef<HTMLElement>(() => null)
+      const props: Record<string, any> = { 'enable-xr': true }
+      const result = replaceToSpatialPrimitiveType(Plain, props)
+
+      expect(result).toBe(withSpatialized2DElementContainer(Plain))
+      expect('enable-xr' in props).toBe(false)
     })
   })
 })

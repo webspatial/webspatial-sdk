@@ -4,6 +4,7 @@ import { ForwardedRef, createElement, forwardRef } from 'react'
 import type { ModelProps, ModelRef } from '../Model'
 import { getSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
+import { markWebSpatialPrimitive } from '../jsx/primitiveMarker'
 import { warnBootForgotten } from './shared/warnBootForgotten'
 
 export type { ModelProps, ModelRef }
@@ -38,6 +39,9 @@ function ModelFacadeImpl(props: ModelProps, ref: ForwardedRef<ModelRef>) {
 
 export const Model = forwardRef<ModelRef, ModelProps>(ModelFacadeImpl)
 Model.displayName = 'Model'
+// Brand so the JSX runtime short-circuits `Model` regardless of whether the
+// default-entry facade or the eager-entry real implementation reaches it.
+markWebSpatialPrimitive(Model, 'Model')
 
 function renderModelFallback(
   props: ModelProps,

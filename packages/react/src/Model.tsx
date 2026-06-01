@@ -6,6 +6,7 @@ import {
 } from './spatialized-container'
 import { withSSRSupported } from './ssr'
 import { useInsideAttachment } from './reality/context/InsideAttachmentContext'
+import { markWebSpatialPrimitive } from './jsx/primitiveMarker'
 
 import { Spatial } from '@webspatial/core-sdk'
 
@@ -46,3 +47,7 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
 
 export const Model = withSSRSupported(forwardRef(ModelBase))
 Model.displayName = 'Model'
+// Brand the real implementation too: the eager entry exports THIS `Model`,
+// and the JSX runtime must short-circuit it (not wrap `<Model enable-xr>` as
+// a 2D spatialized container).
+markWebSpatialPrimitive(Model, 'Model')
