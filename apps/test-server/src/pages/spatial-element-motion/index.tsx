@@ -81,7 +81,7 @@ export default function SpatialDivAnimationPage() {
             </li>
             <li>
               Capability detection page reports{' '}
-              <code>supports('useSpatializedMotion', ['element'])</code>{' '}
+              <code>supports('useSpatializedMotion')</code> and per-kind tokens
               consistently with runtime expectation.
             </li>
           </ul>
