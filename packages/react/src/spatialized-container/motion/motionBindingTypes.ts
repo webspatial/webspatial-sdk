@@ -14,6 +14,7 @@ export interface SpatializedMotionBindingInternal {
   __getSuppressedFields(): Set<string> | null
   __setElement?: (
     element:
+      | HTMLElement
       | Spatialized2DElement
       | SpatializedStatic3DElement
       | SpatializedDynamic3DElement

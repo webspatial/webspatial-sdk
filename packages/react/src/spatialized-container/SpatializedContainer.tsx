@@ -28,6 +28,7 @@ import {
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
 import { withSSRSupported } from '../ssr'
+import type { SpatializedMotionBindingInternal } from './motion/motionBindingTypes'
 
 /**
  * Degraded fallback: strips spatial-only props and renders plain HTML.
@@ -45,6 +46,7 @@ function DegradedContainer<T extends SpatializedElementRef>({
   type DegradedProps = SpatializedContainerProps<T> & {
     'enable-xr'?: unknown
     sizingMode?: unknown
+    motion?: SpatializedMotionBindingInternal
   }
   const {
     component: Component,
@@ -65,12 +67,25 @@ function DegradedContainer<T extends SpatializedElementRef>({
     extraRefProps: _extraRef,
     sizingMode: _sizingMode,
     onSpatialContentReady: _onSpatialContentReady,
+    motion,
     ...restProps
   } = inprops as DegradedProps
 
   const [hostEl, setHostEl] = useState<HTMLElement | null>(null)
   const callbackRef = useRef(_onSpatialContentReady)
   callbackRef.current = _onSpatialContentReady
+
+  useLayoutEffect(() => {
+    if (!motion || !hostEl || !hostEl.isConnected) return () => {}
+
+    // Bind the real DOM host so web RAF playback can start in degraded mode.
+    motion.__setElement?.(hostEl, 'spatialized2d')
+
+    return () => {
+      motion.__onUnbind?.()
+      motion.__setElement?.(null, 'spatialized2d')
+    }
+  }, [hostEl, motion])
 
   useLayoutEffect(() => {
     if (
