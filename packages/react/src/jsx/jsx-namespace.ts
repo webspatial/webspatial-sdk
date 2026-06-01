@@ -113,7 +113,7 @@ export namespace WebSpatialJSX {
     style?: React.CSSProperties
     'enable-xr'?: boolean
     animation?: SpatializedMotionBinding
-    motion?: SpatializedMotionBindingInternal
+    'xr-animation'?: SpatializedMotionBindingInternal
     onSpatialTap?: (e: SpatialTapEvent) => void
     onSpatialDragStart?: (e: SpatialDragStartEvent) => void
     onSpatialDrag?: (e: SpatialDragEvent) => void

@@ -9,7 +9,7 @@ export default function SpatialDivAnimationPage() {
           Test pages for Spatialized Element Motion via{' '}
           <code className="text-cyan-300">useSpatializedMotion</code> +{' '}
           <code className="text-cyan-300">
-            {'<div enable-xr motion={...}>'}
+            {'<div enable-xr xr-animation={...}>'}
           </code>
           . The hook auto-dispatches to the target path based on the{' '}
           <code>to</code> key set.

@@ -51,7 +51,7 @@ function TimelinePercentMotionPanel() {
   return (
     <div
       enable-xr
-      motion={motion}
+      xr-animation={motion}
       ref={refFC}
       style={{
         width: 280,

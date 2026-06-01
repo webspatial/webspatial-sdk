@@ -56,9 +56,9 @@ export function SpatializedMotionRealityContainerPage() {
       setLines(l => [...l, `onComplete ${fmtValues(values as any)}`])
       setHint('Done — container at y≈0.18m, rotate.y=180°')
     },
-    onCancel: values => {
-      setLines(l => [...l, `onCancel ${fmtValues(values as any)}`])
-      setHint('Canceled — snapped to start keyframes')
+    onReset: values => {
+      setLines(l => [...l, `onReset ${fmtValues(values as any)}`])
+      setHint('Reset — snapped to start keyframes')
     },
     onError: error => {
       setLines(l => [...l, `onError ${error.reason}`])
@@ -73,7 +73,7 @@ export function SpatializedMotionRealityContainerPage() {
       </h1>
       <p className="text-sm text-gray-400 mb-2">
         <code>useSpatializedMotion(&#123; from/to or tracks &#125;)</code> +{' '}
-        <code>&lt;Reality motion&gt;</code>. Timeline drives the{' '}
+        <code>&lt;Reality xr-animation&gt;</code>. Timeline drives the{' '}
         <strong>Reality root</strong> (not child <code>Entity</code> nodes).
         Values are <strong>meters / degrees</strong>.
       </p>
@@ -84,13 +84,14 @@ export function SpatializedMotionRealityContainerPage() {
       </p>
       <p className="text-xs text-emerald-400/90 mb-4 font-mono">{hint}</p>
       <p className="text-xs text-gray-500 mb-4 font-mono">
-        supports(useAnimation, dynamic3d)={String(dynamic3dAnim)} · motion=
+        supports(useAnimation, dynamic3d)={String(dynamic3dAnim)} ·
+        xr-animation=
         {motion ? 'yes' : 'no'} · playState={api.playState}
       </p>
 
       <div className="relative border border-gray-800 rounded-xl overflow-hidden bg-[#111] mb-4">
         <Reality
-          motion={motion as any}
+          xr-animation={motion as any}
           style={{
             width: '100%',
             height: 480,
@@ -127,8 +128,8 @@ export function SpatializedMotionRealityContainerPage() {
         <button type="button" className={btnCls} onClick={() => api.resume()}>
           Resume
         </button>
-        <button type="button" className={btnCls} onClick={() => api.cancel()}>
-          Cancel
+        <button type="button" className={btnCls} onClick={() => api.reset()}>
+          Reset
         </button>
       </div>
 

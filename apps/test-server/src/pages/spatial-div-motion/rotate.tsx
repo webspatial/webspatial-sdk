@@ -51,9 +51,9 @@ export function SpatialDivMotionRotatePage() {
       setLines(l => [...l, `onComplete ${fmtValues(values as any)}`])
       setHint('Done — rotate.y=90°, rotate.z=180°')
     },
-    onCancel: values => {
-      setLines(l => [...l, `onCancel ${fmtValues(values as any)}`])
-      setHint('Canceled — rotations reset')
+    onReset: values => {
+      setLines(l => [...l, `onReset ${fmtValues(values as any)}`])
+      setHint('Reset — rotations reset')
     },
     onError: error => {
       setLines(l => [...l, `onError ${error.reason}`])
@@ -85,7 +85,7 @@ export function SpatialDivMotionRotatePage() {
 
       <div
         enable-xr
-        {...{ motion: motion as any }}
+        {...{ 'xr-animation': motion as any }}
         className="box mb-4 rounded-xl border-2 border-violet-500/50"
         style={{
           width: 280,
@@ -109,8 +109,8 @@ export function SpatialDivMotionRotatePage() {
         <button type="button" className={btnCls} onClick={() => api.pause()}>
           Pause
         </button>
-        <button type="button" className={btnCls} onClick={() => api.cancel()}>
-          Cancel
+        <button type="button" className={btnCls} onClick={() => api.reset()}>
+          Reset
         </button>
       </div>
 

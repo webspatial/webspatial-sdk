@@ -66,7 +66,7 @@ export default function OpacityFadePage() {
         <div
           ref={divRef}
           enable-xr
-          motion={motion}
+          xr-animation={motion}
           style={{
             width: 250,
             height: 150,

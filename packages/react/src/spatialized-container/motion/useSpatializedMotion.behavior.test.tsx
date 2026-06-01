@@ -27,6 +27,7 @@ describe('useSpatializedMotion tuple api', () => {
       useSpatializedMotion(SIMPLE_ENTRANCE_CONFIG),
     )
 
+    expect(result.current[0].__propName).toBe('xr-animation')
     expect(result.current[2].opacity).toBe(0)
     expect(String(result.current[2].transform)).toContain('40px')
 
