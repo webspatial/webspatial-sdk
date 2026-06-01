@@ -25,6 +25,8 @@ import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
+import { withSSRSupported } from '../ssr'
+import type { SpatializedMotionBindingInternal } from './motion/motionBindingTypes'
 
 /**
  * Degraded fallback: strips spatial-only props and renders plain HTML.
@@ -40,6 +42,7 @@ function DegradedContainer<T extends SpatializedElementRef>({
   type DegradedProps = SpatializedContainerProps<T> & {
     'enable-xr'?: unknown
     sizingMode?: unknown
+    motion?: SpatializedMotionBindingInternal
   }
   const {
     component: Component,
@@ -66,8 +69,68 @@ function DegradedContainer<T extends SpatializedElementRef>({
     // HTML host has no such host, so the callback MUST NOT be invoked here —
     // this covers both the non-WebSpatial and attachment-degraded paths.
     onSpatialContentReady: _onSpatialContentReady,
+    motion,
     ...restProps
   } = inprops as DegradedProps
+
+  const [hostEl, setHostEl] = useState<HTMLElement | null>(null)
+  const callbackRef = useRef(_onSpatialContentReady)
+  callbackRef.current = _onSpatialContentReady
+
+  useLayoutEffect(() => {
+    if (!motion || !hostEl || !hostEl.isConnected) return () => {}
+
+    // Bind the real DOM host so web RAF playback can start in degraded mode.
+    motion.__setElement?.(hostEl, 'spatialized2d')
+
+    return () => {
+      motion.__onUnbind?.()
+      motion.__setElement?.(null, 'spatialized2d')
+    }
+  }, [hostEl, motion])
+
+  useLayoutEffect(() => {
+    if (
+      !enableOnSpatialContentReadyFallback ||
+      !hostEl ||
+      !hostEl.isConnected ||
+      !callbackRef.current
+    ) {
+      return () => {}
+    }
+
+    let cleanup: void | (() => void)
+    try {
+      cleanup = callbackRef.current({ host: hostEl })
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[WebSpatial] onSpatialContentReady threw', e)
+      }
+    }
+
+    return () => {
+      if (typeof cleanup !== 'function') return
+      try {
+        cleanup()
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[WebSpatial] onSpatialContentReady cleanup threw', e)
+        }
+      }
+    }
+  }, [enableOnSpatialContentReadyFallback, hostEl])
+
+  const setHostRef = useCallback(
+    (node: SpatializedElementRef<T> | null) => {
+      if (typeof innerRef === 'function') {
+        innerRef(node)
+      } else if (innerRef != null) {
+        innerRef.current = node
+      }
+      setHostEl(node as HTMLElement | null)
+    },
+    [innerRef],
+  )
 
   return (
     <Component ref={innerRef} {...restProps}>
