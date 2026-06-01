@@ -4,9 +4,12 @@
 // registration/validation runs before `./spatial` (imported below) evaluates
 // its polyfill side effects. ESM evaluates static imports in source order
 // before the module body, so placing a `registerReactSdkEntry('eager')` call
-// in this file's body would run AFTER `./spatial`'s side effects. See
-// `./runtime/registerEagerEntry` for the full rationale.
-import './runtime/registerEagerEntry'
+// in this file's body would run AFTER `./spatial`'s side effects.
+//
+// We import a VALUE binding (not a bare side-effect import) and reference it
+// below so consumer bundlers cannot tree-shake the registration chunk away.
+// See `./runtime/registerEagerEntry` for the full rationale.
+import { eagerEntryRegistered } from './runtime/registerEagerEntry'
 
 // =============================================================================
 // `@webspatial/react-sdk/eager` — eager-mode entry for spatial-only consumers.
@@ -61,7 +64,12 @@ import './runtime/registerEagerEntry'
 // (see `runtime/bridge.ts` for the rationale).
 import * as SpatialImpl from './spatial'
 import { __internalSetSpatialImpl } from './runtime/bridge'
-__internalSetSpatialImpl(SpatialImpl)
+// The `eagerEntryRegistered` guard keeps the registration import live for
+// downstream tree-shaking (it is always truthy — registration already ran
+// during this module's import-evaluation phase, before `./spatial` above).
+if (eagerEntryRegistered) {
+  __internalSetSpatialImpl(SpatialImpl)
+}
 
 // --- Step 2: spatial primitives — REAL implementations from /spatial -------
 // Per the "Spatial primitives mount real implementations on first render"
