@@ -36,7 +36,7 @@ export default function Rotate3DPage() {
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div
           enable-xr
-          motion={motion}
+          xr-animation={motion}
           style={{
             width: 200,
             height: 200,

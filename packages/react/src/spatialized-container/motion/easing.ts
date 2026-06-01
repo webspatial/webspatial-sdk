@@ -1,1 +1,1 @@
-export { applyEasing } from '@webspatial/core-sdk'
+export { applyTimingFunction as applyEasing } from '@webspatial/core-sdk'

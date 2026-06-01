@@ -56,7 +56,7 @@ function FadeInScene({ log }: { log: (msg: string) => void }) {
   return (
     <div
       enable-xr
-      motion={motion}
+      xr-animation={motion}
       style={{
         width: 300,
         height: 150,

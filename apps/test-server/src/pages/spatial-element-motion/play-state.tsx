@@ -87,7 +87,7 @@ export default function SpatializedMotionPlayStatePage() {
 
         <div
           enable-xr
-          motion={motion}
+          xr-animation={motion}
           style={{
             width: 240,
             height: 140,

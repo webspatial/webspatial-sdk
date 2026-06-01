@@ -13,8 +13,8 @@
 | 类型 | 状态 |
 |------|------|
 | **Spatialized2DElement** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` |
-| **SpatializedStatic3DElement** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` + `<Model motion>`；仅 native |
-| **SpatializedDynamic3DElement（Reality 容器）** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` + `<Reality motion>`；仅 native |
+| **SpatializedStatic3DElement** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` + `<Model xr-animation>`；仅 native |
+| **SpatializedDynamic3DElement（Reality 容器）** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` + `<Reality xr-animation>`；仅 native |
 | **SpatialEntity（Reality 子节点）** | **不在本 change** — 继续 `useAnimation` |
 
 ## 3. 统一入口（推荐 API）

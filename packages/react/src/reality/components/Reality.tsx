@@ -24,7 +24,7 @@ export type RealityProps = Omit<
 > &
   EntityEventHandler & {
     /** Native root-transform motion on the Reality container (`SpatializedDynamic3DElement`). */
-    motion?: SpatializedMotionBindingInternal
+    'xr-animation'?: SpatializedMotionBindingInternal
   }
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
@@ -45,7 +45,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       onSpatialRotateEnd,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
-      motion,
+      'xr-animation': xrAnimation,
       ...props
     } = inProps
     const ctxRef = useRef<RealityContextValue | null>(null)
@@ -137,15 +137,15 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     })
 
     useEffect(() => {
-      if (!isReady || !motion) return
+      if (!isReady || !xrAnimation) return
       const reality = ctxRef.current?.reality
       if (!reality) return
-      motion.__setElement?.(reality, 'dynamic3d')
+      xrAnimation.__setElement?.(reality, 'dynamic3d')
       return () => {
-        motion.__onUnbind?.()
-        motion.__setElement?.(null as any, 'dynamic3d')
+        xrAnimation.__onUnbind?.()
+        xrAnimation.__setElement?.(null as any, 'dynamic3d')
       }
-    }, [motion, isReady])
+    }, [xrAnimation, isReady])
 
     return (
       <RealityContext.Provider value={ctxRef.current}>

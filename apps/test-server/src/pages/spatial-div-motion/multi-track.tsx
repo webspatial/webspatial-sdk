@@ -51,9 +51,9 @@ export function SpatialDivMotionMultiTrackPage() {
       setLines(l => [...l, `onComplete ${fmtValues(values as any)}`])
       setHint('Done — card fully visible at translate.x=100')
     },
-    onCancel: values => {
-      setLines(l => [...l, `onCancel ${fmtValues(values as any)}`])
-      setHint('Canceled — reset to start keyframes')
+    onReset: values => {
+      setLines(l => [...l, `onReset ${fmtValues(values as any)}`])
+      setHint('Reset — returned to start keyframes')
     },
     onError: error => {
       setLines(l => [...l, `onError ${error.reason}`])
@@ -82,14 +82,15 @@ export function SpatialDivMotionMultiTrackPage() {
       </p>
       <p className="text-xs text-emerald-400/90 mb-4 font-mono">{hint}</p>
       <p className="text-xs text-gray-500 mb-4 font-mono">
-        supports(useAnimation, element)={String(elementAnim)} · motion binding=
+        supports(useAnimation, element)={String(elementAnim)} · xr-animation
+        binding=
         {motion ? 'yes' : 'no'} · backend=
         {elementAnim && motion ? 'native timeline' : 'Web RAF'}
       </p>
 
       <div
         enable-xr
-        {...{ motion: motion as any }}
+        {...{ 'xr-animation': motion as any }}
         className="box mb-4 rounded-xl border-2 border-emerald-500/50 shadow-lg shadow-emerald-900/30"
         style={{
           width: 280,
@@ -113,8 +114,8 @@ export function SpatialDivMotionMultiTrackPage() {
         <button type="button" className={btnCls} onClick={() => api.pause()}>
           Pause
         </button>
-        <button type="button" className={btnCls} onClick={() => api.cancel()}>
-          Cancel
+        <button type="button" className={btnCls} onClick={() => api.reset()}>
+          Reset
         </button>
       </div>
 

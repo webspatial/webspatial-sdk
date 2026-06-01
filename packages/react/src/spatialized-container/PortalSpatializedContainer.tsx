@@ -88,6 +88,8 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     spatializedContent: Content,
     createSpatializedElement,
     getExtraSpatializedElementProperties,
+    animation,
+    'xr-animation': xrAnimation,
     onSpatialTap,
     onSpatialDragStart,
     onSpatialDrag,
@@ -100,21 +102,6 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     [SpatialID]: spatialId,
     ...restProps
   } = props
-
-  // Extract animation prop for SpatialDiv animation binding
-  const animation = (restProps as any).animation as
-    | SpatializedMotionBindingInternal
-    | undefined
-  if (animation) {
-    delete (restProps as any).animation
-  }
-
-  const motion = (restProps as any).motion as
-    | SpatializedMotionBindingInternal
-    | undefined
-  if (motion) {
-    delete (restProps as any).motion
-  }
 
   const spatializedContainerObject: SpatializedContainerObject = useContext(
     SpatializedContainerContext,
@@ -155,9 +142,10 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   useEffect(() => {
     if (!animation || !spatializedElement) return
 
-    const animProps = animation as SpatializedMotionBindingInternal & {
-      __setElement?: (el: Spatialized2DElement | null) => void
-    }
+    const animProps =
+      animation as unknown as SpatializedMotionBindingInternal & {
+        __setElement?: (el: Spatialized2DElement | null) => void
+      }
 
     // Bind element to animation hook
     if (animProps.__setElement) {
@@ -188,39 +176,39 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   // Keep suppressed fields in sync with animation state changes
   useEffect(() => {
     if (!animation || !spatializedElement) return
-    const animProps = animation as SpatializedMotionBindingInternal
+    const animProps = animation as unknown as SpatializedMotionBindingInternal
     const suppressedFields = animProps.__getSuppressedFields?.()
     portalInstanceObject.setSuppressedFields(suppressedFields ?? null)
   })
 
-  // ---- SpatialDiv Motion binding (Plan B native path) ----
+  // ---- SpatialDiv xr-animation binding (Plan B native path) ----
   useEffect(() => {
-    if (!motion || !spatializedElement) return
+    if (!xrAnimation || !spatializedElement) return
 
-    if (motion.__setElement) {
-      motion.__setElement(
+    if (xrAnimation.__setElement) {
+      xrAnimation.__setElement(
         spatializedElement as unknown as import('@webspatial/core-sdk').Spatialized2DElement,
         'spatialized2d',
       )
     }
 
-    const suppressedFields = motion.__getSuppressedFields?.()
+    const suppressedFields = xrAnimation.__getSuppressedFields?.()
     if (suppressedFields) {
       portalInstanceObject.setSuppressedFields(suppressedFields)
     }
 
     return () => {
-      motion.__onUnbind?.()
-      if (motion.__setElement) {
-        motion.__setElement(null, 'spatialized2d')
+      xrAnimation.__onUnbind?.()
+      if (xrAnimation.__setElement) {
+        xrAnimation.__setElement(null, 'spatialized2d')
       }
       portalInstanceObject.setSuppressedFields(null)
     }
-  }, [motion, spatializedElement, portalInstanceObject])
+  }, [xrAnimation, spatializedElement, portalInstanceObject])
 
   useEffect(() => {
-    if (!motion || !spatializedElement) return
-    const suppressedFields = motion.__getSuppressedFields?.()
+    if (!xrAnimation || !spatializedElement) return
+    const suppressedFields = xrAnimation.__getSuppressedFields?.()
     portalInstanceObject.setSuppressedFields(suppressedFields ?? null)
   })
 

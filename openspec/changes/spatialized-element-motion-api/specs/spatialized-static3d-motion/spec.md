@@ -16,7 +16,7 @@ Implementation MUST use `SpatializedMotionController` with the `static3d` target
 
 #### Scenario: Model xr-animation binding
 
-- **WHEN** `<Model motion={binding} />` receives `animation` from `useSpatializedMotion(config)`, resolving the target to `static3d`
+- **WHEN** `<Model xr-animation={binding} />` receives `animation` from `useSpatializedMotion(config)`, resolving the target to `static3d`
 - **THEN** play before bind MAY queue; after bind native playback MUST drive transform without fighting React layout writes (suppression rules analogous to 2D)
 
 ### Requirement: Clip playback stays separate
