@@ -65,7 +65,7 @@ function InnerScene({ log }: { log: (msg: string) => void }) {
     <div>
       <div
         enable-xr
-        motion={motion}
+        xr-animation={motion}
         style={{
           width: 120,
           height: 80,
@@ -130,7 +130,7 @@ function MiddleLayer({ log }: { log: (msg: string) => void }) {
       </div>
       <div
         enable-xr
-        motion={motion}
+        xr-animation={motion}
         style={{
           width: 300,
           height: 180,
@@ -197,7 +197,7 @@ function OuterLayer({
       </div>
       <div
         enable-xr
-        motion={motion}
+        xr-animation={motion}
         style={{
           width: 400,
           minHeight: 300,

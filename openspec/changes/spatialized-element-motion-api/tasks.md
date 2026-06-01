@@ -142,14 +142,13 @@
 
 ## Phase 11 — Binding prop rename (`motion` → `xr-animation`)
 
-- [ ] Rename binding prop from `motion` to `xr-animation` on all target components:
+- [x] Rename binding prop from `motion` to `xr-animation` on all target components:
   - `<div enable-xr motion={animation}>` → `<div enable-xr xr-animation={animation}>`
   - `<Model motion={animation}>` → `<Model xr-animation={animation}>`
   - `<Reality motion={animation}>` → `<Reality xr-animation={animation}>`
-- [ ] Update `SpatializedMotionBinding` internal `__propName` from `'motion'` to `'xr-animation'`
-- [ ] Update `createMotionBinding` to register under `xr-animation` prop key
-- [ ] Update all React component prop type definitions (`ModelProps`, `RealityProps`, enable-xr type augmentation)
-- [ ] Deprecation alias: accept `motion` with console.warn pointing to `xr-animation` (one release cycle)
-- [ ] Update test-server demo pages: replace all `motion=` with `xr-animation=`
-- [ ] Update unit / integration tests
-- [ ] Update documentation (spec, design, proposal, API.zh.md) — prop references only
+- [x] Update `SpatializedMotionBinding` internal `__propName` from `'motion'` to `'xr-animation'`
+- [x] Update `createMotionBinding` to register under `xr-animation` prop key
+- [x] Update all React component prop type definitions (`ModelProps`, `RealityProps`, enable-xr type augmentation)
+- [x] Update test-server demo pages: replace all `motion=` with `xr-animation=`
+- [x] Update unit / integration tests
+- [x] Update documentation (spec, design, proposal, API.zh.md) — prop references only

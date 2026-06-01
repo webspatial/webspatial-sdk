@@ -112,7 +112,7 @@ function DeclarativeBox({ running }: { running: boolean }) {
   return (
     <div
       enable-xr
-      motion={motion}
+      xr-animation={motion}
       style={{
         width: 24,
         height: 24,

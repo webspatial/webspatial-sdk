@@ -142,14 +142,13 @@
 
 ## Phase 11 — 绑定 prop 重命名（`motion` → `xr-animation`）
 
-- [ ] 将所有目标组件的绑定 prop 从 `motion` 重命名为 `xr-animation`：
+- [x] 将所有目标组件的绑定 prop 从 `motion` 重命名为 `xr-animation`：
   - `<div enable-xr motion={animation}>` → `<div enable-xr xr-animation={animation}>`
   - `<Model motion={animation}>` → `<Model xr-animation={animation}>`
   - `<Reality motion={animation}>` → `<Reality xr-animation={animation}>`
-- [ ] 更新 `SpatializedMotionBinding` 内部 `__propName`，从 `'motion'` 改为 `'xr-animation'`
-- [ ] 更新 `createMotionBinding` 注册到 `xr-animation` prop key
-- [ ] 更新所有 React 组件 prop 类型定义（`ModelProps`、`RealityProps`、enable-xr 类型增强）
-- [ ] 废弃兼容：接受 `motion` 并 console.warn 指向 `xr-animation`（保留一个版本周期）
-- [ ] 更新 test-server 演示页：所有 `motion=` 替换为 `xr-animation=`
-- [ ] 更新单元/集成测试
-- [ ] 更新文档（spec、design、proposal、API.zh.md）— 仅 prop 引用
+- [x] 更新 `SpatializedMotionBinding` 内部 `__propName`，从 `'motion'` 改为 `'xr-animation'`
+- [x] 更新 `createMotionBinding` 注册到 `xr-animation` prop key
+- [x] 更新所有 React 组件 prop 类型定义（`ModelProps`、`RealityProps`、enable-xr 类型增强）
+- [x] 更新 test-server 演示页：所有 `motion=` 替换为 `xr-animation=`
+- [x] 更新单元/集成测试
+- [x] 更新文档（spec、design、proposal、API.zh.md）— 仅 prop 引用

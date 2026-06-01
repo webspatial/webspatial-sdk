@@ -3,13 +3,13 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { resetRuntimeCacheForTests } from '@webspatial/core-sdk'
 
-describe('SpatializedContainer degraded motion binding', () => {
+describe('SpatializedContainer degraded xr-animation binding', () => {
   beforeEach(() => {
     vi.resetModules()
     resetRuntimeCacheForTests()
   })
 
-  test('binds motion to the degraded host so web playback can advance', async () => {
+  test('binds xr-animation to the degraded host so web playback can advance', async () => {
     const { Spatialized2DElementContainer } = await import(
       './Spatialized2DElementContainer'
     )
@@ -38,7 +38,7 @@ describe('SpatializedContainer degraded motion binding', () => {
             Spatialized2DElementContainer as any,
             {
               component: 'div',
-              motion,
+              'xr-animation': motion,
               style,
               'data-testid': 'host',
             },

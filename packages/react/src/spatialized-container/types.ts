@@ -65,6 +65,8 @@ export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
         computedStyle: CSSStyleDeclaration,
       ) => Record<string, any>
       spatialEventOptions?: SpatialEventOptions
+      animation?: import('@webspatial/core-sdk').SpatializedMotionBinding
+      'xr-animation'?: import('./motion/motionBindingTypes').SpatializedMotionBindingInternal
 
       [SpatialID]: string
     }
@@ -111,8 +113,8 @@ export type SpatializedStatic3DContainerProps =
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
       spatialEventOptions?: SpatialEventOptions
-      /** Native root-transform motion binding from `useSpatializedMotion()`. */
-      motion?: import('./motion/motionBindingTypes').SpatializedMotionBindingInternal
+      /** Native root-transform motion binding from `useSpatializedMotion()` via `xr-animation`. */
+      'xr-animation'?: import('./motion/motionBindingTypes').SpatializedMotionBindingInternal
     }
 
 export type SpatializedStatic3DContentProps = {
@@ -125,7 +127,7 @@ export type SpatializedStatic3DContentProps = {
   children?: React.ReactNode
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void
-  motion?: import('./motion/motionBindingTypes').SpatializedMotionBindingInternal
+  'xr-animation'?: import('./motion/motionBindingTypes').SpatializedMotionBindingInternal
 }
 
 export const SpatialCustomStyleVars = {

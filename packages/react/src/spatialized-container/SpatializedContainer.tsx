@@ -46,7 +46,7 @@ function DegradedContainer<T extends SpatializedElementRef>({
   type DegradedProps = SpatializedContainerProps<T> & {
     'enable-xr'?: unknown
     sizingMode?: unknown
-    motion?: SpatializedMotionBindingInternal
+    'xr-animation'?: SpatializedMotionBindingInternal
   }
   const {
     component: Component,
@@ -67,7 +67,7 @@ function DegradedContainer<T extends SpatializedElementRef>({
     extraRefProps: _extraRef,
     sizingMode: _sizingMode,
     onSpatialContentReady: _onSpatialContentReady,
-    motion,
+    'xr-animation': xrAnimation,
     ...restProps
   } = inprops as DegradedProps
 
@@ -76,16 +76,16 @@ function DegradedContainer<T extends SpatializedElementRef>({
   callbackRef.current = _onSpatialContentReady
 
   useLayoutEffect(() => {
-    if (!motion || !hostEl || !hostEl.isConnected) return () => {}
+    if (!xrAnimation || !hostEl || !hostEl.isConnected) return () => {}
 
     // Bind the real DOM host so web RAF playback can start in degraded mode.
-    motion.__setElement?.(hostEl, 'spatialized2d')
+    xrAnimation.__setElement?.(hostEl, 'spatialized2d')
 
     return () => {
-      motion.__onUnbind?.()
-      motion.__setElement?.(null, 'spatialized2d')
+      xrAnimation.__onUnbind?.()
+      xrAnimation.__setElement?.(null, 'spatialized2d')
     }
-  }, [hostEl, motion])
+  }, [hostEl, xrAnimation])
 
   useLayoutEffect(() => {
     if (
@@ -252,10 +252,12 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
         spatializedContent,
         createSpatializedElement,
         getExtraSpatializedElementProperties,
+        'xr-animation': _xrAnimation,
         spatialEventOptions: _nestedSpatialEventOptions,
         onSpatialContentReady: _nestedOnSpatialContentReady,
         ...restProps
       } = props
+      void _xrAnimation
       return (
         <SpatialLayerContext.Provider value={layer}>
           <StandardSpatializedContainer<T>
@@ -317,10 +319,12 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
       spatializedContent,
       createSpatializedElement,
       getExtraSpatializedElementProperties,
+      'xr-animation': _xrAnimation,
       spatialEventOptions: _rootSpatialEventOptions,
       onSpatialContentReady: _rootOnSpatialContentReady,
       ...restProps
     } = props
+    void _xrAnimation
 
     return (
       <SpatialLayerContext.Provider value={layer}>
