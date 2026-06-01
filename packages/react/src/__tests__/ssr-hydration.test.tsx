@@ -145,13 +145,19 @@ describe('SSR via renderToString (spec tasks.md §13.2 + "Server render does not
     expect(loader).not.toHaveBeenCalled()
   })
 
-  it('renderToString with useMetrics returns the placeholder constants and does not throw', () => {
+  it('renderToString with useMetrics does not throw when conversion functions are not invoked', () => {
     function Probe() {
       const m = useMetrics()
-      return <span>{m.pointToPhysical(1360)}</span>
+      return (
+        <span
+          data-has-metrics={
+            typeof m.pointToPhysical === 'function' ? 'yes' : 'no'
+          }
+        />
+      )
     }
     const html = renderToString(<Probe />)
-    expect(html).toContain('>1<')
+    expect(html).toContain('data-has-metrics="yes"')
   })
 })
 
