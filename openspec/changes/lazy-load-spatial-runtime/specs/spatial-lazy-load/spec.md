@@ -778,6 +778,13 @@ The contract has three normative parts:
 
    Side effects with externally visible consequences MUST be deferred into functions invoked on demand (e.g. `bootSpatial()`, `enableDebugTool()`).
 
+   **Sole permitted observable side effects (entry-root registration + primitive branding).** Two narrowly-scoped top-level side effects are explicitly allowed because they are required by other Requirements in this spec and are tree-shake-equivalent to React metadata assignment:
+
+   - **Entry-root registration** — the entry modules MUST call `registerReactSdkEntry('lazy')` (in `src/index.ts`) and `registerReactSdkEntry('eager')` (reached from `src/eager.ts`) at module top level so the "Mixed-import shape is rejected" Requirement can detect both roots in one realm. This is the ONLY global-registry write permitted at module top level, and it MUST NOT pull the spatial implementation into the default entry's static graph. For the eager entry, the registration MUST additionally be evaluated **before** the statically-linked `./spatial` import (whose bootstrap installs polyfills), so a mixed-entry throw happens before the spatial runtime is mutated — see the "Mixed-import shape is rejected" Scenario.
+   - **Primitive branding** — `markWebSpatialPrimitive(Component, 'Model' | 'Reality')` writes a single non-enumerable marker property onto a module-local component (facade or real implementation) so the JSX runtime can short-circuit `Model` / `Reality` by stable identity rather than facade reference equality (see the "JSX runtime strips spatial markers and wraps with facade HOCs" Requirement). This is the same tree-shake class as `Component.displayName = '...'`: when the component is dropped, the branding call is dropped with it.
+
+   The `tasks.md §9.6` lint MUST recognize exactly these two patterns and continue to reject every other top-level observable side effect.
+
 3. **Re-export shape** — the barrel `src/index.ts` SHOULD prefer named re-exports (`export { Model } from './facades/Model'`) over wildcard re-exports (`export * from './facades'`) where practical, to reduce ambiguity for bundler tree-shaking heuristics. Wildcard re-exports remain acceptable for type-only re-exports (`export type * from ...`) since types vanish at runtime.
 
 #### Scenario: Published package declares sideEffects: false
@@ -795,6 +802,7 @@ The contract has three normative parts:
   - `import` for side effects only (`import 'some-side-effect-module'`)
   - Expression statements whose evaluation is not annotated `/* @__PURE__ */` and is not a known tree-shakable React factory call
 - **AND** the existing top-level `if (typeof window !== 'undefined') { initPolyfill() }` in `src/index.ts` MUST be removed (this is also tracked in `tasks.md §7.2`); polyfill installation moves into the spatial chunk's bootstrap
+- **EXCEPT** the two entry-root/branding side effects carved out by the "Tree-shake friendliness" Requirement — `registerReactSdkEntry('lazy' | 'eager')` and `markWebSpatialPrimitive(Component, 'Model' | 'Reality')` — which the `tasks.md §9.6` lint MUST allow (and ONLY these); every other top-level observable side effect MUST still be rejected
 
 #### Scenario: Module-private pure initialization is permitted
 
