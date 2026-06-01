@@ -139,24 +139,23 @@ describe('Model parity (spec tasks.md §15.3 + REVIEW.md "Two-scenario behavior 
 })
 
 // ---------------------------------------------------------------------------
-// §15.4 — useMetrics parity (Path 1: placeholder constants / Path 2: real
-// useMetrics under non-WebSpatial / no-session conditions, which today
-// also returns the 1/1360 ratio constants from the plain-browser fallback)
+// §15.4 — useMetrics parity (Path 1: placeholder throws in plain web /
+// Path 2: real useMetrics under non-WebSpatial / no-session conditions still
+// returns the 1/1360 ratio from PhysicalMetrics)
 // ---------------------------------------------------------------------------
 
 describe('useMetrics parity (spec tasks.md §15.4 + runtime-capabilities "useMetrics graceful degradation" Scenario)', () => {
-  it('Path 1 (placeholder) returns the documented 1/1360 ratio constants with stable function identities', () => {
+  it('Path 1 (placeholder) throws on conversion in plain web with stable function identities', () => {
     const m1 = useMetricsPlaceholder()
     const m2 = useMetricsPlaceholder()
-    expect(m1.pointToPhysical(0)).toBe(0)
-    expect(m1.pointToPhysical(1360)).toBe(1)
-    expect(m1.physicalToPoint(1)).toBe(1360)
+    expect(() => m1.pointToPhysical(1360)).toThrow()
+    expect(() => m1.physicalToPoint(1)).toThrow()
     expect(m1).toBe(m2)
     expect(m1.pointToPhysical).toBe(m2.pointToPhysical)
     expect(m1.physicalToPoint).toBe(m2.physicalToPoint)
   })
 
-  it('Path 2 (real useMetrics) under no-session conditions returns numerically equivalent results to Path 1 (the 1/1360 ratio is the documented fallback contract)', () => {
+  it('Path 2 (real useMetrics) under no-session conditions still returns the 1/1360 PhysicalMetrics fallback when invoked directly', () => {
     // Without a SpatialSession, the real useMetrics implementation reaches
     // its own no-runtime fallback branch. We mount it via renderHook in
     // jsdom (NOT SSR — the real `useMetrics` is missing `getServerSnapshot`,
@@ -165,14 +164,10 @@ describe('useMetrics parity (spec tasks.md §15.4 + runtime-capabilities "useMet
     // "useMetrics is SSR-safe" Scenario already pins the correct contract
     // on the placeholder, which is what the public default-entry hook
     // actually invokes during SSR per the per-instance selector).
-    const path1 = useMetricsPlaceholder()
     const { result } = renderHook(() => useMetricsReal())
-    // Numerical equivalence of the documented assertion-grade values.
-    expect(result.current.pointToPhysical(0)).toBe(path1.pointToPhysical(0))
-    expect(result.current.pointToPhysical(1360)).toBe(
-      path1.pointToPhysical(1360),
-    )
-    expect(result.current.physicalToPoint(1)).toBe(path1.physicalToPoint(1))
+    expect(result.current.pointToPhysical(0)).toBe(0)
+    expect(result.current.pointToPhysical(1360)).toBe(1)
+    expect(result.current.physicalToPoint(1)).toBe(1360)
   })
 })
 

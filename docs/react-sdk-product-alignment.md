@@ -105,7 +105,7 @@ normal browser (Chrome, Safari, Firefox) without a WebSpatial runtime.
 | `enable-xr` / `enable-xr-monitor` hosts | Ordinary `<div>` (marker stripped); no spatial slab |
 | `Entity` / `*Entity` / `Material` / `*Asset` | **No DOM** (`null` fallback) — expected, not a bug |
 | `SceneGraph` / `World` | **No DOM** (`null` fallback) — expected; under `<Reality>` the child subtree does not mount anyway |
-| `useMetrics` | Stable placeholder math (`pt / 1360`); does not throw |
+| `useMetrics` | Returns `pointToPhysical` / `physicalToPoint`; invoking either throws `WebSpatialRuntimeError` while the placeholder is active (plain web, SSR, pre-boot, or pinned instances) |
 
 **Plain-web UX tiers (P0-3 component detail):** **Visible** fallbacks are `Model`,
 `Reality`, and `enable-xr` / `enable-xr-monitor` hosts. **Structural** fallbacks

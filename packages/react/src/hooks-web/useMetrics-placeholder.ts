@@ -1,30 +1,35 @@
 /**
- * `useMetrics` placeholder constants (web-mode fallback).
+ * `useMetrics` placeholder (web-mode fallback).
  *
  * Module-level frozen singleton with module-level constant function
- * references for `pointToPhysical` / `physicalToPoint`. The 1/1360 ratio
- * matches the documented plain-browser fallback so consumers see no behavior
- * change after the lazy-load architecture lands.
+ * references for `pointToPhysical` / `physicalToPoint`. Invoking either
+ * conversion function throws `WebSpatialRuntimeError` — including in plain
+ * web, during SSR, and in a WebSpatial runtime while the bridge is not ready
+ * (or while a component instance remains pinned to the placeholder).
  *
  * Per spatial-lazy-load spec "Hook placeholders" Requirement (the
- * `useMetrics` row in the public-hook table) + "useMetrics placeholder
- * returns the documented fallback values" / "useMetrics function identities
+ * `useMetrics` row in the public-hook table) + "useMetrics function identities
  * are stable across renders" / "useMetrics is SSR-safe" Scenarios.
  *
- * Pure constants module — no React imports, no `'use client'` directive,
- * no `window` access. Safe to call during SSR and to import from
- * server-only modules.
+ * Pure constants module — no React imports, no `'use client'` directive.
+ * Safe to import from server-only modules.
  */
 
-const POINT_TO_PHYSICAL_RATIO = 1 / 1360
-const PHYSICAL_TO_POINT_RATIO = 1360
+import { WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
 
-function pointToPhysical(point: number, _options?: object): number {
-  return point * POINT_TO_PHYSICAL_RATIO
+function throwMetricsConversionUnavailable(): never {
+  throw new WebSpatialRuntimeError(
+    'useMetrics',
+    'useMetrics conversion functions are not available until bootSpatial() has resolved and the component remounts with the real hook implementation',
+  )
 }
 
-function physicalToPoint(physical: number, _options?: object): number {
-  return physical * PHYSICAL_TO_POINT_RATIO
+function pointToPhysical(_point: number, _options?: object): number {
+  return throwMetricsConversionUnavailable()
+}
+
+function physicalToPoint(_physical: number, _options?: object): number {
+  return throwMetricsConversionUnavailable()
 }
 
 const METRICS_PLACEHOLDER = Object.freeze({
