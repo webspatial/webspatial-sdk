@@ -168,12 +168,64 @@ The default entry carries `'use client'` at the top of its emitted `dist/index.j
 
 If you need to **branch server-rendered HTML** on the incoming request (e.g. different hero for WebSpatial-capable shells vs plain browsers), base that decision on the **HTTP `User-Agent`** string and the **official WebSpatial documentation** for how to interpret it — for example [Introduction](https://webspatial.dev/docs/introduction) and [Development Guide](https://webspatial.dev/docs/development-guide). **Do not rely on undocumented SDK helpers** for environment detection in application code.
 
-## SpatialDiv `onSpatialContentReady` runtime note
+## SpatialDiv lifecycle differs from a plain `<div>`
 
-When using nested `SpatialDiv` (`enable-xr`) with `onSpatialContentReady`, callback ordering differs by runtime:
+A `<div enable-xr>` (SpatialDiv) is **not** a plain `<div>`. In a WebSpatial runtime the SDK renders your content into a portal whose host DOM node is created, and may be **recreated**, by the SDK — and the hidden layout box you see in the React tree is **not necessarily the same DOM node** as the visible portal host. In plain-web fallback it renders a single host element.
 
-- In WebSpatial runtime, parent `SpatialDiv` callback runs before child callback on the same ready edge.
-- In non-WebSpatial fallback (plain web DOM), callback ordering between parent and child is not a guaranteed contract and should be treated as unspecified.
+Because of this, **do not reach into child DOM refs inside an `enable-xr` container to synchronize layout or attach an external renderer** (Three.js, a `<canvas>` 2D context, a video player, etc.). Those child nodes may be detached/recreated under you, so a one-shot `useEffect([])` that captures `ref.current` will silently attach to a stale node.
+
+Use **`onSpatialContentReady`** instead. It is invoked in `useLayoutEffect` timing once the content host is connected, gives you the correct `ctx.host` for the current runtime, and lets you return a cleanup that runs on teardown / re-ready:
+
+### Do — attach via `onSpatialContentReady` and clean up
+
+```tsx
+<div
+  enable-xr
+  onSpatialContentReady={(ctx) => {
+    // ctx.host is the connected content host for THIS runtime
+    // (portal host in WebSpatial, fallback host on plain web).
+    const renderer = new THREE.WebGLRenderer()
+    renderer.setSize(ctx.host.clientWidth, ctx.host.clientHeight)
+    ctx.host.appendChild(renderer.domElement)
+
+    // Returned cleanup runs on unmount / before the next ready edge.
+    return () => {
+      renderer.dispose()
+      renderer.domElement.remove()
+    }
+  }}
+/>
+```
+
+### Don't — capture a child ref in `useEffect([])`
+
+```tsx
+// ANTI-PATTERN: fragile. The captured node may be recreated or split across
+// a hidden layout host and a visible portal host, so `el` can become stale
+// and the renderer attaches to a detached/wrong node.
+function Broken() {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = ref.current!
+    const renderer = new THREE.WebGLRenderer()
+    el.appendChild(renderer.domElement) // ← may attach to a stale node
+  }, [])
+  return (
+    <div enable-xr>
+      <div ref={ref} /> {/* child DOM ref is NOT a supported attach point */}
+    </div>
+  )
+}
+```
+
+For layout/size changes prefer **declarative React updates** (props/state) rather than imperative DOM measurement of child refs.
+
+### Nested ordering note
+
+When nesting `SpatialDiv` with `onSpatialContentReady`, callback ordering differs by runtime:
+
+- In a WebSpatial runtime, the parent `SpatialDiv` callback runs **before** the child callback on the same ready edge.
+- In non-WebSpatial fallback (plain web DOM), parent/child ordering is **not** a guaranteed contract and should be treated as unspecified.
 
 Recommended practice: initialize imperative renderers from each container's own `ctx.host` and avoid coupling setup logic to parent/child callback sequence in fallback web mode.
 
