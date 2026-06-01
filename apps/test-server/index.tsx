@@ -96,6 +96,7 @@ import SpatialDivLoopAnimationPage from './src/pages/spatial-div-animation/loop-
 import SpatialDivNestedAnimationPage from './src/pages/spatial-div-animation/nested-animation'
 import SpatialElementMotionPage from './src/pages/spatial-element-motion/index'
 import SpatialElementMotionFadeInEntrancePage from './src/pages/spatial-element-motion/fade-in-entrance'
+import { SpatialDivMotionTimelinePercentPage } from './src/pages/spatial-div-motion/timeline-percent'
 import SpatialElementMotionScaleExpandPage from './src/pages/spatial-element-motion/scale-expand'
 import SpatialElementMotionOpacityFadePage from './src/pages/spatial-element-motion/opacity-fade'
 import SpatialElementMotionCombinedDelayPage from './src/pages/spatial-element-motion/combined-delay'
@@ -325,6 +326,11 @@ function App() {
                 <Route
                   path="/spatial-element-motion/fade-in-entrance"
                   element={<SpatialElementMotionFadeInEntrancePage />}
+                />
+                <Route
+                  // Reuse the existing demo component under the element-motion hub.
+                  path="/spatial-element-motion/timeline-percent"
+                  element={<SpatialDivMotionTimelinePercentPage />}
                 />
                 <Route
                   path="/spatial-element-motion/scale-expand"
