@@ -174,16 +174,19 @@ A `<div enable-xr>` (SpatialDiv) is **not** a plain `<div>`. In a WebSpatial run
 
 Because of this, **do not reach into child DOM refs inside an `enable-xr` container to synchronize layout or attach an external renderer** (Three.js, a `<canvas>` 2D context, a video player, etc.). Those child nodes may be detached/recreated under you, so a one-shot `useEffect([])` that captures `ref.current` will silently attach to a stale node.
 
-Use **`onSpatialContentReady`** instead. It is invoked in `useLayoutEffect` timing once the content host is connected, gives you the correct `ctx.host` for the current runtime, and lets you return a cleanup that runs on teardown / re-ready:
+### `onSpatialContentReady` fires only in a WebSpatial runtime
 
-### Do — attach via `onSpatialContentReady` and clean up
+`onSpatialContentReady` is a **spatial-content-host signal**: it is invoked (in `useLayoutEffect` timing) **only when a real WebSpatial spatial content host exists** — i.e. in a WebSpatial runtime after the spatial content has committed. `ctx.host` is always that connected spatial host, and you can return a cleanup that runs on teardown / re-ready.
+
+It does **NOT** fire on plain web (no WebSpatial runtime), nor before `bootSpatial()` has produced a spatial host. For the flat-web presentation, attach your renderer with your **own** `ref` + effect on your **own** element (see the second example), optionally branching on `useSpatialReady()`.
+
+### Do — spatial path via `onSpatialContentReady` (+ cleanup)
 
 ```tsx
 <div
   enable-xr
   onSpatialContentReady={(ctx) => {
-    // ctx.host is the connected content host for THIS runtime
-    // (portal host in WebSpatial, fallback host on plain web).
+    // Runs ONLY in a WebSpatial runtime. ctx.host is the connected spatial host.
     const renderer = new THREE.WebGLRenderer()
     renderer.setSize(ctx.host.clientWidth, ctx.host.clientHeight)
     ctx.host.appendChild(renderer.domElement)
@@ -197,12 +200,42 @@ Use **`onSpatialContentReady`** instead. It is invoked in `useLayoutEffect` timi
 />
 ```
 
-### Don't — capture a child ref in `useEffect([])`
+### Do — flat-web path via your own `ref` + effect
+
+```tsx
+// Plain web (no WebSpatial runtime): onSpatialContentReady does NOT fire, so
+// initialize the flat presentation from YOUR OWN element with a normal effect.
+function FlatRenderer() {
+  const slotRef = useRef<HTMLDivElement>(null)
+  const ready = useSpatialReady() // true only in a WebSpatial runtime
+
+  useLayoutEffect(() => {
+    if (ready) return // spatial runtime is handled by onSpatialContentReady
+    const el = slotRef.current
+    if (!el) return
+    const renderer = new THREE.WebGLRenderer()
+    el.appendChild(renderer.domElement)
+    return () => {
+      renderer.dispose()
+      renderer.domElement.remove()
+    }
+  }, [ready])
+
+  return (
+    <div enable-xr onSpatialContentReady={(ctx) => attachSpatial(ctx.host)}>
+      <div ref={slotRef} /> {/* your own element, your own ref — flat path */}
+    </div>
+  )
+}
+```
+
+### Don't — capture a child ref in `useEffect([])` assuming a spatial host
 
 ```tsx
 // ANTI-PATTERN: fragile. The captured node may be recreated or split across
 // a hidden layout host and a visible portal host, so `el` can become stale
-// and the renderer attaches to a detached/wrong node.
+// and the renderer attaches to a detached/wrong node. It also conflates the
+// spatial and flat-web paths into one runtime-blind effect.
 function Broken() {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -212,7 +245,7 @@ function Broken() {
   }, [])
   return (
     <div enable-xr>
-      <div ref={ref} /> {/* child DOM ref is NOT a supported attach point */}
+      <div ref={ref} /> {/* child DOM ref is NOT a supported spatial attach point */}
     </div>
   )
 }
@@ -222,9 +255,6 @@ For layout/size changes prefer **declarative React updates** (props/state) rathe
 
 ### Nested ordering note
 
-When nesting `SpatialDiv` with `onSpatialContentReady`, callback ordering differs by runtime:
+`onSpatialContentReady` only fires in a WebSpatial runtime, where nested `SpatialDiv` callbacks are ordered: the parent `SpatialDiv` callback runs **before** the child callback on the same ready edge.
 
-- In a WebSpatial runtime, the parent `SpatialDiv` callback runs **before** the child callback on the same ready edge.
-- In non-WebSpatial fallback (plain web DOM), parent/child ordering is **not** a guaranteed contract and should be treated as unspecified.
-
-Recommended practice: initialize imperative renderers from each container's own `ctx.host` and avoid coupling setup logic to parent/child callback sequence in fallback web mode.
+Recommended practice: initialize imperative renderers from each container's own `ctx.host` and do not couple setup logic across parent/child callback ordering beyond the documented parent-before-child guarantee.
