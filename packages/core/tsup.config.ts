@@ -1,4 +1,6 @@
 // tsup.config.ts
+import { readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { defineConfig, Options } from 'tsup'
 import { version } from './package.json'
 
@@ -22,59 +24,53 @@ const baseConfig: Options = {
   sourcemap: true,
   clean: true,
   dts: true,
-  banner: {
-    js: `
-    (function(){
-      if(typeof window === 'undefined') return;
-      if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
-      window.__webspatialsdk__['core-sdk-version'] = ${JSON.stringify(version)}
-  })()
-    `,
-  },
 }
 
 const versionDefine = {
   __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(version),
 }
 
-export default defineConfig([
-  {
-    ...baseConfig,
-    // ESM build: emit one output file per source file (`bundle: false`
-    // above) so consumer bundlers can tree-shake at file granularity.
-    // The entry points to the entire `src/` tree; `**/*.test.ts` is
-    // excluded so Vitest fixtures don't ship in the published package.
-    entry: ['src/**/*.ts', '!src/**/*.test.ts', '!src/iife-entry.ts'],
-    format: ['esm'],
-    outDir: 'dist',
-    esbuildOptions(options) {
-      options.define = {
-        ...options.define,
-        ...versionDefine,
-      }
-    },
+// Diagnostic version stamp. This is intentionally NOT a tsup `banner`: with
+// `bundle: false` a banner is injected into EVERY emitted `dist/*.js` file,
+// turning each one into a top-level `window.__webspatialsdk__` write. That
+// (a) contradicts the `package.json` `sideEffects` allowlist (which declares
+// only `install-polyfills.js` as side-effectful) and (b) multiplies the stamp
+// across a consumer's bundle (one copy per source file pulled in). Instead we
+// post-build stamp ONLY the single ESM file that legitimately already has a
+// side effect — `dist/install-polyfills.js` — so a bundled WebSpatial consumer
+// still reports `core-sdk-version` when the polyfill installs, and every other
+// ESM module stays side-effect-free.
+const versionStamp = `
+(function(){
+  if(typeof window === 'undefined') return;
+  if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
+  window.__webspatialsdk__['core-sdk-version'] = ${JSON.stringify(version)}
+})()
+`.trim()
+
+const prependVersionStamp = (filePath: string): void => {
+  const current = readFileSync(filePath, 'utf8')
+  if (current.includes("__webspatialsdk__['core-sdk-version']")) return
+  writeFileSync(filePath, `${versionStamp}\n${current}`)
+}
+
+export default defineConfig({
+  ...baseConfig,
+  // ESM build: emit one output file per source file (`bundle: false`
+  // above) so consumer bundlers can tree-shake at file granularity.
+  // The entry points to the entire `src/` tree; `**/*.test.ts` is
+  // excluded so Vitest fixtures don't ship in the published package.
+  entry: ['src/**/*.ts', '!src/**/*.test.ts'],
+  format: ['esm'],
+  outDir: 'dist',
+  esbuildOptions(options) {
+    options.define = {
+      ...options.define,
+      ...versionDefine,
+    }
   },
-  {
-    ...baseConfig,
-    // IIFE build uses `iife-entry.ts` instead of `index.ts` so direct-browser
-    // consumers retain the historical auto-install behavior (the IIFE
-    // entry re-exports the public API + runs `install-polyfills` at
-    // evaluation time). See `src/iife-entry.ts`.
-    //
-    // `bundle: true` (overrides the base config's `bundle: false`) is
-    // required for IIFE because IIFE format MUST emit a single
-    // self-contained file (no dynamic module resolver in the IIFE format).
-    bundle: true,
-    entry: ['src/iife-entry.ts'],
-    format: ['iife'],
-    outDir: 'dist/iife',
-    globalName: 'webspatialCore',
-    esbuildOptions(options) {
-      options.define = {
-        ...options.define,
-        ...versionDefine,
-      }
-    },
-    minify: true,
+  onSuccess: async () => {
+    // Stamp only the side-effectful ESM entry (see `versionStamp` rationale).
+    prependVersionStamp(resolve(__dirname, 'dist/install-polyfills.js'))
   },
-])
+})

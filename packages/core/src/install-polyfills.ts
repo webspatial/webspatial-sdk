@@ -21,8 +21,7 @@
 // `@webspatial/react-sdk` does this from inside its spatial chunk
 // (`packages/react/src/spatial/index.ts`) so the polyfill installs only
 // when the spatial chunk dynamically loads — never in the SDK's lean
-// default entry. Direct-browser (IIFE) consumers retain the historical
-// auto-install behavior via a separate `src/iife-entry.ts` bundle entry.
+// default entry.
 //
 // Per the lazy-load proposal `tasks.md §12.9` ("Pre-v1 budget calibration"),
 // extracting these polyfills is one of the named optimization candidates
