@@ -1,9 +1,23 @@
+import { Suspense, lazy } from 'react'
 import { Link } from 'react-router'
 
 import { ClientOnly } from '../components/ClientOnly'
-import { EagerSpatialIsland } from '../components/EagerSpatialIsland'
 
 import type { Route } from './+types/eager-ssr'
+
+// Load the eager spatial island via a DYNAMIC import so the eager entry
+// (`@webspatial/react-sdk/eager`, which registers the entry root and installs
+// the spatial polyfill at module-evaluation time) never enters this route's
+// SSR static module graph. A static `import { EagerSpatialIsland }` would
+// evaluate the eager entry on the server even though `<ClientOnly>` defers its
+// RENDER — `<ClientOnly>` gates rendering, not module evaluation. Pairing
+// `React.lazy` (deferred dynamic import) with `<ClientOnly>` (client-only
+// render) keeps the eager entry out of the server pass entirely.
+const EagerSpatialIsland = lazy(() =>
+  import('../components/EagerSpatialIsland').then(m => ({
+    default: m.EagerSpatialIsland,
+  })),
+)
 
 /** Fixture-only heuristic — follow official WebSpatial UA docs in production. */
 function hasWebSpatialShellToken(userAgent: string): boolean {
@@ -84,7 +98,9 @@ export default function EagerSsrRoute({ loaderData }: Route.ComponentProps) {
           </p>
         }
       >
-        <EagerSpatialIsland />
+        <Suspense fallback={null}>
+          <EagerSpatialIsland />
+        </Suspense>
       </ClientOnly>
     </section>
   )

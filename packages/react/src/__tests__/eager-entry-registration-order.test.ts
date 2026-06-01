@@ -1,3 +1,5 @@
+// @vitest-environment node
+//
 // Build-output assertion: the eager entry's mixed-import registration MUST
 // survive bundling AND run before the spatial chunk's polyfill side effects.
 //
@@ -23,6 +25,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { build } from 'esbuild'
 import { describe, expect, it } from 'vitest'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -100,5 +103,39 @@ describe('eager entry mixed-import registration (build-output)', () => {
     expect(registrationIndex).toBeGreaterThanOrEqual(0)
     expect(spatialIndex).toBeGreaterThanOrEqual(0)
     expect(registrationIndex).toBeLessThan(spatialIndex)
+  })
+
+  // The dist-graph assertions above describe what the SDK ships. This test
+  // simulates a DOWNSTREAM consumer bundle (esbuild, honoring the package
+  // `sideEffects` allowlist) to guard against the failure mode where a bare
+  // side-effect import of a hashed chunk — not covered by the allowlist — is
+  // tree-shaken out, silently disabling mixed-entry detection.
+  it('survives downstream tree-shaking: a consumer bundle that imports the eager entry still contains the eager registration', async () => {
+    const result = await build({
+      stdin: {
+        // A realistic consumer: import + use a spatial primitive from the
+        // eager entry. `export` keeps esbuild from dropping it as unused.
+        contents: `import { Model } from ${JSON.stringify(eagerEntry)};\nexport { Model };`,
+        resolveDir: distDir,
+        loader: 'js',
+      },
+      bundle: true,
+      write: false,
+      format: 'esm',
+      treeShaking: true,
+      logLevel: 'silent',
+      // Peer deps + core-sdk subpaths are not part of the SDK's own bundle.
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        '@webspatial/core-sdk',
+        '@webspatial/core-sdk/*',
+      ],
+    })
+
+    const out = result.outputFiles.map(f => f.text).join('\n')
+    expect(out).toMatch(REGISTRATION_RE)
   })
 })
