@@ -12,6 +12,12 @@ export const spatialElementMotionRoutes: SpatialElementMotionRoute[] = [
       'autoStart entrance with translate.z + opacity (whitelist only).',
   },
   {
+    path: '/spatial-element-motion/timeline-percent',
+    label: 'Timeline % Keyframes',
+    description:
+      'Decimal percentage keys, missing properties, and timingFunction cascade.',
+  },
+  {
     path: '/spatial-element-motion/scale-expand',
     label: 'Scale Expand + Reset',
     description:
