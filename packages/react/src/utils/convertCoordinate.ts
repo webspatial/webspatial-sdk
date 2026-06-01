@@ -10,7 +10,6 @@ import type { EntityRef } from '../reality'
 import type { ModelRef } from '../Model'
 import { getSpatialImpl } from '../runtime/bridge'
 
-
 // Per the lazy-load proposal `tasks.md §12.9` ("Pre-v1 budget calibration"),
 // `convertCoordinate` no longer statically imports `getSession` from
 // `./getSession`. That import would pull `Spatial` + `SpatialSession`
@@ -22,6 +21,23 @@ import { getSpatialImpl } from '../runtime/bridge'
 // and we return the input position unchanged — same observable behavior
 // as the previous "no spatial session" branch, just reached via the
 // dynamic-import bridge instead of a static import.
+
+// One-shot degradation warning. Per the runtime-capabilities spec
+// "convertCoordinate graceful degradation" Scenario the SDK MAY emit at most
+// ONE console.warn — `convertCoordinate` can be called per frame, so a latch
+// keeps the failure observable without flooding the console.
+let hasWarnedDegraded = false
+
+function warnDegradedOnce(...args: unknown[]): void {
+  if (hasWarnedDegraded) return
+  hasWarnedDegraded = true
+  // eslint-disable-next-line no-console
+  console.warn(...(args as [unknown, ...unknown[]]))
+}
+
+export function __resetConvertCoordinateWarningForTests(): void {
+  hasWarnedDegraded = false
+}
 
 type CoordinateConvertible =
   | Window
@@ -67,7 +83,7 @@ export async function convertCoordinate(
     const fromId = resolveSpatialObjectId(from)
     const toId = resolveSpatialObjectId(to)
     if (fromId === null || toId === null) {
-      console.warn(
+      warnDegradedOnce(
         'convertCoordinate error: from or to is not a valid coordinate convertible',
       )
       return position
@@ -78,7 +94,7 @@ export async function convertCoordinate(
     const ret = await spatialScene.convertCoordinate(position, fromId, toId)
     return ret ?? position
   } catch (error) {
-    console.warn('convertCoordinate error:', error)
+    warnDegradedOnce('convertCoordinate error:', error)
     return position
   }
 }

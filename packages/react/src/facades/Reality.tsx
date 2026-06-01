@@ -5,6 +5,7 @@ import type { RealityProps } from '../reality/components/Reality'
 import type { SpatializedElementRef } from '../spatialized-container/types'
 import { getSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
+import { markWebSpatialPrimitive } from '../jsx/primitiveMarker'
 import { warnBootForgotten } from './shared/warnBootForgotten'
 
 export type { RealityProps }
@@ -42,6 +43,9 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
   RealityFacadeImpl,
 )
 Reality.displayName = 'Reality'
+// Brand so the JSX runtime short-circuits `Reality` regardless of whether the
+// default-entry facade or the eager-entry real implementation reaches it.
+markWebSpatialPrimitive(Reality, 'Reality')
 
 function renderRealityFallback(
   props: RealityProps,

@@ -5,8 +5,10 @@ import {
   __getSpatialReadySubscriberCountForTests,
   __resetSpatialBridgeForTests,
   __setSpatialImplLoaderForTests,
+  isSpatialReady,
   loadSpatialImpl,
   onSpatialLoadError,
+  subscribeSpatialReady,
   type SpatialImplementation,
 } from './bridge'
 import { __resetBootStateForTests, bootSpatial } from './boot'
@@ -177,6 +179,54 @@ describe('lazy-load runtime foundation', () => {
 
     expect(first).toHaveBeenCalledTimes(1)
     expect(second).toHaveBeenCalledTimes(2)
+  })
+
+  it('a throwing ready listener does NOT turn a successful load into a rejection, and later listeners still run', async () => {
+    setPuppeteerUserAgent()
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    __setSpatialImplLoaderForTests(() => Promise.resolve(spatialImpl))
+
+    const throwingListener = vi.fn(() => {
+      throw new Error('ready listener boom')
+    })
+    const laterListener = vi.fn()
+    subscribeSpatialReady(throwingListener)
+    subscribeSpatialReady(laterListener)
+
+    // Success must remain a success despite the throwing listener.
+    await expect(loadSpatialImpl()).resolves.toBe(spatialImpl)
+    expect(isSpatialReady()).toBe(true)
+    expect(throwingListener).toHaveBeenCalledTimes(1)
+    // A throwing listener must not block subsequent listeners.
+    expect(laterListener).toHaveBeenCalledTimes(1)
+
+    errorSpy.mockRestore()
+  })
+
+  it('a throwing error listener does NOT replace the WebSpatialBootError rejection reason, and later listeners still run', async () => {
+    setPuppeteerUserAgent()
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const cause = new Error('chunk failed')
+    __setSpatialImplLoaderForTests(() => Promise.reject(cause))
+
+    const throwingListener = vi.fn(() => {
+      throw new Error('error listener boom')
+    })
+    const laterListener = vi.fn()
+    onSpatialLoadError(throwingListener)
+    onSpatialLoadError(laterListener)
+
+    // Rejection reason must stay the original WebSpatialBootError, not the
+    // user listener's error.
+    await expect(loadSpatialImpl()).rejects.toMatchObject({
+      name: 'WebSpatialBootError',
+      cause,
+    })
+    expect(throwingListener).toHaveBeenCalledTimes(1)
+    expect(laterListener).toHaveBeenCalledTimes(1)
+    expect(laterListener.mock.calls[0][0]).toBeInstanceOf(WebSpatialBootError)
+
+    errorSpy.mockRestore()
   })
 
   it('useSpatialReady returns false and does not subscribe in plain web', () => {

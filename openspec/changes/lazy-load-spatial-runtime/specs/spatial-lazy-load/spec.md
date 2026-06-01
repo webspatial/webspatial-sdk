@@ -443,7 +443,7 @@ For each call:
 
    **RSC Client Reference caveat**: `jsx-runtime` / `jsx-dev-runtime` themselves MUST remain server-callable. In React Server Components server bundles, the internal `facades-client` boundary may resolve `Model`, `withSpatialized2DElementContainer`, and `withSpatialMonitor` to Client References (opaque objects) rather than callable functions. In that environment the JSX runtime MUST strip markers but MUST NOT attempt to invoke the Client References; it MAY leave the element type unwrapped because the internal HOC fallback is transparent and therefore produces the same server HTML that the wrapped client fallback would hydrate. In client bundles and SSR environments where the internal facade HOCs are callable functions, the full strip + wrap path MUST run.
 
-3. When `type === Model` (the public `Model` facade), the JSX runtime MUST NOT wrap or strip — `Model` handles its own runtime branching internally. This preserves today's AVP behavior.
+3. When `type === Model` or `type === Reality` (the public `Model` / `Reality` facades), the JSX runtime MUST NOT wrap or strip — these facades handle their own runtime branching internally and MUST NOT be rewritten as generic 2D spatialized containers. This preserves today's AVP behavior.
 
 **Mutation policy**: the top-level `props` object passed to a JSX call is created fresh per render by React's JSX transform and MAY be mutated in place (delete attribute keys, reassign `className`). However, `props.style` MAY be a user-memoized object shared across renders or with sibling consumers. When the `enableXr` key is present in `props.style`, the runtime MUST produce a new style object that omits the `enableXr` key (e.g. via shallow spread / object-rest destructuring) and reassign `props.style` to that new object; the runtime MUST NOT mutate the original `props.style` reference. This protects against (a) corrupting a memoized style object across renders, (b) mutating an `Object.freeze`d style object (which would throw in strict mode), and (c) cross-component aliasing of a shared style constant.
 
@@ -486,9 +486,14 @@ For each call:
 - **THEN** the JSX runtime MUST NOT recognize `props.class` as a marker source
 - **AND** props pass through to React unchanged (React itself decides how to handle a non-canonical `class` prop)
 
-#### Scenario: Model type bypasses JSX runtime wrapping and stripping
+#### Scenario: Model and Reality types bypass JSX runtime wrapping and stripping
 
 - **WHEN** an element is created with `type === Model` (the public `Model` facade)
+- **THEN** the JSX runtime MUST NOT strip any markers from props
+- **AND** the JSX runtime MUST NOT wrap the type with any facade HOC
+- **AND** props pass through to React unchanged
+
+- **WHEN** an element is created with `type === Reality` (the public `Reality` facade)
 - **THEN** the JSX runtime MUST NOT strip any markers from props
 - **AND** the JSX runtime MUST NOT wrap the type with any facade HOC
 - **AND** props pass through to React unchanged
