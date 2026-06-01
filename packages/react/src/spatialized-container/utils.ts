@@ -4,11 +4,7 @@ export function getInheritedStyleProps(
   computedStyle: CSSStyleDeclaration,
 ): CSSProperties {
   //https://stackoverflow.com/questions/5612302/which-css-properties-are-inherited
-  // `azimuth` is a CSS aural property dropped from @types/react CSSProperties
-  // in newer versions; cast through `any` to keep the deprecated key in the
-  // sync list without a wholesale typing rewrite. Out of scope for this PR.
   var propNames: (keyof CSSProperties)[] = [
-    'azimuth' as any,
     'borderCollapse',
     'borderSpacing',
     'captionSide',
