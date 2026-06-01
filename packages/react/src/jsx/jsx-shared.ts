@@ -27,11 +27,10 @@ const reactJSXRuntime = (_reactJSXRuntime as any).default || _reactJSXRuntime
 // case and degrades to "strip markers, no HOC wrap" — see
 // `src/internal/facades-client.ts` for the full rationale.
 import {
-  Model,
-  Reality,
   withSpatialMonitor,
   withSpatialized2DElementContainer,
 } from '@webspatial/react-sdk/internal/facades-client'
+import { getWebSpatialPrimitiveName } from './primitiveMarker'
 
 // In an RSC server bundle, the three facade imports above resolve to
 // Client References (opaque objects) rather than callable functions. We
@@ -83,9 +82,10 @@ const xrMonitorFlag = 'enable-xr-monitor'
  * "HTML class attribute is not recognized as a marker source" Scenario);
  * props pass through to React unchanged in that case.
  *
- * `type === Model` short-circuits both strip and wrap — the `Model` facade
- * handles its own runtime branching (per the spec "Model type bypasses JSX
- * runtime wrapping and stripping" Scenario).
+ * `Model` and `Reality` (identified by the stable primitive marker, covering
+ * both the facade and the eager real implementations) short-circuit both
+ * strip and wrap: both handle their own runtime branching and MUST NOT be
+ * wrapped as generic 2D spatialized containers.
  *
  * Combined markers: when more than one marker is present, every marker MUST
  * be stripped (the `tasks.md §6.6(b)` requirement). The wrap is determined
@@ -101,7 +101,12 @@ export function replaceToSpatialPrimitiveType(
   type: React.ElementType,
   props: unknown,
 ): React.ElementType {
-  if (type === Model || type === Reality) {
+  // `Model` / `Reality` short-circuit both strip and wrap. We brand both the
+  // default-entry facades and the eager-entry real implementations with a
+  // stable marker (see `primitiveMarker.ts`); identifying by marker — not by
+  // object-reference equality against the facade — keeps the eager entry's
+  // real `<Model enable-xr>` from being wrapped as a 2D spatialized container.
+  if (getWebSpatialPrimitiveName(type) !== undefined) {
     return type
   }
 
@@ -156,13 +161,11 @@ export function replaceToSpatialPrimitiveType(
 }
 
 export function jsxs(type: React.ElementType, props: unknown, key?: React.Key) {
-  console.log('--- SDK JSXS CALLED ---', type)
   type = replaceToSpatialPrimitiveType(type, props)
   return (reactJSXRuntime as any).jsxs(type, props, key)
 }
 
 export function jsx(type: React.ElementType, props: unknown, key?: React.Key) {
-  console.log('--- SDK JSX CALLED ---', type)
   type = replaceToSpatialPrimitiveType(type, props)
   return (reactJSXRuntime as any).jsx(type, props, key)
 }

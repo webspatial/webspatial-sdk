@@ -14,15 +14,36 @@ let spatialImplLoader: SpatialImplementationLoader = () => import('../spatial')
 const readyListeners = new Set<SpatialReadyListener>()
 const errorListeners = new Set<SpatialLoadErrorListener>()
 
+// Listener dispatch isolates user-callback failures so they cannot corrupt the
+// boot promise's resolve/reject contract: a throwing ready listener MUST NOT
+// turn a successful load into a rejection, a throwing error listener MUST NOT
+// replace the original `WebSpatialBootError` as the rejection reason, and one
+// throwing listener MUST NOT prevent the remaining listeners from running.
+function reportListenerError(error: unknown): void {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
+    return
+  }
+  // eslint-disable-next-line no-console
+  console.error('[WebSpatial] spatial bridge listener threw:', error)
+}
+
 function notifyReadyListeners(): void {
   for (const listener of [...readyListeners]) {
-    listener()
+    try {
+      listener()
+    } catch (error) {
+      reportListenerError(error)
+    }
   }
 }
 
 function notifyErrorListeners(error: WebSpatialBootError): void {
   for (const listener of [...errorListeners]) {
-    listener(error)
+    try {
+      listener(error)
+    } catch (listenerError) {
+      reportListenerError(listenerError)
+    }
   }
 }
 

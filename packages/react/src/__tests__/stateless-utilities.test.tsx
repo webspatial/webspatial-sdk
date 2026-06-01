@@ -9,7 +9,10 @@
 // Requirement (its hooks/utility-functions branch) cannot regress silently.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { convertCoordinate } from '../utils/convertCoordinate'
+import {
+  convertCoordinate,
+  __resetConvertCoordinateWarningForTests,
+} from '../utils/convertCoordinate'
 import { enableDebugTool } from '../utils/debugTool'
 import { initScene } from '../initScene'
 import { WebSpatialRuntime } from '../webSpatialRuntime'
@@ -45,6 +48,7 @@ function resetEnv(): void {
   // freshly stubbed userAgent. Without this, supports() would observe the
   // first-test snapshot for the entire suite.
   resetRuntimeCacheForTests()
+  __resetConvertCoordinateWarningForTests()
   setPlainWebUserAgent()
   // Strip diagnostic props the debug-tool tests inject onto window.
   if (typeof window !== 'undefined') {
@@ -118,7 +122,21 @@ describe('convertCoordinate (spec tasks.md §14.2 + runtime-capabilities "conver
     expect(out).toBe(position)
     // Per the runtime-capabilities Scenario the SDK MAY emit at most one
     // console.warn — we accept zero or one but never throw.
-    expect(warnSpy.mock.calls.length).toBeLessThanOrEqual(2)
+    expect(warnSpy.mock.calls.length).toBeLessThanOrEqual(1)
+    warnSpy.mockRestore()
+  })
+
+  it('emits the degradation warning at most once across repeated calls (one-shot latch)', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const position = { x: 1, y: 2, z: 3 }
+    const garbageRef = { not: 'a valid ref' } as any
+
+    // Multiple failing calls (per-frame usage pattern) must not flood console.
+    for (let i = 0; i < 5; i++) {
+      await convertCoordinate(position, { from: garbageRef, to: garbageRef })
+    }
+
+    expect(warnSpy.mock.calls.length).toBeLessThanOrEqual(1)
     warnSpy.mockRestore()
   })
 

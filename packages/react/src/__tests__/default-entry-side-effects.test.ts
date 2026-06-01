@@ -399,6 +399,25 @@ function classifyTopLevelStatement(
       ) {
         return { ok: true }
       }
+      // Component branding: `markWebSpatialPrimitive(<TopLevelLocal>, '...')`.
+      // This is the same tree-shake-safe class as `Component.displayName = …`:
+      // the only observable effect is a non-enumerable property written onto a
+      // module-local component, so when that component is dropped the call is
+      // dropped with it. The JSX runtime relies on this brand to short-circuit
+      // `Model` / `Reality` (including the eager real implementations).
+      if (
+        expr.type === 'CallExpression' &&
+        expr.callee.type === 'Identifier' &&
+        expr.callee.name === 'markWebSpatialPrimitive' &&
+        expr.arguments.length >= 1 &&
+        expr.arguments[0].type === 'Identifier' &&
+        scope.locals.has(expr.arguments[0].name) &&
+        expr.arguments
+          .slice(1)
+          .every(arg => isPureExpression(arg as Expression))
+      ) {
+        return { ok: true }
+      }
       return {
         ok: false,
         reason: `bare expression statement (${expr.type})${expr.type === 'CallExpression' && expr.callee.type === 'Identifier' ? ` calling \`${expr.callee.name}()\`` : ''}`,

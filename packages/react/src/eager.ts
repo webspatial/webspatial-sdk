@@ -1,8 +1,12 @@
 'use client'
 
-import { registerReactSdkEntry } from './runtime/entryRegistry'
-
-registerReactSdkEntry('eager')
+// IMPORTANT: this guard MUST be the first import so the mixed-entry
+// registration/validation runs before `./spatial` (imported below) evaluates
+// its polyfill side effects. ESM evaluates static imports in source order
+// before the module body, so placing a `registerReactSdkEntry('eager')` call
+// in this file's body would run AFTER `./spatial`'s side effects. See
+// `./runtime/registerEagerEntry` for the full rationale.
+import './runtime/registerEagerEntry'
 
 // =============================================================================
 // `@webspatial/react-sdk/eager` — eager-mode entry for spatial-only consumers.
