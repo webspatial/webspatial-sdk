@@ -23,7 +23,7 @@ function SimpleEntranceCard() {
   return (
     <div
       enable-xr
-      {...{ motion: motion as any }}
+      {...{ 'xr-animation': motion as any }}
       className="box rounded-lg"
       style={{
         width: 320,

@@ -94,7 +94,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     loop,
     loading = 'eager',
     stagemode = 'none',
-    motion,
+    'xr-animation': xrAnimation,
   } = props
   const portalInstanceObject = useContext(PortalInstanceContext)
   const wasVisible = useRef(false)
@@ -174,13 +174,13 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   }, [onError, portalInstanceObject?.dom])
 
   useEffect(() => {
-    if (!motion || !spatializedElement) return
-    motion.__setElement?.(spatializedElement, 'static3d')
+    if (!xrAnimation || !spatializedElement) return
+    xrAnimation.__setElement?.(spatializedElement, 'static3d')
     return () => {
-      motion.__onUnbind?.()
-      motion.__setElement?.(null as any, 'static3d')
+      xrAnimation.__onUnbind?.()
+      xrAnimation.__setElement?.(null as any, 'static3d')
     }
-  }, [motion, spatializedElement])
+  }, [xrAnimation, spatializedElement])
 
   return <></>
 }
@@ -189,13 +189,15 @@ function SpatializedStatic3DElementContainerBase(
   props: SpatializedStatic3DContainerProps,
   ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
-  const { motion, ...containerProps } = props
+  const { 'xr-animation': xrAnimation, ...containerProps } = props
   const spatializedContent = useMemo(() => {
-    function ContentWithMotion(contentProps: SpatializedStatic3DContentProps) {
-      return <SpatializedContent {...contentProps} motion={motion} />
+    function ContentWithXrAnimation(
+      contentProps: SpatializedStatic3DContentProps,
+    ) {
+      return <SpatializedContent {...contentProps} xr-animation={xrAnimation} />
     }
-    return ContentWithMotion
-  }, [motion])
+    return ContentWithXrAnimation
+  }, [xrAnimation])
   const promiseRef = useRef<Promise<SpatializedStatic3DElement> | null>(null)
 
   const createSpatializedElement = useCallback(() => {
@@ -230,7 +232,7 @@ function SpatializedStatic3DElementContainerBase(
           return spatializedElement?.entityTransform ?? new DOMMatrixReadOnly()
         },
         set entityTransform(value: DOMMatrixReadOnly) {
-          const suppressed = motion?.__getSuppressedFields?.()
+          const suppressed = xrAnimation?.__getSuppressedFields?.()
           if (suppressed?.has('entityTransform')) return
           modelTransform = value
           const spatializedElement = (domProxy as any).__spatializedElement as
@@ -294,7 +296,7 @@ function SpatializedStatic3DElementContainerBase(
         },
       }
     },
-    [motion],
+    [xrAnimation],
   )
 
   return (

@@ -24,6 +24,7 @@ export function createMotionBinding(
 
   return {
     __kind: 'spatializedMotion',
+    __propName: 'xr-animation',
     __motionObjectId: controller.id,
     get __animating() {
       return controller.isAnimating

@@ -36,7 +36,7 @@ export default function ScaleExpandPage() {
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div
           enable-xr
-          motion={motion}
+          xr-animation={motion}
           style={{
             width: 240,
             height: 160,

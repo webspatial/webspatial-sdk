@@ -33,13 +33,14 @@ export const spatializedMotionDemoRoutes = [
   {
     path: '/spatial-div-motion/model-container',
     label: 'Static3D — Model container',
-    description: 'translate.y + rotate.y on <Model motion> (native only)',
+    description: 'translate.y + rotate.y on <Model xr-animation> (native only)',
     section: '3d' as const,
   },
   {
     path: '/spatial-div-motion/reality-container',
     label: 'Dynamic3D — Reality container',
-    description: 'translate.y + rotate.y on <Reality motion> (native only)',
+    description:
+      'translate.y + rotate.y on <Reality xr-animation> (native only)',
     section: '3d' as const,
   },
 ] as const
