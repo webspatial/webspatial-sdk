@@ -6,7 +6,7 @@ var pwaManager = PWAManager()
 struct PWAManager: Codable {
     var isLocal: Bool = false
 
-    var start_url: String = "http://localhost:5173/xr-monitor.html "
+    var start_url: String = "http://localhost:5173/#/spatial-content-ready-three"
 //    var start_url: String = "http://localhost:3030/lazy"
 
     // var start_url: String = "http://localhost:5173/#/spatial-drag-gesture"

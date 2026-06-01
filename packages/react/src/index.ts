@@ -153,9 +153,11 @@ export { convertCoordinate } from './utils/convertCoordinate'
 export { initScene } from './initScene'
 
 // `SSRProvider` USED to be exported here as a Group C helper until the
-// `remove-ssr-provider` change: `withSSRSupported` now relies on
-// `useSyncExternalStore` + `getServerSnapshot` (no Context). Remove any
-// remaining `<SSRProvider>` wrappers from app code.
+// `remove-ssr-provider` change: hydration gating now lives in the facade's
+// `useSpatialReady` (`useSyncExternalStore` + `getServerSnapshot`), and real
+// hosts mount post-hydration through the facade delegate (no Context, no
+// internal SSR wrapper). Remove any remaining `<SSRProvider>` wrappers from
+// app code.
 
 // --- Spatial primitive facades (Group A: lazy-loaded) -----------------------
 // `withSpatialized2DElementContainer` and `withSpatialMonitor` USED to live

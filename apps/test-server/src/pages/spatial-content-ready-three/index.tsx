@@ -11,11 +11,15 @@ import {
 
 import {
   enableDebugTool,
-  useSpatialReady,
   type SpatialContentReadyContext,
 } from '@webspatial/react-sdk'
 
 enableDebugTool()
+
+/** True when the UA carries the WebSpatial version token (same check as `Spatial.runInSpatialWeb()`). */
+function isWebSpatialUserAgent(userAgent: string | undefined): boolean {
+  return !!userAgent && userAgent.includes('WebSpatial')
+}
 
 const DEPTH_OUTER = 120
 const DEPTH_INNER = 100
@@ -135,10 +139,14 @@ export default function SpatialContentReadyThreePage() {
   const innerRef = useRef<HTMLDivElement | null>(null)
   const singleRef = useRef<HTMLDivElement | null>(null)
 
-  // `onSpatialContentReady` fires ONLY in a WebSpatial runtime. `ready` lets the
-  // demo run the flat-web path (own ref + effect) on plain web and hand off to
-  // the spatial path when a real spatial content host exists.
-  const ready = useSpatialReady()
+  // Decide flat-web vs spatial by the CURRENT ENVIRONMENT (User-Agent), not by
+  // boot readiness: `useSpatialReady()` is false on plain web AND before boot in
+  // a WebSpatial runtime, so it cannot distinguish the two. Check for the
+  // WebSpatial UA token instead; on plain web we attach via our own ref, in a
+  // WebSpatial runtime we wait for `onSpatialContentReady`.
+  const isWebSpatialEnv = isWebSpatialUserAgent(
+    typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+  )
 
   const pushLine = useCallback((msg: string) => {
     setLines(prev => [...prev.slice(-(MAX_LOG - 1)), msg])
@@ -211,31 +219,31 @@ export default function SpatialContentReadyThreePage() {
     [runAttach, singleToggle],
   )
 
-  // --- Flat-web path: `onSpatialContentReady` does NOT fire on plain web, so
-  // attach via our OWN panel element + a normal layout effect, gated on
-  // `!ready` so the spatial path takes over when a WebSpatial runtime is present.
+  // --- Flat-web path: only when NOT in a WebSpatial runtime (UA-based). In a
+  // WebSpatial runtime `onSpatialContentReady` is the supported attach point, so
+  // we skip the flat path entirely (avoiding the child-DOM-ref anti-pattern).
   useLayoutEffect(() => {
-    if (ready || !showMainPanel) return
+    if (isWebSpatialEnv || !showMainPanel) return
     const host = outerRef.current
     if (!host) return
     return runAttach('outer', 'flat', host, {
       meshColor: 0x4488ff,
       slotSelector: '[data-three-slot="outer"]',
     })
-  }, [ready, showMainPanel, runAttach])
+  }, [isWebSpatialEnv, showMainPanel, runAttach])
 
   useLayoutEffect(() => {
-    if (ready || !showMainPanel || !showNestedBlock) return
+    if (isWebSpatialEnv || !showMainPanel || !showNestedBlock) return
     const host = innerRef.current
     if (!host) return
     return runAttach('inner', 'flat', host, {
       meshColor: 0x44ff88,
       slotSelector: '[data-three-slot="inner"]',
     })
-  }, [ready, showMainPanel, showNestedBlock, runAttach])
+  }, [isWebSpatialEnv, showMainPanel, showNestedBlock, runAttach])
 
   useLayoutEffect(() => {
-    if (ready) return
+    if (isWebSpatialEnv) return
     const host = singleRef.current
     if (!host) return
     return runAttach('single', 'flat', host, {
@@ -244,7 +252,7 @@ export default function SpatialContentReadyThreePage() {
       enableClickToggle: true,
       onToggleAnimating: singleToggle,
     })
-  }, [ready, runAttach, singleToggle])
+  }, [isWebSpatialEnv, runAttach, singleToggle])
 
   const firstOuterReadyIndex = lines.findIndex(
     line => line.startsWith('[outer ') && line.includes('ready'),
@@ -258,7 +266,7 @@ export default function SpatialContentReadyThreePage() {
     hasOuterReady &&
     hasInnerReady &&
     firstOuterReadyIndex < firstInnerReadyIndex
-  const runtimePath = ready
+  const runtimePath = isWebSpatialEnv
     ? 'WebSpatial · onSpatialContentReady'
     : 'plain web · own ref + effect'
   const sawAnyCleanup = cleanupEvents > 0
@@ -294,7 +302,7 @@ export default function SpatialContentReadyThreePage() {
       <div className="mb-3">
         <span
           className={`text-[11px] px-2 py-1 rounded border ${
-            ready
+            isWebSpatialEnv
               ? 'bg-cyan-500/20 text-cyan-200 border-cyan-400/40'
               : 'bg-amber-500/20 text-amber-200 border-amber-400/40'
           }`}
@@ -452,7 +460,7 @@ export default function SpatialContentReadyThreePage() {
             <div className="flex items-center justify-between gap-3 pt-1">
               <span className="text-xs text-gray-300">Active attach path</span>
               <span className="text-[10px] px-2 py-0.5 rounded border bg-cyan-500/20 text-cyan-200 border-cyan-400/40">
-                {ready ? 'spatial' : 'flat-web'}
+                {isWebSpatialEnv ? 'spatial' : 'flat-web'}
               </span>
             </div>
           </div>
