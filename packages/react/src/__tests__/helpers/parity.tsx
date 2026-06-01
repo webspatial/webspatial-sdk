@@ -45,11 +45,12 @@ export function normalizeHtml(input: string): string {
     .trim()
 }
 
-/** Render via the **client** `react-dom` path (Vitest/jsdom): `SpatializedContainer`
- * / `Model` use `withSSRSupported`, which hides real output behind a placeholder
- * only for `renderToStaticMarkup`/`renderToString` (server snapshots). Parity harness
- * Path 2 for real `@webspatial/react-sdk` exports MUST use this so we compare against
- * the unsupported-branch DOM, not the transport placeholder.
+/** Render via the **client** `react-dom` path (Vitest/jsdom). On the default
+ * entry the real `Model` / `SpatializedContainer` are mounted only through the
+ * facade delegate as a fresh client render AFTER hydration commits, so the
+ * parity harness Path 2 for real `@webspatial/react-sdk` exports uses a client
+ * render to compare against the actual unsupported-branch DOM (matching how the
+ * real implementation renders in practice).
  */
 export function renderClientMarkup(node: React.ReactElement): string {
   const { container, unmount } = render(node)

@@ -4,7 +4,6 @@ import {
   SpatializedStatic3DElementContainer,
   SpatializedStatic3DElementRef,
 } from './spatialized-container'
-import { withSSRSupported } from './ssr'
 import { useInsideAttachment } from './reality/context/InsideAttachmentContext'
 import { markWebSpatialPrimitive } from './jsx/primitiveMarker'
 
@@ -45,7 +44,14 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   return <SpatializedStatic3DElementContainer ref={ref} {...restProps} />
 }
 
-export const Model = withSSRSupported(forwardRef(ModelBase))
+// No `withSSRSupported` wrapper: on the default entry the real `Model` is
+// reached only through the facade delegate (`facades/Model.tsx`), which renders
+// it only after `useSpatialReady()` reports ready — i.e. as a fresh client
+// mount AFTER hydration commits, never during the SSR or hydration pass. The
+// eager entry exports this real `Model` directly and is CSR-only for spatial
+// primitives (see `spatial-lazy-load` spec "Entry routing"); SSR safety in
+// mixed eager setups is the consumer's responsibility (CSR-gate the subtree).
+export const Model = forwardRef(ModelBase)
 Model.displayName = 'Model'
 // Brand the real implementation too: the eager entry exports THIS `Model`,
 // and the JSX runtime must short-circuit it (not wrap `<Model enable-xr>` as

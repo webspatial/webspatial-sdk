@@ -31,8 +31,9 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       // exists at `src/internal/urlUtils.ts` for internal consumers and is
       // tested colocated at `src/internal/urlUtils.test.ts`.
       // `SSRProvider` was a Group C public export until the
-      // `remove-ssr-provider` change; `withSSRSupported` no longer needs a
-      // Context (see `src/ssr/withSSRSupported.tsx`).
+      // `remove-ssr-provider` change; hydration gating now lives in the
+      // facade's `useSpatialReady` and real hosts mount post-hydration through
+      // the facade delegate (no Context, no internal SSR wrapper).
       'initScene',
       // Spatial primitive facades
       'AttachmentEntity',
