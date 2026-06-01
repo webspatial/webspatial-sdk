@@ -10,6 +10,7 @@
     "./dist/eager.js",
     "./dist/spatial.js",
     "./src/eager.ts",
+    "./src/runtime/registerEagerEntry.ts",
     "./src/spatial/index.ts"
   ],
   "exports": {

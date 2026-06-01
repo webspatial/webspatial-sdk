@@ -170,6 +170,17 @@ export default defineConfig([
       // common chunk and the eager entry does NOT duplicate code that the
       // default entry already ships.
       eager: 'src/eager.ts',
+      // Emitted as its OWN entry (not inlined into `eager.js`) so the eager
+      // mixed-entry registration runs during the import-evaluation phase —
+      // before `eager.js` evaluates its `./spatial` import. If this module
+      // were inlined into `eager.js`, esbuild would hoist all of eager's
+      // imports (including the spatial chunk, which installs polyfills) above
+      // the inlined `registerReactSdkEntry('eager')` call, so a mixed-entry
+      // throw would happen only AFTER the spatial runtime was polluted. As a
+      // standalone entry it is fully evaluated before the sibling spatial
+      // import. Retention is additionally guaranteed by the `sideEffects`
+      // allowlist in package.json.
+      'runtime/registerEagerEntry': 'src/runtime/registerEagerEntry.ts',
       spatial: 'src/spatial/index.ts',
       // Internal `'use client'` boundary used exclusively by the JSX
       // runtime (Bundle 2 below). Lives in this bundle so it shares the
