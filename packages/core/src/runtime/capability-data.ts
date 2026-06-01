@@ -15,13 +15,16 @@ export type CapabilityVersionRow = {
 
 /** Mirror `useAnimation:*` element/static3d/dynamic3d flags to `useSpatializedMotion:*` kind tokens. */
 function mirrorSpatializedMotionFlags(flags: Record<string, boolean>): void {
-  flags['useSpatializedMotion'] = flags['useAnimation'] === true
   flags['useSpatializedMotion:spatialized2d'] =
     flags['useAnimation:element'] === true
   flags['useSpatializedMotion:static3d'] =
     flags['useAnimation:static3d'] === true
   flags['useSpatializedMotion:dynamic3d'] =
     flags['useAnimation:dynamic3d'] === true
+  flags['useSpatializedMotion'] =
+    flags['useSpatializedMotion:spatialized2d'] === true &&
+    flags['useSpatializedMotion:static3d'] === true &&
+    flags['useSpatializedMotion:dynamic3d'] === true
 }
 
 function baseTrueFlags(): Record<string, boolean> {
@@ -66,6 +69,8 @@ function matrixVision_1_5_0_Flags(): Record<string, boolean> {
   flags['useAnimation'] = false
   flags['useAnimation:entity'] = false
   flags['useAnimation:element'] = false
+  flags['useAnimation:static3d'] = false
+  flags['useAnimation:dynamic3d'] = false
   mirrorSpatializedMotionFlags(flags)
   return flags
 }
@@ -82,6 +87,10 @@ function matrixVision_1_6_0_Flags(): Record<string, boolean> {
   flags['SpatialRotateEvent:constrainedToAxis'] = true
   // useAnimation not supported until WSAppShell/1.7.0
   flags['useAnimation'] = false
+  flags['useAnimation:entity'] = false
+  flags['useAnimation:element'] = false
+  flags['useAnimation:static3d'] = false
+  flags['useAnimation:dynamic3d'] = false
   mirrorSpatializedMotionFlags(flags)
   return flags
 }
@@ -98,6 +107,8 @@ function matrixVision_1_7_0_Flags(): Record<string, boolean> {
   flags['Model:loading'] = true
   flags['Model:poster'] = true
   flags['useAnimation:element'] = false
+  flags['useAnimation:static3d'] = false
+  flags['useAnimation:dynamic3d'] = false
   mirrorSpatializedMotionFlags(flags)
   return flags
 }

@@ -61,7 +61,7 @@ export const spatialElementMotionRoutes: SpatialElementMotionRoute[] = [
   {
     path: '/spatial-element-motion/capability-check',
     label: 'Capability Detection',
-    description: "supports('useSpatializedMotion', ['element']) runtime probe.",
+    description: "supports('useSpatializedMotion') runtime probe.",
   },
   {
     path: '/spatial-element-motion/play-state',
