@@ -14,11 +14,13 @@ type MetricsImpl = () => MetricsPlaceholder
  *
  * Per spatial-lazy-load spec "Hook placeholders" Requirement: the
  * placeholder-vs-real selection is decided ONCE per component instance via
- * a `useState` initializer. The hook never switches mid-life: a component
- * that first invoked the placeholder keeps invoking the placeholder for
- * its entire lifetime, even after `bootSpatial()` resolves. To get the
- * real hook implementation, the component MUST be unmounted and remounted
- * (e.g. via a `key` change, parent unmount, or page reload).
+ * a `useState` initializer. In plain web, the placeholder conversion
+ * functions throw `WebSpatialRuntimeError` when invoked. The hook never
+ * switches mid-life: a component that first invoked the placeholder keeps
+ * invoking the placeholder for its entire lifetime, even after
+ * `bootSpatial()` resolves. To get the real hook implementation, the
+ * component MUST be unmounted and remounted (e.g. via a `key` change,
+ * parent unmount, or page reload).
  *
  * This decision lives in `useState`'s initializer (called once per
  * instance) — that is what allows the placeholder and the real hook to

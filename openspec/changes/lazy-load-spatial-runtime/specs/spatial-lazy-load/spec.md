@@ -375,16 +375,14 @@ A given component instance MUST consistently use either the placeholder hook (we
 
 | Hook         | Signature                                                                                                                  | Web-mode return value                                                                                                                                                                                                                                                                                                |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `useMetrics` | `() => { pointToPhysical: (pt: number, opts?: object) => number; physicalToPoint: (m: number, opts?: object) => number }` | An object whose `pointToPhysical` and `physicalToPoint` properties are module-level constant function references. `pointToPhysical(pt) === pt / 1360`. `physicalToPoint(m) === m * 1360`. The two function identities MUST remain stable across all renders and all `bootSpatial()` calls during the page lifetime. |
+| `useMetrics` | `() => { pointToPhysical: (pt: number, opts?: object) => number; physicalToPoint: (m: number, opts?: object) => number }` | An object whose `pointToPhysical` and `physicalToPoint` properties are module-level constant function references. The two function identities MUST remain stable across all renders and all `bootSpatial()` calls during the page lifetime. Invoking either function while the placeholder is active (non-WebSpatial browser, SSR, WebSpatial runtime before `bootSpatial()` resolves, or a component instance pinned to the placeholder) MUST throw `WebSpatialRuntimeError` with capability `'useMetrics'`. |
 
-#### Scenario: useMetrics placeholder returns the documented fallback values
+#### Scenario: useMetrics placeholder throws on conversion while unavailable
 
-- **WHEN** `useMetrics()` is invoked in a non-WebSpatial browser, during SSR, or before `bootSpatial()` has resolved
-- **THEN** the returned object MUST expose `pointToPhysical` and `physicalToPoint` matching the table above
-- **AND** `pointToPhysical(0)` MUST equal `0`
-- **AND** `pointToPhysical(1360)` MUST equal `1`
-- **AND** `physicalToPoint(1)` MUST equal `1360`
-- **AND** the call MUST NOT throw, MUST NOT schedule a network request, MUST NOT subscribe to a `window`-scoped external store
+- **WHEN** `useMetrics()` is invoked while the placeholder is active (non-WebSpatial browser, during SSR, WebSpatial runtime before `bootSpatial()` resolves, or a component instance pinned to the placeholder)
+- **THEN** the returned object MUST expose `pointToPhysical` and `physicalToPoint` as stable function references
+- **AND** invoking `pointToPhysical(...)` or `physicalToPoint(...)` MUST throw `WebSpatialRuntimeError` with capability `'useMetrics'`
+- **AND** calling `useMetrics()` itself MUST NOT throw, MUST NOT schedule a network request, MUST NOT subscribe to a `window`-scoped external store
 
 #### Scenario: useMetrics function identities are stable across renders
 
@@ -395,8 +393,9 @@ A given component instance MUST consistently use either the placeholder hook (we
 #### Scenario: useMetrics is SSR-safe
 
 - **WHEN** `useMetrics()` is invoked in an environment without `window` (e.g. under `renderToString` / `renderToPipeableStream`)
-- **THEN** it MUST NOT throw
-- **AND** the placeholder MUST return the same constant functions documented in the table above
+- **THEN** calling `useMetrics()` itself MUST NOT throw
+- **AND** the placeholder MUST return the same stable conversion function references documented in the table above
+- **AND** invoking either conversion function during SSR MUST throw `WebSpatialRuntimeError` because runtime detection resolves to non-WebSpatial
 - **AND** if the implementation uses `useSyncExternalStore`, it MUST provide a `getServerSnapshot` that returns a stable value without touching `window`
 
 #### Scenario: Real hook is used only after boot in spatial runtime

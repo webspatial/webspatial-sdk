@@ -51,7 +51,8 @@ For APIs documented as runtime-gated, unsupported calls/reads MUST follow docume
 
 - **WHEN** `supports('useMetrics')` is `false`
 - **THEN** calling `useMetrics()` MUST NOT throw
-- **AND** the returned object MUST match the `spatial-lazy-load` spec's "Hook placeholders" Requirement: `pointToPhysical(pt) === pt / 1360` and `physicalToPoint(m) === m * 1360` with stable function identities
+- **AND** the returned object MUST expose stable `pointToPhysical` / `physicalToPoint` function references per the `spatial-lazy-load` spec's "Hook placeholders" Requirement
+- **AND** invoking either conversion function while the placeholder is active MUST throw `WebSpatialRuntimeError` with capability `'useMetrics'`
 
 #### Scenario: `convertCoordinate` graceful degradation
 

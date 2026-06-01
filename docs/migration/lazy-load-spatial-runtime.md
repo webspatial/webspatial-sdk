@@ -269,7 +269,7 @@ Pre-v1, `useMetrics` would silently switch from web fallback to real spatial val
 
 This change is required by the spec's "Hook implementation does not switch mid-life" Scenario, which keeps the React Hook call sequence consistent across the instance's lifetime (Rules of Hooks).
 
-The placeholder return value is unchanged: `pointToPhysical(pt) === pt / 1360`, `physicalToPoint(m) === m * 1360`. If your code performed math on these values, the numerics are stable across the upgrade.
+The placeholder conversion functions throw `WebSpatialRuntimeError` when invoked in a non-WebSpatial browser. Guard with `useSpatialReady()` or only call conversions after `bootSpatial()` resolves and the component remounts.
 
 ---
 
