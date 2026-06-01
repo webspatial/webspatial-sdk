@@ -86,6 +86,6 @@
     "typedoc": "^0.26.5",
     "typedoc-plugin-markdown": "^4.2.2",
     "typescript": "^5.5.4",
-    "vitest": "^3.1.2"
+    "vitest": "^4.1.0"
   }
 }
