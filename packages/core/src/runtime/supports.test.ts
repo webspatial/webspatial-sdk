@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest'
+import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
 
 describe('getRuntime / supports', () => {
   beforeEach(() => {
@@ -280,18 +280,37 @@ describe('supports("useSpatializedMotion", [kind])', () => {
     } as Navigator)
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
+    expect(supports('useSpatializedMotion')).toBe(true)
+    expect(supports('useSpatializedMotion', [])).toBe(true)
     expect(supports('useSpatializedMotion', ['spatialized2d'])).toBe(true)
     expect(supports('useSpatializedMotion', ['static3d'])).toBe(true)
     expect(supports('useSpatializedMotion', ['dynamic3d'])).toBe(true)
   })
 
-  test('visionOS WSAppShell/1.7.0: spatialized2d false (element motion ships in 1.8.0)', async () => {
+  test('visionOS WSAppShell/1.7.0: top-level requires all motion kinds', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.7.0 WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
+    expect(supports('useSpatializedMotion')).toBe(false)
+    expect(supports('useSpatializedMotion', [])).toBe(false)
     expect(supports('useSpatializedMotion', ['spatialized2d'])).toBe(false)
+    expect(supports('useSpatializedMotion', ['static3d'])).toBe(false)
+    expect(supports('useSpatializedMotion', ['dynamic3d'])).toBe(false)
+    expect(
+      supports('useSpatializedMotion', ['spatialized2d', 'static3d']),
+    ).toBe(false)
+  })
+
+  test('visionOS WSAppShell/1.6.0: top-level false when one required kind is false', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.6.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useSpatializedMotion')).toBe(false)
   })
 })
