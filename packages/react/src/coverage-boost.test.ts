@@ -1327,7 +1327,7 @@ describe('PortalSpatializedContainer', () => {
 })
 
 describe('SpatializedContainer', () => {
-  it('renders plain component and runs ready callback in non-WebSpatial env', async () => {
+  it('renders plain component in non-WebSpatial env WITHOUT invoking onSpatialContentReady (spec: ready fires only for a real spatial content host)', async () => {
     vi.resetModules()
     vi.doMock('./spatialized-container/context/PortalInstanceContext', () => {
       return {
@@ -1342,12 +1342,7 @@ describe('SpatializedContainer', () => {
     const { SpatializedContainer } = await import(
       './spatialized-container/SpatializedContainer'
     )
-    const cleanup = vi.fn()
-    const onSpatialContentReady = vi.fn((ctx: { host: HTMLElement }) => {
-      expect(ctx.host.tagName).toBe('DIV')
-      expect(ctx.host.isConnected).toBe(true)
-      return cleanup
-    })
+    const onSpatialContentReady = vi.fn()
 
     const r = render(
       React.createElement(SpatializedContainer, {
@@ -1358,11 +1353,13 @@ describe('SpatializedContainer', () => {
     )
     const el = r.container.querySelector('[data-testid="plain"]')
     expect(el).toBeTruthy()
+    // Still MUST NOT leak as a DOM attribute.
     expect(el?.getAttribute('onSpatialContentReady')).toBe(null)
-    expect(onSpatialContentReady).toHaveBeenCalledTimes(1)
+    // Degraded plain-web host has no spatial content host → callback NOT called.
+    expect(onSpatialContentReady).not.toHaveBeenCalled()
 
     r.unmount()
-    expect(cleanup).toHaveBeenCalledTimes(1)
+    expect(onSpatialContentReady).not.toHaveBeenCalled()
   })
 
   it('renders root container with standard/portal/task containers', async () => {

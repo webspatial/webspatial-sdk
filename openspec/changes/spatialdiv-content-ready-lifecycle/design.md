@@ -84,8 +84,8 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 
 - `onSpatialContentReady` is part of the **SpatialDiv (2D)** public API only (`Spatialized2DElementContainer` / `div` JSX augmentation). It is **not** exposed on `Model`, `Reality`, or static 3D container prop types.
 - `WebSpatialJSX.IntrinsicElements['div']` includes `onSpatialContentReady`; other intrinsic tags keep gesture props without this callback (SpatialDiv is `div`-based).
-- In non-WebSpatial environments, the fallback plain DOM `SpatialDiv` SHOULD still run `onSpatialContentReady` so app code can use a unified lifecycle API in web-only usage; `ctx.host` is that fallback DOM host.
-- In attachment-degraded paths (for example `insideAttachment` plain HTML fallback), callback invocation remains suppressed.
+- **Product-confirmed semantics (supersedes the earlier draft):** `onSpatialContentReady` fires ONLY when a real WebSpatial spatial content host exists (the portal pipeline). In non-WebSpatial environments — or before `bootSpatial()` produces a spatial host — the fallback plain DOM `SpatialDiv` MUST NOT run `onSpatialContentReady` (there is no spatial content host). For the web-only / flat presentation, app code uses its own React `ref` + effect (optionally branching on `useSpatialReady()`), not this callback.
+- Attachment-degraded paths (for example `insideAttachment` plain HTML fallback) are likewise degraded paths and do not invoke the callback.
 - Across all degraded/plain-HTML paths, the prop MUST NOT leak to real DOM attributes; strip it or ignore it consistently with existing `spatialEventOptions` stripping patterns.
 
 ### Decision 5: `ctx.host` anchoring
@@ -95,7 +95,7 @@ If app code binds external renderers (Three.js / Pixi / Babylon, and so on) to t
 
 ### Decision 6: Verification
 
-- Add package tests covering timing, cleanup, StrictMode remount ordering, nested parent/child order, ref non-null when ready fires, deduped ref callbacks, non-WebSpatial fallback invocation with connected host, and attachment-degraded non-invocation; optional `apps/test-server` pages for interactive validation.
+- Add package tests covering timing, cleanup, StrictMode remount ordering, nested parent/child order, ref non-null when ready fires, deduped ref callbacks, **non-WebSpatial fallback NON-invocation** (callback never fires, attribute stripped, ref still forwarded), and attachment-degraded non-invocation; optional `apps/test-server` pages for interactive validation.
 
 ## Risks / Trade-offs
 
