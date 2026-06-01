@@ -140,29 +140,31 @@ In non-WebSpatial fallback (plain DOM path), parent/child callback ordering is i
 - **WHEN** a parent plain-DOM fallback `SpatialDiv` contains a child fallback `SpatialDiv`
 - **THEN** parent and child `onSpatialContentReady` callback ordering MUST be considered unspecified by API contract
 
-### Requirement: Non-WebSpatial fallback must keep API usable without leaking DOM attributes
+### Requirement: Degraded paths keep the API usable without leaking DOM attributes and without firing ready
 
-When WebSpatial runtime is unavailable and the SDK renders a plain DOM `SpatialDiv` fallback, the system SHALL still support `onSpatialContentReady` for that fallback path.
+> **Semantics (product-confirmed; supersedes the earlier "fallback still invokes ready" behavior).** `onSpatialContentReady` is a **spatial-content-host signal**: it fires ONLY when a real WebSpatial spatial content host exists (the portal pipeline; see the "Lifecycle" Requirement). When WebSpatial runtime is unavailable — or before `bootSpatial()` has produced a spatial host — the SDK renders a plain DOM `SpatialDiv` fallback that has **no** spatial content host, so the callback MUST NOT fire there.
 
-For this fallback path:
+For every degraded / plain-web / pre-boot host:
 
-- The callback MUST run in `useLayoutEffect` timing (never during render).
-- `ctx.host` MUST be the connected fallback DOM host element rendered by that `SpatialDiv`.
-- Returned cleanup semantics MUST match the primary requirement (unmount / teardown / re-ready boundaries).
+- The system SHALL NOT forward `onSpatialContentReady` as a real DOM attribute.
+- The system SHALL NOT invoke `onSpatialContentReady` (there is no spatial content host to hand back).
+- The spatial `ref` (if provided) SHALL still be forwarded to the rendered host element.
 
-When rendering any plain HTML degraded path, the system SHALL NOT forward `onSpatialContentReady` as a real DOM attribute.
+Applications that need to initialize an external renderer for the **plain-web** (flat) presentation MUST use their own React `ref` + effect on their own element (optionally branching on `useSpatialReady()`); they MUST NOT rely on `onSpatialContentReady` for the non-spatial path.
 
-Attachment-degraded fallback (for example `insideAttachment`) MUST continue to suppress `onSpatialContentReady` invocation, because no supported spatial content host contract is provided there.
+Attachment-degraded fallback (for example `insideAttachment`) is one such degraded path and therefore also does not invoke `onSpatialContentReady`.
 
 #### Scenario: Degraded container keeps DOM attribute namespace clean
 
 - **WHEN** `onSpatialContentReady` is passed while rendering degraded plain HTML
 - **THEN** the resulting DOM element MUST NOT include an `onSpatialContentReady` attribute
 
-#### Scenario: Non-WebSpatial fallback still invokes ready
+#### Scenario: Non-WebSpatial fallback does NOT invoke ready
 
-- **WHEN** WebSpatial runtime is unavailable and `onSpatialContentReady` is passed to SpatialDiv
-- **THEN** `onSpatialContentReady` MUST be called with a connected fallback host element
+- **WHEN** WebSpatial runtime is unavailable (or boot has not yet produced a spatial content host) and `onSpatialContentReady` is passed to SpatialDiv
+- **THEN** `onSpatialContentReady` MUST NOT be called
+- **AND** the prop MUST NOT be forwarded as a DOM attribute
+- **AND** a provided spatial `ref` MUST still be forwarded to the rendered fallback host
 
 #### Scenario: Attachment-degraded path does not invoke ready
 
@@ -195,7 +197,7 @@ Automated tests SHALL cover at minimum:
 - `isReady` falling edge invokes prior cleanup before the next rising edge.
 - StrictMode-style remount: cleanup from the first ready runs before the second ready.
 - Forwarded spatial `ref`: non-null when ready is invoked; ref callback deduplication per prior requirements.
-- Non-WebSpatial fallback: prop stripped from DOM attribute space; `onSpatialContentReady` still called with connected fallback host.
+- Non-WebSpatial fallback: prop stripped from DOM attribute space; `onSpatialContentReady` **never called** (no spatial content host); a provided spatial `ref` is still forwarded to the fallback host.
 - Attachment-degraded path: prop stripped from DOM attribute space; `onSpatialContentReady` never called.
 - Nested spatial containers: in WebSpatial runtime, parent ready before child ready on the same rising edge where both become ready; in non-WebSpatial fallback, ordering is unspecified.
 
