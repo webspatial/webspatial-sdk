@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import {
   BoxGeometry,
   Color,
@@ -11,6 +11,7 @@ import {
 
 import {
   enableDebugTool,
+  useSpatialReady,
   type SpatialContentReadyContext,
 } from '@webspatial/react-sdk'
 
@@ -22,14 +23,19 @@ const DEPTH_SINGLE = 110
 
 type AttachOpts = {
   meshColor: number
-  slotSelector: string
+  // When set, the renderer mounts into `host.querySelector(slotSelector)`
+  // (spatial path: `host` is the SpatialDiv portal host). When `null`, it
+  // mounts into `host` directly (flat-web path: `host` IS the slot element).
+  slotSelector: string | null
   enableClickToggle?: boolean
   onToggleAnimating?: (animating: boolean) => void
 }
 
-function attachThreeToHost(ctx: SpatialContentReadyContext, opts: AttachOpts) {
-  const { host } = ctx
-
+// Attaches a Three.js scene into the given host element. Used by BOTH runtime
+// paths: the WebSpatial path passes the spatial content host from
+// `onSpatialContentReady(ctx)`, and the flat-web path passes the app's own
+// slot element (because `onSpatialContentReady` does NOT fire on plain web).
+function attachThreeToHost(host: HTMLElement, opts: AttachOpts) {
   const scene = new Scene()
   scene.background = new Color(0x0a0a12)
 
@@ -50,7 +56,9 @@ function attachThreeToHost(ctx: SpatialContentReadyContext, opts: AttachOpts) {
   scene.add(mesh)
 
   const mountEl =
-    (host.querySelector(opts.slotSelector) as HTMLElement | null) ?? host
+    (opts.slotSelector
+      ? (host.querySelector(opts.slotSelector) as HTMLElement | null)
+      : host) ?? host
   mountEl.appendChild(renderer.domElement)
 
   let raf = 0
@@ -125,98 +133,124 @@ export default function SpatialContentReadyThreePage() {
 
   const outerRef = useRef<HTMLDivElement | null>(null)
   const innerRef = useRef<HTMLDivElement | null>(null)
+  const singleRef = useRef<HTMLDivElement | null>(null)
+
+  // `onSpatialContentReady` fires ONLY in a WebSpatial runtime. `ready` lets the
+  // demo run the flat-web path (own ref + effect) on plain web and hand off to
+  // the spatial path when a real spatial content host exists.
+  const ready = useSpatialReady()
 
   const pushLine = useCallback((msg: string) => {
     setLines(prev => [...prev.slice(-(MAX_LOG - 1)), msg])
   }, [])
 
-  const onOuterReady = useCallback(
-    (ctx: SpatialContentReadyContext) => {
+  // Single attach routine shared by BOTH runtime paths so the demo logs and
+  // counts them identically; `path` records which mechanism fired.
+  const runAttach = useCallback(
+    (
+      label: string,
+      path: 'spatial' | 'flat',
+      host: HTMLElement,
+      opts: AttachOpts,
+    ) => {
       readySeq.current += 1
       const n = readySeq.current
       setReadyEvents(n)
-      const refOk = outerRef.current != null
       pushLine(
-        `[outer ready #${n}] ref.current→${refOk ? 'set' : 'null'} host=${ctx.host.tagName} ${ctx.host.clientWidth}×${ctx.host.clientHeight}`,
+        `[${label} ${path} ready #${n}] host=${host.tagName} ${host.clientWidth}×${host.clientHeight}`,
       )
+      const disposeThree = attachThreeToHost(host, opts)
+      return () => {
+        disposeThree()
+        cleanupSeq.current += 1
+        const c = cleanupSeq.current
+        setCleanupEvents(c)
+        pushLine(`[${label} ${path} cleanup #${c}]`)
+      }
+    },
+    [pushLine],
+  )
 
-      const disposeThree = attachThreeToHost(ctx, {
+  const singleToggle = useCallback(
+    (animating: boolean) => {
+      if (singleAnimatingRef.current !== animating) {
+        pushLine(`[single toggle] ${animating ? 'running' : 'paused'}`)
+      }
+      singleAnimatingRef.current = animating
+      setSingleAnimating(animating)
+    },
+    [pushLine],
+  )
+
+  // --- Spatial path: fires ONLY in a WebSpatial runtime. `ctx.host` is the
+  // real spatial content host; mount into its slot.
+  const onOuterReady = useCallback(
+    (ctx: SpatialContentReadyContext) =>
+      runAttach('outer', 'spatial', ctx.host, {
         meshColor: 0x4488ff,
         slotSelector: '[data-three-slot="outer"]',
-      })
-
-      return () => {
-        disposeThree()
-        cleanupSeq.current += 1
-        const c = cleanupSeq.current
-        setCleanupEvents(c)
-        pushLine(`[outer cleanup #${c}]`)
-      }
-    },
-    [pushLine],
+      }),
+    [runAttach],
   )
-
   const onInnerReady = useCallback(
-    (ctx: SpatialContentReadyContext) => {
-      readySeq.current += 1
-      const n = readySeq.current
-      setReadyEvents(n)
-      const refOk = innerRef.current != null
-      pushLine(
-        `[inner ready #${n}] ref.current→${refOk ? 'set' : 'null'} host=${ctx.host.tagName} ${ctx.host.clientWidth}×${ctx.host.clientHeight}`,
-      )
-
-      const disposeThree = attachThreeToHost(ctx, {
+    (ctx: SpatialContentReadyContext) =>
+      runAttach('inner', 'spatial', ctx.host, {
         meshColor: 0x44ff88,
         slotSelector: '[data-three-slot="inner"]',
-      })
-
-      return () => {
-        disposeThree()
-        cleanupSeq.current += 1
-        const c = cleanupSeq.current
-        setCleanupEvents(c)
-        pushLine(`[inner cleanup #${c}]`)
-      }
-    },
-    [pushLine],
+      }),
+    [runAttach],
   )
-
-  const onFlatReady = useCallback(
-    (ctx: SpatialContentReadyContext) => {
-      readySeq.current += 1
-      const n = readySeq.current
-      setReadyEvents(n)
-      pushLine(
-        `[single ready #${n}] host=${ctx.host.tagName} ${ctx.host.clientWidth}×${ctx.host.clientHeight}`,
-      )
-      const disposeThree = attachThreeToHost(ctx, {
+  const onSingleReady = useCallback(
+    (ctx: SpatialContentReadyContext) =>
+      runAttach('single', 'spatial', ctx.host, {
         meshColor: 0xaa66ff,
         slotSelector: '[data-three-slot="single"]',
         enableClickToggle: true,
-        onToggleAnimating: animating => {
-          if (singleAnimatingRef.current !== animating) {
-            pushLine(`[single toggle] ${animating ? 'running' : 'paused'}`)
-          }
-          singleAnimatingRef.current = animating
-          setSingleAnimating(animating)
-        },
-      })
-      return () => {
-        disposeThree()
-        cleanupSeq.current += 1
-        setCleanupEvents(cleanupSeq.current)
-        pushLine(`[single cleanup #${cleanupSeq.current}]`)
-      }
-    },
-    [pushLine],
+        onToggleAnimating: singleToggle,
+      }),
+    [runAttach, singleToggle],
   )
 
-  const firstOuterReadyIndex = lines.findIndex(line =>
-    line.startsWith('[outer ready'),
+  // --- Flat-web path: `onSpatialContentReady` does NOT fire on plain web, so
+  // attach via our OWN panel element + a normal layout effect, gated on
+  // `!ready` so the spatial path takes over when a WebSpatial runtime is present.
+  useLayoutEffect(() => {
+    if (ready || !showMainPanel) return
+    const host = outerRef.current
+    if (!host) return
+    return runAttach('outer', 'flat', host, {
+      meshColor: 0x4488ff,
+      slotSelector: '[data-three-slot="outer"]',
+    })
+  }, [ready, showMainPanel, runAttach])
+
+  useLayoutEffect(() => {
+    if (ready || !showMainPanel || !showNestedBlock) return
+    const host = innerRef.current
+    if (!host) return
+    return runAttach('inner', 'flat', host, {
+      meshColor: 0x44ff88,
+      slotSelector: '[data-three-slot="inner"]',
+    })
+  }, [ready, showMainPanel, showNestedBlock, runAttach])
+
+  useLayoutEffect(() => {
+    if (ready) return
+    const host = singleRef.current
+    if (!host) return
+    return runAttach('single', 'flat', host, {
+      meshColor: 0xaa66ff,
+      slotSelector: '[data-three-slot="single"]',
+      enableClickToggle: true,
+      onToggleAnimating: singleToggle,
+    })
+  }, [ready, runAttach, singleToggle])
+
+  const firstOuterReadyIndex = lines.findIndex(
+    line => line.startsWith('[outer ') && line.includes('ready'),
   )
-  const firstInnerReadyIndex = lines.findIndex(line =>
-    line.startsWith('[inner ready'),
+  const firstInnerReadyIndex = lines.findIndex(
+    line => line.startsWith('[inner ') && line.includes('ready'),
   )
   const hasOuterReady = firstOuterReadyIndex >= 0
   const hasInnerReady = firstInnerReadyIndex >= 0
@@ -224,9 +258,9 @@ export default function SpatialContentReadyThreePage() {
     hasOuterReady &&
     hasInnerReady &&
     firstOuterReadyIndex < firstInnerReadyIndex
-  const refNeverNullOnReady = !lines.some(line =>
-    line.includes('ref.current→null'),
-  )
+  const runtimePath = ready
+    ? 'WebSpatial · onSpatialContentReady'
+    : 'plain web · own ref + effect'
   const sawAnyCleanup = cleanupEvents > 0
 
   const renderStatus = (
@@ -257,11 +291,26 @@ export default function SpatialContentReadyThreePage() {
       <h1 className="text-2xl mb-2 font-semibold">
         SpatialDiv · onSpatialContentReady · Three.js
       </h1>
+      <div className="mb-3">
+        <span
+          className={`text-[11px] px-2 py-1 rounded border ${
+            ready
+              ? 'bg-cyan-500/20 text-cyan-200 border-cyan-400/40'
+              : 'bg-amber-500/20 text-amber-200 border-amber-400/40'
+          }`}
+        >
+          Active path: {runtimePath}
+        </span>
+      </div>
       <p className="text-gray-400 text-sm mb-4 max-w-3xl">
-        Canvas under <code className="text-cyan-300">ctx.host</code>. Nested
-        block: expect <strong className="text-gray-200">outer ready</strong>{' '}
-        before <strong className="text-gray-200">inner ready</strong> on first
-        mount. Toggle panels to exercise cleanup / re-ready.
+        <code className="text-cyan-300">onSpatialContentReady</code> fires{' '}
+        <strong className="text-gray-200">only in a WebSpatial runtime</strong>.
+        On plain web this page attaches Three.js via its own{' '}
+        <code className="text-cyan-300">ref</code> + effect instead (the
+        supported flat-web pattern). Nested block: expect{' '}
+        <strong className="text-gray-200">outer ready</strong> before{' '}
+        <strong className="text-gray-200">inner ready</strong> on first mount.
+        Toggle panels to exercise cleanup / re-ready.
       </p>
 
       <div className="flex flex-wrap gap-3 mb-6">
@@ -345,8 +394,9 @@ export default function SpatialContentReadyThreePage() {
             compare single vs nested lifecycle.
           </p>
           <div
+            ref={singleRef}
             enable-xr
-            onSpatialContentReady={onFlatReady}
+            onSpatialContentReady={onSingleReady}
             className="rounded-xl overflow-hidden border border-violet-400/25 shadow-lg"
             style={{
               width: 'min(92vw, 400px)',
@@ -395,14 +445,16 @@ export default function SpatialContentReadyThreePage() {
               !(hasOuterReady && hasInnerReady),
             )}
             {renderStatus(
-              'Ready callback sees non-null ref.current',
-              refNeverNullOnReady,
-            )}
-            {renderStatus(
               'Cleanup observed (toggle main panel once)',
               sawAnyCleanup,
               !sawAnyCleanup,
             )}
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <span className="text-xs text-gray-300">Active attach path</span>
+              <span className="text-[10px] px-2 py-0.5 rounded border bg-cyan-500/20 text-cyan-200 border-cyan-400/40">
+                {ready ? 'spatial' : 'flat-web'}
+              </span>
+            </div>
           </div>
           <div className="text-[11px] text-gray-500">
             Current depth: outer {DEPTH_OUTER}, inner {DEPTH_INNER}, single{' '}
