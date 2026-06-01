@@ -9,7 +9,7 @@ Build configuration + size-budget enforcement for `openspec/lazy-load-spatial-ru
 - Single unified `tsup` pass with `splitting: true` over three logical entries: `src/index.ts → dist/index.js` (lean default), `src/spatial/index.ts → dist/spatial.js` (dynamic-import target), `src/jsx/jsx-{runtime,dev-runtime}.ts → dist/jsx/*.js` (single unified JSX runtime). `esbuild` hoists the facade module + `replaceToSpatialPrimitiveType` into a shared chunk used by both the default entry and the JSX runtimes — no duplicate facade copy ships per JSX bundle.
 - Drops the legacy dual-build (`dist/web` + `dist/default`) and all `*.web.*` entries.
 - Drops the `XR_ENV` global write from the tsup banner; only the `react-sdk-version` window stamp remains.
-- Marks `react`, `react-dom`, `react/jsx-runtime`, `react/jsx-dev-runtime`, `react-dom/client`, and `@webspatial/core-sdk` as external — `core-sdk` is now a real peer dependency from web mode too (no more `noRuntime.ts` aliasing in web builds).
+- Marks `react`, `react-dom`, `react/jsx-runtime`, `react/jsx-dev-runtime`, `react-dom/client`, and `@webspatial/core-sdk` as external — `core-sdk` is now a real peer dependency (the legacy `noRuntime.ts` web-build alias was dropped with the unified layout and the stub files were deleted in follow-up cleanup).
 
 **Published `package.json`**:
 
@@ -22,6 +22,7 @@ Build configuration + size-budget enforcement for `openspec/lazy-load-spatial-ru
 **Source-tree cleanup**:
 
 - Physically deletes `packages/react/src/jsx/jsx-runtime.web.ts` and `packages/react/src/jsx/jsx-dev-runtime.web.ts` (PR 3 left these as transitional shims; PR 5's unified runtime makes them unreachable).
+- Follow-up cleanup also deletes the unused dual-build stubs `packages/react/src/noRuntime.ts`, `noRuntime.test.ts`, and `initScene.web.ts` once the unified tsup layout is stable (see openspec `tasks.md §12.10`).
 - Keeps the relative import `from '../facades'` in `packages/react/src/jsx/jsx-shared.ts` (instead of switching back to `from '@webspatial/react-sdk'` — both resolution targets land in the same shared chunk under `splitting: true`, so the relative form avoids the `@ts-ignore` that the self-import previously needed). `packages/react/src/jsx/README.md` documents the rationale.
 - `src/index.ts` switched `export * from './initScene'` to `export { initScene } from './initScene'` to satisfy the new named-re-export preference (`tasks.md §9.7`).
 - Adds `/* @__PURE__ */` annotations to the `createEntityRefFacade` / `createNullFacade` calls in `src/facades/entities.tsx` and `src/facades/resources.tsx` so the side-effect lint and downstream bundlers can prove the call expressions are tree-shakable.
