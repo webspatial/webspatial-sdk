@@ -4,7 +4,7 @@
 
 Remove the public **`SSRProvider`** export and delete **`SSRContext` / `useSSRPhase`**.
 
-**Why:** Facade SSR is already driven by `useSpatialReady` + `useSyncExternalStore`. Real `Model` / `SpatializedContainer` now hydrate using the same pattern inside **`withSSRSupported`** (stable module-level `getServerSnapshot` returning `false`), so no app-level Context is required.
+**Why:** Facade SSR is already driven by `useSpatialReady` + `useSyncExternalStore`. Real `Model` / `SpatializedContainer` are reached only through the facade delegate and therefore mount as a fresh client render after hydration commits, so no app-level Context is required.
 
 **Migration:** Delete `import { SSRProvider } from '@webspatial/react-sdk'` and any `<SSRProvider>` wrapper. No replacement.
 

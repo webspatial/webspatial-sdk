@@ -92,8 +92,9 @@ describe('Model parity (spec tasks.md §15.3 + REVIEW.md "Two-scenario behavior 
 
     // Path 2 — real Model with `enable-xr={false}` (or under non-WebSpatial
     // UA). Both gating paths short-circuit to the same degraded `<model>`
-    // tag rendering branch. Use client render so `withSSRSupported` does not
-    // emit the SSR transport placeholder `<div>` (see `helpers/parity.renderClientMarkup`).
+    // tag rendering branch. Use client render to match how the real `Model` is
+    // mounted in practice — a fresh post-hydration client mount via the facade
+    // delegate (see `helpers/parity.renderClientMarkup`).
     const path2 = renderClientMarkup(<ModelReal {...props} />)
 
     expect(normalizeHtml(path1)).toBe(normalizeHtml(path2))

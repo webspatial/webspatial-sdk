@@ -59,11 +59,11 @@ afterEach(() => {
 
 describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
   // We assert `!== undefined` instead of pinning `typeof` for each symbol
-  // because `forwardRef` / `memo` / `withSSRSupported` wrappers around
-  // the underlying functions can produce either `'object'` or `'function'`
-  // depending on the wrapper's React internals; the eager entry's
-  // contract only requires that the symbol resolves to a defined runtime
-  // value, NOT that it has a specific JS primitive shape.
+  // because `forwardRef` / `memo` wrappers around the underlying functions
+  // can produce either `'object'` or `'function'` depending on the wrapper's
+  // React internals; the eager entry's contract only requires that the symbol
+  // resolves to a defined runtime value, NOT that it has a specific JS
+  // primitive shape.
 
   const EXPECTED_SPATIAL_PRIMITIVES = [
     'Model',
