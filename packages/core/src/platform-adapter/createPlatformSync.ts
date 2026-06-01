@@ -1,5 +1,5 @@
 import { resolveJsbAdapterPlatform } from '../runtime/jsbAdapterPlatform'
-import { isSSREnv } from '../ssr-polyfill'
+import { isSSREnv } from '../isSSREnv'
 import { PlatformAbility } from './interface'
 import { PicoOSPlatform } from './pico-os/PicoOSPlatform'
 import { PuppeteerPlatform } from './puppeteer/PuppeteerPlatform'

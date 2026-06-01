@@ -38,4 +38,4 @@ export * from './types/animation'
 export * from './runtime'
 
 export { composeSRT, decomposeSRT } from './utils'
-export { isSSREnv } from './ssr-polyfill'
+export { isSSREnv } from './isSSREnv'
