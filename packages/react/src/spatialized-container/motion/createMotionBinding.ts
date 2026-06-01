@@ -12,6 +12,7 @@ export function createMotionBinding(
 ): SpatializedMotionBindingInternal {
   const bindElement = (
     element:
+      | HTMLElement
       | Spatialized2DElement
       | SpatializedStatic3DElement
       | SpatializedDynamic3DElement
