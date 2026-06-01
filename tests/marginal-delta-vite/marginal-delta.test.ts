@@ -28,7 +28,7 @@
 // list; `dynamicImports` is the async one) and sum gzipped sizes for
 // the entry plus its static-import closure only.
 // =============================================================================
-import { existsSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, rmSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
