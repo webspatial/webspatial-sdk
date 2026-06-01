@@ -32,7 +32,6 @@
     "test:w": "vitest",
     "build": "tsup",
     "start": "tsup --watch",
-    "buildIife": "esbuild dist/index.js --outdir=dist/iife --minify --bundle --format=iife --global-name=webspatialCore",
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true",
     "genDocs": "typedoc --plugin typedoc-plugin-markdown src/core/index.ts"
   },

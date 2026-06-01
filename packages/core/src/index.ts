@@ -15,9 +15,7 @@
 //
 // `@webspatial/react-sdk` does this from inside its spatial chunk so the
 // polyfills install only when `bootSpatial()` resolves, never in the
-// lean default-entry bundle. Direct-browser (IIFE) consumers retain the
-// historical auto-install behavior via the separate `iife-entry.ts`
-// bundle target (see `tsup.config.ts`).
+// lean default-entry bundle.
 // =============================================================================
 
 export type {} from './types/global'
