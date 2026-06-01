@@ -36,4 +36,4 @@ export * from './reality'
 export * from './types/types'
 export * from './runtime'
 
-export { isSSREnv } from './ssr-polyfill'
+export { isSSREnv } from './isSSREnv'

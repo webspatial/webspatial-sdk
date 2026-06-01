@@ -978,9 +978,9 @@ describe('SpatializedDynamic3DElement', () => {
   })
 })
 
-describe('ssr-polyfill', () => {
+describe('isSSREnv', () => {
   it('isSSREnv returns false in jsdom', async () => {
-    const { isSSREnv } = await import('./ssr-polyfill')
+    const { isSSREnv } = await import('./isSSREnv')
     expect(isSSREnv()).toBe(false)
   })
 })
@@ -988,7 +988,7 @@ describe('ssr-polyfill', () => {
 describe('platform-adapter', () => {
   it('createPlatform returns SSRPlatform in SSR env', async () => {
     vi.resetModules()
-    vi.doMock('./ssr-polyfill', () => {
+    vi.doMock('./isSSREnv', () => {
       return { isSSREnv: () => true }
     })
 
@@ -1002,7 +1002,7 @@ describe('platform-adapter', () => {
 
   it('createPlatformSync uses SSR sync noop in SSR env', async () => {
     vi.resetModules()
-    vi.doMock('./ssr-polyfill', () => {
+    vi.doMock('./isSSREnv', () => {
       return { isSSREnv: () => true }
     })
 
