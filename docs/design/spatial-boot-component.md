@@ -2,7 +2,7 @@
 
 > **Status:** Implemented in `@webspatial/react-sdk` (see `packages/react/src/runtime/SpatialBoot.tsx`; boot state via internal `useBootSpatial.ts`)  
 > **Phase 1 (public):** Boot completes before spatial UI mounts; boot failure → `onError`, no children  
-> **Advanced (implemented):** `gate={false}` mounts children immediately and lets facades upgrade after boot  
+> **Current contract:** no public `gate` / `fallback`; waiting state renders `null`  
 > **Phase 2 (planned):** optional public `useBootSpatial`, richer boot-progress APIs
 
 **Related material**
@@ -31,11 +31,11 @@
 
 **Not exported in phase 1:** `useBootSpatial` (internal only; phase 2 MAY add a public hook).
 
-**Phase 1 public docs keep advanced options secondary:**
+**Phase 1 public docs keep `<SpatialBoot>` contract minimal:**
 
-- `gate` (default `gate={true}` in code — boot then mount)
-- `fallback` (optional loading UI while boot is in flight)
-- Render-first-then-boot (`gate={false}`, implemented advanced mode)
+- Public props: `children`, `onReady`, `onError`
+- Waiting state: fixed `null` (no custom loading slot)
+- No render-first mode in public API
 
 ---
 
@@ -67,7 +67,6 @@ export function SpatialAppRoot() {
 | `children` | Yes | Spatial UI; mounts **only** after successful boot |
 | `onReady` | Optional | After `bootSpatial()` resolves |
 | `onError` | **Strongly recommended** | On `WebSpatialBootError`; **children stay unmounted** |
-| `fallback` | Advanced / fixtures | Shown while boot is in flight; default **blank** if omitted |
 
 ### 2.2 `bootSpatial()` (advanced / imperative)
 
@@ -92,8 +91,7 @@ Read-only bridge readiness. Use for custom degraded UI (`CapabilityDemo` pattern
 `SpatialBoot` is built with `createSpatialBoot(useBootSpatial)`; the hook is **not** re-exported from `@webspatial/react-sdk` or `@webspatial/react-sdk/eager`.
 
 Default: `showChildren = (status === 'ready')`; on failure, `onError` and children stay unmounted.
-
-**Advanced:** `gate={false}` mounts children immediately. **Phase 2:** optional public `useBootSpatial` for custom status UI without `<SpatialBoot>`.
+While status is not ready, render output is fixed to `null` in current implementation.
 
 ---
 
@@ -101,7 +99,7 @@ Default: `showChildren = (status === 'ready')`; on failure, `onError` and childr
 
 - Server **page** imports a **`'use client'`** module that returns `<SpatialBoot>…</SpatialBoot>`.
 - **SSR does not run `bootSpatial()`** (`useEffect` is client-only).
-- With default gate, **spatial `children` are usually absent from server HTML**; they mount on the client after boot.
+- **Spatial `children` are absent from server HTML**; they mount on the client after boot.
 
 ---
 
@@ -109,9 +107,8 @@ Default: `showChildren = (status === 'ready')`; on failure, `onError` and childr
 
 | Topic | Status |
 | ----- | ------ |
-| `gate={false}` | Implemented advanced mode: mount immediately; facade fallback → real after boot |
 | Public `useBootSpatial` | Phase 2 if product requests custom boot progress / manual `boot()` |
-| Document `fallback` in main guide | Implemented as optional loading UI during boot |
+| Custom loading UI in `<SpatialBoot>` | Not supported in current public contract (`SpatialBoot` waiting state is `null`) |
 
 ---
 
@@ -121,7 +118,7 @@ Default: `showChildren = (status === 'ready')`; on failure, `onError` and childr
 | - | -------- |
 | Ship scope | Phase 1 exports `<SpatialBoot>` only (React sugar); `useBootSpatial` internal |
 | Boot failure | **`onError` only; children do not mount** |
-| Default gate | **`true`**; phase-1 public docs omit the prop name |
+| Waiting behavior | `SpatialBoot` renders `null` before ready (no public `gate` / `fallback`) |
 | Plain web | Boot resolves immediately; children mount on first client tick after mount |
 
 ---
@@ -131,5 +128,5 @@ Default: `showChildren = (status === 'ready')`; on failure, `onError` and childr
 | Date | Notes |
 | ---- | ----- |
 | 2026-05-19 | Initial draft |
-| 2026-05-19 | Phase 1: default `gate={true}`, boot failure does not mount children |
+| 2026-05-19 | Phase 1: boot failure does not mount children |
 | 2026-05-19 | **Position B:** `useBootSpatial` not on public export surface |

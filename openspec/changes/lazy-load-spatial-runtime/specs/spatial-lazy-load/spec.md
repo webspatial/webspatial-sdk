@@ -154,8 +154,9 @@ The default entry and the eager entry (`@webspatial/react-sdk/eager`) MUST expor
 `SpatialBoot` MUST:
 
 - Invoke `bootSpatial()` once after mount (unless a future internal option disables auto-boot — not part of the v1 public surface).
-- By default (`gate` prop omitted or `true`), MUST NOT mount `children` until `bootSpatial()` has resolved successfully in the current page session.
-- While boot is in flight and `children` are not mounted, MUST render `fallback` when provided, otherwise render nothing (`null`).
+- Expose only `children`, `onReady`, and `onError` as public props in v1 (no public `gate` or `fallback` prop).
+- MUST NOT mount `children` until `bootSpatial()` has resolved successfully in the current page session.
+- While boot is in flight and `children` are not mounted, MUST render nothing (`null`).
 - When `bootSpatial()` rejects with `WebSpatialBootError`, MUST invoke the optional `onError` callback with that error and MUST NOT mount `children`.
 - When `bootSpatial()` resolves successfully, MUST mount `children` and MAY invoke the optional `onReady` callback.
 
@@ -163,11 +164,11 @@ The default entry MUST NOT export a public `useBootSpatial` hook in v1. Boot pro
 
 `SpatialBoot` MUST carry `'use client'` (directly or via its module graph) so it is safe to import from Next.js App Router / React Router client boundaries.
 
-The eager entry MUST export `SpatialBoot` as a compatibility stub with the same props and gating semantics, reporting ready immediately (spatial implementation already linked).
+The eager entry MUST export `SpatialBoot` with the same v1 public props (`children`, `onReady`, `onError`) and immediate-ready semantics (spatial implementation already linked).
 
-#### Scenario: Default gate hides children until boot succeeds
+#### Scenario: Default SpatialBoot hides children until boot succeeds
 
-- **WHEN** a consumer renders `<SpatialBoot><App /></SpatialBoot>` without setting `gate` to `false`
+- **WHEN** a consumer renders `<SpatialBoot><App /></SpatialBoot>`
 - **AND** `bootSpatial()` has not yet resolved in a WebSpatial runtime
 - **THEN** `App` MUST NOT be mounted
 - **AND** when `bootSpatial()` subsequently resolves, `App` MUST mount on the next React commit
@@ -178,11 +179,11 @@ The eager entry MUST export `SpatialBoot` as a compatibility stub with the same 
 - **THEN** `onError` MUST be called with that error
 - **AND** `children` MUST remain unmounted for that failure
 
-#### Scenario: Optional fallback during boot
+#### Scenario: SpatialBoot renders null during boot
 
-- **WHEN** a consumer passes `fallback={<Loading />}` to `<SpatialBoot>`
+- **WHEN** a consumer renders `<SpatialBoot><App /></SpatialBoot>`
 - **AND** `children` are not yet mounted because boot has not succeeded
-- **THEN** the rendered output MUST be `<Loading />` (not `children`)
+- **THEN** the rendered output MUST be `null` (not `children`)
 
 #### Scenario: Eager entry SpatialBoot is immediately ready
 
