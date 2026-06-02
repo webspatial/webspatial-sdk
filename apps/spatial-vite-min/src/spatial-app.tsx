@@ -10,11 +10,9 @@ export type SpatialAppProps = {
   /**
    * Which fixture variant this page is.
    * - `lazy` — default package entry + real `bootSpatial()`.
-   * - `eager-boot` — `@webspatial/react-sdk/eager` + still `await bootSpatial()` (migration parity).
    * - `eager-lean` — eager entry only; no `bootSpatial()` call (typical spatial-only app).
-   * - `lazy-gate` — lazy entry; parent wraps this tree in `<SpatialBoot>` (optional fallback).
    */
-  mode: 'lazy' | 'lazy-gate' | 'eager-boot' | 'eager-lean'
+  mode: 'lazy' | 'eager-lean'
   /** Real `Model` from either `@webspatial/react-sdk` or `@webspatial/react-sdk/eager`. */
   Model: React.ComponentType<SpatialAppModelProps>
   /** Lazy-only: minimal Reality scene graph (`@webspatial/react-sdk`). */
@@ -44,8 +42,6 @@ const cellStyle = {
 
 const fixtureTitles: Record<SpatialAppProps['mode'], string> = {
   lazy: 'Lazy default entry',
-  'lazy-gate': 'Lazy + SpatialBoot (optional fallback)',
-  'eager-boot': 'Eager entry + await bootSpatial()',
   'eager-lean': 'Eager entry, no bootSpatial()',
 }
 
@@ -56,9 +52,7 @@ export function SpatialApp({ mode, Model, RealityScene }: SpatialAppProps) {
   }, [])
 
   const entryImport =
-    mode === 'lazy' || mode === 'lazy-gate'
-      ? '@webspatial/react-sdk'
-      : '@webspatial/react-sdk/eager'
+    mode === 'lazy' ? '@webspatial/react-sdk' : '@webspatial/react-sdk/eager'
 
   return (
     <main
@@ -74,14 +68,6 @@ export function SpatialApp({ mode, Model, RealityScene }: SpatialAppProps) {
         {' — '}
         <code>{entryImport}</code>
       </p>
-      {mode === 'lazy-gate' ? (
-        <p style={{ marginBottom: 16, fontSize: 14, color: '#444' }}>
-          This page is wrapped by{' '}
-          <code>&lt;SpatialBoot fallback=&#123;…&#125;&gt;</code> in{' '}
-          <code>main-lazy-gate.tsx</code>. Until <code>bootSpatial()</code>{' '}
-          succeeds, the optional fallback is shown; then this tree mounts.
-        </p>
-      ) : null}
 
       <h1>WebSpatial Vite Min ({mode})</h1>
       <p>
@@ -127,9 +113,7 @@ export function SpatialApp({ mode, Model, RealityScene }: SpatialAppProps) {
         ))}
       </div>
 
-      {(mode === 'lazy' || mode === 'lazy-gate') && RealityScene ? (
-        <RealityScene />
-      ) : null}
+      {mode === 'lazy' && RealityScene ? <RealityScene /> : null}
 
       <h2 style={{ marginTop: 32 }}>Model</h2>
       <p style={{ marginBottom: 16 }}>

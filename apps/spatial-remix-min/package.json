@@ -2,7 +2,7 @@
   "name": "spatial-remix-min",
   "private": true,
   "type": "module",
-  "description": "React Router 7 (Remix-style) + Vite SSR + @webspatial/react-sdk. Consumer-shaped fixture for lazy default entry + loader-based UA.",
+  "description": "React Router 7 (Remix-style) + Vite SSR + @webspatial/react-sdk. Consumer-shaped fixture for lazy default entry and loader-based UA route.",
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev --port 3040",

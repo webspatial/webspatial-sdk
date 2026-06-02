@@ -1,6 +1,8 @@
 # spatial-remix-min
 
-Minimal **[React Router 7](https://reactrouter.com)** framework app (**Remix-style** SSR + Vite) with **`@webspatial/react-sdk`**.
+Minimal **[React Router 7](https://reactrouter.com)** framework app
+(**Remix-style** SSR + Vite) with **`@webspatial/react-sdk`** in a
+**lazy-only** shape.
 
 React Router v7 carries forward the Remix data APIs (`loader`, SSR). New upstream
 projects use `create-react-router`; this fixture matches product ask for **Remix
@@ -14,10 +16,11 @@ SSR** while staying on the maintained stack.
 - **`jsxImportSource: "@webspatial/react-sdk"`** so `<div enable-xr>` compiles
   through the SDK JSX runtime (see `tsconfig.json`).
 - **Loader-based `User-Agent` read** on **`/server-ua`** — integrators should
-  follow **official WebSpatial documentation** for UA rules in production (the
-  demo only echoes the header + a trivial token check).
+  follow **official WebSpatial documentation** for UA rules in production (this
+  demo only echoes the header + shared request-classification output).
 
-Sister demos: `apps/spatial-next-min` (Next.js), `apps/spatial-vite-min` (Vite SPA).
+Related fixtures: `apps/spatial-next-min` (Next.js) and
+`apps/spatial-rspack-min` (Rspack) for lazy-entry parity checks.
 
 ## Quick start
 
@@ -46,9 +49,7 @@ small USDZ used by `apps/test-server` demos (served at **`/modelasset/cone.usdz`
 | ------------ | ----------------------------------------------------------------- |
 | `/`          | Index with links                                                  |
 | `/lazy`      | `<SpatialBoot>` + lazy entry + `Model` + `enable-xr` |
-| `/lazy-gate` | `<SpatialBoot fallback={…}>` — optional loading UI; children after boot |
-| `/eager-ssr` | SSR loader + `<ClientOnly>` + `@webspatial/react-sdk/eager` client island |
-| `/server-ua` | `loader` returns `{ userAgent, hasWebSpatialToken }` for SSR HTML |
+| `/server-ua` | `loader` returns `userAgent` + WebSpatial request `runtime` for SSR HTML |
 
 ## See also
 

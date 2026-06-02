@@ -14,11 +14,7 @@ export function FixtureNav() {
     >
       <a href="/">Lazy default</a>
       <span aria-hidden="true">|</span>
-      <a href="/lazy-gate.html">Lazy + SpatialBoot fallback</a>
-      <span aria-hidden="true">|</span>
       <a href="/xr-monitor.html">enable-xr-monitor</a>
-      <span aria-hidden="true">|</span>
-      <a href="/eager.html">Eager + bootSpatial()</a>
       <span aria-hidden="true">|</span>
       <a href="/eager-lean.html">Eager, no boot</a>
     </nav>

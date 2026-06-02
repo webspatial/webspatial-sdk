@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Minimal Rspack + React fixture for WebSpatial SDK lazy and eager entries.",
+  "description": "Minimal Rspack + React fixture for WebSpatial SDK lazy entry.",
   "scripts": {
     "dev": "rspack serve --mode development",
     "build": "tsc && rspack build --mode production",
