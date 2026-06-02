@@ -6,7 +6,7 @@ import { Model, Reality } from '../facades'
 import {
   getWebSpatialPrimitiveName,
   markWebSpatialPrimitive,
-} from './primitiveMarker'
+} from './primitive-marker'
 import {
   __resetWithSpatialized2DElementContainerCacheForTests,
   withSpatialized2DElementContainer,

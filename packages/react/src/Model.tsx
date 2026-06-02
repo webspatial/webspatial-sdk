@@ -5,7 +5,7 @@ import {
   SpatializedStatic3DElementRef,
 } from './spatialized-container'
 import { useInsideAttachment } from './reality/context/InsideAttachmentContext'
-import { markWebSpatialPrimitive } from './jsx/primitiveMarker'
+import { markWebSpatialPrimitive } from './jsx/primitive-marker'
 
 import { Spatial } from '@webspatial/core-sdk'
 

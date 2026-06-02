@@ -32,7 +32,7 @@ bundlers stop at `dist/internal/facades-client.js`'s `'use client'`
 directive before walking into those facades.
 
 `Model` / `Reality` short-circuiting does not depend on comparing facade
-function identity. `primitiveMarker.ts` brands both the default-entry
+function identity. `primitive-marker.ts` brands both the default-entry
 facades and the eager-entry real implementations, and
 `replaceToSpatialPrimitiveType` checks that marker before stripping or
 wrapping markers.
