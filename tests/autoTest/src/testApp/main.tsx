@@ -11,8 +11,6 @@ import CssApiTest from './CssAPITest/cssapi'
 import TransformTest from './transformTest/transformTest'
 import BasicTransformProbeTagTest from './basicTransformProbeTagTest/basicTransformProbeTagTest'
 
-declare const __XR_ENV_BASE__: string
-
 async function main() {
   await bootSpatial()
 
