@@ -6,7 +6,7 @@ export type AppModelProps = {
 }
 
 export type AppProps = {
-  mode: 'lazy' | 'eager'
+  mode: 'lazy'
   Model: React.ComponentType<AppModelProps>
 }
 
@@ -30,9 +30,6 @@ export function App({ mode, Model }: AppProps) {
     setSpatialTapCount(count => count + 1)
   }, [])
 
-  const importRoot =
-    mode === 'lazy' ? '@webspatial/react-sdk' : '@webspatial/react-sdk/eager'
-
   return (
     <main
       style={{
@@ -49,13 +46,13 @@ export function App({ mode, Model }: AppProps) {
         }}
       >
         <a href="/">Lazy default</a>
-        <a href="/eager.html">Eager</a>
       </nav>
 
       <h1>WebSpatial Rspack Min ({mode})</h1>
       <p>
-        This fixture validates Rspack resolution of <code>{importRoot}</code>,
-        the SDK JSX runtime, and dynamic spatial chunk splitting.
+        This fixture validates Rspack resolution of{' '}
+        <code>@webspatial/react-sdk</code>, the SDK JSX runtime, and dynamic
+        spatial chunk splitting.
       </p>
 
       <section>

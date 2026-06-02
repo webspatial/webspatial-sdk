@@ -9,7 +9,6 @@ export default {
   context: __dirname,
   entry: {
     index: './src/main.tsx',
-    eager: './src/main-eager.tsx',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -67,14 +66,13 @@ export default {
       chunks: ['index'],
       templateContent: '<!doctype html><div id="root"></div>',
     }),
-    new rspack.HtmlRspackPlugin({
-      filename: 'eager.html',
-      chunks: ['eager'],
-      templateContent: '<!doctype html><div id="root"></div>',
-    }),
   ],
   devServer: {
     port: 3050,
-    static: false,
+    static: {
+      directory: path.resolve(__dirname, 'public'),
+      publicPath: '/',
+      watch: true,
+    },
   },
 }

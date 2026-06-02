@@ -1,10 +1,9 @@
 # spatial-vite-min
 
-Minimal **Vite + React 18 + `@webspatial/react-sdk`** example. Demonstrates
-the lazy-load v1 architecture **without** `@webspatial/vite-plugin`, and
-ships **two extra HTML pages** that import `@webspatial/react-sdk/eager` so
-the same consumer pipeline exercises the eager distribution form (with and
-without calling `bootSpatial()`).
+Minimal **Vite + React 18 + `@webspatial/react-sdk`** consumer fixture with a
+**lazy-first** default route. It demonstrates the lazy-load v1 architecture
+**without** `@webspatial/vite-plugin`, and keeps one optional eager page
+(`eager-lean.html`) as a distribution-shape comparison target.
 
 ## What this fixture verifies
 
@@ -15,30 +14,21 @@ without calling `bootSpatial()`).
   `<SpatialBoot>` (boot after mount; children mount when ready). In plain web
   browsers boot resolves on the next microtask; in WebSpatial runtimes the
   spatial chunk loads dynamically.
-- **Lazy + fallback (`lazy-gate.html` → `src/main-lazy-gate.tsx`):** same
-  contract with an optional `fallback` node while boot is in flight (see
-  `docs/design/spatial-boot-component.md`).
 - **Lazy production graph:** Vite's default code-splitting emits the spatial
   chunk as a separate `dist/assets/spatial-*.js` file that is fetched on
   demand by the bridge — confirming the published-bundle shape works
   end-to-end through a standard consumer build pipeline.
-- **Eager + boot (`eager.html` → `src/main-eager.tsx`):** imports
-  `@webspatial/react-sdk/eager` (spatial **statically linked**). Still
-  `await bootSpatial()` so the file mirrors `main.tsx` during migration; on
-  the eager entry `bootSpatial()` is a documented no-op (optional dev-only
-  warning).
-- **Eager, no boot (`eager-lean.html` → `src/main-eager-lean.tsx`):** imports
-  only what the UI needs from `@webspatial/react-sdk/eager` and mounts React
-  immediately — the usual **spatial-only** shape when you are not sharing a
-  bootstrap module with lazy apps.
+- **Optional eager comparison (`eager-lean.html` → `src/main-eager-lean.tsx`):**
+  imports only what the UI needs from `@webspatial/react-sdk/eager` and mounts
+  React immediately — useful when comparing lazy vs eager build graphs.
 - **enable-xr-monitor (`xr-monitor.html` → `src/main-xr-monitor.tsx`):** lazy
   entry demo for `<div enable-xr-monitor>` with nested `<div enable-xr>` cells;
   insert/remove or resize a layout block inside the monitor (box-size changes, not
   visibility-only) so the nested `enable-xr` grid and `Reality` placeholder shift;
   slabs re-sync in WebSpatial runtimes.
-- Inspect `dist/assets/` after `vite build`: the eager entry graphs should
-  **not** rely on the same lazy `import()` bridge pattern as the default lazy
-  page.
+- Inspect `dist/assets/` after `vite build`: `index.html` should keep the lazy
+  `import()` bridge behavior, while `eager-lean.html` should keep spatial code
+  in the static graph.
 
 ## How it imports the SDK (read this first)
 
@@ -94,9 +84,7 @@ pnpm --filter spatial-vite-min dev      # dev server
 
 # Then open any page (nav links exist in the UI):
 #   Lazy default:          http://localhost:5173/
-#   Lazy + SpatialBoot fallback: http://localhost:5173/lazy-gate.html
 #   enable-xr-monitor:     http://localhost:5173/xr-monitor.html
-#   Eager + bootSpatial:   http://localhost:5173/eager.html
 #   Eager, no bootSpatial: http://localhost:5173/eager-lean.html
 
 pnpm --filter spatial-vite-min build    # production build (all HTML inputs)
@@ -110,9 +98,9 @@ The `<Model>` sample uses **`public/modelasset/cone.usdz`** — the same file as
 
 ## Browser smoke checklist
 
-- Plain Chrome (`/` or `/lazy-gate.html` or eager pages): spatial-div cells render as
-  flat boxes; `<Model>` shows a poster `<model>` element; **`/` and `/lazy-gate`**
-  also show a **Reality** scene-graph block as a single `aria-hidden` placeholder
+- Plain Chrome (`/` or eager pages): spatial-div cells render as flat boxes;
+  `<Model>` shows a poster `<model>` element; **`/`** also shows a **Reality**
+  scene-graph block as a single `aria-hidden` placeholder
   (no `BoxEntity` / `SceneGraph` children in the DOM until boot). **`/xr-monitor.html`**
   renders the monitor host with an insert/remove layout block plus a 3×2
   `enable-xr` grid (grid jumps when the block toggles). No

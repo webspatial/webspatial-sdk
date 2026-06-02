@@ -1,16 +1,19 @@
 # spatial-rspack-min
 
-Minimal Rspack + React consumer fixture for `@webspatial/react-sdk`.
+Minimal Rspack + React consumer fixture for `@webspatial/react-sdk` in a
+**lazy-only** shape.
 
 It verifies the lazy-load v1 bundler contract without any WebSpatial-specific
 Rspack plugin:
 
-- ESM package exports resolve for `@webspatial/react-sdk` and
-  `@webspatial/react-sdk/eager`.
+- ESM package exports resolve for `@webspatial/react-sdk`.
 - TypeScript and Rspack's SWC transform both resolve JSX through
   `jsxImportSource: "@webspatial/react-sdk"`.
 - The lazy entry can call `bootSpatial()` and leave
   `@webspatial/react-sdk/spatial` as a split dynamic-import chunk.
+
+Related fixtures: `apps/spatial-vite-min` (Vite SPA) and
+`apps/spatial-remix-min` (React Router SSR) for lazy-entry parity checks.
 
 The Rspack config includes a small compatibility rule:
 `resolve.fullySpecified: false` for JavaScript modules. The current

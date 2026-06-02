@@ -1,5 +1,6 @@
 import type { Route } from './+types/server-ua'
 import { Link } from 'react-router'
+import { detectWebSpatialRequest } from '../../../_shared/webspatial-request'
 
 /**
  * Demonstrates SSR + `loader` reading `User-Agent` for request-time branching.
@@ -8,11 +9,10 @@ import { Link } from 'react-router'
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const userAgent = request.headers.get('user-agent') ?? ''
+  const runtime = detectWebSpatialRequest(userAgent)
   return {
     userAgent,
-    hasWebSpatialToken:
-      /\b(WSAppShell|PicoWebApp)\b/i.test(userAgent) ||
-      /\bPuppeteer\b/i.test(userAgent),
+    runtime,
   }
 }
 
@@ -24,7 +24,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function ServerUaRoute({ loaderData }: Route.ComponentProps) {
-  const { userAgent, hasWebSpatialToken } = loaderData
+  const { userAgent, runtime } = loaderData
   return (
     <section style={{ maxWidth: 720 }}>
       <h1>Server loader + User-Agent</h1>
@@ -45,7 +45,7 @@ export default function ServerUaRoute({ loaderData }: Route.ComponentProps) {
           wordBreak: 'break-all',
         }}
       >
-        {JSON.stringify({ hasWebSpatialToken, userAgent }, null, 2)}
+        {JSON.stringify({ runtime, userAgent }, null, 2)}
       </pre>
     </section>
   )

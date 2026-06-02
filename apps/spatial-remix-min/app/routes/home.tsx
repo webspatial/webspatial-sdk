@@ -32,21 +32,6 @@ export default function Home() {
           <code>enable-xr</code> (set <code>jsxImportSource</code> in tsconfig).
         </li>
         <li>
-          <Link to="/lazy-gate">
-            <strong>/lazy-gate</strong>
-          </Link>{' '}
-          — <code>&lt;SpatialBoot fallback=&#123;…&#125;&gt;</code>; optional
-          loading UI while boot completes before children mount.
-        </li>
-        <li>
-          <Link to="/eager-ssr">
-            <strong>/eager-ssr</strong>
-          </Link>{' '}
-          — <strong>SSR + eager:</strong> loader reads <code>User-Agent</code>;
-          spatial UI via <code>&lt;ClientOnly&gt;</code> +{' '}
-          <code>@webspatial/react-sdk/eager</code> (CSR-gated client island).
-        </li>
-        <li>
           <Link to="/server-ua">
             <strong>/server-ua</strong>
           </Link>{' '}
