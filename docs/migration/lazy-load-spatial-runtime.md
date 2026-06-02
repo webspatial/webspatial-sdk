@@ -256,6 +256,12 @@ The SDK's pure re-exports (`WebSpatialRuntime.supports`, `WebSpatialRuntimeError
 
 For **request-time branching** in RSC or middleware (hero for WebSpatial vs plain web), use the **`User-Agent`** header and the **official WebSpatial site documentation** for classification. The SDK does **not** ship a `@webspatial/react-sdk/server` subpath or public `detectSpatialRuntime` helper in v1 — see [`packages/react/README.md` → "RSC, server requests, and runtime detection"](../../packages/react/README.md#rsc-server-requests-and-runtime-detection).
 
+### `@webspatial/core-sdk` platform APIs on the server
+
+Do **not** import `@webspatial/core-sdk` on the server and execute spatial side effects (`Spatial.requestSession()`, `JSBCommand.execute()`, scene polyfill / `openSpatialSceneSync`, etc.). `createPlatformSync()` now **throws** when `window` is unavailable instead of returning a silent no-op platform that reported `{ success: true }`.
+
+Supported SSR uses the **React SDK default entry** (facades + `bootSpatial()` on the client) or CSR-gates eager spatial primitives. Polyfills install only via `import '@webspatial/core-sdk/install-polyfills'` from the client spatial chunk (`!isSSREnv()` guard). See [`openspec/changes/platform-ssr-fail-fast/proposal.md`](../../openspec/changes/platform-ssr-fail-fast/proposal.md).
+
 > **Removed in v2:** `getAbsoluteUrl` was a Group C public export in v1 and has been removed from the published surface. It was promoted to public by accident during the lazy-load v1 redesign — the SDK only ever used it internally to feed the native bridge absolute asset URLs. Replace direct callers with `new URL(url, location.href).href` (browser) or your framework's URL helper (Next.js `metadataBase`, etc.) for server-side absolute URLs. The helper itself still exists under `src/internal/urlUtils.ts` for `Texture` / `ModelAsset` and is no longer a public-API commitment.
 
 ---
@@ -285,6 +291,7 @@ The placeholder conversion functions throw `WebSpatialRuntimeError` when invoked
 - **BREAKING (v2+)**: removed **`SSRProvider`** from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. On the default entry, hydration gating is handled by the facade's `useSpatialReady` (`useSyncExternalStore`); real `Model` / `SpatializedContainer` are reached only through the facade delegate and mount after hydration commits, so no app-level Context or internal SSR wrapper is required — delete any `<SSRProvider>` wrapper; no replacement import is required. Spatial primitives imported from `@webspatial/react-sdk/eager` are CSR-only: if you server-render them, gate the subtree to the client (e.g. `dynamic(..., { ssr: false })`) or import from the default entry instead.
 
 - **BREAKING (v2)**: removed `withSpatialized2DElementContainer` and `withSpatialMonitor` named exports (plus the `Spatialized2DElementContainerProps` type) from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. The factory HOCs were demoted to internal-only — the documented public mechanism for wrapping intrinsic elements remains the `enable-xr` / `enable-xr-monitor` JSX marker. If you imported the factory directly to compose with a third-party HOC (e.g. `animated(withSpatialized2DElementContainer('div'))`), wrap your own `forwardRef` shim around `<div enable-xr ref={ref} />` and pass _that_ to the third-party HOC (see `packages/react/README.md` → "Advanced: composing with third-party HOCs" for the recipe).
+- **Behavior change (`@webspatial/core-sdk`)**: `createPlatformSync()` / `createPlatform()` throw during SSR (no `window`) instead of using internal `SSRPlatform` no-ops. Fix server bundles that executed JSB or `openSpatialSceneSync`; use the React SDK default entry or CSR-gate spatial UI.
 
 ---
 
