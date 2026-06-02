@@ -318,3 +318,147 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(bridge.motionElementSessionCommand).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('SpatializedMotionController portal suppression timing', () => {
+  test('spatialized2d masks opacity and transform while native playback is active', () => {
+    const controller = new SpatializedMotionController(
+      {
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            timingFunction: 'linear',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+          {
+            property: 'transform.translate.x',
+            timingFunction: 'linear',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 10 },
+            ],
+          },
+        ],
+      },
+      'spatialized2d',
+      { forceNativePlayback: true },
+    )
+
+    ;(controller as any).nativeSession = {
+      animationId: 'native-queued',
+      state: 'running',
+      config: controller.definition,
+    }
+
+    expect(controller.getSuppressedFields()).toEqual(
+      new Set(['opacity', 'transform']),
+    )
+  })
+
+  test('spatialized2d still returns opacity and transform while native is paused', () => {
+    const controller = new SpatializedMotionController(
+      {
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            timingFunction: 'linear',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+          {
+            property: 'transform.translate.x',
+            timingFunction: 'linear',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 10 },
+            ],
+          },
+        ],
+      },
+      'spatialized2d',
+      { forceNativePlayback: true },
+    )
+
+    ;(controller as any).nativeSession = {
+      animationId: 'native-1',
+      state: 'paused',
+      config: controller.definition,
+    }
+
+    expect(controller.getSuppressedFields()).toEqual(
+      new Set(['opacity', 'transform']),
+    )
+  })
+
+  test('spatialized2d releases suppression once native is finished or idle even if webState is stale queued', () => {
+    const controller = new SpatializedMotionController(
+      {
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            timingFunction: 'linear',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+          {
+            property: 'transform.translate.x',
+            timingFunction: 'linear',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 10 },
+            ],
+          },
+        ],
+      },
+      'spatialized2d',
+      { forceNativePlayback: true },
+    )
+
+    for (const state of ['finished', 'idle'] as const) {
+      ;(controller as any).webState = 'queued'
+      ;(controller as any).nativeSession = {
+        animationId: `native-${state}`,
+        state,
+        config: controller.definition,
+      }
+      ;(controller as any).pendingPlay = false
+      ;(controller as any).nativeControlling = false
+
+      expect(controller.getSuppressedFields()).toBeNull()
+    }
+  })
+
+  test('non-native and non-spatialized2d suppression behavior stays unchanged', () => {
+    const web2dController = new SpatializedMotionController(
+      makeConfig({ autoStart: false }),
+      'spatialized2d',
+      { forceNativePlayback: false },
+    )
+    ;(web2dController as any).webState = 'queued'
+    expect(web2dController.getSuppressedFields()).toBeNull()
+
+    const static3dController = new SpatializedMotionController(
+      makeConfig({ autoStart: false }),
+      'static3d',
+      { forceNativePlayback: true },
+    )
+    ;(static3dController as any).nativeSession = {
+      animationId: 'native-2',
+      state: 'queued',
+      config: static3dController.definition,
+    }
+    expect(static3dController.getSuppressedFields()).toBeNull()
+  })
+})

@@ -205,7 +205,7 @@ describe('useSpatializedMotion tuple api native backend', () => {
     })
     await flushPromises()
 
-    expect(String(result.current[2].transform)).toContain('translate3d(30px')
+    expect(result.current[2].transform).toBeUndefined()
   })
 
   test('native pause prefers bridge-reported values over wall-clock estimate', async () => {
@@ -251,9 +251,9 @@ describe('useSpatializedMotion tuple api native backend', () => {
     await act(async () => {
       result.current[1].pause()
     })
-    await waitFor(() => {
-      expect(String(result.current[2].transform)).toContain('translate3d(42px')
-    })
+    await flushPromises()
+
+    expect(result.current[2].transform).toBeUndefined()
   })
 
   test('native onComplete applies finalValues to style', async () => {
@@ -315,6 +315,39 @@ describe('useSpatializedMotion tuple api native backend', () => {
       }),
     )
     expect(String(result.current[2].transform)).toContain('translate3d(99px')
+  })
+
+  test('native-capable spatialized2d masks opacity and transform while native playback is active', async () => {
+    const element = createMockElement()
+
+    const { result } = renderHook(() =>
+      useSpatializedMotion({
+        duration: 5,
+        autoStart: false,
+        from: {
+          opacity: 0,
+          transform: { translate: { x: 0 } },
+        },
+        to: {
+          opacity: 1,
+          transform: { translate: { x: 100 } },
+        },
+        timingFunction: 'linear',
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[1].play()
+    })
+    await waitFor(() => {
+      expect(element.animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'play' }),
+      )
+    })
+
+    expect(result.current[2].opacity).toBeUndefined()
+    expect(result.current[2].transform).toBeUndefined()
   })
 
   test('__onUnbind does not invoke onReset', async () => {

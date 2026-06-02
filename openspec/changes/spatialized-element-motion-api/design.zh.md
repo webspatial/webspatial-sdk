@@ -181,10 +181,12 @@ Plan A 路径（`useAnimation` + `animation` prop）作为薄兼容层保留：
 
 | 被动画字段 | 抑制范围 | 释放触发 |
 |-----------|---------|---------|
-| `opacity` | 属性级：仅 `opacity` 同步被抑制 | 会话终态（finished / stop / reset） |
-| 任何 `transform.*` | Transform 整体级：整个 `updateTransform(matrix)` 被抑制 | 会话终态 |
+| `opacity` | 属性级：仅 `opacity` 同步被抑制 | 会话终态 / unbind |
+| 任何 `transform.*` | Transform 整体级：整个 `updateTransform(matrix)` 被抑制 | 会话终态 / unbind |
 
-抑制同时适用于旧版 `animation` prop 会话和 `xr-animation` binding 会话。三个终止方法（`stop`、`reset`、`finish`）均释放抑制。
+抑制同时适用于旧版 `animation` prop 会话和 `xr-animation` binding 会话。对于 `spatialized2d`，抑制只跟随 active native 播放状态。
+
+释放条件保持为终态 / stop / reset / finish / unbind。其目的在于防止 Portal DOM 同步覆盖 native 播放过程中的中间值。
 
 ## Native Timeline 评估
 
