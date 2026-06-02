@@ -5,6 +5,7 @@ const w2e = await convertCoordinate(position, { from: window, to: elementOrEntit
  * 
  */
 import type { Vec3 } from '@webspatial/core-sdk'
+import { supports, WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
 import type { SpatializedElementRef } from '../spatialized-container/types'
 import type { EntityRef } from '../reality'
 import type { ModelRef } from '../Model'
@@ -15,29 +16,9 @@ import { getSpatialImpl } from '../runtime/bridge'
 // `./getSession`. That import would pull `Spatial` + `SpatialSession`
 // (and through `SpatialSession`, the entire spatial creator class graph
 // + `scene-polyfill`) into the default-entry bundle. The function's
-// existing graceful-degradation contract (`if (!spatialScene) return
-// position`) extends naturally to the bridge-routed lookup: before
-// `await bootSpatial()` resolves, `getSpatialImpl()` returns `null`
-// and we return the input position unchanged — same observable behavior
-// as the previous "no spatial session" branch, just reached via the
-// dynamic-import bridge instead of a static import.
-
-// One-shot degradation warning. Per the runtime-capabilities spec
-// "convertCoordinate graceful degradation" Scenario the SDK MAY emit at most
-// ONE console.warn — `convertCoordinate` can be called per frame, so a latch
-// keeps the failure observable without flooding the console.
-let hasWarnedDegraded = false
-
-function warnDegradedOnce(...args: unknown[]): void {
-  if (hasWarnedDegraded) return
-  hasWarnedDegraded = true
-  // eslint-disable-next-line no-console
-  console.warn(...(args as [unknown, ...unknown[]]))
-}
-
-export function __resetConvertCoordinateWarningForTests(): void {
-  hasWarnedDegraded = false
-}
+// fail-fast contract (per runtime-capabilities "convertCoordinate fail-fast"
+// Scenarios) gates on `supports('convertCoordinate')` via the inlined
+// `@webspatial/core-sdk/runtime` subset before touching the bridge.
 
 type CoordinateConvertible =
   | Window
@@ -79,22 +60,27 @@ export async function convertCoordinate(
   position: Vec3,
   { from, to }: { from: CoordinateConvertible; to: CoordinateConvertible },
 ): Promise<Vec3> {
-  try {
-    const fromId = resolveSpatialObjectId(from)
-    const toId = resolveSpatialObjectId(to)
-    if (fromId === null || toId === null) {
-      warnDegradedOnce(
-        'convertCoordinate error: from or to is not a valid coordinate convertible',
-      )
-      return position
-    }
-
-    const spatialScene = getSpatialImpl()?.getSession?.()?.getSpatialScene()
-    if (!spatialScene) return position
-    const ret = await spatialScene.convertCoordinate(position, fromId, toId)
-    return ret ?? position
-  } catch (error) {
-    warnDegradedOnce('convertCoordinate error:', error)
-    return position
+  if (!supports('convertCoordinate')) {
+    throw new WebSpatialRuntimeError('convertCoordinate')
   }
+
+  const fromId = resolveSpatialObjectId(from)
+  const toId = resolveSpatialObjectId(to)
+  if (fromId === null || toId === null) {
+    throw new WebSpatialRuntimeError(
+      'convertCoordinate',
+      'convertCoordinate: from or to is not a valid coordinate convertible',
+    )
+  }
+
+  const spatialScene = getSpatialImpl()?.getSession?.()?.getSpatialScene()
+  if (!spatialScene) {
+    throw new WebSpatialRuntimeError(
+      'convertCoordinate',
+      'convertCoordinate is not available until bootSpatial() has resolved',
+    )
+  }
+
+  const ret = await spatialScene.convertCoordinate(position, fromId, toId)
+  return ret ?? position
 }
