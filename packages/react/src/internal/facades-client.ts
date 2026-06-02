@@ -14,16 +14,18 @@
 // object, not callable), and SSR would fail at the first call site. So
 // `jsx-runtime.js` MUST stay server-safe.
 //
-// At the same time, `jsx`/`jsxs` need access to the SDK's facade HOCs
-// (`Model`, `withSpatialized2DElementContainer`, `withSpatialMonitor`)
-// to rewrite `enable-xr` markers. Those facades transitively pull in
-// React hooks (`useSyncExternalStore`, `useLayoutEffect`, …), which
-// the RSC compiler rejects from a server-callable module.
+// At the same time, `jsx`/`jsxs` need access to the SDK's facade HOC
+// factories (`withSpatialized2DElementContainer`, `withSpatialMonitor`) to
+// rewrite `enable-xr` markers. Those facades transitively pull in React
+// hooks (`useSyncExternalStore`, `useLayoutEffect`, ...), which the RSC
+// compiler rejects from a server-callable module. `Model` / `Reality`
+// short-circuiting is handled by `primitiveMarker.ts`, not by importing
+// those component values into `jsx-shared.ts`.
 //
 // The bridge: this file marks the public RSC boundary for facade-import
 // purposes. It carries the `'use client'` directive (injected at build
-// time by `tsup.config.ts` `onSuccess`) and re-exports the three facade
-// symbols `jsx-shared.ts` needs. `jsx-shared.ts` imports them via the
+// time by `tsup.config.ts` `onSuccess`) and re-exports the HOC facade
+// factories `jsx-shared.ts` needs. `jsx-shared.ts` imports them via the
 // EXTERNAL package self-reference `@webspatial/react-sdk/internal/facades-client`
 // (tsup is configured to leave that import literal), so consumer bundlers
 // see:
