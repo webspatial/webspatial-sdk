@@ -609,7 +609,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatialObject.sources = sources
         }
         if let loading = command.loading {
-            spatialObject.loading = loading
+            spatialObject.loading = Loading(stringValue: loading)
         }
 
         resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
@@ -701,7 +701,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
 
         if let loading = command.loading {
-            spatializedElement.loading = loading
+            spatializedElement.loading = Loading(stringValue: loading)
         }
 
         resolve(.success(baseReplyData))
