@@ -84,10 +84,28 @@ The capability API MUST be usable without undocumented globals; supported app en
 
 For APIs documented as runtime-gated, unsupported calls/reads MUST follow documented fallback behavior.
 
-#### Scenario: `useMetrics` and `convertCoordinate`
+#### Scenario: `useMetrics` hook call does not throw
 
-- **WHEN** `supports('useMetrics')` or `supports('convertCoordinate')` is `false`
-- **THEN** calling corresponding API MUST throw `WebSpatialRuntimeError`
+- **WHEN** `supports('useMetrics')` is `false`
+- **THEN** calling `useMetrics()` MUST NOT throw
+- **AND** invoking either conversion function while the placeholder is active MUST throw `WebSpatialRuntimeError` with capability `'useMetrics'`
+
+#### Scenario: `convertCoordinate` fail-fast when capability unsupported
+
+- **WHEN** `supports('convertCoordinate')` is `false` (non-WebSpatial browser, SSR, or no detectable WebSpatial runtime)
+- **THEN** calling `convertCoordinate(position, { from, to })` MUST throw `WebSpatialRuntimeError` with capability `'convertCoordinate'`
+- **AND** the call MUST NOT resolve with `position` unchanged
+
+#### Scenario: `convertCoordinate` fail-fast without spatial session
+
+- **WHEN** `supports('convertCoordinate')` is `true` but no `SpatialSession` or `SpatialScene` is reachable through the React SDK bridge (for example before `bootSpatial()` resolves)
+- **THEN** calling `convertCoordinate(position, { from, to })` MUST throw `WebSpatialRuntimeError` with capability `'convertCoordinate'`
+- **AND** the error message MUST indicate that `bootSpatial()` must be awaited first
+
+#### Scenario: `convertCoordinate` fail-fast on invalid refs
+
+- **WHEN** `from` or `to` is not a valid coordinate convertible
+- **THEN** calling `convertCoordinate(position, { from, to })` MUST throw `WebSpatialRuntimeError` with capability `'convertCoordinate'`
 
 #### Scenario: Unsupported HTML component rendering
 
