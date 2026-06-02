@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import { SpatialDivAnimationPageShell, btnPrimary } from './shared'
 
 const ANIM_DURATION_MS = 2000
@@ -80,7 +80,7 @@ function JSDrivenBox({ running }: { running: boolean }) {
 
 // Declarative animation box with reverse loop
 function DeclarativeBox({ running }: { running: boolean }) {
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     from: {
       transform: {
         translate: { x: 0, y: 0, z: 0 },
@@ -148,7 +148,7 @@ export default function LoopAnimationPage() {
           Choose animation mode (JS-driven or declarative), then click Run to
           start continuous loop animation. Click Stop to halt and reset.
           JS-driven uses rAF + manual lerp in a ping-pong loop; Declarative uses{' '}
-          <code className="text-cyan-300">useSpatializedMotion</code> with{' '}
+          <code className="text-cyan-300">useAnimation</code> with{' '}
           <code className="text-cyan-300">loop: {'{ reverse: true }'}</code>.
           Increase instance count to observe performance differences.
         </>
@@ -168,9 +168,7 @@ export default function LoopAnimationPage() {
             }}
             disabled={running}
           >
-            <option value="declarative">
-              Declarative (useSpatializedMotion)
-            </option>
+            <option value="declarative">Declarative (useAnimation)</option>
             <option value="js">JS Driven (rAF + lerp)</option>
           </select>
         </label>
@@ -230,9 +228,7 @@ export default function LoopAnimationPage() {
             isJsMode ? 'text-blue-300' : 'text-green-300'
           }`}
         >
-          {isJsMode
-            ? 'JS Driven (rAF + lerp)'
-            : 'Declarative (useSpatializedMotion)'}
+          {isJsMode ? 'JS Driven (rAF + lerp)' : 'Declarative (useAnimation)'}
           {running && (
             <span className="ml-2 text-xs text-yellow-300">● LOOPING</span>
           )}
@@ -252,7 +248,7 @@ export default function LoopAnimationPage() {
       <p className="mt-4 text-xs text-gray-500">
         {isJsMode
           ? '* JS-driven mode: each instance runs its own requestAnimationFrame loop with manual transform interpolation. Performance degrades as instance count increases due to main thread workload.'
-          : '* Declarative mode: animation runs natively via useSpatializedMotion with loop: { reverse: true }. Main thread stays free regardless of instance count.'}
+          : '* Declarative mode: animation runs natively via useAnimation with loop: { reverse: true }. Main thread stays free regardless of instance count.'}
       </p>
     </SpatialDivAnimationPageShell>
   )

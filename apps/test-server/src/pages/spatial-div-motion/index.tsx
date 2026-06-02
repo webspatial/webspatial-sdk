@@ -14,7 +14,8 @@ export default function SpatializedMotionHubPage() {
       <h1 className="text-2xl font-bold mb-2">Spatialized Motion</h1>
       <p className="text-sm text-gray-400 mb-6">
         Declarative timeline + playback API across spatialized containers.
-        OpenSpec: <code>spatial-div-motion-api</code>,{' '}
+        Public hook: <code>useAnimation</code>. OpenSpec:{' '}
+        <code>spatial-div-motion-api</code>,{' '}
         <code>spatialized-element-motion-api</code>.
       </p>
 
@@ -22,8 +23,8 @@ export default function SpatializedMotionHubPage() {
         2D — SpatialDiv
       </h2>
       <p className="text-xs text-gray-500 mb-3">
-        Web RAF in browser; native timeline on visionOS when <code>motion</code>{' '}
-        is bound.
+        Web RAF in browser; native timeline on visionOS when{' '}
+        <code>useAnimation</code> is bound.
       </p>
       <ul className="space-y-2 mb-8">
         {demos2d.map(r => (

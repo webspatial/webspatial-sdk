@@ -5,7 +5,7 @@ import {
   SceneGraph,
   SphereEntity,
   UnlitMaterial,
-  useSpatializedMotion,
+  useAnimation,
 } from '@webspatial/react-sdk'
 import { useState } from 'react'
 import {
@@ -27,7 +27,7 @@ export function SpatializedMotionRealityContainerPage() {
 
   const dynamic3dAnim = supports('useAnimation', ['dynamic3d'])
 
-  const [motion, api] = useSpatializedMotion({
+  const [motion, api] = useAnimation({
     duration: DURATION,
     autoStart: true,
     tracks: [
@@ -72,7 +72,7 @@ export function SpatializedMotionRealityContainerPage() {
         Dynamic3D — Reality container motion
       </h1>
       <p className="text-sm text-gray-400 mb-2">
-        <code>useSpatializedMotion(&#123; from/to or tracks &#125;)</code> +{' '}
+        <code>useAnimation(&#123; from/to or tracks &#125;)</code> +{' '}
         <code>&lt;Reality xr-animation&gt;</code>. Timeline drives the{' '}
         <strong>Reality root</strong> (not child <code>Entity</code> nodes).
         Values are <strong>meters / degrees</strong>.

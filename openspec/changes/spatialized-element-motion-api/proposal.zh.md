@@ -17,7 +17,7 @@
    - 作为向后兼容子路径保留（见 `specs/legacy-session-animation/`）
 
 2. **Plan B — Motion Timeline API**（`spatial-div-motion-api`，已归档）
-   - 引入 `useSpatializedMotion(config)` 多轨 timeline + `style` outlet
+   - 引入 `useAnimation(config)` 多轨 timeline + `style` outlet
    - 双后端：Web RAF 降级 + native timeline 播放
    - 将 `animation` binding 更名为 `xr-animation` binding，并开始回传 `style`、定义 `style` 的同步规则
 
@@ -25,7 +25,7 @@
 - Plan B 的 **timeline 数据模型** 为规范配置形状
 - Plan A 的 **会话语义**（状态机、抑制、生命周期）保持规范性
 - 覆盖范围扩展到 Static3D 和 Dynamic3D（仅 native，无 Web RAF）
-- `useSpatializedMotion` 的所有 authoring 形状（`from/to`、`timeline`、`tracks`）都编译为同一个 canonical `tracks` 执行模型
+- `useAnimation` 的所有 authoring 形状（`from/to`、`timeline`、`tracks`）都编译为同一个 canonical `tracks` 执行模型
 
 ## 概览
 
@@ -96,7 +96,7 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 ## 两阶段命名迁移
 
 - **Phase 1**：先把当前公共 `useAnimation` 导出重命名为 `useEntityAnimation`，并优先重构 Entity 相关的 `test-server` 页面，先释放 `useAnimation` 这个符号。
-- **Phase 2**：再把 `useSpatializedMotion` 重命名为 `useAnimation`，保持现有目标无关 timeline 语义不变，同时把空间动画相关的 `test-server` 页面迁移到新的 import 和能力探测名称。
+- **Phase 2**：再把空间动画 hook 重命名为 `useAnimation`，保持现有目标无关 timeline 语义不变，同时把空间动画相关的 `test-server` 页面迁移到新的 import 和能力探测名称。
 - **验证范围**：两个阶段都需要同步更新对应的 `test-server` 页面，并确认重构后的页面仍可正常渲染和控制播放。
 
 ## 能力
@@ -132,4 +132,4 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 - **包**：`@webspatial/react-sdk`、`@webspatial/core-sdk`、visionOS native bridge/runtime。
 - **公共 API**：空间动画使用 `useAnimation`，Entity transform 使用 `useEntityAnimation`，其余包括 `SpatializedMotionConfig`、`SpatializedPlaybackApi` 以及 `<Model>` 和 `<Reality>` 上的 `xr-animation` binding prop。
 - **迁移形态**：命名调整分两阶段落地，先迁移 Entity demo，再迁移空间动画 demo。
-- **破坏性变更**：有；当前公共 `useAnimation` 会迁移为 `useEntityAnimation`，当前 `useSpatializedMotion` 会迁移为 `useAnimation`。
+- **破坏性变更**：有；当前公共 `useAnimation` 会迁移为 `useEntityAnimation`，当前空间动画 hook 会迁移为 `useAnimation`。

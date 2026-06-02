@@ -1,5 +1,5 @@
 import { supports } from '@webspatial/core-sdk'
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import { useEffect, useState } from 'react'
 import {
   btnCls,
@@ -18,7 +18,7 @@ export function SpatialDivMotionTranslateZPage() {
 
   const elementAnim = supports('useAnimation', ['element'])
 
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     duration: DURATION,
     autoStart: true,
     tracks: [

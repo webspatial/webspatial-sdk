@@ -1,5 +1,5 @@
 import { supports } from '@webspatial/core-sdk'
-import { Model, useSpatializedMotion } from '@webspatial/react-sdk'
+import { Model, useAnimation } from '@webspatial/react-sdk'
 import { useState } from 'react'
 import {
   btnCls,
@@ -19,7 +19,7 @@ export function SpatializedMotionModelContainerPage() {
 
   const static3dAnim = supports('useAnimation', ['static3d'])
 
-  const [motion, api] = useSpatializedMotion({
+  const [motion, api] = useAnimation({
     duration: DURATION,
     autoStart: true,
     tracks: [
@@ -64,7 +64,7 @@ export function SpatializedMotionModelContainerPage() {
         Static3D — Model container motion
       </h1>
       <p className="text-sm text-gray-400 mb-2">
-        <code>useSpatializedMotion(&#123; from/to or tracks &#125;)</code> +{' '}
+        <code>useAnimation(&#123; from/to or tracks &#125;)</code> +{' '}
         <code>&lt;Model xr-animation&gt;</code>. Timeline drives{' '}
         <strong>modelTransform</strong> (not USD embedded clip playback).
         Separate from <code>ref.play()</code> on the model asset.

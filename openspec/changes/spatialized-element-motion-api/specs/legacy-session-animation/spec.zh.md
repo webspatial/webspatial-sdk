@@ -2,22 +2,22 @@
 
 ## 状态
 
-已被 `useSpatializedMotion`（timeline API）取代。保留用于现有 `useAnimation` + `animation` prop 集成在 `Spatialized2DElement` 上的向后兼容。
+已被统一的 `useAnimation` timeline hook 取代。保留用于现有 `useAnimation` + `animation` prop 集成在 `Spatialized2DElement` 上的向后兼容。
 
 ## 范围
 
-本子规范记录了 **Plan A 会话式动画 API**（`useAnimation(config)` + `animation` prop）在统一空间化元素动画系统中的兼容层角色。新集成 SHOULD 使用 `useSpatializedMotion`。
+本子规范记录了 **Plan A 会话式动画 API**（`useAnimation(config)` + `animation` prop）在统一空间化元素动画系统中的兼容层角色。新集成 SHOULD 使用 `useAnimation`。
 
 ## 与当前架构的关系
 
 | 方面 | 旧版（Plan A） | 当前（Plan B / 统一） |
 |------|---------------|---------------------|
-| Hook | `useAnimation(config)` | `useSpatializedMotion(config)` |
+| Hook | `useAnimation(config)` | `useAnimation(config)` |
 | 绑定方式 | `animation` prop 传给 `enable-xr` 节点 | `style` 合并 + 可选 `xr-animation` binding |
 | 配置形状 | `from` / `to` 单段 | `from/to`（推荐）或 `tracks[]` 带 keyframes（互斥） |
 | 播放后端 | 仅 native | Web RAF + native（双后端） |
 | 支持 kind | 仅 `spatialized2d` | `spatialized2d`、`static3d`、`dynamic3d` |
-| 能力 token | `supports('useAnimation', ['element'])` | `supports('useSpatializedMotion', [kind])` |
+| 能力 token | `supports('useAnimation', ['element'])` | `supports('useAnimation', [kind === 'spatialized2d' ? 'element' : kind])` |
 
 ## 保留的需求
 
@@ -51,13 +51,13 @@
 
 alive 会话在卸载时 MUST 被终止，且 MUST NOT 触发生命周期回调。
 
-## 与 useSpatializedMotion 的边界
+## 与统一 timeline hook 的边界
 
-统一的 `useSpatializedMotion` 路径 MUST 与旧版 native segment 命令路径保持分离。`useSpatializedMotion` 的 authoring 形状可以归一化为 `tracks`，但 MUST NOT 再降级到本兼容层定义的旧版 native `from`/`to` 命令。
+统一的 `useAnimation` timeline 路径 MUST 与旧版 native segment 命令路径保持分离。`useAnimation` 的 authoring 形状可以归一化为 `tracks`，但 MUST NOT 再降级到本兼容层定义的旧版 native `from`/`to` 命令。
 
 ## 废弃路径
 
-- 用于 SpatialDiv 的 `useAnimation` 保持可用，但文档 SHOULD 引导作者使用 `useSpatializedMotion`。
+- 用于 SpatialDiv 的 `useAnimation` 保持可用，且是当前公共 hook 名称。
 - `enable-xr` 节点上的 `animation` prop 仍被识别，但 motion 路径不需要它。
 - 未来主版本 MAY 完全移除旧版路径。
 

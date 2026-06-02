@@ -13,20 +13,6 @@ export type CapabilityVersionRow = {
   flags: Record<string, boolean>
 }
 
-/** Mirror `useAnimation:*` element/static3d/dynamic3d flags to `useSpatializedMotion:*` kind tokens. */
-function mirrorSpatializedMotionFlags(flags: Record<string, boolean>): void {
-  flags['useSpatializedMotion:spatialized2d'] =
-    flags['useAnimation:element'] === true
-  flags['useSpatializedMotion:static3d'] =
-    flags['useAnimation:static3d'] === true
-  flags['useSpatializedMotion:dynamic3d'] =
-    flags['useAnimation:dynamic3d'] === true
-  flags['useSpatializedMotion'] =
-    flags['useSpatializedMotion:spatialized2d'] === true &&
-    flags['useSpatializedMotion:static3d'] === true &&
-    flags['useSpatializedMotion:dynamic3d'] === true
-}
-
 function baseTrueFlags(): Record<string, boolean> {
   const flags: Record<string, boolean> = {}
   for (const k of TOP_LEVEL_KEYS) {
@@ -37,7 +23,6 @@ function baseTrueFlags(): Record<string, boolean> {
       flags[`${name}:${t}`] = true
     }
   }
-  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
@@ -71,7 +56,6 @@ function matrixVision_1_5_0_Flags(): Record<string, boolean> {
   flags['useAnimation:element'] = false
   flags['useAnimation:static3d'] = false
   flags['useAnimation:dynamic3d'] = false
-  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
@@ -91,7 +75,6 @@ function matrixVision_1_6_0_Flags(): Record<string, boolean> {
   flags['useAnimation:element'] = false
   flags['useAnimation:static3d'] = false
   flags['useAnimation:dynamic3d'] = false
-  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
@@ -109,7 +92,6 @@ function matrixVision_1_7_0_Flags(): Record<string, boolean> {
   flags['useAnimation:element'] = false
   flags['useAnimation:static3d'] = false
   flags['useAnimation:dynamic3d'] = false
-  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
@@ -122,7 +104,6 @@ function matrixVision_1_8_0_Flags(): Record<string, boolean> {
   flags['useAnimation:element'] = true
   flags['useAnimation:static3d'] = true
   flags['useAnimation:dynamic3d'] = true
-  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 
@@ -161,7 +142,6 @@ function matrixPico_0_2_2_Flags(): Record<string, boolean> {
   flags['useAnimation:element'] = true
   flags['useAnimation:static3d'] = true
   flags['useAnimation:dynamic3d'] = true
-  mirrorSpatializedMotionFlags(flags)
   return flags
 }
 

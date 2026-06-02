@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
@@ -37,7 +37,7 @@ export default function FadeInEntrancePage() {
 }
 
 function FadeInScene({ log }: { log: (msg: string) => void }) {
-  const [motion, , style] = useSpatializedMotion({
+  const [motion, , style] = useAnimation({
     from: {
       transform: { translate: { z: 0 } },
       opacity: 0,

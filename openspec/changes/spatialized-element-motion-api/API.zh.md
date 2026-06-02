@@ -12,16 +12,16 @@
 
 | 类型 | 状态 |
 |------|------|
-| **Spatialized2DElement** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` |
-| **SpatializedStatic3DElement** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` + `<Model xr-animation>`；仅 native |
-| **SpatializedDynamic3DElement（Reality 容器）** | **已交付** — `useSpatializedMotion(config)`，返回 `[animation, api, style]` + `<Reality xr-animation>`；仅 native |
+| **Spatialized2DElement** | **已交付** — `useAnimation(config)`，返回 `[animation, api, style]` |
+| **SpatializedStatic3DElement** | **已交付** — `useAnimation(config)`，返回 `[animation, api, style]` + `<Model xr-animation>`；仅 native |
+| **SpatializedDynamic3DElement（Reality 容器）** | **已交付** — `useAnimation(config)`，返回 `[animation, api, style]` + `<Reality xr-animation>`；仅 native |
 | **SpatialEntity（Reality 子节点）** | **不在本 change** — 继续 `useAnimation` |
 
 ## 3. 统一入口（推荐 API）
 
 ```typescript
 // from/to 配置（推荐默认） — 目标在绑定时自动解析
-const [animation, api, style] = useSpatializedMotion({
+const [animation, api, style] = useAnimation({
   from: { transform: { translate: { y: 24 } }, opacity: 0 },
   to:   { transform: { translate: { y: 0 } }, opacity: 1 },
   duration: 0.6,
@@ -29,7 +29,7 @@ const [animation, api, style] = useSpatializedMotion({
 })
 
 // tracks 配置（高级） — 多轨 timeline
-const [animation, api, style] = useSpatializedMotion({
+const [animation, api, style] = useAnimation({
   duration: 5,
   tracks: [
     { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], timingFunction: 'linear' },
@@ -37,7 +37,7 @@ const [animation, api, style] = useSpatializedMotion({
 })
 
 // timeline 百分比关键帧配置（CSS @keyframes 风格） — 脱糖为 tracks 执行
-const [animation, api, style] = useSpatializedMotion({
+const [animation, api, style] = useAnimation({
   duration: 2,
   timeline: {
     "0%":   { transform: { translate: { y: 24 } }, opacity: 0, timingFunction: 'easeOut' },
@@ -130,7 +130,7 @@ interface SpatializedMotionSegmentConfig {
 | **`SpatializedMotionController`** | 唯一控制器实现；由绑定目标（组件类型）决定 |
 | **`SpatializedMotionHandle`** | imperative 接口（`play` / `pause` / `resume` / `stop` / `reset` / `finish` / …） |
 | `element.motion(config)` | 各 `Spatialized*Element` 工厂，返回 `SpatializedMotionHandle` |
-| `supports('useSpatializedMotion', [target])` | 能力探测（`spatialized2d` / `static3d` / `dynamic3d`） |
+| `supports('useAnimation', [target])` | 能力探测（`spatialized2d` / `static3d` / `dynamic3d`） |
 
 ## 7. 与模型内嵌动画区分
 

@@ -4,7 +4,7 @@ import {
   Reality,
   SceneGraph,
   UnlitMaterial,
-  useAnimation,
+  useEntityAnimation,
 } from '@webspatial/react-sdk'
 import {
   EntityAnimationPageShell,
@@ -20,7 +20,7 @@ export default function EntityAnimationManualTriggerPage() {
   const [playbackRate, setPlaybackRate] = useState(1.0)
   const [posX, setPosX] = useState(0)
 
-  const [animation, api] = useAnimation({
+  const [animation, api] = useEntityAnimation({
     from: { position: { x: -0.1, y: 0, z: 0 } },
     to: { position: { x: 0.1, y: 0, z: 0 } },
     duration: 3.0,

@@ -2,7 +2,7 @@
 
 ## ADDED Requirements
 
-> **Status: deferred.** Container motion (`SpatializedMotionController` / `useSpatializedMotion`) does **not** include entity targets. Entity animation continues via `useAnimation` + `AnimateTransform`. Requirements below are aspirational until a dedicated change lands.
+> **Status: deferred.** Container motion (`SpatializedMotionController` / `useAnimation`) does **not** include entity targets. Entity animation continues via `useEntityAnimation` + `AnimateTransform`. Requirements below are aspirational until a dedicated change lands.
 
 ### Requirement: Entity timeline uses transform property paths
 

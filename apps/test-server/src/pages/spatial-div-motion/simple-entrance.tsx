@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import { btnCls } from '../spatial-div-animation/shared'
 
 /** Segment-equivalent demo: opacity + translate.z over 0.8s (native segment path on AVP). */
@@ -18,7 +18,7 @@ const SIMPLE_ENTRANCE = {
 }
 
 function SimpleEntranceCard() {
-  const [motion, api, style] = useSpatializedMotion(SIMPLE_ENTRANCE)
+  const [motion, api, style] = useAnimation(SIMPLE_ENTRANCE)
 
   return (
     <div
@@ -37,7 +37,7 @@ function SimpleEntranceCard() {
   )
 }
 
-/** Fade + slide up via useSpatializedMotion({ from, to, duration, … }) */
+/** Fade + slide up via useAnimation({ from, to, duration, … }) */
 export function SpatialDivMotionSimpleEntrancePage() {
   const [key, setKey] = useState(0)
 
