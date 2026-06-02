@@ -3,12 +3,13 @@ import * as _reactJSXRuntime from 'react/jsx-runtime'
 import { createElement as reactCreateElement } from 'react'
 
 const reactJSXRuntime = (_reactJSXRuntime as any).default || _reactJSXRuntime
-// `Model`, `withSpatialized2DElementContainer`, and `withSpatialMonitor` MUST
-// resolve to the **facade** versions defined in `../facades` (not to a real
-// spatial implementation). Per spatial-lazy-load spec `tasks.md` §6.2 the
-// JSX runtime delegates spatial vs. fallback rendering to the facade HOCs;
-// the JSX runtime itself NEVER imports from `../spatial/`, NEVER calls
-// `bootSpatial()`, and never schedules a dynamic import.
+// The marker-wrapping HOC factories MUST resolve to the **facade** versions
+// defined in `../facades` (not to real spatial implementations). Per
+// spatial-lazy-load spec `tasks.md` §6.2 the JSX runtime delegates spatial
+// vs. fallback rendering to the facade HOCs; the JSX runtime itself NEVER
+// imports from `../spatial/`, NEVER calls `bootSpatial()`, and never
+// schedules a dynamic import. `Model` / `Reality` are handled separately by
+// the primitive marker check below.
 //
 // Why an external package self-reference instead of a relative import:
 // `dist/jsx/jsx-runtime.js` MUST be server-callable (Server Components in
@@ -32,7 +33,7 @@ import {
 } from '@webspatial/react-sdk/internal/facades-client'
 import { getWebSpatialPrimitiveName } from './primitiveMarker'
 
-// In an RSC server bundle, the three facade imports above resolve to
+// In an RSC server bundle, the HOC facade imports above resolve to
 // Client References (opaque objects) rather than callable functions. We
 // can still safely STRIP `enable-xr` / `enable-xr-monitor` markers from
 // props (so the resulting server-rendered DOM matches the client-side
