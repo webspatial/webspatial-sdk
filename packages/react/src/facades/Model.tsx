@@ -4,7 +4,7 @@ import { ForwardedRef, createElement, forwardRef } from 'react'
 import type { ModelProps, ModelRef } from '../Model'
 import { getSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
-import { markWebSpatialPrimitive } from '../jsx/primitiveMarker'
+import { markWebSpatialPrimitive } from '../jsx/primitive-marker'
 import { warnBootForgotten } from './shared/warnBootForgotten'
 
 export type { ModelProps, ModelRef }

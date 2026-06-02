@@ -19,7 +19,7 @@
 // rewrite `enable-xr` markers. Those facades transitively pull in React
 // hooks (`useSyncExternalStore`, `useLayoutEffect`, ...), which the RSC
 // compiler rejects from a server-callable module. `Model` / `Reality`
-// short-circuiting is handled by `primitiveMarker.ts`, not by importing
+// short-circuiting is handled by `primitive-marker.ts`, not by importing
 // those component values into `jsx-shared.ts`.
 //
 // The bridge: this file marks the public RSC boundary for facade-import

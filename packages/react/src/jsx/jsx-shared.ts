@@ -31,7 +31,7 @@ import {
   withSpatialMonitor,
   withSpatialized2DElementContainer,
 } from '@webspatial/react-sdk/internal/facades-client'
-import { getWebSpatialPrimitiveName } from './primitiveMarker'
+import { getWebSpatialPrimitiveName } from './primitive-marker'
 
 // In an RSC server bundle, the HOC facade imports above resolve to
 // Client References (opaque objects) rather than callable functions. We
@@ -104,7 +104,7 @@ export function replaceToSpatialPrimitiveType(
 ): React.ElementType {
   // `Model` / `Reality` short-circuit both strip and wrap. We brand both the
   // default-entry facades and the eager-entry real implementations with a
-  // stable marker (see `primitiveMarker.ts`); identifying by marker — not by
+  // stable marker (see `primitive-marker.ts`); identifying by marker — not by
   // object-reference equality against the facade — keeps the eager entry's
   // real `<Model enable-xr>` from being wrapped as a 2D spatialized container.
   if (getWebSpatialPrimitiveName(type) !== undefined) {

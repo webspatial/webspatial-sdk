@@ -15,7 +15,7 @@ import { SpatializedElementRef } from '../../spatialized-container/types'
 import { SpatializedElement } from '@webspatial/core-sdk'
 import { EntityEventHandler } from '../type'
 import { useRealityEvents } from '../hooks'
-import { markWebSpatialPrimitive } from '../../jsx/primitiveMarker'
+import { markWebSpatialPrimitive } from '../../jsx/primitive-marker'
 
 export type RealityProps = Omit<
   React.ComponentPropsWithRef<'div'>,

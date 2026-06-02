@@ -5,7 +5,7 @@ import type { RealityProps } from '../reality/components/Reality'
 import type { SpatializedElementRef } from '../spatialized-container/types'
 import { getSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
-import { markWebSpatialPrimitive } from '../jsx/primitiveMarker'
+import { markWebSpatialPrimitive } from '../jsx/primitive-marker'
 import { warnBootForgotten } from './shared/warnBootForgotten'
 
 export type { RealityProps }
