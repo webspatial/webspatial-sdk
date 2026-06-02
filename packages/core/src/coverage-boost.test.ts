@@ -277,18 +277,6 @@ describe('platform adapters', () => {
     vi.unmock('./JSBCommand')
   })
 
-  it('SSRPlatform returns successful no-op results', async () => {
-    const { SSRPlatform } = await import('./platform-adapter/ssr/SSRPlatform')
-    const platform = new SSRPlatform()
-
-    await expect(platform.callJSB('c', '{}')).resolves.toMatchObject({
-      success: true,
-    })
-    expect(platform.openSpatialSceneSync('s', undefined)).toMatchObject({
-      success: true,
-    })
-  })
-
   it('VisionOSPlatform.callJSB returns success and parses failures', async () => {
     ;(window as any).webkit = {
       messageHandlers: {
@@ -921,32 +909,17 @@ describe('isSSREnv', () => {
 })
 
 describe('platform-adapter', () => {
-  it('createPlatform returns SSRPlatform in SSR env', async () => {
+  it('createPlatform and createPlatformSync throw in SSR env', async () => {
     vi.resetModules()
     vi.doMock('./isSSREnv', () => {
       return { isSSREnv: () => true }
     })
 
-    const { createPlatform } = await import('./platform-adapter')
-    const p = await createPlatform()
-    expect(typeof p.callJSB).toBe('function')
-    expect(typeof p.openSpatialSceneSync).toBe('function')
-    expect(typeof p.createNativeSpatialDiv).toBe('function')
-    expect(typeof p.createNativeAttachment).toBe('function')
-  })
-
-  it('createPlatformSync uses SSR sync noop in SSR env', async () => {
-    vi.resetModules()
-    vi.doMock('./isSSREnv', () => {
-      return { isSSREnv: () => true }
-    })
-
-    const { createPlatformSync } = await import(
-      './platform-adapter/createPlatformSync'
+    const { createPlatform, createPlatformSync } = await import(
+      './platform-adapter'
     )
-    const p = createPlatformSync()
-    const r = p.openSpatialSceneSync('https://x', undefined)
-    expect(r.success).toBe(true)
-    expect(r.data).toBeUndefined()
+    const expected = /cannot run during SSR/
+    await expect(createPlatform()).rejects.toThrow(expected)
+    expect(() => createPlatformSync()).toThrow(expected)
   })
 })
