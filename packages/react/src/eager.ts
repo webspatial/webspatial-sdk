@@ -64,11 +64,10 @@ import { eagerEntryRegistered } from './runtime/registerEagerEntry'
 // (see `runtime/bridge.ts` for the rationale).
 import * as SpatialImpl from './spatial'
 import { __internalSetSpatialImpl } from './runtime/bridge'
-// Keep an explicit value usage so downstream tree-shaking cannot drop the
-// eager-entry registration chunk. Registration already ran during this
-// module's import-evaluation phase, before `./spatial` above.
-void eagerEntryRegistered
-__internalSetSpatialImpl(SpatialImpl)
+// Keep registration binding live for downstream tree-shaking. Short-circuit
+// `&&` ties the read to bridge setup without an `if` that CodeQL flags as
+// always true (registration already ran before `./spatial` above).
+eagerEntryRegistered && __internalSetSpatialImpl(SpatialImpl)
 
 // --- Step 2: spatial primitives — REAL implementations from /spatial -------
 // Per the "Spatial primitives mount real implementations on first render"

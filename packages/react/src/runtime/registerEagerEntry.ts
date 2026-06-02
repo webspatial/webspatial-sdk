@@ -33,7 +33,7 @@ function register(): 'eager' {
 
 /**
  * Registers the eager entry root as a side effect of computing this value.
- * `src/eager.ts` MUST reference this binding (see its `__internalSetSpatialImpl`
- * guard) so downstream bundlers cannot tree-shake the registration away.
+ * `src/eager.ts` MUST reference this binding (see its bridge-setup expression)
+ * so downstream bundlers cannot tree-shake the registration away.
  */
 export const eagerEntryRegistered = register()
