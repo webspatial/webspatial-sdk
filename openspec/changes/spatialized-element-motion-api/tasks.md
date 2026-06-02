@@ -29,7 +29,7 @@
 
 ## Phase 4 — Entity timeline (deferred)
 
-- [ ] Entity transform timeline via existing `useAnimation` / `AnimateTransform` (not `SpatializedMotionController`)
+- [ ] Entity transform timeline via `useEntityAnimation` / `AnimateTransform` (not `SpatializedMotionController`)
 - [ ] Sub-spec `spatialized-entity-motion` remains informational only until product prioritizes
 
 ## Phase 5 — Native consolidation + public surface cleanup
@@ -153,3 +153,21 @@
 - [x] Update test-server demo pages: replace all `motion=` with `xr-animation=`
 - [x] Update unit / integration tests
 - [x] Update documentation (spec, design, proposal, API.zh.md) — prop references only
+
+## Phase 12 — Rename current `useAnimation` to `useEntityAnimation`
+
+- [ ] Rename the current public `useAnimation` export to `useEntityAnimation`
+- [ ] Remove SpatialDiv-key dispatch from the renamed hook so `useEntityAnimation` is entity-only
+- [ ] Update entity-facing docs and examples to use `useEntityAnimation`
+- [ ] Refactor `apps/test-server/src/pages/entity-animation/**` to import `useEntityAnimation`
+- [ ] Update entity capability-check pages and related runtime probe copy to the renamed hook
+- [ ] Verify the refactored entity `test-server` pages still render and control playback correctly
+
+## Phase 13 — Rename `useSpatializedMotion` to `useAnimation`
+
+- [ ] Rename public `useSpatializedMotion(config)` to `useAnimation(config)` without changing the target-agnostic timeline semantics
+- [ ] Update `@webspatial/react-sdk` exports and in-repo imports to the renamed spatialized hook
+- [ ] Refactor `apps/test-server/src/pages/spatial-div-motion/**` to use the new `useAnimation` import
+- [ ] Refactor `apps/test-server/src/pages/spatial-element-motion/**` to use the new `useAnimation` import
+- [ ] Update spatialized motion capability-check pages and related runtime probe copy to the renamed hook
+- [ ] Verify the refactored spatialized-motion `test-server` pages still render and control playback correctly

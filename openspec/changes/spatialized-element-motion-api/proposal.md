@@ -29,9 +29,9 @@ This **umbrella change** merges both into a single normative surface:
 
 ## At a Glance
 
-```tsx
-// Unified API — hook is target-agnostic; target resolved at bind time
-const [animation, api, style] = useSpatializedMotion({
+```
+// Unified spatialized animation API — hook is target-agnostic; target resolved at bind time
+const [animation, api, style] = useAnimation({
   duration: 5,
   tracks: [
     { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], timingFunction: 'linear' },
@@ -53,15 +53,15 @@ const [animation, api, style] = useSpatializedMotion({
 </Reality>
 
 // from/to config (recommended default, equivalent to Plan A from/to)
-const [animation, api, style] = useSpatializedMotion({
+const [animation, api, style] = useAnimation({
   from: { transform: { translate: { y: 24 } }, opacity: 0 },
   to:   { transform: { translate: { y: 0 } }, opacity: 1 },
   duration: 0.6,
   timingFunction: 'easeOut',
 })
 
-// Legacy Plan A (still functional, deprecated for new code)
-const [animation, api] = useAnimation({
+// Entity transform animation keeps its own name and stack
+const [animation, api] = useEntityAnimation({
   from: { opacity: 0 }, to: { opacity: 1 }, duration: 0.5,
 })
 <div enable-xr animation={animation} />
@@ -83,15 +83,21 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 
 ## What Changes
 
-- **Unified public API**: `useSpatializedMotion(config)` accepting `from/to` (recommended), `tracks` (advanced), or `timeline` (CSS @keyframes style); all compile to tracks internally.
+- **Unified public API**: `useAnimation(config)` accepts `from/to` (recommended), `tracks` (advanced), or `timeline` (CSS @keyframes style); all authoring shapes compile to tracks internally.
 - **Timeline data model**: per-property tracks with absolute-time keyframes, per-track timingFunction — the canonical config shape.
 - **Dual backend for 2D**: Web RAF when native unavailable; native uses the canonical tracks path when in WebSpatial runtime.
 - **Native-only for 3D**: Static3D and Dynamic3D use native `animateMotion` exclusively (no Web RAF fallback).
 - **One Core controller**: `SpatializedMotionController` with `MOTION_KIND_POLICIES` per kind.
-- **Legacy compatibility**: Plan A `useAnimation` + `animation` prop retained for SpatialDiv as a separate compatibility path.
+- **Entity-specific API**: entity transform animation is named `useEntityAnimation(config)` and remains on the separate `AnimateTransform` stack.
 - **Portal suppression**: animated fields suppressed during native playback (property-level for opacity, transform-wide for transform).
 - **Session semantics**: state machine, lifecycle callbacks, error handling unified across all paths.
-- **Capability detection**: `supports('useSpatializedMotion', [target])` for `spatialized2d` | `static3d` | `dynamic3d`.
+- **Capability detection**: runtime capability probes follow the renamed public hooks in the migration plan.
+
+## Two-Phase Naming Migration
+
+- **Phase 1**: rename the current public `useAnimation` export to `useEntityAnimation` and refactor entity-focused `test-server` pages first, so the `useAnimation` symbol is freed without breaking the in-repo demos.
+- **Phase 2**: rename `useSpatializedMotion` to `useAnimation`, keep the target-agnostic timeline semantics unchanged, and refactor spatialized motion `test-server` pages to the new import and capability names.
+- **Validation scope**: both phases require updating the relevant `test-server` pages and verifying the refactored pages still render and control playback correctly after the rename.
 
 ## Capabilities
 
@@ -111,7 +117,7 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 
 ### Deferred
 
-- `spatialized-entity-motion` — Entity transform timeline via `useAnimation` (separate stack, not `SpatializedMotionController`).
+- `spatialized-entity-motion` — Entity transform timeline via `useEntityAnimation` (separate stack, not `SpatializedMotionController`).
 
 ## Non-Goals
 
@@ -124,6 +130,6 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 ## Impact
 
 - **Packages**: `@webspatial/react-sdk`, `@webspatial/core-sdk`, visionOS native bridge/runtime.
-- **Public API**: `useSpatializedMotion` hook, `SpatializedMotionConfig`, `SpatializedPlaybackApi`, `xr-animation` binding prop on `<Model>` and `<Reality>`.
-- **Legacy API**: `useAnimation` for SpatialDiv remains functional (no breaking change).
-- **Breaking changes**: None. This change is additive.
+- **Public API**: `useAnimation` for spatialized motion, `useEntityAnimation` for entity transforms, `SpatializedMotionConfig`, `SpatializedPlaybackApi`, and the `xr-animation` binding prop on `<Model>` and `<Reality>`.
+- **Migration shape**: the rename lands in two phases so entity demos move first and spatialized motion demos move second.
+- **Breaking changes**: yes; the current public `useAnimation` name moves to `useEntityAnimation`, and the current `useSpatializedMotion` name moves to `useAnimation`.

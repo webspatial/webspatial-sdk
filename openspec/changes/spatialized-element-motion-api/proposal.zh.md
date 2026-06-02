@@ -30,8 +30,8 @@
 ## 概览
 
 ```tsx
-// 统一 API — hook 与目标无关；目标在绑定时自动解析
-const [animation, api, style] = useSpatializedMotion({
+// 统一的空间动画 API — hook 与目标无关；目标在绑定时自动解析
+const [animation, api, style] = useAnimation({
   duration: 5,
   tracks: [
     { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], timingFunction: 'linear' },
@@ -53,15 +53,15 @@ const [animation, api, style] = useSpatializedMotion({
 </Reality>
 
 // from/to 配置（推荐默认，等价于 Plan A 的 from/to）
-const [animation, api, style] = useSpatializedMotion({
+const [animation, api, style] = useAnimation({
   from: { transform: { translate: { y: 24 } }, opacity: 0 },
   to:   { transform: { translate: { y: 0 } }, opacity: 1 },
   duration: 0.6,
   timingFunction: 'easeOut',
 })
 
-// 旧版 Plan A（仍可用，新代码不推荐）
-const [animation, api] = useAnimation({
+// Entity transform animation 保持独立命名和独立栈
+const [animation, api] = useEntityAnimation({
   from: { opacity: 0 }, to: { opacity: 1 }, duration: 0.5,
 })
 <div enable-xr animation={animation} />
@@ -83,15 +83,21 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 
 ## 变更内容
 
-- **统一公共 API**：`useSpatializedMotion(config)` 接受 `from/to`（推荐）、`tracks`（高级）或 `timeline`（CSS @keyframes 风格）三种互斥配置，内部统一编译为 tracks 执行，返回 `[animation, api, style]`。
+- **统一公共 API**：`useAnimation(config)` 接受 `from/to`（推荐）、`tracks`（高级）或 `timeline`（CSS @keyframes 风格）三种互斥配置，内部统一编译为 tracks 执行，返回 `[animation, api, style]`。
 - **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe + 每轨 timingFunction — 规范配置形状。
 - **2D 双后端**：native 不可用时走 Web RAF；WebSpatial 运行时 native 侧统一走 canonical tracks 路径。
 - **3D 仅 native**：Static3D 和 Dynamic3D 仅使用 native `animateMotion`（无 Web RAF 降级）。
 - **单一 Core 控制器**：`SpatializedMotionController`，通过 `MOTION_KIND_POLICIES` 按 kind 分派。
-- **旧版兼容**：Plan A `useAnimation` + `animation` prop 对 SpatialDiv 保留，但作为独立兼容路径存在。
+- **Entity 专用 API**：Entity transform animation 命名为 `useEntityAnimation(config)`，并继续保留在独立的 `AnimateTransform` 栈上。
 - **Portal 抑制**：native 播放期间抑制被动画控制的字段（opacity 属性级、transform 整体级）。
 - **会话语义**：状态机、生命周期回调、错误处理在所有路径上统一。
-- **能力探测**：`supports('useSpatializedMotion', [target])`，支持 `spatialized2d` | `static3d` | `dynamic3d`。
+- **能力探测**：运行时能力探测会随着迁移计划同步到新的公共 hook 名称。
+
+## 两阶段命名迁移
+
+- **Phase 1**：先把当前公共 `useAnimation` 导出重命名为 `useEntityAnimation`，并优先重构 Entity 相关的 `test-server` 页面，先释放 `useAnimation` 这个符号。
+- **Phase 2**：再把 `useSpatializedMotion` 重命名为 `useAnimation`，保持现有目标无关 timeline 语义不变，同时把空间动画相关的 `test-server` 页面迁移到新的 import 和能力探测名称。
+- **验证范围**：两个阶段都需要同步更新对应的 `test-server` 页面，并确认重构后的页面仍可正常渲染和控制播放。
 
 ## 能力
 
@@ -111,7 +117,7 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 
 ### 推迟
 
-- `spatialized-entity-motion` — Entity transform timeline 通过 `useAnimation`（独立栈，不走 `SpatializedMotionController`）。
+- `spatialized-entity-motion` — Entity transform timeline 通过 `useEntityAnimation`（独立栈，不走 `SpatializedMotionController`）。
 
 ## 非目标
 
@@ -124,6 +130,6 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 ## 影响
 
 - **包**：`@webspatial/react-sdk`、`@webspatial/core-sdk`、visionOS native bridge/runtime。
-- **公共 API**：`useSpatializedMotion` hook、`SpatializedMotionConfig`、`SpatializedPlaybackApi`、`<Model>` 和 `<Reality>` 上的 `xr-animation` binding prop。
-- **旧版 API**：用于 SpatialDiv 的 `useAnimation` 保持可用（无破坏性变更）。
-- **破坏性变更**：无。本变更为纯增量。
+- **公共 API**：空间动画使用 `useAnimation`，Entity transform 使用 `useEntityAnimation`，其余包括 `SpatializedMotionConfig`、`SpatializedPlaybackApi` 以及 `<Model>` 和 `<Reality>` 上的 `xr-animation` binding prop。
+- **迁移形态**：命名调整分两阶段落地，先迁移 Entity demo，再迁移空间动画 demo。
+- **破坏性变更**：有；当前公共 `useAnimation` 会迁移为 `useEntityAnimation`，当前 `useSpatializedMotion` 会迁移为 `useAnimation`。
