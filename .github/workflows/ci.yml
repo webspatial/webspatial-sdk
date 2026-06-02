@@ -48,6 +48,9 @@ jobs:
       - name: Test size budget (marginal-delta consumer fixture)
         run: pnpm run test:size-budget
 
+      - name: Build consumer fixtures (real bundler paths)
+        run: pnpm run test:fixtures
+
       - name: Test changeset
         run: npx changeset version
       
