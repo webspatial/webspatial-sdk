@@ -7,7 +7,7 @@ export default function SpatialDivAnimationPage() {
         <h1 className="mb-2 text-2xl font-bold">Spatialized Element Motion</h1>
         <p className="mb-2 max-w-3xl text-sm text-gray-400">
           Test pages for Spatialized Element Motion via{' '}
-          <code className="text-cyan-300">useSpatializedMotion</code> +{' '}
+          <code className="text-cyan-300">useAnimation</code> +{' '}
           <code className="text-cyan-300">
             {'<div enable-xr xr-animation={...}>'}
           </code>
@@ -81,8 +81,9 @@ export default function SpatialDivAnimationPage() {
             </li>
             <li>
               Capability detection page reports{' '}
-              <code>supports('useSpatializedMotion')</code> and per-kind tokens
-              consistently with runtime expectation.
+              <code>supports('useAnimation')</code> and per-kind tokens
+              consistently with runtime expectation. Public hook name used by
+              the pages is <code>useAnimation</code>.
             </li>
           </ul>
         </section>

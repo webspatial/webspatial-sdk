@@ -109,7 +109,7 @@ export function useEntityAnimation(
     if (cfg.onError) {
       cfg.onError(error)
     } else {
-      console.error('[useAnimation] Animation error:', error)
+      console.error('[useEntityAnimation] Animation error:', error)
     }
   }, [])
 
@@ -264,7 +264,7 @@ export function useEntityAnimation(
       if (!warnedRef.current) {
         warnedRef.current = true
         console.warn(
-          '[useAnimation] Entity transform animation is not supported in the current runtime.',
+          '[useEntityAnimation] Entity transform animation is not supported in the current runtime.',
         )
       }
       return
@@ -523,7 +523,7 @@ export function useEntityAnimation(
     const existingId = _boundAnimations.get(animatedProps)
     if (existingId && existingId !== entity.id) {
       throw new Error(
-        '[useAnimation] The same animation object must not be bound to multiple entities.',
+        '[useEntityAnimation] The same animation object must not be bound to multiple entities.',
       )
     }
     _boundAnimations.set(animatedProps, entity.id)

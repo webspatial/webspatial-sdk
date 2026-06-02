@@ -1,5 +1,5 @@
 export { useMotionController } from './useMotionController'
-export { useSpatializedMotion } from './useSpatializedMotion'
+export { useAnimation } from './useSpatializedMotion'
 export type {
   UseSpatializedMotionResult,
   SpatializedMotionConfig,

@@ -17,11 +17,6 @@ import {
 export const VISIONOS_DEBUG_SHELL_VERSION_PLACEHOLDER = 'WS_SHELL_VERSION'
 
 let runtimeCache: WebSpatialRuntimeSnapshot | undefined
-const SPATIALIZED_MOTION_KIND_TOKENS = [
-  'spatialized2d',
-  'static3d',
-  'dynamic3d',
-] as const
 
 /** Test helper: clear cached UA/runtime snapshot between Vitest cases. */
 export function resetRuntimeCacheForTests(): void {
@@ -108,14 +103,9 @@ export function supports(name: string, tokens?: readonly string[]): boolean {
   if (!row) return false
 
   if (tokList.length === 0) {
-    if (canonical === 'useSpatializedMotion') {
-      return SPATIALIZED_MOTION_KIND_TOKENS.every(
-        t => row.flags[`useSpatializedMotion:${t}`] === true,
-      )
-    }
     return row.flags[canonical] === true
   }
-  if (canonical !== 'useSpatializedMotion' && row.flags[canonical] !== true) {
+  if (row.flags[canonical] !== true) {
     return false
   }
   return tokList.every(t => row.flags[`${canonical}:${t}`] === true)

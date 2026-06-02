@@ -31,7 +31,7 @@ export type UseSpatializedMotionResult = readonly [
 
 const EMPTY_STYLE: CSSProperties = {}
 
-export function useSpatializedMotion(
+export function useAnimation(
   config: SpatializedMotionConfig,
 ): UseSpatializedMotionResult {
   const dataSignature = JSON.stringify(config, (_key, value) =>
@@ -63,7 +63,7 @@ export function useSpatializedMotion(
     controller.targetKind === 'dynamic3d'
       ? EMPTY_STYLE
       : controller.targetKind === 'spatialized2d' &&
-          supports('useSpatializedMotion', ['spatialized2d']) &&
+          supports('useAnimation', ['element']) &&
           suppressedFields
         ? {
             ...(suppressedFields.has('opacity')

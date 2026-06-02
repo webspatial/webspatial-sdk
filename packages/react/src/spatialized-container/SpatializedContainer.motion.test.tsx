@@ -13,12 +13,10 @@ describe('SpatializedContainer degraded xr-animation binding', () => {
     const { Spatialized2DElementContainer } = await import(
       './Spatialized2DElementContainer'
     )
-    const { useSpatializedMotion } = await import(
-      './motion/useSpatializedMotion'
-    )
+    const { useAnimation } = await import('./motion/useSpatializedMotion')
 
     function TestPage() {
-      const [motion, api, style] = useSpatializedMotion({
+      const [motion, api, style] = useAnimation({
         from: {
           opacity: 0,
           transform: { translate: { y: 40 } },

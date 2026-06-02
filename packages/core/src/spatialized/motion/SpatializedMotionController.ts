@@ -35,7 +35,7 @@ export interface SpatializedMotionControllerOptions {
   /** Initial element; may be set later via {@link attachElement}. */
   element?: MotionHostElement | null
   /**
-   * When set, overrides `supports('useSpatializedMotion', [kind])` for backend selection.
+   * When set, overrides `supports('useAnimation', [kind])` for backend selection.
    * Existing native element controllers can keep using this for tests.
    */
   forceNativePlayback?: boolean
@@ -441,7 +441,8 @@ export class SpatializedMotionController
     if (this.supportsMotionKind) {
       return this.supportsMotionKind(this.kind)
     }
-    return supports('useSpatializedMotion', [this.kind])
+    const token = this.kind === 'spatialized2d' ? 'element' : this.kind
+    return supports('useAnimation', [token])
   }
 
   private bump(): void {
@@ -800,7 +801,7 @@ export class SpatializedMotionController
       if (!this.warnedNative) {
         this.warnedNative = true
         console.warn(
-          `[${getPolicy(this.kind).controllerLabel}] Native motion requires supports(useSpatializedMotion, ['${this.kind}']).`,
+          `[${getPolicy(this.kind).controllerLabel}] Native motion requires supports(useAnimation, ['${this.kind === 'spatialized2d' ? 'element' : this.kind}']).`,
         )
       }
       return

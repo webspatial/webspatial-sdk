@@ -13,22 +13,22 @@ The legacy `useAnimation(config)` + `animation` prop path MUST remain compatible
 
 ## Status
 
-**Superseded** by `useSpatializedMotion` (timeline API). Retained for backward compatibility with existing `useAnimation` + `animation` prop integrations on `Spatialized2DElement`.
+**Superseded** by the unified `useAnimation` timeline hook. Retained for backward compatibility with existing `useAnimation` + `animation` prop integrations on `Spatialized2DElement`.
 
 ## Scope
 
-This sub-spec documents the **Plan A session-based animation API** (`useAnimation(config)` + `animation` prop) as a compatibility layer within the unified spatialized element motion system. New integrations SHOULD use `useSpatializedMotion`.
+This sub-spec documents the **Plan A session-based animation API** (`useAnimation(config)` + `animation` prop) as a compatibility layer within the unified spatialized element motion system. New integrations SHOULD use `useAnimation`.
 
 ## Relationship to Current Architecture
 
 | Aspect | Legacy (Plan A) | Current (Plan B / unified) |
 |--------|-----------------|---------------------------|
-| Hook | `useAnimation(config)` | `useSpatializedMotion(config)` |
+| Hook | `useAnimation(config)` | `useAnimation(config)` |
 | Binding | `animation` prop on `enable-xr` node | `style` merge + optional `xr-animation` binding |
 | Config shape | `from` / `to` single segment | `from/to` (recommended) or `tracks[]` with keyframes (mutually exclusive) |
 | Playback backend | Native only | Web RAF + native (dual backend) |
 | Supported kinds | `spatialized2d` only | `spatialized2d`, `static3d`, `dynamic3d` |
-| Capability token | `supports('useAnimation', ['element'])` | `supports('useSpatializedMotion', [kind])` |
+| Capability token | `supports('useAnimation', ['element'])` | `supports('useAnimation', [kind === 'spatialized2d' ? 'element' : kind])` |
 
 ## RETAINED Requirements
 
@@ -62,13 +62,13 @@ Property-level suppression for `opacity` and transform-wide suppression MUST pre
 
 Alive sessions MUST be torn down on unmount without firing lifecycle callbacks.
 
-## Separation from useSpatializedMotion
+## Separation from the unified timeline hook
 
-The unified `useSpatializedMotion` path MUST remain separate from the legacy native segment command path. `useSpatializedMotion` authoring shapes may normalize to `tracks`, but they MUST NOT downgrade into the legacy `from`/`to` native command defined by this compatibility layer.
+The unified `useAnimation` timeline path MUST remain separate from the legacy native segment command path. `useAnimation` authoring shapes may normalize to `tracks`, but they MUST NOT downgrade into the legacy `from`/`to` native command defined by this compatibility layer.
 
 ## Deprecation Path
 
-- `useAnimation` for SpatialDiv remains functional but documentation SHOULD direct authors to `useSpatializedMotion`.
+- `useAnimation` for SpatialDiv remains functional and is the current public hook name.
 - The `animation` prop on `enable-xr` nodes remains recognized but is not required for the motion path.
 - Future major versions MAY remove the legacy path entirely.
 

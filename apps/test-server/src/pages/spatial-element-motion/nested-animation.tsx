@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
@@ -44,7 +44,7 @@ function InnerLayer({ log }: { log: (msg: string) => void }) {
 }
 
 function InnerScene({ log }: { log: (msg: string) => void }) {
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     from: {
       transform: { scale: { x: 0.6, y: 0.6, z: 0.6 } },
       opacity: 0,
@@ -94,7 +94,7 @@ function InnerScene({ log }: { log: (msg: string) => void }) {
 // ─── Middle (Child) ──────────────────────────────────────────────────────────
 
 function MiddleLayer({ log }: { log: (msg: string) => void }) {
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     from: {
       transform: { rotate: { z: 0 } },
     },
@@ -163,7 +163,7 @@ function OuterLayer({
   log: (msg: string) => void
   showMiddle: boolean
 }) {
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     from: {
       transform: { translate: { y: 0 } },
       opacity: 0.5,

@@ -17,7 +17,7 @@ This proposal unifies two prior efforts:
    - Retained as a backward-compatible sub-path (see `specs/legacy-session-animation/`)
 
 2. **Plan B — Motion Timeline API** (`spatial-div-motion-api`, archived)
-   - Introduced `useSpatializedMotion(config)` with multi-track timeline + `style` outlet
+   - Introduced `useAnimation(config)` with multi-track timeline + `style` outlet
    - Dual backend: Web RAF fallback + native timeline playback
    - Renamed `animation` binding to `xr-animation` binding, and started returning `style` with defined `style` sync semantics
 
@@ -25,7 +25,7 @@ This **umbrella change** merges both into a single normative surface:
 - The **timeline data model** from Plan B is the canonical config shape
 - The **session semantics** (state machine, suppression, lifecycle) from Plan A remain normative
 - Coverage extends to Static3D and Dynamic3D (native-only, no Web RAF)
-- All `useSpatializedMotion` authoring shapes (`from`/`to`, `timeline`, `tracks`) compile to the same canonical `tracks` execution model
+- All `useAnimation` authoring shapes (`from`/`to`, `timeline`, `tracks`) compile to the same canonical `tracks` execution model
 
 ## At a Glance
 
@@ -96,7 +96,7 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 ## Two-Phase Naming Migration
 
 - **Phase 1**: rename the current public `useAnimation` export to `useEntityAnimation` and refactor entity-focused `test-server` pages first, so the `useAnimation` symbol is freed without breaking the in-repo demos.
-- **Phase 2**: rename `useSpatializedMotion` to `useAnimation`, keep the target-agnostic timeline semantics unchanged, and refactor spatialized motion `test-server` pages to the new import and capability names.
+- **Phase 2**: rename the spatialized motion hook to `useAnimation`, keep the target-agnostic timeline semantics unchanged, and refactor spatialized motion `test-server` pages to the new import and capability names.
 - **Validation scope**: both phases require updating the relevant `test-server` pages and verifying the refactored pages still render and control playback correctly after the rename.
 
 ## Capabilities
@@ -132,4 +132,4 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 - **Packages**: `@webspatial/react-sdk`, `@webspatial/core-sdk`, visionOS native bridge/runtime.
 - **Public API**: `useAnimation` for spatialized motion, `useEntityAnimation` for entity transforms, `SpatializedMotionConfig`, `SpatializedPlaybackApi`, and the `xr-animation` binding prop on `<Model>` and `<Reality>`.
 - **Migration shape**: the rename lands in two phases so entity demos move first and spatialized motion demos move second.
-- **Breaking changes**: yes; the current public `useAnimation` name moves to `useEntityAnimation`, and the current `useSpatializedMotion` name moves to `useAnimation`.
+- **Breaking changes**: yes; the current public `useAnimation` name moves to `useEntityAnimation`, and the current spatialized motion hook name moves to `useAnimation`.

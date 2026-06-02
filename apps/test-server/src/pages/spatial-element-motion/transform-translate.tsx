@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { supports } from '@webspatial/core-sdk'
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
@@ -17,17 +17,15 @@ export default function TransformTranslatePage() {
   // State that triggers re-renders (used by suppression test)
   const [borderHue, setBorderHue] = useState(0)
   // Capability probe helps verify whether this runtime can use native
-  // spatialized2d playback or is falling back to the web timeline path.
-  const supportsSpatialized2D = supports('useSpatializedMotion', [
-    'spatialized2d',
-  ])
-  const supportsLegacyElementAnimation = supports('useAnimation', ['element'])
+  // element playback or is falling back to the web timeline path.
+  const supportsElementPlayback = supports('useAnimation', ['element'])
+  const supportsStatic3DPlayback = supports('useAnimation', ['static3d'])
   const suppressionTimerRef = useRef<ReturnType<typeof setInterval> | null>(
     null,
   )
   const latestStyleRef = useRef<CSSProperties>({})
 
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     from: {
       transform: { translate: { x: 0, y: 0, z: 0 } },
     },
@@ -178,17 +176,17 @@ export default function TransformTranslatePage() {
             Runtime Capability Probe
           </h4>
           <div className="font-mono">
-            supports(useSpatializedMotion, ['spatialized2d'])=
-            {String(supportsSpatialized2D)}
+            supports(useAnimation, ['element'])=
+            {String(supportsElementPlayback)}
           </div>
           <div className="font-mono">
-            supports(useAnimation, ['element'])=
-            {String(supportsLegacyElementAnimation)}
+            supports(useAnimation, ['static3d'])=
+            {String(supportsStatic3DPlayback)}
           </div>
           <div className="mt-2 text-sky-50/90">
-            {supportsSpatialized2D
-              ? 'Native spatialized2d motion is available in this runtime.'
-              : 'Native spatialized2d motion is unavailable in this runtime. If playState changes but the panel does not move, the page may be using the web fallback path.'}
+            {supportsElementPlayback
+              ? 'Native element motion is available in this runtime.'
+              : 'Native element motion is unavailable in this runtime. If playState changes but the panel does not move, the page may be using the web fallback path.'}
           </div>
         </div>
         <Log lines={lines} />

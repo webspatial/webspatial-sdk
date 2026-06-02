@@ -2,7 +2,7 @@
 
 三个 `SpatializedElement` 子类共享场景定位，但使用**不同的 native 写入路径**。Timeline 评估器、会话状态机和 Portal 抑制逻辑在 TypeScript 中共享；native 将采样结果应用到 `element.transform`（2D / Dynamic3D）或 `modelTransform`（Static3D）。Entity 动画保持**独立**栈（`useAnimation` + `EntityAnimationManager`）。
 
-本设计统一了**面向开发者**的配置（`SpatializedMotionConfig`、`SpatializedSegmentConfig`、`SpatializedPlaybackApi`），并通过**绑定目标**（`animation` 被传给哪个组件的 `xr-animation` prop 时自动确定）路由到单一 Core 控制器和单一 React hook。`useSpatializedMotion` 的所有 authoring 形状（`from/to`、`timeline`、`tracks`）都会在执行前归一化为同一个 canonical `tracks` 模型。
+本设计统一了**面向开发者**的配置（`SpatializedMotionConfig`、`SpatializedSegmentConfig`、`SpatializedPlaybackApi`），并通过**绑定目标**（`animation` 被传给哪个组件的 `xr-animation` prop 时自动确定）路由到单一 Core 控制器和单一 React hook。`useAnimation` 的所有 authoring 形状（`from/to`、`timeline`、`tracks`）都会在执行前归一化为同一个 canonical `tracks` 模型。
 
 ## 设计演进
 
@@ -33,7 +33,7 @@ Plan B 扩展了架构：
 
 - 2D / Static3D / Dynamic3D 三种容器 kind 共享一种 timeline 配置形状。
 - **一个** Core 实现：`SpatializedMotionController`（按 `kind` 策略）+ 各 element 类上的 `element.motion(config)`。
-- **一个** React 入口：`useSpatializedMotion(config)` 接受 `from/to`、`tracks` 或 `timeline`（三种互斥形状）。目标在绑定时解析（config 中无 `kind`）。内部 `from/to` 和 `timeline` 编译为 `tracks`。
+- **一个** React 入口：`useAnimation(config)` 接受 `from/to`、`tracks` 或 `timeline`（三种互斥形状）。目标在绑定时解析（config 中无 `kind`）。内部 `from/to` 和 `timeline` 编译为 `tracks`。
 - 旧版 `useAnimation` + `animation` prop 作为 2D 废弃路径保留。
 - 伞式 spec + 按 kind 子 spec；2D 为 Web RAF + 抑制行为的参考。
 
@@ -41,7 +41,7 @@ Plan B 扩展了架构：
 
 ```mermaid
 flowchart TB
-  Hook["useSpatializedMotion(config)"] --> Binding["animation binding\n(目标延迟)"]
+  Hook["useAnimation(config)"] --> Binding["animation binding\n(目标延迟)"]
   Binding --> |"xr-animation on enable-xr"| Resolve2D["目标: spatialized2d"]
   Binding --> |"xr-animation on Model"| Resolve3D["目标: static3d"]
   Binding --> |"xr-animation on Reality"| ResolveD3["目标: dynamic3d"]
@@ -73,7 +73,7 @@ flowchart TB
 
 | 模块 | 角色 |
 |------|------|
-| `useSpatializedMotion` | 公共 hook（tuple 返回 `[animation, api, style]`）；接受 `from/to` 或 `tracks` 配置；绑定前与目标无关 |
+| `useAnimation` | 公共 hook（tuple 返回 `[animation, api, style]`）；接受 `from/to` 或 `tracks` 配置；绑定前与目标无关 |
 | `useMotionController` + `createMotionBinding` + `createPlaybackApi` | 共享接线 |
 
 ## 共享类型（Core）
@@ -92,7 +92,7 @@ flowchart TB
 
 ## 目标解析（Target Resolution）
 
-`useSpatializedMotion` 返回的 `animation` binding 与**目标无关**。目标在绑定时解析：
+`useAnimation` 返回的 `animation` binding 与**目标无关**。目标在绑定时解析：
 
 1. React 组件接收 `xr-animation={animation}` prop。
 2. 组件类型决定目标：`enable-xr` → `spatialized2d`、`<Model>` → `static3d`、`<Reality>` → `dynamic3d`。
@@ -173,9 +173,9 @@ stateDiagram-v2
 Plan A 路径（`useAnimation` + `animation` prop）作为薄兼容层保留：
 
 1. 用于 SpatialDiv 的 `useAnimation(config)` 继续正常工作。
-2. 旧版路径内部继续保留自己的 native segment 行为；`useSpatializedMotion` 不再降级进入该命令路径。
+2. 旧版路径内部继续保留自己的 native segment 行为；`useAnimation` 不再降级进入该命令路径。
 3. `animation` prop 路径不使用 `SpatializedMotionController`；保留自有会话管理。
-4. 新代码 SHOULD 使用 `useSpatializedMotion({ from, to, duration })`，提供相同的单段体验。
+4. 新代码 SHOULD 使用 `useAnimation({ from, to, duration })`，提供相同的单段体验。
 
 ## Portal 抑制（统一规则）
 

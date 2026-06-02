@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import React, { StrictMode } from 'react'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { useSpatializedMotion } from './useSpatializedMotion'
+import { useAnimation } from './useSpatializedMotion'
 
 const SIMPLE_ENTRANCE_CONFIG = {
   from: {
@@ -23,9 +23,7 @@ function createMockElement(id = 'motion-element-1') {
 
 describe('useSpatializedMotion tuple api', () => {
   test('2D bind starts playback and updates style', async () => {
-    const { result } = renderHook(() =>
-      useSpatializedMotion(SIMPLE_ENTRANCE_CONFIG),
-    )
+    const { result } = renderHook(() => useAnimation(SIMPLE_ENTRANCE_CONFIG))
 
     expect(result.current[0].__propName).toBe('xr-animation')
     expect(result.current[2].opacity).toBe(0)
@@ -57,7 +55,7 @@ describe('useSpatializedMotion tuple api', () => {
 
   test('static3d binding resolves target and keeps style empty', async () => {
     const { result } = renderHook(() =>
-      useSpatializedMotion({
+      useAnimation({
         duration: 1,
         autoStart: false,
         tracks: [
@@ -84,7 +82,7 @@ describe('useSpatializedMotion tuple api', () => {
   test('web pause syncs style to timeline sample at elapsed progress', async () => {
     vi.useFakeTimers()
     const { result } = renderHook(() =>
-      useSpatializedMotion({
+      useAnimation({
         duration: 5,
         autoStart: false,
         tracks: [
@@ -122,7 +120,7 @@ describe('useSpatializedMotion tuple api', () => {
 
   test('timeline authoring shape compiles before playback', async () => {
     const { result } = renderHook(() =>
-      useSpatializedMotion({
+      useAnimation({
         duration: 4,
         autoStart: false,
         timeline: {
@@ -163,10 +161,9 @@ describe('useSpatializedMotion tuple api', () => {
       <StrictMode>{children}</StrictMode>
     )
 
-    const { result } = renderHook(
-      () => useSpatializedMotion(SIMPLE_ENTRANCE_CONFIG),
-      { wrapper },
-    )
+    const { result } = renderHook(() => useAnimation(SIMPLE_ENTRANCE_CONFIG), {
+      wrapper,
+    })
 
     await act(async () => {
       result.current[0].__setElement?.(
