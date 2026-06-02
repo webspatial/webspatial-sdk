@@ -3,7 +3,6 @@ import {
   cleanup,
   render,
   renderHook,
-  screen,
   within,
 } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -96,7 +95,7 @@ describe('useBootSpatial (internal) / SpatialBoot', () => {
     expect(onError).toHaveBeenCalledWith(result.current.error)
   })
 
-  it('SpatialBoot (default gate) hides children until boot succeeds', async () => {
+  it('SpatialBoot hides children until boot succeeds', async () => {
     setPuppeteerUserAgent()
     let resolveLoad!: (impl: SpatialImplementation) => void
     __setSpatialImplLoaderForTests(
@@ -107,13 +106,12 @@ describe('useBootSpatial (internal) / SpatialBoot', () => {
     )
 
     const view = render(
-      <SpatialBoot fallback={<span data-testid="loading">loading</span>}>
+      <SpatialBoot>
         <span data-testid="child-gated">child</span>
       </SpatialBoot>,
     )
 
     const scoped = within(view.container)
-    expect(scoped.getByTestId('loading')).toBeTruthy()
     expect(scoped.queryByTestId('child-gated')).toBeNull()
 
     await act(async () => {
@@ -123,19 +121,15 @@ describe('useBootSpatial (internal) / SpatialBoot', () => {
     })
 
     expect(scoped.getByTestId('child-gated')).toBeTruthy()
-    expect(scoped.queryByTestId('loading')).toBeNull()
   })
 
-  it('SpatialBoot (default gate) does not mount children on boot failure; onError runs', async () => {
+  it('SpatialBoot does not mount children on boot failure; onError runs', async () => {
     setPuppeteerUserAgent()
     __setSpatialImplLoaderForTests(() => Promise.reject(new Error('fail')))
     const onError = vi.fn()
 
     const view = render(
-      <SpatialBoot
-        fallback={<span data-testid="loading-fail">loading</span>}
-        onError={onError}
-      >
+      <SpatialBoot onError={onError}>
         <span data-testid="child-fail">child</span>
       </SpatialBoot>,
     )
@@ -149,30 +143,6 @@ describe('useBootSpatial (internal) / SpatialBoot', () => {
     expect(scoped.queryByTestId('child-fail')).toBeNull()
     expect(onError).toHaveBeenCalledTimes(1)
     expect(onError.mock.calls[0][0]).toBeInstanceOf(WebSpatialBootError)
-  })
-
-  it('SpatialBoot with gate={false} renders children immediately (phase-2)', () => {
-    render(
-      <SpatialBoot gate={false}>
-        <span data-testid="child">child</span>
-      </SpatialBoot>,
-    )
-
-    expect(screen.getByTestId('child')).toBeTruthy()
-  })
-
-  it('warns in dev when fallback is passed with gate={false}', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
-    render(
-      <SpatialBoot gate={false} fallback={<span>ignored</span>}>
-        <span>child</span>
-      </SpatialBoot>,
-    )
-
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('requires gate={true}'),
-    )
   })
 
   it('manual boot() re-invokes bootSpatial', async () => {

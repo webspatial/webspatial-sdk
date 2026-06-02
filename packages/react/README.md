@@ -37,7 +37,7 @@ export function AppRoot() {
 }
 ```
 
-Optional loading UI while the spatial chunk loads: pass `fallback={…}` (default is blank).
+While boot is in flight, `children` are not mounted (render nothing). Show loading UI in your app layout around `<SpatialBoot>` if needed.
 
 **CSR-only optimization:** you may `await bootSpatial()` before `createRoot().render(<SpatialBoot>…)` to shorten the blank period; Next.js / Remix typically use `<SpatialBoot>` inside a `'use client'` subtree instead.
 
