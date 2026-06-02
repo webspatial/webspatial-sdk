@@ -2,30 +2,12 @@ import CryptoKit
 import Foundation
 import RealityKit
 
-/// Serializes remote URL → local file for each distinct URL string and uses a unique on-disk name
-/// (hash + basename) so concurrent loads never `removeItem` a path another `TextureResource` read
-/// is using (the old `Documents/lastPathComponent` scheme collided across scenes / retries).
-private actor RemoteResourceLoadCache {
-    static let shared = RemoteResourceLoadCache()
-
-    private var inFlight: [String: Task<URL, Error>] = [:]
-
-    func localFileURL(forRemote urlString: String) async throws -> URL {
-        if let existing = inFlight[urlString] {
-            return try await existing.value
-        }
-        let task = Task {
-            try await Self.downloadInstallIfNeeded(urlString: urlString)
-        }
-        inFlight[urlString] = task
-        do {
-            let url = try await task.value
-            inFlight[urlString] = nil
-            return url
-        } catch {
-            inFlight[urlString] = nil
-            throw error
-        }
+/// Downloads remote URL → local file using a unique on-disk name (hash + basename).
+/// Each call downloads independently — concurrent loads for the same URL each write to their
+/// own temp file and atomically rename to the same destination (last writer wins).
+private enum RemoteResourceLoadCache {
+    static func localFileURL(forRemote urlString: String) async throws -> URL {
+        try await downloadInstallIfNeeded(urlString: urlString)
     }
 
     private static func downloadInstallIfNeeded(urlString: String) async throws -> URL {
@@ -169,10 +151,10 @@ class Dynamic3DManager {
             loadComplete(.success(localUrl))
             return
         }
-        // load net file — coalesced per URL + unique cache filename (see RemoteResourceLoadCache).
+        // load net file — each call downloads independently to a unique cache filename.
         Task {
             do {
-                let url = try await RemoteResourceLoadCache.shared.localFileURL(forRemote: urlString)
+                let url = try await RemoteResourceLoadCache.localFileURL(forRemote: urlString)
                 loadComplete(.success(url))
             } catch {
                 loadComplete(.failure(error))

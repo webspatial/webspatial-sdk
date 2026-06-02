@@ -70,6 +70,7 @@ import SpatialDivTest from './src/pages/spatialDivTest/index'
 import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
 import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
+import TextureConcurrency from './src/pages/texture-concurrency/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -257,6 +258,10 @@ function App() {
                 <Route path="/cleanup/model" element={<CleanupModel />} />
                 <Route path="/cleanup/iframe" element={<CleanupIframe />} />
                 <Route path="/unit-convert" element={<UnitConvertTest />} />
+                <Route
+                  path="/texture-concurrency"
+                  element={<TextureConcurrency />}
+                />
               </Routes>
             </ErrorBoundary>
           </Suspense>
