@@ -65,6 +65,7 @@
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
     "@changesets/cli": "^2.29.2",
+    "@fission-ai/openspec": "^1.4.0",
     "@vitest/coverage-v8": "^4.1.8",
     "concurrently": "^8.2.2",
     "lint-staged": "^15.2.10",

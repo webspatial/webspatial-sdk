@@ -1,8 +1,11 @@
 # WebSpatial React SDK：`SpatialBoot` 产品对齐稿
 
-> **Status:** Implemented in `@webspatial/react-sdk` (see `packages/react/src/runtime/SpatialBoot.tsx`; boot state via internal `useBootSpatial.ts`)  
-> **Phase 1 (public):** Boot completes before spatial UI mounts; boot failure → `onError`, no children  
-> **Current contract:** no public `gate` / `fallback`; waiting state renders `null`  
+> **Status:** Implemented in `@webspatial/react-sdk` (see `packages/react/src/runtime/SpatialBoot.tsx`; boot state via internal `useBootSpatial.ts`)
+>
+> **Phase 1 (public):** Boot completes before spatial UI mounts; boot failure → `onError`, no children
+>
+> **Current contract:** no public `gate` / `fallback`; waiting state renders `null`
+>
 > **Phase 2 (planned):** optional public `useBootSpatial`, richer boot-progress APIs
 
 **Related material**

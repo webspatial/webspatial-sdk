@@ -115,7 +115,7 @@ export function useBootSpatialEager(
   }
 }
 
-/** Eager entry `SpatialBoot` — same gate semantics, instant ready status. */
+/** Eager entry `SpatialBoot` — same public props, instant ready status. */
 export const SpatialBootEager = createSpatialBoot(useBootSpatialEager)
 
 // Test-only: reset the one-shot warning latch so multiple test runs
