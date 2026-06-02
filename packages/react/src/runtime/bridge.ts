@@ -137,7 +137,10 @@ export function loadSpatialImpl(): Promise<SpatialImplementation | null> {
 // — it is an internal coupling between the bridge and the eager entry.
 // The double-underscore prefix matches the test-only helpers below to
 // signal "internal" without prefixing every export with `internal_`.
-export function __internalSetSpatialImpl(impl: SpatialImplementation): void {
+export function __internalSetSpatialImpl(
+  impl: SpatialImplementation,
+  _registrationToken?: unknown,
+): void {
   if (spatialImpl !== null) return
   spatialImpl = impl
   loadAttempt = 1
