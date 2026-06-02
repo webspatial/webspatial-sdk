@@ -121,6 +121,7 @@
 - [x] Update `specs/spatialized-element-motion/spec.md` and `.zh.md` to state that native `useSpatializedMotion` continues on the canonical tracks model
 - [x] Controller / bridge / native manager follow-up: remove segment downgrade from the `useSpatializedMotion` execution path while keeping legacy `useAnimation` behavior separate
 - [x] Tests follow-up: cover `from/to` and `tracks` authoring shapes reaching the same canonical tracks-native path; percentage-key `timeline` coverage remains in Phase 10
+- [x] 2D native suppression stays scoped to active native playback and clears on terminal / unbind
 
 ## Phase 10 — Timeline percentage keyframe config + timingFunction unification
 
