@@ -254,19 +254,25 @@ export class SpatializedMotionController
     if (!this.kind) return null
     if (this.kind === 'spatialized2d') {
       const nativeState = this.nativeSession?.state
-      if (nativeState === 'running' || nativeState === 'paused') {
-        const active = this.getActiveProperties()
-        const subset = this.config.tracks.filter(t =>
-          active.includes(t.property),
-        )
-        if (subset.length === 0) return null
-        return getPolicy(this.kind).getSuppressedFields({
-          ...this.config,
-          tracks: subset,
-        })
+      const nativeSuppressionReleased =
+        this.nativeCapable &&
+        !this.pendingPlay &&
+        !this.nativeControlling &&
+        (!nativeState || nativeState === 'idle' || nativeState === 'finished')
+
+      if (nativeSuppressionReleased) {
+        return null
       }
-      if (this.webState !== 'running' && this.webState !== 'paused') return null
-      return getPolicy(this.kind).getSuppressedFields(this.config)
+      if (nativeState !== 'running' && nativeState !== 'paused') {
+        return null
+      }
+      const active = this.getActiveProperties()
+      const subset = this.config.tracks.filter(t => active.includes(t.property))
+      if (subset.length === 0) return null
+      return getPolicy(this.kind).getSuppressedFields({
+        ...this.config,
+        tracks: subset,
+      })
     }
     const s = this.nativeSession?.state
     if (!s || (s !== 'running' && s !== 'paused')) return null
@@ -281,7 +287,6 @@ export class SpatializedMotionController
 
   play(): void {
     if (this.destroyed) return
-
     if (!this.kind) {
       if (!this.pendingPlay) {
         this.pendingPlay = true

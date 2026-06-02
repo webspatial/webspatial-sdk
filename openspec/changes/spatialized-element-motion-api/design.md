@@ -182,10 +182,12 @@ The Plan A path (`useAnimation` + `animation` prop) is retained as a thin compat
 
 | Animated field | Suppression scope | Release trigger |
 |----------------|-------------------|-----------------|
-| `opacity` | Property-level: only `opacity` sync suppressed | Session terminal (finished / stop / reset) |
-| Any `transform.*` | Transform-wide: entire `updateTransform(matrix)` suppressed | Session terminal |
+| `opacity` | Property-level: only `opacity` sync suppressed | Session terminal / unbind |
+| Any `transform.*` | Transform-wide: entire `updateTransform(matrix)` suppressed | Session terminal / unbind |
 
-Suppression applies to both legacy `animation` prop sessions and `xr-animation` binding sessions. All three termination methods (`stop`, `reset`, `finish`) release suppression.
+Suppression applies to both legacy `animation` prop sessions and `xr-animation` binding sessions. For `spatialized2d`, suppression follows active native playback state only.
+
+The release conditions remain terminal-only: `finish`, `stop`, `reset`, and `unbind` clear suppression. The purpose is to prevent Portal DOM sync from overwriting native intermediate values while native playback is in flight.
 
 ## Native Timeline Evaluation
 
