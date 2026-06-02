@@ -35,7 +35,6 @@ declare global {
     WebSpatailNativeVersion: string
 
     __webspatialsdk__?: {
-      XR_ENV?: string
       'natvie-version'?: string
       'react-sdk-version'?: string
       'core-sdk-version'?: string
