@@ -9,14 +9,14 @@
 // Requirement (its hooks/utility-functions branch) cannot regress silently.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  convertCoordinate,
-  __resetConvertCoordinateWarningForTests,
-} from '../utils/convertCoordinate'
+import { convertCoordinate } from '../utils/convertCoordinate'
 import { enableDebugTool } from '../utils/debugTool'
 import { initScene } from '../initScene'
 import { WebSpatialRuntime } from '../webSpatialRuntime'
-import { resetRuntimeCacheForTests } from '@webspatial/core-sdk/runtime'
+import {
+  resetRuntimeCacheForTests,
+  WebSpatialRuntimeError,
+} from '@webspatial/core-sdk/runtime'
 import {
   __resetSpatialBridgeForTests,
   __setSpatialImplLoaderForTests,
@@ -48,7 +48,6 @@ function resetEnv(): void {
   // freshly stubbed userAgent. Without this, supports() would observe the
   // first-test snapshot for the entire suite.
   resetRuntimeCacheForTests()
-  __resetConvertCoordinateWarningForTests()
   setPlainWebUserAgent()
   // Strip diagnostic props the debug-tool tests inject onto window.
   if (typeof window !== 'undefined') {
@@ -111,45 +110,31 @@ describe('initScene (spec tasks.md §14.1 + Group B "initScene" row)', () => {
 })
 
 // ---------------------------------------------------------------------------
-// §14.2 convertCoordinate gracefully returns input unchanged
+// §14.2 convertCoordinate fail-fast when unsupported
 // ---------------------------------------------------------------------------
 
-describe('convertCoordinate (spec tasks.md §14.2 + runtime-capabilities "convertCoordinate graceful degradation")', () => {
-  it('without bootSpatial(): returns the input position unchanged (referential equality)', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+describe('convertCoordinate (convert-coordinate-fail-fast + runtime-capabilities "convertCoordinate fail-fast" Scenarios)', () => {
+  it('in plain web: throws WebSpatialRuntimeError', async () => {
     const position = { x: 1, y: 2, z: 3 }
-    const out = await convertCoordinate(position, { from: window, to: window })
-    expect(out).toBe(position)
-    // Per the runtime-capabilities Scenario the SDK MAY emit at most one
-    // console.warn — we accept zero or one but never throw.
-    expect(warnSpy.mock.calls.length).toBeLessThanOrEqual(1)
-    warnSpy.mockRestore()
+    await expect(
+      convertCoordinate(position, { from: window, to: window }),
+    ).rejects.toBeInstanceOf(WebSpatialRuntimeError)
   })
 
-  it('emits the degradation warning at most once across repeated calls (one-shot latch)', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const position = { x: 1, y: 2, z: 3 }
-    const garbageRef = { not: 'a valid ref' } as any
-
-    // Multiple failing calls (per-frame usage pattern) must not flood console.
-    for (let i = 0; i < 5; i++) {
-      await convertCoordinate(position, { from: garbageRef, to: garbageRef })
-    }
-
-    expect(warnSpy.mock.calls.length).toBeLessThanOrEqual(1)
-    warnSpy.mockRestore()
-  })
-
-  it('without bootSpatial(): does NOT throw even with arbitrary refs', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  it('in plain web: throws WebSpatialRuntimeError for invalid refs', async () => {
     const position = { x: 0, y: 0, z: 0 }
     const garbageRef = { not: 'a valid ref' } as any
-    const out = await convertCoordinate(position, {
-      from: garbageRef,
-      to: garbageRef,
-    })
-    expect(out).toBe(position)
-    warnSpy.mockRestore()
+    await expect(
+      convertCoordinate(position, { from: garbageRef, to: garbageRef }),
+    ).rejects.toMatchObject({ capability: 'convertCoordinate' })
+  })
+
+  it('in WebSpatial runtime before boot: throws with bootSpatial guidance', async () => {
+    setPuppeteerUserAgent()
+    const position = { x: 1, y: 2, z: 3 }
+    await expect(
+      convertCoordinate(position, { from: window, to: window }),
+    ).rejects.toThrow(/bootSpatial\(\)/)
   })
 })
 
