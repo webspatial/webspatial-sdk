@@ -2,14 +2,11 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'spatial-next-min',
+  title: 'spatial-next-eager-min',
   description:
-    'Minimal Next.js 15 App Router demo for the @webspatial/react-sdk lazy default entry.',
+    'Minimal Next.js 15 App Router demo for the @webspatial/react-sdk/eager entry.',
 }
 
-// Root layout is a Server Component (no 'use client'). It owns the HTML
-// shell and the nav; per-page boot wiring lives in each page's own
-// Client Component so the demo stays on one entry root.
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
@@ -31,13 +28,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         >
           <Link href="/" style={{ fontWeight: 700, textDecoration: 'none' }}>
-            spatial-next-min
+            spatial-next-eager-min
           </Link>
           <span aria-hidden style={{ color: '#aaa' }}>
             |
           </span>
-          <Link href="/lazy">/lazy</Link>
-          <Link href="/capability-wrapper">/capability-wrapper</Link>
+          <Link href="/eager">/eager</Link>
           <Link href="/server-only-util">/server-only-util</Link>
         </header>
         <main style={{ padding: 24 }}>{children}</main>

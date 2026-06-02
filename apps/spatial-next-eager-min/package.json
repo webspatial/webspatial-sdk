@@ -1,12 +1,12 @@
 {
-  "name": "spatial-next-min",
+  "name": "spatial-next-eager-min",
   "private": true,
   "version": "0.0.0",
-  "description": "Minimal Next.js 15 App Router + React 18 + @webspatial/react-sdk lazy-entry example.",
+  "description": "Minimal Next.js 15 App Router + React 18 + @webspatial/react-sdk/eager example.",
   "scripts": {
-    "dev": "next dev --port 3030",
+    "dev": "next dev --port 3031",
     "build": "next build",
-    "start": "next start --port 3030",
+    "start": "next start --port 3031",
     "lint": "next lint",
     "test": "tsc --noEmit"
   },

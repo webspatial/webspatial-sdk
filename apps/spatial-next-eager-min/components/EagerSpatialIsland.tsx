@@ -4,10 +4,6 @@ import { useCallback, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Model } from '@webspatial/react-sdk/eager'
 
-// Client-only spatial subtree for `@webspatial/react-sdk/eager`.
-// Import via `next/dynamic(..., { ssr: false })` from a Server Component page
-// so eager spatial primitives never run during SSR (spec CSR-only routing).
-
 export function EagerSpatialIsland() {
   const [spatialTapCount, setSpatialTapCount] = useState(0)
   const onFirstCellSpatialTap = useCallback(() => {

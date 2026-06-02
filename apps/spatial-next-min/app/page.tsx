@@ -9,9 +9,8 @@ export default function HomePage() {
     <div>
       <h1>spatial-next-min</h1>
       <p>
-        Worked examples of <code>@webspatial/react-sdk</code> under Next.js 15
-        App Router. Each page exercises a different scenario from the{' '}
-        <code>lazy-load-spatial-runtime</code> spec.
+        Worked examples of the lazy default entry (
+        <code>@webspatial/react-sdk</code>) under Next.js 15 App Router.
       </p>
       <ul style={{ lineHeight: 1.8 }}>
         <li>
@@ -21,30 +20,6 @@ export default function HomePage() {
           — default lazy entry (<code>@webspatial/react-sdk</code>) wrapped in{' '}
           <code>&lt;SpatialBoot&gt;</code>. Recommended shape for web-first
           apps.
-        </li>
-        <li>
-          <Link href="/lazy-gate">
-            <strong>/lazy-gate</strong>
-          </Link>{' '}
-          — <code>&lt;SpatialBoot fallback=&#123;…&#125;&gt;</code>; optional
-          loading UI while boot completes before children mount.
-        </li>
-        <li>
-          <Link href="/eager">
-            <strong>/eager</strong>
-          </Link>{' '}
-          — eager entry (<code>@webspatial/react-sdk/eager</code>). Spatial
-          implementation is statically linked. Pure client route (no SSR shell).
-        </li>
-        <li>
-          <Link href="/eager-ssr">
-            <strong>/eager-ssr</strong>
-          </Link>{' '}
-          — <strong>SSR + eager:</strong> RSC shell reads{' '}
-          <code>User-Agent</code>; spatial UI via{' '}
-          <code>dynamic(..., &#123; ssr: false &#125;)</code> client island.
-          Supported pattern for Next.js apps that want eager without
-          server-rendering spatial primitives.
         </li>
         <li>
           <Link href="/capability-wrapper">
@@ -69,9 +44,7 @@ export default function HomePage() {
         over after <code>bootSpatial()</code> resolves.
       </p>
       <p>
-        See <code>README.md</code> for the &quot;view-source&quot; SSR
-        verification checklist and the <code>&apos;use client&apos;</code>{' '}
-        boundary rules.
+        For eager-entry examples, use <code>apps/spatial-next-eager-min</code>.
       </p>
     </div>
   )
