@@ -2,12 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import type { CSSProperties } from 'react'
-import {
-  Model,
-  SpatialBoot,
-  useSpatialReady,
-  WebSpatialBootError,
-} from '@webspatial/react-sdk'
+import { Model, SpatialBoot, WebSpatialBootError } from '@webspatial/react-sdk'
 import { LazyRealityScene } from '@/components/LazyRealityScene'
 
 // Why 'use client': facades and hooks from the default entry require a client
@@ -23,17 +18,13 @@ function LazyDemoContent() {
   const onFirstCellSpatialTap = useCallback(() => {
     setSpatialTapCount(c => c + 1)
   }, [])
-  const ready = useSpatialReady()
 
   return (
     <>
       <p>
-        useSpatialReady: <strong>{ready ? 'true' : 'false'}</strong> (true once
-        this subtree has mounted after boot)
-      </p>
-      <p>
-        On plain web, boot resolves quickly. In a WebSpatial runtime the spatial
-        chunk must load before this content appears.
+        This subtree mounts after <code>SpatialBoot</code> resolves. On plain
+        web boot resolves quickly; in a WebSpatial runtime the spatial chunk
+        must load before this content appears.
       </p>
 
       <h2 style={{ marginTop: 24 }}>SpatialDiv grid</h2>

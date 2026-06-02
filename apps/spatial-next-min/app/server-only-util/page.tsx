@@ -10,23 +10,16 @@
 // spatial chunk (verify via README "view-source" checklist).
 
 import { headers } from 'next/headers'
+import { detectWebSpatialRequest } from '@/lib/webspatial-request'
 
 export const metadata = {
   title: '/server-only-util — UA-only SSR (spatial-next-min)',
 }
 
-/** Fixture-only heuristic — match official WebSpatial UA docs in production apps. */
-function hasWebSpatialShellToken(userAgent: string): boolean {
-  return (
-    /\b(WSAppShell|PicoWebApp)\b/i.test(userAgent) ||
-    /\bPuppeteer\b/i.test(userAgent)
-  )
-}
-
 export default async function ServerOnlyUtilPage() {
   const requestHeaders = await headers()
   const requestUserAgent = requestHeaders.get('user-agent') ?? '(unset)'
-  const hasWebSpatialToken = hasWebSpatialShellToken(requestUserAgent)
+  const runtime = detectWebSpatialRequest(requestUserAgent)
 
   return (
     <section>
@@ -53,19 +46,16 @@ export default async function ServerOnlyUtilPage() {
           wordBreak: 'break-all',
         }}
       >
-        {JSON.stringify(
-          { userAgent: requestUserAgent, hasWebSpatialToken },
-          null,
-          2,
-        )}
+        {JSON.stringify({ userAgent: requestUserAgent, runtime }, null, 2)}
       </pre>
       <p>Notes:</p>
       <ul>
         <li>
-          <code>hasWebSpatialToken</code> is a coarse fixture flag (shell tokens
-          like <code>WSAppShell</code> / <code>PicoWebApp</code>). Production
-          apps should follow the UA rules in official docs, not copy this regex
-          blindly.
+          Call <code>detectWebSpatialRequest(userAgent)</code> and branch on{' '}
+          <code>runtime.isWebSpatial</code>. The helper also returns{' '}
+          <code>runtime.platform</code> (<code>visionos</code>/
+          <code>picoos</code>/<code>unknown</code>) for product logic and
+          analytics labels.
         </li>
         <li>
           Spatial UI still boots on the client via{' '}
