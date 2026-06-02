@@ -14,7 +14,7 @@ or the source for public-facing positioning copy.
 - Consumer-shaped lazy + eager fixtures: `apps/spatial-vite-min/`
 - **React Router 7 (Remix-style) SSR:** `apps/spatial-remix-min/`
 - Next.js App Router reference: `apps/spatial-next-min/`
-- WebSpatial-runtime-heavy internal demos (eager via build alias): `apps/test-server/`
+- WebSpatial-runtime-heavy internal demos (lazy default + `<SpatialBoot>`, monorepo `src` alias): `apps/test-server/`
 
 ---
 
@@ -81,7 +81,7 @@ These were the first workshop items. **Status: decided** (2026-05); use §11 and
 | `apps/spatial-vite-min`  | **Consumer-shaped** validation: published `exports`, lazy + eager pages, no SDK `src/` alias.    |
 | `apps/spatial-next-min`  | **Next.js 15** SSR / RSC reference (`@webspatial/react-sdk`).                                    |
 | `apps/spatial-remix-min` | **React Router 7** (Remix-style) + **Vite SSR** reference.                                       |
-| `apps/test-server`       | **WebSpatial-runtime-heavy** validation; may alias SDK `src` and eager entry for fast iteration. |
+| `apps/test-server`       | **WebSpatial-runtime-heavy** validation; aliases lazy default `src/index.ts` + `<SpatialBoot>`; `@webspatial/react-sdk/eager` optional. |
 
 Product should confirm this split matches how **you** talk about “official
 demos” externally.

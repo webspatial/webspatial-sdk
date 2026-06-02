@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter as Router, Routes, Route } from 'react-router-dom'
+import { SpatialBoot, WebSpatialBootError } from '@webspatial/react-sdk'
 import Sidebar from './src/components/Sidebar'
 import Home from './src/pages/Home'
 // Static route registry: add your test component here to expose it in the SPA
@@ -275,7 +276,13 @@ const init = () => {
 
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <App />
+      <SpatialBoot
+        onError={(err: WebSpatialBootError) => {
+          console.error('[test-server] bootSpatial failed', err)
+        }}
+      >
+        <App />
+      </SpatialBoot>
     </React.StrictMode>,
   )
 }
