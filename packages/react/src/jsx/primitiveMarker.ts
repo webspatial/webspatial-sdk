@@ -7,8 +7,8 @@
 // `Model` / `Reality` imported from `internal/facades-client`. That breaks for
 // the eager entry (`src/eager.ts`), whose `<Model>` resolves to the REAL
 // implementation from `./spatial` — a different object identity than the
-// facade the JSX runtime compares against — so `<Model enable-xr>` fell
-// through to the 2D-container wrap path.
+// default-entry facade — so a reference-equality check failed and
+// `<Model enable-xr>` fell through to the 2D-container wrap path.
 //
 // We instead brand BOTH the facade and the real components with a stable
 // string-valued, non-enumerable property. A string literal (not a `Symbol`)

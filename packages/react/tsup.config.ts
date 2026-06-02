@@ -63,9 +63,9 @@ const versionDefine = {
 // `dist/index.js` (see dist-identifier-scan).
 //
 // `@webspatial/react-sdk/internal/facades-client` is treated as external too:
-// `src/jsx/jsx-shared.ts` reaches the facade trio through that subpath so
-// the published `dist/jsx/jsx-runtime.js` chunk graph terminates at the
-// `'use client'` boundary in `dist/internal/facades-client.js` (see
+// `src/jsx/jsx-shared.ts` reaches the HOC facade factories through that
+// subpath so the published `dist/jsx/jsx-runtime.js` chunk graph terminates
+// at the `'use client'` boundary in `dist/internal/facades-client.js` (see
 // `src/internal/facades-client.ts` for the full RSC-compatibility rationale).
 // All other dist entries reach facades through the relative path
 // (`src/facades/index.ts`), so this externalisation does NOT round-trip
@@ -133,7 +133,7 @@ const ensureVersionStamp = (filePath: string): void => {
 export default defineConfig([
   // Bundle — default entry + spatial chunk + eager entry + internal
   // support subpaths + JSX runtime entries. The JSX runtime reaches the
-  // facade trio only through the external package self-reference
+  // HOC facade factories only through the external package self-reference
   // `@webspatial/react-sdk/internal/facades-client`, so even though all
   // entries are emitted by one tsup config, the JSX runtime's static graph
   // still terminates at the `'use client'` boundary instead of importing
@@ -182,13 +182,13 @@ export default defineConfig([
       // allowlist in package.json.
       'runtime/registerEagerEntry': 'src/runtime/registerEagerEntry.ts',
       spatial: 'src/spatial/index.ts',
-      // Internal `'use client'` boundary used exclusively by the JSX
-      // runtime (Bundle 2 below). Lives in this bundle so it shares the
-      // facade source files with `index.ts` / `eager.ts` via the same
-      // splitting graph — preserving the contract that
-      // `import { Model } from '@webspatial/react-sdk'` resolves to the
-      // SAME module-level binding (and therefore the SAME function
-      // identity) that the JSX runtime sees via the external subpath.
+      // Internal `'use client'` boundary used by the JSX runtime. It is
+      // emitted in this same splitting graph, but `jsx-shared.ts` reaches
+      // it through the external package self-reference so consumer RSC
+      // compilers stop at this public client boundary instead of walking
+      // into hook-bearing facade modules. `Model` / `Reality`
+      // short-circuiting is handled by primitive markers, not by comparing
+      // facade function identity.
       'internal/facades-client': 'src/internal/facades-client.ts',
       'jsx/jsx-runtime': 'src/jsx/jsx-runtime.ts',
       'jsx/jsx-dev-runtime': 'src/jsx/jsx-dev-runtime.ts',
@@ -213,7 +213,7 @@ export default defineConfig([
       // Negative cases per the same Requirement / spec preamble:
       //   - `dist/jsx/jsx-runtime.js`, `dist/jsx/jsx-dev-runtime.js`
       //     do NOT use React hooks and MUST stay server-callable →
-      //     MUST NOT carry the directive (Bundle 2 below)
+      //     MUST NOT carry the directive
       //   - `dist/spatial.js` is the dynamic-import target (NOT a static
       //     RSC entry) → MUST NOT carry the directive
       // The §13.1 build-output assertion enforces both polarities.
@@ -236,7 +236,7 @@ export default defineConfig([
       ensureVersionStamp(resolve(__dirname, 'dist/spatial.js'))
       // Internal facade boundary — the entire point of this entry is to
       // be a `'use client'` stop for the JSX runtime (see
-      // `src/internal/facades-client.ts` and Bundle 2's external config).
+      // `src/internal/facades-client.ts` and the `externals` list above).
       ensureRscClientBoundary(
         resolve(__dirname, 'dist/internal/facades-client.js'),
       )
