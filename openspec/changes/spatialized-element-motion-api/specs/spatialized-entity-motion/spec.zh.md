@@ -1,6 +1,6 @@
 # 空间化 Entity 动画（timeline）
 
-> **状态：推迟。** 容器动画（`SpatializedMotionController` / `useSpatializedMotion`）**不**包含 `kind: 'entity'`。Entity 动画继续通过 `useAnimation` + `AnimateTransform`。以下需求在专项变更落地前为愿景性质。
+> **状态：推迟。** 容器动画（`SpatializedMotionController` / `useAnimation`）**不**包含 `kind: 'entity'`。Entity 动画继续通过 `useEntityAnimation` + `AnimateTransform`。以下需求在专项变更落地前为愿景性质。
 
 ## 新增需求
 

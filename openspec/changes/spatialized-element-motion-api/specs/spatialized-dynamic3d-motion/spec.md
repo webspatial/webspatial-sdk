@@ -16,7 +16,7 @@ Implementation MUST use `SpatializedMotionController` with the `dynamic3d` targe
 
 #### Scenario: Reality xr-animation binding
 
-- **WHEN** `<Reality xr-animation={binding} />` receives `animation` from `useSpatializedMotion(config)`, resolving the target to `dynamic3d`
+- **WHEN** `<Reality xr-animation={binding} />` receives `animation` from `useAnimation(config)`, resolving the target to `dynamic3d`
 - **THEN** play before bind MAY queue; after bind native playback MUST drive the Reality root without conflicting React transform writes (suppression analogous to 2D)
 
 ### Requirement: Entity motion stays separate

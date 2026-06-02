@@ -156,18 +156,18 @@
 
 ## Phase 12 — 将当前 `useAnimation` 重命名为 `useEntityAnimation`
 
-- [ ] 将当前公共 `useAnimation` 导出重命名为 `useEntityAnimation`
-- [ ] 从重命名后的 hook 中移除 SpatialDiv key 分流逻辑，确保 `useEntityAnimation` 仅用于 Entity
-- [ ] 将面向 Entity 的文档和示例改为 `useEntityAnimation`
-- [ ] 重构 `apps/test-server/src/pages/entity-animation/**`，改为导入 `useEntityAnimation`
-- [ ] 更新 Entity capability-check 页面及相关 runtime probe 文案，使用重命名后的 hook 名称
-- [ ] 验证重构后的 Entity `test-server` 页面仍可正常渲染并控制播放
+- [x] 将当前公共 `useAnimation` 导出重命名为 `useEntityAnimation`
+- [x] 从重命名后的 hook 中移除 SpatialDiv key 分流逻辑，确保 `useEntityAnimation` 仅用于 Entity
+- [x] 将面向 Entity 的文档和示例改为 `useEntityAnimation`
+- [x] 重构 `apps/test-server/src/pages/entity-animation/**`，改为导入 `useEntityAnimation`
+- [x] 更新 Entity capability-check 页面及相关 runtime probe 文案，使用重命名后的 hook 名称
+- [x] 验证重构后的 Entity `test-server` 页面仍可正常渲染并控制播放
 
 ## Phase 13 — 将 `useSpatializedMotion` 重命名为 `useAnimation`
 
-- [ ] 将公共 `useSpatializedMotion(config)` 重命名为 `useAnimation(config)`，保持现有目标无关 timeline 语义不变
-- [ ] 更新 `@webspatial/react-sdk` 导出和仓库内 import，切换到新的空间动画 hook 名称
-- [ ] 重构 `apps/test-server/src/pages/spatial-div-motion/**`，改为使用新的 `useAnimation` 导入
-- [ ] 重构 `apps/test-server/src/pages/spatial-element-motion/**`，改为使用新的 `useAnimation` 导入
-- [ ] 更新空间动画 capability-check 页面及相关 runtime probe 文案，使用重命名后的 hook 名称
-- [ ] 验证重构后的 spatialized-motion `test-server` 页面仍可正常渲染并控制播放
+- [x] 将公共 `useSpatializedMotion(config)` 重命名为 `useAnimation(config)`，保持现有目标无关 timeline 语义不变
+- [x] 更新 `@webspatial/react-sdk` 导出和仓库内 import，切换到新的空间动画 hook 名称
+- [x] 重构 `apps/test-server/src/pages/spatial-div-motion/**`，改为使用新的 `useAnimation` 导入
+- [x] 重构 `apps/test-server/src/pages/spatial-element-motion/**`，改为使用新的 `useAnimation` 导入
+- [x] 更新空间动画 capability-check 页面及相关 runtime probe 文案，使用重命名后的 hook 名称
+- [x] 验证重构后的 spatialized-motion `test-server` 页面仍可正常渲染并控制播放

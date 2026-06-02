@@ -349,7 +349,7 @@ describe('5.1.2 React playback lifecycle', () => {
       await flushPromises()
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[useAnimation]'),
+        expect.stringContaining('[useEntityAnimation]'),
         expect.anything(),
       )
       consoleSpy.mockRestore()

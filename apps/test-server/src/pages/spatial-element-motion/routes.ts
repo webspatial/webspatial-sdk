@@ -61,7 +61,8 @@ export const spatialElementMotionRoutes: SpatialElementMotionRoute[] = [
   {
     path: '/spatial-element-motion/capability-check',
     label: 'Capability Detection',
-    description: "supports('useSpatializedMotion') runtime probe.",
+    description:
+      "supports('useAnimation') runtime probe for the renamed motion hook.",
   },
   {
     path: '/spatial-element-motion/play-state',
@@ -73,7 +74,7 @@ export const spatialElementMotionRoutes: SpatialElementMotionRoute[] = [
     path: '/spatial-element-motion/perf-comparison',
     label: 'Perf Comparison',
     description:
-      'JS-driven (rAF) vs declarative (useSpatializedMotion) side-by-side FPS benchmark.',
+      'JS-driven (rAF) vs declarative (useAnimation) side-by-side FPS benchmark.',
   },
   {
     path: '/spatial-element-motion/loop-animation',

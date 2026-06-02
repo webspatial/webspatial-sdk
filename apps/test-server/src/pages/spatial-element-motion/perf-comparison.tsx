@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import { SpatialDivAnimationPageShell, btnPrimary, btnCls } from './shared'
 
 // --- Animation target values (shared between JS-driven and declarative) ---
@@ -169,9 +169,9 @@ function JSDrivenBox({ running }: { running: boolean }) {
   )
 }
 
-// --- Declarative animation box (useSpatializedMotion API) ---
+// --- Declarative animation box (useAnimation API) ---
 function DeclarativeBox({ running }: { running: boolean }) {
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     from: {
       transform: {
         translate: { x: 0, y: 0, z: 0 },
@@ -315,10 +315,9 @@ export default function PerfComparisonPage() {
         <>
           Sequential benchmark: first runs JS-driven (rAF + lerp) animation,
           then runs declarative (
-          <code className="text-cyan-300">useSpatializedMotion</code>)
-          animation. Each phase independently measures FPS via rAF interval.
-          Increase instance count to see JS-driven FPS degrade while declarative
-          stays stable.
+          <code className="text-cyan-300">useAnimation</code>) animation. Each
+          phase independently measures FPS via rAF interval. Increase instance
+          count to see JS-driven FPS degrade while declarative stays stable.
         </>
       }
     >
@@ -391,7 +390,7 @@ export default function PerfComparisonPage() {
           }`}
         >
           <h3 className="mb-2 text-sm font-semibold text-green-300">
-            Declarative (useSpatializedMotion)
+            Declarative (useAnimation)
             {declRunning && (
               <span className="ml-2 text-xs text-yellow-300">● ACTIVE</span>
             )}

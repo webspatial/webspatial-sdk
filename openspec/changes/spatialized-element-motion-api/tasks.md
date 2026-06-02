@@ -156,18 +156,18 @@
 
 ## Phase 12 — Rename current `useAnimation` to `useEntityAnimation`
 
-- [ ] Rename the current public `useAnimation` export to `useEntityAnimation`
-- [ ] Remove SpatialDiv-key dispatch from the renamed hook so `useEntityAnimation` is entity-only
-- [ ] Update entity-facing docs and examples to use `useEntityAnimation`
-- [ ] Refactor `apps/test-server/src/pages/entity-animation/**` to import `useEntityAnimation`
-- [ ] Update entity capability-check pages and related runtime probe copy to the renamed hook
-- [ ] Verify the refactored entity `test-server` pages still render and control playback correctly
+- [x] Rename the current public `useAnimation` export to `useEntityAnimation`
+- [x] Remove SpatialDiv-key dispatch from the renamed hook so `useEntityAnimation` is entity-only
+- [x] Update entity-facing docs and examples to use `useEntityAnimation`
+- [x] Refactor `apps/test-server/src/pages/entity-animation/**` to import `useEntityAnimation`
+- [x] Update entity capability-check pages and related runtime probe copy to the renamed hook
+- [x] Verify the refactored entity `test-server` pages still render and control playback correctly
 
 ## Phase 13 — Rename `useSpatializedMotion` to `useAnimation`
 
-- [ ] Rename public `useSpatializedMotion(config)` to `useAnimation(config)` without changing the target-agnostic timeline semantics
-- [ ] Update `@webspatial/react-sdk` exports and in-repo imports to the renamed spatialized hook
-- [ ] Refactor `apps/test-server/src/pages/spatial-div-motion/**` to use the new `useAnimation` import
-- [ ] Refactor `apps/test-server/src/pages/spatial-element-motion/**` to use the new `useAnimation` import
-- [ ] Update spatialized motion capability-check pages and related runtime probe copy to the renamed hook
-- [ ] Verify the refactored spatialized-motion `test-server` pages still render and control playback correctly
+- [x] Rename public `useSpatializedMotion(config)` to `useAnimation(config)` without changing the target-agnostic timeline semantics
+- [x] Update `@webspatial/react-sdk` exports and in-repo imports to the renamed spatialized hook
+- [x] Refactor `apps/test-server/src/pages/spatial-div-motion/**` to use the new `useAnimation` import
+- [x] Refactor `apps/test-server/src/pages/spatial-element-motion/**` to use the new `useAnimation` import
+- [x] Update spatialized motion capability-check pages and related runtime probe copy to the renamed hook
+- [x] Verify the refactored spatialized-motion `test-server` pages still render and control playback correctly

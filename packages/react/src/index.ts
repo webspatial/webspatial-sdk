@@ -50,10 +50,12 @@ export * from './initScene'
 export * from './spatialized-container'
 export * from './spatialized-container-monitor'
 export * from './reality'
-export { useAnimation } from './useAnimation'
+export { useEntityAnimation } from './useAnimation'
 export {
   WebSpatialRuntimeError,
   type CapabilityKey,
+  useAnimation,
+  SpatializedMotionController,
   type WebSpatialRuntimeSnapshot,
   type WebSpatialRuntimeType,
 } from '@webspatial/core-sdk/runtime'

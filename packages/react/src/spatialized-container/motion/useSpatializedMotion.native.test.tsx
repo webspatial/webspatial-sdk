@@ -6,12 +6,11 @@ vi.mock('@webspatial/core-sdk', async () => {
   return {
     ...actual,
     supports: (name: string, tokens?: readonly string[]) =>
-      name === 'useSpatializedMotion' &&
-      !!tokens?.some(token => token === 'spatialized2d'),
+      name === 'useAnimation' && !!tokens?.some(token => token === 'element'),
   }
 })
 
-const { useSpatializedMotion } = await import('./useSpatializedMotion')
+const { useAnimation } = await import('./useSpatializedMotion')
 
 function createMockElement(id = 'motion-element-1') {
   const animateMotion = vi.fn().mockImplementation(async (cmd: any) => {
@@ -49,7 +48,7 @@ describe('useSpatializedMotion tuple api native backend', () => {
     const element = createMockElement()
 
     const { result } = renderHook(() =>
-      useSpatializedMotion({
+      useAnimation({
         duration: 5,
         from: {
           opacity: 0,
@@ -105,7 +104,7 @@ describe('useSpatializedMotion tuple api native backend', () => {
     const element = createMockElement()
 
     const { result } = renderHook(() =>
-      useSpatializedMotion({
+      useAnimation({
         duration: 5,
         autoStart: false,
         tracks: [
@@ -172,7 +171,7 @@ describe('useSpatializedMotion tuple api native backend', () => {
     const element = createMockElement()
 
     const { result } = renderHook(() =>
-      useSpatializedMotion({
+      useAnimation({
         duration: 5,
         autoStart: false,
         tracks: [
@@ -226,7 +225,7 @@ describe('useSpatializedMotion tuple api native backend', () => {
     })
 
     const { result } = renderHook(() =>
-      useSpatializedMotion({
+      useAnimation({
         duration: 5,
         autoStart: false,
         tracks: [
@@ -277,7 +276,7 @@ describe('useSpatializedMotion tuple api native backend', () => {
 
     const onComplete = vi.fn()
     const { result } = renderHook(() =>
-      useSpatializedMotion({
+      useAnimation({
         duration: 5,
         autoStart: false,
         tracks: [
@@ -321,7 +320,7 @@ describe('useSpatializedMotion tuple api native backend', () => {
     const element = createMockElement()
 
     const { result } = renderHook(() =>
-      useSpatializedMotion({
+      useAnimation({
         duration: 5,
         autoStart: false,
         from: {
@@ -355,7 +354,7 @@ describe('useSpatializedMotion tuple api native backend', () => {
     const onReset = vi.fn()
 
     const { result } = renderHook(() =>
-      useSpatializedMotion({
+      useAnimation({
         duration: 1,
         autoStart: false,
         tracks: [

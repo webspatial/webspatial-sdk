@@ -2,7 +2,7 @@
 
 ## Scope
 
-`Spatialized2DElement` (HTML SpatialDiv / `enable-xr`) is the **reference target** for the unified motion system. When `animation` from `useSpatializedMotion` is bound to an `enable-xr` node via `xr-animation` prop, the SDK resolves the target to `spatialized2d`. It is the only target that supports the **dual backend** (Web RAF + native).
+`Spatialized2DElement` (HTML SpatialDiv / `enable-xr`) is the **reference target** for the unified motion system. When `animation` from `useAnimation` is bound to an `enable-xr` node via `xr-animation` prop, the SDK resolves the target to `spatialized2d`. It is the only target that supports the **dual backend** (Web RAF + native).
 
 ## ADDED Requirements
 
@@ -12,7 +12,7 @@ The SDK MUST treat `Spatialized2DElement` motion as the 2D target, resolved when
 
 #### Scenario: Public React entry
 
-- **WHEN** authors call `useSpatializedMotion(config)` (with `from/to` or `tracks`) and bind `animation` to an `enable-xr` node
+- **WHEN** authors call `useAnimation(config)` (with `from/to` or `tracks`) and bind `animation` to an `enable-xr` node
 - **THEN** the hook MUST return `[animation, api, style]` with Web RAF when native motion is unavailable
 
 #### Scenario: Core controller parity
@@ -24,17 +24,17 @@ The SDK MUST treat `Spatialized2DElement` motion as the 2D target, resolved when
 
 ### Requirement: Provide SpatialDiv motion API with a single style outlet
 
-The SDK MUST provide `useSpatializedMotion(config)` returning `[animation, api, style]`. For `spatialized2d` (binding to `enable-xr`), `style` carries active animated values. The `style` object MUST carry only whitelisted animated fields (`opacity` and structured `transform` as a CSS string composed translate → rotate → scale). Applications MUST integrate motion by merging `style` onto spatialized HTML nodes.
+The SDK MUST provide `useAnimation(config)` returning `[animation, api, style]`. For `spatialized2d` (binding to `enable-xr`), `style` carries active animated values. The `style` object MUST carry only whitelisted animated fields (`opacity` and structured `transform` as a CSS string composed translate → rotate → scale). Applications MUST integrate motion by merging `style` onto spatialized HTML nodes.
 
 #### Scenario: Hook return shape
 
-- **WHEN** application code calls `useSpatializedMotion(config)` and binds `animation` to an `enable-xr` node
+- **WHEN** application code calls `useAnimation(config)` and binds `animation` to an `enable-xr` node
 - **THEN** the hook MUST return a tuple with `animation`, `api`, and `style`
 - **AND** `api` MUST expose `play`, `pause`, `stop`, `reset`, `finish`, `isAnimating`, `isPaused`, `finished`, and `playState`
 
 #### Scenario: from/to config compiles to tracks internally
 
-- **WHEN** application code calls `useSpatializedMotion({ from, to, duration, ... })` and binds to an `enable-xr` node
+- **WHEN** application code calls `useAnimation({ from, to, duration, ... })` and binds to an `enable-xr` node
 - **THEN** the SDK MUST internally compile `from/to` to `tracks` containing one track per animated scalar with keyframes at `at: 0` and `at: duration`, then execute via the same timeline pipeline
 
 ---
@@ -75,21 +75,21 @@ When the native motion backend is not active, the SDK MUST use a **Web backend**
 
 #### Scenario: Plain browser play animates style
 
-- **GIVEN** `supports('useSpatializedMotion', ['spatialized2d'])` is `false`
+- **GIVEN** `supports('useAnimation', ['element'])` is `false`
 - **WHEN** application binds `animation` to an `enable-xr` node with valid tracks and calls `api.play()`
 - **THEN** `style` MUST update over time until the timeline completes
 - **AND** `onComplete` MUST fire when a non-looping timeline finishes
 
 #### Scenario: WebSpatial runtime uses native backend only
 
-- **GIVEN** `supports('useSpatializedMotion', ['spatialized2d'])` is `true`
+- **GIVEN** `supports('useAnimation', ['element'])` is `true`
 - **WHEN** `api.play()` is called on a valid timeline bound to an `enable-xr` node
 - **THEN** the SDK MUST use the native motion backend
 - **AND** the Web RAF backend MUST NOT run for playback on the same hook instance
 
 #### Scenario: play before bind does not fall back to Web RAF
 
-- **GIVEN** `supports('useSpatializedMotion', ['spatialized2d'])` is `true`
+- **GIVEN** `supports('useAnimation', ['element'])` is `true`
 - **AND** `api.play()` runs before the `xr-animation` binding has attached an element
 - **THEN** the SDK MUST NOT start Web RAF playback as a fallback
 - **AND** native playback MUST begin once the element is bound
@@ -98,30 +98,30 @@ When the native motion backend is not active, the SDK MUST use a **Web backend**
 
 ### Requirement: Native play uses the canonical tracks path
 
-For `useSpatializedMotion`, the bridge `play` command MUST carry the canonical tracks document for native execution. Native MUST evaluate that tracks document and MUST NOT fall back to legacy `from`/`to` segment interpolation for this API.
+For `useAnimation`, the bridge `play` command MUST carry the canonical tracks document for native execution. Native MUST evaluate that tracks document and MUST NOT fall back to legacy `from`/`to` segment interpolation for this API.
 
 #### Scenario: Wire shape matches the canonical tracks model
 
-- **WHEN** JS sends native `play` for `useSpatializedMotion`
+- **WHEN** JS sends native `play` for `useAnimation`
 - **THEN** the payload MUST include the canonical tracks document with `duration`, optional `delay`, optional `playbackRate`, optional `loop`, and non-empty `tracks`
 - **AND** each track MUST include `property`, `keyframes` with `at` in seconds, and `timingFunction`
 
 #### Scenario: from/to authoring shape compiles to tracks before native send
 
-- **WHEN** application code calls `useSpatializedMotion({ from, to, duration, ... })`
+- **WHEN** application code calls `useAnimation({ from, to, duration, ... })`
 - **THEN** the SDK MUST compile that authoring shape to canonical `tracks` before sending native `play`
 
 #### Scenario: timeline authoring shape compiles to tracks before native send
 
-- **WHEN** application code calls `useSpatializedMotion({ duration, timeline, ... })`
+- **WHEN** application code calls `useAnimation({ duration, timeline, ... })`
 - **THEN** the SDK MUST compile that authoring shape to canonical `tracks` before sending native `play`
 
 #### Scenario: tracks authoring shape stays on the same execution path
 
-- **WHEN** application code calls `useSpatializedMotion({ duration, tracks, ... })`
+- **WHEN** application code calls `useAnimation({ duration, tracks, ... })`
 - **THEN** the SDK MUST execute native playback through the same canonical tracks path without a segment downgrade
 
-#### Scenario: Segment downgrade is forbidden for useSpatializedMotion
+#### Scenario: Segment downgrade is forbidden for useAnimation
 
 - **WHEN** the canonical tracks document is ready for native playback
 - **THEN** the SDK MUST NOT replace it with a legacy native `from`/`to` segment command
