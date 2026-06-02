@@ -46,7 +46,6 @@ const buildOptions = {
   sourcemap: !isBuild,
   plugins,
   define: {
-    'process.env.XR_ENV': JSON.stringify(process.env.XR_ENV ?? ''),
     __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(corePkg.version),
     __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
   },
@@ -80,15 +79,16 @@ const buildOptions = {
     '@webspatial/react-sdk/internal/facades-client': path.resolve(
       `${packagesBasePath}/react/src/internal/facades-client.ts`,
     ),
-    // Test-server targets WebSpatial runtimes only — bundle the eager entry so
-    // spatial is statically linked (no lazy `import('./spatial')` bridge in
-    // this app). Plain-web / lazy-default consumer shape is exercised in
-    // `apps/spatial-vite-min` instead.
+    // Default lazy-load entry (`bootSpatial` / facades). `bridge.ts` dynamically
+    // imports `../spatial`; alias the subpath so esbuild resolves the chunk.
+    '@webspatial/react-sdk/spatial': path.resolve(
+      `${packagesBasePath}/react/src/spatial/index.ts`,
+    ),
     '@webspatial/react-sdk/eager': path.resolve(
       `${packagesBasePath}/react/src/eager.ts`,
     ),
     '@webspatial/react-sdk': path.resolve(
-      `${packagesBasePath}/react/src/eager.ts`,
+      `${packagesBasePath}/react/src/index.ts`,
     ),
     '@webspatial/core-sdk': path.resolve(`${packagesBasePath}/core/src`),
   },

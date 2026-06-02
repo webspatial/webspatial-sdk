@@ -41,17 +41,16 @@ export default function Home() {
           {/* Window Content */}
           <div className="p-6 text-left">
             <pre className="text-sm text-gray-300">
-              <code>{`import { Model } from '@webspatial/react-sdk/eager'
+              <code>{`import { Model, SpatialBoot } from '@webspatial/react-sdk'
 
-function App() {
+export function App() {
   return (
-      <div
-        enable-xr
-        style={{color: "blue", "--xr-back": 50}}>
-          <h1>3D UI on XR devices and embeded 3D models</h1>
+    <SpatialBoot onError={err => console.error(err)}>
+      <div enable-xr style={{ color: "blue", "--xr-back": 50 }}>
+        <h1>3D UI on XR devices and embedded 3D models</h1>
       </div>
-      
-      <Model enable-xr  src="/assets/3DFile.usdz" />
+      <Model enable-xr src="/assets/3DFile.usdz" />
+    </SpatialBoot>
   )
 }`}</code>
             </pre>
