@@ -176,7 +176,7 @@ Native MUST sample each track independently at timeline time `t`, then assemble 
 
 ### Requirement: Portal suppression during native playback
 
-While a native session is alive, the SDK MUST suppress Portal DOM sync for animated fields.
+While native playback is actively controlling the session, until the session reaches terminal state or unbinds, the SDK MUST suppress Portal DOM sync for animated fields.
 
 #### Scenario: Suppression field set from tracks
 
@@ -185,7 +185,8 @@ While a native session is alive, the SDK MUST suppress Portal DOM sync for anima
 
 #### Scenario: Suppression cleared on terminal state
 
-- **WHEN** session reaches finished or idle after stop/reset/finish → suppression cleared
+- **WHEN** session reaches terminal state, `stop`, `reset`, `finish`, or `unbind`
+- **THEN** suppression MUST clear
 
 ---
 

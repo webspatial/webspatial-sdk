@@ -9,6 +9,7 @@ import type {
   SpatializedPlaybackApi,
   SpatializedVisualValues,
 } from '@webspatial/core-sdk'
+import { supports } from '@webspatial/core-sdk'
 import { createMotionBinding } from './createMotionBinding'
 import { createPlaybackApi } from './createPlaybackApi'
 import { useMotionController } from './useMotionController'
@@ -55,11 +56,24 @@ export function useSpatializedMotion(
     controller.play()
   }, [controller, normalizedConfig.autoStart])
 
+  const rawStyle = valuesToMotionStyle(values)
+  const suppressedFields = controller.getSuppressedFields()
   const style =
     controller.targetKind === 'static3d' ||
     controller.targetKind === 'dynamic3d'
       ? EMPTY_STYLE
-      : valuesToMotionStyle(values)
+      : controller.targetKind === 'spatialized2d' &&
+          supports('useSpatializedMotion', ['spatialized2d']) &&
+          suppressedFields
+        ? {
+            ...(suppressedFields.has('opacity')
+              ? {}
+              : { opacity: rawStyle.opacity }),
+            ...(suppressedFields.has('transform')
+              ? {}
+              : { transform: rawStyle.transform }),
+          }
+        : rawStyle
 
   return [animation, api, style]
 }

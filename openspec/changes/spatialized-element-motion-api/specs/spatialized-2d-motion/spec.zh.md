@@ -176,7 +176,7 @@ Native MUST 在 timeline 时间 `t` 独立采样每条 track，然后按与 Web 
 
 ### Requirement: Native 播放期间 Portal 抑制
 
-Native 会话 alive 期间，SDK MUST 抑制被动画字段的 Portal DOM 同步。
+当 native 播放正在主动控制会话时，一直到会话到达终态或解绑为止，SDK MUST 抑制被动画字段的 Portal DOM 同步。
 
 #### Scenario: 根据 tracks 确定抑制字段集
 
@@ -185,7 +185,8 @@ Native 会话 alive 期间，SDK MUST 抑制被动画字段的 Portal DOM 同步
 
 #### Scenario: 终态时清除抑制
 
-- **WHEN** 会话到达 finished 或 stop/reset/finish 后 idle → 抑制清除
+- **WHEN** 会话到达终态，或执行 `stop`、`reset`、`finish`、`unbind`
+- **THEN** 抑制 MUST 清除
 
 ---
 
