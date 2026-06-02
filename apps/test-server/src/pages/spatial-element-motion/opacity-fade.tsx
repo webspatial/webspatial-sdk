@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
@@ -17,7 +17,7 @@ export default function OpacityFadePage() {
     null,
   )
 
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     from: { opacity: 1.0 },
     to: { opacity: 0.2 },
     duration: 2.0,

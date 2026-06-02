@@ -268,49 +268,47 @@ describe('getRuntime / supports', () => {
   })
 })
 
-describe('supports("useSpatializedMotion", [kind])', () => {
+describe('supports("useAnimation", [motion kind])', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
 
-  test('visionOS WSAppShell/1.8.0: spatialized2d and 3d kinds', async () => {
+  test('visionOS WSAppShell/1.8.0: element and 3d kinds', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
-    expect(supports('useSpatializedMotion')).toBe(true)
-    expect(supports('useSpatializedMotion', [])).toBe(true)
-    expect(supports('useSpatializedMotion', ['spatialized2d'])).toBe(true)
-    expect(supports('useSpatializedMotion', ['static3d'])).toBe(true)
-    expect(supports('useSpatializedMotion', ['dynamic3d'])).toBe(true)
+    expect(supports('useAnimation')).toBe(true)
+    expect(supports('useAnimation', [])).toBe(true)
+    expect(supports('useAnimation', ['element'])).toBe(true)
+    expect(supports('useAnimation', ['static3d'])).toBe(true)
+    expect(supports('useAnimation', ['dynamic3d'])).toBe(true)
   })
 
-  test('visionOS WSAppShell/1.7.0: top-level requires all motion kinds', async () => {
+  test('visionOS WSAppShell/1.7.0: element token remains false', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.7.0 WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
-    expect(supports('useSpatializedMotion')).toBe(false)
-    expect(supports('useSpatializedMotion', [])).toBe(false)
-    expect(supports('useSpatializedMotion', ['spatialized2d'])).toBe(false)
-    expect(supports('useSpatializedMotion', ['static3d'])).toBe(false)
-    expect(supports('useSpatializedMotion', ['dynamic3d'])).toBe(false)
-    expect(
-      supports('useSpatializedMotion', ['spatialized2d', 'static3d']),
-    ).toBe(false)
+    expect(supports('useAnimation')).toBe(true)
+    expect(supports('useAnimation', [])).toBe(true)
+    expect(supports('useAnimation', ['element'])).toBe(false)
+    expect(supports('useAnimation', ['static3d'])).toBe(false)
+    expect(supports('useAnimation', ['dynamic3d'])).toBe(false)
   })
 
-  test('visionOS WSAppShell/1.6.0: top-level false when one required kind is false', async () => {
+  test('visionOS WSAppShell/1.6.0: element token remains false', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.6.0 WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
-    expect(supports('useSpatializedMotion')).toBe(false)
+    expect(supports('useAnimation')).toBe(false)
+    expect(supports('useAnimation', ['element'])).toBe(false)
   })
 })

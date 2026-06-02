@@ -113,7 +113,7 @@ export type SpatializedStatic3DContainerProps =
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
       spatialEventOptions?: SpatialEventOptions
-      /** Native root-transform motion binding from `useSpatializedMotion()` via `xr-animation`. */
+      /** Native root-transform motion binding from `useAnimation()` via `xr-animation`. */
       'xr-animation'?: import('./motion/motionBindingTypes').SpatializedMotionBindingInternal
     }
 

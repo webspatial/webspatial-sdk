@@ -2,7 +2,7 @@
 
 Three `SpatializedElement` subclasses share scene placement but use **different native write paths**. The timeline evaluator, session state machine, and Portal suppression logic are shared in TypeScript; native applies samples to `element.transform` (2D / Dynamic3D) or `modelTransform` (Static3D). Entity animation remains a **separate** stack (`useAnimation` + `EntityAnimationManager`).
 
-This design unifies **author-facing** config (`SpatializedMotionConfig`, `SpatializedSegmentConfig`, `SpatializedPlaybackApi`) and routes by the **binding target** (resolved when `animation` is passed as `xr-animation` prop to a component) to one Core controller and one React hook. All `useSpatializedMotion` authoring shapes (`from`/`to`, `timeline`, `tracks`) normalize to the same canonical `tracks` model before execution.
+This design unifies **author-facing** config (`SpatializedMotionConfig`, `SpatializedSegmentConfig`, `SpatializedPlaybackApi`) and routes by the **binding target** (resolved when `animation` is passed as `xr-animation` prop to a component) to one Core controller and one React hook. All `useAnimation` authoring shapes (`from`/`to`, `timeline`, `tracks`) normalize to the same canonical `tracks` model before execution.
 
 ## Design Evolution
 
@@ -33,7 +33,7 @@ The merge combines both into a single normative system with backward compatibili
 
 - One timeline config shape across 2D / Static3D / Dynamic3D container kinds.
 - **One** Core implementation: `SpatializedMotionController` (policy per `kind`) + `element.motion(config)` on each element class.
-- **One** React entry: `useSpatializedMotion(config)` accepting `from/to`, `tracks`, or `timeline` (three mutually exclusive shapes). Target resolved at bind time (no `kind` in config). Internally, `from/to` and `timeline` compile to `tracks`.
+- **One** React entry: `useAnimation(config)` accepting `from/to`, `tracks`, or `timeline` (three mutually exclusive shapes). Target resolved at bind time (no `kind` in config). Internally, `from/to` and `timeline` compile to `tracks`.
 - Legacy `useAnimation` + `animation` prop retained as deprecated path for 2D.
 - Umbrella spec with per-kind sub-specs; 2D remains the reference for Web RAF + suppression behavior.
 
@@ -41,7 +41,7 @@ The merge combines both into a single normative system with backward compatibili
 
 ```mermaid
 flowchart TB
-  Hook["useSpatializedMotion(config)"] --> Binding["animation binding
+  Hook["useAnimation(config)"] --> Binding["animation binding
 (target deferred)"]
   Binding --> |"xr-animation on enable-xr"| Resolve2D["target: spatialized2d"]
   Binding --> |"xr-animation on Model"| Resolve3D["target: static3d"]
@@ -74,7 +74,7 @@ flowchart TB
 
 | Module | Role |
 |--------|------|
-| `useSpatializedMotion` | Public hook (tuple return `[animation, api, style]`); accepts `from/to` or `tracks` config; target-agnostic until bind |
+| `useAnimation` | Public hook (tuple return `[animation, api, style]`); accepts `from/to` or `tracks` config; target-agnostic until bind |
 | `useMotionController` + `createMotionBinding` + `createPlaybackApi` | Shared wiring |
 
 ## Shared Types (Core)
@@ -93,7 +93,7 @@ flowchart TB
 
 ## Target Resolution
 
-The `animation` binding returned by `useSpatializedMotion` is **target-agnostic**. Target is resolved at bind time:
+The `animation` binding returned by `useAnimation` is **target-agnostic**. Target is resolved at bind time:
 
 1. React component receives `xr-animation={animation}` prop.
 2. Component type determines target: `enable-xr` → `spatialized2d`, `<Model>` → `static3d`, `<Reality>` → `dynamic3d`.
@@ -174,9 +174,9 @@ stateDiagram-v2
 The Plan A path (`useAnimation` + `animation` prop) is retained as a thin compatibility layer:
 
 1. `useAnimation(config)` for SpatialDiv continues to work unchanged.
-2. Internally, the legacy path keeps its own segment-native behavior; `useSpatializedMotion` does not downgrade into that command path.
+2. Internally, the legacy path keeps its own segment-native behavior; `useAnimation` does not downgrade into that command path.
 3. The `animation` prop path does NOT use `SpatializedMotionController`; it retains its own session management.
-4. New code SHOULD use `useSpatializedMotion({ from, to, duration })` which provides the same single-segment experience.
+4. New code SHOULD use `useAnimation({ from, to, duration })` which provides the same single-segment experience.
 
 ## Portal Suppression (unified rules)
 

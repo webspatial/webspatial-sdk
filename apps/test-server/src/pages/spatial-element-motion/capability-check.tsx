@@ -2,21 +2,19 @@ import { WebSpatialRuntime } from '@webspatial/react-sdk'
 import { SpatialDivAnimationPageShell } from './shared'
 
 export default function SpatialDivCapabilityCheckPage() {
-  const allSupported = WebSpatialRuntime.supports('useSpatializedMotion')
-  const spatialized2DSupported = WebSpatialRuntime.supports(
-    'useSpatializedMotion',
-    ['spatialized2d'],
-  )
-  const static3DSupported = WebSpatialRuntime.supports('useSpatializedMotion', [
+  const allSupported = WebSpatialRuntime.supports('useAnimation')
+  const elementSupported = WebSpatialRuntime.supports('useAnimation', [
+    'element',
+  ])
+  const static3DSupported = WebSpatialRuntime.supports('useAnimation', [
     'static3d',
   ])
-  const dynamic3DSupported = WebSpatialRuntime.supports(
-    'useSpatializedMotion',
-    ['dynamic3d'],
-  )
+  const dynamic3DSupported = WebSpatialRuntime.supports('useAnimation', [
+    'dynamic3d',
+  ])
 
   const kindRows = [
-    ['spatialized2d', spatialized2DSupported],
+    ['element', elementSupported],
     ['static3d', static3DSupported],
     ['dynamic3d', dynamic3DSupported],
   ] as const
@@ -30,7 +28,7 @@ export default function SpatialDivCapabilityCheckPage() {
         <div>
           <p className="text-sm text-gray-400">
             <code className="text-cyan-300">
-              WebSpatialRuntime.supports('useSpatializedMotion')
+              WebSpatialRuntime.supports('useAnimation')
             </code>
           </p>
           <div
@@ -40,7 +38,7 @@ export default function SpatialDivCapabilityCheckPage() {
                 : 'border border-red-700 bg-red-900/50 text-red-300'
             }`}
           >
-            supports('useSpatializedMotion') = {String(allSupported)}
+            supports('useAnimation') = {String(allSupported)}
           </div>
         </div>
 
@@ -48,7 +46,7 @@ export default function SpatialDivCapabilityCheckPage() {
           <div key={kind}>
             <p className="text-sm text-gray-400">
               <code className="text-cyan-300">
-                {`WebSpatialRuntime.supports('useSpatializedMotion', ['${kind}'])`}
+                {`WebSpatialRuntime.supports('useAnimation', ['${kind}'])`}
               </code>
             </p>
             <div
@@ -58,18 +56,16 @@ export default function SpatialDivCapabilityCheckPage() {
                   : 'border border-red-700 bg-red-900/50 text-red-300'
               }`}
             >
-              {`supports('useSpatializedMotion', ['${kind}']) = ${String(
-                supported,
-              )}`}
+              {`supports('useAnimation', ['${kind}']) = ${String(supported)}`}
             </div>
           </div>
         ))}
 
         <p className="text-xs text-gray-500">
-          When the spatialized2d token is <code>false</code>, calling{' '}
-          <code>useSpatializedMotion</code> with SpatialDiv keys logs a one-time
-          warning and returns a no-op API; <code>play()</code> becomes a no-op
-          and <code>isAnimating</code> stays <code>false</code>.
+          When the element token is <code>false</code>, calling{' '}
+          <code>useAnimation</code> with SpatialDiv keys logs a one-time warning
+          and returns a no-op API; <code>play()</code> becomes a no-op and{' '}
+          <code>isAnimating</code> stays <code>false</code>.
         </p>
       </section>
     </SpatialDivAnimationPageShell>

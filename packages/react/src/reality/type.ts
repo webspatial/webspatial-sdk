@@ -18,7 +18,7 @@ export type EntityProps = {
   rotation?: Vec3
   scale?: Vec3
   enableInput?: boolean
-  /** Animation prop returned by useAnimation(). */
+  /** Animation prop returned by useEntityAnimation(). */
   animation?: AnimatedProps
 }
 

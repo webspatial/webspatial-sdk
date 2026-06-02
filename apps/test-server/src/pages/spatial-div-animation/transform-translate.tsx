@@ -86,7 +86,7 @@ export default function TransformTranslatePage() {
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div
           enable-xr
-          animation={animation}
+          animation={animation as any}
           style={{
             width: 200,
             height: 150,

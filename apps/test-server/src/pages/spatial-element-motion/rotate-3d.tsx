@@ -1,4 +1,4 @@
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
@@ -12,7 +12,7 @@ import {
 export default function Rotate3DPage() {
   const { lines, log, clear } = useLog()
 
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     from: {
       transform: { rotate: { x: 0, y: 0, z: 0 } },
     },

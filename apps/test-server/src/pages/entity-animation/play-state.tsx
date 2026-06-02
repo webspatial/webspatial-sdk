@@ -2,7 +2,7 @@ import {
   BoxEntity,
   Reality,
   SceneGraph,
-  useAnimation,
+  useEntityAnimation,
 } from '@webspatial/react-sdk'
 import {
   EntityAnimationPageShell,
@@ -15,7 +15,7 @@ import {
 export default function EntityAnimationPlayStatePage() {
   const logger = useLog()
 
-  const [animation, api] = useAnimation({
+  const [animation, api] = useEntityAnimation({
     from: {
       position: { x: -0.2, y: 0, z: 0 },
       scale: { x: 0.5, y: 0.5, z: 0.5 },

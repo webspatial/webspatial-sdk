@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { expect } from 'chai'
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import { render, unmount } from './render'
 import { AsyncPromise } from '../../utils/AsyncPromise'
 
@@ -17,7 +17,7 @@ function readTranslateX(child: { transform?: { translation?: number[] } }) {
 function TimelinePercentMotionPanel() {
   const bindPromiseRef = React.useRef<AsyncPromise<boolean> | null>(null)
 
-  const [motion, , style] = useSpatializedMotion({
+  const [motion, , style] = useAnimation({
     duration: 4,
     autoStart: true,
     timingFunction: 'easeInOut',

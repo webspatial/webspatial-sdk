@@ -21,7 +21,8 @@ export function useMotionController(
     controllerRef.current = new SpatializedMotionController(config, {
       onStateChange: () => tick(),
       onValuesChange,
-      supportsMotionKind: kind => supports('useSpatializedMotion', [kind]),
+      supportsMotionKind: kind =>
+        supports('useAnimation', [kind === 'spatialized2d' ? 'element' : kind]),
     })
   }
   const controller = controllerRef.current

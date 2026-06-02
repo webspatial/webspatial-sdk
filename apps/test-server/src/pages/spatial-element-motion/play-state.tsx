@@ -1,4 +1,4 @@
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   Log,
@@ -11,7 +11,7 @@ import {
 export default function SpatializedMotionPlayStatePage() {
   const { lines, log, clear } = useLog()
 
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     from: { opacity: 1.0 },
     to: { opacity: 0.0 },
     duration: 4.0,

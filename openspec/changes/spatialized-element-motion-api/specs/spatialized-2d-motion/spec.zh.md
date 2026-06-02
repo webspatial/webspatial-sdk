@@ -2,7 +2,7 @@
 
 ## 范围
 
-`Spatialized2DElement`（HTML SpatialDiv / `enable-xr`）是统一动画系统的**参考目标**。当 `useSpatializedMotion` 返回的 `animation` 通过 `xr-animation` prop 绑定到 `enable-xr` 节点时，SDK 将目标解析为 `spatialized2d`。它是唯一支持**双后端**（Web RAF + native）的目标。
+`Spatialized2DElement`（HTML SpatialDiv / `enable-xr`）是统一动画系统的**参考目标**。当 `useAnimation` 返回的 `animation` 通过 `xr-animation` prop 绑定到 `enable-xr` 节点时，SDK 将目标解析为 `spatialized2d`。它是唯一支持**双后端**（Web RAF + native）的目标。
 
 ## 新增需求
 
@@ -12,7 +12,7 @@ SDK MUST 将 `Spatialized2DElement` 动画视为 `animation` 绑定到 `enable-x
 
 #### Scenario: 公共 React 入口
 
-- **WHEN** 开发者调用 `useSpatializedMotion(config)`（`from/to` 或 `tracks` 配置）并将 `animation` 绑定到 `enable-xr` 节点
+- **WHEN** 开发者调用 `useAnimation(config)`（`from/to` 或 `tracks` 配置）并将 `animation` 绑定到 `enable-xr` 节点
 - **THEN** hook MUST 返回 `[animation, api, style]`，native 不可用时启用 Web RAF
 
 #### Scenario: Core 控制器等价性
@@ -24,17 +24,17 @@ SDK MUST 将 `Spatialized2DElement` 动画视为 `animation` 绑定到 `enable-x
 
 ### Requirement: 提供带单一 style outlet 的 SpatialDiv motion API
 
-SDK MUST 提供 `useSpatializedMotion(config)` 返回 `[animation, api, style]`。对于 `spatialized2d`（绑定到 `enable-xr`），`style` 携带活跃动画值。`style` 对象 MUST 仅携带白名单动画字段（`opacity` 和结构化 `transform` CSS 字符串，按 translate → rotate → scale 组合）。应用 MUST 通过合并 `style` 到空间化 HTML 节点来集成动画。
+SDK MUST 提供 `useAnimation(config)` 返回 `[animation, api, style]`。对于 `spatialized2d`（绑定到 `enable-xr`），`style` 携带活跃动画值。`style` 对象 MUST 仅携带白名单动画字段（`opacity` 和结构化 `transform` CSS 字符串，按 translate → rotate → scale 组合）。应用 MUST 通过合并 `style` 到空间化 HTML 节点来集成动画。
 
 #### Scenario: Hook 返回结构
 
-- **WHEN** 应用代码调用 `useSpatializedMotion(config)` 并将 `animation` 绑定到 `enable-xr` 节点
+- **WHEN** 应用代码调用 `useAnimation(config)` 并将 `animation` 绑定到 `enable-xr` 节点
 - **THEN** hook MUST 返回包含 `animation`、`api` 和 `style` 的元组
 - **AND** `api` MUST 暴露 `play`、`pause`、`stop`、`reset`、`finish`、`isAnimating`、`isPaused`、`finished`、`playState`
 
 #### Scenario: from/to 配置内部编译为 tracks
 
-- **WHEN** 应用调用 `useSpatializedMotion({ from, to, duration, ... })` 并绑定到 `enable-xr` 节点
+- **WHEN** 应用调用 `useAnimation({ from, to, duration, ... })` 并绑定到 `enable-xr` 节点
 - **THEN** SDK MUST 内部将 `from/to` 编译为 `tracks`（每个动画标量一条 track，keyframe 在 `at: 0` 和 `at: duration`），然后通过同一 timeline pipeline 执行
 
 ---
@@ -75,21 +75,21 @@ Track `property` MUST 限于：`opacity`、`transform.translate.x/y/z`、`transf
 
 #### Scenario: 普通浏览器下 play 驱动 style 动画
 
-- **GIVEN** `supports('useSpatializedMotion', ['spatialized2d'])` 为 `false`
+- **GIVEN** `supports('useAnimation', ['element'])` 为 `false`
 - **WHEN** 应用将 `animation` 绑定到 `enable-xr` 节点并调用 `api.play()`
 - **THEN** `style` MUST 随时间更新直到 timeline 完成
 - **AND** 非循环 timeline 完成时 `onComplete` MUST 触发
 
 #### Scenario: WebSpatial 运行时仅使用 native 后端
 
-- **GIVEN** `supports('useSpatializedMotion', ['spatialized2d'])` 为 `true`
+- **GIVEN** `supports('useAnimation', ['element'])` 为 `true`
 - **WHEN** `api.play()` 被调用
 - **THEN** SDK MUST 使用 native 动画后端
 - **AND** Web RAF 后端 MUST NOT 在同一 hook 实例上运行
 
 #### Scenario: bind 前 play 不降级到 Web RAF
 
-- **GIVEN** `supports('useSpatializedMotion', ['spatialized2d'])` 为 `true`
+- **GIVEN** `supports('useAnimation', ['element'])` 为 `true`
 - **AND** `api.play()` 在 `xr-animation` binding 绑定元素前执行
 - **THEN** SDK MUST NOT 启动 Web RAF 作为降级
 - **AND** native 播放 MUST 在元素绑定后开始
@@ -98,30 +98,30 @@ Track `property` MUST 限于：`opacity`、`transform.translate.x/y/z`、`transf
 
 ### Requirement: Native 播放使用 canonical tracks 路径
 
-对于 `useSpatializedMotion`，Bridge `play` 命令 MUST 携带供 native 执行的 canonical tracks 文档。Native MUST 评估该 tracks 文档，且 MUST NOT 对这个 API 回退到旧版 `from`/`to` segment 插值。
+对于 `useAnimation`，Bridge `play` 命令 MUST 携带供 native 执行的 canonical tracks 文档。Native MUST 评估该 tracks 文档，且 MUST NOT 对这个 API 回退到旧版 `from`/`to` segment 插值。
 
 #### Scenario: 线格式匹配 canonical tracks 模型
 
-- **WHEN** JS 为 `useSpatializedMotion` 发送 native `play`
+- **WHEN** JS 为 `useAnimation` 发送 native `play`
 - **THEN** payload MUST 包含 canonical tracks 文档，其中有 `duration`、可选 `delay`、可选 `playbackRate`、可选 `loop`、非空 `tracks`
 - **AND** 每条 track MUST 包含 `property`、`keyframes`（`at` 单位秒）、`timingFunction`
 
 #### Scenario: from/to authoring 形状在发送 native 前编译为 tracks
 
-- **WHEN** 应用代码调用 `useSpatializedMotion({ from, to, duration, ... })`
+- **WHEN** 应用代码调用 `useAnimation({ from, to, duration, ... })`
 - **THEN** SDK MUST 先将该 authoring 形状编译为 canonical `tracks`，再发送 native `play`
 
 #### Scenario: timeline authoring 形状在发送 native 前编译为 tracks
 
-- **WHEN** 应用代码调用 `useSpatializedMotion({ duration, timeline, ... })`
+- **WHEN** 应用代码调用 `useAnimation({ duration, timeline, ... })`
 - **THEN** SDK MUST 先将该 authoring 形状编译为 canonical `tracks`，再发送 native `play`
 
 #### Scenario: tracks authoring 形状保持在同一执行路径
 
-- **WHEN** 应用代码调用 `useSpatializedMotion({ duration, tracks, ... })`
+- **WHEN** 应用代码调用 `useAnimation({ duration, tracks, ... })`
 - **THEN** SDK MUST 通过同一个 canonical tracks 路径执行 native 播放，不得降级成 segment
 
-#### Scenario: useSpatializedMotion 禁止 segment 降级
+#### Scenario: useAnimation 禁止 segment 降级
 
 - **WHEN** canonical tracks 文档已经为 native 播放准备完成
 - **THEN** SDK MUST NOT 用旧版 native `from`/`to` segment 命令替换它

@@ -17,7 +17,7 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 
 #### Scenario: Playback API is available regardless of binding target
 
-- **WHEN** authors obtain a motion tuple from `useSpatializedMotion(config)`
+- **WHEN** authors obtain a motion tuple from `useAnimation(config)`
 - **THEN** the returned `api` MUST expose `play`, `pause`, `resume`, `stop`, `reset`, `finish`, `playState`, `isAnimating`, `isPaused`, and `finished` regardless of which component the `animation` is later bound to
 
 #### Scenario: stop() freezes active session at current values
@@ -106,7 +106,7 @@ The hook MUST accept a config that is one of three mutually exclusive shapes:
 2. **Tracks config** (advanced): `{ duration, tracks: [{ property, keyframes: [{ at, value, timingFunction? }], timingFunction? }], timingFunction? }`
 3. **Timeline config** (CSS @keyframes style): `{ duration, timeline: { "0%": { ...values, timingFunction? }, ... "100%": { ...values } }, timingFunction? }`
 
-Passing more than one of `from`/`to`, `tracks`, or `timeline` in the same config object MUST be a type error (discriminated union). Internally, segment config and timeline config MUST compile to tracks before execution. When native playback is used for `useSpatializedMotion`, that unified path MUST continue executing the canonical tracks model and MUST NOT downgrade into a legacy native segment command.
+Passing more than one of `from`/`to`, `tracks`, or `timeline` in the same config object MUST be a type error (discriminated union). Internally, segment config and timeline config MUST compile to tracks before execution. When native playback is used for `useAnimation`, that unified path MUST continue executing the canonical tracks model and MUST NOT downgrade into a legacy native segment command.
 
 All kinds MUST use visual transform paths (`transform.translate.*`, `opacity`, etc.) in all config shapes.
 
@@ -236,7 +236,7 @@ The SDK MUST implement container motion with one `SpatializedMotionController` c
 
 #### Scenario: React single hook with bind-time resolution
 
-- **WHEN** authors call `useSpatializedMotion(config)` and pass `animation` to a component via `xr-animation` prop
+- **WHEN** authors call `useAnimation(config)` and pass `animation` to a component via `xr-animation` prop
 - **THEN** the SDK MUST resolve the target from the component type and route to the same controller implementation with the matching target policy
 
 ### Requirement: Separate clip playback on Model
@@ -250,7 +250,7 @@ USD embedded animation on `SpatializedStatic3DElement` (`play`/`pause` on model 
 
 ### Requirement: Target resolved at bind time
 
-The public hook `useSpatializedMotion(config)` MUST NOT require a `kind` field in config. The returned `animation` binding MUST carry a deferred target. Target resolution MUST occur when the binding is passed as `xr-animation` prop to a component:
+The public hook `useAnimation(config)` MUST NOT require a `kind` field in config. The returned `animation` binding MUST carry a deferred target. Target resolution MUST occur when the binding is passed as `xr-animation` prop to a component:
 
 | Component | Resolved target |
 |-----------|-----------------|
@@ -260,7 +260,7 @@ The public hook `useSpatializedMotion(config)` MUST NOT require a `kind` field i
 
 #### Scenario: Binding to enable-xr resolves 2D
 
-- **WHEN** `animation` from `useSpatializedMotion(config)` is passed as `xr-animation` to `<div enable-xr>`
+- **WHEN** `animation` from `useAnimation(config)` is passed as `xr-animation` to `<div enable-xr>`
 - **THEN** the SDK MUST resolve target to `spatialized2d` and activate the 2D policy (Web RAF + native)
 
 #### Scenario: Binding to Model resolves static3d

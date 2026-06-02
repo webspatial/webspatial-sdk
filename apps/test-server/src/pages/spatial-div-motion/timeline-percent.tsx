@@ -1,4 +1,4 @@
-import { useSpatializedMotion } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk'
 import {
   SpatialDivAnimationPageShell,
   btnCls,
@@ -8,7 +8,7 @@ import {
 } from '../spatial-element-motion/shared'
 
 export function SpatialDivMotionTimelinePercentPage() {
-  const [motion, api, style] = useSpatializedMotion({
+  const [motion, api, style] = useAnimation({
     duration: 4,
     autoStart: true,
     timingFunction: 'linear',
