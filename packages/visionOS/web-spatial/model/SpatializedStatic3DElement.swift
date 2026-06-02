@@ -23,10 +23,8 @@ class SpatializedStatic3DElement: SpatializedElement {
     /// fetching until the web layer flips it back to `"eager"`.
     var loading: String = "eager"
     var allSources: [ModelSource] {
-        guard loading == "eager" else { return [] }
-        return if let modelURL {
-            [ModelSource(src: modelURL, type: nil)] + sources
-        } else { sources }
+        if let modelURL { [ModelSource(src: modelURL, type: nil)] + sources }
+        else { sources }
     }
 
     enum CodingKeys: String, CodingKey {
