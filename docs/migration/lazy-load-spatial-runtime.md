@@ -118,6 +118,51 @@ Use this as a CSR optimization, not as the default SSR / framework recipe. Next.
 
 If you call `bootSpatial()` without `<SpatialBoot>`, facades and hook placeholders keep rendering their fallback until the promise resolves; on the next React commit after the bridge becomes ready, **mounted facades automatically swap to the real implementation** (no `key` change required).
 
+### Imperative refs during a late boot
+
+If a facade mounts before `bootSpatial()` resolves, refs point at the fallback output for that first commit. For `Model`, that means a forwarded ref can initially point at the degraded native `<model>` fallback. When the spatial chunk becomes ready, the facade replaces that fallback with the real `Model` implementation; React does not re-run a parent `useEffect([])` just because `ref.current` changed.
+
+Avoid one-shot effects that capture a facade ref before boot and imperatively attach listeners or renderer state:
+
+```tsx
+function Drone() {
+  const modelRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    const el = modelRef.current
+    if (!el) return
+    const onClick = () => console.log('clicked')
+    el.addEventListener('click', onClick)
+    return () => el.removeEventListener('click', onClick)
+  }, [])
+
+  return <Model ref={modelRef} src="/drone.glb" />
+}
+```
+
+In that pattern the effect captures the fallback element; after the boot swap, the listener remains attached to the detached fallback node and is not attached to the real spatial implementation.
+
+Prefer one of these patterns:
+
+- Wrap the spatial subtree in `<SpatialBoot>` so children mount only after the real implementation is ready.
+- For late-boot custom wiring, include `useSpatialReady()` in the effect dependencies and treat fallback vs real nodes as separate lifetimes.
+
+```tsx
+function Drone() {
+  const ready = useSpatialReady()
+  const modelRef = useRef<ModelRef | null>(null)
+
+  useEffect(() => {
+    if (!ready) return
+    const model = modelRef.current
+    if (!model) return
+    // Attach spatial-only imperative work here, after the real implementation mounts.
+  }, [ready])
+
+  return <Model ref={modelRef} src="/drone.glb" />
+}
+```
+
 There is one caveat: **public spatial hooks (currently `useMetrics`) do NOT switch mid-life**. A component instance that first invoked `useMetrics()` while the bridge was unready continues using the placeholder for its entire lifetime. To start using the real hook, the component must be unmounted and remounted (e.g. via a `key` change, parent unmount, or page reload). This is intentional — it keeps the React Hook call sequence consistent for the instance's lifetime.
 
 ### Boot before vs after `hydrateRoot`
