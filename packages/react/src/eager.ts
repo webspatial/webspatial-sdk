@@ -64,11 +64,11 @@ import { eagerEntryRegistered } from './runtime/registerEagerEntry'
 // (see `runtime/bridge.ts` for the rationale).
 import * as SpatialImpl from './spatial'
 import { __internalSetSpatialImpl } from './runtime/bridge'
-// Keep registration binding live for downstream tree-shaking.
-// Read the value explicitly (without conditional control flow) so static
-// analysis does not flag a useless conditional.
-void eagerEntryRegistered
-__internalSetSpatialImpl(SpatialImpl)
+// Keep registration binding live for downstream tree-shaking by passing it
+// through the bridge setup call. A standalone `void eagerEntryRegistered` is
+// pure enough for consumer bundlers to erase, which drops the registration
+// chunk and disables mixed-entry detection.
+__internalSetSpatialImpl(SpatialImpl, eagerEntryRegistered)
 
 // --- Step 2: spatial primitives — REAL implementations from /spatial -------
 // Per the "Spatial primitives mount real implementations on first render"
