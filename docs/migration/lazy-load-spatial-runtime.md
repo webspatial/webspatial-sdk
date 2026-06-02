@@ -1,6 +1,6 @@
 # Migrating to lazy-load `@webspatial/react-sdk`
 
-This guide covers the upgrade from `@webspatial/react-sdk` `1.5.x` (or earlier) to the lazy-load v1 architecture. **It is a BREAKING change.**
+This guide covers the upgrade from `@webspatial/react-sdk` `1.5.x` (or earlier) to the lazy-load architecture. **It is a BREAKING change.** All breaking removals listed below happen in this major upgrade.
 
 The new architecture removes the dual-build (`dist/web` + `dist/default`) plus the alias-switching `@webspatial/vite-plugin` in favor of a single flat `dist/` layout where the spatial implementation lives in a dynamically importable subpath (`@webspatial/react-sdk/spatial`). Plain browsers pay only the lean default entry; the spatial chunk is fetched only when an application opts in via `bootSpatial()` from a WebSpatial-capable runtime.
 
@@ -11,10 +11,11 @@ The full normative contract lives in [`openspec/changes/lazy-load-spatial-runtim
 ## TL;DR
 
 1. **Remove `@webspatial/vite-plugin`** from your build pipeline (uninstall + delete the plugin entry from `vite.config.ts` / `webpack.config.js` / etc.).
-2. **Add `await bootSpatial()` before your first React render** in WebSpatial-runtime entry points. In plain browsers it resolves immediately and never fetches the spatial chunk; in WebSpatial shells it loads the spatial chunk over the network.
-3. **Stop importing the four internal containers** (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`) — use JSX markers (`enable-xr` / `enable-xr-monitor`) or a tiny `forwardRef` shim around those markers when you need a component value.
-4. **Replace `@webspatial/react-sdk/web` and `@webspatial/react-sdk/default` imports** with the default `@webspatial/react-sdk` entry. Both legacy subpaths are removed.
-5. **Confirm React `>=18.0`** is installed. React 18's `useSyncExternalStore` is a hard requirement.
+2. **Wrap React spatial UI in `<SpatialBoot>`** from `@webspatial/react-sdk`. It calls `bootSpatial()` after mount, renders `null` while boot is pending, mounts children only after boot succeeds, and invokes `onError` on `WebSpatialBootError`.
+3. **Use `await bootSpatial()` before `createRoot()` only as a CSR / imperative optimization.** In plain browsers it resolves immediately and never fetches the spatial chunk; in WebSpatial shells it loads the spatial chunk over the network.
+4. **Stop importing removed public exports**: internal containers (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`), factory HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`), `Spatialized2DElementContainerProps`, `SSRProvider`, and `getAbsoluteUrl`.
+5. **Replace `@webspatial/react-sdk/web` and `@webspatial/react-sdk/default` imports** with the default `@webspatial/react-sdk` entry. Both legacy subpaths are removed.
+6. **Confirm React `>=18.0`** is installed. React 18's `useSyncExternalStore` is a hard requirement.
 
 ---
 
@@ -65,20 +66,49 @@ If you also have `@webspatial/builder` invocations (e.g. `webspatial build --xrT
 
 ---
 
-## Step 2 — Call `bootSpatial()` before your first render
+## Step 2 — Boot with `<SpatialBoot>` in React apps
 
-The lazy-load v1 SDK loads the real spatial implementation on demand. Until you call `bootSpatial()`, every facade renders its documented per-component fallback (see the README's "Default fallbacks per component" table). The recommended integration is:
+The lazy-load SDK loads the real spatial implementation on demand. For React applications, the recommended integration is `<SpatialBoot>`:
 
 ```tsx
-import { bootSpatial } from '@webspatial/react-sdk'
+import { SpatialBoot, WebSpatialBootError } from '@webspatial/react-sdk'
+
+export function AppRoot() {
+  return (
+    <SpatialBoot
+      onError={(err: WebSpatialBootError) => {
+        // Show error UI; retry with bootSpatial() if needed.
+        console.error(err)
+      }}
+    >
+      <App />
+    </SpatialBoot>
+  )
+}
+```
+
+`SpatialBoot` calls `bootSpatial()` after mount. While boot is pending it renders `null`; children mount only after boot succeeds. There is no public `gate` or `fallback` prop — render loading UI in your surrounding app layout if needed.
+
+### Optional CSR pre-boot
+
+Pure client-rendered apps may still pre-await `bootSpatial()` before the first `createRoot()` render to shorten the blank period:
+
+```tsx
+import { bootSpatial, SpatialBoot } from '@webspatial/react-sdk'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 
 await bootSpatial()
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <SpatialBoot>
+    <App />
+  </SpatialBoot>,
+)
 ```
 
-`bootSpatial()` semantics:
+Use this as a CSR optimization, not as the default SSR / framework recipe. Next.js / React Router / Remix-style apps typically place `<SpatialBoot>` inside a `'use client'` subtree.
+
+`bootSpatial()` semantics are the same whether it is called by `<SpatialBoot>` or manually:
 
 - In a non-WebSpatial browser (`navigator.userAgent` does not match the WebSpatial / PICO shells nor the Puppeteer test harness), it resolves immediately and never fetches the spatial chunk. **Plain web users pay zero network for the spatial code.**
 - In a WebSpatial runtime, it dynamically imports `@webspatial/react-sdk/spatial`. The bundler (Vite, Webpack, Rspack, …) emits this as a separate chunk that is fetched once.
@@ -86,7 +116,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
 - It supports **retry on failure**: after a rejection, calling `bootSpatial()` again starts a fresh `import()`.
 - It **never throws raw `import()` errors**; rejection is always a `WebSpatialBootError` whose `cause` is the underlying error.
 
-If you need to call `bootSpatial()` later (e.g. inside `useEffect`), facades and hook placeholders will keep rendering their fallback until the promise resolves; on the next React commit after the bridge becomes ready, **mounted facades automatically swap to the real implementation** (no `key` change required).
+If you call `bootSpatial()` without `<SpatialBoot>`, facades and hook placeholders keep rendering their fallback until the promise resolves; on the next React commit after the bridge becomes ready, **mounted facades automatically swap to the real implementation** (no `key` change required).
 
 There is one caveat: **public spatial hooks (currently `useMetrics`) do NOT switch mid-life**. A component instance that first invoked `useMetrics()` while the bridge was unready continues using the placeholder for its entire lifetime. To start using the real hook, the component must be unmounted and remounted (e.g. via a `key` change, parent unmount, or page reload). This is intentional — it keeps the React Hook call sequence consistent for the instance's lifetime.
 
@@ -105,12 +135,12 @@ Both timings produce identical hydration safety because `useSpatialReady` is imp
 
 The four internal container classes are no longer publicly exported:
 
-| Removed (BREAKING)                    | Replacement                                                                                                                                                |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SpatializedContainer`                | Use the JSX marker `<div enable-xr />`; the SDK JSX runtime wraps it with the internal facade HOC at compile time                                          |
-| `Spatialized2DElementContainer`       | Same as above                                                                                                                                              |
-| `SpatializedStatic3DElementContainer` | Use `<Model {...} />`; the `Model` facade owns this internally                                                                                             |
-| `SpatialMonitor`                      | Use the JSX marker `<div enable-xr-monitor />`                                                                                                             |
+| Removed (BREAKING)                    | Replacement                                                                                                       |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `SpatializedContainer`                | Use the JSX marker `<div enable-xr />`; the SDK JSX runtime wraps it with the internal facade HOC at compile time |
+| `Spatialized2DElementContainer`       | Same as above                                                                                                     |
+| `SpatializedStatic3DElementContainer` | Use `<Model {...} />`; the `Model` facade owns this internally                                                    |
+| `SpatialMonitor`                      | Use the JSX marker `<div enable-xr-monitor />`                                                                    |
 
 Before:
 
@@ -200,7 +230,7 @@ The new JSX runtime strips spatial markers (`enable-xr`, `enable-xr-monitor`, `s
 The lazy-load v1 SDK relies on three bundler capabilities:
 
 1. **ECMAScript modules** — the package is published as ESM (`"type": "module"`). CommonJS `require()` is not supported.
-2. **`exports` package.json field** — for subpath resolution of `'.'`, `./jsx-runtime`, `./jsx-dev-runtime`, and `./spatial`.
+2. **`exports` package.json field** — for consumer subpath resolution of `'.'`, `./eager`, `./jsx-runtime`, `./jsx-dev-runtime`, and `./spatial`; the SDK also publishes `./internal/facades-client` for its own JSX-runtime boundary.
 3. **Dynamic `import()` with code-splitting** — the bridge invokes `import('@webspatial/react-sdk/spatial')`; the bundler must emit the spatial chunk as a separate output that is fetched on demand. Without code-splitting (e.g. bare esbuild without `splitting: true`), the bundler will inline the spatial chunk into the main bundle. **The SDK still functions correctly** but the per-application size benefit is lost on that consumer's bundle.
 
 ### Tested-target list (non-normative)
@@ -262,7 +292,7 @@ Do **not** import `@webspatial/core-sdk` on the server and execute spatial side 
 
 Supported SSR uses the **React SDK default entry** (facades + `bootSpatial()` on the client) or CSR-gates eager spatial primitives. Polyfills install only via `import '@webspatial/core-sdk/install-polyfills'` from the client spatial chunk (`!isSSREnv()` guard). See [`openspec/changes/platform-ssr-fail-fast/proposal.md`](../../openspec/changes/platform-ssr-fail-fast/proposal.md).
 
-> **Removed in v2:** `getAbsoluteUrl` was a Group C public export in v1 and has been removed from the published surface. It was promoted to public by accident during the lazy-load v1 redesign — the SDK only ever used it internally to feed the native bridge absolute asset URLs. Replace direct callers with `new URL(url, location.href).href` (browser) or your framework's URL helper (Next.js `metadataBase`, etc.) for server-side absolute URLs. The helper itself still exists under `src/internal/urlUtils.ts` for `Texture` / `ModelAsset` and is no longer a public-API commitment.
+> **Removed in this major release:** `getAbsoluteUrl` was promoted to the public surface by accident during the lazy-load redesign — the SDK only ever used it internally to feed the native bridge absolute asset URLs. Replace direct callers with `new URL(url, location.href).href` (browser) or your framework's URL helper (Next.js `metadataBase`, etc.) for server-side absolute URLs. The helper itself still exists under `src/internal/urlUtils.ts` for `Texture` / `ModelAsset` and is no longer a public-API commitment.
 
 ---
 
@@ -275,7 +305,7 @@ Pre-v1, `useMetrics` would silently switch from web fallback to real spatial val
 
 This change is required by the spec's "Hook implementation does not switch mid-life" Scenario, which keeps the React Hook call sequence consistent across the instance's lifetime (Rules of Hooks).
 
-The placeholder conversion functions throw `WebSpatialRuntimeError` when invoked in a non-WebSpatial browser. Guard with `useSpatialReady()` or only call conversions after `bootSpatial()` resolves and the component remounts.
+The placeholder conversion functions throw `WebSpatialRuntimeError` while the placeholder is active (plain web, SSR, pre-boot, or pinned placeholder instances). Guard with `useSpatialReady()` or only call conversions after `bootSpatial()` resolves and the component remounts.
 
 ---
 
@@ -285,12 +315,12 @@ The placeholder conversion functions throw `WebSpatialRuntimeError` when invoked
 - **BREAKING**: `@webspatial/vite-plugin` is no longer required and the SDK no longer participates in any plugin-driven import rewriting.
 - **BREAKING**: removed public exports `SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor` — use the `enable-xr` / `enable-xr-monitor` JSX markers.
 - **BREAKING**: `react` and `react-dom` are now required peer dependencies (`>=18.0`); React 17 and earlier are no longer supported.
-- **BREAKING**: spatial code is now lazy-loaded via `bootSpatial()`; applications that previously relied on spatial primitives mounting real implementations on first render MUST `await bootSpatial()` before `ReactDOM.createRoot(...).render(...)` (or accept the documented fallback-to-real swap on the next React commit after `bootSpatial()` resolves later).
+- **BREAKING**: spatial code is now lazy-loaded via `bootSpatial()`; React applications should wrap spatial UI in `<SpatialBoot>`, or use imperative `await bootSpatial()` before `ReactDOM.createRoot(...).render(...)` as a CSR-only optimization.
 - **BREAKING**: a component instance that calls `useMetrics()` (and any future spatial Hooks) now pins the placeholder-vs-real choice for its lifetime; remount required to switch to the real implementation after a late `bootSpatial()`.
 - **DEPRECATED**: `createElement` named export — migrate to the automatic JSX transform (`./jsx-runtime` / `./jsx-dev-runtime`). Removal scheduled for v2.
-- **BREAKING (v2+)**: removed **`SSRProvider`** from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. On the default entry, hydration gating is handled by the facade's `useSpatialReady` (`useSyncExternalStore`); real `Model` / `SpatializedContainer` are reached only through the facade delegate and mount after hydration commits, so no app-level Context or internal SSR wrapper is required — delete any `<SSRProvider>` wrapper; no replacement import is required. Spatial primitives imported from `@webspatial/react-sdk/eager` are CSR-only: if you server-render them, gate the subtree to the client (e.g. `dynamic(..., { ssr: false })`) or import from the default entry instead.
-
-- **BREAKING (v2)**: removed `withSpatialized2DElementContainer` and `withSpatialMonitor` named exports (plus the `Spatialized2DElementContainerProps` type) from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. The factory HOCs were demoted to internal-only — the documented public mechanism for wrapping intrinsic elements remains the `enable-xr` / `enable-xr-monitor` JSX marker. If you imported the factory directly to compose with a third-party HOC (e.g. `animated(withSpatialized2DElementContainer('div'))`), wrap your own `forwardRef` shim around `<div enable-xr ref={ref} />` and pass _that_ to the third-party HOC (see `packages/react/README.md` → "Advanced: composing with third-party HOCs" for the recipe).
+- **BREAKING**: removed **`SSRProvider`** from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. On the default entry, hydration gating is handled by the facade's `useSpatialReady` (`useSyncExternalStore`); real `Model` / `SpatializedContainer` are reached only through the facade delegate and mount after hydration commits, so no app-level Context or internal SSR wrapper is required — delete any `<SSRProvider>` wrapper; no replacement import is required. Spatial primitives imported from `@webspatial/react-sdk/eager` are CSR-only: if you server-render them, gate the subtree to the client (e.g. `dynamic(..., { ssr: false })`) or import from the default entry instead.
+- **BREAKING**: removed `withSpatialized2DElementContainer` and `withSpatialMonitor` named exports (plus the `Spatialized2DElementContainerProps` type) from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. The factory HOCs were demoted to internal-only — the documented public mechanism for wrapping intrinsic elements remains the `enable-xr` / `enable-xr-monitor` JSX marker. If you imported the factory directly to compose with a third-party HOC (e.g. `animated(withSpatialized2DElementContainer('div'))`), wrap your own `forwardRef` shim around `<div enable-xr ref={ref} />` and pass _that_ to the third-party HOC (see `packages/react/README.md` → "Advanced: composing with third-party HOCs" for the recipe).
+- **BREAKING**: removed `getAbsoluteUrl` from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`; replace it with standard URL helpers.
 - **Behavior change (`@webspatial/core-sdk`)**: `createPlatformSync()` / `createPlatform()` throw during SSR (no `window`) instead of using internal `SSRPlatform` no-ops. Fix server bundles that executed JSB or `openSpatialSceneSync`; use the React SDK default entry or CSR-gate spatial UI.
 
 ---
