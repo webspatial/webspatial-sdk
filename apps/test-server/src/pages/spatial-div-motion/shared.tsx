@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { enableDebugTool } from '@webspatial/react-sdk'
 import type { SpatializedVisualValues } from '@webspatial/core-sdk'
-import { spatialDivAnimationRoutes } from './routes'
+import { spatializedMotionDemoRoutes } from './routes'
 
 enableDebugTool()
 
@@ -13,19 +13,16 @@ export const btnCls =
 export const btnPrimary =
   'select-none px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 transition-colors'
 
-/** Format a possibly-undefined number with fixed precision. */
 export function fmtNum(n: number | undefined, digits = 2): string {
   return typeof n === 'number' && Number.isFinite(n) ? n.toFixed(digits) : '-'
 }
 
-/** Pretty-print whitelisted SpatialDiv animated values for log lines. */
 export function fmtValues(
   values: SpatializedVisualValues | Record<string, unknown> | undefined,
 ): string {
   if (!values) return '-'
   const parts: string[] = []
 
-  // Extract from nested structure: { transform?: { translate?, rotate?, scale? }, opacity? }
   const transform = values.transform as
     | {
         translate?: { x?: number; y?: number; z?: number }
@@ -117,10 +114,10 @@ export function SpatialDivAnimationPageShell({
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4 border-b border-gray-800 pb-4">
           <div className="space-y-2">
             <Link
-              to="/spatial-div-animation"
+              to="/spatial-div-motion"
               className="inline-flex text-sm text-blue-400 hover:text-blue-300"
             >
-              Back to SpatialDiv Animation
+              Back to Spatialized Motion
             </Link>
             <div>
               <h1 className="text-2xl font-bold">{title}</h1>
@@ -139,7 +136,7 @@ export function SpatialDivAnimationPageShell({
 export function SpatialDivAnimationOverview() {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {spatialDivAnimationRoutes.map(route => (
+      {spatializedMotionDemoRoutes.map(route => (
         <Link
           key={route.path}
           to={route.path}

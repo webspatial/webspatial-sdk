@@ -47,9 +47,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     lazy var animationManager: EntityAnimationManager = .init(scene: self)
 
     @ObservationIgnored
-    lazy var spatialDivAnimationManager: SpatialDivAnimationManager = .init(scene: self)
-
-    @ObservationIgnored
     lazy var containerMotionAnimationManager: SpatializedContainerMotionAnimationManager = .init(scene: self)
 
     /// Enum
@@ -488,7 +485,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         logger.debug("SpatialScene page generation advanced to \(currentPageGeneration)")
         // Clean up all animation sessions
         animationManager.removeAll()
-        spatialDivAnimationManager.removeAll()
+        containerMotionAnimationManager.removeAll()
         // destroy all SpatialObject asset
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
@@ -1393,72 +1390,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onAnimateSpatializedElementMotion(command: AnimateSpatializedElementMotionCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        if command.targetKind == "spatialized2d" {
-            onAnimateSpatialized2DMotion(command: command, resolve: resolve)
-            return
-        }
         onAnimateSpatializedContainerMotion(
             command: command,
             transformSink: command.transformSink,
             commandLabel: "AnimateSpatializedElementMotion",
             resolve: resolve
         )
-    }
-
-    private func onAnimateSpatialized2DMotion(command: AnimateSpatializedElementMotionCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        let commandLabel = "AnimateSpatializedElementMotion"
-        let manager = spatialDivAnimationManager
-        switch command.type {
-        case "play":
-            guard let elementId = command.elementId else {
-                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "\(commandLabel) play: elementId is required")))
-                return
-            }
-            guard let element: SpatializedElement = findSpatialObject(elementId) else {
-                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "\(commandLabel) play: element \(elementId) not found")))
-                return
-            }
-            manager.handlePlay(command: command, element: element, resolve: resolve)
-
-        case "pause":
-            manager.handlePause(command: command, resolve: resolve)
-
-        case "resume":
-            manager.handleResume(command: command, resolve: resolve)
-
-        case "reset":
-            guard let session = manager.getSession(command.animationId),
-                  let element: SpatializedElement = findSpatialObject(session.elementId)
-            else {
-                resolve(.success(nil))
-                return
-            }
-            manager.handleReset(command: command, element: element, resolve: resolve)
-
-        case "stop":
-            manager.handleStop(command: command, resolve: resolve)
-
-        case "finish":
-            guard let session = manager.getSession(command.animationId),
-                  let element: SpatializedElement = findSpatialObject(session.elementId)
-            else {
-                resolve(.success(nil))
-                return
-            }
-            manager.handleFinish(command: command, element: element, resolve: resolve)
-
-        case "cancel":
-            guard let session = manager.getSession(command.animationId),
-                  let element: SpatializedElement = findSpatialObject(session.elementId)
-            else {
-                resolve(.success(nil))
-                return
-            }
-            manager.handleCancel(command: command, element: element, resolve: resolve)
-
-        default:
-            resolve(.failure(JsbError(code: .TypeError, message: "\(commandLabel): unknown command type '\(command.type)'")))
-        }
     }
 
     private func onAnimateSpatializedContainerMotion(
@@ -1626,7 +1563,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     override func onDestroy() {
         animationManager.removeAll()
-        spatialDivAnimationManager.removeAll()
+        containerMotionAnimationManager.removeAll()
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()

@@ -1,88 +1,46 @@
-import { SpatialDivAnimationOverview } from './shared'
-
 export default function SpatialDivAnimationPage() {
   return (
     <div className="min-h-full bg-[#0d0d0d] p-6 text-white">
-      <div className="mx-auto max-w-6xl">
-        <h1 className="mb-2 text-2xl font-bold">SpatialDiv Animation</h1>
-        <p className="mb-2 max-w-3xl text-sm text-gray-400">
-          Test pages for SpatialDiv animation via{' '}
-          <code className="text-cyan-300">useAnimation</code> +{' '}
-          <code className="text-cyan-300">
-            {'<div enable-xr animation={...}>'}
-          </code>
-          . The hook auto-dispatches to the SpatialDiv path based on the{' '}
-          <code>to</code> key set.
-        </p>
-        <p className="mb-4 max-w-3xl text-xs text-gray-500">
-          Requires the WebSpatial visionOS runtime with{' '}
-          <code>AnimateSpatializedElementMotion</code> (
-          <code>targetKind: spatialized2d</code>) JSB support. In a regular
-          browser, the <code>enable-xr</code> div renders as a normal div;
-          callbacks and state transitions remain testable.
-        </p>
-
-        <div className="mb-8 rounded-xl border border-yellow-900/60 bg-yellow-950/30 p-4 text-xs text-yellow-200">
-          <div className="mb-1 font-semibold text-yellow-300">
-            Visual whitelist only
-          </div>
-          The SpatialDiv animation API only accepts visual fields:{' '}
-          <code className="text-cyan-300">transform.translate.x/y/z</code>,{' '}
-          <code className="text-cyan-300">transform.rotate.x/y/z</code>,{' '}
-          <code className="text-cyan-300">transform.scale.x/y/z</code>, and{' '}
-          <code className="text-cyan-300">opacity</code>. Layout / spatial-size
-          fields (<code>width</code>, <code>height</code>, <code>back</code>,{' '}
-          <code>backOffset</code>, <code>depth</code>) are explicitly rejected.
+      <div className="mx-auto max-w-4xl space-y-6">
+        <div className="space-y-2 border-b border-gray-800 pb-4">
+          <h1 className="text-2xl font-bold">SpatialDiv Animation Archive</h1>
+          <p className="text-sm text-gray-400">
+            This route is historical reference only. The legacy `animation`-prop
+            session path has been removed from the public surface.
+          </p>
         </div>
 
-        <SpatialDivAnimationOverview />
+        <section className="rounded-2xl border border-gray-800 bg-[#111] p-5 text-sm text-gray-300">
+          <p className="leading-6">
+            The old SpatialDiv session demo used to exercise the Plan A
+            compatibility layer. That entrypoint is now retired. For the unified
+            declarative motion API, use the Spatialized Motion pages under{' '}
+            <code className="text-cyan-300">/spatial-div-motion</code>.
+          </p>
+          <p className="mt-4 leading-6 text-gray-400">
+            Capability probes remain family-level:
+            <code className="ml-1 text-cyan-300">
+              supports(&apos;useAnimation&apos;, [&apos;element&apos;])
+            </code>
+            . Concrete availability checks should always use the relevant
+            sub-token.
+          </p>
+        </section>
 
-        <section className="mt-10 border-t border-gray-800 pt-6 text-sm text-gray-500">
-          <h3 className="mb-2 font-medium text-gray-400">
-            Manual verification checklist (visionOS)
-          </h3>
-          <ul className="list-disc space-y-1 pl-5">
+        <section className="rounded-2xl border border-gray-800 bg-[#111] p-5 text-sm text-gray-300">
+          <h2 className="mb-3 font-semibold text-gray-100">Historical notes</h2>
+          <ul className="list-disc space-y-2 pl-5 text-gray-400">
             <li>
-              Entrance: card fades in from translate.z=-50 / opacity=0 to rest
-              on mount.
+              Plan A&apos;s legacy `animation` prop path is no longer part of
+              the target-state API.
             </li>
             <li>
-              Scale expand: div grows from scale 0.6 to 1.0; cancel restores
-              original transform.
+              React, core, and visionOS now route 2D motion through the unified
+              `xr-animation` / `AnimateSpatializedElementMotion` path.
             </li>
             <li>
-              Opacity: element fades from 1.0 to 0.2; pause freezes mid-fade;
-              suppression test confirms native ignores CSS opacity changes.
-            </li>
-            <li>
-              Combined: after 500ms delay, translate.y / scale / opacity animate
-              simultaneously.
-            </li>
-            <li>
-              Playback rate: 2× speed completes a 2s rotate.z + opacity
-              animation in ~1s.
-            </li>
-            <li>
-              3D Rotate: transform.rotate.x/y/z animate together; pause / resume
-              / cancel each behave correctly.
-            </li>
-            <li>
-              Reverse loop: ping-pongs translate.x indefinitely; toggle pauses /
-              resumes the same session.
-            </li>
-            <li>
-              All lifecycle callbacks (onStart, onComplete, onCancel, onError)
-              appear in the log panel.
-            </li>
-            <li>
-              <code>playState</code> transitions through{' '}
-              <code>idle → running → paused → running → finished</code> as
-              expected; cancel returns to <code>idle</code>.
-            </li>
-            <li>
-              Capability detection page reports{' '}
-              <code>supports('useAnimation', ['element'])</code> consistently
-              with runtime expectation.
+              The archived legacy-session spec remains as reference material
+              only.
             </li>
           </ul>
         </section>

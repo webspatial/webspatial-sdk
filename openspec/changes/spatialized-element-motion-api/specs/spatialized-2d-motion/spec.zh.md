@@ -8,7 +8,7 @@
 
 ### Requirement: 2D 为 timeline 动画的参考 kind
 
-SDK MUST 将 `Spatialized2DElement` 动画视为 `animation` 绑定到 `enable-xr` 节点时解析的 2D 目标。实现使用共享的 `SpatializedMotionController`，配合 2D 策略（Web RAF + native `SpatialDivAnimationManager`）。
+SDK MUST 将 `Spatialized2DElement` 动画视为 `xr-animation` 绑定到 `enable-xr` 节点时解析的 2D 目标。实现使用共享的 `SpatializedMotionController`，配合 2D 策略（Web RAF + native `SpatializedContainerMotionAnimationManager`）。
 
 #### Scenario: 公共 React 入口
 

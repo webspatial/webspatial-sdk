@@ -2,11 +2,13 @@
 
 | 元素 kind | Core 类型 | React surface | 已交付 timeline | Web RAF 降级 | Native 后端 | 能力 token |
 |-----------|-----------|---------------|----------------|-------------|-------------|-----------|
-| **2D** | `Spatialized2DElement` | `useAnimation(config)` → `[animation, api, style]` | 是 | 是 | `SpatialDivAnimationManager` | `supports('useAnimation', ['element'])` |
+| **2D** | `Spatialized2DElement` | `useAnimation(config)` → `[animation, api, style]` | 是 | 是 | `SpatializedContainerMotionAnimationManager` | `supports('useAnimation', ['element'])` |
 | **Static3D** | `SpatializedStatic3DElement` | `<Model xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | 是 | **否** | `SpatializedContainerMotionAnimationManager` | `supports('useAnimation', ['static3d'])` |
 | **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | 是 | **否** | `SpatializedContainerMotionAnimationManager` | `supports('useAnimation', ['dynamic3d'])` |
 
-**实现说明：** TypeScript 使用**单一** `SpatializedMotionController` 覆盖三种 kind；native 侧 Static3D/Dynamic3D 共享 `SpatializedContainerMotionAnimationManager` + `SpatializedMotionTransformSink`，2D 使用独立的 `SpatialDivAnimationManager`。
+**实现说明：** TypeScript 使用**单一** `SpatializedMotionController` 覆盖三种 kind；native 侧 2D/Static3D/Dynamic3D 统一走 `SpatializedContainerMotionAnimationManager`，并共享 `SpatializedMotionTransformSink`。
+
+**能力契约：** `supports('useAnimation')` 仅保留 family 级语义。具体运行时可用性 MUST 使用 `supports('useAnimation', [subtoken])`。
 
 **不在本变更范围：** Reality 内部的 `SpatialEntity` transform timeline — 继续使用现有 `useAnimation` / `AnimateTransform`。
 
