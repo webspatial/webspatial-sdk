@@ -2,11 +2,13 @@
 
 | Element kind | Core type | React surface | Shipped timeline | Web RAF fallback | Native backend | Capability token |
 |--------------|-----------|---------------|------------------|------------------|----------------|------------------|
-| **2D** | `Spatialized2DElement` | `useAnimation(config)` → `[animation, api, style]` | Yes | Yes | `SpatialDivAnimationManager` | `supports('useAnimation', ['element'])` |
+| **2D** | `Spatialized2DElement` | `useAnimation(config)` → `[animation, api, style]` | Yes | Yes | `SpatializedContainerMotionAnimationManager` | `supports('useAnimation', ['element'])` |
 | **Static3D** | `SpatializedStatic3DElement` | `<Model xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | Yes | **No** | `Static3DMotionAnimationManager` | `supports('useAnimation', ['static3d'])` |
 | **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | Yes | **No** | `Dynamic3DMotionAnimationManager` | `supports('useAnimation', ['dynamic3d'])` |
 
-**Implementation note:** TypeScript uses a **single** `SpatializedMotionController` for all three kinds; native remains three managers until a future Swift consolidation.
+**Implementation note:** TypeScript uses a **single** `SpatializedMotionController` for all three kinds; native 2D now routes through `SpatializedContainerMotionAnimationManager` alongside Static3D / Dynamic3D.
+
+**Capability contract:** `supports('useAnimation')` is family-level only. Concrete runtime availability checks MUST use `supports('useAnimation', [subtoken])`.
 
 **Out of scope (this change):** `SpatialEntity` transform timelines inside Reality — keep existing `useAnimation` / `AnimateTransform` for entities.
 

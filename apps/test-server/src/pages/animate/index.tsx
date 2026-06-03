@@ -25,7 +25,7 @@ export default function AnimateTest() {
             className="text-amber-400 underline"
             to="/spatial-div-animation"
           >
-            Session API (animation prop)
+            SpatialDiv Animation archive
           </Link>
         </p>
         <PopmotionTest />

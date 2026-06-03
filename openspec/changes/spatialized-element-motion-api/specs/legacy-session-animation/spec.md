@@ -1,79 +1,15 @@
-# Legacy Session Animation (Plan A compatibility)
+# Legacy Session Animation (historical reference)
 
-## ADDED Requirements
+This file is retained only as historical context for the removed Plan A path.
+It does **not** define normative requirements for the current API surface.
 
-### Requirement: Legacy session animation remains compatible
+## Historical summary
 
-The legacy `useAnimation(config)` + `animation` prop path MUST remain compatible for existing `Spatialized2DElement` integrations while the unified motion API is adopted.
-
-#### Scenario: Existing SpatialDiv animation stays valid
-
-- **WHEN** an application continues using `useAnimation` with an `animation` prop on `enable-xr`
-- **THEN** the legacy session semantics and portal suppression MUST continue to work as before
-
-## Status
-
-**Superseded** by the unified `useAnimation` timeline hook. Retained for backward compatibility with existing `useAnimation` + `animation` prop integrations on `Spatialized2DElement`.
-
-## Scope
-
-This sub-spec documents the **Plan A session-based animation API** (`useAnimation(config)` + `animation` prop) as a compatibility layer within the unified spatialized element motion system. New integrations SHOULD use `useAnimation`.
-
-## Relationship to Current Architecture
-
-| Aspect | Legacy (Plan A) | Current (Plan B / unified) |
-|--------|-----------------|---------------------------|
-| Hook | `useAnimation(config)` | `useAnimation(config)` |
-| Binding | `animation` prop on `enable-xr` node | `style` merge + optional `xr-animation` binding |
-| Config shape | `from` / `to` single segment | `from/to` (recommended) or `tracks[]` with keyframes (mutually exclusive) |
-| Playback backend | Native only | Web RAF + native (dual backend) |
-| Supported kinds | `spatialized2d` only | `spatialized2d`, `static3d`, `dynamic3d` |
-| Capability token | `supports('useAnimation', ['element'])` | `supports('useAnimation', [kind === 'spatialized2d' ? 'element' : kind])` |
-
-## RETAINED Requirements
-
-The following requirements from the original `spatial-div-animation-api` spec remain normative for the legacy path:
-
-### Requirement: Legacy useAnimation hook returns [animation, api]
-
-When application code calls `useAnimation(config)` for SpatialDiv, the hook MUST return `[animation, api]` where `api` exposes `play`, `pause`, `stop`, `reset`, `finish`, `isAnimating`, `isPaused`, `finished`, and `playState`.
-
-### Requirement: animation prop binds to SpatialDiv only
-
-The `animation` object MUST be passed to an `enable-xr` HTML node. Binding to a non-spatialized node MUST emit a warning and `play()` MUST be a no-op. The same `animation` object MUST NOT be reused across elements.
-
-### Requirement: Whitelisted properties (same as unified)
-
-Legacy animation supports the same visual-only whitelist: `transform.translate.x/y/z`, `transform.rotate.x/y/z`, `transform.scale.x/y/z`, and `opacity`. Layout-affecting fields MUST be rejected.
-
-### Requirement: Session state machine
-
-Session states (`idle`, `queued`, `delaying`, `running`, `paused`, `finished`) and `isAnimating`/`isPaused`/`finished`/`playState` semantics MUST match the unified spec. See the archived `spatial-div-animation/spec.md` for complete scenario coverage.
-
-### Requirement: Imperative playback and lifecycle
-
-`play`, `pause`, `stop`, `reset`, `finish`, and lifecycle callbacks (`onStart`, `onComplete`, `onStop`, `onReset`, `onError`) MUST follow the same semantics documented in the archived spec.
-
-### Requirement: Portal suppression during playback
-
-Property-level suppression for `opacity` and transform-wide suppression MUST prevent regular DOM sync from overwriting animation mid-states. Suppression release timing and `reset` restoring to `from` are unchanged.
-
-### Requirement: Unmount cleanup
-
-Alive sessions MUST be torn down on unmount without firing lifecycle callbacks.
-
-## Separation from the unified timeline hook
-
-The unified `useAnimation` timeline path MUST remain separate from the legacy native segment command path. `useAnimation` authoring shapes may normalize to `tracks`, but they MUST NOT downgrade into the legacy `from`/`to` native command defined by this compatibility layer.
-
-## Deprecation Path
-
-- `useAnimation` for SpatialDiv remains functional and is the current public hook name.
-- The `animation` prop on `enable-xr` nodes remains recognized but is not required for the motion path.
-- Future major versions MAY remove the legacy path entirely.
+- Plan A used `useAnimation(config)` plus an `animation` prop on `enable-xr` nodes.
+- The compatibility path has been removed from the target-state API.
+- New integrations MUST use the unified `useAnimation(config)` timeline API with `xr-animation`.
 
 ## Cross-references
 
-- Full archived spec: `openspec/changes/archive/spatial-div-animation-api/specs/spatial-div-animation/spec.md`
-- Feasibility study: `references/feasibility-visionOS.md`
-- Feasibility analysis: `references/feasibility-visionOS-analysis.md`
+- Archived Plan A spec: `openspec/changes/archive/spatial-div-animation-api/specs/spatial-div-animation/spec.md`
+- Unified umbrella: `openspec/changes/spatialized-element-motion-api/`

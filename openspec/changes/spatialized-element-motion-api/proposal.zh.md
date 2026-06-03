@@ -14,7 +14,7 @@
    - 引入 `useAnimation(config)` + `animation` prop 用于 SpatialDiv
    - 单段 `from`/`to`，仅 native 播放
    - 确立了：属性白名单、会话状态机、Portal 抑制、生命周期回调
-   - 仅作为历史背景保留；本 change 的目标态改为彻底移除 legacy 公共入口及其 backend path
+   - 仅作为历史背景保留；legacy 公共入口及其 backend path 已从目标态 API 中移除
 
 2. **Plan B — Motion Timeline API**（`spatial-div-motion-api`，已归档）
    - 引入 `useAnimation(config)` 多轨 timeline + `style` outlet
@@ -23,10 +23,10 @@
 
 本**伞式变更**将两者合并为单一规范 surface：
 - Plan B 的 **timeline 数据模型** 为规范配置形状
-- Plan A 的 **会话语义**（状态机、抑制、生命周期）保持规范性
+- Plan A 的 **会话语义** 仅作为归档 spec 中的历史参考保留；目标态 API 为统一的 `xr-animation` motion 路径
 - 覆盖范围扩展到 Static3D 和 Dynamic3D（仅 native，无 Web RAF）
 - `useAnimation` 的所有 authoring 形状（`from/to`、`timeline`、`tracks`）都编译为同一个 canonical `tracks` 执行模型
-- Plan A 的旧公共路径（`useAnimation` + `animation` prop）不再属于目标态 API；剩余清理工作在本 change 中继续跟踪
+- Plan A 的旧公共路径（`useAnimation` + `animation` prop）已从目标态 API 中移除
 
 ## 概览
 
@@ -93,7 +93,7 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 - **Entity 专用 API**：Entity transform animation 命名为 `useEntityAnimation(config)`，并继续保留在独立的 `AnimateTransform` 栈上。
 - **Portal 抑制**：native 播放期间抑制被动画控制的字段（opacity 属性级、transform 整体级）。
 - **会话语义**：状态机、生命周期回调、错误处理在所有路径上统一。
-- **legacy 删除目标**：旧的 `animation` prop 路径、legacy SpatialDiv session hook 路径，以及 visionOS 专用的旧 2D backend path 都纳入删除范围；目标态仅保留统一的 `xr-animation` motion 路径。
+- **legacy 删除目标**：旧的 `animation` prop 路径、legacy SpatialDiv session hook 路径，以及 visionOS 专用的旧 2D backend path 已从目标态中移除；目标态仅保留统一的 `xr-animation` motion 路径。
 - **能力探测**：运行时能力探测继续使用 `useAnimation` family key 和其 subtoken（`entity`、`element`、`static3d`、`dynamic3d`）。判断具体能力时 MUST 使用 subtoken。之所以保留 family 级命名，是因为长期路线仍计划把 `useEntityAnimation` 再整合回 `useAnimation` family。
 
 ## 两阶段命名迁移
@@ -107,7 +107,8 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 ### 新增
 
 - `spatialized-element-motion` — 伞式需求与按 kind 矩阵。
-- `spatialized-2d-motion` — 2D timeline + 双后端（参考实现）。- `spatialized-static3d-motion` — Model 根 transform timeline（仅 native）。
+- `spatialized-2d-motion` — 2D timeline + 双后端（参考实现）。
+- `spatialized-static3d-motion` — Model 根 transform timeline（仅 native）。
 - `spatialized-dynamic3d-motion` — Reality 容器 transform timeline（仅 native）。
 
 ### 修改
@@ -130,6 +131,6 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 
 - **包**：`@webspatial/react-sdk`、`@webspatial/core-sdk`、visionOS native bridge/runtime。
 - **公共 API**：空间动画使用 `useAnimation`，Entity transform 使用 `useEntityAnimation`，其余包括 `SpatializedMotionConfig`、`SpatializedPlaybackApi` 以及 `<Model>` 和 `<Reality>` 上的 `xr-animation` binding prop。
-- **迁移形态**：命名调整分两阶段落地，先迁移 Entity demo，再迁移空间动画 demo；剩余的 legacy 清理会移除过时的 `animation` prop 路径，而不是继续保留兼容层。
+- **迁移形态**：命名调整分两阶段落地，先迁移 Entity demo，再迁移空间动画 demo；legacy `animation` prop 路径已移除，不再保留兼容层。
 - **能力契约**：`supports('useAnimation')` 仅保留 family 级探测语义。调用方 MUST 使用 `supports('useAnimation', [subtoken])` 判断 `entity`、`element`、`static3d` 或 `dynamic3d` 是否在当前运行时可用。
 - **破坏性变更**：有；当前公共 `useAnimation` 会迁移为 `useEntityAnimation`，当前空间动画 hook 会迁移为 `useAnimation`。

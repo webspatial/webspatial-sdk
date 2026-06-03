@@ -65,7 +65,6 @@ export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
         computedStyle: CSSStyleDeclaration,
       ) => Record<string, any>
       spatialEventOptions?: SpatialEventOptions
-      animation?: import('@webspatial/core-sdk').SpatializedMotionBinding
       'xr-animation'?: import('./motion/motionBindingTypes').SpatializedMotionBindingInternal
 
       [SpatialID]: string

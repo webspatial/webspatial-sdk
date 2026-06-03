@@ -8,7 +8,7 @@
 
 ### Requirement: 2D is the reference kind for timeline motion
 
-The SDK MUST treat `Spatialized2DElement` motion as the 2D target, resolved when `animation` is bound to an `enable-xr` node. Implementation uses the shared `SpatializedMotionController` with 2D policy (Web RAF + native `SpatialDivAnimationManager`).
+The SDK MUST treat `Spatialized2DElement` motion as the 2D target, resolved when `xr-animation` is bound to an `enable-xr` node. Implementation uses the shared `SpatializedMotionController` with 2D policy (Web RAF + native `SpatializedContainerMotionAnimationManager`).
 
 #### Scenario: Public React entry
 

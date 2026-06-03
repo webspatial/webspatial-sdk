@@ -3,7 +3,6 @@ import {
   PortalInstanceObject,
   PortalInstanceContext,
 } from './context/PortalInstanceContext'
-import { Spatialized2DElement } from '@webspatial/core-sdk'
 import type { SpatializedMotionBindingInternal } from './motion/motionBindingTypes'
 import {
   PortalSpatializedContainerProps,
@@ -88,7 +87,6 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     spatializedContent: Content,
     createSpatializedElement,
     getExtraSpatializedElementProperties,
-    animation,
     'xr-animation': xrAnimation,
     onSpatialTap,
     onSpatialDragStart,

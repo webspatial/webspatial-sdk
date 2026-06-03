@@ -5,10 +5,10 @@ import type {
 } from '@webspatial/core-sdk'
 import type { SpatializedMotionTargetKind } from './targetKind'
 
-/** Internal binding surface for Portal (2D `xr-animation` / legacy `animation` prop). */
+/** Internal binding surface for Portal (2D `xr-animation`). */
 export interface SpatializedMotionBindingInternal {
   readonly __kind: 'spatializedMotion'
-  readonly __propName: 'animation' | 'xr-animation'
+  readonly __propName: 'xr-animation'
   readonly __motionObjectId: string
   get __animating(): boolean
   readonly __suppressedFields: Set<string> | null

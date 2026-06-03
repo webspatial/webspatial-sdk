@@ -80,19 +80,6 @@ import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/cap
 import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loop'
 import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
 import SpatialDivAnimationPage from './src/pages/spatial-div-animation/index'
-import SpatialDivFadeInEntrancePage from './src/pages/spatial-div-animation/fade-in-entrance'
-import SpatialDivScaleExpandPage from './src/pages/spatial-div-animation/scale-expand'
-import SpatialDivOpacityFadePage from './src/pages/spatial-div-animation/opacity-fade'
-import SpatialDivCombinedDelayPage from './src/pages/spatial-div-animation/combined-delay'
-import SpatialDivPlaybackRatePage from './src/pages/spatial-div-animation/playback-rate'
-import SpatialDivRotate3dPage from './src/pages/spatial-div-animation/rotate-3d'
-import SpatialDivTransformTranslatePage from './src/pages/spatial-div-animation/transform-translate'
-import SpatialDivReverseLoopPage from './src/pages/spatial-div-animation/reverse-loop'
-import SpatialDivCapabilityCheckPage from './src/pages/spatial-div-animation/capability-check'
-import SpatializedMotionPlayStatePage from './src/pages/spatial-div-animation/play-state'
-import SpatialDivPerfComparisonPage from './src/pages/spatial-div-animation/perf-comparison'
-import SpatialDivLoopAnimationPage from './src/pages/spatial-div-animation/loop-animation'
-import SpatialDivNestedAnimationPage from './src/pages/spatial-div-animation/nested-animation'
 import SpatialElementMotionPage from './src/pages/spatial-element-motion/index'
 import SpatialElementMotionFadeInEntrancePage from './src/pages/spatial-element-motion/fade-in-entrance'
 import { SpatialDivMotionTimelinePercentPage } from './src/pages/spatial-div-motion/timeline-percent'
@@ -222,58 +209,6 @@ function App() {
                 <Route
                   path="/spatial-div-animation"
                   element={<SpatialDivAnimationPage />}
-                />
-                <Route
-                  path="/spatial-div-animation/fade-in-entrance"
-                  element={<SpatialDivFadeInEntrancePage />}
-                />
-                <Route
-                  path="/spatial-div-animation/scale-expand"
-                  element={<SpatialDivScaleExpandPage />}
-                />
-                <Route
-                  path="/spatial-div-animation/opacity-fade"
-                  element={<SpatialDivOpacityFadePage />}
-                />
-                <Route
-                  path="/spatial-div-animation/combined-delay"
-                  element={<SpatialDivCombinedDelayPage />}
-                />
-                <Route
-                  path="/spatial-div-animation/playback-rate"
-                  element={<SpatialDivPlaybackRatePage />}
-                />
-                <Route
-                  path="/spatial-div-animation/rotate-3d"
-                  element={<SpatialDivRotate3dPage />}
-                />
-                <Route
-                  path="/spatial-div-animation/reverse-loop"
-                  element={<SpatialDivReverseLoopPage />}
-                />
-                <Route
-                  path="/spatial-div-animation/capability-check"
-                  element={<SpatialDivCapabilityCheckPage />}
-                />
-                <Route
-                  path="/spatial-div-animation/play-state"
-                  element={<SpatializedMotionPlayStatePage />}
-                />
-                <Route
-                  path="/spatial-div-animation/transform-translate"
-                  element={<SpatialDivTransformTranslatePage />}
-                />
-                <Route
-                  path="/spatial-div-animation/perf-comparison"
-                  element={<SpatialDivPerfComparisonPage />}
-                />
-                <Route
-                  path="/spatial-div-animation/loop-animation"
-                  element={<SpatialDivLoopAnimationPage />}
-                />
-                <Route
-                  path="/spatial-div-animation/nested-animation"
-                  element={<SpatialDivNestedAnimationPage />}
                 />
                 <Route
                   path="/spatial-element-motion"
