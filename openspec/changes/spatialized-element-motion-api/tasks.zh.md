@@ -171,3 +171,19 @@
 - [x] 重构 `apps/test-server/src/pages/spatial-element-motion/**`，改为使用新的 `useAnimation` 导入
 - [x] 更新空间动画 capability-check 页面及相关 runtime probe 文案，使用重命名后的 hook 名称
 - [x] 验证重构后的 spatialized-motion `test-server` 页面仍可正常渲染并控制播放
+
+## Phase 14 — 删除 legacy SpatialDiv session 路径
+
+- [ ] Proposal/tasks 跟进：重写伞式 change 叙事，明确 Plan A 仅作为历史背景保留，不再作为兼容路径保留在目标态中
+- [ ] React 公共接口：移除 legacy `animation` prop 路径及其旧 SpatialDiv session 绑定流程
+- [ ] React 内部实现：在没有公共调用方后，删除 `useSpatialDivAnimation` 及其他仅服务于 legacy 的 wiring
+- [ ] Core 公共接口：移除 `animateSpatialDiv()` 及其他仅为 legacy session 路径保留的废弃 2D 别名
+- [ ] Demo 清理：删除或替换 `apps/test-server/src/pages/spatial-div-animation/**` 中仍依赖 legacy 入口的页面
+- [ ] Spec 清理：将 `specs/legacy-session-animation/` 改写为纯历史参考，或在最终 scope 不再需要时将其移出 active umbrella
+
+## Phase 15 — visionOS 2D backend 收敛 + capability 契约收口
+
+- [ ] visionOS native 路由：将 `spatialized2d` 从 `onAnimateSpatialized2DMotion` / `SpatialDivAnimationManager` 收敛到统一的 `onAnimateSpatializedContainerMotion` / `SpatializedContainerMotionAnimationManager` 路径
+- [ ] visionOS 清理：在统一路径对 play pause resume stop reset finish 和 unbind cleanup 达到语义对齐后，删除旧 2D native 适配层
+- [ ] Capability 契约文档：保留 `useAnimation` 顶层 family key，并保留 `entity` 作为 subtoken，因为长期路线仍计划将 entity animation 再整合回 `useAnimation` family
+- [ ] Capability 使用约束：文档中明确具体运行时检查 MUST 使用 `supports('useAnimation', [subtoken])`；`supports('useAnimation')` 仅保留 family 级语义，MUST NOT 被当作目标可用性判断
