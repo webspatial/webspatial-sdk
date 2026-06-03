@@ -2,7 +2,6 @@ import {
   AddSpatializedElementToSpatialized2DElement,
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
-import { SpatialWebEvent } from './SpatialWebEvent'
 import { executeAnimateSpatializedElementMotion } from './spatialized/executeAnimateSpatializedElementMotion'
 import {
   SpatializedMotionController,
@@ -13,7 +12,6 @@ import type { SpatializedMotionConfig } from './types/spatializedMotion'
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
-  ElementMotionCommand,
 } from './types/spatializedElementMotion'
 import type { SpatializedVisualValues } from './types/spatializedVisual'
 import { hijackWindowATag } from './scene-polyfill'
@@ -79,32 +77,6 @@ export class Spatialized2DElement extends SpatializedElement {
   > {
     const { targetKind, ...rest } = command
     return executeAnimateSpatializedElementMotion(this.id, targetKind, rest)
-  }
-
-  /** @deprecated Use {@link animateMotion} — kept for `useSpatialDivAnimation` and legacy callers. */
-  animateSpatialDiv(
-    command: ElementMotionCommand & { type: 'play' },
-  ): Promise<AnimateSpatializedElementMotionResult>
-  animateSpatialDiv(
-    command: ElementMotionCommand & { type: 'pause' },
-  ): Promise<SpatializedVisualValues>
-  animateSpatialDiv(command: ElementMotionCommand): Promise<void>
-  async animateSpatialDiv(
-    command: ElementMotionCommand,
-  ): Promise<
-    AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
-  > {
-    return executeAnimateSpatializedElementMotion(
-      this.id,
-      'spatialized2d',
-      command,
-    )
-  }
-
-  cleanupSpatialDivAnimationListeners(animationId: string) {
-    SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
-    SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
-    SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
   }
 
   /**

@@ -77,17 +77,16 @@
 				dynamic3d/SpatialTextureResource.swift,
 				MaterialSceneRefresh.swift,
 				SpatialApp.swift,
-				spatialdiv/SpatialDivAnimationManager.swift,
 				spatialdiv/SpatialDivAnimationSession.swift,
 				spatialdiv/SpatialDivTimelineEvaluator.swift,
+				spatialized/SpatializedContainerMotionAnimationManager.swift,
+				spatialized/SpatializedContainerMotionCommand.swift,
+				spatialized/SpatializedMotionTransformSink.swift,
 				Spatialized2DElement.swift,
 				SpatializedDynamic3DElement.swift,
 				SpatializedElement.swift,
 				SpatializedStatic3DElement.swift,
 				SpatialScene.swift,
-				spatialized/SpatializedContainerMotionAnimationManager.swift,
-				spatialized/SpatializedContainerMotionCommand.swift,
-				spatialized/SpatializedMotionTransformSink.swift,
 			);
 			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
 		};
