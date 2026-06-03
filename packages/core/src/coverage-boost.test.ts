@@ -326,8 +326,8 @@ describe('platform adapters', () => {
     const r = await platform.createNativeSpatialDiv()
 
     expect(r.success).toBe(true)
-    expect(r.data.id).toBe(uuid)
-    expect(r.data.windowProxy).toBe(windowProxy)
+    expect(r.data?.id).toBe(uuid)
+    expect(r.data?.windowProxy).toBe(windowProxy)
   })
 })
 

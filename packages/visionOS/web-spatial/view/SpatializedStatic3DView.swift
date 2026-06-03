@@ -35,7 +35,7 @@ struct SpatializedStatic3DView: View {
         let z = translation.z
 
         let enableGesture = spatializedElement.enableGesture
-        if !spatializedStatic3DElement.allSources.isEmpty {
+        if spatializedStatic3DElement.loading == .eager {
             Group {
                 switch loadState {
                 case .idle, .loading:
