@@ -171,3 +171,19 @@
 - [x] Refactor `apps/test-server/src/pages/spatial-element-motion/**` to use the new `useAnimation` import
 - [x] Update spatialized motion capability-check pages and related runtime probe copy to the renamed hook
 - [x] Verify the refactored spatialized-motion `test-server` pages still render and control playback correctly
+
+## Phase 14 — Remove legacy SpatialDiv session path
+
+- [ ] Proposal/tasks follow-up: rewrite the umbrella change narrative so Plan A remains historical context only and is no longer a retained compatibility path
+- [ ] React public surface: remove the legacy `animation` prop path and its old SpatialDiv session binding flow
+- [ ] React internals: remove `useSpatialDivAnimation` and other legacy-only wiring once no public callers remain
+- [ ] Core public surface: remove `animateSpatialDiv()` and other deprecated 2D aliases kept only for the legacy session path
+- [ ] Demo cleanup: remove or replace `apps/test-server/src/pages/spatial-div-animation/**` pages that still exercise the legacy entrypoints
+- [ ] Spec cleanup: rewrite `specs/legacy-session-animation/` as historical reference only, or remove it from the active umbrella if the final scope no longer needs an active legacy sub-spec
+
+## Phase 15 — visionOS 2D backend convergence + capability contract cleanup
+
+- [ ] visionOS native routing: move `spatialized2d` off `onAnimateSpatialized2DMotion` / `SpatialDivAnimationManager` and onto the unified `onAnimateSpatializedContainerMotion` / `SpatializedContainerMotionAnimationManager` path
+- [ ] visionOS cleanup: delete the old 2D native adapter layer after unified routing reaches semantic parity for play pause resume stop reset finish and unbind cleanup
+- [ ] Capability contract docs: keep `useAnimation` as the top-level family key and keep `entity` as a sub-token because the long-term roadmap still converges entity animation back into the `useAnimation` family
+- [ ] Capability guidance: document that concrete runtime checks MUST use `supports('useAnimation', [subtoken])`; `supports('useAnimation')` remains family-level only and MUST NOT be treated as target availability
