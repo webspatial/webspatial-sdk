@@ -10,9 +10,8 @@ import {
   SpatialMagnifyEndEvent,
   SpatialEventOptions,
   type SpatialContentReadyCallback,
-  //@ts-ignore bypass ts check for external
+  // @ts-ignore bypass ts check for external
 } from '@webspatial/react-sdk'
-import type { SpatializedMotionBinding } from '@webspatial/core-sdk'
 import type { SpatializedMotionBindingInternal } from '../spatialized-container/motion/motionBindingTypes'
 
 import 'react'
@@ -112,7 +111,6 @@ export namespace WebSpatialJSX {
   type BaseSpatialIntrinsic = {
     style?: React.CSSProperties
     'enable-xr'?: boolean
-    animation?: SpatializedMotionBinding
     'xr-animation'?: SpatializedMotionBindingInternal
     onSpatialTap?: (e: SpatialTapEvent) => void
     onSpatialDragStart?: (e: SpatialDragStartEvent) => void

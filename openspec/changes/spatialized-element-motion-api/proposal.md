@@ -14,7 +14,7 @@ This proposal unifies two prior efforts:
    - Introduced `useAnimation(config)` + `animation` prop for SpatialDiv
    - Single `from`/`to` segment, native-only playback
    - Established: property whitelist, session state machine, Portal suppression, lifecycle callbacks
-   - Remains as historical context only; this change now targets full removal of the legacy public entrypoints and their backend path
+   - Remains as historical context only; the legacy public entrypoints and backend path are removed from the target-state API
 
 2. **Plan B — Motion Timeline API** (`spatial-div-motion-api`, archived)
    - Introduced `useAnimation(config)` with multi-track timeline + `style` outlet
@@ -23,10 +23,10 @@ This proposal unifies two prior efforts:
 
 This **umbrella change** merges both into a single normative surface:
 - The **timeline data model** from Plan B is the canonical config shape
-- The **session semantics** (state machine, suppression, lifecycle) from Plan A remain normative
+- The **session semantics** from Plan A remain as historical reference material in the archived spec; the target-state API is the unified `xr-animation` motion path
 - Coverage extends to Static3D and Dynamic3D (native-only, no Web RAF)
 - All `useAnimation` authoring shapes (`from`/`to`, `timeline`, `tracks`) compile to the same canonical `tracks` execution model
-- The legacy Plan A public path (`useAnimation` + `animation` prop) is no longer part of the target-state API; the remaining cleanup is tracked as follow-up work in this change
+- The legacy Plan A public path (`useAnimation` + `animation` prop) is removed from the target-state API
 
 ## At a Glance
 
@@ -93,7 +93,7 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 - **Entity-specific API**: entity transform animation is named `useEntityAnimation(config)` and remains on the separate `AnimateTransform` stack.
 - **Portal suppression**: animated fields suppressed during native playback (property-level for opacity, transform-wide for transform).
 - **Session semantics**: state machine, lifecycle callbacks, error handling unified across all paths.
-- **Legacy removal target**: the old `animation` prop path, legacy SpatialDiv session hook path, and the visionOS-specific legacy 2D backend path are all scheduled for removal; only the unified `xr-animation` motion path remains in the target state.
+- **Legacy removal target**: the old `animation` prop path, legacy SpatialDiv session hook path, and the visionOS-specific legacy 2D backend path are removed from the target state; only the unified `xr-animation` motion path remains.
 - **Capability detection**: runtime capability probes continue to use the `useAnimation` family key with sub-tokens (`entity`, `element`, `static3d`, `dynamic3d`). Concrete feature checks MUST use sub-tokens. This family-level naming is retained because the long-term roadmap is to converge `useEntityAnimation` back into the `useAnimation` family.
 
 ## Two-Phase Naming Migration
@@ -107,7 +107,8 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 ### New
 
 - `spatialized-element-motion` — umbrella requirements and per-kind matrix.
-- `spatialized-2d-motion` — 2D timeline + dual backend (reference implementation).- `spatialized-static3d-motion` — Model root transform timeline (native-only).
+- `spatialized-2d-motion` — 2D timeline + dual backend (reference implementation).
+- `spatialized-static3d-motion` — Model root transform timeline (native-only).
 - `spatialized-dynamic3d-motion` — Reality container transform timeline (native-only).
 
 ### Modified
@@ -130,6 +131,6 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 
 - **Packages**: `@webspatial/react-sdk`, `@webspatial/core-sdk`, visionOS native bridge/runtime.
 - **Public API**: `useAnimation` for spatialized motion, `useEntityAnimation` for entity transforms, `SpatializedMotionConfig`, `SpatializedPlaybackApi`, and the `xr-animation` binding prop on `<Model>` and `<Reality>`.
-- **Migration shape**: the rename lands in two phases so entity demos move first and spatialized motion demos move second; the remaining legacy cleanup removes the obsolete `animation` prop path rather than preserving it as a compatibility layer.
+- **Migration shape**: the rename lands in two phases so entity demos move first and spatialized motion demos move second; the legacy `animation` prop path is removed rather than preserved as a compatibility layer.
 - **Capability contract**: `supports('useAnimation')` remains a family-level probe only. Callers MUST use `supports('useAnimation', [subtoken])` to determine whether `entity`, `element`, `static3d`, or `dynamic3d` is available in the current runtime.
 - **Breaking changes**: yes; the current public `useAnimation` name moves to `useEntityAnimation`, and the current spatialized motion hook name moves to `useAnimation`.

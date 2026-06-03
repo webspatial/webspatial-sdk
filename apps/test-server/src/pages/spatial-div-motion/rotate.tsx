@@ -1,13 +1,7 @@
 import { supports } from '@webspatial/core-sdk'
 import { useAnimation } from '@webspatial/react-sdk'
 import { useEffect, useState } from 'react'
-import {
-  btnCls,
-  btnPrimary,
-  fmtNum,
-  fmtValues,
-  Log,
-} from '../spatial-div-animation/shared'
+import { btnCls, btnPrimary, fmtNum, fmtValues, Log } from './shared'
 
 const DURATION = 4
 

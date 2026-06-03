@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAnimation } from '@webspatial/react-sdk'
-import { btnCls } from '../spatial-div-animation/shared'
+import { btnCls } from './shared'
 
 /** Segment-equivalent demo: opacity + translate.z over 0.8s (native segment path on AVP). */
 const SIMPLE_ENTRANCE = {
