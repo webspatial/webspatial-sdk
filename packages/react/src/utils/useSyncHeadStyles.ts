@@ -1,6 +1,10 @@
 import { useEffect } from 'react'
 
-import { syncParentHeadToChild } from './windowStyleSync'
+import { SpatialStyleInfoUpdateEvent } from '../notifyUpdateStandInstanceLayout'
+import {
+  disposeSyncParentHeadToChild,
+  scheduleSyncParentHeadToChild,
+} from './windowStyleSync'
 
 interface Options {
   subtree?: boolean
@@ -9,11 +13,78 @@ interface Options {
 
 type SyncTiming = 'immediate' | 'delayed'
 
+const activeChildWindows = new Set<WindowProxy>()
+
+let patchedCssomUsers = 0
+let originalInsertRule: CSSStyleSheet['insertRule'] | undefined
+let originalDeleteRule: CSSStyleSheet['deleteRule'] | undefined
+
+function isParentHeadStyleSheet(sheet: CSSStyleSheet) {
+  const ownerNode = (sheet as CSSStyleSheet & { ownerNode?: Node }).ownerNode
+  if (
+    ownerNode instanceof HTMLStyleElement &&
+    ownerNode.ownerDocument === document &&
+    document.head.contains(ownerNode)
+  ) {
+    return true
+  }
+
+  return Array.from(document.head.querySelectorAll('style')).some(
+    style => style.sheet === sheet,
+  )
+}
+
+function scheduleActiveChildWindowSync() {
+  for (const childWindow of activeChildWindows) {
+    scheduleSyncParentHeadToChild(childWindow, 'immediate')
+  }
+}
+
+function installCssomRuleObserver() {
+  if (typeof CSSStyleSheet === 'undefined') return () => {}
+
+  patchedCssomUsers++
+  if (patchedCssomUsers > 1) {
+    return () => {
+      patchedCssomUsers--
+    }
+  }
+
+  originalInsertRule = CSSStyleSheet.prototype.insertRule
+  originalDeleteRule = CSSStyleSheet.prototype.deleteRule
+
+  CSSStyleSheet.prototype.insertRule = function patchedInsertRule(
+    rule: string,
+    index?: number,
+  ) {
+    const result = originalInsertRule!.call(this, rule, index)
+    if (isParentHeadStyleSheet(this)) scheduleActiveChildWindowSync()
+    return result
+  }
+
+  CSSStyleSheet.prototype.deleteRule = function patchedDeleteRule(
+    index: number,
+  ) {
+    originalDeleteRule!.call(this, index)
+    if (isParentHeadStyleSheet(this)) scheduleActiveChildWindowSync()
+  }
+
+  return () => {
+    patchedCssomUsers--
+    if (patchedCssomUsers > 0) return
+    if (originalInsertRule) {
+      CSSStyleSheet.prototype.insertRule = originalInsertRule
+    }
+    if (originalDeleteRule) {
+      CSSStyleSheet.prototype.deleteRule = originalDeleteRule
+    }
+    originalInsertRule = undefined
+    originalDeleteRule = undefined
+  }
+}
+
 function getSyncTiming(mutations?: MutationRecord[] | null): SyncTiming | null {
   if (!Array.isArray(mutations) || mutations.length === 0) return null
-  // Scan the whole batch and take the highest priority across all records.
-  // `immediate` (inline <style> changes) wins over `delayed` (<link rel=stylesheet>),
-  // so a mixed batch is never downgraded to `delayed` by record ordering.
   let hasDelayed = false
   for (const mutation of mutations) {
     if (mutation.type === 'characterData') {
@@ -43,51 +114,43 @@ export function useSyncHeadStyles(
   childWindow: WindowProxy | null | undefined,
   options?: Options,
 ) {
-  const delayMs = 100
-  const subtree = options?.subtree ?? true
   const immediate = options?.immediate ?? true
 
   useEffect(() => {
     if (!childWindow) return
 
-    let timer: number | undefined
-    let immediateQueued = false
-    let disposed = false
-    const scheduleSync = (timing: SyncTiming = 'delayed') => {
-      if (timer) window.clearTimeout(timer)
-      if (timing === 'immediate') {
-        if (immediateQueued) return
-        immediateQueued = true
-        queueMicrotask(() => {
-          immediateQueued = false
-          if (disposed) return
-          syncParentHeadToChild(childWindow)
-        })
-        return
-      }
-      timer = window.setTimeout(() => {
-        if (disposed) return
-        syncParentHeadToChild(childWindow)
-      }, delayMs)
-    }
+    activeChildWindows.add(childWindow)
+    const uninstallCssomRuleObserver = installCssomRuleObserver()
 
-    if (immediate) scheduleSync()
+    if (immediate) scheduleSyncParentHeadToChild(childWindow)
 
     const observer = new MutationObserver(mutations => {
       const timing = getSyncTiming(mutations)
       if (!timing) return
-      scheduleSync(timing)
+      scheduleSyncParentHeadToChild(childWindow, timing)
     })
     observer.observe(document.head, {
       childList: true,
       characterData: true,
-      subtree,
+      subtree: true,
     })
 
+    const onDomUpdated = () =>
+      scheduleSyncParentHeadToChild(childWindow, 'afterHostLayout')
+    document.addEventListener(
+      SpatialStyleInfoUpdateEvent.domUpdated,
+      onDomUpdated,
+    )
+
     return () => {
-      disposed = true
-      if (timer) window.clearTimeout(timer)
+      activeChildWindows.delete(childWindow)
+      uninstallCssomRuleObserver()
       observer.disconnect()
+      document.removeEventListener(
+        SpatialStyleInfoUpdateEvent.domUpdated,
+        onDomUpdated,
+      )
+      disposeSyncParentHeadToChild(childWindow)
     }
-  }, [childWindow, delayMs, subtree, immediate])
+  }, [childWindow, immediate])
 }

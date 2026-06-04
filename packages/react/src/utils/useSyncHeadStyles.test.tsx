@@ -1,10 +1,14 @@
 import { act, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSyncHeadStyles } from './useSyncHeadStyles'
-import { syncParentHeadToChild } from './windowStyleSync'
+import {
+  disposeSyncParentHeadToChild,
+  scheduleSyncParentHeadToChild,
+} from './windowStyleSync'
 
 vi.mock('./windowStyleSync', () => ({
-  syncParentHeadToChild: vi.fn(),
+  disposeSyncParentHeadToChild: vi.fn(),
+  scheduleSyncParentHeadToChild: vi.fn(),
 }))
 
 describe('useSyncHeadStyles', () => {
@@ -26,7 +30,8 @@ describe('useSyncHeadStyles', () => {
         observers.push(this)
       }
     }
-    vi.mocked(syncParentHeadToChild).mockClear()
+    vi.mocked(disposeSyncParentHeadToChild).mockClear()
+    vi.mocked(scheduleSyncParentHeadToChild).mockClear()
   })
 
   afterEach(() => {
@@ -34,7 +39,7 @@ describe('useSyncHeadStyles', () => {
     globalThis.MutationObserver = originalMutationObserver
   })
 
-  it('syncs stylesheet text changes before the next timer tick', async () => {
+  it('syncs stylesheet text changes immediately', async () => {
     const childWindow = {
       document: document.implementation.createHTMLDocument(),
     }
@@ -74,17 +79,15 @@ describe('useSyncHeadStyles', () => {
         observers[0] as unknown as MutationObserver,
       )
     })
-    expect(syncParentHeadToChild).not.toHaveBeenCalled()
 
-    await act(async () => {
-      await Promise.resolve()
-    })
-
-    expect(syncParentHeadToChild).toHaveBeenCalledWith(childWindow)
+    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
+      childWindow,
+      'immediate',
+    )
     unmount()
   })
 
-  it('coalesces multiple immediate stylesheet text changes in one microtask', async () => {
+  it('keeps observing stylesheet text changes when subtree is disabled by the caller', async () => {
     const childWindow = {
       document: document.implementation.createHTMLDocument(),
     }
@@ -92,55 +95,21 @@ describe('useSyncHeadStyles', () => {
     function Test() {
       useSyncHeadStyles(childWindow as unknown as WindowProxy, {
         immediate: false,
+        subtree: false,
       })
       return null
     }
 
     const { unmount } = render(<Test />)
-    const style = document.createElement('style')
-    const text = document.createTextNode('.a{padding:12px;}')
-    style.appendChild(text)
-    const mutation = {
-      type: 'characterData',
-      target: text,
-      addedNodes: [],
-      removedNodes: [],
-    } as unknown as MutationRecord
+    expect(observers[0].observe).toHaveBeenCalledWith(
+      document.head,
+      expect.objectContaining({
+        childList: true,
+        characterData: true,
+        subtree: true,
+      }),
+    )
 
-    act(() => {
-      observers[0].callback(
-        [mutation],
-        observers[0] as unknown as MutationObserver,
-      )
-      observers[0].callback(
-        [mutation],
-        observers[0] as unknown as MutationObserver,
-      )
-    })
-    expect(syncParentHeadToChild).not.toHaveBeenCalled()
-
-    await act(async () => {
-      await Promise.resolve()
-    })
-
-    expect(syncParentHeadToChild).toHaveBeenCalledTimes(1)
-    expect(syncParentHeadToChild).toHaveBeenCalledWith(childWindow)
-    unmount()
-  })
-
-  it('cancels queued immediate sync on unmount', async () => {
-    const childWindow = {
-      document: document.implementation.createHTMLDocument(),
-    }
-
-    function Test() {
-      useSyncHeadStyles(childWindow as unknown as WindowProxy, {
-        immediate: false,
-      })
-      return null
-    }
-
-    const { unmount } = render(<Test />)
     const style = document.createElement('style')
     const text = document.createTextNode('.a{padding:12px;}')
     style.appendChild(text)
@@ -157,14 +126,59 @@ describe('useSyncHeadStyles', () => {
         ],
         observers[0] as unknown as MutationObserver,
       )
-      unmount()
     })
 
-    await act(async () => {
-      await Promise.resolve()
+    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
+      childWindow,
+      'immediate',
+    )
+    unmount()
+  })
+
+  it('schedules sync for CSSOM insertRule changes in parent head styles', () => {
+    const childWindow = {
+      document: document.implementation.createHTMLDocument(),
+    }
+
+    function Test() {
+      useSyncHeadStyles(childWindow as unknown as WindowProxy, {
+        immediate: false,
+      })
+      return null
+    }
+
+    const { unmount } = render(<Test />)
+    const style = document.createElement('style')
+    document.head.appendChild(style)
+
+    act(() => {
+      style.sheet!.insertRule('.a{padding:12px;}', 0)
     })
 
-    expect(syncParentHeadToChild).not.toHaveBeenCalled()
+    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
+      childWindow,
+      'immediate',
+    )
+    style.remove()
+    unmount()
+  })
+
+  it('disposes scheduled sync on unmount', () => {
+    const childWindow = {
+      document: document.implementation.createHTMLDocument(),
+    }
+
+    function Test() {
+      useSyncHeadStyles(childWindow as unknown as WindowProxy, {
+        immediate: false,
+      })
+      return null
+    }
+
+    const { unmount } = render(<Test />)
+    unmount()
+
+    expect(disposeSyncParentHeadToChild).toHaveBeenCalledWith(childWindow)
   })
 
   it('prefers immediate when a batch mixes link stylesheet and style text changes', async () => {
@@ -208,17 +222,15 @@ describe('useSyncHeadStyles', () => {
         observers[0] as unknown as MutationObserver,
       )
     })
-    expect(syncParentHeadToChild).not.toHaveBeenCalled()
 
-    await act(async () => {
-      await Promise.resolve()
-    })
-
-    expect(syncParentHeadToChild).toHaveBeenCalledTimes(1)
-    expect(syncParentHeadToChild).toHaveBeenCalledWith(childWindow)
+    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledTimes(1)
+    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
+      childWindow,
+      'immediate',
+    )
 
     vi.advanceTimersByTime(1000)
-    expect(syncParentHeadToChild).toHaveBeenCalledTimes(1)
+    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledTimes(1)
 
     unmount()
   })
