@@ -1095,14 +1095,15 @@ describe('TransformVisibilityTaskContainer', () => {
     ) as HTMLDivElement
     expect(host).toBeTruthy()
 
-    const div = host.querySelector('div') as HTMLDivElement
-    expect(div).toBeTruthy()
-    expect(div.getAttribute(SpatialID)).toBe('tv1')
-    expect(div.className).toBe('c')
-    expect(div.style.left).toBe('-10000px')
-    expect(div.style.top).toBe('-10000px')
-    expect(div.style.opacity).toBe('0')
-    expect(div.style.pointerEvents).toBe('none')
+    const probe = host.querySelector(
+      `div[${SpatialID}="tv1"]`,
+    ) as HTMLDivElement
+    expect(probe).toBeTruthy()
+    expect(probe.className).toBe('c')
+    expect(probe.style.left).toBe('-10000px')
+    expect(probe.style.top).toBe('-10000px')
+    expect(probe.style.opacity).toBe('0')
+    expect(probe.style.pointerEvents).toBe('none')
 
     r.unmount()
     host.remove()

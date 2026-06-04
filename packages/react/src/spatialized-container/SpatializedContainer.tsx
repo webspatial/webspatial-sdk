@@ -252,6 +252,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
           <TransformVisibilityTaskContainer
             ref={transformVisibilityTaskContainerCallback}
             {...spatialIdProps}
+            component={props.component}
             className={probeClassName}
             style={props.style}
           />
@@ -325,6 +326,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
           <TransformVisibilityTaskContainer
             ref={transformVisibilityTaskContainerCallback}
             {...spatialIdProps}
+            component={props.component}
             className={probeClassName}
             style={props.style}
           />
