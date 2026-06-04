@@ -52,6 +52,8 @@ npm run dev
 
 5. Verify that the server is started by going to http://localhost:5173/
 
+If you develop an **external** app with a **linked** `@webspatial/react-sdk` and Vite HMR (not the monorepo test-server), dedupe `react` / `react-dom` in Vite and alias the SDK to a single copy. Portal hook invariants and regression tests are documented in `packages/react/src/spatialized-container/ARCHITECTURE.md` (section **Portal lifecycle and local dev (HMR)**).
+
 ## Local CodeQL-Aligned Checks
 
 Run the fast unused-local check before opening a PR that changes TypeScript or JavaScript:

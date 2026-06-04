@@ -51,6 +51,7 @@ From repo root:
 ## Useful Entry Points
 
 - Root scripts: `package.json`.
+- Portal / 2D sync / HMR invariants (when editing `packages/react/src/spatialized-container/`): `packages/react/src/spatialized-container/ARCHITECTURE.md` — section **Portal lifecycle and local dev (HMR)**; tests: `useSpatializedElement.hmr.test.ts`, `useSpatialContentReady.test.ts`, `SpatializedStatic3DElementContainer.test.tsx`.
 - Dev server docs: `apps/test-server/README.md`.
 - E2E harness docs: `tests/ci-test/README.md`.
 - Browser auto test docs: `tests/autoTest/README.md`.

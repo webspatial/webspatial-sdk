@@ -23,7 +23,8 @@ function safeInvokeCleanup(cleanup: (() => void) | undefined) {
  */
 export function useSpatialContentReady(params: {
   spatializedElement: SpatializedElement | undefined
-  portalInstanceObject: PortalInstanceObject
+  /** May be null during HMR teardown or before PortalInstanceContext is mounted. */
+  portalInstanceObject: PortalInstanceObject | null
   /** Portal subtree root element (connected when ready). */
   hostElement: HTMLElement | null
   onSpatialContentReady?: SpatialContentReadyCallback | undefined
@@ -39,7 +40,7 @@ export function useSpatialContentReady(params: {
   callbackRef.current = onSpatialContentReady
 
   useLayoutEffect(() => {
-    const dom = portalInstanceObject.dom
+    const dom = portalInstanceObject?.dom
     const isReady = !!(
       spatializedElement &&
       dom &&
@@ -68,5 +69,10 @@ export function useSpatialContentReady(params: {
     return () => {
       safeInvokeCleanup(cleanupFromCallback)
     }
-  }, [spatializedElement, portalInstanceObject.dom, hostElement])
+  }, [
+    spatializedElement,
+    portalInstanceObject,
+    portalInstanceObject?.dom,
+    hostElement,
+  ])
 }

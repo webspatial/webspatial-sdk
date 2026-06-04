@@ -1,4 +1,5 @@
 import React, { ElementType } from 'react'
+import type { PortalInstanceObject } from './context/PortalInstanceContext'
 import { SpatialID } from './SpatialID'
 import {
   ModelLoadingMode,
@@ -85,6 +86,7 @@ export type SpatializedContentProps<
   P extends ElementType,
 > = Omit<PortalSpatializedContainerProps<T>, 'spatializedContent'> & {
   spatializedElement: SpatializedElement
+  portalInstanceObject: PortalInstanceObject
   /** SpatialDiv (2D) portal content only. */
   onSpatialContentReady?: SpatialContentReadyCallback
 }

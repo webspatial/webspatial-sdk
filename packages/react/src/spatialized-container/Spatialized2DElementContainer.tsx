@@ -5,7 +5,6 @@ import React, {
   ForwardedRef,
   forwardRef,
   useCallback,
-  useContext,
   useEffect,
   useState,
 } from 'react'
@@ -26,10 +25,7 @@ import {
   SpatializedDivElementRef,
 } from './types'
 import { SpatializedContainer } from './SpatializedContainer'
-import {
-  PortalInstanceContext,
-  PortalInstanceObject,
-} from './context/PortalInstanceContext'
+import type { PortalInstanceObject } from './context/PortalInstanceContext'
 import { getSession } from '../utils'
 import { useSpatialContentReady } from './hooks/useSpatialContentReady'
 
@@ -51,7 +47,7 @@ function mergeRefs<T>(
 function getJSXPortalInstance<P extends ElementType>(
   inProps: Omit<
     SpatializedContentProps<SpatializedElementRef, P>,
-    'spatializedElement' | 'onSpatialContentReady'
+    'spatializedElement' | 'onSpatialContentReady' | 'portalInstanceObject'
   >,
   portalInstanceObject: PortalInstanceObject,
   hostRef?: React.RefCallback<HTMLElement | null>,
@@ -79,9 +75,10 @@ function getJSXPortalInstance<P extends ElementType>(
     transform: 'none',
   }
 
-  const computedStyle = portalInstanceObject.computedStyle!
-  const inheritedPortalStyle: CSSProperties =
-    getInheritedStyleProps(computedStyle)
+  const computedStyle = portalInstanceObject.computedStyle
+  const inheritedPortalStyle: CSSProperties = computedStyle
+    ? getInheritedStyleProps(computedStyle)
+    : {}
 
   const style = {
     ...inStyle,
@@ -110,14 +107,16 @@ function useSyncDocumentTitle(
 function SpatializedContent<P extends ElementType>(
   props: SpatializedContentProps<SpatializedElementRef, P>,
 ) {
-  const { spatializedElement, onSpatialContentReady, ...restProps } = props
+  const {
+    spatializedElement,
+    portalInstanceObject,
+    onSpatialContentReady,
+    ...restProps
+  } = props
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const { windowProxy } = spatialized2DElement
 
   const [hostEl, setHostEl] = useState<HTMLElement | null>(null)
-  const portalInstanceObject: PortalInstanceObject = useContext(
-    PortalInstanceContext,
-  )!
 
   useSpatialContentReady({
     spatializedElement,
