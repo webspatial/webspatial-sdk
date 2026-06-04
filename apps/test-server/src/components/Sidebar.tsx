@@ -41,6 +41,10 @@ export const routes = [
   { path: '/basic-transform', label: 'Basic Transform' },
   { path: '/model-test', label: 'Model Test' },
   { path: '/spatialStyleTest', label: 'Spatial Style' },
+  {
+    path: '/styledComponentsSpatialTest',
+    label: 'Styled-components Spatial',
+  },
   { path: '/canvas-test', label: 'Canvas Test' },
   { path: '/jsapi-test', label: 'JS API Test' },
   {

@@ -25,6 +25,7 @@ import RealitySpatialDiv from './src/pages/reality/spatialDivDynamic'
 import BasicTransform from './src/pages/basic-transform/index'
 import ModelTest from './src/pages/model-test/index'
 import SpatialStyleTest from './src/pages/spatialStyleTest/index'
+import StyledComponentsSpatialTest from './src/pages/styledComponentsSpatialTest/index'
 import CanvasTest from './src/pages/canvas-test/index'
 import JSAPITest from './src/pages/jsapi-test/index'
 import SpatialDivRefreshValidation from './src/pages/jsapi-refresh-validation/index'
@@ -123,6 +124,10 @@ function App() {
                 <Route
                   path="/spatialStyleTest"
                   element={<SpatialStyleTest />}
+                />
+                <Route
+                  path="/styledComponentsSpatialTest"
+                  element={<StyledComponentsSpatialTest />}
                 />
                 <Route path="/canvas-test" element={<CanvasTest />} />
                 <Route path="/jsapi-test" element={<JSAPITest />} />
