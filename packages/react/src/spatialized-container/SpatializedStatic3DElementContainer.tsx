@@ -148,32 +148,34 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   }, [modelURL, sourcesKey, autoPlay, loop, posterURL, loading])
 
   useEffect(() => {
-    if (onLoad) {
+    const dom = portalInstanceObject?.dom
+    if (onLoad && dom) {
       spatializedElement.onLoadCallback = () => {
         onLoad(
           createLoadSuccessEvent(
-            () => portalInstanceObject?.dom as SpatializedStatic3DElementRef,
+            () => dom as SpatializedStatic3DElementRef,
           ),
         )
       }
     } else {
       spatializedElement.onLoadCallback = undefined
     }
-  }, [onLoad])
+  }, [onLoad, portalInstanceObject?.dom])
 
   useEffect(() => {
-    if (onError) {
+   const dom = portalInstanceObject?.dom
+    if (onError && dom) {
       spatializedElement.onLoadFailureCallback = () => {
         onError(
           createLoadFailureEvent(
-            () => portalInstanceObject?.dom as SpatializedStatic3DElementRef,
+            () => dom as SpatializedStatic3DElementRef,
           ),
         )
       }
     } else {
       spatializedElement.onLoadFailureCallback = undefined
     }
-  }, [onError])
+  }, [onError, portalInstanceObject?.dom])
 
   return <></>
 }
