@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 export const routes = [
   { path: '/', label: 'Home' },
@@ -115,9 +116,98 @@ export const routes = [
   },
 ]
 
-export default function Sidebar() {
+type RouteChild = {
+  path?: string
+  href?: string
+  label: string
+  external?: boolean
+}
+
+type Route = {
+  path: string
+  label: string
+  children?: RouteChild[]
+}
+
+function NavLeaf({ route }: { route: Route }) {
   const location = useLocation()
-  const items = routes
+  return (
+    <Link
+      to={route.path}
+      className={`block px-4 py-2 rounded-lg text-sm transition-colors ${
+        location.pathname === route.path
+          ? 'bg-blue-600 text-white'
+          : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+      }`}
+    >
+      {route.label}
+    </Link>
+  )
+}
+
+function NavSection({ route }: { route: Route }) {
+  const location = useLocation()
+  // A section is "active" when the current page is the section itself or one
+  // of its children.
+  const containsActivePage =
+    location.pathname === route.path ||
+    !!route.children?.some(child => child.path === location.pathname)
+  // Each section owns its own expanded state. Sections containing the current
+  // page start expanded; all others default to collapsed.
+  const [isExpanded, setIsExpanded] = useState(containsActivePage)
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setIsExpanded(prev => !prev)}
+        aria-expanded={isExpanded}
+        className={`w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors text-left ${
+          location.pathname === route.path
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+        }`}
+      >
+        <span>{route.label}</span>
+        <span
+          className={`ml-2 text-xs transition-transform ${
+            isExpanded ? 'rotate-90' : ''
+          }`}
+        >
+          ▶
+        </span>
+      </button>
+      {isExpanded && (
+        <div className="ml-4 mt-1 space-y-1">
+          {route.children!.map(child => {
+            const key = child.path || child.href
+            const isActive = !!child.path && location.pathname === child.path
+            const cls = `block px-4 py-1.5 rounded-lg text-xs transition-colors ${
+              isActive
+                ? 'bg-blue-900/50 text-blue-200 border border-blue-800'
+                : 'text-gray-500 hover:bg-gray-800 hover:text-white'
+            }`
+            if (child.href) {
+              return (
+                <a key={key} href={child.href} className={cls}>
+                  {child.label}
+                </a>
+              )
+            }
+            return (
+              <Link key={key} to={child.path!} className={cls}>
+                {child.label}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function Sidebar() {
+  const items = routes as Route[]
   const containerClass =
     'w-64 h-screen sticky top-0 bg-[#111111] border-r border-gray-800 flex flex-col'
 
@@ -130,47 +220,13 @@ export default function Sidebar() {
         <div className="text-xs text-gray-500 mt-1">Test Application</div>
       </div>
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-        {items.map(route => (
-          <div key={route.path}>
-            <Link
-              to={route.path}
-              className={`block px-4 py-2 rounded-lg text-sm transition-colors ${
-                location.pathname === route.path
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-              }`}
-            >
-              {route.label}
-            </Link>
-            {route.children && (
-              <div className="ml-4 mt-1 space-y-1">
-                {route.children.map(child => {
-                  const key = (child as any).path || (child as any).href
-                  const isActive =
-                    !!(child as any).path &&
-                    location.pathname === (child as any).path
-                  const cls = `block px-4 py-1.5 rounded-lg text-xs transition-colors ${
-                    isActive
-                      ? 'bg-blue-900/50 text-blue-200 border border-blue-800'
-                      : 'text-gray-500 hover:bg-gray-800 hover:text-white'
-                  }`
-                  if ((child as any).href) {
-                    return (
-                      <a key={key} href={(child as any).href} className={cls}>
-                        {child.label}
-                      </a>
-                    )
-                  }
-                  return (
-                    <Link key={key} to={(child as any).path} className={cls}>
-                      {child.label}
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        ))}
+        {items.map(route =>
+          route.children ? (
+            <NavSection key={route.path} route={route} />
+          ) : (
+            <NavLeaf key={route.path} route={route} />
+          ),
+        )}
       </nav>
       <div className="p-4 border-t border-gray-800">
         <a
