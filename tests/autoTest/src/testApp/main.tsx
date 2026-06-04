@@ -8,6 +8,7 @@ import './index.css'
 import MaterialApiTest from './materialApiTest/materialapi'
 import CssApiTest from './CssAPITest/cssapi'
 import TransformTest from './transformTest/transformTest'
+import BasicTransformProbeTagTest from './basicTransformProbeTagTest/basicTransformProbeTagTest'
 
 declare const __XR_ENV_BASE__: string
 
@@ -20,6 +21,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/materialApiTest" element={<MaterialApiTest />} />
         <Route path="/cssApiTest" element={<CssApiTest />} />
         <Route path="/transformTest" element={<TransformTest />} />
+        <Route
+          path="/basicTransformProbeTagTest"
+          element={<BasicTransformProbeTagTest />}
+        />
       </Routes>
     </BrowserRouter>
   </ErrorBoundary>,

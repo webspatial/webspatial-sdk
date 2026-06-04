@@ -30,6 +30,7 @@ export default function BasicTransform() {
           style={style}
           className="rounded-lg shadow-xl basicTransform"
           ref={ref}
+          data-testid="basic-transform-spatial-h1"
           data-name="basic-transform-h1"
           onSpatialTap={evt => {
             console.log(
