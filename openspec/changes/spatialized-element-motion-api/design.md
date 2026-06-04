@@ -1,208 +1,531 @@
 ## Context
 
-Three `SpatializedElement` subclasses share scene placement but use **different native write paths**. The timeline evaluator, session state machine, and Portal suppression logic are shared in TypeScript; native applies samples to `element.transform` (2D / Dynamic3D) or `modelTransform` (Static3D). Entity animation remains a **separate** stack (`useAnimation` + `EntityAnimationManager`).
+This change defines declarative motion for three spatialized container kinds:
 
-This design unifies **author-facing** config (`SpatializedMotionConfig`, `SpatializedSegmentConfig`, `SpatializedPlaybackApi`) and routes by the **binding target** (resolved when `animation` is passed as `xr-animation` prop to a component) to one Core controller and one React hook. All `useAnimation` authoring shapes (`from`/`to`, `timeline`, `tracks`) normalize to the same canonical `tracks` model before execution.
+- `spatialized2d` via `Spatialized2DElement`
+- `static3d` via `SpatializedStatic3DElement`
+- `dynamic3d` via `SpatializedDynamic3DElement`
+
+All three share the same authoring model and the same canonical `tracks` execution model, but they differ in React integration points and native write paths. Entity animation remains a separate stack and is not part of this target-state design.
 
 ## Design Evolution
 
-### Plan A (Session Animation) — Foundations
+### Plan A foundations
 
-Plan A established the architectural primitives:
-- **Session state machine**: idle → queued → delaying → running → paused → finished
-- **Portal suppression**: property-level for opacity, transform-wide for transform fields
-- **Native playback model**: CADisplayLink-driven per-frame sampling on visionOS
-- **Lifecycle contracts**: onStart/onComplete/onStop/onReset/onError mutual exclusion
-- **Authoring convenience**: single `from`/`to` with timing function as a sugar shape that compiles to tracks
+Plan A established the primitives that remain normative here:
 
-These remain normative in the unified system.
+- Session lifecycle and playback state
+- Portal suppression during native-controlled playback
+- Native per-frame sampling semantics
+- Lifecycle callback mutual exclusion
+- Single-segment `from` and `to` authoring as a convenience shape
 
-### Plan B (Motion Timeline) — Generalization
+### Plan B generalization
 
-Plan B extended the architecture:
-- **Timeline data model**: per-property tracks with absolute-time keyframes (inspired by Three.js AnimationClip)
-- **Dual backend**: Web RAF when native unavailable, native timeline when in WebSpatial runtime
-- **Style outlet**: `style` object returned to app code for React state-driven rendering; Plan B also renamed the binding from `animation` to `xr-animation`
-- **Multi-kind support**: policy-based routing for spatialized2d / static3d / dynamic3d
+Plan B introduced the general-purpose timeline model:
 
-### Unified Architecture (this design)
+- Canonical per-property `tracks`
+- Web RAF for 2D when native motion is unavailable
+- `style` as the single React merge outlet
+- Bind-time target resolution through `xr-animation`
 
-The merge combines both into a single normative system with backward compatibility.
+### Unified target state
+
+This design merges those ideas into a single three-layer architecture:
+
+- `React SDK` defines authoring and binding
+- `Core SDK` defines config normalization, playback semantics, and bridge payloads
+- `Native Runtime` defines target-specific playback and write paths
 
 ## Goals
 
-- One timeline config shape across 2D / Static3D / Dynamic3D container kinds.
-- **One** Core implementation: `SpatializedMotionController` (policy per `kind`) + `element.motion(config)` on each element class.
-- **One** React entry: `useAnimation(config)` accepting `from/to`, `tracks`, or `timeline` (three mutually exclusive shapes). Target resolved at bind time (no `kind` in config). Internally, `from/to` and `timeline` compile to `tracks`.
-- Legacy `useAnimation` + `animation` prop retained as deprecated path for 2D.
-- Umbrella spec with per-kind sub-specs; 2D remains the reference for Web RAF + suppression behavior.
+- One authoring API for 2D, Static3D, and Dynamic3D container motion
+- One canonical timeline model for all execution paths
+- One shared playback API and callback contract across all kinds
+- Clear separation between React authoring, Core execution, and Native playback
+- Explicit cross-layer contracts so module responsibilities are easy to reason about
 
 ## Architecture
 
 ```mermaid
-flowchart TB
-  Hook["useAnimation(config)"] --> Binding["animation binding
-(target deferred)"]
-  Binding --> |"xr-animation on enable-xr"| Resolve2D["target: spatialized2d"]
-  Binding --> |"xr-animation on Model"| Resolve3D["target: static3d"]
-  Binding --> |"xr-animation on Reality"| ResolveD3["target: dynamic3d"]
-  Resolve2D --> Core[SpatializedMotionController]
-  Resolve3D --> Core
-  ResolveD3 --> Core
-  Core --> Bridge[motionElementBridge]
-  Bridge --> N2D[SpatialDivAnimationManager]
-  Bridge --> N3D[SpatializedContainerMotionAnimationManager + TransformSink]
-  
-  subgraph Legacy[Legacy Path - deprecated]
-    LegacyHook[useAnimation] --> LegacyBinding[animation prop]
-    LegacyBinding --> N2D
-  end
+flowchart TD
+  React[React SDK]
+  Core[Core SDK]
+  Native[Native Runtime]
+
+  React --> Core
+  Core --> Native
 ```
 
-## Core Modules
+## Core SDK
 
-| Module | Role |
-|--------|------|
-| `SpatializedMotionController` | Single TS controller; binding target selects capability token, Web RAF vs native-only, suppressed fields |
-| `motionElementBridge` | Dispatches `animateSpatialDiv` vs `animateMotion` + listener cleanup |
-| `element.motion(config)` | Factory on each `Spatialized*Element`; returns `SpatializedMotionController` with matching target kind |
-| `evaluateMotionTimeline` | Shared Web evaluator: per-track sampling, timingFunction, lerp |
-| `SpatialDivTimelineEvaluator` (Swift) | Native parity evaluator: per-track 90Hz sampling via CADisplayLink for the canonical tracks path |
-| `SpatializedMotionTransformSink` | Abstracts write path (elementTransform vs modelTransform) for Static3D/Dynamic3D |
+### Modules
 
-## React Modules
+| Module | Responsibility |
+|--------|----------------|
+| `SpatializedMotionController` | Canonical playback controller for container motion. Owns play state, backend selection, terminal command semantics, and suppression state. |
+| `evaluateMotionTimeline` | Samples canonical `tracks` at timeline time `t`, applies `timingFunction`, and assembles visual values. |
+| `validateSpatializedMotionConfig` | Validates authoring config before playback or native send. |
+| `motionConfigToNativeTimeline` | Compiles normalized motion config into the canonical native wire payload. |
+| `motionElementBridge` | Sends `play`, `pause`, `resume`, `stop`, `reset`, and `finish` commands from Core to spatialized native elements and cleans up listeners. |
+| `MOTION_KIND_POLICIES` | Encodes per-kind policy for capability token, Web RAF availability, and suppression rules. |
+| `element.motion(config)` | Imperative factory on `Spatialized2DElement`, `SpatializedStatic3DElement`, and `SpatializedDynamic3DElement` that creates a controller already bound to that kind. |
 
-| Module | Role |
-|--------|------|
-| `useAnimation` | Public hook (tuple return `[animation, api, style]`); accepts `from/to` or `tracks` config; target-agnostic until bind |
-| `useMotionController` + `createMotionBinding` + `createPlaybackApi` | Shared wiring |
+### Interfaces
 
-## Shared Types (Core)
+#### Config and data types
 
-- `spatializedVisual.ts` — values + transform components
-- `spatializedMotion.ts` — timeline, segment, playback API, play state, `SpatializedMotionKind`
-- `spatializedPlayback.ts` — errors
+- `SpatializedMotionConfig`
+- `SpatializedMotionSegmentConfig`
+- `SpatializedMotionTimelineConfig`
+- `SpatializedMotionTrack`
+- `SpatializedMotionTimeline`
+- `SpatializedVisualValues`
+- `SpatializedPlaybackError`
 
-## Integration Matrix
+#### Playback interface
 
-| Kind | React outlet | Binding prop | Native write path | Web RAF |
-|------|--------------|--------------|-------------------|---------|
-| 2D | `style` | `xr-animation` on `enable-xr` node | `element.transform` + opacity + DOM | Yes |
-| Static3D | `style` unused | `xr-animation` on `<Model>` | `modelTransform` + opacity | No |
-| Dynamic3D | `style` unused | `xr-animation` on `<Reality>` | `element.transform` + opacity | No |
+`SpatializedPlaybackApi` defines:
 
-## Target Resolution
+- `play()`
+- `pause(keys?)`
+- `resume(keys?)`
+- `stop()`
+- `reset()`
+- `finish()`
+- `isAnimating`
+- `isPaused`
+- `finished`
+- `playState`
 
-The `animation` binding returned by `useAnimation` is **target-agnostic**. Target is resolved at bind time:
+### Behavior
 
-1. React component receives `xr-animation={animation}` prop.
-2. Component type determines target: `enable-xr` → `spatialized2d`, `<Model>` → `static3d`, `<Reality>` → `dynamic3d`.
-3. Controller activates the matching `MOTION_KIND_POLICIES` entry.
-4. For 2D: `style` outlet is actively driven by Web RAF or native samples. For 3D: `style` remains `{}`.
+#### Config normalization
 
-**Pre-bind playback:** If `api.play()` is called before the binding is mounted, the command is queued. Playback begins once the target is resolved.
+The Core layer accepts three mutually exclusive authoring shapes:
 
-**Single-bind constraint:** A binding instance MUST NOT be passed to multiple components simultaneously. The first bind wins; subsequent binds MUST warn/throw.
+- Segment config via `from` and `to`
+- Direct `tracks`
+- Percentage-key `timeline`
 
-## Termination Methods and Style Delivery
+All non-track shapes normalize to canonical `tracks` before execution. Native playback for `useAnimation` always uses this canonical tracks model and must not downgrade to a legacy segment payload.
 
-The three terminal commands are independent. `stop()` only terminates an active session, while `reset()` and `finish()` always seek to a deterministic endpoint even if the motion is already `idle`. Each command determines a distinct final style value, `playState`, `finished` flag, and lifecycle callback:
+#### Timeline evaluation
 
-| Method | Invocation scope | Style value | playState | finished | Callback | Suppression |
-|--------|------------------|-------------|-----------|----------|----------|-------------|
-| `stop()` | Active session only | Current frame (frozen at invocation time) | `idle` | `false` | `onStop(values)` | Released |
-| `reset()` | Unconditional | From values (initial state) | `idle` | `false` | `onReset(values)` | Released |
-| `finish()` | Unconditional | To values (final state) | `finished` | `true` | `onComplete(values)` | Released |
-| Natural end | End of active playback | To values (last frame reached) | `finished` | `true` | `onComplete(values)` | Released |
+`evaluateMotionTimeline` defines the shared interpolation rules:
 
-### Backend-symmetric style delivery
+- Each track is sampled independently
+- Before the first keyframe, use the first value
+- After the last keyframe, use the last value
+- Resolve `timingFunction` in this order:
+  1. keyframe
+  2. track
+  3. config
+  4. `linear`
+- Compose transforms in fixed order: translate → rotate → scale
 
-Style values for termination methods follow the same dual-backend pattern as regular playback:
+#### Playback semantics
 
-| Backend | Value source | Mechanism |
-|---------|-------------|-----------|
-| **Web** (RAF) | JS `evaluateMotionTimeline(config, t)` computes the target values | `emitValues()` → `onValuesChange` → React state update |
-| **Native** | Native runtime provides sampled values via promise resolution | `emitValues()` → `onValuesChange` → React state update |
-| **Native (fallback)** | If native does not return values, JS evaluator estimates | Same as Web path |
+`SpatializedMotionController` owns the normative playback behavior:
 
-For `stop()`: `t` = elapsed time at invocation. For `reset()`: `t` = 0. For `finish()`: `t` = duration.
+- `play()` starts playback or resumes from paused progress
+- `play()` while already running is a no-op
+- `stop()` terminates only an active session and freezes the sampled current values
+- `reset()` always seeks to start values, even when already idle
+- `finish()` always seeks to end values, even when already idle
+- `finished` becomes `false` after `stop()` and `reset()`
+- `finished` becomes `true` after `finish()` and natural completion
 
-`idle.reset()` MUST still emit the `from` values. `idle.finish()` MUST still emit the `to` values and move `playState` to `finished`. These commands are not aliases for each other and MUST NOT absorb each other's semantics.
+#### Backend policy
 
-### State machine transitions
+Per-kind backend policy is chosen by `MOTION_KIND_POLICIES`:
+
+- `spatialized2d`
+  - Web RAF allowed
+  - Native allowed when capability is available
+- `static3d`
+  - Native only
+- `dynamic3d`
+  - Native only
+
+### Boundaries
+
+The Core layer does not define:
+
+- React component APIs
+- JSX binding prop types
+- Native manager class internals
+- Entity motion behavior
+
+## React SDK
+
+### Modules
+
+| Module | Responsibility |
+|--------|----------------|
+| `useAnimation` | Public authoring hook. Returns `[animation, api, style]` and remains target-agnostic until bind time. |
+| `useMotionController` | Connects React lifecycle to the Core controller. |
+| `createMotionBinding` | Produces the opaque `xr-animation` binding object that carries deferred target state. |
+| `createPlaybackApi` | Exposes a stable React-facing playback surface backed by the controller. |
+| `PortalSpatializedContainer` | Binds 2D `xr-animation` to `Spatialized2DElement` and coordinates suppression with Portal sync. |
+| `Model` | React integration point that resolves binding target to `static3d`. |
+| `Reality` | React integration point that resolves binding target to `dynamic3d`. |
+
+### Interfaces
+
+#### Public hook
+
+`useAnimation(config)` returns:
+
+- `animation`
+- `api`
+- `style`
+
+#### Binding
+
+The React layer defines the `xr-animation` prop as the target binding channel:
+
+- `<div enable-xr xr-animation={animation}>`
+- `<Model xr-animation={animation}>`
+- `<Reality xr-animation={animation}>`
+
+#### Style outlet
+
+`style` is the only author-facing visual merge outlet:
+
+- For `spatialized2d`, `style` carries active animated values
+- For `static3d` and `dynamic3d`, `style` is an empty object that is safe to spread
+
+### Behavior
+
+#### Bind-time target resolution
+
+The React layer resolves the controller target only when `animation` is bound:
+
+- `enable-xr` node → `spatialized2d`
+- `Model` → `static3d`
+- `Reality` → `dynamic3d`
+
+If `api.play()` is called before a bind exists, the command queues and begins once the target resolves.
+
+#### Single-bind constraint
+
+One binding instance may control only one mounted target at a time. If the same binding is passed to multiple components simultaneously, the first bind wins and later binds warn or fail.
+
+#### Style semantics
+
+For `spatialized2d`:
+
+- Web RAF directly drives the `style` outlet when native motion is unavailable
+- During native-controlled playback, `style` remains the React merge outlet, but intermediate native-owned fields are suppression-controlled
+
+For `static3d` and `dynamic3d`:
+
+- React does not drive root transform playback through `style`
+- Native playback is triggered by the bound `xr-animation` handle
+
+### Boundaries
+
+The React layer does not define:
+
+- Timeline interpolation formulas
+- Native sampling algorithms
+- Native manager implementation details
+- Entity animation stack behavior
+
+## Native Runtime
+
+### Modules
+
+| Module | Responsibility |
+|--------|----------------|
+| `SpatializedContainerMotionAnimationManager` | Unified native manager for container motion across 2D, Static3D, and Dynamic3D. |
+| `SpatialDivTimelineEvaluator` | Native evaluator for canonical tracks playback. |
+| `SpatializedMotionTransformSink` | Abstracts target-specific writes for `element.transform` and `modelTransform`. |
+| `AnimateSpatializedElementMotion` listener | Native JSB entrypoint for motion commands and timeline payloads. |
+
+### Interfaces
+
+#### Command surface
+
+The Native layer accepts the canonical command family:
+
+- `play`
+- `pause`
+- `resume`
+- `stop`
+- `reset`
+- `finish`
+
+#### Play payload
+
+The `play` payload carries:
+
+- `animationId`
+- `targetKind`
+- `elementId`
+- `timeline`
+- `delay`
+- `playbackRate`
+- `loop`
+
+`timeline` is the canonical tracks document sent by Core.
+
+### Behavior
+
+#### Target-specific write paths
+
+Native applies sampled values to different sinks per kind:
+
+- `spatialized2d` → `element.transform` and `opacity`
+- `static3d` → `modelTransform` and `opacity`
+- `dynamic3d` → `element.transform` and `opacity`
+
+#### Canonical tracks execution
+
+The Native layer must evaluate the canonical tracks payload directly. For this API, native playback must not replace tracks execution with a legacy `from` and `to` interpolation path.
+
+#### Terminal command behavior
+
+The Native layer must return values aligned with Core semantics:
+
+- `stop()` returns current sampled values
+- `reset()` returns start values
+- `finish()` returns end values
+- natural completion returns end values
+
+#### Native parity requirement
+
+Native sampling must remain aligned with the Web evaluator for:
+
+- per-track interpolation
+- hold behavior
+- transform compose order
+- terminal sampled values
+
+### Boundaries
+
+The Native layer does not define:
+
+- React hook return shapes
+- author-facing config sugar
+- entity animation manager behavior
+- capability probe API shape
+
+## Cross-layer contracts
+
+### React SDK to Core SDK
+
+The React layer passes authoring config and lifecycle to Core through:
+
+- `useAnimation(config)`
+- `createMotionBinding`
+- `createPlaybackApi`
+
+Core remains the owner of normalized config, play state, and terminal command semantics.
+
+#### Hook tuple contract
+
+```typescript
+type UseAnimationResult = readonly [
+  animation: SpatializedMotionBindingInternal,
+  api: SpatializedPlaybackApi,
+  style: CSSProperties,
+]
+```
+
+- `animation` is the opaque binding handle passed through `xr-animation`
+- `api` is the stable imperative playback surface backed by Core
+- `style` is the only author-facing visual outlet
+
+#### Binding contract
+
+```typescript
+interface SpatializedMotionBindingInternal {
+  readonly __kind: 'spatializedMotion'
+  readonly __propName: 'xr-animation'
+  readonly __motionObjectId: string
+  get __animating(): boolean
+  readonly __suppressedFields: Set<string> | null
+  __getSuppressedFields(): Set<string> | null
+  __setElement?: (
+    element: HTMLElement | Spatialized2DElement | SpatializedStatic3DElement | SpatializedDynamic3DElement | null,
+    targetKind?: 'spatialized2d' | 'static3d' | 'dynamic3d',
+  ) => void
+  __onUnbind?: () => void
+}
+```
+
+- React owns creation and mount-time wiring of this object
+- Core owns the motion object identity, animating state, and suppression state behind it
+- Applications treat it as opaque and only pass it through `xr-animation`
+
+### Core SDK to Native Runtime
+
+The Core layer sends canonical motion commands through the bridge:
+
+- `AnimateSpatializedElementMotion`
+- canonical `timeline` payload
+- terminal commands for `stop`, `reset`, and `finish`
+
+#### Command contract
+
+```typescript
+interface AnimateSpatializedElementMotionCommand {
+  animationId: string
+  type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish'
+  targetKind: 'spatialized2d' | 'static3d' | 'dynamic3d'
+  properties?: SpatializedMotionProperty[]
+  elementId?: string
+  to?: SpatializedVisualValues
+  from?: SpatializedVisualValues
+  duration?: number
+  timingFunction?: TimingFunction
+  delay?: number
+  loop?: boolean | { reverse?: boolean }
+  playbackRate?: number
+  timeline?: SpatializedMotionTimeline
+}
+```
+
+- For the target-state `useAnimation` path, `play` uses `timeline` as the canonical execution document
+- `targetKind` is filled in by Core after React bind-time target resolution
+- `properties` is reserved for selective pause and resume control
+
+#### Canonical timeline payload
+
+```typescript
+interface SpatializedMotionTimeline {
+  duration: number
+  delay?: number
+  playbackRate?: number
+  loop?: boolean | { reverse?: boolean }
+  tracks: Array<{
+    property: SpatializedMotionProperty
+    keyframes: Array<{
+      at: number
+      value: number
+      timingFunction?: TimingFunction
+    }>
+    timingFunction: TimingFunction
+  }>
+}
+```
+
+- This is the only stable cross-layer play document for target-state container motion
+- Segment-style `from` and `to` authoring must be compiled to this shape before native send
+
+### Native Runtime to Core SDK
+
+The Native layer returns:
+
+- completion values
+- stop values
+- reset values
+- finish values
+- async playback errors
+
+Core forwards those values to React-facing callbacks and style updates.
+
+#### Play handle contract
+
+```typescript
+interface AnimateSpatializedElementMotionResult {
+  animationId: string
+  finished: Promise<SpatializedVisualValues>
+  canceled: Promise<SpatializedVisualValues>
+  failed: Promise<SpatializedPlaybackError>
+}
+```
+
+- `finished` resolves with end values on natural completion
+- `canceled` resolves with sampled values for terminal interruption paths surfaced through the unified manager
+- `failed` resolves with the async playback error payload
+
+#### Terminal value contract
+
+For terminal commands issued after playback has started:
+
+- `stop()` returns sampled current values
+- `reset()` returns start values
+- `finish()` returns end values
+
+Those values are consumed by Core as the source of:
+
+- `onStop(values)`
+- `onReset(values)`
+- `onComplete(values)` for `finish()`
+- style synchronization after terminal state transitions
+
+#### Error contract
+
+```typescript
+interface SpatializedPlaybackError {
+  animationId: string
+  command: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish'
+  code?: string
+  reason: string
+}
+```
+
+- Native owns the async failure source
+- Core owns error fan-out to callbacks or logging
+
+## Shared semantics
+
+### Playback state
 
 ```mermaid
 stateDiagram-v2
     [*] --> idle
+    idle --> queued : play before bind
+    queued --> running : bind and start
     idle --> running : play
     running --> paused : pause
+    paused --> running : resume
     running --> idle : stop
     running --> idle : reset
-    running --> finished : finish
-    running --> finished : natural end
-    paused --> running : resume
     paused --> idle : stop
     paused --> idle : reset
+    running --> finished : finish
     paused --> finished : finish
-    idle --> idle : reset and emit start
-    idle --> finished : finish and emit end
-    finished --> idle : reset and emit start
-    finished --> running : play
+    running --> finished : natural end
+    idle --> idle : reset emit start
+    idle --> finished : finish emit end
 ```
 
-## Lifecycle Callbacks
+### Lifecycle callbacks
 
-| Callback | Trigger | Values passed |
-|----------|---------|---------------|
-| `onStart` | First frame after `play()` | none |
-| `onComplete` | Natural end **or** `finish()` | `SpatializedVisualValues` (to values) |
-| `onStop` | `stop()` | `SpatializedVisualValues` (current values) |
-| `onReset` | `reset()` | `SpatializedVisualValues` (from values) |
-| `onError` | Native bridge failure | `SpatializedPlaybackError` |
+The callback contract is shared across all kinds:
 
-**Mutual exclusion:** Per session termination, exactly one of `onComplete` / `onStop` / `onReset` fires. `onError` may fire independently on native failure.
+| Callback | Trigger | Value |
+|----------|---------|-------|
+| `onStart` | First frame after playback begins | none |
+| `onComplete` | Natural completion or `finish()` | end values |
+| `onStop` | `stop()` | sampled current values |
+| `onReset` | `reset()` | start values |
+| `onError` | Async native failure | `SpatializedPlaybackError` |
 
-`stop()` and `reset()` MUST always leave `finished === false`. `finish()` and natural completion MUST always leave `finished === true`.
+Exactly one of `onComplete`, `onStop`, or `onReset` fires per termination path.
 
-**Alignment with industry standards:**
-- `stop()` aligns with React Spring `api.stop()` and Framer Motion `controls.stop()`
-- `finish()` aligns with WAAPI `animation.finish()` (fires `onfinish`, same as natural end)
-- `reset()` aligns with WAAPI `animation.cancel()` (reverts to pre-animation state)
+### Suppression
 
-## Legacy Compatibility
+Portal suppression remains a shared cross-layer rule:
 
-The Plan A path (`useAnimation` + `animation` prop) is retained as a thin compatibility layer:
+- `opacity` tracks suppress only `opacity` sync
+- any `transform.*` track suppresses transform sync as a whole
+- suppression clears on terminal state or unbind
 
-1. `useAnimation(config)` for SpatialDiv continues to work unchanged.
-2. Internally, the legacy path keeps its own segment-native behavior; `useAnimation` does not downgrade into that command path.
-3. The `animation` prop path does NOT use `SpatializedMotionController`; it retains its own session management.
-4. New code SHOULD use `useAnimation({ from, to, duration })` which provides the same single-segment experience.
+## Non-goals
 
-## Portal Suppression (unified rules)
+This design does not cover:
 
-| Animated field | Suppression scope | Release trigger |
-|----------------|-------------------|-----------------|
-| `opacity` | Property-level: only `opacity` sync suppressed | Session terminal / unbind |
-| Any `transform.*` | Transform-wide: entire `updateTransform(matrix)` suppressed | Session terminal / unbind |
+- Entity animation convergence
+- Material or variant animation
+- Layout field animation
+- Physics or spring simulation
+- Arbitrary transform string interpolation
 
-Suppression applies to both legacy `animation` prop sessions and `xr-animation` binding sessions. For `spatialized2d`, suppression follows active native playback state only.
+## Delivery note
 
-The release conditions remain terminal-only: `finish`, `stop`, `reset`, and `unbind` clear suppression. The purpose is to prevent Portal DOM sync from overwriting native intermediate values while native playback is in flight.
-
-## Native Timeline Evaluation
-
-Native MUST sample each track independently at timeline time `t` (seconds, after `delay` and `playbackRate`), compose transform in fixed order (translate → rotate → scale), and produce results matching the Web evaluator within tolerance (±0.5 for translate px, ±0.01 for opacity/scale).
-
-## Phased Delivery
-
-See [tasks.md](./tasks.md). Summary:
-- Phase 0–1: Umbrella spec + unified naming (completed)
-- Phase 2: Static3D + Dynamic3D native timelines (completed)
-- Phase 3: Core + React consolidation (completed)
-- Phase 4: Entity timeline (deferred)
-- Phase 5: Native consolidation (completed)
-- Phase 6: Unified JSB + type rename (completed)
-- Phase 7: Spec merge (completed)
-- Phase 8: Bind-time target resolution (completed)
-- Phase 9: Playback API expansion — stop / reset / finish (proposed)
-- Phase 10: Timeline percentage keyframe support — `timeline` config shape, `SpatializedMotionKeyframeValues`, three-level `timingFunction` cascade, `easing` → `timingFunction` rename (proposed)
+This document describes the target-state design and module boundaries. Delivery history, phase ordering, and migration progress remain tracked in [tasks.md](./tasks.md).
