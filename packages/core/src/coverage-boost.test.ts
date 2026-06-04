@@ -171,20 +171,24 @@ describe('SpatialObject', () => {
   it('inspect returns data when command succeeds', async () => {
     vi.doMock('./JSBCommand', () => {
       return {
-        InspectCommand: vi.fn().mockImplementation(() => ({
-          execute: vi.fn().mockResolvedValue({
-            success: true,
-            data: { a: 1 },
-            errorMessage: '',
-          }),
-        })),
-        DestroyCommand: vi.fn().mockImplementation(() => ({
-          execute: vi.fn().mockResolvedValue({
-            success: true,
-            data: undefined,
-            errorMessage: '',
-          }),
-        })),
+        InspectCommand: vi.fn().mockImplementation(function () {
+          return {
+            execute: vi.fn().mockResolvedValue({
+              success: true,
+              data: { a: 1 },
+              errorMessage: '',
+            }),
+          }
+        }),
+        DestroyCommand: vi.fn().mockImplementation(function () {
+          return {
+            execute: vi.fn().mockResolvedValue({
+              success: true,
+              data: undefined,
+              errorMessage: '',
+            }),
+          }
+        }),
       }
     })
 
@@ -196,20 +200,24 @@ describe('SpatialObject', () => {
   it('inspect throws when command fails', async () => {
     vi.doMock('./JSBCommand', () => {
       return {
-        InspectCommand: vi.fn().mockImplementation(() => ({
-          execute: vi.fn().mockResolvedValue({
-            success: false,
-            data: undefined,
-            errorMessage: 'nope',
-          }),
-        })),
-        DestroyCommand: vi.fn().mockImplementation(() => ({
-          execute: vi.fn().mockResolvedValue({
-            success: true,
-            data: undefined,
-            errorMessage: '',
-          }),
-        })),
+        InspectCommand: vi.fn().mockImplementation(function () {
+          return {
+            execute: vi.fn().mockResolvedValue({
+              success: false,
+              data: undefined,
+              errorMessage: 'nope',
+            }),
+          }
+        }),
+        DestroyCommand: vi.fn().mockImplementation(function () {
+          return {
+            execute: vi.fn().mockResolvedValue({
+              success: true,
+              data: undefined,
+              errorMessage: '',
+            }),
+          }
+        }),
       }
     })
 
@@ -222,20 +230,24 @@ describe('SpatialObject', () => {
     const onDestroy = vi.fn()
     vi.doMock('./JSBCommand', () => {
       return {
-        InspectCommand: vi.fn().mockImplementation(() => ({
-          execute: vi.fn().mockResolvedValue({
-            success: true,
-            data: undefined,
-            errorMessage: '',
-          }),
-        })),
-        DestroyCommand: vi.fn().mockImplementation(() => ({
-          execute: vi.fn().mockResolvedValue({
-            success: true,
-            data: { ok: true },
-            errorMessage: '',
-          }),
-        })),
+        InspectCommand: vi.fn().mockImplementation(function () {
+          return {
+            execute: vi.fn().mockResolvedValue({
+              success: true,
+              data: undefined,
+              errorMessage: '',
+            }),
+          }
+        }),
+        DestroyCommand: vi.fn().mockImplementation(function () {
+          return {
+            execute: vi.fn().mockResolvedValue({
+              success: true,
+              data: { ok: true },
+              errorMessage: '',
+            }),
+          }
+        }),
       }
     })
 
@@ -501,34 +513,42 @@ describe('SpatializedElementCreator', () => {
         UpdateSpatializedDynamic3DElementProperties: OkCommand,
         SetParentForEntityCommand: OkCommand,
         AddEntityToDynamic3DCommand: OkCommand,
-        createSpatialized2DElementCommand: vi.fn().mockImplementation(() => ({
-          execute: vi.fn().mockResolvedValue({
-            success: true,
-            data: { id: 'w1', windowProxy },
-            errorCode: '',
-            errorMessage: '',
+        createSpatialized2DElementCommand: vi
+          .fn()
+          .mockImplementation(function () {
+            return {
+              execute: vi.fn().mockResolvedValue({
+                success: true,
+                data: { id: 'w1', windowProxy },
+                errorCode: '',
+                errorMessage: '',
+              }),
+            }
           }),
-        })),
         CreateSpatializedStatic3DElementCommand: vi
           .fn()
-          .mockImplementation(() => ({
-            execute: vi.fn().mockResolvedValue({
-              success: true,
-              data: { id: 's-default' },
-              errorCode: '',
-              errorMessage: '',
-            }),
-          })),
+          .mockImplementation(function () {
+            return {
+              execute: vi.fn().mockResolvedValue({
+                success: true,
+                data: { id: 's-default' },
+                errorCode: '',
+                errorMessage: '',
+              }),
+            }
+          }),
         CreateSpatializedDynamic3DElementCommand: vi
           .fn()
-          .mockImplementation(() => ({
-            execute: vi.fn().mockResolvedValue({
-              success: true,
-              data: { id: 'd-default' },
-              errorCode: '',
-              errorMessage: '',
-            }),
-          })),
+          .mockImplementation(function () {
+            return {
+              execute: vi.fn().mockResolvedValue({
+                success: true,
+                data: { id: 'd-default' },
+                errorCode: '',
+                errorMessage: '',
+              }),
+            }
+          }),
       }
     })
 
@@ -574,14 +594,18 @@ describe('SpatializedElementCreator', () => {
         UpdateSpatializedDynamic3DElementProperties: OkCommand,
         SetParentForEntityCommand: OkCommand,
         AddEntityToDynamic3DCommand: OkCommand,
-        createSpatialized2DElementCommand: vi.fn().mockImplementation(() => ({
-          execute: vi.fn().mockResolvedValue({
-            success: false,
-            data: undefined,
-            errorCode: 'E',
-            errorMessage: 'bad',
+        createSpatialized2DElementCommand: vi
+          .fn()
+          .mockImplementation(function () {
+            return {
+              execute: vi.fn().mockResolvedValue({
+                success: false,
+                data: undefined,
+                errorCode: 'E',
+                errorMessage: 'bad',
+              }),
+            }
           }),
-        })),
         CreateSpatializedStatic3DElementCommand: vi.fn(),
         CreateSpatializedDynamic3DElementCommand: vi.fn(),
       }
@@ -622,22 +646,26 @@ describe('SpatializedElementCreator', () => {
         CreateSpatializedDynamic3DElementCommand: vi.fn(),
         CreateSpatializedStatic3DElementCommand: vi
           .fn()
-          .mockImplementationOnce(() => ({
-            execute: vi.fn().mockResolvedValue({
-              success: true,
-              data: { id: 's3' },
-              errorCode: '',
-              errorMessage: '',
-            }),
-          }))
-          .mockImplementationOnce(() => ({
-            execute: vi.fn().mockResolvedValue({
-              success: false,
-              data: undefined,
-              errorCode: 'E',
-              errorMessage: 'bad',
-            }),
-          })),
+          .mockImplementationOnce(function () {
+            return {
+              execute: vi.fn().mockResolvedValue({
+                success: true,
+                data: { id: 's3' },
+                errorCode: '',
+                errorMessage: '',
+              }),
+            }
+          })
+          .mockImplementationOnce(function () {
+            return {
+              execute: vi.fn().mockResolvedValue({
+                success: false,
+                data: undefined,
+                errorCode: 'E',
+                errorMessage: 'bad',
+              }),
+            }
+          }),
       }
     })
 
@@ -679,22 +707,26 @@ describe('SpatializedElementCreator', () => {
         CreateSpatializedStatic3DElementCommand: vi.fn(),
         CreateSpatializedDynamic3DElementCommand: vi
           .fn()
-          .mockImplementationOnce(() => ({
-            execute: vi.fn().mockResolvedValue({
-              success: true,
-              data: { id: 'd3' },
-              errorCode: '',
-              errorMessage: '',
-            }),
-          }))
-          .mockImplementationOnce(() => ({
-            execute: vi.fn().mockResolvedValue({
-              success: false,
-              data: undefined,
-              errorCode: 'E',
-              errorMessage: 'bad',
-            }),
-          })),
+          .mockImplementationOnce(function () {
+            return {
+              execute: vi.fn().mockResolvedValue({
+                success: true,
+                data: { id: 'd3' },
+                errorCode: '',
+                errorMessage: '',
+              }),
+            }
+          })
+          .mockImplementationOnce(function () {
+            return {
+              execute: vi.fn().mockResolvedValue({
+                success: false,
+                data: undefined,
+                errorCode: 'E',
+                errorMessage: 'bad',
+              }),
+            }
+          }),
       }
     })
 
@@ -750,7 +782,9 @@ describe('SpatializedStatic3DElement', () => {
         CreateSpatializedDynamic3DElementCommand: vi.fn(),
         UpdateSpatializedStatic3DElementProperties: vi
           .fn()
-          .mockImplementation(() => ({ execute })),
+          .mockImplementation(function () {
+            return { execute }
+          }),
       }
     })
 
@@ -815,7 +849,9 @@ describe('SpatializedStatic3DElement', () => {
         CreateSpatializedDynamic3DElementCommand: vi.fn(),
         UpdateSpatializedStatic3DElementProperties: vi
           .fn()
-          .mockImplementation(() => ({ execute })),
+          .mockImplementation(function () {
+            return { execute }
+          }),
       }
     })
 
@@ -875,9 +911,9 @@ describe('SpatializedDynamic3DElement', () => {
         CreateSpatializedStatic3DElementCommand: vi.fn(),
         CreateSpatializedDynamic3DElementCommand: vi.fn(),
         AddEntityToDynamic3DCommand: OkCommand,
-        SetParentForEntityCommand: vi
-          .fn()
-          .mockImplementation(() => ({ execute })),
+        SetParentForEntityCommand: vi.fn().mockImplementation(function () {
+          return { execute }
+        }),
       }
     })
 
@@ -927,7 +963,9 @@ describe('SpatializedDynamic3DElement', () => {
         CreateSpatializedDynamic3DElementCommand: vi.fn(),
         UpdateSpatializedDynamic3DElementProperties: vi
           .fn()
-          .mockImplementation(() => ({ execute })),
+          .mockImplementation(function () {
+            return { execute }
+          }),
       }
     })
 

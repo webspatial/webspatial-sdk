@@ -265,18 +265,28 @@ describe('test formatSceneConfig in volume', () => {
 
 vi.mock('./JSBCommand', () => {
   return {
-    GetSpatialSceneState: vi.fn().mockImplementation(() => ({
-      execute: vi.fn().mockResolvedValue({ data: { name: 'pending' } }),
-    })),
-    UpdateSceneConfig: vi.fn().mockImplementation(() => ({
-      execute: vi.fn().mockResolvedValue(undefined),
-    })),
-    UpdateSpatialSceneProperties: vi.fn().mockImplementation(() => ({
-      execute: vi.fn().mockResolvedValue(undefined),
-    })),
-    AddSpatializedElementToSpatialScene: vi.fn().mockImplementation(() => ({
-      execute: vi.fn().mockResolvedValue(undefined),
-    })),
+    GetSpatialSceneState: vi.fn().mockImplementation(function () {
+      return {
+        execute: vi.fn().mockResolvedValue({ data: { name: 'pending' } }),
+      }
+    }),
+    UpdateSceneConfig: vi.fn().mockImplementation(function () {
+      return {
+        execute: vi.fn().mockResolvedValue(undefined),
+      }
+    }),
+    UpdateSpatialSceneProperties: vi.fn().mockImplementation(function () {
+      return {
+        execute: vi.fn().mockResolvedValue(undefined),
+      }
+    }),
+    AddSpatializedElementToSpatialScene: vi
+      .fn()
+      .mockImplementation(function () {
+        return {
+          execute: vi.fn().mockResolvedValue(undefined),
+        }
+      }),
   }
 })
 
