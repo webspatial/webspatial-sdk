@@ -35,7 +35,7 @@ function App() {
         // src="/modelasset/cone.usdz"
         poster="/img/toy_drummer.png"
         enable-xr
-        autoPlay
+        autoPlay={false}
         loop={loop}
         style={{
           height: '200px',
@@ -91,7 +91,7 @@ function App() {
         <button
           className="btn m-1"
           onClick={() => {
-            if (modelRef.current?.currentTime) {
+            if (modelRef.current?.currentTime != undefined) {
               modelRef.current.currentTime -= 10
             }
           }}
@@ -113,7 +113,7 @@ function App() {
         <button
           className="btn m-1"
           onClick={() => {
-            if (modelRef.current?.currentTime) {
+            if (modelRef.current?.currentTime != undefined) {
               modelRef.current.currentTime += 10
             }
           }}
