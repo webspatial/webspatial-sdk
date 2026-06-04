@@ -23,7 +23,7 @@ flowchart LR
     end
 
     subgraph Hidden["off-screen / portal"]
-        Probe["<b>Probe</b><br/>portal'd into<br/>cssParserDivContainer<br/>(not in host's tree)"]
+        Probe["<b>Probe</b><br/>same intrinsic tag as host<br/>(class mirrored)<br/>portal'd into cssParserDivContainer"]
     end
 
     Watcher["useSpatial-<br/>TransformVisibility"]
@@ -46,6 +46,9 @@ flowchart LR
 | `ref.current` | **Yes** — exposed to user code | No |
 | `style.transform` / `visibility` | Written via `setAttribute` (data-attr toggle), never inline | Holds the **user's** spatial values inline |
 | Class | `xr-spatial-default` + user classes; mirrored to probe | Mirrored from host (class only, not data-\*) |
+| Element tag | User's intrinsic (`h1`, `div`, `section`, …) | Same intrinsic when `component` is a string; **`div` fallback** for custom React component types (`resolveProbeIntrinsicTag`) |
+
+`TransformVisibilityTaskContainer` receives `component` from `SpatializedContainer` so tag selectors in stylesheets (e.g. `h1 { transform: … }`) can reach the probe via `getComputedStyle`. Only **`class`** is mirrored from host → probe; `data-xr-*` stays host-only (I4).
 
 ## What `ref.current` is
 
@@ -243,6 +246,18 @@ This is a niche scenario (it requires React + WebSpatial inside an iframe, not j
 
 **Workaround in the meantime:** call `injectSpatialDefaultStyle()` once from inside the iframe's own realm (e.g. an entry script that runs there). Cross-origin iframes are out of scope — the SDK cannot reach across origins anyway.
 
+### Stylesheet selectors vs. the probe ([#1263](https://github.com/webspatial/webspatial-sdk/issues/1263))
+
+The probe lives under `cssParserDivContainer` in `<body>`, **not** under the user's page subtree. Therefore:
+
+- **Tag** and **class** selectors that do not depend on page ancestors usually work on the probe (tag matching requires the probe to use the same intrinsic element as the host — see table above).
+- **Ancestor** selectors tied to the page tree (e.g. `.page h1`, `.layout > h1`) may **not** match the probe even when they match the host.
+- **Inherited** properties can differ between host and probe because their ancestor chains differ.
+
+**Workarounds:** prefer class selectors (`.mySpatialPanel`), inline `style` on the element, or `ref.current.style.transform = …` (forwarded to the probe via the style proxy). For custom React components wrapped with `enable-xr`, the probe stays `div` — use class or inline style, not tag selectors on the wrapper's display name.
+
+End-user summary: [`docs/webspatial-quirks.md`](../../../../docs/webspatial-quirks.md) — *SpatialDiv / `enable-xr` and CSS*.
+
 ## Test coverage map
 
 Each invariant has at least one regression test pinned in this directory:
@@ -262,6 +277,8 @@ Each invariant has at least one regression test pinned in this directory:
 | CSS rule is class-scoped, not global (I2) | `coverage-boost.test.ts` — *"injectSpatialDefaultStyle is idempotent and emits class-scoped data-xr-host rules"* |
 | Stylesheet injected per host root incl. shadow roots (I7) | `useDomProxy.coverage.test.ts` — *"injects spatial default stylesheet into the host shadow root"* |
 | Stylesheet injection is idempotent per root (I7) | `coverage-boost.test.ts` — same as above (asserts `length === 1` after three calls) |
+| Probe mirrors host intrinsic tag; tag-selector CSS on probe | `TransformVisibilityTaskContainer.test.tsx` — *"portals an h1 probe"*, *"applies tag selectors from document stylesheets"* |
+| Non-intrinsic `component` → `div` probe | `TransformVisibilityTaskContainer.test.tsx` — `resolveProbeIntrinsicTag` |
 
 ## Quick reference for new contributors
 
