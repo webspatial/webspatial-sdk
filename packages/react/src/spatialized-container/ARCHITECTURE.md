@@ -289,6 +289,7 @@ End-user summary: [`docs/webspatial-quirks.md`](../../../../docs/webspatial-quir
 | `portalInstanceObject` null-safe deps / props | `hooks/useSpatialContentReady.test.ts` |
 | Lazy 3D when `dom` appears after sync | `SpatializedStatic3DElementContainer.test.tsx` |
 | `useSync2DFrame` mount + element-driven sync | `coverage-boost.test.ts` (filtered cases for `useSync2DFrame`) |
+| `useSync2DFrame` `afterHostLayout` head sync before re-render | `hooks/useSync2DFrame.test.tsx` |
 | Portal head sync / CSSOM / registry waves | `utils/windowStyleSync.test.ts` |
 | `useSyncHeadStyles` register + dispose | `utils/useSyncHeadStyles.test.tsx` |
 
