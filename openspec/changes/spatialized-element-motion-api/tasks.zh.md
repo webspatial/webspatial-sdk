@@ -15,7 +15,7 @@
 ## Phase 2 — Static3D + Dynamic3D native timelines
 
 - [x] Core：`SpatializedStatic3DElement.animateMotion()` / `SpatializedDynamic3DElement.animateMotion()` 通过统一的 `AnimateSpatializedElementMotion`
-- [x] Native：`SpatializedContainerMotionAnimationManager` + 单一 JSB 监听器 `AnimateSpatializedElementMotion`（`targetKind`: static3d | dynamic3d）
+- [x] Native：`SpatializedElementMotionManager` + 单一 JSB 监听器 `AnimateSpatializedElementMotion`（`targetKind`: static3d | dynamic3d）
 - [x] React：Model / Reality `motion` 绑定；`useSpatializedMotion(config)` 绑定时目标解析
 - [x] test-server 演示页在 **Spatialized Motion** 下（`model-container`、`reality-container`）
 
@@ -34,7 +34,7 @@
 
 ## Phase 5 — Native 合并 + 公共接口清理
 
-- [x] 合并 native Swift Static3D/Dynamic3D managers → `SpatializedContainerMotionAnimationManager` + `SpatializedMotionTransformSink`
+- [x] 合并 native Swift Static3D/Dynamic3D managers → `SpatializedElementMotionManager` + `SpatializedElementMotionTransformAdapter`
 - [x] 统一 JSB `AnimateSpatializedElementMotion` + 仅 `targetKind`（移除 `AnimateSpatializedStatic3DElement` / `AnimateSpatializedDynamic3DElement`）
 - [x] 将 2D 合入 `AnimateSpatializedElementMotion`（`targetKind: spatialized2d`）；移除 `AnimateSpatialized2DElement` JSB
 - [x] 移除废弃的 Core 控制器类别名（`SpatialDivMotionController`、`Static3DMotionController`、`Dynamic3DMotionController`）
@@ -50,7 +50,7 @@
 ## Phase 6b — 统一 JSB for 2D（在 Phase 6 提交中完成）
 
 - [x] 扩展 `AnimateSpatializedElementMotion` 增加 `targetKind: spatialized2d`
-- [x] 在统一监听器中将 native 2D 路由到 `SpatialDivAnimationManager`
+- [x] 在统一监听器中将 native 2D 路由到 `SpatializedElementMotionManager`
 - [x] Core：`executeAnimateSpatializedElementMotion` 覆盖所有 kind；移除 `AnimateSpatialDivJSBCommand`
 - [x] 保留 `animateSpatialDiv()` 作为 `Spatialized2DElement` 上的废弃别名（供 `useSpatialDivAnimation` 使用）
 
@@ -183,7 +183,7 @@
 
 ## Phase 15 — visionOS 2D backend 收敛 + capability 契约收口
 
-- [x] visionOS native 路由：将 `spatialized2d` 从 `onAnimateSpatialized2DMotion` / `SpatialDivAnimationManager` 收敛到统一的 `onAnimateSpatializedContainerMotion` / `SpatializedContainerMotionAnimationManager` 路径
+- [x] visionOS native 路由：将 `spatialized2d` 从 `onAnimateSpatialized2DMotion` / `SpatializedElementMotionManager` 收敛到统一的 `onAnimateSpatializedElementMotionCommand` / `SpatializedElementMotionManager` 路径
 - [x] visionOS 清理：在统一路径对 play pause resume stop reset finish 和 unbind cleanup 达到语义对齐后，删除旧 2D native 适配层
 - [x] Capability 契约文档：保留 `useAnimation` 顶层 family key，并保留 `entity` 作为 subtoken，因为长期路线仍计划将 entity animation 再整合回 `useAnimation` family
 - [x] Capability 使用约束：文档中明确具体运行时检查 MUST 使用 `supports('useAnimation', [subtoken])`；`supports('useAnimation')` 仅保留 family 级语义，MUST NOT 被当作目标可用性判断
