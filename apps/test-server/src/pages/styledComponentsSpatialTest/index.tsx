@@ -1,18 +1,20 @@
 import { enableDebugTool } from '@webspatial/react-sdk'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { StyledNestedSpatialSection } from './StyledNestedSpatialSection'
 import { StyledSpatialChildSection } from './StyledSpatialChildSection'
 import { StyledSpatialHostSection } from './StyledSpatialHostSection'
 import { StyledTitleSection } from './StyledTitleSection'
 
 enableDebugTool()
 
-type DemoTab = 'host' | 'child' | 'title'
+type DemoTab = 'host' | 'child' | 'title' | 'nested'
 
 const DEMO_TABS: { id: DemoTab; label: string }[] = [
   { id: 'host', label: 'Styled host' },
   { id: 'child', label: 'Styled child' },
   { id: 'title', label: 'Styled title' },
+  { id: 'nested', label: 'Nested' },
 ]
 
 export default function StyledComponentsSpatialTest() {
@@ -86,6 +88,7 @@ export default function StyledComponentsSpatialTest() {
                 {t.id === 'host' && <StyledSpatialHostSection />}
                 {t.id === 'child' && <StyledSpatialChildSection />}
                 {t.id === 'title' && <StyledTitleSection />}
+                {t.id === 'nested' && <StyledNestedSpatialSection />}
               </>
             )}
           </div>

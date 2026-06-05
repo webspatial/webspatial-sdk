@@ -163,6 +163,44 @@ describe('useSyncHeadStyles', () => {
     unmount()
   })
 
+  it('schedules CSSOM rule sync for every active child window', () => {
+    const parentChildWindow = {
+      document: document.implementation.createHTMLDocument(),
+    }
+    const nestedChildWindow = {
+      document: document.implementation.createHTMLDocument(),
+    }
+
+    function Test() {
+      useSyncHeadStyles(parentChildWindow as unknown as WindowProxy, {
+        immediate: false,
+      })
+      useSyncHeadStyles(nestedChildWindow as unknown as WindowProxy, {
+        immediate: false,
+      })
+      return null
+    }
+
+    const { unmount } = render(<Test />)
+    const style = document.createElement('style')
+    document.head.appendChild(style)
+
+    act(() => {
+      style.sheet!.insertRule('.nested{opacity:.42;}', 0)
+    })
+
+    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
+      parentChildWindow,
+      'immediate',
+    )
+    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
+      nestedChildWindow,
+      'immediate',
+    )
+    style.remove()
+    unmount()
+  })
+
   it('restores CSSOM rule methods after the last synced child unmounts', () => {
     const childWindowA = {
       document: document.implementation.createHTMLDocument(),
