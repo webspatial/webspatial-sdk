@@ -1,39 +1,6 @@
 import Foundation
 import QuartzCore
 
-// MARK: - Partial Vec3 for transform sub-fields
-
-/// Partial 3D vector for specifying individual axis values.
-/// Used for translate (pixels), rotate (degrees), and scale (unitless multiplier).
-struct Vec3Partial: Decodable {
-    let x: Double?
-    let y: Double?
-    let z: Double?
-}
-
-// MARK: - Transform Target
-
-/// Structured transform target for SpatialDiv animation.
-/// Composed in fixed order: translate → rotate → scale.
-struct SpatialDivTransformTarget: Decodable {
-    /// Translation in CSS pixels.
-    let translate: Vec3Partial?
-    /// Rotation in degrees, aligning with CSS rotateX/Y/Z().
-    let rotate: Vec3Partial?
-    /// Scale as unitless multipliers, aligning with CSS scaleX/Y/Z().
-    let scale: Vec3Partial?
-}
-
-// MARK: - Animation Target
-
-/// Whitelisted property values for SpatialDiv animation.
-/// Per spec: only transform (translate/rotate/scale) and opacity.
-/// Layout-affecting fields (width, height, back, backOffset, depth) are NOT animatable.
-struct SpatialDivAnimationTarget: Decodable {
-    let transform: SpatialDivTransformTarget?
-    let opacity: Double?
-}
-
 // MARK: - Loop Configuration
 
 /// Loop configuration decoded from JS bridge.
@@ -165,24 +132,6 @@ class SpatialDivAnimationSession {
     /// Native write path for container motion (Static3D `modelTransform` vs element `transform`).
     var transformSink: SpatializedMotionTransformSink = .elementTransform
 
-    /// Target values to animate to.
-    let to: SpatialDivAnimationTarget?
-
-    /// Start values (from). If nil, snapshot from element at play time.
-    let from: SpatialDivAnimationTarget?
-
-    /// Resolved "from" SRT values after snapshotting from element.
-    var resolvedFromSRT: ResolvedSRT = .identity
-
-    /// Resolved "to" SRT values.
-    var resolvedToSRT: ResolvedSRT = .identity
-
-    /// Resolved "from" opacity.
-    var resolvedFromOpacity: Double = 1.0
-
-    /// Resolved "to" opacity.
-    var resolvedToOpacity: Double = 1.0
-
     /// Whether transform is being animated.
     var animatesTransform: Bool = false
 
@@ -195,7 +144,7 @@ class SpatialDivAnimationSession {
     /// Delay in seconds before animation starts.
     let delay: TimeInterval
 
-    /// Timing function used by interpolation.
+    /// Timing function used to ease loop progress across iterations.
     let timingFunction: SpatialDivTimingFunction
 
     /// Playback speed multiplier.
@@ -204,8 +153,8 @@ class SpatialDivAnimationSession {
     /// Loop configuration.
     let loopConfig: SpatialDivLoopConfig
 
-    /// Timeline evaluator when `timeline` play payload is used (Phase 2b).
-    var timelineEvaluator: SpatialDivTimelineEvaluator?
+    /// Timeline evaluator for canonical timeline playback.
+    let timelineEvaluator: SpatialDivTimelineEvaluator
 
     /// Snapshot at t=0 for timeline cancel restore.
     var timelineStartSRT: ResolvedSRT = .identity
@@ -246,8 +195,7 @@ class SpatialDivAnimationSession {
     init(
         animationId: String,
         elementId: String,
-        to: SpatialDivAnimationTarget?,
-        from: SpatialDivAnimationTarget?,
+        timelineEvaluator: SpatialDivTimelineEvaluator,
         duration: Double,
         timingFunction: String,
         delay: Double,
@@ -256,8 +204,7 @@ class SpatialDivAnimationSession {
     ) {
         self.animationId = animationId
         self.elementId = elementId
-        self.to = to
-        self.from = from
+        self.timelineEvaluator = timelineEvaluator
         self.duration = duration
         self.delay = delay
         self.timingFunction = SpatialDivTimingFunction.from(name: timingFunction)
@@ -326,12 +273,6 @@ class SpatialDivAnimationSession {
     func resetForNextIteration(at timestamp: CFTimeInterval) {
         startTime = timestamp
         pausedDuration = 0
-    }
-
-    // MARK: - Interpolation Helpers
-
-    static func lerp(_ from: Double, _ to: Double, _ progress: Double) -> Double {
-        return from + (to - from) * progress
     }
 }
 
