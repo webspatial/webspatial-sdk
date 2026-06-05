@@ -17,7 +17,7 @@ describe('useSyncHeadStyles', () => {
     vi.mocked(registerParentHeadSyncTarget).mockClear()
   })
 
-  it('registers the child window with immediate sync on mount', () => {
+  it('registers and disposes the child window on mount', () => {
     const childWindow = {
       document: document.implementation.createHTMLDocument(),
     }

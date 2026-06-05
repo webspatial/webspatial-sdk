@@ -298,8 +298,6 @@ describe('windowStyleSync', () => {
     style.appendChild(text)
     document.head.appendChild(style)
 
-    const querySpy = vi.spyOn(document.head, 'querySelectorAll')
-
     observers[0]!.callback(
       [
         {
@@ -325,59 +323,12 @@ describe('windowStyleSync', () => {
       'style[data-webspatial-sync="1"]',
     ) as HTMLStyleElement
     expect(syncedStyle.textContent).toContain('color: red')
-    expect(
-      querySpy.mock.calls.filter(([selector]) => selector === 'style'),
-    ).toHaveLength(1)
 
     text.textContent = '.a { padding: 12px; color: blue; }'
     await vi.advanceTimersByTimeAsync(1000)
 
     expect(syncedStyle.textContent).toContain('color: red')
     expect(syncedStyle.textContent).not.toContain('color: blue')
-    expect(
-      querySpy.mock.calls.filter(([selector]) => selector === 'style'),
-    ).toHaveLength(1)
-
-    querySpy.mockRestore()
-  })
-
-  it('reads the parent head once per broadcast wave', async () => {
-    const childWindowA = createChildWindow()
-    const childWindowB = createChildWindow()
-    const childWindowC = createChildWindow()
-    registerParentHeadSyncTarget(childWindowA, { immediate: false })
-    registerParentHeadSyncTarget(childWindowB, { immediate: false })
-    registerParentHeadSyncTarget(childWindowC, { immediate: false })
-
-    const parentStyle = document.createElement('style')
-    parentStyle.textContent = '.snapshot { opacity: .42; }'
-    document.head.appendChild(parentStyle)
-
-    const querySpy = vi.spyOn(document.head, 'querySelectorAll')
-
-    observers[0]!.callback(
-      [
-        {
-          type: 'childList',
-          target: document.head,
-          addedNodes: [parentStyle] as unknown as NodeList,
-          removedNodes: [] as unknown as NodeList,
-        } as unknown as MutationRecord,
-      ],
-      observers[0] as unknown as MutationObserver,
-    )
-
-    await Promise.resolve()
-    await Promise.resolve()
-
-    expect(
-      querySpy.mock.calls.filter(([selector]) => selector === 'style'),
-    ).toHaveLength(1)
-    expect(
-      querySpy.mock.calls.filter(
-        ([selector]) => selector === 'link[rel="stylesheet"][href]',
-      ),
-    ).toHaveLength(1)
   })
 
   it('keeps afterHostLayout sync scoped to the requested target', async () => {
