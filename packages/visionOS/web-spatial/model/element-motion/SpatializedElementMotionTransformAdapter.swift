@@ -1,8 +1,8 @@
 import Foundation
 import Spatial
 
-/// Selects where container motion samples are read/written on a `SpatializedElement`.
-enum SpatializedMotionTransformSink {
+/// Adapts where spatialized element motion samples are read/written.
+enum SpatializedElementMotionTransformAdapter {
     /// `Spatialized2DElement` / `SpatializedDynamic3DElement` root — `element.transform` + opacity.
     case elementTransform
     /// `SpatializedStatic3DElement` — `modelTransform` (opacity not driven on Model root).
