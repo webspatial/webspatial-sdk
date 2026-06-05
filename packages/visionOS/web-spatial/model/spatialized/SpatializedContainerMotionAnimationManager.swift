@@ -139,91 +139,19 @@ class SpatializedContainerMotionAnimationManager: NSObject {
             resolve(.failure(JsbError(code: .CommandError, message: "Spatialized container motion play: elementId is required")))
             return
         }
-
-        if let timeline = command.timeline {
-            handleTimelinePlay(
-                command: command,
-                transformSink: transformSink,
-                timeline: timeline,
-                element: element,
-                elementId: elementId,
-                resolve: resolve
-            )
+        guard let timeline = command.timeline else {
+            resolve(.failure(JsbError(code: .CommandError, message: "Spatialized container motion play: timeline is required")))
             return
         }
 
-        let session = SpatialDivAnimationSession(
-            animationId: command.animationId,
+        handleTimelinePlay(
+            command: command,
+            transformSink: transformSink,
+            timeline: timeline,
+            element: element,
             elementId: elementId,
-            to: command.to,
-            from: command.from,
-            duration: command.duration ?? 0.3,
-            timingFunction: command.timingFunction ?? "easeInOut",
-            delay: command.delay ?? 0,
-            speed: command.playbackRate ?? 1.0,
-            loopConfig: command.loop ?? .none
+            resolve: resolve
         )
-
-        // --- Resolve "from" SRT by snapshotting current element transform ---
-        let currentSRT = Self.decomposeSRT(from: transformSink.currentAffineTransform(for: element))
-        let fromTarget = command.from
-
-        session.resolvedFromSRT = ResolvedSRT(
-            translateX: fromTarget?.transform?.translate?.x ?? currentSRT.translateX,
-            translateY: fromTarget?.transform?.translate?.y ?? currentSRT.translateY,
-            translateZ: fromTarget?.transform?.translate?.z ?? currentSRT.translateZ,
-            rotateX: fromTarget?.transform?.rotate?.x ?? currentSRT.rotateX,
-            rotateY: fromTarget?.transform?.rotate?.y ?? currentSRT.rotateY,
-            rotateZ: fromTarget?.transform?.rotate?.z ?? currentSRT.rotateZ,
-            scaleX: fromTarget?.transform?.scale?.x ?? currentSRT.scaleX,
-            scaleY: fromTarget?.transform?.scale?.y ?? currentSRT.scaleY,
-            scaleZ: fromTarget?.transform?.scale?.z ?? currentSRT.scaleZ
-        )
-
-        // --- Resolve "from" opacity ---
-        session.resolvedFromOpacity = fromTarget?.opacity ?? transformSink.baselineOpacity(for: element)
-
-        // --- Resolve "to" SRT ---
-        let toTarget = command.to
-        if let toTransform = toTarget?.transform {
-            session.animatesTransform = true
-            // For "to" values: if a sub-field is not specified, hold at the from value
-            session.resolvedToSRT = ResolvedSRT(
-                translateX: toTransform.translate?.x ?? session.resolvedFromSRT.translateX,
-                translateY: toTransform.translate?.y ?? session.resolvedFromSRT.translateY,
-                translateZ: toTransform.translate?.z ?? session.resolvedFromSRT.translateZ,
-                rotateX: toTransform.rotate?.x ?? session.resolvedFromSRT.rotateX,
-                rotateY: toTransform.rotate?.y ?? session.resolvedFromSRT.rotateY,
-                rotateZ: toTransform.rotate?.z ?? session.resolvedFromSRT.rotateZ,
-                scaleX: toTransform.scale?.x ?? session.resolvedFromSRT.scaleX,
-                scaleY: toTransform.scale?.y ?? session.resolvedFromSRT.scaleY,
-                scaleZ: toTransform.scale?.z ?? session.resolvedFromSRT.scaleZ
-            )
-        }
-
-        // --- Resolve "to" opacity ---
-        if let toOpacity = toTarget?.opacity {
-            session.animatesOpacity = true
-            session.resolvedToOpacity = toOpacity
-        } else {
-            session.resolvedToOpacity = session.resolvedFromOpacity
-        }
-
-        // If "from" values are explicitly provided, apply them immediately to the element
-        session.transformSink = transformSink
-        if fromTarget?.transform != nil {
-            session.animatesTransform = true
-            transformSink.applyAffine(Self.composeSRT(session.resolvedFromSRT), to: element)
-        }
-        if fromTarget?.opacity != nil {
-            session.animatesOpacity = true
-            transformSink.applyOpacity(session.resolvedFromOpacity, to: element)
-        }
-
-        addSession(session)
-
-        // Acknowledge the play command immediately so the JS side can set up listeners
-        resolve(.success(nil))
     }
 
     private func handleTimelinePlay(
@@ -248,9 +176,9 @@ class SpatializedContainerMotionAnimationManager: NSObject {
             from: nil,
             duration: timeline.duration,
             timingFunction: "linear",
-            delay: command.delay ?? timeline.delay ?? 0,
-            speed: command.playbackRate ?? timeline.playbackRate ?? 1.0,
-            loopConfig: command.loop ?? timeline.loop ?? .none
+            delay: timeline.delay ?? 0,
+            speed: timeline.playbackRate ?? 1.0,
+            loopConfig: timeline.loop ?? .none
         )
 
         session.timelineEvaluator = evaluator

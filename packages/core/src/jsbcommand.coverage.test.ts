@@ -202,10 +202,11 @@ describe('JSBCommand', () => {
       type: 'play',
       targetKind: 'spatialized2d',
       elementId: 'element-1',
-      duration: 5,
-      timingFunction: 'linear',
       timeline: {
         duration: 5,
+        delay: 0.25,
+        playbackRate: 1.5,
+        loop: { reverse: true },
         tracks: [
           {
             property: 'transform.translate.x',
@@ -234,10 +235,11 @@ describe('JSBCommand', () => {
         animationId: 'anim-1',
         targetKind: 'spatialized2d',
         elementId: 'element-1',
-        duration: 5,
-        timingFunction: 'linear',
         timeline: {
           duration: 5,
+          delay: 0.25,
+          playbackRate: 1.5,
+          loop: { reverse: true },
           tracks: [
             {
               property: 'transform.translate.x',
@@ -487,6 +489,8 @@ describe('SpatializedElement', () => {
         errorCode: '',
         errorMessage: '',
       })
+
+      motion = vi.fn()
     }
 
     const e = new TestElement('el3')
@@ -515,6 +519,8 @@ describe('SpatializedElement', () => {
         errorCode: '',
         errorMessage: '',
       })
+
+      motion = vi.fn()
     }
 
     const e = new TestElement('el4')

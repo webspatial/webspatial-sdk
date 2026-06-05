@@ -117,9 +117,9 @@
 - [x] 更新 `proposal.md` 和 `proposal.zh.md`，明确 `useSpatializedMotion` 的所有 authoring 形状（`from/to`、`timeline`、`tracks`）都会编译为 canonical `tracks`
 - [x] 更新 `design.md` 和 `design.zh.md`，明确统一 motion 路径执行 canonical `tracks`，并移除 `useSpatializedMotion` 会降级到 native segment 的描述
 - [x] 更新 `specs/spatialized-2d-motion/spec.md` 和 `.zh.md`，移除 native segment fallback / optimization 表述，并要求 native `useSpatializedMotion` 走 canonical tracks 路径
-- [x] 更新 `specs/legacy-session-animation/spec.md` 和 `.zh.md`，将旧版 native segment 命令严格限定在 `useAnimation` 兼容路径内
+- [x] 更新 `specs/legacy-session-animation/spec.md` 和 `.zh.md`，明确旧版 native segment 路径已经删除，仅作为历史参考保留
 - [x] 更新 `specs/spatialized-element-motion/spec.md` 和 `.zh.md`，补充 native `useSpatializedMotion` 持续执行 canonical tracks 模型
-- [x] Controller bridge native manager 跟进：移除 `useSpatializedMotion` 执行路径中的 segment downgrade，同时保持 legacy `useAnimation` 行为独立
+- [x] Controller bridge native manager 跟进：移除 `useSpatializedMotion` 执行路径中的 segment downgrade，并删除剩余的 legacy native segment fallback
 - [x] Tests 跟进：覆盖 `from/to` 和 `tracks` 两种 authoring 形状最终进入同一 canonical tracks native 路径；百分比 key 的 `timeline` 覆盖仍保留在 Phase 10
 - [x] 2D native suppression 仅跟随 active native playback，并在 terminal / unbind 时清除
 
@@ -187,3 +187,16 @@
 - [x] visionOS 清理：在统一路径对 play pause resume stop reset finish 和 unbind cleanup 达到语义对齐后，删除旧 2D native 适配层
 - [x] Capability 契约文档：保留 `useAnimation` 顶层 family key，并保留 `entity` 作为 subtoken，因为长期路线仍计划将 entity animation 再整合回 `useAnimation` family
 - [x] Capability 使用约束：文档中明确具体运行时检查 MUST 使用 `supports('useAnimation', [subtoken])`；`supports('useAnimation')` 仅保留 family 级语义，MUST NOT 被当作目标可用性判断
+
+## 阶段 — PicoOS 对齐
+
+- [ ] 归档 picoOS Plan A（`spatial-div-animation-api`）到 `_archived/` ✅（2026-06-04 完成）
+- [ ] 在 picoOS 仓库创建统一 `spatialized-element-motion-api` 变更 ✅（2026-06-04 完成）
+- [ ] picoOS 阶段 1：JSB 协议迁移（`AnimateSpatialized2DElement` → `AnimateSpatializedElementMotion` + `targetKind`）
+- [ ] picoOS 阶段 2：Canonical tracks 执行（将单一 from/to lerp 替换为多轨道评估器）
+- [ ] picoOS 阶段 3：扩展终止命令（`stop`/`reset`/`finish` 及正确的值发射语义）
+- [ ] picoOS 阶段 4：3 级 timingFunction 级联（keyframe > track > config > 'linear'）
+- [ ] picoOS 阶段 5：Timeline 百分比关键帧反糖
+- [ ] picoOS 阶段 6：遗留清理（JS SDK 迁移确认后移除 `AnimateSpatialized2DElement` 处理器）
+- [ ] picoOS 阶段 7：测试（单元 + 集成，目标是与上游 Web RAF 评估器值对齐）
+- [ ] 确认 JS SDK 不再发射 `AnimateSpatialized2DElement` → picoOS 可移除双监听适配
