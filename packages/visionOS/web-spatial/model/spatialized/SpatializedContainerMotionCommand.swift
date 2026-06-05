@@ -5,13 +5,6 @@ protocol SpatializedContainerMotionCommand {
     var animationId: String { get }
     var type: String { get }
     var elementId: String? { get }
-    var to: SpatialDivAnimationTarget? { get }
-    var from: SpatialDivAnimationTarget? { get }
-    var duration: Double? { get }
-    var timingFunction: String? { get }
-    var delay: Double? { get }
-    var playbackRate: Double? { get }
-    var loop: SpatialDivLoopConfig? { get }
     var timeline: SpatialDivMotionTimelinePayload? { get }
 }
 
@@ -25,13 +18,6 @@ struct AnimateSpatializedElementMotionCommand: CommandDataProtocol, SpatializedC
     let targetKind: String
 
     let elementId: String?
-    let to: SpatialDivAnimationTarget?
-    let from: SpatialDivAnimationTarget?
-    let duration: Double?
-    let timingFunction: String?
-    let delay: Double?
-    let playbackRate: Double?
-    let loop: SpatialDivLoopConfig?
     let timeline: SpatialDivMotionTimelinePayload?
 
     var transformSink: SpatializedMotionTransformSink {

@@ -1,6 +1,1 @@
-export {
-  motionConfigToNativeSegment,
-  motionConfigToNativeTimeline,
-  tracksToFromTo,
-  type NativeSegmentPlayPayload,
-} from '../../../../core/src/spatialdiv/motion'
+export { motionConfigToNativeTimeline } from '../../../../core/src/spatialdiv/motion'

@@ -2,10 +2,9 @@ import type {
   SpatializedMotionProperty,
   SpatializedMotionTimeline,
 } from './spatializedMotion'
-import type { SpatializedVisualValues } from './spatializedVisual'
-import type { TimingFunction } from './animation'
 import type { SpatializedMotionKind } from './spatializedMotion'
 import type { SpatializedPlaybackError } from './spatializedPlayback'
+import type { SpatializedVisualValues } from './spatializedVisual'
 
 /** Unified JSB command for spatialized2d / static3d / dynamic3d motion. */
 export interface AnimateSpatializedElementMotionCommand {
@@ -14,13 +13,6 @@ export interface AnimateSpatializedElementMotionCommand {
   targetKind: SpatializedMotionKind
   properties?: SpatializedMotionProperty[]
   elementId?: string
-  to?: SpatializedVisualValues
-  from?: SpatializedVisualValues
-  duration?: number
-  timingFunction?: TimingFunction
-  delay?: number
-  loop?: boolean | { reverse?: boolean }
-  playbackRate?: number
   timeline?: SpatializedMotionTimeline
 }
 

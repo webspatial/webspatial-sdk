@@ -59,6 +59,9 @@ describe('useSpatializedMotion tuple api native backend', () => {
           transform: { translate: { x: 100 } },
         },
         timingFunction: 'linear',
+        delay: 0.25,
+        loop: { reverse: true },
+        playbackRate: 1.5,
         autoStart: false,
       }),
     )
@@ -84,6 +87,9 @@ describe('useSpatializedMotion tuple api native backend', () => {
         targetKind: 'spatialized2d',
         timeline: expect.objectContaining({
           duration: 5,
+          delay: 0.25,
+          loop: { reverse: true },
+          playbackRate: 1.5,
           tracks: expect.arrayContaining([
             expect.objectContaining({
               property: 'opacity',
@@ -97,6 +103,9 @@ describe('useSpatializedMotion tuple api native backend', () => {
     )
     expect(playCall).not.toHaveProperty('from')
     expect(playCall).not.toHaveProperty('to')
+    expect(playCall).not.toHaveProperty('delay')
+    expect(playCall).not.toHaveProperty('loop')
+    expect(playCall).not.toHaveProperty('playbackRate')
   })
 
   test('pre-bind play queues until the target resolves', async () => {

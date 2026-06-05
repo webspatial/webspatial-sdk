@@ -678,19 +678,11 @@ export class SpatializedMotionController
     const cfg = session.config
     const timeline: SpatializedMotionTimeline =
       motionConfigToNativeTimeline(cfg)
-    const base = {
+    return {
       animationId: session.animationId,
       type: 'play' as const,
       elementId,
-      delay: cfg.delay ?? 0,
-      loop: cfg.loop,
-      playbackRate: cfg.playbackRate,
-    }
-    return {
-      ...base,
       timeline,
-      duration: timeline.duration,
-      timingFunction: 'linear',
     }
   }
 

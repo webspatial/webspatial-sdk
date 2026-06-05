@@ -117,9 +117,9 @@
 - [x] Update `proposal.md` and `proposal.zh.md` so all `useSpatializedMotion` authoring shapes (`from/to`, `timeline`, `tracks`) are documented as compiling to canonical `tracks`
 - [x] Update `design.md` and `design.zh.md` so the unified motion path is described as canonical `tracks` execution and no longer references native segment downgrade for `useSpatializedMotion`
 - [x] Update `specs/spatialized-2d-motion/spec.md` and `.zh.md` to remove native segment fallback / optimization language and require the canonical tracks path for native `useSpatializedMotion`
-- [x] Update `specs/legacy-session-animation/spec.md` and `.zh.md` so the legacy native segment command remains scoped to `useAnimation` compatibility only
+- [x] Update `specs/legacy-session-animation/spec.md` and `.zh.md` so the legacy native segment path is documented as removed and retained only as historical reference
 - [x] Update `specs/spatialized-element-motion/spec.md` and `.zh.md` to state that native `useSpatializedMotion` continues on the canonical tracks model
-- [x] Controller / bridge / native manager follow-up: remove segment downgrade from the `useSpatializedMotion` execution path while keeping legacy `useAnimation` behavior separate
+- [x] Controller / bridge / native manager follow-up: remove segment downgrade from the `useSpatializedMotion` execution path and delete the remaining legacy native segment fallback
 - [x] Tests follow-up: cover `from/to` and `tracks` authoring shapes reaching the same canonical tracks-native path; percentage-key `timeline` coverage remains in Phase 10
 - [x] 2D native suppression stays scoped to active native playback and clears on terminal / unbind
 
@@ -187,3 +187,16 @@
 - [x] visionOS cleanup: delete the old 2D native adapter layer after unified routing reaches semantic parity for play pause resume stop reset finish and unbind cleanup
 - [x] Capability contract docs: keep `useAnimation` as the top-level family key and keep `entity` as a sub-token because the long-term roadmap still converges entity animation back into the `useAnimation` family
 - [x] Capability guidance: document that concrete runtime checks MUST use `supports('useAnimation', [subtoken])`; `supports('useAnimation')` remains family-level only and MUST NOT be treated as target availability
+
+## Phase — PicoOS Alignment
+
+- [ ] Archive picoOS Plan A (`spatial-div-animation-api`) to `_archived/` ✅ (completed 2026-06-04)
+- [ ] Create unified `spatialized-element-motion-api` change in picoOS repo ✅ (completed 2026-06-04)
+- [ ] picoOS Phase 1: JSB protocol migration (`AnimateSpatialized2DElement` → `AnimateSpatializedElementMotion` + `targetKind`)
+- [ ] picoOS Phase 2: Canonical tracks execution (replace single from/to lerp with multi-track evaluator)
+- [ ] picoOS Phase 3: Extended terminal commands (`stop`/`reset`/`finish` with correct value-emission semantics)
+- [ ] picoOS Phase 4: 3-level timingFunction cascade (keyframe > track > config > 'linear')
+- [ ] picoOS Phase 5: Timeline percentage keyframe desugaring
+- [ ] picoOS Phase 6: Legacy cleanup (remove `AnimateSpatialized2DElement` handler after JS SDK migration confirmed)
+- [ ] picoOS Phase 7: Testing (unit + integration, targeting value parity with upstream Web RAF evaluator)
+- [ ] Confirm JS SDK no longer emits `AnimateSpatialized2DElement` → picoOS can remove dual-listen shim

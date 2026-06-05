@@ -715,16 +715,6 @@ export class AnimateSpatializedElementMotionJSBCommand extends JSBCommand {
     if (elementId !== undefined) params.elementId = elementId
 
     if (type === 'play') {
-      if (this.command.to !== undefined) params.to = this.command.to
-      if (this.command.from !== undefined) params.from = this.command.from
-      if (this.command.duration !== undefined)
-        params.duration = this.command.duration
-      if (this.command.timingFunction !== undefined)
-        params.timingFunction = this.command.timingFunction
-      if (this.command.delay !== undefined) params.delay = this.command.delay
-      if (this.command.loop !== undefined) params.loop = this.command.loop
-      if (this.command.playbackRate !== undefined)
-        params.playbackRate = this.command.playbackRate
       if (this.command.timeline !== undefined)
         params.timeline = this.command.timeline
     }
