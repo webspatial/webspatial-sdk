@@ -3,12 +3,7 @@ export { applyFrozenProperties, snapshotScalars } from './mergeValues'
 export { evaluateMotionTimeline } from './evaluate'
 export { validateSpatializedMotionConfig } from './validate'
 export { motionTimeSec } from './motionTiming'
-export {
-  motionConfigToNativeSegment,
-  motionConfigToNativeTimeline,
-  tracksToFromTo,
-  type NativeSegmentPlayPayload,
-} from './nativeCompile'
+export { motionConfigToNativeTimeline } from './nativeCompile'
 export { getMotionSuppressedFields } from './getMotionSuppressedFields'
 export {
   desugarTimelineConfig,
