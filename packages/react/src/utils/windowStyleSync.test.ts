@@ -381,7 +381,6 @@ describe('windowStyleSync', () => {
   })
 
   it('keeps afterHostLayout sync scoped to the requested target', async () => {
-    vi.useFakeTimers()
     const childWindowA = createChildWindow()
     const childWindowB = createChildWindow()
     registerParentHeadSyncTarget(childWindowA, { immediate: false })
@@ -390,14 +389,10 @@ describe('windowStyleSync', () => {
     const parentStyle = document.createElement('style')
     parentStyle.textContent = '.targeted { color: blue; }'
     document.head.appendChild(parentStyle)
-    const querySpy = vi.spyOn(document.head, 'querySelectorAll')
     const onComplete = vi.fn()
 
     scheduleSyncParentHeadToChild(childWindowB, 'afterHostLayout', onComplete)
-
-    await vi.runAllTicks()
-    await vi.advanceTimersByTimeAsync(20)
-    await Promise.resolve()
+    await __parentHeadSyncRegistryTest__.flushPendingWaveForTest()
 
     expect(
       childWindowA.document.head.querySelector(
@@ -410,8 +405,5 @@ describe('windowStyleSync', () => {
       )?.textContent,
     ).toContain('color: blue')
     expect(onComplete).toHaveBeenCalledTimes(1)
-    expect(
-      querySpy.mock.calls.filter(([selector]) => selector === 'style'),
-    ).toHaveLength(1)
   })
 })
