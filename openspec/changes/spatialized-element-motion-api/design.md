@@ -239,9 +239,9 @@ The React layer does not define:
 
 | Module | Responsibility |
 |--------|----------------|
-| `SpatializedContainerMotionAnimationManager` | Unified native manager for container motion across 2D, Static3D, and Dynamic3D. |
-| `SpatialDivTimelineEvaluator` | Native evaluator for canonical tracks playback. |
-| `SpatializedMotionTransformSink` | Abstracts target-specific writes for `element.transform` and `modelTransform`. |
+| `SpatializedElementMotionManager` | Unified native manager for spatialized element motion across 2D, Static3D, and Dynamic3D. |
+| `SpatializedElementMotionTimelineSampler` | Native sampler for canonical tracks playback. |
+| `SpatializedElementMotionTransformAdapter` | Abstracts target-specific writes for `element.transform` and `modelTransform`. |
 | `AnimateSpatializedElementMotion` listener | Native JSB entrypoint for motion commands and timeline payloads. |
 
 ### Interfaces

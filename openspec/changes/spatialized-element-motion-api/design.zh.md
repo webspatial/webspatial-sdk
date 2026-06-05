@@ -239,9 +239,9 @@ React 层不定义：
 
 | 模块 | 职责 |
 |------|------|
-| `SpatializedContainerMotionAnimationManager` | 统一的容器 motion native manager，覆盖 2D、Static3D、Dynamic3D。 |
-| `SpatialDivTimelineEvaluator` | canonical tracks 播放的 native evaluator。 |
-| `SpatializedMotionTransformSink` | 屏蔽 `element.transform` 和 `modelTransform` 的目标特定写入差异。 |
+| `SpatializedElementMotionManager` | 统一的 spatialized element motion native manager，覆盖 2D、Static3D、Dynamic3D。 |
+| `SpatializedElementMotionTimelineSampler` | canonical tracks 播放的 native sampler。 |
+| `SpatializedElementMotionTransformAdapter` | 屏蔽 `element.transform` 和 `modelTransform` 的目标特定写入差异。 |
 | `AnimateSpatializedElementMotion` listener | 接收 motion command 和 timeline payload 的 native JSB 入口。 |
 
 ### 接口

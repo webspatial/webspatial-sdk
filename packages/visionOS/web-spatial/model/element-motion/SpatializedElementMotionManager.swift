@@ -2,17 +2,17 @@ import Foundation
 import QuartzCore
 import Spatial
 
-// MARK: - Spatialized container motion (Static3D + Dynamic3D)
+// MARK: - Spatialized element motion (2D + Static3D + Dynamic3D)
 
-/// Manages active Static3D / Dynamic3D container motion sessions via `SpatializedMotionTransformSink`.
+/// Manages active 2D / Static3D / Dynamic3D element motion sessions via `SpatializedElementMotionTransformAdapter`.
 /// Uses a single shared CADisplayLink to drive all animations at display refresh rate (90Hz on visionOS).
 /// Properties are interpolated per-frame and applied directly to SpatializedElement @Observable vars,
 /// which triggers SwiftUI view updates automatically.
 ///
 /// Per spec, only `transform` (translate/rotate/scale) and `opacity` are animatable.
-class SpatializedContainerMotionAnimationManager: NSObject {
+class SpatializedElementMotionManager: NSObject {
     /// Active sessions keyed by animationId.
-    private var sessions: [String: SpatialDivAnimationSession] = [:]
+    private var sessions: [String: SpatializedElementMotionSession] = [:]
 
     /// The shared CADisplayLink for frame driving.
     private var displayLink: CADisplayLink?
@@ -27,11 +27,11 @@ class SpatializedContainerMotionAnimationManager: NSObject {
 
     // MARK: - Session Management
 
-    func getSession(_ animationId: String) -> SpatialDivAnimationSession? {
+    func getSession(_ animationId: String) -> SpatializedElementMotionSession? {
         return sessions[animationId]
     }
 
-    private func addSession(_ session: SpatialDivAnimationSession) {
+    private func addSession(_ session: SpatializedElementMotionSession) {
         sessions[session.animationId] = session
         ensureDisplayLinkRunning()
     }
@@ -130,49 +130,28 @@ class SpatializedContainerMotionAnimationManager: NSObject {
     // MARK: - Play
 
     func handlePlay(
-        command: some SpatializedContainerMotionCommand,
-        transformSink: SpatializedMotionTransformSink,
+        command: AnimateSpatializedElementMotionCommand,
         element: SpatializedElement,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
-        guard let elementId = command.elementId else {
-            resolve(.failure(JsbError(code: .CommandError, message: "Spatialized container motion play: elementId is required")))
-            return
-        }
         guard let timeline = command.timeline else {
-            resolve(.failure(JsbError(code: .CommandError, message: "Spatialized container motion play: timeline is required")))
+            resolve(.failure(JsbError(code: .CommandError, message: "Spatialized element motion play: timeline is required")))
             return
         }
 
-        handleTimelinePlay(
-            command: command,
-            transformSink: transformSink,
+        let elementId = element.spatialId
+        let transformAdapter = command.transformAdapter
+        let baselineTransform = Self.decomposeTransform(from: transformAdapter.currentAffineTransform(for: element))
+        let baselineOpacity = transformAdapter.baselineOpacity(for: element)
+        let sampler = SpatializedElementMotionTimelineSampler(
             timeline: timeline,
-            element: element,
-            elementId: elementId,
-            resolve: resolve
-        )
-    }
-
-    private func handleTimelinePlay(
-        command: some SpatializedContainerMotionCommand,
-        transformSink: SpatializedMotionTransformSink,
-        timeline: SpatialDivMotionTimelinePayload,
-        element: SpatializedElement,
-        elementId: String,
-        resolve: @escaping JSBManager.ResolveHandler<Encodable>
-    ) {
-        let baselineSRT = Self.decomposeSRT(from: transformSink.currentAffineTransform(for: element))
-        let baselineOpacity = transformSink.baselineOpacity(for: element)
-        let evaluator = SpatialDivTimelineEvaluator(
-            timeline: timeline,
-            baselineSRT: baselineSRT,
+            baselineTransform: baselineTransform,
             baselineOpacity: baselineOpacity
         )
-        let session = SpatialDivAnimationSession(
+        let session = SpatializedElementMotionSession(
             animationId: command.animationId,
             elementId: elementId,
-            timelineEvaluator: evaluator,
+            timelineSampler: sampler,
             duration: timeline.duration,
             timingFunction: "linear",
             delay: timeline.delay ?? 0,
@@ -180,19 +159,19 @@ class SpatializedContainerMotionAnimationManager: NSObject {
             loopConfig: timeline.loop ?? .none
         )
 
-        session.animatesTransform = evaluator.animatesTransform
-        session.animatesOpacity = evaluator.animatesOpacity
+        session.animatesTransform = sampler.animatesTransform
+        session.animatesOpacity = sampler.animatesOpacity
 
-        let start = evaluator.sampleSRTAndOpacity(at: 0)
-        session.timelineStartSRT = start.srt
+        let start = sampler.sampleTransformAndOpacity(at: 0)
+        session.timelineStartTransform = start.transform
         session.timelineStartOpacity = start.opacity
 
-        session.transformSink = transformSink
+        session.transformAdapter = transformAdapter
         if session.animatesTransform {
-            transformSink.applyAffine(Self.composeSRT(start.srt), to: element)
+            transformAdapter.applyAffine(Self.composeTransform(start.transform), to: element)
         }
         if session.animatesOpacity {
-            transformSink.applyOpacity(start.opacity, to: element)
+            transformAdapter.applyOpacity(start.opacity, to: element)
         }
 
         addSession(session)
@@ -202,7 +181,7 @@ class SpatializedContainerMotionAnimationManager: NSObject {
     // MARK: - Pause
 
     func handlePause(
-        command: some SpatializedContainerMotionCommand,
+        command: AnimateSpatializedElementMotionCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
         guard let session = getSession(command.animationId) else {
@@ -219,14 +198,14 @@ class SpatializedContainerMotionAnimationManager: NSObject {
             at: CACurrentMediaTime()
         )
         session.markPaused()
-        let payload = SpatialDivAnimationPausedPayload(type: "paused", values: values)
+        let payload = SpatializedMotionPausedPayload(type: "paused", values: values)
         resolve(.success(payload))
     }
 
     // MARK: - Resume
 
     func handleResume(
-        command: some SpatializedContainerMotionCommand,
+        command: AnimateSpatializedElementMotionCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
         guard let session = getSession(command.animationId) else {
@@ -245,7 +224,7 @@ class SpatializedContainerMotionAnimationManager: NSObject {
     // MARK: - Reset
 
     func handleReset(
-        command: some SpatializedContainerMotionCommand,
+        command: AnimateSpatializedElementMotionCommand,
         element: SpatializedElement,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
@@ -264,7 +243,7 @@ class SpatializedContainerMotionAnimationManager: NSObject {
     // MARK: - Stop
 
     func handleStop(
-        command: some SpatializedContainerMotionCommand,
+        command: AnimateSpatializedElementMotionCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
         guard let session = getSession(command.animationId) else {
@@ -284,7 +263,7 @@ class SpatializedContainerMotionAnimationManager: NSObject {
     // MARK: - Finish
 
     func handleFinish(
-        command: some SpatializedContainerMotionCommand,
+        command: AnimateSpatializedElementMotionCommand,
         element: SpatializedElement,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
@@ -303,7 +282,7 @@ class SpatializedContainerMotionAnimationManager: NSObject {
     // MARK: - Cancel
 
     func handleCancel(
-        command: some SpatializedContainerMotionCommand,
+        command: AnimateSpatializedElementMotionCommand,
         element: SpatializedElement,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
@@ -321,12 +300,12 @@ class SpatializedContainerMotionAnimationManager: NSObject {
         session.markCanceled()
 
         // Cancel restores element to the "from" values (Web Animation API cancel semantics).
-        let sink = session.transformSink
+        let adapter = session.transformAdapter
         if session.animatesTransform {
-            sink.applyAffine(Self.composeSRT(session.timelineStartSRT), to: element)
+            adapter.applyAffine(Self.composeTransform(session.timelineStartTransform), to: element)
         }
         if session.animatesOpacity {
-            sink.applyOpacity(session.timelineStartOpacity, to: element)
+            adapter.applyOpacity(session.timelineStartOpacity, to: element)
         }
 
         sendCanceledEvent(session: session)
@@ -337,49 +316,49 @@ class SpatializedContainerMotionAnimationManager: NSObject {
 
     // MARK: - Interpolation Application
 
-    private func applyInterpolatedValues(session: SpatialDivAnimationSession, progress: Double) {
+    private func applyInterpolatedValues(session: SpatializedElementMotionSession, progress: Double) {
         guard let element = findElement(session.elementId) else { return }
-        let sink = session.transformSink
+        let adapter = session.transformAdapter
         let timeSec = progress * session.duration
-        let sample = session.timelineEvaluator.sampleSRTAndOpacity(at: timeSec)
+        let sample = session.timelineSampler.sampleTransformAndOpacity(at: timeSec)
         if session.animatesTransform {
-            sink.applyAffine(Self.composeSRT(sample.srt), to: element)
+            adapter.applyAffine(Self.composeTransform(sample.transform), to: element)
         }
         if session.animatesOpacity {
-            sink.applyOpacity(sample.opacity, to: element)
+            adapter.applyOpacity(sample.opacity, to: element)
         }
     }
 
-    private func applyFinalValues(session: SpatialDivAnimationSession) {
+    private func applyFinalValues(session: SpatializedElementMotionSession) {
         guard let element = findElement(session.elementId) else { return }
-        let sink = session.transformSink
-        let sample = session.timelineEvaluator.sampleSRTAndOpacity(at: session.duration)
+        let adapter = session.transformAdapter
+        let sample = session.timelineSampler.sampleTransformAndOpacity(at: session.duration)
         if session.animatesTransform {
-            sink.applyAffine(Self.composeSRT(sample.srt), to: element)
+            adapter.applyAffine(Self.composeTransform(sample.transform), to: element)
         }
         if session.animatesOpacity {
-            sink.applyOpacity(sample.opacity, to: element)
+            adapter.applyOpacity(sample.opacity, to: element)
         }
     }
 
     /// Apply the "from" values to the element (used in reset loop snap-back).
-    private func applyFromValues(session: SpatialDivAnimationSession) {
+    private func applyFromValues(session: SpatializedElementMotionSession) {
         guard let element = findElement(session.elementId) else { return }
-        let sink = session.transformSink
+        let adapter = session.transformAdapter
         if session.animatesTransform {
-            sink.applyAffine(Self.composeSRT(session.timelineStartSRT), to: element)
+            adapter.applyAffine(Self.composeTransform(session.timelineStartTransform), to: element)
         }
         if session.animatesOpacity {
-            sink.applyOpacity(session.timelineStartOpacity, to: element)
+            adapter.applyOpacity(session.timelineStartOpacity, to: element)
         }
     }
 
-    // MARK: - SRT Decomposition / Composition
+    // MARK: - Transform Decomposition / Composition
 
     /// Decompose an AffineTransform3D into separate translate, rotate (degrees), scale components.
     /// Assumes composition order: translate → rotate → scale.
-    static func decomposeSRT(from transform: AffineTransform3D) -> ResolvedSRT {
-        // If identity, return identity SRT
+    static func decomposeTransform(from transform: AffineTransform3D) -> SpatializedMotionTransformComponents {
+        // If identity, return identity transform components
         if transform == .identity {
             return .identity
         }
@@ -404,7 +383,7 @@ class SpatializedContainerMotionAnimationManager: NSObject {
 
         // Avoid division by zero
         guard sx > 1e-10, sy > 1e-10, sz > 1e-10 else {
-            return ResolvedSRT(
+            return SpatializedMotionTransformComponents(
                 translateX: tx, translateY: ty, translateZ: tz,
                 rotateX: 0, rotateY: 0, rotateZ: 0,
                 scaleX: sx, scaleY: sy, scaleZ: sz
@@ -433,7 +412,7 @@ class SpatializedContainerMotionAnimationManager: NSObject {
         // Convert radians to degrees
         let rad2deg = 180.0 / Double.pi
 
-        return ResolvedSRT(
+        return SpatializedMotionTransformComponents(
             translateX: tx, translateY: ty, translateZ: tz,
             rotateX: rotX * rad2deg,
             rotateY: rotY * rad2deg,
@@ -442,18 +421,18 @@ class SpatializedContainerMotionAnimationManager: NSObject {
         )
     }
 
-    /// Compose an AffineTransform3D from SRT values.
+    /// Compose an AffineTransform3D from transform components.
     /// Composition order (spec-mandated): translate → rotate → scale.
     /// Rotation order: rotateX → rotateY → rotateZ (matching CSS transform function order).
-    static func composeSRT(_ srt: ResolvedSRT) -> AffineTransform3D {
+    static func composeTransform(_ transform: SpatializedMotionTransformComponents) -> AffineTransform3D {
         let deg2rad = Double.pi / 180.0
 
-        let cosX = cos(srt.rotateX * deg2rad)
-        let sinX = sin(srt.rotateX * deg2rad)
-        let cosY = cos(srt.rotateY * deg2rad)
-        let sinY = sin(srt.rotateY * deg2rad)
-        let cosZ = cos(srt.rotateZ * deg2rad)
-        let sinZ = sin(srt.rotateZ * deg2rad)
+        let cosX = cos(transform.rotateX * deg2rad)
+        let sinX = sin(transform.rotateX * deg2rad)
+        let cosY = cos(transform.rotateY * deg2rad)
+        let sinY = sin(transform.rotateY * deg2rad)
+        let cosZ = cos(transform.rotateZ * deg2rad)
+        let sinZ = sin(transform.rotateZ * deg2rad)
 
         // Combined rotation matrix Rz * Ry * Rx (for intrinsic XYZ order, extrinsic is ZYX)
         // This gives the matrix for applying rotateX first, then rotateY, then rotateZ.
@@ -470,10 +449,10 @@ class SpatializedContainerMotionAnimationManager: NSObject {
         // Build the 4x4 matrix: T * R * S
         // Where T = translation, R = rotation, S = scale
         // Combined: each column of R is scaled, then translation is added to column 3.
-        let col0 = simd_double4(r00 * srt.scaleX, r10 * srt.scaleX, r20 * srt.scaleX, 0)
-        let col1 = simd_double4(r01 * srt.scaleY, r11 * srt.scaleY, r21 * srt.scaleY, 0)
-        let col2 = simd_double4(r02 * srt.scaleZ, r12 * srt.scaleZ, r22 * srt.scaleZ, 0)
-        let col3 = simd_double4(srt.translateX, srt.translateY, srt.translateZ, 1)
+        let col0 = simd_double4(r00 * transform.scaleX, r10 * transform.scaleX, r20 * transform.scaleX, 0)
+        let col1 = simd_double4(r01 * transform.scaleY, r11 * transform.scaleY, r21 * transform.scaleY, 0)
+        let col2 = simd_double4(r02 * transform.scaleZ, r12 * transform.scaleZ, r22 * transform.scaleZ, 0)
+        let col3 = simd_double4(transform.translateX, transform.translateY, transform.translateZ, 1)
 
         let matrix = simd_double4x4(columns: (col0, col1, col2, col3))
         return AffineTransform3D(truncating: matrix)
@@ -481,23 +460,23 @@ class SpatializedContainerMotionAnimationManager: NSObject {
 
     // MARK: - Event Emission
 
-    private func sendCompletedEvent(session: SpatialDivAnimationSession) {
+    private func sendCompletedEvent(session: SpatializedElementMotionSession) {
         guard let scene = scene else { return }
         let values = buildCurrentValuesPayload(session: session, useTo: true)
-        let payload = SpatialDivAnimationCompletedPayload(type: "completed", values: values)
+        let payload = SpatializedMotionCompletedPayload(type: "completed", values: values)
         scene.sendWebMsg("\(session.animationId)_completed", payload)
     }
 
-    private func sendCanceledEvent(session: SpatialDivAnimationSession) {
+    private func sendCanceledEvent(session: SpatializedElementMotionSession) {
         guard let scene = scene else { return }
         let values = buildCurrentValuesPayload(session: session, useTo: false)
-        let payload = SpatialDivAnimationCanceledPayload(type: "canceled", values: values)
+        let payload = SpatializedMotionCanceledPayload(type: "canceled", values: values)
         scene.sendWebMsg("\(session.animationId)_canceled", payload)
     }
 
-    private func sendFailedEvent(session: SpatialDivAnimationSession, command: String, reason: String) {
+    private func sendFailedEvent(session: SpatializedElementMotionSession, command: String, reason: String) {
         guard let scene = scene else { return }
-        let payload = SpatialDivAnimationFailedPayload(
+        let payload = SpatializedMotionFailedPayload(
             type: "failed",
             animationId: session.animationId,
             command: command,
@@ -508,33 +487,33 @@ class SpatializedContainerMotionAnimationManager: NSObject {
 
     /// Sample animated values at the session's current playback position (for pause ack).
     private func buildSampledValuesPayload(
-        session: SpatialDivAnimationSession,
+        session: SpatializedElementMotionSession,
         at timestamp: CFTimeInterval
-    ) -> SpatialDivAnimationValuesPayload {
+    ) -> SpatializedMotionValuesPayload {
         let progress = session.currentProgress(at: timestamp)
-        let sample = session.timelineEvaluator.sampleSRTAndOpacity(
+        let sample = session.timelineSampler.sampleTransformAndOpacity(
             at: progress * session.duration
         )
         return buildValuesPayload(
-            srt: sample.srt,
+            transform: sample.transform,
             opacity: sample.opacity,
             session: session
         )
     }
 
     private func buildValuesPayload(
-        srt: ResolvedSRT,
+        transform: SpatializedMotionTransformComponents,
         opacity: Double,
-        session: SpatialDivAnimationSession
-    ) -> SpatialDivAnimationValuesPayload {
-        var transformPayload: SpatialDivTransformPayload? = nil
+        session: SpatializedElementMotionSession
+    ) -> SpatializedMotionValuesPayload {
+        var transformPayload: SpatializedMotionTransformPayload? = nil
         var opacityPayload: Double? = nil
 
         if session.animatesTransform {
-            transformPayload = SpatialDivTransformPayload(
-                translate: Vec3Payload(x: srt.translateX, y: srt.translateY, z: srt.translateZ),
-                rotate: Vec3Payload(x: srt.rotateX, y: srt.rotateY, z: srt.rotateZ),
-                scale: Vec3Payload(x: srt.scaleX, y: srt.scaleY, z: srt.scaleZ)
+            transformPayload = SpatializedMotionTransformPayload(
+                translate: Vec3Payload(x: transform.translateX, y: transform.translateY, z: transform.translateZ),
+                rotate: Vec3Payload(x: transform.rotateX, y: transform.rotateY, z: transform.rotateZ),
+                scale: Vec3Payload(x: transform.scaleX, y: transform.scaleY, z: transform.scaleZ)
             )
         }
 
@@ -542,7 +521,7 @@ class SpatializedContainerMotionAnimationManager: NSObject {
             opacityPayload = opacity
         }
 
-        return SpatialDivAnimationValuesPayload(
+        return SpatializedMotionValuesPayload(
             transform: transformPayload,
             opacity: opacityPayload
         )
@@ -550,12 +529,12 @@ class SpatializedContainerMotionAnimationManager: NSObject {
 
     /// Build the event payload with current animated values.
     /// - Parameter useTo: if true, use the resolved "to" values (for completed); if false, use "from" (for canceled).
-    private func buildCurrentValuesPayload(session: SpatialDivAnimationSession, useTo: Bool) -> SpatialDivAnimationValuesPayload {
-        let sample = session.timelineEvaluator.sampleSRTAndOpacity(
+    private func buildCurrentValuesPayload(session: SpatializedElementMotionSession, useTo: Bool) -> SpatializedMotionValuesPayload {
+        let sample = session.timelineSampler.sampleTransformAndOpacity(
             at: useTo ? session.duration : 0
         )
         return buildValuesPayload(
-            srt: sample.srt,
+            transform: sample.transform,
             opacity: sample.opacity,
             session: session
         )

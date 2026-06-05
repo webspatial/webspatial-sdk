@@ -15,7 +15,7 @@
 ## Phase 2 — Static3D + Dynamic3D native timelines
 
 - [x] Core: `SpatializedStatic3DElement.animateMotion()` / `SpatializedDynamic3DElement.animateMotion()` via unified `AnimateSpatializedElementMotion`
-- [x] Native: `SpatializedContainerMotionAnimationManager` + single JSB listener `AnimateSpatializedElementMotion` (`targetKind`: static3d | dynamic3d)
+- [x] Native: `SpatializedElementMotionManager` + single JSB listener `AnimateSpatializedElementMotion` (`targetKind`: static3d | dynamic3d)
 - [x] React: Model / Reality `motion` binding; `useSpatializedMotion(config)` with bind-time target resolution
 - [x] test-server demos under **Spatialized Motion** (`model-container`, `reality-container`)
 
@@ -34,7 +34,7 @@
 
 ## Phase 5 — Native consolidation + public surface cleanup
 
-- [x] Merge native Swift Static3D/Dynamic3D managers → `SpatializedContainerMotionAnimationManager` + `SpatializedMotionTransformSink`
+- [x] Merge native Swift Static3D/Dynamic3D managers → `SpatializedElementMotionManager` + `SpatializedElementMotionTransformAdapter`
 - [x] Unified JSB `AnimateSpatializedElementMotion` + `targetKind` only (removed `AnimateSpatializedStatic3DElement` / `AnimateSpatializedDynamic3DElement`)
 - [x] Merge 2D into `AnimateSpatializedElementMotion` (`targetKind: spatialized2d`); removed `AnimateSpatialized2DElement` JSB
 - [x] Remove deprecated Core controller class aliases (`SpatialDivMotionController`, `Static3DMotionController`, `Dynamic3DMotionController`)
@@ -50,7 +50,7 @@
 ## Phase 6b — Unified JSB for 2D (completed earlier in phase 6 commit)
 
 - [x] Extend `AnimateSpatializedElementMotion` with `targetKind: spatialized2d`
-- [x] Route native 2D through `SpatialDivAnimationManager` in unified listener
+- [x] Route native 2D through `SpatializedElementMotionManager` in unified listener
 - [x] Core: `executeAnimateSpatializedElementMotion` for all kinds; remove `AnimateSpatialDivJSBCommand`
 - [x] Keep `animateSpatialDiv()` as deprecated alias on `Spatialized2DElement` for `useSpatialDivAnimation`
 
@@ -183,7 +183,7 @@
 
 ## Phase 15 — visionOS 2D backend convergence + capability contract cleanup
 
-- [x] visionOS native routing: move `spatialized2d` off `onAnimateSpatialized2DMotion` / `SpatialDivAnimationManager` and onto the unified `onAnimateSpatializedContainerMotion` / `SpatializedContainerMotionAnimationManager` path
+- [x] visionOS native routing: move `spatialized2d` off `onAnimateSpatialized2DMotion` / `SpatializedElementMotionManager` and onto the unified `onAnimateSpatializedElementMotionCommand` / `SpatializedElementMotionManager` path
 - [x] visionOS cleanup: delete the old 2D native adapter layer after unified routing reaches semantic parity for play pause resume stop reset finish and unbind cleanup
 - [x] Capability contract docs: keep `useAnimation` as the top-level family key and keep `entity` as a sub-token because the long-term roadmap still converges entity animation back into the `useAnimation` family
 - [x] Capability guidance: document that concrete runtime checks MUST use `supports('useAnimation', [subtoken])`; `supports('useAnimation')` remains family-level only and MUST NOT be treated as target availability
