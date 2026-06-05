@@ -282,6 +282,63 @@ describe('windowStyleSync', () => {
     }
   })
 
+  it('prefers immediate when a batch mixes link stylesheet and style text changes', async () => {
+    vi.useFakeTimers()
+    const childWindow = createChildWindow()
+    registerParentHeadSyncTarget(childWindow, { immediate: false })
+
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://example.com/a.css'
+
+    const style = document.createElement('style')
+    const text = document.createTextNode('.a { padding: 12px; color: red; }')
+    style.appendChild(text)
+    document.head.appendChild(style)
+
+    const querySpy = vi.spyOn(document.head, 'querySelectorAll')
+
+    observers[0]!.callback(
+      [
+        {
+          type: 'childList',
+          target: document.head,
+          addedNodes: [link] as unknown as NodeList,
+          removedNodes: [] as unknown as NodeList,
+        } as unknown as MutationRecord,
+        {
+          type: 'characterData',
+          target: text,
+          addedNodes: [],
+          removedNodes: [],
+        } as unknown as MutationRecord,
+      ],
+      observers[0] as unknown as MutationObserver,
+    )
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const syncedStyle = childWindow.document.head.querySelector(
+      'style[data-webspatial-sync="1"]',
+    ) as HTMLStyleElement
+    expect(syncedStyle.textContent).toContain('color: red')
+    expect(
+      querySpy.mock.calls.filter(([selector]) => selector === 'style'),
+    ).toHaveLength(1)
+
+    text.textContent = '.a { padding: 12px; color: blue; }'
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(syncedStyle.textContent).toContain('color: red')
+    expect(syncedStyle.textContent).not.toContain('color: blue')
+    expect(
+      querySpy.mock.calls.filter(([selector]) => selector === 'style'),
+    ).toHaveLength(1)
+
+    querySpy.mockRestore()
+  })
+
   it('reads the parent head once per broadcast wave', async () => {
     const childWindowA = createChildWindow()
     const childWindowB = createChildWindow()
