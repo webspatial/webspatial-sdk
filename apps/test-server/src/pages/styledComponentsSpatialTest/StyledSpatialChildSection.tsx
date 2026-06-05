@@ -17,6 +17,9 @@ import {
 export function StyledSpatialChildSection() {
   const [hidden, setHidden] = useState(false)
   const [opacity, setOpacity] = useState(1)
+  const childVisibilityStyle: CSSProperties = {
+    visibility: hidden ? 'hidden' : 'inherit',
+  }
 
   return (
     <PageSection>
@@ -50,13 +53,22 @@ export function StyledSpatialChildSection() {
         style={{ '--xr-back': 100 } as CSSProperties}
       >
         <CompareLabel>A — SC prop ($opacity)</CompareLabel>
-        <StyledSpatialBox $hidden={hidden} $opacity={opacity}>
+        <StyledSpatialBox
+          $hidden={hidden}
+          $opacity={opacity}
+          style={childVisibilityStyle}
+        >
           Child A — opacity from styled prop
         </StyledSpatialBox>
         <CompareLabel>B — CSS variable (--spatial-opacity)</CompareLabel>
         <StyledSpatialBoxCssVar
           $hidden={hidden}
-          style={{ '--spatial-opacity': opacity } as CSSProperties}
+          style={
+            {
+              ...childVisibilityStyle,
+              '--spatial-opacity': opacity,
+            } as CSSProperties
+          }
         >
           Child B — opacity from CSS variable
         </StyledSpatialBoxCssVar>
