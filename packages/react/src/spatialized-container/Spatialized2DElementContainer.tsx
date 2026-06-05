@@ -125,9 +125,7 @@ function SpatializedContent<P extends ElementType>(
     onSpatialContentReady,
   })
 
-  useSyncHeadStyles(windowProxy, {
-    subtree: false,
-  })
+  useSyncHeadStyles(windowProxy)
 
   const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)

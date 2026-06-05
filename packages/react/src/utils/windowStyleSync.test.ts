@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   __parentHeadSyncRegistryTest__,
-  registerParentHeadSyncTarget,
   scheduleSyncParentHeadToChild,
   syncParentHeadToChild,
   syncStyleSheetRulesToChild,
 } from './windowStyleSync'
+
+const registerParentHeadSyncTarget =
+  __parentHeadSyncRegistryTest__.registerTarget
 
 function createChildWindow() {
   const childDocument = document.implementation.createHTMLDocument()

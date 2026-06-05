@@ -647,18 +647,11 @@ function enqueueParentHeadSync(
   queuePendingWaveFlush(wave.timing)
 }
 
-export function registerParentHeadSyncTarget(
-  childWindow: WindowProxy,
-  options?: { immediate?: boolean },
-) {
+function addParentHeadSyncTarget(childWindow: WindowProxy) {
   const scheduler = getHeadSyncScheduler(childWindow)
   scheduler.disposed = false
   activeTargets.add(childWindow)
   installParentHeadSyncRegistry()
-
-  if (options?.immediate ?? true) {
-    scheduleSyncParentHeadToChild(childWindow)
-  }
 
   let unregistered = false
   return () => {
@@ -667,6 +660,12 @@ export function registerParentHeadSyncTarget(
     activeTargets.delete(childWindow)
     teardownParentHeadSyncRegistryIfEmpty()
   }
+}
+
+export function registerParentHeadSyncTarget(childWindow: WindowProxy) {
+  const unregister = addParentHeadSyncTarget(childWindow)
+  scheduleSyncParentHeadToChild(childWindow)
+  return unregister
 }
 
 /**
@@ -698,6 +697,13 @@ export const __parentHeadSyncRegistryTest__ = {
   getActiveTargetCount: () => activeTargets.size,
   getObserverInstalled: () => headObserver != null,
   flushPendingWaveForTest: flushHeadSyncWave,
+  registerTarget(childWindow: WindowProxy, options?: { immediate?: boolean }) {
+    const unregister = addParentHeadSyncTarget(childWindow)
+    if (options?.immediate ?? true) {
+      scheduleSyncParentHeadToChild(childWindow)
+    }
+    return unregister
+  },
   reset: () => {
     activeTargets.clear()
     teardownParentHeadSyncRegistry()

@@ -17,7 +17,7 @@ describe('useSyncHeadStyles', () => {
     vi.mocked(registerParentHeadSyncTarget).mockClear()
   })
 
-  it('registers the child window with immediate sync by default', () => {
+  it('registers the child window with immediate sync on mount', () => {
     const childWindow = {
       document: document.implementation.createHTMLDocument(),
     }
@@ -31,36 +31,12 @@ describe('useSyncHeadStyles', () => {
 
     const { unmount } = render(<Test />)
 
-    expect(registerParentHeadSyncTarget).toHaveBeenCalledWith(childWindow, {
-      immediate: true,
-    })
+    expect(registerParentHeadSyncTarget).toHaveBeenCalledWith(childWindow)
 
     unmount()
 
     expect(unregister).toHaveBeenCalledTimes(1)
     expect(disposeSyncParentHeadToChild).toHaveBeenCalledWith(childWindow)
-  })
-
-  it('passes immediate=false through to the registry', () => {
-    const childWindow = {
-      document: document.implementation.createHTMLDocument(),
-    }
-    vi.mocked(registerParentHeadSyncTarget).mockReturnValue(vi.fn())
-
-    function Test() {
-      useSyncHeadStyles(childWindow as unknown as WindowProxy, {
-        immediate: false,
-      })
-      return null
-    }
-
-    const { unmount } = render(<Test />)
-
-    expect(registerParentHeadSyncTarget).toHaveBeenCalledWith(childWindow, {
-      immediate: false,
-    })
-
-    unmount()
   })
 
   it('does not register without a child window', () => {
