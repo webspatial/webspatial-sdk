@@ -265,11 +265,10 @@ Native 层接收统一的命令族：
 - `targetKind`
 - `elementId`
 - `timeline`
-- `delay`
-- `playbackRate`
-- `loop`
 
-其中 `timeline` 是由 Core 发送的 canonical tracks 文档。
+其中 `timeline` 是由 Core 发送的 canonical tracks 文档，同时承载
+`duration`、逐轨和逐 keyframe 的 `timingFunction`，以及 timeline 级别的
+`delay`、`playbackRate`、`loop`。
 
 ### 行为
 
@@ -377,18 +376,12 @@ interface AnimateSpatializedElementMotionCommand {
   targetKind: 'spatialized2d' | 'static3d' | 'dynamic3d'
   properties?: SpatializedMotionProperty[]
   elementId?: string
-  to?: SpatializedVisualValues
-  from?: SpatializedVisualValues
-  duration?: number
-  timingFunction?: TimingFunction
-  delay?: number
-  loop?: boolean | { reverse?: boolean }
-  playbackRate?: number
   timeline?: SpatializedMotionTimeline
 }
 ```
 
 - 对目标态 `useAnimation` 路径，`play` 使用 `timeline` 作为 canonical execution document
+- `play` 通过 JSB 是 timeline-only 的；顶层时序控制字段不属于稳定 wire 契约
 - `targetKind` 由 Core 在 React 绑定时完成目标解析后填充
 - `properties` 预留给选择性 `pause` 和 `resume` 控制
 
@@ -414,6 +407,7 @@ interface SpatializedMotionTimeline {
 
 - 这是目标态容器 motion 唯一稳定的跨层播放文档
 - segment 风格的 `from` 和 `to` authoring 必须在 native send 前编译为该形状
+- timeline 级别的 `delay`、`playbackRate`、`loop` 都位于该 payload 内部，而不是外层命令上
 
 ### Native Runtime 到 Core SDK
 

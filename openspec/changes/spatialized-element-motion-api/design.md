@@ -265,11 +265,10 @@ The `play` payload carries:
 - `targetKind`
 - `elementId`
 - `timeline`
-- `delay`
-- `playbackRate`
-- `loop`
 
-`timeline` is the canonical tracks document sent by Core.
+`timeline` is the canonical tracks document sent by Core. It also carries
+`duration`, per-track and per-keyframe `timingFunction`, plus timeline-level
+`delay`, `playbackRate`, and `loop`.
 
 ### Behavior
 
@@ -377,18 +376,12 @@ interface AnimateSpatializedElementMotionCommand {
   targetKind: 'spatialized2d' | 'static3d' | 'dynamic3d'
   properties?: SpatializedMotionProperty[]
   elementId?: string
-  to?: SpatializedVisualValues
-  from?: SpatializedVisualValues
-  duration?: number
-  timingFunction?: TimingFunction
-  delay?: number
-  loop?: boolean | { reverse?: boolean }
-  playbackRate?: number
   timeline?: SpatializedMotionTimeline
 }
 ```
 
 - For the target-state `useAnimation` path, `play` uses `timeline` as the canonical execution document
+- `play` is timeline-only across JSB; top-level timing control fields are not part of the stable wire contract
 - `targetKind` is filled in by Core after React bind-time target resolution
 - `properties` is reserved for selective pause and resume control
 
@@ -414,6 +407,7 @@ interface SpatializedMotionTimeline {
 
 - This is the only stable cross-layer play document for target-state container motion
 - Segment-style `from` and `to` authoring must be compiled to this shape before native send
+- Timeline-level `delay`, `playbackRate`, and `loop` live inside this payload rather than on the outer command
 
 ### Native Runtime to Core SDK
 

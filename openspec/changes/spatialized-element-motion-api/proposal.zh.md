@@ -88,6 +88,7 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 - **统一公共 API**：`useAnimation(config)` 接受 `from/to`（推荐）、`tracks`（高级）或 `timeline`（CSS @keyframes 风格）三种互斥配置，内部统一编译为 tracks 执行，返回 `[animation, api, style]`。
 - **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe + 每轨 timingFunction — 规范配置形状。
 - **2D 双后端**：native 不可用时走 Web RAF；WebSpatial 运行时 native 侧统一走 canonical tracks 路径。
+- **Timeline-only play payload**：`AnimateSpatializedElementMotion` 的 `play` 通过 JSB 仅发送 canonical `timeline` 文档；`duration`、`timingFunction`、`delay`、`loop`、`playbackRate` 等时序控制信息都内嵌在编译后的 timeline payload 中，不再作为 JSB 顶层字段存在。
 - **3D 仅 native**：Static3D 和 Dynamic3D 仅使用 native `animateMotion`（无 Web RAF 降级）。
 - **单一 Core 控制器**：`SpatializedMotionController`，通过 `MOTION_KIND_POLICIES` 按 kind 分派。
 - **Entity 专用 API**：Entity transform animation 命名为 `useEntityAnimation(config)`，并继续保留在独立的 `AnimateTransform` 栈上。
