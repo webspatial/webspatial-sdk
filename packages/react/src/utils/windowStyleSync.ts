@@ -350,6 +350,11 @@ export function scheduleSyncParentHeadToChild(
     return
   }
 
+  if (scheduler.delayTimer) {
+    window.clearTimeout(scheduler.delayTimer)
+    scheduler.delayTimer = undefined
+  }
+
   if (timing === 'afterHostLayout') {
     if (onComplete) {
       scheduler.afterHostLayoutComplete = onComplete

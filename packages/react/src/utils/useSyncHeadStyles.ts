@@ -45,9 +45,7 @@ function installCssomRuleObserver() {
 
   patchedCssomUsers++
   if (patchedCssomUsers > 1) {
-    return () => {
-      patchedCssomUsers--
-    }
+    return uninstallCssomRuleObserver
   }
 
   originalInsertRule = CSSStyleSheet.prototype.insertRule
@@ -69,18 +67,21 @@ function installCssomRuleObserver() {
     if (isParentHeadStyleSheet(this)) scheduleActiveChildWindowSync()
   }
 
-  return () => {
-    patchedCssomUsers--
-    if (patchedCssomUsers > 0) return
-    if (originalInsertRule) {
-      CSSStyleSheet.prototype.insertRule = originalInsertRule
-    }
-    if (originalDeleteRule) {
-      CSSStyleSheet.prototype.deleteRule = originalDeleteRule
-    }
-    originalInsertRule = undefined
-    originalDeleteRule = undefined
+  return uninstallCssomRuleObserver
+}
+
+function uninstallCssomRuleObserver() {
+  if (patchedCssomUsers <= 0) return
+  patchedCssomUsers--
+  if (patchedCssomUsers > 0) return
+  if (originalInsertRule) {
+    CSSStyleSheet.prototype.insertRule = originalInsertRule
   }
+  if (originalDeleteRule) {
+    CSSStyleSheet.prototype.deleteRule = originalDeleteRule
+  }
+  originalInsertRule = undefined
+  originalDeleteRule = undefined
 }
 
 function getSyncTiming(mutations?: MutationRecord[] | null): SyncTiming | null {

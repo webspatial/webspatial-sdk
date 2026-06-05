@@ -163,6 +163,36 @@ describe('useSyncHeadStyles', () => {
     unmount()
   })
 
+  it('restores CSSOM rule methods after the last synced child unmounts', () => {
+    const childWindowA = {
+      document: document.implementation.createHTMLDocument(),
+    }
+    const childWindowB = {
+      document: document.implementation.createHTMLDocument(),
+    }
+    const originalInsertRule = CSSStyleSheet.prototype.insertRule
+    const originalDeleteRule = CSSStyleSheet.prototype.deleteRule
+
+    function Test() {
+      useSyncHeadStyles(childWindowA as unknown as WindowProxy, {
+        immediate: false,
+      })
+      useSyncHeadStyles(childWindowB as unknown as WindowProxy, {
+        immediate: false,
+      })
+      return null
+    }
+
+    const { unmount } = render(<Test />)
+    expect(CSSStyleSheet.prototype.insertRule).not.toBe(originalInsertRule)
+    expect(CSSStyleSheet.prototype.deleteRule).not.toBe(originalDeleteRule)
+
+    unmount()
+
+    expect(CSSStyleSheet.prototype.insertRule).toBe(originalInsertRule)
+    expect(CSSStyleSheet.prototype.deleteRule).toBe(originalDeleteRule)
+  })
+
   it('disposes scheduled sync on unmount', () => {
     const childWindow = {
       document: document.implementation.createHTMLDocument(),

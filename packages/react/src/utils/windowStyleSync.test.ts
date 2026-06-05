@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  scheduleSyncParentHeadToChild,
   syncParentHeadToChild,
   syncStyleSheetRulesToChild,
 } from './windowStyleSync'
@@ -117,5 +118,30 @@ describe('windowStyleSync', () => {
     childLinks[0]!.dispatchEvent(new Event('load'))
 
     await Promise.all([firstSync, secondSync])
+  })
+
+  it('cancels a pending delayed sync when an immediate sync is scheduled', async () => {
+    vi.useFakeTimers()
+    const childWindow = createChildWindow()
+    const parentStyle = document.createElement('style')
+    parentStyle.textContent = '.a { color: red; }'
+    document.head.appendChild(parentStyle)
+
+    scheduleSyncParentHeadToChild(childWindow, 'delayed')
+    scheduleSyncParentHeadToChild(childWindow, 'immediate')
+
+    await vi.runAllTicks()
+    await Promise.resolve()
+
+    const syncedStyle = childWindow.document.head.querySelector(
+      'style[data-webspatial-sync="1"]',
+    ) as HTMLStyleElement
+    expect(syncedStyle.textContent).toContain('color: red')
+
+    parentStyle.textContent = '.a { color: blue; }'
+    await vi.advanceTimersByTimeAsync(101)
+
+    expect(syncedStyle.textContent).toContain('color: red')
+    expect(syncedStyle.textContent).not.toContain('color: blue')
   })
 })
