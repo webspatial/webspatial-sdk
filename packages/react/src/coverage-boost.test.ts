@@ -1552,7 +1552,7 @@ describe('utils/getSession', () => {
     vi.doUnmock('./utils/getSession')
 
     const session = { ok: true }
-    const Spatial = vi.fn().mockImplementation(() => {
+    const Spatial = vi.fn().mockImplementation(function () {
       return {
         isSupported: () => true,
         requestSession: vi.fn(() => session),
@@ -1579,7 +1579,7 @@ describe('utils/getSession', () => {
     vi.resetModules()
     vi.doUnmock('./utils/getSession')
 
-    const Spatial = vi.fn().mockImplementation(() => {
+    const Spatial = vi.fn().mockImplementation(function () {
       return {
         isSupported: () => false,
         requestSession: vi.fn(),
