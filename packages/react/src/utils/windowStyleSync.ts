@@ -67,6 +67,14 @@ function copyParentStyleAttributes(
   source: HTMLStyleElement,
   target: HTMLStyleElement,
 ) {
+  const sourceAttrNames = new Set(
+    Array.from(source.attributes, attr => attr.name),
+  )
+  for (const attr of Array.from(target.attributes)) {
+    if (attr.name === WEBSPATIAL_SYNC_ATTR) continue
+    if (!sourceAttrNames.has(attr.name)) target.removeAttribute(attr.name)
+  }
+
   for (const attr of Array.from(source.attributes)) {
     if (attr.name === WEBSPATIAL_SYNC_ATTR) continue
     target.setAttribute(attr.name, attr.value)
@@ -115,9 +123,7 @@ function applyFullTextStyleSync(
       // Fall through to textContent assignment.
     }
   }
-  if (target.textContent !== text) {
-    target.textContent = text
-  }
+  target.textContent = text
 }
 
 /**
