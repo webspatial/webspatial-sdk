@@ -1,3 +1,5 @@
+import { SpatialStyleInfoUpdateEvent } from '../notifyUpdateStandInstanceLayout'
+
 export function asyncLoadStyleToChildWindow(
   childWindow: WindowProxy,
   link: HTMLLinkElement,
@@ -110,11 +112,19 @@ function clearStyleSheetRules(sheet: CSSStyleSheet) {
   }
 }
 
+function getStyleTextForRules(
+  source: HTMLStyleElement,
+  parentRules?: string[] | null,
+) {
+  if (parentRules && parentRules.length > 0) return parentRules.join('\n')
+  return source.textContent ?? ''
+}
+
 function applyFullTextStyleSync(
   target: HTMLStyleElement,
   source: HTMLStyleElement,
+  text = getStyleElementTextForSync(source),
 ) {
-  const text = getStyleElementTextForSync(source)
   const sheet = target.sheet
   if (sheet) {
     try {
@@ -133,10 +143,17 @@ function applyFullTextStyleSync(
 export function syncStyleSheetRulesToChild(
   target: HTMLStyleElement,
   source: HTMLStyleElement,
+  precomputedParentRules?: string[] | null,
+  precomputedText?: string,
 ) {
-  const parentRules = getStyleSheetRuleTexts(source)
+  const parentRules =
+    precomputedParentRules === undefined
+      ? getStyleSheetRuleTexts(source)
+      : precomputedParentRules
+  const parentText =
+    precomputedText ?? getStyleTextForRules(source, parentRules)
   if (parentRules === null) {
-    applyFullTextStyleSync(target, source)
+    applyFullTextStyleSync(target, source, parentText)
     return
   }
 
@@ -150,14 +167,13 @@ export function syncStyleSheetRulesToChild(
         return
       }
     }
-    const text = source.textContent ?? ''
-    if (target.textContent !== text) target.textContent = text
+    if (target.textContent !== parentText) target.textContent = parentText
     return
   }
 
   const sheet = target.sheet
   if (!sheet) {
-    applyFullTextStyleSync(target, source)
+    applyFullTextStyleSync(target, source, parentText)
     return
   }
 
@@ -179,15 +195,45 @@ export function syncStyleSheetRulesToChild(
       sheet.insertRule(parentRules[i]!, i)
     }
   } catch {
-    applyFullTextStyleSync(target, source)
+    applyFullTextStyleSync(target, source, parentText)
+  }
+}
+
+export type ParentHeadSnapshot = {
+  parentStyles: HTMLStyleElement[]
+  parentStylesheets: HTMLLinkElement[]
+  documentElementClassName: string
+  styleRuleTexts: Array<string[] | null>
+  styleTextContents: string[]
+}
+
+export function captureParentHeadSnapshot(): ParentHeadSnapshot {
+  const parentStyles = Array.from(
+    document.head.querySelectorAll('style'),
+  ) as HTMLStyleElement[]
+  const styleRuleTexts = parentStyles.map(getStyleSheetRuleTexts)
+  const styleTextContents = parentStyles.map((style, index) =>
+    getStyleTextForRules(style, styleRuleTexts[index]),
+  )
+  const parentStylesheets = Array.from(
+    document.head.querySelectorAll('link[rel="stylesheet"][href]'),
+  ) as HTMLLinkElement[]
+
+  return {
+    parentStyles,
+    parentStylesheets,
+    documentElementClassName: document.documentElement.className,
+    styleRuleTexts,
+    styleTextContents,
   }
 }
 
 /** Update portal <style> nodes in place; prefer CSSOM rule deltas over full text replace. */
 function syncInlineStylesToChild(
   childHead: HTMLHeadElement,
-  parentStyles: HTMLStyleElement[],
+  snapshot: ParentHeadSnapshot,
 ) {
+  const { parentStyles, styleRuleTexts, styleTextContents } = snapshot
   const existing = Array.from(
     childHead.querySelectorAll(`style[${WEBSPATIAL_SYNC_ATTR}="1"]`),
   ) as HTMLStyleElement[]
@@ -197,11 +243,21 @@ function syncInlineStylesToChild(
     const target = existing[i]
     if (target) {
       copyParentStyleAttributes(source, target)
-      syncStyleSheetRulesToChild(target, source)
+      syncStyleSheetRulesToChild(
+        target,
+        source,
+        styleRuleTexts[i],
+        styleTextContents[i],
+      )
     } else {
       const node = cloneParentStyleElementForSync(source)
       childHead.appendChild(node)
-      syncStyleSheetRulesToChild(node, source)
+      syncStyleSheetRulesToChild(
+        node,
+        source,
+        styleRuleTexts[i],
+        styleTextContents[i],
+      )
     }
   }
 
@@ -239,18 +295,17 @@ function getController(childWindow: WindowProxy): SyncController {
   return next
 }
 
-export async function syncParentHeadToChild(childWindow: WindowProxy) {
+export async function syncParentHeadToChild(
+  childWindow: WindowProxy,
+  snapshot = captureParentHeadSnapshot(),
+) {
   const controller = getController(childWindow)
   const version = ++controller.version
   const styleLoadedPromises: Promise<boolean>[] = []
   const { head } = childWindow.document
 
   const isCurrent = () => controller.version === version
-
-  const parentStyles = Array.from(document.head.querySelectorAll('style'))
-  const parentStylesheets = Array.from(
-    document.head.querySelectorAll('link[rel="stylesheet"][href]'),
-  ) as HTMLLinkElement[]
+  const { parentStylesheets } = snapshot
 
   const desiredStylesheetKeys = new Set<string>()
   for (const link of parentStylesheets) {
@@ -267,7 +322,7 @@ export async function syncParentHeadToChild(childWindow: WindowProxy) {
     if (!desiredStylesheetKeys.has(key)) link.parentNode?.removeChild(link)
   }
 
-  syncInlineStylesToChild(head, parentStyles)
+  syncInlineStylesToChild(head, snapshot)
 
   const currentKeys = new Set<string>()
   const currentSyncedLinks = Array.from(
@@ -292,7 +347,7 @@ export async function syncParentHeadToChild(childWindow: WindowProxy) {
 
   // sync className
   childWindow.document.documentElement.className =
-    document.documentElement.className
+    snapshot.documentElementClassName
 
   return Promise.all(styleLoadedPromises)
 }
@@ -300,10 +355,6 @@ export async function syncParentHeadToChild(childWindow: WindowProxy) {
 type SyncScheduleTiming = 'immediate' | 'delayed' | 'afterHostLayout'
 
 type HeadSyncScheduler = {
-  delayTimer?: number
-  immediateQueued: boolean
-  afterHostLayoutRaf?: number
-  afterHostLayoutComplete?: () => void
   disposed: boolean
 }
 
@@ -313,11 +364,309 @@ function getHeadSyncScheduler(childWindow: WindowProxy): HeadSyncScheduler {
   const prev = headSyncSchedulers.get(childWindow)
   if (prev) return prev
   const next: HeadSyncScheduler = {
-    immediateQueued: false,
     disposed: false,
   }
   headSyncSchedulers.set(childWindow, next)
   return next
+}
+
+type SyncTimingFromMutation = 'immediate' | 'delayed'
+
+type PendingWave = {
+  timing: SyncScheduleTiming
+  broadcast: boolean
+  targets: Set<WindowProxy>
+  onComplete: Map<WindowProxy, () => void>
+}
+
+const activeTargets = new Set<WindowProxy>()
+
+let headObserver: MutationObserver | null = null
+let domUpdatedHandler: (() => void) | null = null
+let originalInsertRule: CSSStyleSheet['insertRule'] | undefined
+let originalDeleteRule: CSSStyleSheet['deleteRule'] | undefined
+let pendingWave: PendingWave | null = null
+let flushQueued: SyncScheduleTiming | null = null
+let delayTimer: number | undefined
+let afterHostLayoutRaf: number | undefined
+
+const timingPriority: Record<SyncScheduleTiming, number> = {
+  delayed: 1,
+  afterHostLayout: 2,
+  immediate: 3,
+}
+
+function isParentHeadStyleSheet(sheet: CSSStyleSheet) {
+  const ownerNode = (sheet as CSSStyleSheet & { ownerNode?: Node }).ownerNode
+  if (
+    ownerNode instanceof HTMLStyleElement &&
+    ownerNode.ownerDocument === document &&
+    document.head.contains(ownerNode)
+  ) {
+    return true
+  }
+
+  return Array.from(document.head.querySelectorAll('style')).some(
+    style => style.sheet === sheet,
+  )
+}
+
+function getSyncTiming(
+  mutations?: MutationRecord[] | null,
+): SyncTimingFromMutation | null {
+  if (!Array.isArray(mutations) || mutations.length === 0) return null
+  let hasDelayed = false
+  for (const mutation of mutations) {
+    if (mutation.type === 'characterData') {
+      const parent = mutation.target.parentElement
+      if (parent?.tagName === 'STYLE') return 'immediate'
+    }
+
+    const nodes: Node[] = [
+      mutation.target,
+      ...Array.from(mutation.addedNodes),
+      ...Array.from(mutation.removedNodes),
+    ]
+    for (const node of nodes) {
+      if (!(node instanceof Element)) continue
+      const tag = node.tagName
+      if (tag === 'STYLE') return 'immediate'
+      if (tag === 'LINK') {
+        const { rel } = node as HTMLLinkElement
+        if (rel && rel.toLowerCase() === 'stylesheet') hasDelayed = true
+      }
+    }
+  }
+  return hasDelayed ? 'delayed' : null
+}
+
+function installCssomRuleObserver() {
+  if (typeof CSSStyleSheet === 'undefined' || originalInsertRule) return
+
+  originalInsertRule = CSSStyleSheet.prototype.insertRule
+  originalDeleteRule = CSSStyleSheet.prototype.deleteRule
+
+  CSSStyleSheet.prototype.insertRule = function patchedInsertRule(
+    rule: string,
+    index?: number,
+  ) {
+    const result = originalInsertRule!.call(this, rule, index)
+    if (isParentHeadStyleSheet(this)) {
+      enqueueParentHeadSync('immediate', { broadcast: true })
+    }
+    return result
+  }
+
+  CSSStyleSheet.prototype.deleteRule = function patchedDeleteRule(
+    index: number,
+  ) {
+    originalDeleteRule!.call(this, index)
+    if (isParentHeadStyleSheet(this)) {
+      enqueueParentHeadSync('immediate', { broadcast: true })
+    }
+  }
+}
+
+function uninstallCssomRuleObserver() {
+  if (originalInsertRule) {
+    CSSStyleSheet.prototype.insertRule = originalInsertRule
+  }
+  if (originalDeleteRule) {
+    CSSStyleSheet.prototype.deleteRule = originalDeleteRule
+  }
+  originalInsertRule = undefined
+  originalDeleteRule = undefined
+}
+
+function installParentHeadSyncRegistry() {
+  if (!headObserver) {
+    headObserver = new MutationObserver(mutations => {
+      const timing = getSyncTiming(mutations)
+      if (!timing) return
+      enqueueParentHeadSync(timing, { broadcast: true })
+    })
+    headObserver.observe(document.head, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    })
+  }
+
+  if (!domUpdatedHandler) {
+    domUpdatedHandler = () =>
+      enqueueParentHeadSync('afterHostLayout', { broadcast: true })
+    document.addEventListener(
+      SpatialStyleInfoUpdateEvent.domUpdated,
+      domUpdatedHandler,
+    )
+  }
+
+  installCssomRuleObserver()
+}
+
+function clearQueuedFlush() {
+  if (delayTimer) {
+    window.clearTimeout(delayTimer)
+    delayTimer = undefined
+  }
+  if (afterHostLayoutRaf) {
+    window.cancelAnimationFrame(afterHostLayoutRaf)
+    afterHostLayoutRaf = undefined
+  }
+  flushQueued = null
+}
+
+function teardownParentHeadSyncRegistry() {
+  headObserver?.disconnect()
+  headObserver = null
+
+  if (domUpdatedHandler) {
+    document.removeEventListener(
+      SpatialStyleInfoUpdateEvent.domUpdated,
+      domUpdatedHandler,
+    )
+    domUpdatedHandler = null
+  }
+
+  uninstallCssomRuleObserver()
+  clearQueuedFlush()
+  pendingWave = null
+}
+
+function teardownParentHeadSyncRegistryIfEmpty() {
+  if (activeTargets.size > 0) return
+  teardownParentHeadSyncRegistry()
+}
+
+function isWindowDisposed(childWindow: WindowProxy) {
+  return headSyncSchedulers.get(childWindow)?.disposed === true
+}
+
+function getOrCreatePendingWave(timing: SyncScheduleTiming) {
+  if (!pendingWave) {
+    pendingWave = {
+      timing,
+      broadcast: false,
+      targets: new Set(),
+      onComplete: new Map(),
+    }
+    return pendingWave
+  }
+
+  if (timingPriority[timing] > timingPriority[pendingWave.timing]) {
+    pendingWave.timing = timing
+  }
+  return pendingWave
+}
+
+async function flushHeadSyncWave() {
+  const wave = pendingWave
+  pendingWave = null
+  flushQueued = null
+  delayTimer = undefined
+  afterHostLayoutRaf = undefined
+  if (!wave) return
+
+  const targets = (
+    wave.broadcast ? Array.from(activeTargets) : Array.from(wave.targets)
+  ).filter(childWindow => !isWindowDisposed(childWindow))
+
+  if (targets.length === 0) return
+
+  const snapshot = captureParentHeadSnapshot()
+  await Promise.all(
+    targets.map(async childWindow => {
+      await syncParentHeadToChild(childWindow, snapshot)
+      wave.onComplete.get(childWindow)?.()
+    }),
+  )
+}
+
+function queuePendingWaveFlush(timing: SyncScheduleTiming) {
+  if (timing === 'delayed') {
+    if (flushQueued) return
+    flushQueued = 'delayed'
+    delayTimer = window.setTimeout(() => {
+      void flushHeadSyncWave()
+    }, 100)
+    return
+  }
+
+  if (delayTimer) {
+    window.clearTimeout(delayTimer)
+    delayTimer = undefined
+  }
+
+  if (timing === 'immediate') {
+    if (afterHostLayoutRaf) {
+      window.cancelAnimationFrame(afterHostLayoutRaf)
+      afterHostLayoutRaf = undefined
+    }
+    if (flushQueued === 'immediate') return
+    flushQueued = 'immediate'
+    queueMicrotask(() => {
+      if (flushQueued !== 'immediate') return
+      void flushHeadSyncWave()
+    })
+    return
+  }
+
+  if (flushQueued === 'immediate' || flushQueued === 'afterHostLayout') return
+
+  flushQueued = 'afterHostLayout'
+  queueMicrotask(() => {
+    if (flushQueued !== 'afterHostLayout') return
+    afterHostLayoutRaf = window.requestAnimationFrame(() => {
+      if (flushQueued !== 'afterHostLayout') return
+      void flushHeadSyncWave()
+    })
+  })
+}
+
+function enqueueParentHeadSync(
+  timing: SyncScheduleTiming,
+  options:
+    | { broadcast: true; onComplete?: never }
+    | {
+        broadcast?: false
+        childWindow: WindowProxy
+        onComplete?: () => void
+      },
+) {
+  const wave = getOrCreatePendingWave(timing)
+  if (options.broadcast) {
+    wave.broadcast = true
+  } else {
+    const scheduler = getHeadSyncScheduler(options.childWindow)
+    if (scheduler.disposed) return
+    wave.targets.add(options.childWindow)
+    if (options.onComplete) {
+      wave.onComplete.set(options.childWindow, options.onComplete)
+    }
+  }
+  queuePendingWaveFlush(wave.timing)
+}
+
+export function registerParentHeadSyncTarget(
+  childWindow: WindowProxy,
+  options?: { immediate?: boolean },
+) {
+  const scheduler = getHeadSyncScheduler(childWindow)
+  scheduler.disposed = false
+  activeTargets.add(childWindow)
+  installParentHeadSyncRegistry()
+
+  if (options?.immediate ?? true) {
+    scheduleSyncParentHeadToChild(childWindow)
+  }
+
+  let unregistered = false
+  return () => {
+    if (unregistered) return
+    unregistered = true
+    activeTargets.delete(childWindow)
+    teardownParentHeadSyncRegistryIfEmpty()
+  }
 }
 
 /**
@@ -330,63 +679,27 @@ export function scheduleSyncParentHeadToChild(
   timing: SyncScheduleTiming = 'immediate',
   onComplete?: () => void,
 ) {
-  const scheduler = getHeadSyncScheduler(childWindow)
-  if (scheduler.disposed) return
-
-  const run = () => {
-    if (scheduler.disposed) return
-    void syncParentHeadToChild(childWindow).then(() => {
-      if (timing === 'afterHostLayout') {
-        const complete = scheduler.afterHostLayoutComplete
-        scheduler.afterHostLayoutComplete = undefined
-        complete?.()
-      }
-    })
-  }
-
-  if (timing === 'delayed') {
-    if (scheduler.delayTimer) window.clearTimeout(scheduler.delayTimer)
-    scheduler.delayTimer = window.setTimeout(run, 100)
-    return
-  }
-
-  if (scheduler.delayTimer) {
-    window.clearTimeout(scheduler.delayTimer)
-    scheduler.delayTimer = undefined
-  }
-
-  if (timing === 'afterHostLayout') {
-    if (onComplete) {
-      scheduler.afterHostLayoutComplete = onComplete
-    }
-    if (scheduler.afterHostLayoutRaf != null) {
-      return
-    }
-    queueMicrotask(() => {
-      if (scheduler.disposed || scheduler.afterHostLayoutRaf != null) return
-      scheduler.afterHostLayoutRaf = window.requestAnimationFrame(() => {
-        scheduler.afterHostLayoutRaf = undefined
-        run()
-      })
-    })
-    return
-  }
-
-  if (scheduler.immediateQueued) return
-  scheduler.immediateQueued = true
-  queueMicrotask(() => {
-    scheduler.immediateQueued = false
-    run()
+  enqueueParentHeadSync(timing, {
+    broadcast: false,
+    childWindow,
+    onComplete: timing === 'afterHostLayout' ? onComplete : undefined,
   })
 }
 
 export function disposeSyncParentHeadToChild(childWindow: WindowProxy) {
   const scheduler = headSyncSchedulers.get(childWindow)
-  if (!scheduler) return
-  scheduler.disposed = true
-  if (scheduler.delayTimer) window.clearTimeout(scheduler.delayTimer)
-  if (scheduler.afterHostLayoutRaf) {
-    window.cancelAnimationFrame(scheduler.afterHostLayoutRaf)
-  }
+  if (scheduler) scheduler.disposed = true
+  activeTargets.delete(childWindow)
+  teardownParentHeadSyncRegistryIfEmpty()
   headSyncSchedulers.delete(childWindow)
+}
+
+export const __parentHeadSyncRegistryTest__ = {
+  getActiveTargetCount: () => activeTargets.size,
+  getObserverInstalled: () => headObserver != null,
+  flushPendingWaveForTest: flushHeadSyncWave,
+  reset: () => {
+    activeTargets.clear()
+    teardownParentHeadSyncRegistry()
+  },
 }

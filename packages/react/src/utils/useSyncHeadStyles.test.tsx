@@ -1,258 +1,51 @@
-import { act, render } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { render } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSyncHeadStyles } from './useSyncHeadStyles'
 import {
   disposeSyncParentHeadToChild,
-  scheduleSyncParentHeadToChild,
+  registerParentHeadSyncTarget,
 } from './windowStyleSync'
 
 vi.mock('./windowStyleSync', () => ({
   disposeSyncParentHeadToChild: vi.fn(),
-  scheduleSyncParentHeadToChild: vi.fn(),
+  registerParentHeadSyncTarget: vi.fn(),
 }))
 
 describe('useSyncHeadStyles', () => {
-  const originalMutationObserver = globalThis.MutationObserver
-  const observers: Array<{
-    callback: MutationCallback
-    observe: ReturnType<typeof vi.fn>
-    disconnect: ReturnType<typeof vi.fn>
-  }> = []
-
   beforeEach(() => {
-    vi.useFakeTimers()
-    observers.length = 0
-    ;(globalThis as any).MutationObserver = class {
-      observe = vi.fn()
-      disconnect = vi.fn()
-
-      constructor(public callback: MutationCallback) {
-        observers.push(this)
-      }
-    }
     vi.mocked(disposeSyncParentHeadToChild).mockClear()
-    vi.mocked(scheduleSyncParentHeadToChild).mockClear()
+    vi.mocked(registerParentHeadSyncTarget).mockClear()
   })
 
-  afterEach(() => {
-    vi.useRealTimers()
-    globalThis.MutationObserver = originalMutationObserver
-  })
-
-  it('syncs stylesheet text changes immediately', async () => {
+  it('registers the child window with immediate sync by default', () => {
     const childWindow = {
       document: document.implementation.createHTMLDocument(),
     }
+    const unregister = vi.fn()
+    vi.mocked(registerParentHeadSyncTarget).mockReturnValue(unregister)
 
     function Test() {
-      useSyncHeadStyles(childWindow as unknown as WindowProxy, {
-        immediate: false,
-      })
+      useSyncHeadStyles(childWindow as unknown as WindowProxy)
       return null
     }
 
     const { unmount } = render(<Test />)
-    expect(observers).toHaveLength(1)
-    expect(observers[0].observe).toHaveBeenCalledWith(
-      document.head,
-      expect.objectContaining({
-        childList: true,
-        characterData: true,
-        subtree: true,
-      }),
-    )
 
-    const style = document.createElement('style')
-    const text = document.createTextNode('.a{padding:12px;}')
-    style.appendChild(text)
-
-    act(() => {
-      observers[0].callback(
-        [
-          {
-            type: 'characterData',
-            target: text,
-            addedNodes: [],
-            removedNodes: [],
-          } as unknown as MutationRecord,
-        ],
-        observers[0] as unknown as MutationObserver,
-      )
+    expect(registerParentHeadSyncTarget).toHaveBeenCalledWith(childWindow, {
+      immediate: true,
     })
 
-    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
-      childWindow,
-      'immediate',
-    )
-    unmount()
-  })
-
-  it('keeps observing stylesheet text changes when subtree is disabled by the caller', async () => {
-    const childWindow = {
-      document: document.implementation.createHTMLDocument(),
-    }
-
-    function Test() {
-      useSyncHeadStyles(childWindow as unknown as WindowProxy, {
-        immediate: false,
-        subtree: false,
-      })
-      return null
-    }
-
-    const { unmount } = render(<Test />)
-    expect(observers[0].observe).toHaveBeenCalledWith(
-      document.head,
-      expect.objectContaining({
-        childList: true,
-        characterData: true,
-        subtree: true,
-      }),
-    )
-
-    const style = document.createElement('style')
-    const text = document.createTextNode('.a{padding:12px;}')
-    style.appendChild(text)
-
-    act(() => {
-      observers[0].callback(
-        [
-          {
-            type: 'characterData',
-            target: text,
-            addedNodes: [],
-            removedNodes: [],
-          } as unknown as MutationRecord,
-        ],
-        observers[0] as unknown as MutationObserver,
-      )
-    })
-
-    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
-      childWindow,
-      'immediate',
-    )
-    unmount()
-  })
-
-  it('schedules sync for CSSOM insertRule changes in parent head styles', () => {
-    const childWindow = {
-      document: document.implementation.createHTMLDocument(),
-    }
-
-    function Test() {
-      useSyncHeadStyles(childWindow as unknown as WindowProxy, {
-        immediate: false,
-      })
-      return null
-    }
-
-    const { unmount } = render(<Test />)
-    const style = document.createElement('style')
-    document.head.appendChild(style)
-
-    act(() => {
-      style.sheet!.insertRule('.a{padding:12px;}', 0)
-    })
-
-    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
-      childWindow,
-      'immediate',
-    )
-    style.remove()
-    unmount()
-  })
-
-  it('schedules CSSOM rule sync for every active child window', () => {
-    const parentChildWindow = {
-      document: document.implementation.createHTMLDocument(),
-    }
-    const nestedChildWindow = {
-      document: document.implementation.createHTMLDocument(),
-    }
-
-    function Test() {
-      useSyncHeadStyles(parentChildWindow as unknown as WindowProxy, {
-        immediate: false,
-      })
-      useSyncHeadStyles(nestedChildWindow as unknown as WindowProxy, {
-        immediate: false,
-      })
-      return null
-    }
-
-    const { unmount } = render(<Test />)
-    const style = document.createElement('style')
-    document.head.appendChild(style)
-
-    act(() => {
-      style.sheet!.insertRule('.nested{opacity:.42;}', 0)
-    })
-
-    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
-      parentChildWindow,
-      'immediate',
-    )
-    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
-      nestedChildWindow,
-      'immediate',
-    )
-    style.remove()
-    unmount()
-  })
-
-  it('restores CSSOM rule methods after the last synced child unmounts', () => {
-    const childWindowA = {
-      document: document.implementation.createHTMLDocument(),
-    }
-    const childWindowB = {
-      document: document.implementation.createHTMLDocument(),
-    }
-    const originalInsertRule = CSSStyleSheet.prototype.insertRule
-    const originalDeleteRule = CSSStyleSheet.prototype.deleteRule
-
-    function Test() {
-      useSyncHeadStyles(childWindowA as unknown as WindowProxy, {
-        immediate: false,
-      })
-      useSyncHeadStyles(childWindowB as unknown as WindowProxy, {
-        immediate: false,
-      })
-      return null
-    }
-
-    const { unmount } = render(<Test />)
-    expect(CSSStyleSheet.prototype.insertRule).not.toBe(originalInsertRule)
-    expect(CSSStyleSheet.prototype.deleteRule).not.toBe(originalDeleteRule)
-
     unmount()
 
-    expect(CSSStyleSheet.prototype.insertRule).toBe(originalInsertRule)
-    expect(CSSStyleSheet.prototype.deleteRule).toBe(originalDeleteRule)
-  })
-
-  it('disposes scheduled sync on unmount', () => {
-    const childWindow = {
-      document: document.implementation.createHTMLDocument(),
-    }
-
-    function Test() {
-      useSyncHeadStyles(childWindow as unknown as WindowProxy, {
-        immediate: false,
-      })
-      return null
-    }
-
-    const { unmount } = render(<Test />)
-    unmount()
-
+    expect(unregister).toHaveBeenCalledTimes(1)
     expect(disposeSyncParentHeadToChild).toHaveBeenCalledWith(childWindow)
   })
 
-  it('prefers immediate when a batch mixes link stylesheet and style text changes', async () => {
+  it('passes immediate=false through to the registry', () => {
     const childWindow = {
       document: document.implementation.createHTMLDocument(),
     }
+    vi.mocked(registerParentHeadSyncTarget).mockReturnValue(vi.fn())
 
     function Test() {
       useSyncHeadStyles(childWindow as unknown as WindowProxy, {
@@ -263,43 +56,22 @@ describe('useSyncHeadStyles', () => {
 
     const { unmount } = render(<Test />)
 
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://example.com/a.css'
-
-    const style = document.createElement('style')
-    const text = document.createTextNode('.a{padding:12px;}')
-    style.appendChild(text)
-
-    act(() => {
-      observers[0].callback(
-        [
-          {
-            type: 'childList',
-            target: document.head,
-            addedNodes: [link] as unknown as NodeList,
-            removedNodes: [] as unknown as NodeList,
-          } as unknown as MutationRecord,
-          {
-            type: 'characterData',
-            target: text,
-            addedNodes: [],
-            removedNodes: [],
-          } as unknown as MutationRecord,
-        ],
-        observers[0] as unknown as MutationObserver,
-      )
+    expect(registerParentHeadSyncTarget).toHaveBeenCalledWith(childWindow, {
+      immediate: false,
     })
 
-    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledTimes(1)
-    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledWith(
-      childWindow,
-      'immediate',
-    )
-
-    vi.advanceTimersByTime(1000)
-    expect(scheduleSyncParentHeadToChild).toHaveBeenCalledTimes(1)
-
     unmount()
+  })
+
+  it('does not register without a child window', () => {
+    function Test() {
+      useSyncHeadStyles(null)
+      return null
+    }
+
+    render(<Test />)
+
+    expect(registerParentHeadSyncTarget).not.toHaveBeenCalled()
+    expect(disposeSyncParentHeadToChild).not.toHaveBeenCalled()
   })
 })

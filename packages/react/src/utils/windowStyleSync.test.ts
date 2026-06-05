@@ -1,5 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  __parentHeadSyncRegistryTest__,
+  registerParentHeadSyncTarget,
   scheduleSyncParentHeadToChild,
   syncParentHeadToChild,
   syncStyleSheetRulesToChild,
@@ -20,9 +22,30 @@ function clearParentHead() {
 }
 
 describe('windowStyleSync', () => {
+  const originalMutationObserver = globalThis.MutationObserver
+  const observers: Array<{
+    callback: MutationCallback
+    observe: ReturnType<typeof vi.fn>
+    disconnect: ReturnType<typeof vi.fn>
+  }> = []
+
+  beforeEach(() => {
+    observers.length = 0
+    ;(globalThis as any).MutationObserver = class {
+      observe = vi.fn()
+      disconnect = vi.fn()
+
+      constructor(public callback: MutationCallback) {
+        observers.push(this)
+      }
+    }
+  })
+
   afterEach(() => {
     vi.useRealTimers()
     clearParentHead()
+    globalThis.MutationObserver = originalMutationObserver
+    __parentHeadSyncRegistryTest__.reset()
   })
 
   it('updates synced style nodes in place without retaining stale attributes', async () => {
@@ -130,7 +153,7 @@ describe('windowStyleSync', () => {
     scheduleSyncParentHeadToChild(childWindow, 'delayed')
     scheduleSyncParentHeadToChild(childWindow, 'immediate')
 
-    await vi.runAllTicks()
+    await Promise.resolve()
     await Promise.resolve()
 
     const syncedStyle = childWindow.document.head.querySelector(
@@ -143,5 +166,193 @@ describe('windowStyleSync', () => {
 
     expect(syncedStyle.textContent).toContain('color: red')
     expect(syncedStyle.textContent).not.toContain('color: blue')
+  })
+
+  it('installs one global head observer for multiple registered targets', () => {
+    const childWindowA = createChildWindow()
+    const childWindowB = createChildWindow()
+    const childWindowC = createChildWindow()
+
+    const unregisterA = registerParentHeadSyncTarget(childWindowA, {
+      immediate: false,
+    })
+    const unregisterB = registerParentHeadSyncTarget(childWindowB, {
+      immediate: false,
+    })
+    const unregisterC = registerParentHeadSyncTarget(childWindowC, {
+      immediate: false,
+    })
+
+    expect(observers).toHaveLength(1)
+    expect(observers[0]!.observe).toHaveBeenCalledWith(
+      document.head,
+      expect.objectContaining({
+        childList: true,
+        characterData: true,
+        subtree: true,
+      }),
+    )
+    expect(__parentHeadSyncRegistryTest__.getActiveTargetCount()).toBe(3)
+
+    unregisterA()
+    unregisterB()
+    expect(observers[0]!.disconnect).not.toHaveBeenCalled()
+    unregisterC()
+
+    expect(observers[0]!.disconnect).toHaveBeenCalledTimes(1)
+    expect(__parentHeadSyncRegistryTest__.getActiveTargetCount()).toBe(0)
+  })
+
+  it('restores CSSOM rule methods after the last target unregisters', () => {
+    const childWindowA = createChildWindow()
+    const childWindowB = createChildWindow()
+    const originalInsertRule = CSSStyleSheet.prototype.insertRule
+    const originalDeleteRule = CSSStyleSheet.prototype.deleteRule
+
+    const unregisterA = registerParentHeadSyncTarget(childWindowA, {
+      immediate: false,
+    })
+    const unregisterB = registerParentHeadSyncTarget(childWindowB, {
+      immediate: false,
+    })
+
+    expect(CSSStyleSheet.prototype.insertRule).not.toBe(originalInsertRule)
+    expect(CSSStyleSheet.prototype.deleteRule).not.toBe(originalDeleteRule)
+
+    unregisterA()
+    expect(CSSStyleSheet.prototype.insertRule).not.toBe(originalInsertRule)
+    expect(CSSStyleSheet.prototype.deleteRule).not.toBe(originalDeleteRule)
+
+    unregisterB()
+    expect(CSSStyleSheet.prototype.insertRule).toBe(originalInsertRule)
+    expect(CSSStyleSheet.prototype.deleteRule).toBe(originalDeleteRule)
+  })
+
+  it('broadcasts CSSOM rule changes to every active portal', async () => {
+    const childWindowA = createChildWindow()
+    const childWindowB = createChildWindow()
+    registerParentHeadSyncTarget(childWindowA, { immediate: false })
+    registerParentHeadSyncTarget(childWindowB, { immediate: false })
+
+    const parentStyle = document.createElement('style')
+    document.head.appendChild(parentStyle)
+    parentStyle.sheet!.insertRule('.cssom { opacity: .5; }', 0)
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    for (const childWindow of [childWindowA, childWindowB]) {
+      const syncedStyle = childWindow.document.head.querySelector(
+        'style[data-webspatial-sync="1"]',
+      ) as HTMLStyleElement
+      expect(syncedStyle.textContent).toContain('opacity: .5')
+    }
+  })
+
+  it('broadcast sync updates every active portal from one head mutation', async () => {
+    const childWindowA = createChildWindow()
+    const childWindowB = createChildWindow()
+    registerParentHeadSyncTarget(childWindowA, { immediate: false })
+    registerParentHeadSyncTarget(childWindowB, { immediate: false })
+
+    const parentStyle = document.createElement('style')
+    parentStyle.textContent = '.broadcast { color: red; }'
+    document.head.appendChild(parentStyle)
+
+    observers[0]!.callback(
+      [
+        {
+          type: 'childList',
+          target: document.head,
+          addedNodes: [parentStyle] as unknown as NodeList,
+          removedNodes: [] as unknown as NodeList,
+        } as unknown as MutationRecord,
+      ],
+      observers[0] as unknown as MutationObserver,
+    )
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    for (const childWindow of [childWindowA, childWindowB]) {
+      const syncedStyle = childWindow.document.head.querySelector(
+        'style[data-webspatial-sync="1"]',
+      ) as HTMLStyleElement
+      expect(syncedStyle.textContent).toContain('color: red')
+    }
+  })
+
+  it('reads the parent head once per broadcast wave', async () => {
+    const childWindowA = createChildWindow()
+    const childWindowB = createChildWindow()
+    const childWindowC = createChildWindow()
+    registerParentHeadSyncTarget(childWindowA, { immediate: false })
+    registerParentHeadSyncTarget(childWindowB, { immediate: false })
+    registerParentHeadSyncTarget(childWindowC, { immediate: false })
+
+    const parentStyle = document.createElement('style')
+    parentStyle.textContent = '.snapshot { opacity: .42; }'
+    document.head.appendChild(parentStyle)
+
+    const querySpy = vi.spyOn(document.head, 'querySelectorAll')
+
+    observers[0]!.callback(
+      [
+        {
+          type: 'childList',
+          target: document.head,
+          addedNodes: [parentStyle] as unknown as NodeList,
+          removedNodes: [] as unknown as NodeList,
+        } as unknown as MutationRecord,
+      ],
+      observers[0] as unknown as MutationObserver,
+    )
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(
+      querySpy.mock.calls.filter(([selector]) => selector === 'style'),
+    ).toHaveLength(1)
+    expect(
+      querySpy.mock.calls.filter(
+        ([selector]) => selector === 'link[rel="stylesheet"][href]',
+      ),
+    ).toHaveLength(1)
+  })
+
+  it('keeps afterHostLayout sync scoped to the requested target', async () => {
+    vi.useFakeTimers()
+    const childWindowA = createChildWindow()
+    const childWindowB = createChildWindow()
+    registerParentHeadSyncTarget(childWindowA, { immediate: false })
+    registerParentHeadSyncTarget(childWindowB, { immediate: false })
+
+    const parentStyle = document.createElement('style')
+    parentStyle.textContent = '.targeted { color: blue; }'
+    document.head.appendChild(parentStyle)
+    const querySpy = vi.spyOn(document.head, 'querySelectorAll')
+    const onComplete = vi.fn()
+
+    scheduleSyncParentHeadToChild(childWindowB, 'afterHostLayout', onComplete)
+
+    await vi.runAllTicks()
+    await vi.advanceTimersByTimeAsync(20)
+    await Promise.resolve()
+
+    expect(
+      childWindowA.document.head.querySelector(
+        'style[data-webspatial-sync="1"]',
+      ),
+    ).toBeNull()
+    expect(
+      childWindowB.document.head.querySelector(
+        'style[data-webspatial-sync="1"]',
+      )?.textContent,
+    ).toContain('color: blue')
+    expect(onComplete).toHaveBeenCalledTimes(1)
+    expect(
+      querySpy.mock.calls.filter(([selector]) => selector === 'style'),
+    ).toHaveLength(1)
   })
 })
