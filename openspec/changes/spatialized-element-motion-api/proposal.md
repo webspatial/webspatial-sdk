@@ -88,6 +88,7 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 - **Unified public API**: `useAnimation(config)` accepts `from/to` (recommended), `tracks` (advanced), or `timeline` (CSS @keyframes style); all authoring shapes compile to tracks internally.
 - **Timeline data model**: per-property tracks with absolute-time keyframes, per-track timingFunction — the canonical config shape.
 - **Dual backend for 2D**: Web RAF when native unavailable; native uses the canonical tracks path when in WebSpatial runtime.
+- **Timeline-only play payload**: `AnimateSpatializedElementMotion` `play` sends only the canonical `timeline` document across JSB; timing controls such as `duration`, `timingFunction`, `delay`, `loop`, and `playbackRate` live inside the compiled timeline payload rather than as top-level JSB fields.
 - **Native-only for 3D**: Static3D and Dynamic3D use native `animateMotion` exclusively (no Web RAF fallback).
 - **One Core controller**: `SpatializedMotionController` with `MOTION_KIND_POLICIES` per kind.
 - **Entity-specific API**: entity transform animation is named `useEntityAnimation(config)` and remains on the separate `AnimateTransform` stack.
