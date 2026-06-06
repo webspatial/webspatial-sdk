@@ -168,7 +168,7 @@ For a **standalone** `<Model>` (single file, no `<Reality>` / scene graph), see 
 ```
 
 - **ModelAsset:** `id`, `src`, `onLoad?`, `onError?`. Relative `src` are resolved to absolute URLs. Formats (e.g. USDZ) follow platform support; see [Apple Quick Look](https://developer.apple.com/augmented-reality/quick-look/) and **`docs/Model.md`**.
-- **ModelEntity:** `model` (asset id), optional `materials?` (material override), `position?`, `rotation?`, `scale?`, and entity event handlers. Changing **`model`** after mount recreates that instance with the new asset. Changing **`materials`** reapplies overrides on the loaded model.
+- **ModelEntity:** `model` (asset id), optional `materials?` (material override), `position?`, `rotation?`, `scale?`, and entity event handlers. Changing **`model`** after mount recreates that instance with the new asset. Changing **`materials`** reapplies overrides on the loaded model. Avoid driving material overrides from high-frequency state: overlapping async updates can still apply out of order, and clearing `materials` does not currently restore the model asset's authored material set on visionOS.
 
 ---
 
