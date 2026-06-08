@@ -71,6 +71,7 @@ import SpatialDivTest from './src/pages/spatialDivTest/index'
 import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
 import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
+import PagePropertiesCornerPage from './src/pages/page-properties-corner/index'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -142,6 +143,10 @@ function App() {
                 <Route
                   path="/runtime-capabilities"
                   element={<RuntimeCapabilitiesPage />}
+                />
+                <Route
+                  path="/page-properties-corner"
+                  element={<PagePropertiesCornerPage />}
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
