@@ -214,6 +214,66 @@ SpatialDiv / Model / Reality entities that open a **portal** (native sub-webview
 3. **Never read `portalInstanceObject.dom` bare in hook dependency arrays.** React evaluates deps before the effect body. Use optional chaining (`portalInstanceObject?.dom`) and allow `portalInstanceObject | null`. Prefer passing `portalInstanceObject` from `PortalSpatializedContainer` as a prop instead of `useContext` inside `SpatializedContent` so linked-SDK HMR is less sensitive to duplicate `PortalInstanceContext` module instances.
 4. **Do not promote lazy 3D loading while `dom` is missing.** `SpatializedStatic3DElementContainer` must wait for frame sync when `portalInstanceObject.dom` is undefined; do not call `setEffectiveLoading('eager')` as a shortcut (regression for [#1192](https://github.com/webspatial/webspatial-sdk/issues/1192)).
 
+### Portal head sync (CSS-in-JS) ([#1265](https://github.com/webspatial/webspatial-sdk/issues/1265))
+
+> **Audience:** maintainers editing `windowStyleSync.ts`, `useSyncHeadStyles.ts`, `useSync2DFrame.ts`, or `Spatialized2DElementContainer`.
+>
+> **Background:** SpatialDiv / Attachment portal content is rendered via `createPortal(..., windowProxy.document.body)`, but React and CSS-in-JS runtimes still execute in the **host** page. Runtime libraries such as styled-components and Emotion inject rules into the host `document.head` (often via `CSSStyleSheet.insertRule` / `deleteRule`). Each portal is a separate child webview and needs its own mirrored copy of those rules.
+
+#### Model
+
+| Layer | Document | Role |
+| --- | --- | --- |
+| Host page | `document` | React tree, styled-components / Emotion injection target |
+| Portal webview | `windowProxy.document` | Visible UI via `createPortal`; `<head>` is mirrored from the host |
+
+Sync is **host → portal**, never portal → portal. Nested SpatialDivs and many flat SpatialDivs each get their own `windowProxy`, but all read from the same host `document.head` source.
+
+#### Key pieces
+
+| Piece | Role |
+| --- | --- |
+| `useSyncHeadStyles` | Thin hook: `registerParentHeadSyncTarget(childWindow)` on mount, `disposeSyncParentHeadToChild` on unmount (`Spatialized2DElementContainer`, `AttachmentEntity`) |
+| `registerParentHeadSyncTarget` | Adds the portal to the global registry and schedules an initial head sync |
+| `windowStyleSync.ts` registry | One `MutationObserver` on host `document.head`, one `domUpdated` listener, one CSSOM `insertRule` / `deleteRule` patch while any target is active |
+| `captureParentHeadSnapshot` | Reads host `<style>` / `<link rel=stylesheet>` once per sync wave; serializes `sheet.cssRules` when available |
+| `syncStyleSheetRulesToChild` | Reuses portal `<style data-webspatial-sync>` nodes in place; incremental `insertRule` / `deleteRule` when possible |
+| `useSync2DFrame` | Before portal `forceUpdate`, runs `scheduleSyncParentHeadToChild(childWindow, 'afterHostLayout', onComplete)` so CSS-in-JS can commit head rules after host layout |
+
+#### Sync waves
+
+The registry coalesces work into **waves** to avoid O(N) parent-head reads when N portals are active:
+
+- **Broadcast** (all active portals): host `MutationObserver`, CSSOM patch, `domUpdated` event.
+- **Single-target** (one portal): `scheduleSyncParentHeadToChild` from `useSync2DFrame` (`afterHostLayout`) or direct callers.
+
+Timing priority within a wave: `immediate` > `afterHostLayout` > `delayed`. `immediate` cancels a pending `delayTimer`. Portal head **writes** remain O(N) — each webview must be updated separately.
+
+#### Invariants (do not break)
+
+1. **Serialize from `cssRules`, not `cloneNode` alone.** CSS-in-JS often updates CSSOM without mutating `<style>` text children.
+2. **Patch only parent head sheets.** `isParentHeadStyleSheet` must gate the CSSOM prototype patch so child-portal `insertRule` during sync does not recurse.
+3. **Restore the CSSOM patch when the last target unregisters.** Do not leave `CSSStyleSheet.prototype` patched globally.
+4. **Sync before 2D-frame portal refresh.** `useSync2DFrame` must keep the `afterHostLayout` → sync → `forceUpdate` ordering for prop-driven styled updates.
+5. **Mixed mutation batches prefer `immediate`.** A `<link rel=stylesheet>` record in the same batch must not downgrade co-occurring `<style>` text / `characterData` updates to `delayed`.
+6. **`<link>` sync stays idempotent.** Keep `data-webspatial-sync-key`, per-window `version`, and `isCurrent()` guards for async stylesheet loads ([#1033](https://github.com/webspatial/webspatial-sdk/issues/1033)).
+7. **Dispose stops further sync for that window.** `disposeSyncParentHeadToChild` must filter disposed targets out of pending waves.
+
+#### Manual validation (test-server)
+
+| Route | What it exercises |
+| --- | --- |
+| `#/styledComponentsSpatialTest` | styled-components on host, child, nested SpatialDiv; inspector helpers `__probeStyledComponentsSpatialHeadSync`, `__runStyledComponentsSpatialOpacitySweep` |
+| `#/head-style-sync` | `<link rel=stylesheet>` dedupe / stress (not CSSOM flicker) |
+
+#### Known limitations
+
+- **Custom injection targets** (e.g. styled-components `StyleSheetManager` targeting a portal or shadow `document.head`) are not mirrored — sync reads host `document.head` only.
+- **Synced `<style>` nodes are paired by index** with parent `<style>` nodes. Append/update flows (typical CSS-in-JS) are stable; devtools/HMR that reorder parent `<style>` nodes may need future stable keying.
+- **`domUpdated` triggers a broadcast `afterHostLayout` wave** for all active portals (correctness-first).
+
+End-user summary: [`docs/webspatial-quirks.md`](../../../../docs/webspatial-quirks.md) — *CSS-in-JS in SpatialDiv*.
+
 ### Local development notes
 
 | Setup | What it exercises |
@@ -229,11 +289,15 @@ SpatialDiv / Model / Reality entities that open a **portal** (native sub-webview
 | `portalInstanceObject` null-safe deps / props | `hooks/useSpatialContentReady.test.ts` |
 | Lazy 3D when `dom` appears after sync | `SpatializedStatic3DElementContainer.test.tsx` |
 | `useSync2DFrame` mount + element-driven sync | `coverage-boost.test.ts` (filtered cases for `useSync2DFrame`) |
+| `useSync2DFrame` `afterHostLayout` head sync before re-render | `hooks/useSync2DFrame.test.tsx` |
+| Portal head sync / CSSOM / registry waves | `utils/windowStyleSync.test.ts` |
+| `useSyncHeadStyles` register + dispose | `utils/useSyncHeadStyles.test.tsx` |
 
 Run focused checks:
 
 ```sh
 cd packages/react && pnpm exec vitest run src/spatialized-container/
+cd packages/react && pnpm exec vitest run src/utils/windowStyleSync.test.ts src/utils/useSyncHeadStyles.test.tsx
 ```
 
 ## Known limitations
@@ -283,6 +347,8 @@ Each invariant has at least one regression test pinned in this directory:
 ## Quick reference for new contributors
 
 If you are changing **portal** hooks or `PortalSpatializedContainer`, read [Portal lifecycle and local dev (HMR)](#portal-lifecycle-and-local-dev-hmr) first and run `src/spatialized-container/` vitest.
+
+If you are changing **portal head sync** (`windowStyleSync.ts`, `useSyncHeadStyles.ts`, `useSync2DFrame.ts`), read [Portal head sync (CSS-in-JS)](#portal-head-sync-css-in-js-1265) and run `src/utils/windowStyleSync.test.ts`.
 
 If you are adding behavior to the standard host:
 

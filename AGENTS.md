@@ -52,6 +52,7 @@ From repo root:
 
 - Root scripts: `package.json`.
 - Portal / 2D sync / HMR invariants (when editing `packages/react/src/spatialized-container/`): `packages/react/src/spatialized-container/ARCHITECTURE.md` — section **Portal lifecycle and local dev (HMR)**; tests: `useSpatializedElement.hmr.test.ts`, `useSpatialContentReady.test.ts`, `SpatializedStatic3DElementContainer.test.tsx`.
+- Portal head sync / CSS-in-JS (when editing `windowStyleSync.ts`, `useSyncHeadStyles.ts`, `useSync2DFrame.ts`): `packages/react/src/spatialized-container/ARCHITECTURE.md` — section **Portal head sync (CSS-in-JS)**; tests: `windowStyleSync.test.ts`, `useSyncHeadStyles.test.tsx`; demo: `#/styledComponentsSpatialTest`.
 - Dev server docs: `apps/test-server/README.md`.
 - E2E harness docs: `tests/ci-test/README.md`.
 - Browser auto test docs: `tests/autoTest/README.md`.

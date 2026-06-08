@@ -51,6 +51,28 @@ A `<div enable-xr>` (SpatialDiv) is **not** a single DOM node for styling purpos
 | Tag selector on matching intrinsic (`h1 {}` with `<h1 enable-xr>`) | Yes (after probe tag mirror) |
 | Ancestor + tag (`.page h1 {}`) | Often **no** |
 
+### CSS-in-JS in SpatialDiv (styled-components, Emotion, …)
+
+**Symptom:** Prop-driven styled updates (for example an opacity slider) briefly flash unstyled content in the spatial portal on visionOS / PICO.
+
+**Root cause:** Portal UI renders in a separate child webview. Runtime CSS-in-JS libraries inject rules into the host `document.head` (often via `insertRule`, without changing visible `<style>` text). The portal must mirror those rules into its own `<head>` **before** the new class is painted.
+
+**Current behavior:** The SDK mirrors host `document.head` into each active portal webview. This covers typical styled-components / Emotion setups that inject into the host page.
+
+**Works when:**
+
+- Styles are injected into the **host** `document.head` (default for styled-components and Emotion).
+- You use SpatialDiv (`enable-xr`) or Attachment portal content with the shared `useSyncHeadStyles` path.
+
+**Does not work / not supported:**
+
+- `StyleSheetManager` (or similar) with a **custom target** outside the host document (for example a portal or shadow-root `document.head`).
+- Compile-time CSS only (Tailwind, CSS Modules, Vanilla Extract) — different sync path; issues tend to be missing global `<link>` styles, not CSSOM flicker.
+
+**Manual check:** test-server `#/styledComponentsSpatialTest` (host, child, nested tabs). On device, drag the opacity slider and/or run `window.__runStyledComponentsSpatialOpacitySweep()`; expect `mismatchFrames === 0`.
+
+Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md` — *Portal head sync (CSS-in-JS)*.
+
 ### Dev workflow note
 
 Changing only a CSS file may not update the spatial slab until the host document reloads or the SDK re-samples the probe (see `useSpatialTransformVisibility` — head `childList` changes and `domUpdated` events). The test-server uses esbuild + LiveReload (full page refresh), not Vite-style CSS HMR. Spatial windows on a headset/simulator may need a manual refresh separately from your desktop browser tab.
