@@ -24,8 +24,8 @@ export function Logger({ logs, clearLog }: LoggerProps) {
         <h2 className="m-0">Console</h2>
         <button onClick={clearLog}>Clear Log</button>
         <div className="mockup-code max-w-2xl not-prose">
-          {logs.map(log => (
-            <pre data-prefix="">
+          {logs.map((log, index) => (
+            <pre data-prefix="" key={index}>
               <code>{log}</code>
             </pre>
           ))}

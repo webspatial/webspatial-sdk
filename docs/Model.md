@@ -41,7 +41,7 @@ Like standard HTML elements, the `<Model>` component supports a range of attribu
 `stagemode` Controls the built-in user interaction mode for the model.
 
 - **none** (default): No built-in interaction is enabled. All interactions must be handled via spatial events.
-- `orbit` Enables a native orbit interaction mode. Allows users to rotate the model by dragging. When in orbit mode `entityTransform` becomes read-only and gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
+- `orbit` Input events in a horizontal direction result in a rotation of the model about the Y axis, and events in a vertical direction result in a rotation about the horizontal axis. When in orbit mode entityTransform becomes read-only.
 
 ## Events
 
@@ -103,7 +103,7 @@ The <source> HTML element specifies one or more media resources for the <Model> 
 
 ## Usage Notes
 
-- **Orbit Interaction Conflicts**: Setting the `stagemode` attribute to `orbit` results in an **_orbit_** interaction mode, where the `entityTransform` becomes read-only, and the view is updated exclusively based on input events from the user. Native gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
+- **Orbit Interaction**: Setting `stagemode` to `orbit` enables an **_orbit_** interaction mode built on the `manipulable` modifier (rotation only). The model is rotated by user drag, and `entityTransform` is updated from native to reflect the current orientation
 
 ## Examples
 
@@ -222,7 +222,7 @@ function LongScrollPage() {
 | `<source>` | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.1 | ✓<br>1.6       |
 | poster     | ✓<br>26            | ✓<br>6 β2.0                     | ✓<br>1.7       |
 | loading    | ✓<br>26            | ✓<br>6 β2.1                     | ✓<br>1.7       |
-| stagemode  | 26                 | 6                               | July           |
+| stagemode  | 26                 | 6                               | September      |
 
 ### CSS
 
@@ -249,8 +249,8 @@ function LongScrollPage() {
 | play()             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
 | pause()            | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
 | currentTime        | ✓<br>26  | ✓<br>6 β2.0 | ✓<br>1.7       |
-| boundingBoxCenter  | 26       | 6           | July           |
-| boundingBoxExtents | 26       | 6           | July           |
+| boundingBoxCenter  |          |             |                |
+| boundingBoxExtents |          |             |                |
 
 ## Feature Implementation Details
 
@@ -268,16 +268,16 @@ This feature provides a built-in, intuitive way for users to inspect a 3D model 
 
 #### 5.3. Native visionOS Layer (`packages/visionOS`)
 
-1. In `SpatializedStatic3DView.swift`, we will check for the `stagemode` property on the `SpatializedStatic3DElement`.
-2. If `stagemode` is `"orbit"`, we will add a `DragGesture` to the view.
-3. The `onChanged` handler for the `DragGesture` will be used to manipulate the model's orientation.
-   - A horizontal drag (`event.translation.width`) will be mapped to a rotation around the model's Y-axis.
-   - A vertical drag (`event.translation.height`) will be mapped to a rotation around the model's X-axis (pitch).
-4. A state variable (e.g., `@State private var orbitRotation: Angle3D = .zero`) will be used to accumulate the rotation from the drag gesture. This rotation will be applied to the model using the `.rotation3DEffect()` modifier on the `Model3D` view.
+1. In `SpatializedStatic3DView.swift`, we check the `stagemode` property on the `SpatializedStatic3DElement`.
+2. If `stagemode` is `"orbit"`, we attach the `manipulable` modifier to the `Model3D` view, restricting supported operations to rotation only (e.g. `.manipulable(operations: .rotation)`). This provides built-in drag-to-rotate handling without a hand-rolled `DragGesture`.
+3. The modifier's change callback reads the manipulated transform and converts it to the model-transform representation used by `entityTransform`.
 
-- **Interaction with&nbsp;entityTransform**: `entityTransform` will not be updated when the model is rotated using the orbit gesture. Similarly updates to `entityTransform` will not affect the model's orientation.
+- **Interaction with entityTransform**: While in orbit mode, `entityTransform` is updated from the native side to reflect the user's manipulation, and these updates are pushed back to the web layer so reads reflect the live orientation. JS writes to `entityTransform` do not drive the model while orbit is active.
 
-- **Gesture Conflict Resolution**: `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` will be disabled when stagemode is set to orbit.
+- **Pushing entityTransform updates to JS**: Native syncs the transform using the existing web-message pattern:
+  - Native emits a new `sendWebMsg` event (e.g. `EntityTransformChangeEvent`) carrying the updated matrix as its detail.
+  - The Core SDK adds a matching `SpatialWebMsgType` member (e.g. `entitytransformchange`) and `…Msg`/`…Detail` interface in `WebMsgCommand.ts` (with the Swift counterpart).
+  - `SpatializedStatic3DElement.onReceiveEvent` handles the new type, updates the cached model transform, and the container's `entityTransform` getter returns the manipulated value.
 
 ## Risks
 

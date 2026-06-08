@@ -18,7 +18,6 @@ function App() {
       .current!.ready?.then(() => logLine('ref.current.ready success'))
       .catch(() => logLine('ref.current.ready error'))
   }, [logLine])
-  // Monitor duration and pause state since there is no playback lifecycle events
   useEffect(() => {
     const id = setInterval(
       () => setCurrentTime(modelRef.current?.currentTime ?? 0.0),
