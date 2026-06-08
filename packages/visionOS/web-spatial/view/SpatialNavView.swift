@@ -114,13 +114,9 @@ struct SpatialNavView: View {
         guard navigationStateListenerID == nil else { return }
 
         let listener: (SpatialWebViewState) -> Void = { state in
-            switch state {
-            case .didUpdateNavigationState:
-                DispatchQueue.main.async {
-                    self.checkButtonState()
-                }
-            default:
-                break
+            guard case .didUpdateNavigationState = state else { return }
+            Task { @MainActor in
+                self.checkButtonState()
             }
         }
 
