@@ -68,6 +68,7 @@ export const routes = [
       },
       { path: '/scene/xrapp', label: 'XR App' },
       { path: '/scene/nosdk', label: 'No SDK' },
+      { path: '/page-properties-corner', label: 'Page Properties Corner' },
     ],
   },
   {

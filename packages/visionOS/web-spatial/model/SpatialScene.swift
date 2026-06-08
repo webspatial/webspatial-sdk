@@ -37,6 +37,7 @@ let defaultSceneConfig = SceneOptions(
 
 @Observable
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSender {
+    private static let defaultMainPageCornerRadius: CGFloat = 44
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     var attachmentManager = AttachmentManager()
@@ -501,7 +502,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatialObject.destroy()
         }
         attachmentManager.destroyAll()
-        backgroundMaterial = .None
+        explicitSceneCornerRadius = nil
+        resetBackgroundMaterialOnWindowStyleChange(windowStyle)
     }
 
     private func injectPageEpoch() {
@@ -636,6 +638,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
 
         if let cornerRadius = command.cornerRadius {
+            explicitSceneCornerRadius = cornerRadius
             self.cornerRadius = cornerRadius
         }
 
@@ -979,12 +982,45 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             } else {
                 spatialWebViewModel.setBackgroundTransparent(_backgroundMaterial != .None)
             }
+            applyDerivedSceneCornerRadiusIfNeeded()
         }
     }
+
+    private var explicitSceneCornerRadius: CornerRadius? = nil
 
     var cornerRadius: CornerRadius = .init()
 
     var opacity: Double = 1.0
+
+    private var effectiveMaterialForDerivedCorner: BackgroundMaterial {
+        if windowStyle == .volume {
+            return .Transparent
+        }
+        return _backgroundMaterial
+    }
+
+    private func makeUniformCornerRadius(_ radius: CGFloat) -> CornerRadius {
+        CornerRadius(
+            topLeading: radius,
+            bottomLeading: radius,
+            topTrailing: radius,
+            bottomTrailing: radius
+        )
+    }
+
+    private func derivedSceneCornerRadius() -> CornerRadius {
+        if effectiveMaterialForDerivedCorner == .Transparent {
+            return makeUniformCornerRadius(0)
+        }
+        return makeUniformCornerRadius(Self.defaultMainPageCornerRadius)
+    }
+
+    private func applyDerivedSceneCornerRadiusIfNeeded() {
+        guard explicitSceneCornerRadius == nil else {
+            return
+        }
+        cornerRadius = derivedSceneCornerRadius()
+    }
 
     func getView() -> SpatialWebView {
         return spatialWebViewModel.getView()
