@@ -99,6 +99,7 @@ import {
 ```
 
 - **Props:** `id?`, `name?`, `position?`, `rotation?`, `scale?`, spatial event handlers (see §12).
+- **Naming:** `name?` must be a USD-safe identifier. Do not include hyphens (`-`) or other special characters; use camelCase or underscores (`_`) instead. RCP normalizes unsupported characters to underscores and runtime features such as serialization, USD export, and playback expect consistent names across platforms.
 - **Children:** Any entity (primitives, `ModelEntity`, nested `Entity`). Transforms are relative to the parent.
 
 ---
