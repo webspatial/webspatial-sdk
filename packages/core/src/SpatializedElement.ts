@@ -1,5 +1,5 @@
 import type { SpatializedMotionConfig } from './types/spatializedMotion'
-import type { SpatializedMotionHandle } from './spatialized/motion/SpatializedMotionHandle'
+import type { SpatializedMotionHandle } from './motion/control/SpatializedMotionHandle'
 import { UpdateSpatializedElementTransform } from './JSBCommand'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialObject } from './SpatialObject'

@@ -9,4 +9,4 @@ export {
   evaluateMotionTimeline,
   validateSpatializedMotionConfig as validateSpatializedMotionConfig,
   segmentConfigToMotionConfig as segmentConfigToMotionConfig,
-} from '../../spatialdiv/motion'
+} from '../compute'

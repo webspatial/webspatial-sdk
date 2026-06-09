@@ -1,7 +1,7 @@
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type { SpatializedMotionProperty } from '../../types/spatializedMotion'
 
-function setScalar(
+export function setScalar(
   values: SpatializedVisualValues,
   property: SpatializedMotionProperty,
   value: number,
@@ -22,7 +22,7 @@ function setScalar(
   ;(values.transform[group] as Record<string, number>)[axis] = value
 }
 
-function getScalar(
+export function getScalar(
   values: SpatializedVisualValues,
   property: SpatializedMotionProperty,
 ): number | undefined {
