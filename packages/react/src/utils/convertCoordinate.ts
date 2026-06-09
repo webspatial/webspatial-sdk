@@ -5,10 +5,20 @@ const w2e = await convertCoordinate(position, { from: window, to: elementOrEntit
  * 
  */
 import type { Vec3 } from '@webspatial/core-sdk'
+import { supports, WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
 import type { SpatializedElementRef } from '../spatialized-container/types'
 import type { EntityRef } from '../reality'
 import type { ModelRef } from '../Model'
-import { getSession } from './getSession'
+import { getSpatialImpl } from '../runtime/bridge'
+
+// Per the lazy-load proposal `tasks.md §12.9` ("Pre-v1 budget calibration"),
+// `convertCoordinate` no longer statically imports `getSession` from
+// `./getSession`. That import would pull `Spatial` + `SpatialSession`
+// (and through `SpatialSession`, the entire spatial creator class graph
+// + `scene-polyfill`) into the default-entry bundle. The function's
+// fail-fast contract (per runtime-capabilities "convertCoordinate fail-fast"
+// Scenarios) gates on `supports('convertCoordinate')` via the inlined
+// `@webspatial/core-sdk/runtime` subset before touching the bridge.
 
 type CoordinateConvertible =
   | Window
@@ -19,7 +29,7 @@ type CoordinateConvertible =
 function resolveSpatialObjectId(target: CoordinateConvertible): string | null {
   // window -> current spatial scene id which is empty string
   if (typeof window !== 'undefined' && target === window) {
-    const scene = getSession()?.getSpatialScene()
+    const scene = getSpatialImpl()?.getSession?.()?.getSpatialScene()
     return scene?.id ?? ''
   }
 
@@ -50,22 +60,27 @@ export async function convertCoordinate(
   position: Vec3,
   { from, to }: { from: CoordinateConvertible; to: CoordinateConvertible },
 ): Promise<Vec3> {
-  try {
-    const fromId = resolveSpatialObjectId(from)
-    const toId = resolveSpatialObjectId(to)
-    if (fromId === null || toId === null) {
-      console.warn(
-        'convertCoordinate error: from or to is not a valid coordinate convertible',
-      )
-      return position
-    }
-
-    const spatialScene = getSession()?.getSpatialScene()
-    if (!spatialScene) return position
-    const ret = await spatialScene.convertCoordinate(position, fromId, toId)
-    return ret ?? position
-  } catch (error) {
-    console.warn('convertCoordinate error:', error)
-    return position
+  if (!supports('convertCoordinate')) {
+    throw new WebSpatialRuntimeError('convertCoordinate')
   }
+
+  const fromId = resolveSpatialObjectId(from)
+  const toId = resolveSpatialObjectId(to)
+  if (fromId === null || toId === null) {
+    throw new WebSpatialRuntimeError(
+      'convertCoordinate',
+      'convertCoordinate: from or to is not a valid coordinate convertible',
+    )
+  }
+
+  const spatialScene = getSpatialImpl()?.getSession?.()?.getSpatialScene()
+  if (!spatialScene) {
+    throw new WebSpatialRuntimeError(
+      'convertCoordinate',
+      'convertCoordinate is not available until bootSpatial() has resolved',
+    )
+  }
+
+  const ret = await spatialScene.convertCoordinate(position, fromId, toId)
+  return ret ?? position
 }

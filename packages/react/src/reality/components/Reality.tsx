@@ -15,6 +15,7 @@ import { SpatializedElementRef } from '../../spatialized-container/types'
 import { SpatializedElement } from '@webspatial/core-sdk'
 import { EntityEventHandler } from '../type'
 import { useRealityEvents } from '../hooks'
+import { markWebSpatialPrimitive } from '../../jsx/primitive-marker'
 
 export type RealityProps = Omit<
   React.ComponentPropsWithRef<'div'>,
@@ -145,3 +146,6 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     )
   },
 )
+// Brand the real implementation too: the eager entry exports THIS `Reality`,
+// and the JSX runtime must short-circuit it rather than wrapping it.
+markWebSpatialPrimitive(Reality, 'Reality')

@@ -1,126 +1,245 @@
 // tsup.config.ts
-import { defineConfig, Options } from 'tsup'
+//
+// Lazy-load v1 build pipeline (per spatial-lazy-load spec tasks.md §8). The
+// previous dual-build (`dist/web` + `dist/default`) plus the alias-switching
+// `@webspatial/vite-plugin` is replaced by ONE flat `dist/` layout:
+//
+// - `dist/index.js`   — default-entry barrel (facades + bridge + boot +
+//                       hooks-web/useMetrics + Group B/C utilities). Size
+//                       budget proxy ≤ 5 KB gzipped per spec "SDK-side
+//                       `dist/index.js` size proxy" Scenario; enforced by
+//                       `src/__tests__/size-budget.test.ts` (§9.1).
+// - `dist/spatial.js` — bridge dynamic-import target. Owns the real spatial
+//                       implementation (real `Model`, `Reality`, `*Entity`
+//                       family, materials/assets, real `useMetrics`, real
+//                       containers, real monitor) + the `initPolyfill()`
+//                       bootstrap moved out of the default entry by PR 4.
+// - `dist/jsx/jsx-runtime.js` and `dist/jsx/jsx-dev-runtime.js` — single
+//   unified JSX runtime serving plain web, AVP, SSR, and RSC consumers (per
+//   spec "JSX runtime strips spatial markers and wraps with facade HOCs"
+//   Requirement). The previously separate `*.web.ts` siblings are physically
+//   deleted in this PR per task §6.1.
+//
+// Code-splitting is the mechanism that keeps `dist/index.js` ≤ 5 KB: the
+// bridge's dynamic `import('../spatial')` is hoisted into the spatial chunk,
+// and shared modules that both `index` and the JSX runtime touch (notably
+// the facades + the strip helper) collapse into a small shared chunk emitted
+// alongside the entries.
+import { readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { defineConfig, type Options } from 'tsup'
 import { version } from './package.json'
 
-const baseConfig: Options = {
-  splitting: false,
-  sourcemap: true,
-  clean: true,
-  dts: true,
-}
+// Version stamp injected into selected published entry files. Per spec task
+// §8.2 the legacy
+// `XR_ENV` (`web` / `avp`) global write is removed — there is no longer a
+// per-build flavor distinction. We only stamp the SDK version onto
+// `window.__webspatialsdk__['react-sdk-version']` so existing diagnostic
+// tools that read it keep working.
+//
+// This is intentionally NOT a tsup `banner`: applying the IIFE to shared
+// `chunk-*.js` files makes every chunk top-level side-effectful and forces
+// esbuild to retain otherwise-empty side-effect imports, inflating the eager
+// static-import closure. The onSuccess hook below writes the stamp only to
+// public runtime entry files that users import directly.
+const versionBanner = `
+(function(){
+  if(typeof window === 'undefined') return;
+  if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
+  window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
+})()
+`.trim()
 
 const versionDefine = {
   __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(version),
 }
 
-const banner = {
-  web: `
-      (function(){
-        if(typeof window === 'undefined') return;
-        if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
-        window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
-        window.__webspatialsdk__['XR_ENV'] = "web"
-    })()
-      `,
-  avp: `
-      (function(){
-        if(typeof window === 'undefined') return;
-        if(!window.__webspatialsdk__) window.__webspatialsdk__ = {}
-        window.__webspatialsdk__['react-sdk-version'] = ${JSON.stringify(version)}
-        window.__webspatialsdk__['XR_ENV'] = "avp"
-    })()
-      `,
+// Treat React + React DOM as external — they are required peer dependencies
+// per `package.json` and contribute zero bytes to the SDK's own bundle.
+// `@webspatial/core-sdk` is external for the spatial implementation graph.
+// `@webspatial/core-sdk/runtime` is bundled into the default/eager chunks
+// (inlined at build time) so capability detection is single-sourced in
+// core-sdk without leaving a runtime `import '@webspatial/core-sdk'` in
+// `dist/index.js` (see dist-identifier-scan).
+//
+// `@webspatial/react-sdk/internal/facades-client` is treated as external too:
+// `src/jsx/jsx-shared.ts` reaches the HOC facade factories through that
+// subpath so the published `dist/jsx/jsx-runtime.js` chunk graph terminates
+// at the `'use client'` boundary in `dist/internal/facades-client.js` (see
+// `src/internal/facades-client.ts` for the full RSC-compatibility rationale).
+// All other dist entries reach facades through the relative path
+// (`src/facades/index.ts`), so this externalisation does NOT round-trip
+// the default-entry / eager / spatial bundles through an extra subpath
+// import — only the JSX runtime chunks.
+const externals = [
+  'react',
+  'react-dom',
+  'react/jsx-runtime',
+  'react/jsx-dev-runtime',
+  '@webspatial/core-sdk',
+  '@webspatial/react-sdk/internal/facades-client',
+]
+
+const baseConfig: Options = {
+  format: ['esm'],
+  sourcemap: true,
+  dts: true,
+  external: externals,
+  noExternal: [/^@webspatial\/core-sdk\/runtime$/],
+  esbuildOptions(options) {
+    options.define = {
+      ...options.define,
+      ...versionDefine,
+    }
+    // Keep identifiers stable for build-output scans while removing comments
+    // and redundant whitespace from published JS (smaller default-entry proxy
+    // and cleaner dist output) without changing exported symbol names.
+    options.minifyWhitespace = true
+    options.minifySyntax = true
+  },
+}
+
+// Next.js / RSC requires `'use client'` to be the very first statement in
+// a module — before the version banner IIFE. esbuild may also emit a stray
+// second directive mid-file when splitting re-exports from `'use client'`
+// source files; strip duplicates and reorder to:
+//   'use client' → banner → body
+const directive = `'use client';\n`
+const bannerRe = /^\(function\(\)\{[\s\S]*?\}\)\(\)\s*\n/
+const useClientRe = /^['"]use client['"];?\s*/gm
+const ensureRscClientBoundary = (
+  filePath: string,
+  { stampVersion = false }: { stampVersion?: boolean } = {},
+): void => {
+  let current = readFileSync(filePath, 'utf8')
+  const bannerMatch = current.match(bannerRe)
+  if (bannerMatch) {
+    current = current.slice(bannerMatch[0].length)
+  }
+  current = current.replace(useClientRe, '')
+  const banner = stampVersion ? `${versionBanner}\n` : ''
+  writeFileSync(filePath, directive + banner + current)
+}
+
+const ensureVersionStamp = (filePath: string): void => {
+  let current = readFileSync(filePath, 'utf8')
+  const bannerMatch = current.match(bannerRe)
+  if (bannerMatch) {
+    current = current.slice(bannerMatch[0].length)
+  }
+  writeFileSync(filePath, `${versionBanner}\n${current}`)
 }
 
 export default defineConfig([
+  // Bundle — default entry + spatial chunk + eager entry + internal
+  // support subpaths + JSX runtime entries. The JSX runtime reaches the
+  // HOC facade factories only through the external package self-reference
+  // `@webspatial/react-sdk/internal/facades-client`, so even though all
+  // entries are emitted by one tsup config, the JSX runtime's static graph
+  // still terminates at the `'use client'` boundary instead of importing
+  // hook-bearing facade source files directly. Keeping one config also
+  // makes `clean: true` deterministic: dist is cleaned once before all
+  // entries emit, avoiding a race where one config deletes another config's
+  // already-written JSX runtime files.
+  //
+  //   (a) emits `dist/spatial.js` as the dynamic-import target referenced
+  //       by the bridge (`runtime/bridge.ts:loadSpatialImpl`), per spec
+  //       "Spatial implementation MUST live in a dynamically importable
+  //       subpath" Requirement.
+  //   (b) hoists code shared by the default + eager + facade entries
+  //       (notably the facade HOCs and their hook dependencies) into a
+  //       single shared chunk so the eager entry does NOT duplicate code
+  //       the default entry already ships.
+  //   (c) keeps the dynamic `import('../spatial')` literal as a separate
+  //       network request rather than inlining the spatial surface into
+  //       the default entry.
+  //
+  // The entry keys dictate the output filenames (e.g. `internal/facades-client`
+  // → `dist/internal/facades-client.js`), so the `package.json#exports`
+  // mappings stay deterministic.
   {
-    // Web
     ...baseConfig,
-    entry: ['src/index.ts'],
-    format: ['esm'],
-    outDir: 'dist/web',
-    noExternal: ['@webspatial/core-sdk'],
-    banner: {
-      js: banner.web,
+    clean: true,
+    splitting: true,
+    entry: {
+      index: 'src/index.ts',
+      // The eager-mode entry per spec tasks.md §16. Statically links the
+      // spatial implementation so spatial-only consumers pay one network
+      // request instead of two. Lives alongside `index` in the same
+      // `splitting: true` chunk graph so shared utilities collapse into a
+      // common chunk and the eager entry does NOT duplicate code that the
+      // default entry already ships.
+      eager: 'src/eager.ts',
+      // Emitted as its OWN entry (not inlined into `eager.js`) so the eager
+      // mixed-entry registration runs during the import-evaluation phase —
+      // before `eager.js` evaluates its `./spatial` import. If this module
+      // were inlined into `eager.js`, esbuild would hoist all of eager's
+      // imports (including the spatial chunk, which installs polyfills) above
+      // the inlined `registerReactSdkEntry('eager')` call, so a mixed-entry
+      // throw would happen only AFTER the spatial runtime was polluted. As a
+      // standalone entry it is fully evaluated before the sibling spatial
+      // import. Retention is additionally guaranteed by the `sideEffects`
+      // allowlist in package.json.
+      'runtime/registerEagerEntry': 'src/runtime/registerEagerEntry.ts',
+      spatial: 'src/spatial/index.ts',
+      // Internal `'use client'` boundary used by the JSX runtime. It is
+      // emitted in this same splitting graph, but `jsx-shared.ts` reaches
+      // it through the external package self-reference so consumer RSC
+      // compilers stop at this public client boundary instead of walking
+      // into hook-bearing facade modules. `Model` / `Reality`
+      // short-circuiting is handled by primitive markers, not by comparing
+      // facade function identity.
+      'internal/facades-client': 'src/internal/facades-client.ts',
+      'jsx/jsx-runtime': 'src/jsx/jsx-runtime.ts',
+      'jsx/jsx-dev-runtime': 'src/jsx/jsx-dev-runtime.ts',
     },
-    esbuildOptions(options) {
-      options.alias = {
-        '@webspatial/core-sdk': './src/noRuntime.ts',
-      }
-      options.define = {
-        ...options.define,
-        ...versionDefine,
-      }
-      options.resolveExtensions = [
-        '.web.tsx',
-        '.web.ts',
-        '.tsx',
-        '.ts',
-        ...(options.resolveExtensions ?? []),
-      ]
-    },
-  },
-  {
-    // AVP
-    ...baseConfig,
-    entry: ['src/index.ts'],
-    format: ['esm'],
-    outDir: 'dist/default',
-    esbuildOptions(options) {
-      options.define = {
-        ...options.define,
-        ...versionDefine,
-      }
-    },
-    banner: {
-      js: banner.avp,
-    },
-  },
+    outDir: 'dist',
+    onSuccess: async () => {
+      // Per spatial-lazy-load spec "SSR and hydration safety" Requirement
+      // ("Client-component directive" bullet) + tasks.md §13.1: every
+      // public RSC boundary MUST start with `'use client'` so consumer
+      // bundlers (Next.js App Router) treat the imported names as Client
+      // Component references and stop walking before the file's hook
+      // call sites.
+      //
+      // Splitting (`splitting: true`) merges multiple source files into
+      // shared chunks, so esbuild cannot preserve a per-source-file
+      // `'use client'` at chunk boundaries. We therefore inject the
+      // directive at the PUBLIC RSC boundary entry files only —
+      // internal chunks (`dist/chunk-*.js`) are reached transitively,
+      // already inside the client subgraph by the time React's RSC
+      // compiler walks them.
+      //
+      // Negative cases per the same Requirement / spec preamble:
+      //   - `dist/jsx/jsx-runtime.js`, `dist/jsx/jsx-dev-runtime.js`
+      //     do NOT use React hooks and MUST stay server-callable →
+      //     MUST NOT carry the directive
+      //   - `dist/spatial.js` is the dynamic-import target (NOT a static
+      //     RSC entry) → MUST NOT carry the directive
+      // The §13.1 build-output assertion enforces both polarities.
 
-  {
-    // JSX web
-    ...baseConfig,
-    clean: false,
-    external: ['@webspatial/react-sdk'],
-    entry: [
-      // dev
-      'src/jsx/jsx-dev-runtime.web.ts',
-      // prod
-      'src/jsx/jsx-runtime.web.ts',
-    ],
-    format: ['esm'],
-    outDir: 'dist/jsx',
-    esbuildOptions(options) {
-      options.define = {
-        ...options.define,
-        ...versionDefine,
-      }
-    },
-    banner: {
-      js: banner.web,
-    },
-  },
-  {
-    // JSX avp
-    ...baseConfig,
-    clean: false,
-    external: ['@webspatial/react-sdk'],
-    entry: [
-      // dev
-      'src/jsx/jsx-dev-runtime.ts',
-      // prod
-      'src/jsx/jsx-runtime.ts',
-    ],
-    format: ['esm'],
-    outDir: 'dist/jsx',
-    esbuildOptions(options) {
-      options.define = {
-        ...options.define,
-        ...versionDefine,
-      }
-    },
-    banner: {
-      js: banner.avp,
+      // Default entry — RSC client boundary.
+      ensureRscClientBoundary(resolve(__dirname, 'dist/index.js'), {
+        stampVersion: true,
+      })
+      // Eager entry per spec tasks.md §16 — also a public RSC boundary
+      // because consumers may import facade-equivalent symbols + the
+      // `useSpatialReady` stub from a Server Component file. Without
+      // the directive the RSC compiler would attempt server execution
+      // of the underlying hook code and fail at the first hook call.
+      ensureRscClientBoundary(resolve(__dirname, 'dist/eager.js'), {
+        stampVersion: true,
+      })
+      // Spatial entry — no RSC directive (dynamic-import target), but it
+      // still stamps the version when spatial/eager consumers load the real
+      // implementation directly.
+      ensureVersionStamp(resolve(__dirname, 'dist/spatial.js'))
+      // Internal facade boundary — the entire point of this entry is to
+      // be a `'use client'` stop for the JSX runtime (see
+      // `src/internal/facades-client.ts` and the `externals` list above).
+      ensureRscClientBoundary(
+        resolve(__dirname, 'dist/internal/facades-client.js'),
+      )
     },
   },
 ])
