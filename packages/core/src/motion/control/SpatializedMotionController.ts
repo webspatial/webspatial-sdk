@@ -1,8 +1,11 @@
-import { supports } from '../../runtime/supports'
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 import type { SpatializedMotionHandle } from './SpatializedMotionHandle'
 import { MOTION_KIND_POLICIES, type MotionKindPolicy } from './motionKindPolicy'
 import type { MotionHost } from './MotionHost'
+import {
+  resolverFromOptions,
+  type CapabilityResolver,
+} from './CapabilityResolver'
 import { WebPlaybackBackend } from './WebPlaybackBackend'
 import { NativePlaybackBackend } from './NativePlaybackBackend'
 import { Sampler } from './Sampler'
@@ -83,8 +86,7 @@ export class SpatializedMotionController
   private warnedNativeOnly = false
   private destroyed = false
   private pendingPlay = false
-  private readonly forceNativePlayback?: boolean
-  private readonly supportsMotionKind?: (kind: SpatializedMotionKind) => boolean
+  private readonly capability: CapabilityResolver
 
   constructor(
     config: SpatializedMotionConfig,
@@ -106,8 +108,7 @@ export class SpatializedMotionController
           : MOTION_KIND_POLICIES.spatialized2d.motionObjectIdPrefix,
     )
     this.element = resolvedOptions.element ?? null
-    this.forceNativePlayback = resolvedOptions.forceNativePlayback
-    this.supportsMotionKind = resolvedOptions.supportsMotionKind
+    this.capability = resolverFromOptions(resolvedOptions)
     this.onValuesChange = resolvedOptions.onValuesChange
     this.onStateChange = resolvedOptions.onStateChange
 
@@ -208,42 +209,54 @@ export class SpatializedMotionController
     this.native.detach({ cancelSession: true })
   }
 
-  get playState(): SpatializedMotionPlayState {
-    if (!this.kind) {
-      if (this.pendingPlay) return 'queued'
-      return this.web.state
+  /**
+   * Single source of truth for the merged playback state. Both backends are
+   * read here once; the four public getters derive purely from this snapshot.
+   */
+  private resolveState(): {
+    hasKind: boolean
+    pendingPlay: boolean
+    web: SpatializedMotionPlayState
+    webFinished: boolean
+    native: SpatializedMotionPlayState | undefined
+    hasFrozen: boolean
+  } {
+    const hasKind = !!this.kind
+    return {
+      hasKind,
+      pendingPlay: this.pendingPlay,
+      web: this.web.state,
+      webFinished: this.web.finished,
+      native: hasKind ? this.native.sessionState : undefined,
+      hasFrozen: this.sampler.hasFrozen,
     }
+  }
 
-    const s = this.native.sessionState
-    if (s === 'queued') return 'running'
-    if (s && s !== 'idle') return s
-    return this.web.state
+  get playState(): SpatializedMotionPlayState {
+    const { hasKind, pendingPlay, web, native } = this.resolveState()
+    if (!hasKind) return pendingPlay ? 'queued' : web
+    if (native === 'queued') return 'running'
+    if (native && native !== 'idle') return native
+    return web
   }
 
   get isAnimating(): boolean {
-    if (!this.kind) {
-      return this.pendingPlay || this.web.state === 'running'
-    }
-    const s = this.native.sessionState
-    if (s === 'running' || s === 'queued') return true
-    return this.web.state === 'running' || this.web.state === 'queued'
+    const { hasKind, pendingPlay, web, native } = this.resolveState()
+    if (!hasKind) return pendingPlay || web === 'running'
+    if (native === 'running' || native === 'queued') return true
+    return web === 'running' || web === 'queued'
   }
 
   get isPaused(): boolean {
-    if (this.kind && this.native.sessionState === 'paused') {
-      return true
-    }
-    return (
-      this.web.state === 'paused' ||
-      (this.web.state === 'running' && this.sampler.hasFrozen)
-    )
+    const { hasKind, web, native, hasFrozen } = this.resolveState()
+    if (hasKind && native === 'paused') return true
+    return web === 'paused' || (web === 'running' && hasFrozen)
   }
 
   get finished(): boolean {
-    if (this.kind && this.native.sessionState === 'finished') {
-      return true
-    }
-    return this.web.finished
+    const { hasKind, webFinished, native } = this.resolveState()
+    if (hasKind && native === 'finished') return true
+    return webFinished
   }
 
   /** Fields to suppress on the Portal while native drives playback. */
@@ -384,14 +397,7 @@ export class SpatializedMotionController
 
   private get nativeCapable(): boolean {
     if (!this.kind) return false
-    if (this.forceNativePlayback !== undefined) {
-      return this.forceNativePlayback
-    }
-    if (this.supportsMotionKind) {
-      return this.supportsMotionKind(this.kind)
-    }
-    const token = this.kind === 'spatialized2d' ? 'element' : this.kind
-    return supports('useAnimation', [token])
+    return this.capability.supports(this.kind)
   }
 
   private bump(): void {
