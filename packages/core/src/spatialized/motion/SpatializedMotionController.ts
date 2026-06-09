@@ -10,7 +10,6 @@ import {
   type MotionHostElement,
 } from './motionElementBridge'
 import { MOTION_KIND_POLICIES, type MotionKindPolicy } from './motionKindPolicy'
-import { warnNativeOnlyMotion } from './nativeOnlyMotion'
 import type { SpatializedPlaybackError } from '../../types/spatializedPlayback'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
@@ -79,6 +78,8 @@ function getPolicy(kind: SpatializedMotionKind | null): MotionKindPolicy {
       return MOTION_KIND_POLICIES.spatialized2d
   }
 }
+
+const CONTROLLER_LABEL = 'SpatializedMotionController'
 
 /**
  * Runtime controller for a spatialized element motion timeline.
@@ -177,7 +178,7 @@ export class SpatializedMotionController
     if (targetKind) {
       if (this.kind && this.kind !== targetKind) {
         console.warn(
-          `[${getPolicy(this.kind).controllerLabel}] motion binding already resolved to ${this.kind}; ignoring ${targetKind}.`,
+          `[${CONTROLLER_LABEL}] motion binding already resolved to ${this.kind}; ignoring ${targetKind}.`,
         )
         return
       }
@@ -188,7 +189,7 @@ export class SpatializedMotionController
 
     if (element && this.element && this.element !== element) {
       console.warn(
-        `[${getPolicy(this.kind).controllerLabel}] motion binding already attached to another component; ignoring subsequent bind.`,
+        `[${CONTROLLER_LABEL}] motion binding already attached to another component; ignoring subsequent bind.`,
       )
       return
     }
@@ -304,7 +305,9 @@ export class SpatializedMotionController
       if (policy.webPlayback === 'none') {
         if (!this.warnedNativeOnly) {
           this.warnedNativeOnly = true
-          warnNativeOnlyMotion(policy.controllerLabel, this.kind)
+          console.warn(
+            `[${CONTROLLER_LABEL}] Declarative motion requires native runtime (supports('useAnimation', ['${this.kind}'])). Web playback is not supported for this element kind.`,
+          )
         }
         this.webState = 'queued'
         this.bump()
@@ -696,10 +699,7 @@ export class SpatializedMotionController
     if (cfg.onError) {
       cfg.onError(error as SpatializedPlaybackError)
     } else {
-      console.error(
-        `[${getPolicy(this.kind).controllerLabel}] Native error:`,
-        error,
-      )
+      console.error(`[${CONTROLLER_LABEL}] Native error:`, error)
     }
   }
 
@@ -793,7 +793,7 @@ export class SpatializedMotionController
       if (!this.warnedNative) {
         this.warnedNative = true
         console.warn(
-          `[${getPolicy(this.kind).controllerLabel}] Native motion requires supports(useAnimation, ['${this.kind === 'spatialized2d' ? 'element' : this.kind}']).`,
+          `[${CONTROLLER_LABEL}] Native motion requires supports(useAnimation, ['${this.kind === 'spatialized2d' ? 'element' : this.kind}']).`,
         )
       }
       return
@@ -846,7 +846,7 @@ export class SpatializedMotionController
       if (!this.warnedQueued) {
         this.warnedQueued = true
         console.warn(
-          `[${getPolicy(this.kind).controllerLabel}] Native play is queued until attachElement / motion bind.`,
+          `[${CONTROLLER_LABEL}] Native play is queued until attachElement / motion bind.`,
         )
       }
       this.bump()
@@ -863,7 +863,7 @@ export class SpatializedMotionController
     const properties = normalizeMotionPropertyKeys(keys)
     if (properties && properties.length > 0) {
       console.warn(
-        `[${getPolicy(this.kind).controllerLabel}] Selective native pause is not yet supported; pausing entire session.`,
+        `[${CONTROLLER_LABEL}] Selective native pause is not yet supported; pausing entire session.`,
       )
     }
 
