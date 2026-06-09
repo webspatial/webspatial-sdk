@@ -13,6 +13,7 @@ function App() {
   const [playbackRate, setPlaybackRate] = useState(1.0)
   const [loop, setLoop] = useState(true)
   const [loading, setLoading] = useState<'eager' | 'lazy'>('eager')
+  const [isOrbit, setIsOrbit] = useState(true)
   useEffect(() => {
     modelRef
       .current!.ready?.then(() => logLine('ref.current.ready success'))
@@ -37,6 +38,7 @@ function App() {
         enable-xr
         autoPlay={false}
         loop={loop}
+        stagemode={isOrbit ? 'orbit' : 'none'}
         style={{
           height: '200px',
           '--xr-depth': '100px',
@@ -138,6 +140,15 @@ function App() {
           />
           <span className="label-text m-1">Eager</span>
         </label>
+        <label className="inline-flex items-center align-middle">
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={isOrbit}
+            onChange={() => setIsOrbit(!isOrbit)}
+          />
+          <span className="label-text m-1">Orbit</span>
+        </label>
         <select
           className="select m-1"
           value={playbackRate}
@@ -165,6 +176,7 @@ function App() {
         enable-xr
         autoPlay
         loading={loading}
+        stagemode="orbit"
         style={{
           height: '200px',
           '--xr-depth': '100px',

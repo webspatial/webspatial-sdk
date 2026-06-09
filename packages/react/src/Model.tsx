@@ -41,6 +41,23 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
     return <model ref={ref} {...modelProps} />
   }
 
+  // In orbit mode the native layer drives the model's transform, so the
+  // `onSpatial*` gesture handlers are disabled.
+  if (restProps.stagemode === 'orbit') {
+    const {
+      onSpatialTap,
+      onSpatialDragStart,
+      onSpatialDrag,
+      onSpatialDragEnd,
+      onSpatialRotate,
+      onSpatialRotateEnd,
+      onSpatialMagnify,
+      onSpatialMagnifyEnd,
+      ...orbitProps
+    } = restProps
+    return <SpatializedStatic3DElementContainer ref={ref} {...orbitProps} />
+  }
+
   return <SpatializedStatic3DElementContainer ref={ref} {...restProps} />
 }
 
