@@ -22,7 +22,8 @@ export default function EntityAnimationPlayStatePage() {
     },
     to: {
       position: { x: 0.2, y: 0, z: 0 },
-      scale: { x: -1, y: 1, z: 1 },
+      // Keep scale values non-negative to satisfy useAnimation validation.
+      scale: { x: 1, y: 1, z: 1 },
     },
     duration: 4.0,
     timingFunction: 'easeInOut',
