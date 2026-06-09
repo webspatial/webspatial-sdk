@@ -11,6 +11,7 @@ import type {
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 import type { SpatializedMotionHandle } from './SpatializedMotionHandle'
 import { MOTION_KIND_POLICIES, type MotionKindPolicy } from './motionKindPolicy'
+import { WebPlaybackBackend } from './WebPlaybackBackend'
 import type { SpatializedPlaybackError } from '../../types/spatializedPlayback'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
@@ -22,7 +23,6 @@ import type {
   SpatializedMotionTimeline,
 } from '../../types/spatializedMotion'
 import { evaluateMotionTimeline } from '../compute/sample'
-import { applyFrozenProperties, snapshotScalars } from '../compute/scalarValues'
 import { motionConfigToNativeTimeline } from '../compute/nativeTimeline'
 import { motionTimeSec } from '../compute/timing'
 import { normalizeMotionPropertyKeys } from '../compute/propertyKeys'
@@ -99,7 +99,12 @@ const CONTROLLER_LABEL = 'SpatializedMotionController'
 
 /**
  * Runtime controller for a spatialized element motion timeline.
- * Implements react-spring-style selective `pause(['opacity'])` on the Web backend.
+ *
+ * Acts as a Facade over two interchangeable playback strategies: the
+ * raf-driven {@link WebPlaybackBackend} (extracted) and the native session
+ * state machine (still inline, extracted in a later step). The controller
+ * selects a backend at runtime via {@link nativeCapable}, delegates the six
+ * playback verbs and aggregates state for the public API.
  */
 export class SpatializedMotionController
   implements SpatializedPlaybackApi, SpatializedMotionHandle
@@ -112,19 +117,8 @@ export class SpatializedMotionController
   private readonly onValuesChange?: (values: SpatializedVisualValues) => void
   private readonly onStateChange?: () => void
 
-  private webState: SpatializedMotionPlayState = 'idle'
-  private webFinished = false
-  private webStarted = false
-  private rafId: number | null = null
-  private startWallMs = 0
-  private pausedElapsedMs = 0
-  /** Full timeline pause (clock stopped). */
-  private fullPause = false
-  /** Per-property freeze while clock may still run. */
-  private readonly frozenByProperty = new Map<
-    SpatializedMotionProperty,
-    SpatializedVisualValues
-  >()
+  /** raf-driven web playback strategy. */
+  private readonly web: WebPlaybackBackend
 
   private nativeSession: NativeSession | null = null
   private nativeControlling = false
@@ -164,6 +158,16 @@ export class SpatializedMotionController
     this.supportsMotionKind = resolvedOptions.supportsMotionKind
     this.onValuesChange = resolvedOptions.onValuesChange
     this.onStateChange = resolvedOptions.onStateChange
+    this.web = new WebPlaybackBackend({
+      getConfig: () => this.config,
+      emitValues: values => this.emitValues(values),
+      notifyStateChange: () => this.bump(),
+      isDestroyed: () => this.destroyed,
+      isPendingPlay: () => this.pendingPlay,
+      clearPendingPlay: () => {
+        this.pendingPlay = false
+      },
+    })
     this.emitValues(evaluateMotionTimeline(config, 0))
   }
 
@@ -224,29 +228,29 @@ export class SpatializedMotionController
   destroy(): void {
     this.destroyed = true
     this.pendingPlay = false
-    this.stopWebRaf()
+    this.web.stopRaf()
     this.detachNative({ cancelSession: true })
   }
 
   get playState(): SpatializedMotionPlayState {
     if (!this.kind) {
       if (this.pendingPlay) return 'queued'
-      return this.webState
+      return this.web.state
     }
 
     const s = this.nativeSession?.state
     if (s === 'queued') return 'running'
     if (s && s !== 'idle') return s
-    return this.webState
+    return this.web.state
   }
 
   get isAnimating(): boolean {
     if (!this.kind) {
-      return this.pendingPlay || this.webState === 'running'
+      return this.pendingPlay || this.web.state === 'running'
     }
     const s = this.nativeSession?.state
     if (s === 'running' || s === 'queued') return true
-    return this.webState === 'running' || this.webState === 'queued'
+    return this.web.state === 'running' || this.web.state === 'queued'
   }
 
   get isPaused(): boolean {
@@ -254,8 +258,8 @@ export class SpatializedMotionController
       return true
     }
     return (
-      this.webState === 'paused' ||
-      (this.webState === 'running' && this.frozenByProperty.size > 0)
+      this.web.state === 'paused' ||
+      (this.web.state === 'running' && this.web.hasFrozen)
     )
   }
 
@@ -263,7 +267,7 @@ export class SpatializedMotionController
     if (this.kind && this.nativeSession?.state === 'finished') {
       return true
     }
-    return this.webFinished
+    return this.web.finished
   }
 
   /** Fields to suppress on the Portal while native drives playback. */
@@ -283,7 +287,7 @@ export class SpatializedMotionController
       if (nativeState !== 'running' && nativeState !== 'paused') {
         return null
       }
-      const active = this.getActiveProperties()
+      const active = this.web.getActiveProperties()
       const subset = this.config.tracks.filter(t => active.includes(t.property))
       if (subset.length === 0) return null
       return getPolicy(this.kind).getSuppressedFields({
@@ -293,7 +297,7 @@ export class SpatializedMotionController
     }
     const s = this.nativeSession?.state
     if (!s || (s !== 'running' && s !== 'paused')) return null
-    const active = this.getActiveProperties()
+    const active = this.web.getActiveProperties()
     const subset = this.config.tracks.filter(t => active.includes(t.property))
     if (subset.length === 0) return null
     return getPolicy(this.kind).getSuppressedFields({
@@ -307,9 +311,7 @@ export class SpatializedMotionController
     if (!this.kind) {
       if (!this.pendingPlay) {
         this.pendingPlay = true
-        this.webState = 'queued'
-        this.webFinished = false
-        this.bump()
+        this.web.markQueued(true)
       }
       return
     }
@@ -325,15 +327,14 @@ export class SpatializedMotionController
             `[${CONTROLLER_LABEL}] Declarative motion requires native runtime (supports('useAnimation', ['${this.kind}'])). Web playback is not supported for this element kind.`,
           )
         }
-        this.webState = 'queued'
-        this.bump()
+        this.web.markQueued()
         return
       }
-      this.webPlay()
+      this.web.play()
       return
     }
 
-    this.stopWebRaf()
+    this.web.stopRaf()
     const sessionState = this.nativeSession?.state
     if (
       !sessionState ||
@@ -351,7 +352,7 @@ export class SpatializedMotionController
   pause(keys?: SpatializedMotionPropertyKeys): void {
     if (!this.kind) return
     if (!this.nativeCapable) {
-      if (getPolicy(this.kind).webPlayback === 'raf') this.webPause(keys)
+      if (getPolicy(this.kind).webPlayback === 'raf') this.web.pause(keys)
       return
     }
     const ns = this.nativeSession?.state
@@ -364,7 +365,7 @@ export class SpatializedMotionController
     if (!this.kind) return
     if (!this.nativeCapable) {
       if (getPolicy(this.kind).webPlayback === 'raf') {
-        this.webResume(normalizeMotionPropertyKeys(keys))
+        this.web.resume(normalizeMotionPropertyKeys(keys))
       }
       return
     }
@@ -377,17 +378,17 @@ export class SpatializedMotionController
   stop(): void {
     if (this.destroyed) return
     if (!this.kind) {
-      this.webStop()
+      this.web.stop()
       return
     }
 
     if (!this.nativeCapable) {
       if (getPolicy(this.kind).webPlayback === 'raf') {
-        this.webStop()
+        this.web.stop()
         return
       }
-      if (this.webState === 'queued' || this.pendingPlay) {
-        this.webStop()
+      if (this.web.state === 'queued' || this.pendingPlay) {
+        this.web.stop()
       }
       return
     }
@@ -403,16 +404,16 @@ export class SpatializedMotionController
   reset(): void {
     if (this.destroyed) return
     if (!this.kind) {
-      this.webReset()
+      this.web.reset()
       return
     }
 
     if (!this.nativeCapable) {
       if (getPolicy(this.kind).webPlayback === 'raf') {
-        this.webReset()
+        this.web.reset()
         return
       }
-      this.webReset()
+      this.web.reset()
       return
     }
 
@@ -422,22 +423,22 @@ export class SpatializedMotionController
       return
     }
     this.nativePlayToken++
-    this.webReset()
+    this.web.reset()
   }
 
   finish(): void {
     if (this.destroyed) return
     if (!this.kind) {
-      this.webFinish()
+      this.web.finish()
       return
     }
 
     if (!this.nativeCapable) {
       if (getPolicy(this.kind).webPlayback === 'raf') {
-        this.webFinish()
+        this.web.finish()
         return
       }
-      this.webFinish()
+      this.web.finish()
       return
     }
 
@@ -448,7 +449,7 @@ export class SpatializedMotionController
     }
     if (!ns || ns === 'idle') {
       this.nativePlayToken++
-      this.webFinish()
+      this.web.finish()
     }
   }
 
@@ -470,220 +471,6 @@ export class SpatializedMotionController
 
   private emitValues(values: SpatializedVisualValues): void {
     this.onValuesChange?.(values)
-  }
-
-  private getActiveProperties(): SpatializedMotionProperty[] {
-    const all = this.config.tracks.map(t => t.property)
-    if (this.frozenByProperty.size === 0) return all
-    return all.filter(p => !this.frozenByProperty.has(p))
-  }
-
-  private sampleAt(timeSec: number): SpatializedVisualValues {
-    let values = evaluateMotionTimeline(this.config, timeSec)
-    for (const property of this.frozenByProperty.keys()) {
-      const snap = this.frozenByProperty.get(property)!
-      values = applyFrozenProperties(values, snap, [property])
-    }
-    return values
-  }
-
-  private stopWebRaf(): void {
-    if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId)
-      this.rafId = null
-    }
-  }
-
-  private webPlay(): void {
-    if (this.webState === 'running' && !this.fullPause) return
-
-    if (this.webState === 'paused' || this.fullPause) {
-      this.startWallMs = performance.now() - this.pausedElapsedMs
-      this.fullPause = false
-      this.webState = 'running'
-      this.bump()
-      this.scheduleWebFrame()
-      return
-    }
-
-    if (this.webState === 'finished') {
-      this.webFinished = false
-    }
-
-    if (!this.webStarted) {
-      this.webStarted = true
-      this.config.onStart?.()
-    }
-
-    this.startWallMs = performance.now()
-    this.pausedElapsedMs = 0
-    this.fullPause = false
-    this.webState = 'running'
-    this.bump()
-    this.stopWebRaf()
-    this.scheduleWebFrame()
-  }
-
-  private webPause(keys?: SpatializedMotionPropertyKeys): void {
-    const normalized = normalizeMotionPropertyKeys(keys)
-
-    if (normalized === null) {
-      if (this.webState !== 'running') return
-      this.pausedElapsedMs = performance.now() - this.startWallMs
-      this.fullPause = true
-      this.webState = 'paused'
-      this.stopWebRaf()
-      this.emitValues(
-        this.sampleAt(motionTimeSec(this.pausedElapsedMs, this.config)),
-      )
-      this.bump()
-      return
-    }
-
-    if (this.webState !== 'running' && this.webState !== 'paused') return
-    const t =
-      this.webState === 'paused' && this.fullPause
-        ? motionTimeSec(this.pausedElapsedMs, this.config)
-        : motionTimeSec(performance.now() - this.startWallMs, this.config)
-    const current = this.sampleAt(t)
-    for (const property of normalized) {
-      this.frozenByProperty.set(property, snapshotScalars(current, [property]))
-    }
-    if (this.webState === 'paused' && this.fullPause) {
-      this.fullPause = false
-      this.webState = 'running'
-      this.startWallMs = performance.now() - this.pausedElapsedMs
-      this.scheduleWebFrame()
-    }
-    this.emitValues(this.sampleAt(t))
-    this.bump()
-  }
-
-  private webResume(keys: SpatializedMotionProperty[] | null): void {
-    if (keys === null) {
-      if (this.webState === 'paused' && this.fullPause) {
-        this.webPlay()
-        return
-      }
-      if (this.frozenByProperty.size > 0) {
-        this.frozenByProperty.clear()
-        this.bump()
-        if (this.webState === 'running') this.scheduleWebFrame()
-      }
-      return
-    }
-
-    for (const property of keys) {
-      this.frozenByProperty.delete(property)
-    }
-    this.bump()
-    if (this.webState === 'running') this.scheduleWebFrame()
-    else if (this.webState === 'paused' && this.fullPause) this.webPlay()
-  }
-
-  private webReset(): void {
-    this.stopWebRaf()
-    this.frozenByProperty.clear()
-    this.fullPause = false
-    this.pendingPlay = false
-    const values = evaluateMotionTimeline(this.config, 0)
-    this.emitValues(values)
-    this.webState = 'idle'
-    this.webFinished = false
-    this.webStarted = false
-    this.pausedElapsedMs = 0
-    this.bump()
-    this.config.onReset?.(values)
-  }
-
-  private webStop(): void {
-    if (this.webState === 'idle' && !this.pendingPlay) return
-    this.stopWebRaf()
-    const wasRunning = this.webState === 'running' || this.webState === 'paused'
-    const wasQueued = this.webState === 'queued' || this.pendingPlay
-    if (!wasRunning && wasQueued) {
-      this.frozenByProperty.clear()
-      this.fullPause = false
-      this.pendingPlay = false
-      this.webState = 'idle'
-      this.webFinished = false
-      this.webStarted = false
-      this.pausedElapsedMs = 0
-      this.bump()
-      return
-    }
-    if (!wasRunning) {
-      return
-    }
-    const wasFullPause = this.fullPause
-    const elapsedAtStop =
-      this.webState === 'queued'
-        ? 0
-        : wasFullPause
-          ? this.pausedElapsedMs
-          : this.pausedElapsedMs > 0
-            ? this.pausedElapsedMs
-            : performance.now() - this.startWallMs
-    this.frozenByProperty.clear()
-    this.fullPause = false
-    this.pendingPlay = false
-    const values = this.sampleAt(motionTimeSec(elapsedAtStop, this.config))
-    this.emitValues(values)
-    this.webState = 'idle'
-    this.webFinished = false
-    this.webStarted = false
-    this.pausedElapsedMs = 0
-    this.bump()
-    this.config.onStop?.(values)
-  }
-
-  private webFinish(): void {
-    this.stopWebRaf()
-    this.frozenByProperty.clear()
-    this.fullPause = false
-    this.pendingPlay = false
-    const values = evaluateMotionTimeline(this.config, this.config.duration)
-    this.emitValues(values)
-    this.webState = 'finished'
-    this.webFinished = true
-    this.webStarted = false
-    this.pausedElapsedMs = 0
-    this.bump()
-    this.config.onComplete?.(values)
-  }
-
-  private scheduleWebFrame(): void {
-    this.stopWebRaf()
-    this.rafId = requestAnimationFrame(() => this.webFrame())
-  }
-
-  private webFrame(): void {
-    if (this.webState !== 'running' || this.destroyed) return
-
-    const elapsed = performance.now() - this.startWallMs
-    const t = motionTimeSec(elapsed, this.config)
-
-    if (t >= this.config.duration) {
-      const values = this.sampleAt(this.config.duration)
-      this.emitValues(values)
-      if (this.config.loop) {
-        this.startWallMs = performance.now()
-        this.pausedElapsedMs = 0
-        this.emitValues(this.sampleAt(0))
-        this.scheduleWebFrame()
-        return
-      }
-      this.stopWebRaf()
-      this.webState = 'finished'
-      this.webFinished = true
-      this.webStarted = false
-      this.bump()
-      this.config.onComplete?.(values)
-      return
-    }
-
-    this.emitValues(this.sampleAt(t))
-    this.scheduleWebFrame()
   }
 
   private enqueueNative(fn: () => Promise<void>): void {
@@ -1018,7 +805,7 @@ export class SpatializedMotionController
     if (!session || session.state === 'idle' || session.state === 'finished')
       return
 
-    const currentValues = this.sampleAt(
+    const currentValues = this.web.sampleAt(
       motionTimeSec(
         session.state === 'queued'
           ? 0
