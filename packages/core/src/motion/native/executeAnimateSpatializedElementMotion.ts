@@ -1,5 +1,6 @@
 import { AnimateSpatializedElementMotionJSBCommand } from '../../JSBCommand'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
+import { removeMotionEventReceivers } from './motionEventReceivers'
 import { parseSpatializedVisualValues } from './parseSpatializedVisualValues'
 import type {
   AnimateSpatializedElementMotionCommand,
@@ -39,11 +40,7 @@ export async function executeAnimateSpatializedElementMotion(
       resolveFailed = r
     })
 
-    const cleanup = () => {
-      SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
-      SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
-      SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
-    }
+    const cleanup = () => removeMotionEventReceivers(animationId)
 
     SpatialWebEvent.addEventReceiver(
       `${animationId}_completed`,
