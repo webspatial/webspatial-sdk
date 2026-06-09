@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { motionConfigToNativeTimeline } from './nativeCompile'
+import { motionConfigToNativeTimeline } from '@webspatial/core-sdk'
 
 describe('motionConfigToNativeTimeline', () => {
   test('builds timeline payload for multi-track', () => {

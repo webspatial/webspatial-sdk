@@ -11,9 +11,11 @@ export {
   evaluateMotionTimeline,
   validateSpatializedMotionConfig,
   segmentConfigToMotionConfig,
-} from '../../../../core/src/spatialized/motion'
-export type { SpatializedMotionHandle } from '@webspatial/core-sdk'
+} from '@webspatial/core-sdk'
+export type {
+  SpatializedMotionHandle,
+  Static3DMotionBindingInternal,
+  Dynamic3DMotionBindingInternal,
+} from '@webspatial/core-sdk'
 export { valuesToMotionStyle } from './style'
 export type { SpatializedMotionBindingInternal } from './motionBindingTypes'
-export type { Static3DMotionBindingInternal } from './static3dMotionBindingTypes'
-export type { Dynamic3DMotionBindingInternal } from './dynamic3dMotionBindingTypes'
