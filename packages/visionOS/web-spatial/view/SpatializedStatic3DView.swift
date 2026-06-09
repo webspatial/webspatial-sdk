@@ -232,7 +232,7 @@ struct SpatializedStatic3DView: View {
                     orbitState.captureBase(from: spatializedStatic3DElement.entityTransform)
                 }
                 let yaw = orbitState.dragStartYaw + Double(value.translation.width) * orbitDragSensitivity
-                let rawPitch = Double(value.translation.height) * orbitDragSensitivity
+                let rawPitch = -Double(value.translation.height) * orbitDragSensitivity
                 orbitState.accumulatedYaw = yaw
                 orbitState.currentPitch = elasticClamp(rawPitch, limit: orbitMaxPitch)
                 applyOrbit()
@@ -294,15 +294,18 @@ final class OrbitState {
 }
 
 private extension AffineTransform3D {
-    /// Column-major flattening matching the format JS uses when sending the
-    /// matrix into native via `UpdateSpatializedStatic3DElementProperties`.
+    /// Column-major 16-element flattening matching the format JS uses when
+    /// sending the matrix into native via
+    /// `UpdateSpatializedStatic3DElementProperties`. `AffineTransform3D.matrix`
+    /// only stores the upper 3 rows; the implicit `[0, 0, 0, 1]` bottom row
+    /// is re-introduced here.
     var columnMajorArray: [Double] {
-        let c = matrix4x4.columns
+        let c = matrix.columns
         return [
-            c.0.x, c.0.y, c.0.z, c.0.w,
-            c.1.x, c.1.y, c.1.z, c.1.w,
-            c.2.x, c.2.y, c.2.z, c.2.w,
-            c.3.x, c.3.y, c.3.z, c.3.w,
+            c.0.x, c.0.y, c.0.z, 0,
+            c.1.x, c.1.y, c.1.z, 0,
+            c.2.x, c.2.y, c.2.z, 0,
+            c.3.x, c.3.y, c.3.z, 1,
         ]
     }
 }
