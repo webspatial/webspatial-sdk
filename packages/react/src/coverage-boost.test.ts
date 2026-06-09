@@ -1809,10 +1809,12 @@ describe('SpatializedStatic3DElementContainer', () => {
     }))
 
     const updateProperties = vi.fn()
-    const updateModelTransform = vi.fn()
+    const setEntityTransform = vi.fn()
     const spatializedStatic3DElement: any = {
       updateProperties,
-      updateModelTransform,
+      set entityTransform(value: unknown) {
+        setEntityTransform(value)
+      },
       ready: Promise.resolve(true),
       currentSrc: window.location.origin + '/resolved.usdz',
       onLoadCallback: undefined,
@@ -1904,6 +1906,7 @@ describe('SpatializedStatic3DElementContainer', () => {
       loop: undefined,
       posterURL: '',
       loading: 'eager',
+      stagemode: 'none',
     })
 
     spatializedStatic3DElement.onLoadCallback?.()
@@ -1920,8 +1923,8 @@ describe('SpatializedStatic3DElementContainer', () => {
     const m = extra.entityTransform
     ;(m as any).m11 = 2
     extra.entityTransform = m
-    expect(updateModelTransform).toHaveBeenCalledTimes(1)
-    expect(updateModelTransform).toHaveBeenCalledWith(expect.any(DOMMatrix))
+    expect(setEntityTransform).toHaveBeenCalledTimes(1)
+    expect(setEntityTransform).toHaveBeenCalledWith(expect.any(DOMMatrix))
     expect((domProxy as any).entityTransform).toBeUndefined()
     ;(globalThis as any).requestAnimationFrame = originalRAF
   })
@@ -1937,7 +1940,6 @@ describe('SpatializedStatic3DElementContainer', () => {
 
     const spatializedStatic3DElement: any = {
       updateProperties: vi.fn(),
-      updateModelTransform: vi.fn(),
       ready: Promise.resolve(false),
     }
     const createSpatializedStatic3DElement = vi
