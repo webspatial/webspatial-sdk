@@ -696,11 +696,3 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     }
   }
 }
-
-// TODO: Can crypto.randomUUID be used instead including in dev environments without https
-function uuid(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = (Math.random() * 16) | 0
-    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
-  })
-}
