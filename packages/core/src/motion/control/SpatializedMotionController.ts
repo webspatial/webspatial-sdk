@@ -40,18 +40,6 @@ function nextMotionObjectId(prefix: string): string {
   return `${prefix}${++_motionObjectCounter}_${Date.now()}`
 }
 
-function getPolicy(kind: SpatializedMotionKind | null): MotionKindPolicy {
-  switch (kind) {
-    case 'static3d':
-      return MOTION_KIND_POLICIES.static3d
-    case 'dynamic3d':
-      return MOTION_KIND_POLICIES.dynamic3d
-    case 'spatialized2d':
-    default:
-      return MOTION_KIND_POLICIES.spatialized2d
-  }
-}
-
 const CONTROLLER_LABEL = 'SpatializedMotionController'
 
 /**
@@ -101,11 +89,7 @@ export class SpatializedMotionController
     this.kind = kind ?? null
     this.config = config
     this.id = nextMotionObjectId(
-      this.kind === 'static3d'
-        ? MOTION_KIND_POLICIES.static3d.motionObjectIdPrefix
-        : this.kind === 'dynamic3d'
-          ? MOTION_KIND_POLICIES.dynamic3d.motionObjectIdPrefix
-          : MOTION_KIND_POLICIES.spatialized2d.motionObjectIdPrefix,
+      MOTION_KIND_POLICIES[this.kind ?? 'spatialized2d'].motionObjectIdPrefix,
     )
     this.element = resolvedOptions.element ?? null
     this.capability = resolverFromOptions(resolvedOptions)
@@ -279,7 +263,7 @@ export class SpatializedMotionController
       const active = this.sampler.getActiveProperties()
       const subset = this.config.tracks.filter(t => active.includes(t.property))
       if (subset.length === 0) return null
-      return getPolicy(this.kind).getSuppressedFields({
+      return this.policy.getSuppressedFields({
         ...this.config,
         tracks: subset,
       })
@@ -289,7 +273,7 @@ export class SpatializedMotionController
     const active = this.sampler.getActiveProperties()
     const subset = this.config.tracks.filter(t => active.includes(t.property))
     if (subset.length === 0) return null
-    return getPolicy(this.kind).getSuppressedFields({
+    return this.policy.getSuppressedFields({
       ...this.config,
       tracks: subset,
     })
@@ -307,9 +291,8 @@ export class SpatializedMotionController
 
     this.pendingPlay = false
 
-    const policy = getPolicy(this.kind)
     if (!this.nativeCapable) {
-      if (policy.webPlayback === 'none') {
+      if (!this.webDriven) {
         if (!this.warnedNativeOnly) {
           this.warnedNativeOnly = true
           console.warn(
@@ -329,7 +312,7 @@ export class SpatializedMotionController
   pause(keys?: SpatializedMotionPropertyKeys): void {
     if (!this.kind) return
     if (!this.nativeCapable) {
-      if (getPolicy(this.kind).webPlayback === 'raf') this.web.pause(keys)
+      if (this.webDriven) this.web.pause(keys)
       return
     }
     this.native.pause(keys)
@@ -338,7 +321,7 @@ export class SpatializedMotionController
   resume(keys?: SpatializedMotionPropertyKeys): void {
     if (!this.kind) return
     if (!this.nativeCapable) {
-      if (getPolicy(this.kind).webPlayback === 'raf') this.web.resume(keys)
+      if (this.webDriven) this.web.resume(keys)
       return
     }
     this.native.resume(keys)
@@ -352,7 +335,7 @@ export class SpatializedMotionController
     }
 
     if (!this.nativeCapable) {
-      if (getPolicy(this.kind).webPlayback === 'raf') {
+      if (this.webDriven) {
         this.web.stop()
         return
       }
@@ -393,6 +376,16 @@ export class SpatializedMotionController
     }
 
     this.native.finish()
+  }
+
+  /** Policy for the current kind (defaults to spatialized2d when unbound). */
+  private get policy(): MotionKindPolicy {
+    return MOTION_KIND_POLICIES[this.kind ?? 'spatialized2d']
+  }
+
+  /** Whether the current kind is driven by the raf web backend. */
+  private get webDriven(): boolean {
+    return this.policy.webPlayback === 'raf'
   }
 
   private get nativeCapable(): boolean {

@@ -1,4 +1,3 @@
-import { SpatialWebEvent } from '../../SpatialWebEvent'
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
@@ -19,6 +18,7 @@ import { motionConfigToNativeTimeline } from '../compute/nativeTimeline'
 import { motionTimeSec } from '../compute/timing'
 import { normalizeMotionPropertyKeys } from '../compute/propertyKeys'
 import { MOTION_KIND_POLICIES } from './motionKindPolicy'
+import { removeMotionEventReceivers } from '../native/motionEventReceivers'
 import type { MotionHost } from './MotionHost'
 import type { PlaybackBackend } from './PlaybackBackend'
 import type { Sampler } from './Sampler'
@@ -270,9 +270,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
 
   /** Remove native event receivers registered for a session's terminal events. */
   private cleanupNativeListeners(animationId: string): void {
-    SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
-    SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
-    SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
+    removeMotionEventReceivers(animationId)
   }
 
   private async doNativePlay(
