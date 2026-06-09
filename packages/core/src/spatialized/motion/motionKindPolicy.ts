@@ -9,7 +9,6 @@ export interface MotionKindPolicy {
   readonly webPlayback: 'raf' | 'none'
   readonly motionObjectIdPrefix: string
   readonly sessionIdPrefix: string
-  readonly controllerLabel: string
   getSuppressedFields(config: SpatializedMotionConfig): Set<string> | null
 }
 
@@ -23,7 +22,6 @@ export const MOTION_KIND_POLICIES: Record<
     webPlayback: 'raf',
     motionObjectIdPrefix: '__sdmotion_',
     sessionIdPrefix: 'sdmotion_',
-    controllerLabel: 'SpatializedMotionController',
     getSuppressedFields: config => getMotionSuppressedFields(config),
   },
   static3d: {
@@ -32,7 +30,6 @@ export const MOTION_KIND_POLICIES: Record<
     webPlayback: 'none',
     motionObjectIdPrefix: '__s3motion_',
     sessionIdPrefix: 's3motion_',
-    controllerLabel: 'SpatializedMotionController',
     getSuppressedFields: config => getStatic3DMotionSuppressedFields(config),
   },
   dynamic3d: {
@@ -41,7 +38,6 @@ export const MOTION_KIND_POLICIES: Record<
     webPlayback: 'none',
     motionObjectIdPrefix: '__d3motion_',
     sessionIdPrefix: 'd3motion_',
-    controllerLabel: 'SpatializedMotionController',
     getSuppressedFields: config => getMotionSuppressedFields(config),
   },
 }
