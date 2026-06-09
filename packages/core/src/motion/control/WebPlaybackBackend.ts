@@ -1,37 +1,23 @@
 import type {
-  SpatializedMotionConfig,
   SpatializedMotionPlayState,
-  SpatializedMotionProperty,
   SpatializedMotionPropertyKeys,
 } from '../../types/spatializedMotion'
-import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import { evaluateMotionTimeline } from '../compute/sample'
-import { applyFrozenProperties, snapshotScalars } from '../compute/scalarValues'
+import { snapshotScalars } from '../compute/scalarValues'
 import { motionTimeSec } from '../compute/timing'
 import { normalizeMotionPropertyKeys } from '../compute/propertyKeys'
-
-/**
- * Collaboration surface a playback backend needs from its owning controller.
- * Injected so backends never reference the Controller directly (no back-edge).
- */
-export interface PlaybackBackendContext {
-  getConfig(): SpatializedMotionConfig
-  emitValues(values: SpatializedVisualValues): void
-  notifyStateChange(): void
-  isDestroyed(): boolean
-  isPendingPlay(): boolean
-  clearPendingPlay(): void
-}
+import type { PlaybackBackend, PlaybackBackendContext } from './PlaybackBackend'
+import type { Sampler } from './Sampler'
 
 /**
  * requestAnimationFrame-driven playback strategy.
  *
  * Owns the entire Web raf state machine that previously lived inside
- * {@link SpatializedMotionController}: clock fields, per-property freeze map and
- * the frame loop. The controller delegates the six playback verbs here and reads
- * back state through the public getters.
+ * {@link SpatializedMotionController}: clock fields and the frame loop. The
+ * per-property freeze map and visual sampling are delegated to the shared
+ * {@link Sampler}, so this backend never borrows from the native backend.
  */
-export class WebPlaybackBackend {
+export class WebPlaybackBackend implements PlaybackBackend {
   private webState: SpatializedMotionPlayState = 'idle'
   private webFinished = false
   private webStarted = false
@@ -40,13 +26,15 @@ export class WebPlaybackBackend {
   private pausedElapsedMs = 0
   /** Full timeline pause (clock stopped). */
   private fullPause = false
-  /** Per-property freeze while clock may still run. */
-  private readonly frozenByProperty = new Map<
-    SpatializedMotionProperty,
-    SpatializedVisualValues
-  >()
 
-  constructor(private readonly ctx: PlaybackBackendContext) {}
+  constructor(
+    private readonly ctx: PlaybackBackendContext,
+    private readonly sampler: Sampler,
+  ) {}
+
+  get playState(): SpatializedMotionPlayState {
+    return this.webState
+  }
 
   get state(): SpatializedMotionPlayState {
     return this.webState
@@ -54,26 +42,6 @@ export class WebPlaybackBackend {
 
   get finished(): boolean {
     return this.webFinished
-  }
-
-  get hasFrozen(): boolean {
-    return this.frozenByProperty.size > 0
-  }
-
-  getActiveProperties(): SpatializedMotionProperty[] {
-    const all = this.ctx.getConfig().tracks.map(t => t.property)
-    if (this.frozenByProperty.size === 0) return all
-    return all.filter(p => !this.frozenByProperty.has(p))
-  }
-
-  sampleAt(timeSec: number): SpatializedVisualValues {
-    const cfg = this.ctx.getConfig()
-    let values = evaluateMotionTimeline(cfg, timeSec)
-    for (const property of this.frozenByProperty.keys()) {
-      const snap = this.frozenByProperty.get(property)!
-      values = applyFrozenProperties(values, snap, [property])
-    }
-    return values
   }
 
   /** Mark backend queued (e.g. kind not yet resolved, or native-only awaiting runtime). */
@@ -132,7 +100,7 @@ export class WebPlaybackBackend {
       this.webState = 'paused'
       this.stopRaf()
       this.ctx.emitValues(
-        this.sampleAt(motionTimeSec(this.pausedElapsedMs, cfg)),
+        this.sampler.sampleAt(motionTimeSec(this.pausedElapsedMs, cfg)),
       )
       this.ctx.notifyStateChange()
       return
@@ -143,9 +111,9 @@ export class WebPlaybackBackend {
       this.webState === 'paused' && this.fullPause
         ? motionTimeSec(this.pausedElapsedMs, cfg)
         : motionTimeSec(performance.now() - this.startWallMs, cfg)
-    const current = this.sampleAt(t)
+    const current = this.sampler.sampleAt(t)
     for (const property of normalized) {
-      this.frozenByProperty.set(property, snapshotScalars(current, [property]))
+      this.sampler.freeze(property, snapshotScalars(current, [property]))
     }
     if (this.webState === 'paused' && this.fullPause) {
       this.fullPause = false
@@ -153,26 +121,27 @@ export class WebPlaybackBackend {
       this.startWallMs = performance.now() - this.pausedElapsedMs
       this.scheduleFrame()
     }
-    this.ctx.emitValues(this.sampleAt(t))
+    this.ctx.emitValues(this.sampler.sampleAt(t))
     this.ctx.notifyStateChange()
   }
 
-  resume(keys: SpatializedMotionProperty[] | null): void {
-    if (keys === null) {
+  resume(keys?: SpatializedMotionPropertyKeys): void {
+    const normalized = normalizeMotionPropertyKeys(keys)
+    if (normalized === null) {
       if (this.webState === 'paused' && this.fullPause) {
         this.play()
         return
       }
-      if (this.frozenByProperty.size > 0) {
-        this.frozenByProperty.clear()
+      if (this.sampler.hasFrozen) {
+        this.sampler.clearFrozen()
         this.ctx.notifyStateChange()
         if (this.webState === 'running') this.scheduleFrame()
       }
       return
     }
 
-    for (const property of keys) {
-      this.frozenByProperty.delete(property)
+    for (const property of normalized) {
+      this.sampler.unfreeze(property)
     }
     this.ctx.notifyStateChange()
     if (this.webState === 'running') this.scheduleFrame()
@@ -182,7 +151,7 @@ export class WebPlaybackBackend {
   reset(): void {
     const cfg = this.ctx.getConfig()
     this.stopRaf()
-    this.frozenByProperty.clear()
+    this.sampler.clearFrozen()
     this.fullPause = false
     this.ctx.clearPendingPlay()
     const values = evaluateMotionTimeline(cfg, 0)
@@ -202,7 +171,7 @@ export class WebPlaybackBackend {
     const wasRunning = this.webState === 'running' || this.webState === 'paused'
     const wasQueued = this.webState === 'queued' || this.ctx.isPendingPlay()
     if (!wasRunning && wasQueued) {
-      this.frozenByProperty.clear()
+      this.sampler.clearFrozen()
       this.fullPause = false
       this.ctx.clearPendingPlay()
       this.webState = 'idle'
@@ -224,10 +193,10 @@ export class WebPlaybackBackend {
           : this.pausedElapsedMs > 0
             ? this.pausedElapsedMs
             : performance.now() - this.startWallMs
-    this.frozenByProperty.clear()
+    this.sampler.clearFrozen()
     this.fullPause = false
     this.ctx.clearPendingPlay()
-    const values = this.sampleAt(motionTimeSec(elapsedAtStop, cfg))
+    const values = this.sampler.sampleAt(motionTimeSec(elapsedAtStop, cfg))
     this.ctx.emitValues(values)
     this.webState = 'idle'
     this.webFinished = false
@@ -240,7 +209,7 @@ export class WebPlaybackBackend {
   finish(): void {
     const cfg = this.ctx.getConfig()
     this.stopRaf()
-    this.frozenByProperty.clear()
+    this.sampler.clearFrozen()
     this.fullPause = false
     this.ctx.clearPendingPlay()
     const values = evaluateMotionTimeline(cfg, cfg.duration)
@@ -266,12 +235,12 @@ export class WebPlaybackBackend {
     const t = motionTimeSec(elapsed, cfg)
 
     if (t >= cfg.duration) {
-      const values = this.sampleAt(cfg.duration)
+      const values = this.sampler.sampleAt(cfg.duration)
       this.ctx.emitValues(values)
       if (cfg.loop) {
         this.startWallMs = performance.now()
         this.pausedElapsedMs = 0
-        this.ctx.emitValues(this.sampleAt(0))
+        this.ctx.emitValues(this.sampler.sampleAt(0))
         this.scheduleFrame()
         return
       }
@@ -284,7 +253,7 @@ export class WebPlaybackBackend {
       return
     }
 
-    this.ctx.emitValues(this.sampleAt(t))
+    this.ctx.emitValues(this.sampler.sampleAt(t))
     this.scheduleFrame()
   }
 }
