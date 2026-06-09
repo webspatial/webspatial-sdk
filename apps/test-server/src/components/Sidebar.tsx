@@ -1,4 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
+import { entityAnimationRoutes } from '../pages/entity-animation/routes'
+
 export const routes = [
   { path: '/', label: 'Home' },
   { path: '/animate', label: 'Animations' },
@@ -50,6 +52,17 @@ export const routes = [
   {
     path: '/spatial-div-refresh-validation',
     label: 'Spatial Div Refresh Validation',
+  },
+  {
+    path: '/entity-animation',
+    label: 'Entity Animation',
+    children: [
+      { path: '/entity-animation', label: 'Overview' },
+      ...entityAnimationRoutes.map(route => ({
+        path: route.path,
+        label: route.label,
+      })),
+    ],
   },
   { path: '/runtime-capabilities', label: 'Runtime capabilities' },
   { path: '/unit-convert', label: 'Unit Convert' },
@@ -124,6 +137,14 @@ export default function Sidebar() {
   const items = routes
   const containerClass =
     'w-64 h-screen sticky top-0 bg-[#111111] border-r border-gray-800 flex flex-col'
+  const isRouteActive = (route: (typeof routes)[number]) =>
+    location.pathname === route.path ||
+    !!route.children?.some(
+      child =>
+        'path' in child &&
+        typeof child.path === 'string' &&
+        location.pathname === child.path,
+    )
 
   return (
     <div className={containerClass}>
@@ -139,7 +160,7 @@ export default function Sidebar() {
             <Link
               to={route.path}
               className={`block px-4 py-2 rounded-lg text-sm transition-colors ${
-                location.pathname === route.path
+                isRouteActive(route)
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-400 hover:bg-gray-800 hover:text-white'
               }`}

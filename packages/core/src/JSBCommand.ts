@@ -27,6 +27,7 @@ import {
   ModelSource,
   SpatialTextureResourceOptions,
 } from './types/types'
+import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
 
 abstract class JSBCommand {
@@ -628,6 +629,39 @@ export class CheckWebViewCanCreateCommand extends JSBCommand {
   }
 }
 
+export class AnimateTransformJSBCommand extends JSBCommand {
+  commandType = 'AnimateTransform'
+
+  constructor(private command: AnimateTransformCommand) {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    const { type, animationId, entityId } = this.command
+    const params: Record<string, any> = { type, animationId }
+
+    if (entityId !== undefined) params.entityId = entityId
+
+    if (type === 'play') {
+      if (this.command.toTransform) {
+        params.toTransform = Array.from(this.command.toTransform)
+      }
+      if (this.command.fromTransform) {
+        params.fromTransform = Array.from(this.command.fromTransform)
+      }
+      if (this.command.duration !== undefined)
+        params.duration = this.command.duration
+      if (this.command.timingFunction !== undefined)
+        params.timingFunction = this.command.timingFunction
+      if (this.command.delay !== undefined) params.delay = this.command.delay
+      if (this.command.loop !== undefined) params.loop = this.command.loop
+      if (this.command.playbackRate !== undefined)
+        params.playbackRate = this.command.playbackRate
+    }
+
+    return params
+  }
+}
 export class InitializeAttachmentCommand extends JSBCommand {
   commandType = 'InitializeAttachment'
   constructor(

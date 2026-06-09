@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import Observation
 import RealityKit
 import simd
 import SwiftUI
@@ -40,6 +41,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     var attachmentManager = AttachmentManager()
+    // NOTE: `@Observable` + `lazy` 在新版本 Swift 宏展开下会触发编译器报错（init accessor 访问 backing storage）。
+    // 这里不需要让动画管理器参与 Observation，避免生成 `@ObservationTracked` 相关访问器即可。
+    @ObservationIgnored
+    lazy var animationManager: EntityAnimationManager = .init(scene: self)
 
     /// Enum
     enum WindowStyle: String, Codable, CaseIterable {
@@ -331,6 +336,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addJSBListener(UpdateAttachmentEntityCommand.self, onUpdateAttachmentEntity)
 
+        spatialWebViewModel.addJSBListener(AnimateTransformCommand.self, onAnimateTransform)
+
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
         spatialWebViewModel
@@ -495,6 +502,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         currentPageGeneration += 1
         injectPageEpoch()
         logger.debug("SpatialScene page generation advanced to \(currentPageGeneration)")
+        // Clean up all animation sessions
+        animationManager.removeAll()
         // destroy all SpatialObject asset
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
@@ -1347,6 +1356,46 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    private func onAnimateTransform(command: AnimateTransformCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        switch command.type {
+        case "play":
+            guard let entityId = command.entityId else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateTransform play: entityId is required")))
+                return
+            }
+            guard let entity: SpatialEntity = findSpatialObject(entityId) else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateTransform play: entity \(entityId) not found")))
+                return
+            }
+            animationManager.handlePlay(command: command, entity: entity, resolve: resolve)
+
+        case "pause":
+            animationManager.handlePause(command: command, resolve: resolve)
+
+        case "resume":
+            guard let session = animationManager.getSession(command.animationId),
+                  let entity: SpatialEntity = findSpatialObject(session.entityId)
+            else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateTransform resume: session or entity not found")))
+                return
+            }
+            animationManager.handleResume(command: command, entity: entity, resolve: resolve)
+
+        case "cancel":
+            guard let session = animationManager.getSession(command.animationId),
+                  let entity: SpatialEntity = findSpatialObject(session.entityId)
+            else {
+                // Session may have already been cleaned up - acknowledge silently.
+                resolve(.success(nil))
+                return
+            }
+            animationManager.handleCancel(command: command, entity: entity, resolve: resolve)
+
+        default:
+            resolve(.failure(JsbError(code: .TypeError, message: "AnimateTransform: unknown command type '\(command.type)'")))
+        }
+    }
+
     private func onUpdateUnlitMaterialProperties(command: UpdateUnlitMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let material = spatialObjects[command.id] as? SpatialUnlitMaterial else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(command.id) not found")))
@@ -1451,6 +1500,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
      */
 
     override func onDestroy() {
+        animationManager.removeAll()
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
