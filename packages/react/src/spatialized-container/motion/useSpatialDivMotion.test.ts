@@ -1,8 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { evaluateMotionTimeline } from './evaluate'
-import { desugarTimelineConfig, segmentConfigToMotionConfig } from './simple'
+import {
+  desugarTimelineConfig,
+  evaluateMotionTimeline,
+  segmentConfigToMotionConfig,
+  validateSpatializedMotionConfig,
+} from '@webspatial/core-sdk'
 import { valuesToMotionStyle } from './style'
-import { validateSpatializedMotionConfig } from './validate'
 
 describe('evaluateMotionTimeline', () => {
   const multiTrack = {

@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { evaluateMotionTimeline } from './evaluate'
-import { normalizeMotionConfig } from './simple'
 import type {
   SpatializedMotionConfig as CoreSpatializedMotionConfig,
   SpatializedMotionSegmentConfig as CoreSpatializedMotionSegmentConfig,
@@ -9,7 +7,11 @@ import type {
   SpatializedPlaybackApi,
   SpatializedVisualValues,
 } from '@webspatial/core-sdk'
-import { supports } from '@webspatial/core-sdk'
+import {
+  evaluateMotionTimeline,
+  normalizeMotionConfig,
+  supports,
+} from '@webspatial/core-sdk'
 import { createMotionBinding } from './createMotionBinding'
 import { createPlaybackApi } from './createPlaybackApi'
 import { useMotionController } from './useMotionController'
