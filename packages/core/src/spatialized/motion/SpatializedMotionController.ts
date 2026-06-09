@@ -1,14 +1,15 @@
 import { supports } from '../../runtime/supports'
-import type { ElementMotionCommand } from '../../types/spatializedElementMotion'
+import type { Spatialized2DElement } from '../../Spatialized2DElement'
+import type { SpatializedStatic3DElement } from '../../SpatializedStatic3DElement'
+import type { SpatializedDynamic3DElement } from '../../SpatializedDynamic3DElement'
+import { SpatialWebEvent } from '../../SpatialWebEvent'
+import type {
+  AnimateSpatializedElementMotionCommand,
+  AnimateSpatializedElementMotionResult,
+  ElementMotionCommand,
+} from '../../types/spatializedElementMotion'
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 import type { SpatializedMotionHandle } from './SpatializedMotionHandle'
-import {
-  motionElementCleanupListeners,
-  motionElementPlay,
-  motionElementSessionCommand,
-  type MotionAnimatePlayResult,
-  type MotionHostElement,
-} from './motionElementBridge'
 import { MOTION_KIND_POLICIES, type MotionKindPolicy } from './motionKindPolicy'
 import type { SpatializedPlaybackError } from '../../types/spatializedPlayback'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
@@ -29,6 +30,24 @@ import { motionConfigToNativeTimeline } from '../../spatialdiv/motion/nativeComp
 import { motionTimeSec } from '../../spatialdiv/motion/motionTiming'
 import { normalizeMotionPropertyKeys } from '../../spatialdiv/motion/propertyKeys'
 import { validateSpatializedMotionConfig } from '../../spatialdiv/motion/validate'
+
+/**
+ * Host elements that can drive native spatialized motion via {@link Element.animateMotion}.
+ */
+export type MotionHostElement =
+  | Spatialized2DElement
+  | SpatializedStatic3DElement
+  | SpatializedDynamic3DElement
+
+type MotionHostBridge = {
+  animateMotion(
+    command: AnimateSpatializedElementMotionCommand,
+  ): Promise<
+    AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
+  >
+}
+
+type MotionAnimatePlayResult = AnimateSpatializedElementMotionResult
 
 export interface SpatializedMotionControllerOptions {
   /** Initial element; may be set later via {@link attachElement}. */
@@ -703,6 +722,37 @@ export class SpatializedMotionController
     }
   }
 
+  /** Issue a native `play` command, tagging the controller's target kind. */
+  private nativeElementPlay(
+    element: MotionHostElement,
+    command: ElementMotionCommand & { type: 'play' },
+  ): Promise<MotionAnimatePlayResult> {
+    return (element as MotionHostBridge).animateMotion({
+      ...command,
+      targetKind: this.kind as SpatializedMotionKind,
+    } as AnimateSpatializedElementMotionCommand & {
+      type: 'play'
+    }) as Promise<MotionAnimatePlayResult>
+  }
+
+  /** Issue a native session command (pause/resume/reset/stop/finish/cancel). */
+  private async nativeElementCommand(
+    element: MotionHostElement,
+    command: ElementMotionCommand,
+  ): Promise<SpatializedVisualValues | void> {
+    return (await (element as MotionHostBridge).animateMotion({
+      ...command,
+      targetKind: this.kind as SpatializedMotionKind,
+    })) as SpatializedVisualValues | void
+  }
+
+  /** Remove native event receivers registered for a session's terminal events. */
+  private cleanupNativeListeners(animationId: string): void {
+    SpatialWebEvent.removeEventReceiver(`${animationId}_completed`)
+    SpatialWebEvent.removeEventReceiver(`${animationId}_canceled`)
+    SpatialWebEvent.removeEventReceiver(`${animationId}_failed`)
+  }
+
   private async doNativePlay(
     session: NativeSession,
     element: MotionHostElement,
@@ -712,7 +762,7 @@ export class SpatializedMotionController
     if (!cmd) return
 
     try {
-      const result = await motionElementPlay(this.kind, element, cmd)
+      const result = await this.nativeElementPlay(element, cmd)
       if (this.destroyed || session.unmounted) return
 
       session.result = result
@@ -755,7 +805,7 @@ export class SpatializedMotionController
       if (session.queuedPause) {
         session.state = 'paused'
         session.queuedPause = false
-        await motionElementSessionCommand(this.kind, element, {
+        await this.nativeElementCommand(element, {
           animationId: session.animationId,
           type: 'pause',
         })
@@ -808,7 +858,7 @@ export class SpatializedMotionController
       const element = this.element
       if (!element) return
       try {
-        await motionElementSessionCommand(this.kind, element, {
+        await this.nativeElementCommand(element, {
           animationId: current.animationId,
           type: 'resume',
         })
@@ -884,7 +934,7 @@ export class SpatializedMotionController
     const element = this.element
     if (!element) return
     try {
-      const values = await motionElementSessionCommand(this.kind, element, {
+      const values = await this.nativeElementCommand(element, {
         animationId: session.animationId,
         type: 'pause',
         properties: properties ?? undefined,
@@ -941,7 +991,7 @@ export class SpatializedMotionController
     }
 
     try {
-      const values = await motionElementSessionCommand(this.kind, element, {
+      const values = await this.nativeElementCommand(element, {
         animationId: session.animationId,
         type: 'reset',
       })
@@ -994,7 +1044,7 @@ export class SpatializedMotionController
     }
 
     try {
-      const values = await motionElementSessionCommand(this.kind, element, {
+      const values = await this.nativeElementCommand(element, {
         animationId: session.animationId,
         type: 'stop',
       })
@@ -1036,7 +1086,7 @@ export class SpatializedMotionController
     }
 
     try {
-      const values = await motionElementSessionCommand(this.kind, element, {
+      const values = await this.nativeElementCommand(element, {
         animationId: session.animationId,
         type: 'finish',
       })
@@ -1067,12 +1117,12 @@ export class SpatializedMotionController
     if (this.kind && opts.cancelSession && session && element) {
       if (session.state !== 'idle' && session.state !== 'finished') {
         ;(
-          motionElementSessionCommand(this.kind, element, {
+          this.nativeElementCommand(element, {
             animationId: session.animationId,
             type: 'cancel',
           } as any) as Promise<void>
         ).catch(() => {})
-        motionElementCleanupListeners(this.kind, element, session.animationId)
+        this.cleanupNativeListeners(session.animationId)
         session.unmounted = true
         session.state = 'idle'
       }

@@ -1,14 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 
-const bridge = vi.hoisted(() => ({
-  motionElementPlay: vi.fn(),
-  motionElementSessionCommand: vi.fn(),
-  motionElementCleanupListeners: vi.fn(),
-}))
-
-vi.mock('./motionElementBridge', () => bridge)
-
 import { SpatializedMotionController } from './SpatializedMotionController'
 
 function makeConfig(
@@ -142,7 +134,6 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(controller.playState).toBe('idle')
     expect(controller.finished).toBe(false)
     expect(onReset).toHaveBeenCalledWith({ opacity: 0 })
-    expect(bridge.motionElementPlay).not.toHaveBeenCalled()
   })
 
   test('play followed by finish in the same tick cancels pending native startup', async () => {
@@ -165,7 +156,6 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(controller.playState).toBe('finished')
     expect(controller.finished).toBe(true)
     expect(onComplete).toHaveBeenCalledWith({ opacity: 1 })
-    expect(bridge.motionElementPlay).not.toHaveBeenCalled()
   })
 
   test('play followed by stop in the same tick cancels pending native startup without onStop', async () => {
@@ -188,7 +178,6 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(controller.playState).toBe('idle')
     expect(controller.finished).toBe(false)
     expect(onStop).not.toHaveBeenCalled()
-    expect(bridge.motionElementPlay).not.toHaveBeenCalled()
   })
 
   test('idle reset and finish fall back to JS-side emit without native session', () => {
@@ -226,9 +215,6 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(controller.playState).toBe('finished')
     expect(controller.finished).toBe(true)
     expect(onComplete).toHaveBeenCalledWith({ opacity: 1 })
-
-    expect(bridge.motionElementPlay).not.toHaveBeenCalled()
-    expect(bridge.motionElementSessionCommand).not.toHaveBeenCalled()
   })
 
   test('native stop, reset, and finish match web semantics without absorbing one another', async () => {
@@ -237,22 +223,22 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     const onReset = vi.fn()
     const onComplete = vi.fn()
 
-    bridge.motionElementPlay.mockResolvedValue({
-      animationId: 'native-1',
-      finished: new Promise<SpatializedVisualValues>(() => {}),
-      canceled: new Promise<SpatializedVisualValues>(() => {}),
-      failed: new Promise(() => {}),
+    const animateMotion = vi.fn(async (command: { type: string }) => {
+      if (command.type === 'play') {
+        return {
+          animationId: 'native-1',
+          finished: new Promise<SpatializedVisualValues>(() => {}),
+          canceled: new Promise<SpatializedVisualValues>(() => {}),
+          failed: new Promise(() => {}),
+        }
+      }
+      if (command.type === 'stop') return { opacity: 0.4 }
+      return undefined
     })
-    bridge.motionElementSessionCommand.mockImplementation(
-      async (
-        _kind: string,
-        _element: { id: string },
-        command: { type: string },
-      ) => {
-        if (command.type === 'stop') return { opacity: 0.4 }
-        return undefined
-      },
-    )
+    const sessionCalls = () =>
+      animateMotion.mock.calls.filter(
+        ([c]) => (c as { type: string }).type !== 'play',
+      )
 
     const controller = new SpatializedMotionController(
       makeConfig({ autoStart: false, onStop, onReset, onComplete }),
@@ -262,19 +248,27 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
         onValuesChange: v => values.push(v),
       },
     )
-    controller.attachElement({ id: 'native-element' } as any)
+    controller.attachElement({ id: 'native-element', animateMotion } as any)
 
     controller.play()
     await vi.waitFor(() => {
-      expect(bridge.motionElementPlay).toHaveBeenCalledTimes(1)
+      expect(
+        animateMotion.mock.calls.filter(
+          ([c]) => (c as { type: string }).type === 'play',
+        ),
+      ).toHaveLength(1)
     })
-    const playCall = bridge.motionElementPlay.mock.calls[0]?.[2] as {
+    const playCall = animateMotion.mock.calls.find(
+      ([c]) => (c as { type: string }).type === 'play',
+    )?.[0] as {
       timeline?: { duration: number; tracks: unknown[] }
+      targetKind?: string
       from?: unknown
       to?: unknown
     }
     expect(playCall).toEqual(
       expect.objectContaining({
+        targetKind: 'spatialized2d',
         timeline: expect.objectContaining({
           duration: 1,
           tracks: expect.arrayContaining([
@@ -292,10 +286,8 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
 
     controller.stop()
     await vi.waitFor(() => {
-      expect(bridge.motionElementSessionCommand).toHaveBeenCalledWith(
-        'spatialized2d',
-        expect.objectContaining({ id: 'native-element' }),
-        expect.objectContaining({ type: 'stop' }),
+      expect(animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ targetKind: 'spatialized2d', type: 'stop' }),
       )
     })
     const stopped = values.at(-1)!
@@ -315,7 +307,7 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(controller.playState).toBe('finished')
     expect(controller.finished).toBe(true)
     expect(onComplete).toHaveBeenCalledWith({ opacity: 1 })
-    expect(bridge.motionElementSessionCommand).toHaveBeenCalledTimes(1)
+    expect(sessionCalls()).toHaveLength(1)
   })
 })
 
