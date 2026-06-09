@@ -1,4 +1,4 @@
-import type { Quaternion, Vec3 } from '@webspatial/core-sdk'
+import type { Quaternion, SpatialEntityName, Vec3 } from '@webspatial/core-sdk'
 import type { AnimatedProps } from '@webspatial/core-sdk'
 import { EntityRefShape } from './hooks'
 import { SpatialTapEvent as CoreSpatialTapEvent } from '@webspatial/core-sdk'
@@ -11,9 +11,9 @@ import { SpatialMagnifyEvent as CoreSpatialMagnifyEvent } from '@webspatial/core
 import { SpatialMagnifyEndEvent as CoreSpatialMagnifyEndEvent } from '@webspatial/core-sdk'
 import { SpatialEventOptions } from '..'
 
-export type EntityProps = {
+export type EntityProps<Name extends string = string> = {
   id?: string
-  name?: string
+  name?: SpatialEntityName<Name>
   position?: Vec3
   rotation?: Vec3
   scale?: Vec3

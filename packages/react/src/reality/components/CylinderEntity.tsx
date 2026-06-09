@@ -5,10 +5,14 @@ import { SpatialCylinderGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type CylinderEntityProps = EntityProps & {
+type CylinderEntityProps<Name extends string = string> = EntityProps<Name> & {
   children?: React.ReactNode
   materials?: string[]
 } & SpatialCylinderGeometryOptions
+
+type CylinderEntityComponent = <Name extends string = string>(
+  props: CylinderEntityProps<Name> & React.RefAttributes<EntityRefShape>,
+) => React.ReactElement | null
 
 export const CylinderEntity = forwardRef<EntityRefShape, CylinderEntityProps>(
   ({ children, ...props }, ref) => {
@@ -27,4 +31,4 @@ export const CylinderEntity = forwardRef<EntityRefShape, CylinderEntityProps>(
       </GeometryEntity>
     )
   },
-)
+) as CylinderEntityComponent

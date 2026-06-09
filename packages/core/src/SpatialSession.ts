@@ -104,7 +104,9 @@ export class SpatialSession {
    * @param name Optional name for the entity
    * @returns Promise resolving to a new SpatialEntity instance
    */
-  createEntity(userData?: SpatialEntityUserData): Promise<SpatialEntity> {
+  createEntity<Name extends string = string>(
+    userData?: SpatialEntityUserData<Name>,
+  ): Promise<SpatialEntity> {
     return createSpatialEntity(userData)
   }
 
@@ -199,9 +201,9 @@ export class SpatialSession {
    * @param options Configuration options for the spatial model entity
    * @returns Promise resolving to a new SpatialModelEntity instance
    */
-  createSpatialModelEntity(
-    options: SpatialModelEntityCreationOptions,
-    userData?: SpatialEntityUserData,
+  createSpatialModelEntity<Name extends string = string>(
+    options: SpatialModelEntityCreationOptions<Name>,
+    userData?: SpatialEntityUserData<Name>,
   ) {
     return createSpatialModelEntity(options, userData)
   }

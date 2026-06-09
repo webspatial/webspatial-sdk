@@ -21,10 +21,12 @@ import { ModelComponent } from './component'
 import { SpatialGeometry } from './geometry'
 import { SpatialUnlitMaterial } from './material'
 import { SpatialModelAsset, SpatialTextureResource } from './resource'
+import { assertValidSpatialEntityName } from './entityName'
 
-export async function createSpatialEntity(
-  userData?: SpatialEntityUserData,
+export async function createSpatialEntity<Name extends string = string>(
+  userData?: SpatialEntityUserData<Name>,
 ): Promise<SpatialEntity> {
+  assertValidSpatialEntityName(userData?.name)
   const result = await new CreateSpatialEntityCommand(userData?.name).execute()
   if (!result.success) {
     throw new Error('createSpatialEntity failed:' + result?.errorMessage)
@@ -72,10 +74,12 @@ export async function createModelComponent(options: ModelComponentOptions) {
   }
 }
 
-export async function createSpatialModelEntity(
-  options: SpatialModelEntityCreationOptions,
-  userData?: SpatialEntityUserData,
+export async function createSpatialModelEntity<Name extends string = string>(
+  options: SpatialModelEntityCreationOptions<Name>,
+  userData?: SpatialEntityUserData<Name>,
 ) {
+  assertValidSpatialEntityName(options.name)
+  assertValidSpatialEntityName(userData?.name)
   const result = await new CreateSpatialModelEntityCommand(options).execute()
   if (!result.success) {
     throw new Error('createSpatialModelEntity failed:' + result?.errorMessage)

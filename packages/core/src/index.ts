@@ -11,6 +11,7 @@ export { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 export * as PhysicalMetrics from './physicalMetrics'
 
 export * from './reality'
+export * from './reality/entityName'
 export * from './types/types'
 export * from './types/animation'
 export * from './runtime'

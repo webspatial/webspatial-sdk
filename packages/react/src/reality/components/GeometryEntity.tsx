@@ -6,6 +6,7 @@ import {
   SpatialGeometry,
   SpatialComponent,
   SpatialEntity,
+  assertValidSpatialEntityName,
 } from '@webspatial/core-sdk'
 import { AbortResourceManager } from '../utils'
 import { shallowEqualObject, shallowEqualArray } from '../utils'
@@ -35,6 +36,7 @@ export const GeometryEntity = forwardRef<EntityRefShape, GeometryEntityProps>(
     { id, children, name, materials, geometryOptions, createGeometry, ...rest },
     ref,
   ) => {
+    assertValidSpatialEntityName(name)
     const ctx = useRealityContext()
     const entityRef = useRef<SpatialEntity | null>(null)
     const componentRef = useRef<SpatialComponent | null>(null)
