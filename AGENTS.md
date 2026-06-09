@@ -44,7 +44,7 @@ From repo root:
 
 - Package manager is `pnpm` (enforced by `preinstall`).
 - Pre-commit runs `lint-staged`; it rejects files >= 1MB and non-English (CJK) characters.
-- Keep PRs focused: avoid committing local artifacts (`.trae/`, `node_modules/`, build outputs).
+- Keep PRs focused: avoid committing untracked local artifacts (`node_modules/`, build outputs, temp tool scratch dirs). Tracked agent helper docs under `.trae/` are part of the repo.
 - **AI Agent Rule:** When refactoring, moving, or modifying existing code, DO NOT strip, delete, or rewrite existing inline comments unless explicitly instructed to do so. Retain all original developer context.
 - **AI Agent Rule:** Keep refactors (like moving files or renaming variables) strictly separate from logic changes to make PRs easier to review.
 
