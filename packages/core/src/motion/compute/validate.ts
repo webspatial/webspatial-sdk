@@ -5,7 +5,7 @@ import type {
   SpatializedMotionTimelineConfig,
   SpatializedMotionTrack,
 } from '../../types/spatializedMotion'
-import { normalizeMotionConfig } from './simple'
+import { normalizeMotionConfig } from './normalize'
 
 const ALLOWED_PROPERTIES = new Set<SpatializedMotionProperty>([
   'opacity',

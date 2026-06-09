@@ -1,14 +1,14 @@
-import { AnimateSpatializedElementMotionJSBCommand } from '../JSBCommand'
-import { SpatialWebEvent } from '../SpatialWebEvent'
+import { AnimateSpatializedElementMotionJSBCommand } from '../../JSBCommand'
+import { SpatialWebEvent } from '../../SpatialWebEvent'
 import { parseSpatializedVisualValues } from './parseSpatializedVisualValues'
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
   ElementMotionCommand,
-} from '../types/spatializedElementMotion'
-import type { SpatializedPlaybackError } from '../types/spatializedPlayback'
-import type { SpatializedVisualValues } from '../types/spatializedVisual'
-import type { SpatializedMotionKind } from '../types/spatializedMotion'
+} from '../../types/spatializedElementMotion'
+import type { SpatializedPlaybackError } from '../../types/spatializedPlayback'
+import type { SpatializedVisualValues } from '../../types/spatializedVisual'
+import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 
 export async function executeAnimateSpatializedElementMotion(
   elementId: string,

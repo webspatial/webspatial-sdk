@@ -2,12 +2,12 @@ import {
   AddSpatializedElementToSpatialized2DElement,
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
-import { executeAnimateSpatializedElementMotion } from './spatialized/executeAnimateSpatializedElementMotion'
+import { executeAnimateSpatializedElementMotion } from './motion/native/executeAnimateSpatializedElementMotion'
 import {
   SpatializedMotionController,
   type SpatializedMotionControllerOptions,
-} from './spatialized/motion/SpatializedMotionController'
-import type { SpatializedMotionHandle } from './spatialized/motion/SpatializedMotionHandle'
+} from './motion/control/SpatializedMotionController'
+import type { SpatializedMotionHandle } from './motion/control/SpatializedMotionHandle'
 import type { SpatializedMotionConfig } from './types/spatializedMotion'
 import type {
   AnimateSpatializedElementMotionCommand,
