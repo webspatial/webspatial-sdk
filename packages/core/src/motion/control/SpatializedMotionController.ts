@@ -1,10 +1,8 @@
 import { supports } from '../../runtime/supports'
-import type { Spatialized2DElement } from '../../Spatialized2DElement'
-import type { SpatializedStatic3DElement } from '../../SpatializedStatic3DElement'
-import type { SpatializedDynamic3DElement } from '../../SpatializedDynamic3DElement'
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 import type { SpatializedMotionHandle } from './SpatializedMotionHandle'
 import { MOTION_KIND_POLICIES, type MotionKindPolicy } from './motionKindPolicy'
+import type { MotionHost } from './MotionHost'
 import { WebPlaybackBackend } from './WebPlaybackBackend'
 import { NativePlaybackBackend } from './NativePlaybackBackend'
 import { Sampler } from './Sampler'
@@ -18,17 +16,9 @@ import type {
 import { evaluateMotionTimeline } from '../compute/sample'
 import { validateSpatializedMotionConfig } from '../compute/validate'
 
-/**
- * Host elements that can drive native spatialized motion via {@link Element.animateMotion}.
- */
-export type MotionHostElement =
-  | Spatialized2DElement
-  | SpatializedStatic3DElement
-  | SpatializedDynamic3DElement
-
 export interface SpatializedMotionControllerOptions {
   /** Initial element; may be set later via {@link attachElement}. */
-  element?: MotionHostElement | null
+  element?: MotionHost | null
   /**
    * When set, overrides `supports('useAnimation', [kind])` for backend selection.
    * Existing native element controllers can keep using this for tests.
@@ -79,7 +69,7 @@ export class SpatializedMotionController
 
   private kind: SpatializedMotionKind | null
   private config: SpatializedMotionConfig
-  private element: MotionHostElement | null
+  private element: MotionHost | null
   private readonly onValuesChange?: (values: SpatializedVisualValues) => void
   private readonly onStateChange?: () => void
 
@@ -175,7 +165,7 @@ export class SpatializedMotionController
   }
 
   attachElement(
-    element: MotionHostElement | null,
+    element: MotionHost | null,
     targetKind?: SpatializedMotionKind,
   ): void {
     const previousKind = this.kind
