@@ -2,11 +2,11 @@ import {
   SetParentForEntityCommand,
   UpdateSpatializedDynamic3DElementProperties,
 } from './JSBCommand'
-import { executeAnimateSpatializedElementMotion } from './spatialized/executeAnimateSpatializedElementMotion'
+import { executeAnimateSpatializedElementMotion } from './motion/native/executeAnimateSpatializedElementMotion'
 import {
   SpatializedMotionController,
   type SpatializedMotionControllerOptions,
-} from './spatialized/motion/SpatializedMotionController'
+} from './motion/control/SpatializedMotionController'
 import type { SpatializedMotionConfig } from './types/spatializedMotion'
 import type {
   AnimateSpatializedElementMotionCommand,
@@ -15,7 +15,7 @@ import type {
 import type { SpatializedVisualValues } from './types/spatializedVisual'
 import { SpatialEntity } from './reality'
 import { SpatializedElement } from './SpatializedElement'
-import type { SpatializedMotionHandle } from './spatialized/motion/SpatializedMotionHandle'
+import type { SpatializedMotionHandle } from './motion/control/SpatializedMotionHandle'
 import {
   SpatialEntityEventType,
   SpatialEntityOrReality,

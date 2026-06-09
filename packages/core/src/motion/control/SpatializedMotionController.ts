@@ -21,15 +21,12 @@ import type {
   SpatializedMotionPropertyKeys,
   SpatializedMotionTimeline,
 } from '../../types/spatializedMotion'
-import { evaluateMotionTimeline } from '../../spatialdiv/motion/evaluate'
-import {
-  applyFrozenProperties,
-  snapshotScalars,
-} from '../../spatialdiv/motion/mergeValues'
-import { motionConfigToNativeTimeline } from '../../spatialdiv/motion/nativeCompile'
-import { motionTimeSec } from '../../spatialdiv/motion/motionTiming'
-import { normalizeMotionPropertyKeys } from '../../spatialdiv/motion/propertyKeys'
-import { validateSpatializedMotionConfig } from '../../spatialdiv/motion/validate'
+import { evaluateMotionTimeline } from '../compute/sample'
+import { applyFrozenProperties, snapshotScalars } from '../compute/scalarValues'
+import { motionConfigToNativeTimeline } from '../compute/nativeTimeline'
+import { motionTimeSec } from '../compute/timing'
+import { normalizeMotionPropertyKeys } from '../compute/propertyKeys'
+import { validateSpatializedMotionConfig } from '../compute/validate'
 
 /**
  * Host elements that can drive native spatialized motion via {@link Element.animateMotion}.

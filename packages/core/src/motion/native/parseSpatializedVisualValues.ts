@@ -1,4 +1,4 @@
-import type { SpatializedVisualValues } from '../types/spatializedVisual'
+import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 
 /** Parse native wire payload `{ values }` (or legacy flat shape) into visual values. */
 export function parseSpatializedVisualValues(

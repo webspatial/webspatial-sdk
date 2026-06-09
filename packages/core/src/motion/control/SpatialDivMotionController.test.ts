@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
-import { SpatializedMotionController } from '../../spatialized/motion/SpatializedMotionController'
+import { SpatializedMotionController } from './SpatializedMotionController'
 
 describe('SpatializedMotionController (spatialized2d) selective pause (Web)', () => {
   test('pause(["opacity"]) freezes opacity while translate continues', async () => {

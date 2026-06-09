@@ -1,7 +1,7 @@
 import type { SpatializedMotionConfig } from '../../types/spatializedMotion'
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
-import { getMotionSuppressedFields } from '../../spatialdiv/motion/getMotionSuppressedFields'
-import { getStatic3DMotionSuppressedFields } from '../../static3d/motion/getStatic3DMotionSuppressedFields'
+import { getMotionSuppressedFields } from '../compute/suppressedFields'
+import { getStatic3DMotionSuppressedFields } from '../kinds/static3d'
 
 export interface MotionKindPolicy {
   readonly kind: SpatializedMotionKind
