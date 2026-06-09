@@ -19,17 +19,9 @@ import { motionConfigToNativeTimeline } from '../compute/nativeTimeline'
 import { motionTimeSec } from '../compute/timing'
 import { normalizeMotionPropertyKeys } from '../compute/propertyKeys'
 import { MOTION_KIND_POLICIES } from './motionKindPolicy'
-import type { MotionHostElement } from './SpatializedMotionController'
+import type { MotionHost } from './MotionHost'
 import type { PlaybackBackend } from './PlaybackBackend'
 import type { Sampler } from './Sampler'
-
-type MotionHostBridge = {
-  animateMotion(
-    command: AnimateSpatializedElementMotionCommand,
-  ): Promise<
-    AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
-  >
-}
 
 type MotionAnimatePlayResult = AnimateSpatializedElementMotionResult
 
@@ -54,7 +46,7 @@ interface NativeSession {
 export interface NativeBackendContext {
   getConfig(): SpatializedMotionConfig
   getKind(): SpatializedMotionKind | null
-  getElement(): MotionHostElement | null
+  getElement(): MotionHost | null
   isNativeCapable(): boolean
   isDestroyed(): boolean
   emitValues(values: SpatializedVisualValues): void
@@ -254,10 +246,10 @@ export class NativePlaybackBackend implements PlaybackBackend {
 
   /** Issue a native `play` command, tagging the controller's target kind. */
   private nativeElementPlay(
-    element: MotionHostElement,
+    element: MotionHost,
     command: ElementMotionCommand & { type: 'play' },
   ): Promise<MotionAnimatePlayResult> {
-    return (element as MotionHostBridge).animateMotion({
+    return element.animateMotion({
       ...command,
       targetKind: this.ctx.getKind() as SpatializedMotionKind,
     } as AnimateSpatializedElementMotionCommand & {
@@ -267,10 +259,10 @@ export class NativePlaybackBackend implements PlaybackBackend {
 
   /** Issue a native session command (pause/resume/reset/stop/finish/cancel). */
   private async nativeElementCommand(
-    element: MotionHostElement,
+    element: MotionHost,
     command: ElementMotionCommand,
   ): Promise<SpatializedVisualValues | void> {
-    return (await (element as MotionHostBridge).animateMotion({
+    return (await element.animateMotion({
       ...command,
       targetKind: this.ctx.getKind() as SpatializedMotionKind,
     })) as SpatializedVisualValues | void
@@ -285,7 +277,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
 
   private async doNativePlay(
     session: NativeSession,
-    element: MotionHostElement,
+    element: MotionHost,
   ): Promise<void> {
     if (!this.ctx.getKind()) return
     const cmd = this.buildPlayCommand(session, element.id)
