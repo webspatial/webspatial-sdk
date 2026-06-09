@@ -5,7 +5,7 @@ The repository already documents `xr_spatial_scene` as a declarative manifest en
 ## What Changes
 
 - Accept both snake_case and camelCase aliases for supported `xr_spatial_scene` fields on the same manifest object.
-- Define that snake_case wins when both alias forms are present in the same object layer.
+- Define a recursive same-layer rule: when both alias forms are present in the same object layer, snake_case wins, the winner owns the whole value at that layer, and supported nested aliases continue resolving inside the winning object value.
 - Accept both `window_scene` and `windowScene`, and both `volume_scene` and `volumeScene`, inside `overrides`.
 - Normalize supported manifest aliases into the runtime camelCase shape before they are exposed through manifest-derived defaults.
 - Preserve existing priority rules across built-in defaults, top-level manifest values, per-scene overrides, and `initScene()` callback returns.

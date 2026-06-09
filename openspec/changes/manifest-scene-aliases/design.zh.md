@@ -18,38 +18,51 @@
 
 ## Decisions
 
-### Decision: 先在各自对象层内解析别名 再进行跨层 merge
+### Decision: 字段清洗独立完成
 
-实现先在字段出现的源对象内解析别名，再对归一化后的对象按层级做 deep merge。
+这次 change 先做字段清洗。字段清洗只负责在字段出现的源对象内解析别名，不负责决定顶层和 override 谁优先。这里的源对象主要是顶层 `xr_spatial_scene`、`window` override 和 `volume` override。在单个对象层内，snake_case 胜出，胜者独占该层这个逻辑字段的整个值；如果胜者值仍然是对象，则只在这个胜出对象内部继续递归解析受支持的嵌套别名。
 
 ```mermaid
 flowchart TD
-    A[manifest xr_spatial_scene] --> B[归一化顶层别名]
-    A --> C[归一化 window override 别名]
-    A --> D[归一化 volume override 别名]
-    B --> E[顶层与 window override 深度合并]
-    B --> F[顶层与 volume override 深度合并]
-    E --> G[window 默认值]
-    F --> H[volume 默认值]
+    A[读取一个源对象] --> B[检查当前层受支持别名]
+    B --> C{同层同时存在两种别名}
+    C -->|是| D[snake_case 胜出]
+    C -->|否| E[保留唯一存在的值]
+    D --> F[败者整值丢弃]
+    E --> G[保留当前值]
+    F --> H{胜者值是否仍是对象}
+    G --> H
+    H -->|是| I[进入对象内部继续清洗]
+    H -->|否| J[当前对象清洗完成]
 ```
 
 原因:
-- 这样可以保持现有优先级模型不变。
-- 可以避免跨层别名串扰，防止某一层的键意外压掉另一层的键。
-
-备选方案:
-- 先合并原始对象，再统一归一化。否决原因是合并后会丢失别名来自哪个优先级层的信息。
-
-### Decision: 同层同时存在两种别名时 snake_case 优先
-
-像 `default_size` 和 `defaultSize`，或者 `window_scene` 和 `windowScene` 这样的成对字段，在同一对象层内统一按 snake_case 优先解析。
-
-原因:
+- 这样可以把别名冲突的处理边界限制在单个源对象内，避免不同来源之间互相串扰。
 - manifest 文档本身以 snake_case 命名为主。
 - 当前分支中的测试已经明确断言同层别名冲突时应当优先采用 snake_case。
+- 这条规则可以同时解释顶层整个对象替换和嵌套对象内部键冲突，不需要再引入第二套规则。
 
 备选方案:
+- 先把多个来源对象合并，再统一清洗。否决原因是合并后会丢失别名来自哪个优先级层的信息。
 - 让 camelCase 优先，或者把重复声明视为错误。否决原因是这两种方案都会破坏当前分支已有 manifest 或测试预期。
+
+### Decision: 优先级应用保持不变
+
+字段清洗完成后，系统再对归一化后的对象按既有优先级链做 deep merge。这里的 deep merge 只是在已经清洗完成的对象之间应用原有规则，不重新参与别名判定。这个 change 不改变 built in defaults、顶层 manifest 值、按场景 override 和 `initScene` callback 返回值之间的优先级。
+
+这里可以直接理解为：
+
+- `window 默认配置 = 清洗后的 top level defaults + 清洗后的 window override`
+- `volume 默认配置 = 清洗后的 top level defaults + 清洗后的 volume override`
+
+这里的加号表示沿用既有 merge 规则，不是字面上的对象相加。后续 `initScene` callback 仍然可以继续覆盖这些默认配置。
+
+原因:
+- 这样可以明确区分本次 change 的实际范围，只修改字段清洗，不修改优先级链。
+- 可以复用现有的默认值合并行为，降低回归风险。
+
+备选方案:
+- 在字段清洗的同时重定义跨层优先级。否决原因是这会扩大 change 范围，也不符合当前实现和测试。
 
 ### Decision: 只归一化 manifest 派生默认值 不归一化 callback 链状态
 
@@ -90,6 +103,7 @@ sequenceDiagram
 原因:
 - 这些别名正好与当前分支实现和测试覆盖一致。
 - 超出已验证范围继续扩展会变成猜测。
+- 递归规则描述的是已支持别名的行为方式，不代表未来所有深层路径都会自动获得 alias 支持。
 
 ## Risks / Trade-offs
 

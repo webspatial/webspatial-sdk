@@ -18,38 +18,51 @@
 
 ## Decisions
 
-### Decision: Resolve aliases inside each object layer before merging layers
+### Decision: Field cleanup happens independently
 
-The implementation resolves aliases on the source object where they appear, then deep-merges normalized objects across layers.
+This change starts with field cleanup. Field cleanup only resolves aliases inside the source object where a field appears, and it does not decide whether top-level values or overrides have higher priority. The main source objects here are top-level `xr_spatial_scene`, the window override, and the volume override. Within a single object layer, snake_case wins, the winner owns the whole value for that logical field at that layer, and supported nested aliases continue resolving recursively only inside that winning object value.
 
 ```mermaid
 flowchart TD
-    A[manifest xr_spatial_scene] --> B[normalize top level aliases]
-    A --> C[normalize window override aliases]
-    A --> D[normalize volume override aliases]
-    B --> E[deep merge top level with window override]
-    B --> F[deep merge top level with volume override]
-    E --> G[window defaults]
-    F --> H[volume defaults]
+    A[read one source object] --> B[check supported aliases in this layer]
+    B --> C{both alias forms exist}
+    C -->|yes| D[snake_case wins]
+    C -->|no| E[keep the only present value]
+    D --> F[discard the losing whole value]
+    E --> G[keep the current value]
+    F --> H{winner value is still an object}
+    G --> H
+    H -->|yes| I[continue cleanup inside that object]
+    H -->|no| J[current object cleanup complete]
 ```
 
 Rationale:
-- This keeps the existing precedence model intact.
-- It avoids cross-layer alias leaks where one layer could accidentally suppress another layer's key.
-
-Alternative considered:
-- Merge raw objects first, then normalize once. Rejected because the merged object would lose information about which alias originated in which precedence layer.
-
-### Decision: Snake case wins when both aliases exist on the same object
-
-Supported pairs such as `default_size` and `defaultSize`, or `window_scene` and `windowScene`, are resolved with snake_case priority within the same object layer.
-
-Rationale:
+- This limits alias conflict handling to one source object at a time and avoids cross-source interference.
 - The manifest documentation already centers snake_case names.
 - Existing tests in this branch assert that same-layer alias conflicts prefer snake_case.
+- This keeps `default_size` whole-value replacement and nested object key conflicts under one recursive rule.
 
 Alternative considered:
+- Merge multiple source objects first, then normalize once. Rejected because the merged object would lose information about which alias originated in which precedence layer.
 - Prefer camelCase or treat duplicates as an error. Rejected because both would break existing manifests and tests on this branch.
+
+### Decision: Precedence application stays unchanged
+
+After field cleanup finishes, the system deep-merges the normalized objects through the existing precedence chain. This deep merge only applies the pre-existing merge behavior between already cleaned objects and does not participate in alias conflict resolution again. This change does not alter the precedence across built-in defaults, top-level manifest values, per-scene overrides, and `initScene()` callback returns.
+
+This can be read directly as:
+
+- `window defaults = cleaned top level defaults + cleaned window override`
+- `volume defaults = cleaned top level defaults + cleaned volume override`
+
+The plus sign here means the existing merge behavior, not literal object addition. Later `initScene()` callbacks can still override these defaults.
+
+Rationale:
+- This makes the scope of the change explicit: it changes field cleanup, not the precedence chain.
+- It reuses the existing default-merging behavior and lowers regression risk.
+
+Alternative considered:
+- Redefine cross-layer precedence while introducing field cleanup. Rejected because that would expand the scope of the change and would not match the current implementation or tests.
 
 ### Decision: Normalize only manifest-derived defaults, not callback chaining state
 
@@ -90,6 +103,7 @@ This change documents and implements aliases only for:
 Rationale:
 - These are the aliases covered by the branch implementation and tests.
 - Expanding beyond the verified surface would be speculative.
+- The recursive rule describes how supported aliases behave, but it does not implicitly add support for new paths.
 
 ## Risks / Trade-offs
 

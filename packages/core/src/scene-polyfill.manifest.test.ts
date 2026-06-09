@@ -192,6 +192,46 @@ describe('setupManifest applies overrides to xr_window_defaults / xr_volume_defa
     cleanup()
   })
 
+  it('resolves same-layer aliases recursively so winners own their layer values', async () => {
+    vi.resetModules()
+    const cleanup = addDataManifest({
+      xr_spatial_scene: {
+        defaultSize: { width: '111px', height: '111px' },
+        default_size: { width: '222px', height: '333px' },
+        resizability: {
+          minWidth: '100px',
+          min_width: '200px',
+          maxWidth: '800px',
+        },
+      },
+    })
+    const { hijackWindowOpen, initScene } = await import('./scene-polyfill')
+    hijackWindowOpen(window)
+    await waitTick()
+
+    let defaults: any
+    initScene(
+      'recursive-layer',
+      pre => {
+        defaults = pre
+        return pre
+      },
+      { type: 'window' },
+    )
+
+    expect(defaults).toEqual(
+      expect.objectContaining({
+        defaultSize: { width: '222px', height: '333px' },
+        resizability: {
+          minWidth: '200px',
+          maxWidth: '800px',
+        },
+      }),
+    )
+
+    cleanup()
+  })
+
   it('supports overrides windowScene/volumeScene and snake_case resizability keys', async () => {
     vi.resetModules()
     const cleanup = addDataManifest({

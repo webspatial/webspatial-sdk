@@ -5,7 +5,7 @@
 ## What Changes
 
 - 支持在同一个 manifest 对象层级中读取受支持的 snake_case 和 camelCase `xr_spatial_scene` 字段别名。
-- 明确规定当同一层同时出现两种别名时，snake_case 优先。
+- 明确规定统一的同层递归解析规则：当同一对象层同时出现两种别名时，snake_case 优先，胜者独占该层字段的整个值；如果胜者值仍然是对象，则在该对象内部继续按同样规则解析受支持的嵌套别名。
 - 支持在 `overrides` 中同时读取 `window_scene` 和 `windowScene`，以及 `volume_scene` 和 `volumeScene`。
 - 在通过 manifest 生成场景默认值之前，将受支持的输入别名归一化为运行时使用的 camelCase 结构。
 - 保持内置默认值 顶层 manifest 值 按场景 override 和 `initScene()` 回调返回值之间的现有优先级规则不变。
