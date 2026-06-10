@@ -303,6 +303,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
       return
     }
 
+    this.web.stopRaf()
     this.native.play()
   }
 
@@ -357,7 +358,13 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
       return
     }
 
-    this.native.reset()
+    const ns = this.native.sessionState
+    if (ns && ns !== 'idle') {
+      this.native.reset()
+    } else {
+      this.native.bumpToken()
+      this.web.reset()
+    }
   }
 
   finish(): void {
@@ -372,7 +379,13 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
       return
     }
 
-    this.native.finish()
+    const ns = this.native.sessionState
+    if (ns && ns !== 'idle' && ns !== 'finished') {
+      this.native.finish()
+    } else if (!ns || ns === 'idle') {
+      this.native.bumpToken()
+      this.web.finish()
+    }
   }
 
   /** Policy for the current kind (defaults to spatialized2d when unbound). */
