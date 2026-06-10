@@ -39,9 +39,6 @@ interface NativeSession {
 /**
  * Collaboration surface the native backend needs from its owning controller.
  * Injected so the backend never imports the controller or the web backend.
- * The `stopWeb` / `jsReset` / `jsFinish` callbacks let the controller route the
- * JS-side fallback (no active native session) without the native backend
- * depending on {@link WebPlaybackBackend}.
  */
 export interface NativeBackendContext {
   getConfig(): SpatializedMotionConfig
@@ -52,12 +49,6 @@ export interface NativeBackendContext {
   emitValues(values: SpatializedVisualValues): void
   notifyStateChange(): void
   clearPendingPlay(): void
-  /** Stop any in-flight web raf playback before native takes over. */
-  stopWeb(): void
-  /** JS-side reset fallback when no native session is active. */
-  jsReset(): void
-  /** JS-side finish fallback when no native session is active. */
-  jsFinish(): void
 }
 
 const CONTROLLER_LABEL = 'SpatializedMotionController'
