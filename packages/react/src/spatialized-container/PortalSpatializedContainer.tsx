@@ -3,14 +3,13 @@ import {
   PortalInstanceObject,
   PortalInstanceContext,
 } from './context/PortalInstanceContext'
-import type { SpatializedMotionBindingInternal } from './motion/motionBindingTypes'
 import {
   PortalSpatializedContainerProps,
   SpatialContentReadyCallback,
   SpatialEventOptions,
   SpatializedElementRef,
 } from './types'
-import type { Vec3 } from '@webspatial/core-sdk'
+import type { Spatialized2DElement, Vec3 } from '@webspatial/core-sdk'
 
 function constrainedAxisToVec3(
   input: SpatialEventOptions['constrainedToAxis'] | undefined,
@@ -134,50 +133,6 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     spatializedContainerObject,
     spatializedElement,
   )
-  // ---- SpatialDiv Animation Binding ----
-  // When animation prop is present and spatializedElement is available,
-  // call __setElement to bind the element to the animation hook.
-  useEffect(() => {
-    if (!animation || !spatializedElement) return
-
-    const animProps =
-      animation as unknown as SpatializedMotionBindingInternal & {
-        __setElement?: (el: Spatialized2DElement | null) => void
-      }
-
-    // Bind element to animation hook
-    if (animProps.__setElement) {
-      animProps.__setElement(
-        spatializedElement as unknown as Spatialized2DElement,
-      )
-    }
-
-    // Set suppressed fields on the portal instance to prevent DOM sync
-    // from overwriting animation intermediate values
-    const suppressedFields = animProps.__getSuppressedFields?.()
-    if (suppressedFields) {
-      portalInstanceObject.setSuppressedFields(suppressedFields)
-    }
-
-    return () => {
-      // Unbind on cleanup
-      if (animProps.__onUnbind) {
-        animProps.__onUnbind()
-      }
-      if (animProps.__setElement) {
-        animProps.__setElement(null)
-      }
-      portalInstanceObject.setSuppressedFields(null)
-    }
-  }, [animation, spatializedElement, portalInstanceObject])
-
-  // Keep suppressed fields in sync with animation state changes
-  useEffect(() => {
-    if (!animation || !spatializedElement) return
-    const animProps = animation as unknown as SpatializedMotionBindingInternal
-    const suppressedFields = animProps.__getSuppressedFields?.()
-    portalInstanceObject.setSuppressedFields(suppressedFields ?? null)
-  })
 
   // ---- SpatialDiv xr-animation binding (Plan B native path) ----
   useEffect(() => {
@@ -185,7 +140,7 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
 
     if (xrAnimation.__setElement) {
       xrAnimation.__setElement(
-        spatializedElement as unknown as import('@webspatial/core-sdk').Spatialized2DElement,
+        spatializedElement as unknown as Spatialized2DElement,
         'spatialized2d',
       )
     }
