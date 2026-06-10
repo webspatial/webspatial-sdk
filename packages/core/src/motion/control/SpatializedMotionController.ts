@@ -8,6 +8,7 @@ import {
 } from './CapabilityResolver'
 import { WebPlaybackBackend } from './WebPlaybackBackend'
 import { NativePlaybackBackend } from './NativePlaybackBackend'
+import type { PlaybackBackend } from './PlaybackBackend'
 import { Sampler } from './Sampler'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
@@ -44,13 +45,14 @@ const CONTROLLER_LABEL = 'SpatializedMotionController'
 /**
  * Runtime controller for a spatialized element motion timeline.
  *
- * Facade over two interchangeable playback strategies (Strategy pattern): the
- * raf-driven {@link WebPlaybackBackend} and the native-session
+ * Facade over a single playback strategy (Strategy pattern). The backend is
+ * chosen lazily — exactly once, when the motion `kind` becomes known — between
+ * the raf-driven {@link WebPlaybackBackend} and the native-session
  * {@link NativePlaybackBackend}. Both implement the common
- * {@link PlaybackBackend} abstraction and share a single {@link Sampler}, so
- * neither depends on the other. The controller selects a backend at runtime via
- * {@link nativeCapable}, delegates the six playback verbs and aggregates state
- * for the public API.
+ * {@link PlaybackBackend} abstraction, so the controller only ever talks to the
+ * interface and stays unaware of the web/native distinction. While the kind is
+ * still unresolved the backend is `null` and the controller handles the verbs
+ * itself (queueing a pending play, seeking start/end via the timeline).
  */
 export class SpatializedMotionController implements SpatializedMotionHandle {
   readonly id: string
@@ -61,16 +63,19 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
   private readonly onValuesChange?: (values: SpatializedVisualValues) => void
   private readonly onStateChange?: () => void
 
-  /** Shared visual sampler / freeze registry (used by both backends). */
+  /** Shared visual sampler / freeze registry (used by whichever backend wins). */
   private readonly sampler: Sampler
-  /** raf-driven web playback strategy. */
-  private readonly web: WebPlaybackBackend
-  /** native-session playback strategy. */
-  private readonly native: NativePlaybackBackend
+  /**
+   * The single chosen playback strategy, or `null` until the motion `kind`
+   * resolves. The controller only ever sees the {@link PlaybackBackend}
+   * interface — never the concrete web/native type.
+   */
+  private backend: PlaybackBackend | null = null
 
-  private warnedNativeOnly = false
   private destroyed = false
   private pendingPlay = false
+  /** Terminal flag for the no-backend (kind-unresolved) finish() path. */
+  private idleFinished = false
   private readonly capability: CapabilityResolver
 
   constructor(
@@ -94,36 +99,57 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
     this.onStateChange = resolvedOptions.onStateChange
 
     this.sampler = new Sampler(() => this.config)
-    this.web = new WebPlaybackBackend(
-      {
-        getConfig: () => this.config,
-        emitValues: values => this.emitValues(values),
-        notifyStateChange: () => this.bump(),
-        isDestroyed: () => this.destroyed,
-        isPendingPlay: () => this.pendingPlay,
-        clearPendingPlay: () => {
-          this.pendingPlay = false
-        },
-      },
-      this.sampler,
-    )
-    this.native = new NativePlaybackBackend(
-      {
-        getConfig: () => this.config,
-        getKind: () => this.kind,
-        getElement: () => this.element,
-        isNativeCapable: () => this.nativeCapable,
-        isDestroyed: () => this.destroyed,
-        emitValues: values => this.emitValues(values),
-        notifyStateChange: () => this.bump(),
-        clearPendingPlay: () => {
-          this.pendingPlay = false
-        },
-      },
-      this.sampler,
-    )
+    this.ensureBackend()
 
     this.emitValues(evaluateMotionTimeline(config, 0))
+  }
+
+  /**
+   * Lazily create the single backend once (and only once) the kind is known.
+   * spatialized2d may run on either web or native depending on
+   * {@link nativeCapable}; the 3d kinds are native-only. Choosing here means the
+   * controller holds exactly one strategy for its whole lifetime.
+   */
+  private ensureBackend(): void {
+    if (this.backend || !this.kind) return
+    this.backend = this.useNativeBackend
+      ? new NativePlaybackBackend(
+          {
+            getConfig: () => this.config,
+            getKind: () => this.kind,
+            getElement: () => this.element,
+            isNativeCapable: () => this.nativeCapable,
+            isDestroyed: () => this.destroyed,
+            emitValues: values => this.emitValues(values),
+            notifyStateChange: () => this.bump(),
+            clearPendingPlay: () => {
+              this.pendingPlay = false
+            },
+          },
+          this.sampler,
+        )
+      : new WebPlaybackBackend(
+          {
+            getConfig: () => this.config,
+            emitValues: values => this.emitValues(values),
+            notifyStateChange: () => this.bump(),
+            isDestroyed: () => this.destroyed,
+            isPendingPlay: () => this.pendingPlay,
+            clearPendingPlay: () => {
+              this.pendingPlay = false
+            },
+          },
+          this.sampler,
+        )
+  }
+
+  /**
+   * Backend selection (mutually exclusive): native-only kinds (static3d /
+   * dynamic3d) always run on the native session; spatialized2d runs on native
+   * when the runtime supports it, otherwise on the raf web backend.
+   */
+  private get useNativeBackend(): boolean {
+    return this.nativeCapable || this.policy.webPlayback !== 'raf'
   }
 
   get isDestroyed(): boolean {
@@ -170,6 +196,11 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
     }
 
     this.element = element
+    // Kind may have just resolved — create the single backend now (no-op if it
+    // already exists). A pending play() is replayed by the autoStart/pending
+    // branch below, which now routes through the freshly created backend.
+    this.ensureBackend()
+
     if (previousKind !== this.kind || previousElement !== this.element) {
       this.bump()
     }
@@ -183,216 +214,102 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
   destroy(): void {
     this.destroyed = true
     this.pendingPlay = false
-    this.web.stopRaf()
-    this.native.detach({ cancelSession: true })
-  }
-
-  /**
-   * Single source of truth for the merged playback state. Both backends are
-   * read here once; the four public getters derive purely from this snapshot.
-   */
-  private resolveState(): {
-    hasKind: boolean
-    pendingPlay: boolean
-    web: SpatializedMotionPlayState
-    webFinished: boolean
-    native: SpatializedMotionPlayState | undefined
-    hasFrozen: boolean
-  } {
-    const hasKind = !!this.kind
-    return {
-      hasKind,
-      pendingPlay: this.pendingPlay,
-      web: this.web.state,
-      webFinished: this.web.finished,
-      native: hasKind ? this.native.sessionState : undefined,
-      hasFrozen: this.sampler.hasFrozen,
-    }
+    this.backend?.destroy()
   }
 
   get playState(): SpatializedMotionPlayState {
-    const { hasKind, pendingPlay, web, native } = this.resolveState()
-    if (!hasKind) return pendingPlay ? 'queued' : web
-    if (native === 'queued') return 'running'
-    if (native && native !== 'idle') return native
-    return web
+    if (!this.backend) {
+      if (this.pendingPlay) return 'queued'
+      return this.idleFinished ? 'finished' : 'idle'
+    }
+    return this.backend.playState
   }
 
   get isAnimating(): boolean {
-    const { hasKind, pendingPlay, web, native } = this.resolveState()
-    if (!hasKind) return pendingPlay || web === 'running'
-    if (native === 'running' || native === 'queued') return true
-    return web === 'running' || web === 'queued'
+    if (!this.backend) return this.pendingPlay
+    return this.backend.isAnimating
   }
 
   get isPaused(): boolean {
-    const { hasKind, web, native, hasFrozen } = this.resolveState()
-    if (hasKind && native === 'paused') return true
-    return web === 'paused' || (web === 'running' && hasFrozen)
+    return this.backend?.isPaused ?? false
   }
 
   get finished(): boolean {
-    const { hasKind, webFinished, native } = this.resolveState()
-    if (hasKind && native === 'finished') return true
-    return webFinished
+    if (!this.backend) return this.idleFinished
+    return this.backend.finished
   }
 
-  /** Fields to suppress on the Portal while native drives playback. */
+  /** Fields to suppress on the Portal while the backend drives playback. */
   getSuppressedFields(): Set<string> | null {
-    if (!this.kind) return null
-    if (this.kind === 'spatialized2d') {
-      const nativeState = this.native.sessionState
-      const nativeSuppressionReleased =
-        this.nativeCapable &&
-        !this.pendingPlay &&
-        !this.native.controlling &&
-        (!nativeState || nativeState === 'idle' || nativeState === 'finished')
-
-      if (nativeSuppressionReleased) {
-        return null
-      }
-      if (nativeState !== 'running' && nativeState !== 'paused') {
-        return null
-      }
-      const active = this.sampler.getActiveProperties()
-      const subset = this.config.tracks.filter(t => active.includes(t.property))
-      if (subset.length === 0) return null
-      return this.policy.getSuppressedFields({
-        ...this.config,
-        tracks: subset,
-      })
-    }
-    const s = this.native.sessionState
-    if (!s || (s !== 'running' && s !== 'paused')) return null
-    const active = this.sampler.getActiveProperties()
-    const subset = this.config.tracks.filter(t => active.includes(t.property))
-    if (subset.length === 0) return null
-    return this.policy.getSuppressedFields({
-      ...this.config,
-      tracks: subset,
-    })
+    return this.backend?.getSuppressedFields() ?? null
   }
 
   play(): void {
     if (this.destroyed) return
-    if (!this.kind) {
-      if (!this.pendingPlay) {
-        this.pendingPlay = true
-        this.web.markQueued(true)
-      }
+    if (!this.backend) {
+      // Kind not resolved yet: remember the intent and replay it in
+      // ensureBackend() once a backend exists.
+      this.idleFinished = false
+      this.pendingPlay = true
       return
     }
-
     this.pendingPlay = false
-
-    if (!this.nativeCapable) {
-      if (!this.webDriven) {
-        if (!this.warnedNativeOnly) {
-          this.warnedNativeOnly = true
-          console.warn(
-            `[${CONTROLLER_LABEL}] Declarative motion requires native runtime (supports('useAnimation', ['${this.kind}'])). Web playback is not supported for this element kind.`,
-          )
-        }
-        this.web.markQueued()
-        return
-      }
-      this.web.play()
-      return
-    }
-
-    this.web.stopRaf()
-    this.native.play()
+    this.backend.play()
   }
 
   pause(keys?: SpatializedMotionPropertyKeys): void {
-    if (!this.kind) return
-    if (!this.nativeCapable) {
-      if (this.webDriven) this.web.pause(keys)
-      return
-    }
-    this.native.pause(keys)
+    this.backend?.pause(keys)
   }
 
   resume(keys?: SpatializedMotionPropertyKeys): void {
-    if (!this.kind) return
-    if (!this.nativeCapable) {
-      if (this.webDriven) this.web.resume(keys)
-      return
-    }
-    this.native.resume(keys)
+    this.backend?.resume(keys)
   }
 
   stop(): void {
     if (this.destroyed) return
-    if (!this.kind) {
-      this.web.stop()
+    if (!this.backend) {
+      this.pendingPlay = false
+      this.idleFinished = false
       return
     }
-
-    if (!this.nativeCapable) {
-      if (this.webDriven) {
-        this.web.stop()
-        return
-      }
-      if (this.web.state === 'queued' || this.pendingPlay) {
-        this.web.stop()
-      }
-      return
-    }
-
-    this.native.stop()
+    this.backend.stop()
   }
 
   reset(): void {
     if (this.destroyed) return
-    if (!this.kind) {
-      this.web.reset()
+    if (!this.backend) {
+      // Kind not resolved yet: seek to start directly (spec: reset always
+      // seeks start, even when idle/unbound).
+      this.pendingPlay = false
+      this.idleFinished = false
+      const values = evaluateMotionTimeline(this.config, 0)
+      this.emitValues(values)
+      this.bump()
+      this.config.onReset?.(values)
       return
     }
-
-    if (!this.nativeCapable) {
-      this.web.reset()
-      return
-    }
-
-    const ns = this.native.sessionState
-    if (ns && ns !== 'idle') {
-      this.native.reset()
-    } else {
-      this.native.bumpToken()
-      this.web.reset()
-    }
+    this.backend.reset()
   }
 
   finish(): void {
     if (this.destroyed) return
-    if (!this.kind) {
-      this.web.finish()
+    if (!this.backend) {
+      // Kind not resolved yet: seek to end directly (spec: finish always seeks
+      // end, even when idle/unbound).
+      this.pendingPlay = false
+      this.idleFinished = true
+      const values = evaluateMotionTimeline(this.config, this.config.duration)
+      this.emitValues(values)
+      this.bump()
+      this.config.onComplete?.(values)
       return
     }
-
-    if (!this.nativeCapable) {
-      this.web.finish()
-      return
-    }
-
-    const ns = this.native.sessionState
-    if (ns && ns !== 'idle' && ns !== 'finished') {
-      this.native.finish()
-    } else if (!ns || ns === 'idle') {
-      this.native.bumpToken()
-      this.web.finish()
-    }
+    this.backend.finish()
   }
 
   /** Policy for the current kind (defaults to spatialized2d when unbound). */
   private get policy(): MotionKindPolicy {
     return MOTION_KIND_POLICIES[this.kind ?? 'spatialized2d']
-  }
-
-  /** Whether the current kind is driven by the raf web backend. */
-  private get webDriven(): boolean {
-    return this.policy.webPlayback === 'raf'
   }
 
   private get nativeCapable(): boolean {
@@ -410,11 +327,11 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
 
   /** Called when React Portal unbinds motion wiring. */
   handleMotionUnbind(): void {
-    this.native.detach({ cancelSession: true })
+    this.backend?.destroy()
     this.element = null
   }
 
   get nativeSessionAnimating(): boolean {
-    return this.native.sessionAnimating
+    return this.backend?.sessionAnimating ?? false
   }
 }
