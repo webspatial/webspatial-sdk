@@ -115,6 +115,11 @@ export type SpatializedStatic3DContainerProps =
 
 export type SpatializedStatic3DContentProps = {
   spatializedElement: SpatializedStatic3DElement
+  /**
+   * Preferred over `PortalInstanceContext` (ARCHITECTURE portal invariant #3);
+   * wired by `PortalSpatializedContainer`, falls back to context when absent.
+   */
+  portalInstanceObject?: PortalInstanceObject | null
   src?: string
   poster?: string
   autoPlay?: boolean
