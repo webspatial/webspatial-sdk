@@ -96,6 +96,18 @@ export const PhysicalMetrics = {
 }
 // --- Web bundle: browser-only utilities (no native runtime needed) ---
 
+/** Minimal `Vec3Like` shape for the web no-runtime bundle. */
+export type Vec3Like = Vec3 | [number, number, number]
+
+/** Normalize a Vec3Like ({x,y,z} or [x,y,z]) to a tuple — pure, no runtime needed. */
+export function toVec3Tuple(
+  v?: Vec3Like,
+): [number, number, number] | undefined {
+  if (v === undefined) return undefined
+  if (Array.isArray(v)) return [v[0], v[1], v[2]]
+  return [v.x, v.y, v.z]
+}
+
 /** Compose position/rotation/scale into a 4x4 transform matrix.
  *  Uses browser-native DOMMatrix — works without the native runtime. */
 export function composeSRT(

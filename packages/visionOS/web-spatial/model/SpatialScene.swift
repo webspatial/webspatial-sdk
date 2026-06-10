@@ -477,6 +477,16 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             position = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
         }
 
+        var orientation = simd_quatf(ix: 0, iy: 0, iz: 0, r: 1)
+        if let rotArray = command.rotation, rotArray.count >= 3 {
+            orientation = quatFromEulerDegreesXYZ(SIMD3<Float>(rotArray[0], rotArray[1], rotArray[2]))
+        }
+
+        var scale = SIMD3<Float>(1, 1, 1)
+        if let scaleArray = command.scale, scaleArray.count >= 3 {
+            scale = SIMD3<Float>(scaleArray[0], scaleArray[1], scaleArray[2])
+        }
+
         let size = CGSize(
             width: command.size?.width ?? 100,
             height: command.size?.height ?? 100
@@ -491,7 +501,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             id: command.id,
             parentEntityId: command.parentEntityId,
             position: position,
+            orientation: orientation,
+            scale: scale,
             size: size,
+            widthMeters: command.widthMeters,
+            heightMeters: command.heightMeters,
             webViewModel: webViewModel
         )
 
@@ -1321,11 +1335,27 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let posArray = command.position, posArray.count >= 3 {
             newPosition = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
         }
+        var newOrientation: simd_quatf? = nil
+        if let rotArray = command.rotation, rotArray.count >= 3 {
+            newOrientation = quatFromEulerDegreesXYZ(SIMD3<Float>(rotArray[0], rotArray[1], rotArray[2]))
+        }
+        var newScale: SIMD3<Float>? = nil
+        if let scaleArray = command.scale, scaleArray.count >= 3 {
+            newScale = SIMD3<Float>(scaleArray[0], scaleArray[1], scaleArray[2])
+        }
         var newSize: CGSize? = nil
         if let sizeObj = command.size {
             newSize = CGSize(width: sizeObj.width, height: sizeObj.height)
         }
-        attachmentManager.update(id: command.id, position: newPosition, size: newSize)
+        attachmentManager.update(
+            id: command.id,
+            position: newPosition,
+            orientation: newOrientation,
+            scale: newScale,
+            size: newSize,
+            widthMeters: command.widthMeters,
+            heightMeters: command.heightMeters
+        )
         resolve(.success(baseReplyData))
     }
 

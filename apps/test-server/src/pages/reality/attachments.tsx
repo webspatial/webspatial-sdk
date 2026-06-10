@@ -6,6 +6,7 @@ import {
   enableDebugTool,
   Entity,
   Model,
+  PlaneEntity,
   Reality,
   SceneGraph,
   UnlitMaterial,
@@ -771,6 +772,291 @@ function TestAttachmentPositionSizeSliders() {
   )
 }
 
+function TestAttachmentRotationScaleSliders() {
+  const [rotX, setRotX] = React.useState(0)
+  const [rotY, setRotY] = React.useState(0)
+  const [rotZ, setRotZ] = React.useState(0)
+  const [scl, setScl] = React.useState(1)
+
+  const rotation = { x: rotX, y: rotY, z: rotZ }
+  const scale = { x: scl, y: scl, z: scl }
+
+  return (
+    <TestCase title="13. Dynamic rotation & scale (sliders)">
+      <p className="text-sm text-gray-600 mb-3">
+        Drag sliders to rotate (Euler degrees) and scale the attachment relative
+        to its parent entity. The plane behind the attachment gets the same
+        rotation via <code className="text-xs">Entity</code>, so both should
+        stay aligned — proving the attachment matches normal entity rotation
+        semantics.
+      </p>
+      <div className="mb-4 max-w-md space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
+        <SliderRow
+          label="Rotation X"
+          value={rotX}
+          min={-180}
+          max={180}
+          step={5}
+          onChange={setRotX}
+          unit="°"
+        />
+        <SliderRow
+          label="Rotation Y"
+          value={rotY}
+          min={-180}
+          max={180}
+          step={5}
+          onChange={setRotY}
+          unit="°"
+        />
+        <SliderRow
+          label="Rotation Z"
+          value={rotZ}
+          min={-180}
+          max={180}
+          step={5}
+          onChange={setRotZ}
+          unit="°"
+        />
+        <SliderRow
+          label="Scale"
+          value={scl}
+          min={0.25}
+          max={2.5}
+          step={0.05}
+          onChange={setScl}
+          unit="x"
+        />
+      </div>
+      <Reality
+        style={{ width: '480px', height: '420px', border: '1px solid #d946ef' }}
+      >
+        <UnlitMaterial id="matRotScale" color="#d946ef" />
+        <AttachmentAsset name="rot-scale-attachment">
+          <div
+            style={{
+              background: 'rgba(90,20,90,0.92)',
+              color: 'white',
+              padding: 12,
+              borderRadius: 8,
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: 600 }}>Rotated panel</p>
+            <p style={{ margin: '8px 0 0', fontSize: 12, opacity: 0.85 }}>
+              rot ({rotX}°, {rotY}°, {rotZ}°) · scale {scl.toFixed(2)}x
+            </p>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0.05 }}>
+            {/* Reference plane with the same rotation, behind the attachment */}
+            <Entity rotation={rotation} position={{ x: 0, y: 0, z: -0.01 }}>
+              <PlaneEntity
+                width={0.24}
+                height={0.14}
+                materials={['matRotScale']}
+              />
+            </Entity>
+            <AttachmentEntity
+              attachment="rot-scale-attachment"
+              position={{ x: 0, y: 0, z: 0 }}
+              rotation={rotation}
+              scale={scale}
+              size={{ width: 220, height: 120 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestAttachmentMeterSizing() {
+  return (
+    <TestCase title="14. Meter-based width/height vs Plane">
+      <p className="text-sm text-gray-600 mb-2">
+        Left: attachment sized with <code className="text-xs">width</code>/
+        <code className="text-xs">height</code> in meters (0.3×0.15 m). Behind
+        it: a Plane with the exact same meter dimensions. The attachment should
+        cover the plane edge-to-edge, even when the window is rescaled. Right:
+        legacy point-based <code className="text-xs">size</code> for comparison,
+        which scales with the window instead.
+      </p>
+      <Reality
+        style={{ width: '520px', height: '420px', border: '1px solid #16a34a' }}
+      >
+        <UnlitMaterial id="matMeterPlane" color="#16a34a" />
+        <AttachmentAsset name="meter-sized-attachment">
+          <div
+            style={{
+              background: 'rgba(10,80,40,0.85)',
+              color: 'white',
+              padding: 8,
+              borderRadius: 8,
+              minHeight: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 13 }}>0.3 m × 0.15 m</p>
+          </div>
+        </AttachmentAsset>
+        <AttachmentAsset name="point-sized-attachment">
+          <div
+            style={{
+              background: 'rgba(40,40,40,0.85)',
+              color: 'white',
+              padding: 8,
+              borderRadius: 8,
+              minHeight: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 13 }}>300 × 150 pt (legacy)</p>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: -0.18, y: 0, z: 0.05 }}>
+            <PlaneEntity
+              width={0.3}
+              height={0.15}
+              materials={['matMeterPlane']}
+            />
+            <AttachmentEntity
+              attachment="meter-sized-attachment"
+              position={{ x: 0, y: 0, z: 0.01 }}
+              width={0.3}
+              height={0.15}
+            />
+          </Entity>
+          <Entity position={{ x: 0.18, y: 0, z: 0.05 }}>
+            <AttachmentEntity
+              attachment="point-sized-attachment"
+              position={[0, 0, 0.01]}
+              size={{ width: 300, height: 150 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestAttachmentSizingPrecedence() {
+  return (
+    <TestCase title="15. Sizing precedence — meters win per-axis over size">
+      <p className="text-sm text-gray-600 mb-2">
+        This attachment passes both{' '}
+        <code className="text-xs">size=&#123;&#123;400, 60&#125;&#125;</code>{' '}
+        (points) and <code className="text-xs">width=&#123;0.2&#125;</code>{' '}
+        (meters, no meter height). Expected: width comes from the 0.2 m value,
+        height falls back to the 60 pt legacy value.
+      </p>
+      <Reality
+        style={{ width: '420px', height: '360px', border: '1px solid #ca8a04' }}
+      >
+        <AttachmentAsset name="precedence-attachment">
+          <div
+            style={{
+              background: 'rgba(120,90,0,0.88)',
+              color: 'white',
+              padding: 8,
+              borderRadius: 8,
+              minHeight: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 13 }}>
+              width: 0.2 m · height: 60 pt
+            </p>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0.05 }}>
+            <AttachmentEntity
+              attachment="precedence-attachment"
+              position={{ x: 0, y: 0, z: 0 }}
+              size={{ width: 400, height: 60 }}
+              width={0.2}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestExplicitAttachmentIds() {
+  const [showSecond, setShowSecond] = React.useState(true)
+
+  return (
+    <TestCase title="16. Explicit ids — stable identity, shared asset">
+      <p className="text-sm text-gray-600 mb-2">
+        Two AttachmentEntities with explicit ids (
+        <code className="text-xs">badge-left</code>,{' '}
+        <code className="text-xs">badge-right</code>) share one asset. Toggling
+        the right one off and on must not disturb the left one, and both portals
+        keep rendering the shared content.
+      </p>
+      <button
+        className="bg-cyan-600 text-white p-2 rounded mb-3"
+        onClick={() => setShowSecond(s => !s)}
+      >
+        Toggle right attachment (currently {showSecond ? 'shown' : 'hidden'})
+      </button>
+      <Reality
+        style={{ width: '500px', height: '380px', border: '1px solid #0891b2' }}
+      >
+        <UnlitMaterial id="matIdLeft" color="#0891b2" />
+        <UnlitMaterial id="matIdRight" color="#22d3ee" />
+        <AttachmentAsset name="explicit-id-badge">
+          <div
+            style={{
+              background: 'rgba(0,60,80,0.88)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 13 }}>Shared badge content</p>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: -0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matIdLeft']}
+            />
+            <AttachmentEntity
+              id="badge-left"
+              attachment="explicit-id-badge"
+              position={{ x: 0, y: 0.15, z: 0 }}
+              size={{ width: 180, height: 70 }}
+            />
+          </Entity>
+          <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matIdRight']}
+            />
+            {showSecond && (
+              <AttachmentEntity
+                id="badge-right"
+                attachment="explicit-id-badge"
+                position={{ x: 0, y: 0.15, z: 0 }}
+                size={{ width: 180, height: 70 }}
+              />
+            )}
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
 function TestLastDefinitionWins() {
   return (
     <TestCase title="9. Last Definition Wins — Duplicate AttachmentAsset name">
@@ -861,6 +1147,10 @@ function App() {
         <TestGSAPSingleAttachment />
         <TestGSAPSharedAttachmentAsset />
         <TestAttachmentPositionSizeSliders />
+        <TestAttachmentRotationScaleSliders />
+        <TestAttachmentMeterSizing />
+        <TestAttachmentSizingPrecedence />
+        <TestExplicitAttachmentIds />
       </div>
     </div>
   )

@@ -7,8 +7,15 @@ import { createNativeAttachment } from '../spatial-host'
 import {
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
+  Vec3Like,
 } from '../types/types'
 
+/**
+ * Entity-like attachment surface. Not a SpatialEntity: the native entity is
+ * created and owned by SwiftUI's RealityView attachments mechanism, so only
+ * transform-style behavior (position/rotation/scale/sizing) is exposed —
+ * no components, children, events or transform animation.
+ */
 export class Attachment extends SpatialObject {
   constructor(
     id: string,
@@ -26,10 +33,29 @@ export class Attachment extends SpatialObject {
     return this.windowProxy
   }
 
+  /** Set position relative to the parent entity, in meters. */
+  async setPosition(position: Vec3Like) {
+    return this.update({ position })
+  }
+
+  /** Set rotation relative to the parent entity, Euler degrees (XYZ). */
+  async setRotation(rotation: Vec3Like) {
+    return this.update({ rotation })
+  }
+
+  /** Set scale relative to the parent entity. */
+  async setScale(scale: Vec3Like) {
+    return this.update({ scale })
+  }
+
   async update(options: AttachmentEntityUpdateOptions) {
     if (this.isDestroyed) return
     if (options.position) this.options.position = options.position
+    if (options.rotation) this.options.rotation = options.rotation
+    if (options.scale) this.options.scale = options.scale
     if (options.size) this.options.size = options.size
+    if (options.width !== undefined) this.options.width = options.width
+    if (options.height !== undefined) this.options.height = options.height
     return new UpdateAttachmentEntityCommand(this.id, options).execute()
   }
 }

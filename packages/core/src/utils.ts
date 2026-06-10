@@ -1,4 +1,4 @@
-import { Vec3 } from './types/types'
+import { Vec3, Vec3Like } from './types/types'
 import type { TransformValues } from './types/animation'
 
 function parseBorderRadius(borderProperty: string, width: number) {
@@ -59,6 +59,18 @@ export function composeSRT(position: Vec3, rotation: Vec3, scale: Vec3) {
   m = m.rotate(rx, ry, rz)
   m = m.scale(sx, sy, sz)
   return m
+}
+
+/**
+ * Normalize a Vec3Like value ({x,y,z} object or [x,y,z] tuple) to a tuple.
+ * Returns undefined when the input is undefined.
+ */
+export function toVec3Tuple(
+  v?: Vec3Like,
+): [number, number, number] | undefined {
+  if (v === undefined) return undefined
+  if (Array.isArray(v)) return [v[0], v[1], v[2]]
+  return [v.x, v.y, v.z]
 }
 
 /**

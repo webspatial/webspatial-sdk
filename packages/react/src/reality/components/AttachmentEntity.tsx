@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Attachment } from '@webspatial/core-sdk'
+import { Attachment, toVec3Tuple, Vec3 } from '@webspatial/core-sdk'
 
 import { useRealityContext, useParentContext } from '../context'
 import { setOpenWindowStyle } from '../../utils/windowStyleSync'
@@ -7,24 +7,78 @@ import { useSyncHeadStyles } from '../../utils/useSyncHeadStyles'
 
 let instanceCounter = 0
 
+// Ids of currently mounted AttachmentEntity instances, used to detect
+// duplicate explicit `id` props so registry/portal keys never collide.
+const activeInstanceIds = new Set<string>()
+
+export function claimAttachmentInstanceId(explicitId?: string): string {
+  let resolved = explicitId ?? `att_${++instanceCounter}`
+  if (activeInstanceIds.has(resolved)) {
+    const fallback = `${resolved}_${++instanceCounter}`
+    console.warn(
+      `[AttachmentEntity] Duplicate id "${resolved}", falling back to "${fallback}". Explicit ids must be unique.`,
+    )
+    resolved = fallback
+  }
+  activeInstanceIds.add(resolved)
+  return resolved
+}
+
 type AttachmentEntityProps = {
+  /**
+   * Stable explicit identity for this attachment placement. Must be unique
+   * across mounted AttachmentEntity instances and must not change for the
+   * lifetime of the component. Defaults to an auto-generated id.
+   */
+  id?: string
+  /** Name of the <AttachmentAsset> whose content renders into this surface. */
   attachment: string
-  position?: [number, number, number]
-  size: { width: number; height: number }
+  /** Position relative to the parent entity in meters (Vec3 or [x, y, z]). */
+  position?: Vec3 | [number, number, number]
+  /** Rotation relative to the parent entity, Euler angles in degrees. */
+  rotation?: Vec3
+  /** Scale relative to the parent entity. */
+  scale?: Vec3
+  /**
+   * 2D surface size in points (legacy). Prefer the meter-based
+   * `width`/`height`, which take precedence per axis when both are given.
+   */
+  size?: { width: number; height: number }
+  /** Surface width in world-space meters, like <Plane>. */
+  width?: number
+  /** Surface height in world-space meters, like <Plane>. */
+  height?: number
 }
 
 export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
+  id,
   attachment: attachmentName,
   position,
+  rotation,
+  scale,
   size,
+  width,
+  height,
 }) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
   const attachmentRef = useRef<Attachment | null>(null)
   const parentIdRef = useRef<string | null>(null)
-  const instanceIdRef = useRef(`att_${++instanceCounter}`)
+  const instanceIdRef = useRef<string | null>(null)
+  if (instanceIdRef.current === null) {
+    instanceIdRef.current = claimAttachmentInstanceId(id)
+  }
   const attachmentNameRef = useRef(attachmentName)
   const [childWindow, setChildWindow] = useState<WindowProxy | null>(null)
+
+  // Keep the id claimed while mounted (re-claims after StrictMode remount)
+  useEffect(() => {
+    const claimed = instanceIdRef.current!
+    activeInstanceIds.add(claimed)
+    return () => {
+      activeInstanceIds.delete(claimed)
+    }
+  }, [])
 
   // Create the attachment when the parent entity is ready
   useEffect(() => {
@@ -39,10 +93,19 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 
     const init = async () => {
       try {
+        if (size === undefined && width === undefined && height === undefined) {
+          console.warn(
+            '[AttachmentEntity] No size, width or height provided; the native default size will be used.',
+          )
+        }
         const att = await ctx.session.createAttachmentEntity({
           parentEntityId: parentId,
-          position: position ?? [0, 0, 0],
+          position,
+          rotation,
+          scale,
           size,
+          width,
+          height,
           ownerViewId: ctx.reality.id,
         })
         if (cancelled) {
@@ -81,7 +144,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
         setChildWindow(windowProxy)
         ctx.attachmentRegistry.addContainer(
           attachmentNameRef.current,
-          instanceIdRef.current,
+          instanceIdRef.current!,
           att.getContainer(),
         )
       } catch (error) {
@@ -97,7 +160,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
       if (att) {
         ctx.attachmentRegistry.removeContainer(
           attachmentNameRef.current,
-          instanceIdRef.current,
+          instanceIdRef.current!,
         )
         att.destroy()
         attachmentRef.current = null
@@ -112,10 +175,10 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     const att = attachmentRef.current
     const prevName = attachmentNameRef.current
     if (att && prevName !== attachmentName) {
-      ctx.attachmentRegistry.removeContainer(prevName, instanceIdRef.current)
+      ctx.attachmentRegistry.removeContainer(prevName, instanceIdRef.current!)
       ctx.attachmentRegistry.addContainer(
         attachmentName,
-        instanceIdRef.current,
+        instanceIdRef.current!,
         att.getContainer(),
       )
       attachmentNameRef.current = attachmentName
@@ -126,11 +189,36 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 
   useSyncHeadStyles(childWindow)
 
-  // Update position/size when they change
+  // Update transform/sizing when props change. `childWindow` is a dep so the
+  // effect re-fires once after the async create completes, flushing any prop
+  // values that changed while creation was in flight.
+  const pos = toVec3Tuple(position)
   useEffect(() => {
     if (!attachmentRef.current) return
-    attachmentRef.current.update({ position, size })
-  }, [position?.[0], position?.[1], position?.[2], size?.width, size?.height])
+    attachmentRef.current.update({
+      position,
+      rotation,
+      scale,
+      size,
+      width,
+      height,
+    })
+  }, [
+    pos?.[0],
+    pos?.[1],
+    pos?.[2],
+    rotation?.x,
+    rotation?.y,
+    rotation?.z,
+    scale?.x,
+    scale?.y,
+    scale?.z,
+    size?.width,
+    size?.height,
+    width,
+    height,
+    childWindow,
+  ])
 
   return null
 }

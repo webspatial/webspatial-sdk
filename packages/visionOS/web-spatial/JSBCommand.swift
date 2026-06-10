@@ -395,7 +395,14 @@ struct InitializeAttachmentCommand: CommandDataProtocol {
     let id: String
     let parentEntityId: String
     let position: [Float]?
+    // Euler angles in degrees (XYZ), composed as Rz·Ry·Rx to match the
+    // JS SDK's composeSRT/DOMMatrix.rotate semantics
+    let rotation: [Float]?
+    let scale: [Float]?
     let size: AttachmentSize?
+    // World-space meters; take precedence per-axis over the point-based size
+    let widthMeters: Double?
+    let heightMeters: Double?
     let ownerViewId: String
 }
 
@@ -403,7 +410,11 @@ struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     static let commandType = "UpdateAttachmentEntity"
     let id: String
     let position: [Float]?
+    let rotation: [Float]?
+    let scale: [Float]?
     let size: AttachmentSize?
+    let widthMeters: Double?
+    let heightMeters: Double?
 }
 
 struct AttachmentSize: Codable {

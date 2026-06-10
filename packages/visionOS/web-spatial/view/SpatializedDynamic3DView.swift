@@ -4,6 +4,7 @@ import SwiftUI
 struct SpatializedDynamic3DView: View {
     @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
+    @Environment(\.physicalMetrics) private var physicalMetrics
     @State private var isDrag = false
     @State private var isRotate = false
     @State private var isScale = false
@@ -142,7 +143,7 @@ struct SpatializedDynamic3DView: View {
             // Add existing attachments on initial creation
             for (_, info) in spatialScene.attachmentManager.attachments {
                 if let attachmentEntity = attachments.entity(for: info.id) {
-                    attachmentEntity.position = info.position
+                    applyAttachmentTransform(attachmentEntity, info)
                     if let parentEntity = findSpatialEntity(info.parentEntityId) {
                         parentEntity.addChild(attachmentEntity)
                     } else {
@@ -152,10 +153,10 @@ struct SpatializedDynamic3DView: View {
             }
         }, update: { _, attachments in
             let rootEntity = spatializedDynamic3DElement.getRoot()
-            // Update attachment positions and parenting
+            // Update attachment transforms and parenting
             for (_, info) in spatialScene.attachmentManager.attachments {
                 if let attachmentEntity = attachments.entity(for: info.id) {
-                    attachmentEntity.position = info.position
+                    applyAttachmentTransform(attachmentEntity, info)
                     // Re-parent if not already under the correct parent
                     if let parentEntity = findSpatialEntity(info.parentEntityId) {
                         if attachmentEntity.parent != parentEntity {
@@ -174,8 +175,8 @@ struct SpatializedDynamic3DView: View {
                 Attachment(id: info.id) {
                     info.webViewModel.getView()
                         .frame(
-                            width: info.size.width,
-                            height: info.size.height
+                            width: attachmentFramePoints(meters: info.widthMeters, fallbackPoints: info.size.width),
+                            height: attachmentFramePoints(meters: info.heightMeters, fallbackPoints: info.size.height)
                         )
                 }
             }
@@ -192,5 +193,21 @@ struct SpatializedDynamic3DView: View {
     private func findSpatialEntity(_ spatialId: String) -> SpatialEntity? {
         // Look up the SpatialEntity from the SpatialScene's spatial object registry
         return spatialScene.findSpatialObject(spatialId)
+    }
+
+    // Entity scale multiplies on top of the frame computed from
+    // widthMeters/heightMeters (or the legacy point-based size).
+    private func applyAttachmentTransform(_ entity: Entity, _ info: AttachmentInfo) {
+        entity.position = info.position
+        entity.orientation = info.orientation
+        entity.scale = info.scale
+    }
+
+    // Meter-based dimensions win per-axis over the legacy point-based size.
+    // The physicalMetrics conversion keeps meter sizing correct in world
+    // space when the window's scale changes.
+    private func attachmentFramePoints(meters: Double?, fallbackPoints: CGFloat) -> CGFloat {
+        guard let meters = meters else { return fallbackPoints }
+        return CGFloat(physicalMetrics.worldScalingCompensation(.scaled).convert(meters, from: .meters))
     }
 }
