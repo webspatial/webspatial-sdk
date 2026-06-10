@@ -87,6 +87,8 @@ export class NativePlaybackBackend implements PlaybackBackend {
   private commandQueue: Promise<void> = Promise.resolve()
   private warnedNative = false
   private warnedQueued = false
+  /** Set when finish() is invoked with no active session (idle terminal). */
+  private idleFinished = false
 
   constructor(
     private readonly ctx: NativeBackendContext,
@@ -97,15 +99,22 @@ export class NativePlaybackBackend implements PlaybackBackend {
     const s = this.session?.state
     if (s === 'queued') return 'running'
     if (s && s !== 'idle') return s
+    if (this.idleFinished) return 'finished'
     return 'idle'
   }
 
-  get sessionState(): SessionState | undefined {
-    return this.session?.state
+  get isAnimating(): boolean {
+    const s = this.session?.state
+    return s === 'running' || s === 'queued'
   }
 
-  get controlling(): boolean {
-    return this.nativeControlling
+  get isPaused(): boolean {
+    return this.session?.state === 'paused'
+  }
+
+  get finished(): boolean {
+    if (this.session?.state === 'finished') return true
+    return !this.session && this.idleFinished
   }
 
   get sessionAnimating(): boolean {
@@ -113,12 +122,29 @@ export class NativePlaybackBackend implements PlaybackBackend {
     return s ? ['running', 'paused', 'queued'].includes(s) : false
   }
 
-  /** Bump the play token without starting playback (used by idle stop). */
-  bumpToken(): void {
-    this.nativePlayToken++
+  /** Fields to suppress on the Portal while the native session drives playback. */
+  getSuppressedFields(): Set<string> | null {
+    const s = this.session?.state
+    if (s !== 'running' && s !== 'paused') return null
+    const kind = this.ctx.getKind()
+    if (!kind) return null
+    const cfg = this.ctx.getConfig()
+    const active = this.sampler.getActiveProperties()
+    const subset = cfg.tracks.filter(t => active.includes(t.property))
+    if (subset.length === 0) return null
+    return MOTION_KIND_POLICIES[kind].getSuppressedFields({
+      ...cfg,
+      tracks: subset,
+    })
+  }
+
+  /** Cancel any active session and release native wiring. */
+  destroy(): void {
+    this.detach({ cancelSession: true })
   }
 
   play(): void {
+    this.idleFinished = false
     const sessionState = this.session?.state
     if (
       !sessionState ||
@@ -159,13 +185,37 @@ export class NativePlaybackBackend implements PlaybackBackend {
     const ns = this.session?.state
     if (ns && ns !== 'idle') {
       this.enqueue(() => this.nativeReset())
+      return
     }
+    // No active session: seek to start synchronously (spec: reset always seeks
+    // start, even when idle).
+    this.nativePlayToken++
+    this.idleFinished = false
+    const cfg = this.ctx.getConfig()
+    const values = evaluateMotionTimeline(cfg, 0)
+    this.ctx.clearPendingPlay()
+    this.ctx.emitValues(values)
+    this.ctx.notifyStateChange()
+    cfg.onReset?.(values)
   }
 
   finish(): void {
     const ns = this.session?.state
     if (ns && ns !== 'idle' && ns !== 'finished') {
       this.enqueue(() => this.nativeFinish())
+      return
+    }
+    if (!ns || ns === 'idle') {
+      // No active session: seek to end synchronously (spec: finish always seeks
+      // end, even when idle).
+      this.nativePlayToken++
+      this.idleFinished = true
+      const cfg = this.ctx.getConfig()
+      const values = evaluateMotionTimeline(cfg, cfg.duration)
+      this.ctx.clearPendingPlay()
+      this.ctx.emitValues(values)
+      this.ctx.notifyStateChange()
+      cfg.onComplete?.(values)
     }
   }
 
