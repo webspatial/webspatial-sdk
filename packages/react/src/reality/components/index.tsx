@@ -1,21 +1,56 @@
-export * from './Entity'
-export * from './BoxEntity'
-export * from './UnlitMaterial'
-export * from './Texture'
-export * from './SphereEntity'
-export * from './ConeEntity'
-export * from './CylinderEntity'
-export * from './PlaneEntity'
-export * from './SceneGraph'
-export * from './ModelAsset'
-export * from './ModelEntity'
-export * from './Reality'
-export * from './AttachmentAsset'
-export * from './AttachmentEntity'
-export { BoxEntity as Box } from './BoxEntity'
-export { PlaneEntity as Plane } from './PlaneEntity'
-export { SphereEntity as Sphere } from './SphereEntity'
-export { ConeEntity as Cone } from './ConeEntity'
-export { CylinderEntity as Cylinder } from './CylinderEntity'
-export { SceneGraph as World } from './SceneGraph'
+import React from 'react'
+import type { SpatialEntityName } from '@webspatial/core-sdk'
+import { EntityRefShape } from '../hooks'
+
+import { Entity as EntityBase } from './Entity'
+import { BoxEntity as BoxEntityBase } from './BoxEntity'
+import { SphereEntity as SphereEntityBase } from './SphereEntity'
+import { ConeEntity as ConeEntityBase } from './ConeEntity'
+import { CylinderEntity as CylinderEntityBase } from './CylinderEntity'
+import { PlaneEntity as PlaneEntityBase } from './PlaneEntity'
+import { ModelEntity as ModelEntityBase } from './ModelEntity'
+import { SceneGraph } from './SceneGraph'
+
+type WithEntityName<Props, Name extends string> = Omit<Props, 'name'> & {
+  name?: SpatialEntityName<Name>
+}
+
+type EntityComponent<Component extends React.ComponentType<any>> = <
+  Name extends string = string,
+>(
+  props: WithEntityName<React.ComponentPropsWithoutRef<Component>, Name> &
+    React.RefAttributes<EntityRefShape>,
+) => React.ReactElement | null
+
+export const Entity = EntityBase as EntityComponent<typeof EntityBase>
+export const BoxEntity = BoxEntityBase as EntityComponent<typeof BoxEntityBase>
+export const SphereEntity = SphereEntityBase as EntityComponent<
+  typeof SphereEntityBase
+>
+export const ConeEntity = ConeEntityBase as EntityComponent<
+  typeof ConeEntityBase
+>
+export const CylinderEntity = CylinderEntityBase as EntityComponent<
+  typeof CylinderEntityBase
+>
+export const PlaneEntity = PlaneEntityBase as EntityComponent<
+  typeof PlaneEntityBase
+>
+export const ModelEntity = ModelEntityBase as EntityComponent<
+  typeof ModelEntityBase
+>
+
+export { UnlitMaterial } from './UnlitMaterial'
+export { Texture } from './Texture'
+export { SceneGraph }
+export { ModelAsset } from './ModelAsset'
+export { Reality } from './Reality'
+export { AttachmentAsset } from './AttachmentAsset'
+export { AttachmentEntity } from './AttachmentEntity'
+export { BoxEntity as Box }
+export { PlaneEntity as Plane }
+export { SphereEntity as Sphere }
+export { ConeEntity as Cone }
+export { CylinderEntity as Cylinder }
+export { SceneGraph as World }
 export * from './Material'

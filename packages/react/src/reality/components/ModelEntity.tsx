@@ -2,7 +2,6 @@ import React, { forwardRef, useEffect, useRef } from 'react'
 import {
   SpatialMaterial,
   SpatialModelEntity as CoreSpatialModelEntity,
-  assertValidSpatialEntityName,
 } from '@webspatial/core-sdk'
 import { EntityProps, EntityEventHandler } from '../type'
 import { EntityRefShape } from '../hooks'
@@ -10,20 +9,15 @@ import { BaseEntity } from './BaseEntity'
 import { useRealityContext } from '../context'
 import { shallowEqualArray } from '../utils'
 
-type Props<Name extends string = string> = EntityProps<Name> & {
+type Props = EntityProps & {
   model: string
   materials?: string[]
 } & EntityEventHandler & {
     children?: React.ReactNode
   }
 
-type ModelEntityComponent = <Name extends string = string>(
-  props: Props<Name> & React.RefAttributes<EntityRefShape>,
-) => React.ReactElement | null
-
 export const ModelEntity = forwardRef<EntityRefShape, Props>(
   ({ id, model, children, name, materials, ...rest }, ref) => {
-    assertValidSpatialEntityName(name)
     const ctx = useRealityContext()
     const entityRef = useRef<CoreSpatialModelEntity | null>(null)
     const lastMaterialsRef = useRef<string[] | undefined>(undefined)
@@ -99,4 +93,4 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
       </BaseEntity>
     )
   },
-) as ModelEntityComponent
+)

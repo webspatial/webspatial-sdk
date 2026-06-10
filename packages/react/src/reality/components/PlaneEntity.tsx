@@ -5,14 +5,10 @@ import { SpatialPlaneGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type PlaneEntityProps<Name extends string = string> = EntityProps<Name> & {
+type PlaneEntityProps = EntityProps & {
   children?: React.ReactNode
   materials?: string[]
 } & SpatialPlaneGeometryOptions
-
-type PlaneEntityComponent = <Name extends string = string>(
-  props: PlaneEntityProps<Name> & React.RefAttributes<EntityRefShape>,
-) => React.ReactElement | null
 
 export const PlaneEntity = forwardRef<EntityRefShape, PlaneEntityProps>(
   ({ children, ...props }, ref) => {
@@ -32,4 +28,4 @@ export const PlaneEntity = forwardRef<EntityRefShape, PlaneEntityProps>(
       </GeometryEntity>
     )
   },
-) as PlaneEntityComponent
+)

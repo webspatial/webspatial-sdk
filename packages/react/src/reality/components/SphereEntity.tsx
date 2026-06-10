@@ -5,14 +5,10 @@ import { SpatialSphereGeometryOptions } from '@webspatial/core-sdk'
 import { GeometryEntity } from './GeometryEntity'
 import { useRealityContext } from '../context'
 
-type SphereEntityProps<Name extends string = string> = EntityProps<Name> & {
+type SphereEntityProps = EntityProps & {
   children?: React.ReactNode
   materials?: string[]
 } & SpatialSphereGeometryOptions
-
-type SphereEntityComponent = <Name extends string = string>(
-  props: SphereEntityProps<Name> & React.RefAttributes<EntityRefShape>,
-) => React.ReactElement | null
 
 export const SphereEntity = forwardRef<EntityRefShape, SphereEntityProps>(
   ({ children, ...props }, ref) => {
@@ -30,4 +26,4 @@ export const SphereEntity = forwardRef<EntityRefShape, SphereEntityProps>(
       </GeometryEntity>
     )
   },
-) as SphereEntityComponent
+)
