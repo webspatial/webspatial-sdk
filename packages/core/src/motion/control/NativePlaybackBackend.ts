@@ -128,7 +128,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
   }
 
   play(): void {
-    this.ctx.stopWeb()
     const sessionState = this.session?.state
     if (
       !sessionState ||
@@ -169,21 +168,13 @@ export class NativePlaybackBackend implements PlaybackBackend {
     const ns = this.session?.state
     if (ns && ns !== 'idle') {
       this.enqueue(() => this.nativeReset())
-      return
     }
-    this.nativePlayToken++
-    this.ctx.jsReset()
   }
 
   finish(): void {
     const ns = this.session?.state
     if (ns && ns !== 'idle' && ns !== 'finished') {
       this.enqueue(() => this.nativeFinish())
-      return
-    }
-    if (!ns || ns === 'idle') {
-      this.nativePlayToken++
-      this.ctx.jsFinish()
     }
   }
 
