@@ -58,7 +58,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
   readonly id: string
 
   private kind: SpatializedMotionKind | null
-  private config: SpatializedMotionConfig
+  private _config: SpatializedMotionConfig
   private element: MotionHost | null
   private readonly onValuesChange?: (values: SpatializedVisualValues) => void
   private readonly onStateChange?: () => void
@@ -80,25 +80,20 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
 
   constructor(
     config: SpatializedMotionConfig,
-    kindOrOptions?: SpatializedMotionKind | SpatializedMotionControllerOptions,
     options: SpatializedMotionControllerOptions = {},
   ) {
     validateSpatializedMotionConfig(config)
-    const kind = typeof kindOrOptions === 'string' ? kindOrOptions : undefined
-    const resolvedOptions =
-      typeof kindOrOptions === 'string' ? options : (kindOrOptions ?? {})
-
-    this.kind = kind ?? null
-    this.config = config
+    this.kind = null
+    this._config = config
     this.id = nextMotionObjectId(
       MOTION_KIND_POLICIES[this.kind ?? 'spatialized2d'].motionObjectIdPrefix,
     )
-    this.element = resolvedOptions.element ?? null
-    this.capability = resolverFromOptions(resolvedOptions)
-    this.onValuesChange = resolvedOptions.onValuesChange
-    this.onStateChange = resolvedOptions.onStateChange
+    this.element = options.element ?? null
+    this.capability = resolverFromOptions(options)
+    this.onValuesChange = options.onValuesChange
+    this.onStateChange = options.onStateChange
 
-    this.sampler = new Sampler(() => this.config)
+    this.sampler = new Sampler(() => this._config)
     this.ensureBackend()
 
     this.emitValues(evaluateMotionTimeline(config, 0))
@@ -115,7 +110,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
     this.backend = this.useNativeBackend
       ? new NativePlaybackBackend(
           {
-            getConfig: () => this.config,
+            getConfig: () => this._config,
             getKind: () => this.kind,
             getElement: () => this.element,
             isNativeCapable: () => this.nativeCapable,
@@ -130,7 +125,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
         )
       : new WebPlaybackBackend(
           {
-            getConfig: () => this.config,
+            getConfig: () => this._config,
             emitValues: values => this.emitValues(values),
             notifyStateChange: () => this.bump(),
             isDestroyed: () => this.destroyed,
@@ -156,17 +151,17 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
     return this.destroyed
   }
 
-  get definition(): SpatializedMotionConfig {
-    return this.config
+  get config(): SpatializedMotionConfig {
+    return this._config
   }
 
   get targetKind(): SpatializedMotionKind | null {
     return this.kind
   }
 
-  updateDefinition(config: SpatializedMotionConfig): void {
+  updateConfig(config: SpatializedMotionConfig): void {
     validateSpatializedMotionConfig(config)
-    this.config = config
+    this._config = config
   }
 
   attachElement(
@@ -206,7 +201,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
     }
     if (!element) return
 
-    if (this.pendingPlay || this.config.autoStart !== false) {
+    if (this.pendingPlay || this._config.autoStart !== false) {
       this.play()
     }
   }
@@ -282,10 +277,10 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
       // seeks start, even when idle/unbound).
       this.pendingPlay = false
       this.idleFinished = false
-      const values = evaluateMotionTimeline(this.config, 0)
+      const values = evaluateMotionTimeline(this._config, 0)
       this.emitValues(values)
       this.bump()
-      this.config.onReset?.(values)
+      this._config.onReset?.(values)
       return
     }
     this.backend.reset()
@@ -298,10 +293,10 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
       // end, even when idle/unbound).
       this.pendingPlay = false
       this.idleFinished = true
-      const values = evaluateMotionTimeline(this.config, this.config.duration)
+      const values = evaluateMotionTimeline(this._config, this._config.duration)
       this.emitValues(values)
       this.bump()
-      this.config.onComplete?.(values)
+      this._config.onComplete?.(values)
       return
     }
     this.backend.finish()
@@ -329,9 +324,5 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
   handleMotionUnbind(): void {
     this.backend?.destroy()
     this.element = null
-  }
-
-  get nativeSessionAnimating(): boolean {
-    return this.backend?.sessionAnimating ?? false
   }
 }

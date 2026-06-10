@@ -17,7 +17,7 @@ The SDK MUST treat `Spatialized2DElement` motion as the 2D target, resolved when
 
 #### Scenario: Core controller parity
 
-- **WHEN** authors call `element.motion(config)` on a `Spatialized2DElement` or `new SpatializedMotionController(config, 'spatialized2d')`
+- **WHEN** authors create `new SpatializedMotionController(config)` and the binding flow resolves the target to `spatialized2d`
 - **THEN** playback behavior MUST be equivalent for the same timeline config
 
 ---

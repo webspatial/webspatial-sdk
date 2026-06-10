@@ -80,7 +80,6 @@ function sessionIdPrefix(kind: SpatializedMotionKind | null): string {
  */
 export class NativePlaybackBackend implements PlaybackBackend {
   private session: NativeSession | null = null
-  private nativeControlling = false
   private nativePlayToken = 0
   private playStartWallMs = 0
   private nativePausedElapsedMs = 0
@@ -237,7 +236,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
       }
     }
     this.session = null
-    this.nativeControlling = false
     this.nativePlayToken++
     this.ctx.clearPendingPlay()
     this.ctx.notifyStateChange()
@@ -318,14 +316,11 @@ export class NativePlaybackBackend implements PlaybackBackend {
       if (this.ctx.isDestroyed() || session.unmounted) return
 
       session.result = result
-      this.nativeControlling = true
-
       result.finished.then(finalValues => {
         if (this.ctx.isDestroyed() || session.unmounted) return
         if (this.session !== session) return
         if (session.state === 'finished' || session.state === 'idle') return
         session.state = 'finished'
-        this.nativeControlling = false
         this.ctx.notifyStateChange()
         this.ctx.getConfig().onComplete?.(finalValues)
         this.ctx.emitValues(finalValues)
@@ -337,7 +332,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
         if (session.state === 'finished' || session.state === 'idle') return
         session.state = 'idle'
         this.session = null
-        this.nativeControlling = false
         this.ctx.notifyStateChange()
         this.ctx.getConfig().onReset?.(currentValues)
         this.ctx.emitValues(currentValues)
@@ -349,7 +343,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
         if (session.state === 'finished' || session.state === 'idle') return
         session.state = 'idle'
         this.session = null
-        this.nativeControlling = false
         this.ctx.notifyStateChange()
         this.reportNativeError(error)
       })
@@ -374,7 +367,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
       if (this.ctx.isDestroyed() || session.unmounted) return
       session.state = 'idle'
       this.session = null
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
       this.reportNativeError({
         animationId: session.animationId,
@@ -417,7 +409,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
           type: 'resume',
         })
         current.state = 'running'
-        this.nativeControlling = true
         this.playStartWallMs = performance.now() - this.nativePausedElapsedMs
         this.ctx.notifyStateChange()
       } catch (e: unknown) {
@@ -525,7 +516,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
       const values = evaluateMotionTimeline(session.config, 0)
       session.state = 'idle'
       this.session = null
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
       this.ctx.emitValues(values)
       this.ctx.getConfig().onReset?.(values)
@@ -536,7 +526,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
     if (!element) {
       session.state = 'idle'
       this.session = null
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
       const values = evaluateMotionTimeline(session.config, 0)
       this.ctx.getConfig().onReset?.(values)
@@ -551,7 +540,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
       })
       session.state = 'idle'
       this.session = null
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
       if (values) {
         this.ctx.emitValues(values)
@@ -564,7 +552,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
     } catch {
       session.state = 'idle'
       this.session = null
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
     }
   }
@@ -590,7 +577,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
     if (!element) {
       session.state = 'idle'
       this.session = null
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
       this.ctx.emitValues(currentValues)
       this.ctx.getConfig().onStop?.(currentValues)
@@ -604,7 +590,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
       })
       session.state = 'idle'
       this.session = null
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
       const output = values ?? currentValues
       this.ctx.emitValues(output)
@@ -612,7 +597,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
     } catch {
       session.state = 'idle'
       this.session = null
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
       this.ctx.emitValues(currentValues)
       this.ctx.getConfig().onStop?.(currentValues)
@@ -628,7 +612,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
     const element = this.ctx.getElement()
     if (!element) {
       session.state = 'finished'
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
       const values = evaluateMotionTimeline(
         session.config,
@@ -645,7 +628,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
         type: 'finish',
       })
       session.state = 'finished'
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
       const output =
         values ??
@@ -654,7 +636,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
       this.ctx.getConfig().onComplete?.(output)
     } catch {
       session.state = 'finished'
-      this.nativeControlling = false
       this.ctx.notifyStateChange()
       const fallback = evaluateMotionTimeline(
         session.config,

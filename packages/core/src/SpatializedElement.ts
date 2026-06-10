@@ -1,5 +1,3 @@
-import type { SpatializedMotionConfig } from './types/spatializedMotion'
-import type { SpatializedMotionHandle } from './motion/control/SpatializedMotionHandle'
 import { UpdateSpatializedElementTransform } from './JSBCommand'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialObject } from './SpatialObject'
@@ -56,15 +54,6 @@ export abstract class SpatializedElement extends SpatialObject {
   abstract updateProperties(
     properties: Partial<SpatializedElementProperties>,
   ): Promise<WebSpatialProtocolResult>
-
-  /**
-   * Create a declarative motion controller for this spatialized container.
-   * Implemented per element kind (2D / Static3D / Dynamic3D).
-   */
-  abstract motion(
-    config: SpatializedMotionConfig,
-    options?: Record<string, unknown>,
-  ): SpatializedMotionHandle
 
   /**
    * Updates the transformation matrix of this element in 3D space.

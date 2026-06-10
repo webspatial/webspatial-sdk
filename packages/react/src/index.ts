@@ -83,6 +83,7 @@ export {
 //
 // Names that already resolve to a richer parameterized type via
 // `./spatialized-container/types` (the `SpatialTapEvent` / `SpatialDragEvent`
+export { useAnimation } from './spatialized-container/motion'
 // family) intentionally do NOT appear here — re-exporting the simpler
 // core-sdk version of the same name would shadow the more useful one in
 // consumer IDEs.
