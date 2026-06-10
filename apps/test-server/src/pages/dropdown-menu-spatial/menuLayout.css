@@ -1,0 +1,19 @@
+/* Radix menu panel + items (test-server demo polish on dark page). */
+.dropdown-spatial-menu {
+  background: #ffffff !important;
+  color: #111827;
+  isolation: isolate;
+}
+
+.dropdown-spatial-menu-item {
+  transition: background-color 0.12s ease;
+}
+
+.dropdown-spatial-menu-item[data-highlighted] {
+  background-color: #f1f5f9;
+  outline: none;
+}
+
+.dropdown-spatial-menu-item[data-disabled] {
+  opacity: 0.55;
+}

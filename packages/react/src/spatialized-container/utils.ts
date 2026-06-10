@@ -67,6 +67,34 @@ export function getInheritedStyleProps(
   return props
 }
 
+function parseCssPixelDimension(value: unknown): number {
+  if (value == null || value === '') {
+    return 0
+  }
+  const parsed = parseFloat(String(value))
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+export function getPortalInheritedStyleProps(
+  computedStyle: CSSStyleDeclaration,
+  options: { isFloatingOverlay?: boolean } = {},
+): CSSProperties {
+  const props = getInheritedStyleProps(computedStyle)
+  if (!options.isFloatingOverlay) {
+    return props
+  }
+
+  delete props.position
+  delete props.display
+  if (parseCssPixelDimension(props.width) <= 0) {
+    delete props.width
+  }
+  if (parseCssPixelDimension(props.height) <= 0) {
+    delete props.height
+  }
+  return props
+}
+
 export function parseTransformOrigin(computedStyle: CSSStyleDeclaration) {
   const transformOriginProperty =
     computedStyle.getPropertyValue('transform-origin')

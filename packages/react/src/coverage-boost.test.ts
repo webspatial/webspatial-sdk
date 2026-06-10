@@ -17,6 +17,7 @@ import {
 import {
   extractAndRemoveCustomProperties,
   getInheritedStyleProps,
+  getPortalInheritedStyleProps,
   joinToCSSText,
   parseCornerRadius,
   parseTransformOrigin,
@@ -109,6 +110,22 @@ describe('spatialized-container/utils', () => {
       }),
     )
     expect(getInheritedStyleProps(computedStyle)).not.toHaveProperty('height')
+  })
+
+  it('getPortalInheritedStyleProps drops zero overlay dimensions', () => {
+    const computedStyle = {
+      color: 'red',
+      width: '0px',
+      height: '0px',
+      position: 'fixed',
+      display: 'block',
+    } as unknown as CSSStyleDeclaration
+
+    expect(
+      getPortalInheritedStyleProps(computedStyle, { isFloatingOverlay: true }),
+    ).toEqual({
+      color: 'red',
+    })
   })
 
   it('parseTransformOrigin returns normalized anchor', () => {
@@ -1360,6 +1377,47 @@ describe('SpatializedContainer', () => {
 
     r.unmount()
     expect(onSpatialContentReady).not.toHaveBeenCalled()
+  })
+
+  it('provides host SpatialWindowContext in degraded mode for portal hooks', async () => {
+    vi.resetModules()
+    vi.doMock('./spatialized-container/context/PortalInstanceContext', () => {
+      return {
+        PortalInstanceContext: React.createContext(null),
+        PortalInstanceObject: class PortalInstanceObject {},
+      }
+    })
+    vi.doMock('./utils/getSession', () => {
+      return { getSession: () => null }
+    })
+
+    const { SpatializedContainer } = await import(
+      './spatialized-container/SpatializedContainer'
+    )
+    const { useSpatialPortalContainer } = await import(
+      './spatialized-container/context/SpatialWindowContext'
+    )
+
+    function PortalProbe() {
+      const container = useSpatialPortalContainer()
+      return React.createElement('span', {
+        'data-testid': 'portal-probe',
+        'data-is-body': String(container === document.body),
+      })
+    }
+
+    const r = render(
+      React.createElement(
+        SpatializedContainer,
+        { component: 'div', 'data-testid': 'degraded-host' } as any,
+        React.createElement(PortalProbe),
+      ),
+    )
+
+    expect(r.getByTestId('portal-probe').getAttribute('data-is-body')).toBe(
+      'true',
+    )
+    r.unmount()
   })
 
   it('renders root container with standard/portal/task containers', async () => {
