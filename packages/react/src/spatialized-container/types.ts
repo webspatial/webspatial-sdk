@@ -66,6 +66,13 @@ export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
       ) => Record<string, any>
       spatialEventOptions?: SpatialEventOptions
 
+      /**
+       * Forwarded React ref for the in-page host. In Scenario 3 overlay mode this
+       * is where a floating library's `asChild` ref (e.g. Radix) lands so the
+       * library can measure/position the hidden placeholder host.
+       */
+      hostRef?: React.Ref<HTMLElement>
+
       [SpatialID]: string
     }
 

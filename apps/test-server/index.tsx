@@ -70,6 +70,7 @@ import ModelSpatialDivConvertTest from './src/pages/reality/modelSpatialDivConve
 import SpatialDivTest from './src/pages/spatialDivTest/index'
 import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
+import DropdownMenuSpatialTest from './src/pages/dropdown-menu-spatial/index'
 import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
 
 class ErrorBoundary extends React.Component<
@@ -248,6 +249,10 @@ function App() {
                 <Route
                   path="/dropdown-menu-test"
                   element={<DropdownMenuTest />}
+                />
+                <Route
+                  path="/dropdown-menu-spatial"
+                  element={<DropdownMenuSpatialTest />}
                 />
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
                 <Route path="/geometry-verify" element={<GeometryVerify />} />

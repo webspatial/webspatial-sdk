@@ -16,7 +16,7 @@ import {
   syncParentHeadToChild,
 } from '../utils/windowStyleSync'
 import { useSyncHeadStyles } from '../utils/useSyncHeadStyles'
-import { getInheritedStyleProps, parseCornerRadius } from './utils'
+import { getPortalInheritedStyleProps, parseCornerRadius } from './utils'
 import {
   SpatialCustomStyleVars,
   Spatialized2DElementContainerProps,
@@ -26,6 +26,7 @@ import {
 } from './types'
 import { SpatializedContainer } from './SpatializedContainer'
 import type { PortalInstanceObject } from './context/PortalInstanceContext'
+import { SpatialWindowContext } from './context/SpatialWindowContext'
 import { getSession } from '../utils'
 import { useSpatialContentReady } from './hooks/useSpatialContentReady'
 
@@ -77,7 +78,9 @@ function getJSXPortalInstance<P extends ElementType>(
 
   const computedStyle = portalInstanceObject.computedStyle
   const inheritedPortalStyle: CSSProperties = computedStyle
-    ? getInheritedStyleProps(computedStyle)
+    ? getPortalInheritedStyleProps(computedStyle, {
+        isFloatingOverlay: portalInstanceObject.isFloatingOverlay,
+      })
     : {}
 
   const style = {
@@ -140,7 +143,12 @@ function SpatializedContent<P extends ElementType>(
     setHostCallback,
   )
 
-  return createPortal(JSXPortalInstance, windowProxy.document.body)
+  return createPortal(
+    <SpatialWindowContext.Provider value={windowProxy}>
+      {JSXPortalInstance}
+    </SpatialWindowContext.Provider>,
+    windowProxy.document.body,
+  )
 }
 
 function getExtraSpatializedElementProperties(
