@@ -68,8 +68,7 @@ flowchart TD
 | `validateSpatializedMotionConfig` | Validates authoring config before playback or native send. |
 | `motionConfigToNativeTimeline` | Compiles normalized motion config into the canonical native wire payload. |
 | `motionElementBridge` | Sends `play`, `pause`, `resume`, `stop`, `reset`, and `finish` commands from Core to spatialized native elements and cleans up listeners. |
-| `MOTION_KIND_POLICIES` | Encodes per-kind policy for capability token, Web RAF availability, and suppression rules. |
-| `element.motion(config)` | Imperative factory on `Spatialized2DElement`, `SpatializedStatic3DElement`, and `SpatializedDynamic3DElement` that creates a controller already bound to that kind. |
+| `MOTION_KIND_POLICIES` | Encodes per-kind policy for Web RAF availability and suppression rules. |
 
 ### Interfaces
 
@@ -181,6 +180,10 @@ The Core layer does not define:
 - `api`
 - `style`
 
+The recommended end-user React SDK entry stays `useAnimation`. `SpatializedMotionController`
+and `SpatializedMotionHandle` remain Core-level imperative utility / internal seam types and
+are no longer presented as public exports from the React SDK root entry or motion sub-entry.
+
 #### Binding
 
 The React layer defines the `xr-animation` prop as the target binding channel:
@@ -207,6 +210,8 @@ The React layer resolves the controller target only when `animation` is bound:
 - `Reality` → `dynamic3d`
 
 If `api.play()` is called before a bind exists, the command queues and begins once the target resolves.
+This means the controller is allowed to be constructed without `kind`, but the binding flow
+must resolve and write the target `kind` before the backend actually executes playback.
 
 #### Single-bind constraint
 

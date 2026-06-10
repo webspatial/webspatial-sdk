@@ -3,11 +3,6 @@ import {
   UpdateSpatializedDynamic3DElementProperties,
 } from './JSBCommand'
 import { executeAnimateSpatializedElementMotion } from './motion/native/executeAnimateSpatializedElementMotion'
-import {
-  SpatializedMotionController,
-  type SpatializedMotionControllerOptions,
-} from './motion/control/SpatializedMotionController'
-import type { SpatializedMotionConfig } from './types/spatializedMotion'
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
@@ -15,7 +10,6 @@ import type {
 import type { SpatializedVisualValues } from './types/spatializedVisual'
 import { SpatialEntity } from './reality'
 import { SpatializedElement } from './SpatializedElement'
-import type { SpatializedMotionHandle } from './motion/control/SpatializedMotionHandle'
 import {
   SpatialEntityEventType,
   SpatialEntityOrReality,
@@ -74,15 +68,5 @@ export class SpatializedDynamic3DElement extends SpatializedElement {
   > {
     const { targetKind, ...rest } = command
     return executeAnimateSpatializedElementMotion(this.id, targetKind, rest)
-  }
-
-  motion(
-    config: SpatializedMotionConfig,
-    options?: Omit<SpatializedMotionControllerOptions, 'element'>,
-  ): SpatializedMotionHandle {
-    return new SpatializedMotionController(config, 'dynamic3d', {
-      ...options,
-      element: this,
-    })
   }
 }

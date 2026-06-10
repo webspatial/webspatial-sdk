@@ -119,12 +119,12 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     const onReset = vi.fn()
     const controller = new SpatializedMotionController(
       makeConfig({ autoStart: false, onReset }),
-      'spatialized2d',
       {
         forceNativePlayback: true,
         onValuesChange: v => values.push(v),
       },
     )
+    controller.attachElement(null, 'spatialized2d')
 
     controller.play()
     controller.reset()
@@ -141,12 +141,12 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     const onComplete = vi.fn()
     const controller = new SpatializedMotionController(
       makeConfig({ autoStart: false, onComplete }),
-      'spatialized2d',
       {
         forceNativePlayback: true,
         onValuesChange: v => values.push(v),
       },
     )
+    controller.attachElement(null, 'spatialized2d')
 
     controller.play()
     controller.finish()
@@ -163,12 +163,12 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     const onStop = vi.fn()
     const controller = new SpatializedMotionController(
       makeConfig({ autoStart: false, onStop }),
-      'spatialized2d',
       {
         forceNativePlayback: true,
         onValuesChange: v => values.push(v),
       },
     )
+    controller.attachElement(null, 'spatialized2d')
 
     controller.play()
     controller.stop()
@@ -188,12 +188,12 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
 
     const controller = new SpatializedMotionController(
       makeConfig({ autoStart: false, onStop, onReset, onComplete }),
-      'spatialized2d',
       {
         forceNativePlayback: true,
         onValuesChange: v => values.push(v),
       },
     )
+    controller.attachElement(null, 'spatialized2d')
 
     controller.stop()
     expect(values).toHaveLength(1)
@@ -242,12 +242,12 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
 
     const controller = new SpatializedMotionController(
       makeConfig({ autoStart: false, onStop, onReset, onComplete }),
-      'spatialized2d',
       {
         forceNativePlayback: true,
         onValuesChange: v => values.push(v),
       },
     )
+    controller.attachElement(null, 'spatialized2d')
     controller.attachElement({ id: 'native-element', animateMotion } as any)
 
     controller.play()
@@ -336,14 +336,13 @@ describe('SpatializedMotionController portal suppression timing', () => {
           },
         ],
       },
-      'spatialized2d',
       { forceNativePlayback: true },
     )
-
+    controller.attachElement(null, 'spatialized2d')
     ;(controller as any).backend.session = {
       animationId: 'native-queued',
       state: 'running',
-      config: controller.definition,
+      config: controller.config,
     }
 
     expect(controller.getSuppressedFields()).toEqual(
@@ -375,14 +374,13 @@ describe('SpatializedMotionController portal suppression timing', () => {
           },
         ],
       },
-      'spatialized2d',
       { forceNativePlayback: true },
     )
-
+    controller.attachElement(null, 'spatialized2d')
     ;(controller as any).backend.session = {
       animationId: 'native-1',
       state: 'paused',
-      config: controller.definition,
+      config: controller.config,
     }
 
     expect(controller.getSuppressedFields()).toEqual(
@@ -414,19 +412,18 @@ describe('SpatializedMotionController portal suppression timing', () => {
           },
         ],
       },
-      'spatialized2d',
       { forceNativePlayback: true },
     )
+    controller.attachElement(null, 'spatialized2d')
 
     for (const state of ['finished', 'idle'] as const) {
       ;(controller as any).backend.webState = 'queued'
       ;(controller as any).backend.session = {
         animationId: `native-${state}`,
         state,
-        config: controller.definition,
+        config: controller.config,
       }
       ;(controller as any).pendingPlay = false
-      ;(controller as any).backend.nativeControlling = false
 
       expect(controller.getSuppressedFields()).toBeNull()
     }
@@ -435,21 +432,21 @@ describe('SpatializedMotionController portal suppression timing', () => {
   test('non-native and non-spatialized2d suppression behavior stays unchanged', () => {
     const web2dController = new SpatializedMotionController(
       makeConfig({ autoStart: false }),
-      'spatialized2d',
       { forceNativePlayback: false },
     )
+    web2dController.attachElement(null, 'spatialized2d')
     ;(web2dController as any).backend.webState = 'queued'
     expect(web2dController.getSuppressedFields()).toBeNull()
 
     const static3dController = new SpatializedMotionController(
       makeConfig({ autoStart: false }),
-      'static3d',
       { forceNativePlayback: true },
     )
+    static3dController.attachElement(null, 'static3d')
     ;(static3dController as any).backend.session = {
       animationId: 'native-2',
       state: 'queued',
-      config: static3dController.definition,
+      config: static3dController.config,
     }
     expect(static3dController.getSuppressedFields()).toBeNull()
   })
