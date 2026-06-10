@@ -5,7 +5,6 @@ import { getStatic3DMotionSuppressedFields } from '../kinds/static3d'
 
 export interface MotionKindPolicy {
   readonly kind: SpatializedMotionKind
-  readonly capabilityToken: 'element' | 'static3d' | 'dynamic3d'
   readonly webPlayback: 'raf' | 'none'
   readonly motionObjectIdPrefix: string
   readonly sessionIdPrefix: string
@@ -18,7 +17,6 @@ export const MOTION_KIND_POLICIES: Record<
 > = {
   spatialized2d: {
     kind: 'spatialized2d',
-    capabilityToken: 'element',
     webPlayback: 'raf',
     motionObjectIdPrefix: '__sdmotion_',
     sessionIdPrefix: 'sdmotion_',
@@ -26,7 +24,6 @@ export const MOTION_KIND_POLICIES: Record<
   },
   static3d: {
     kind: 'static3d',
-    capabilityToken: 'static3d',
     webPlayback: 'none',
     motionObjectIdPrefix: '__s3motion_',
     sessionIdPrefix: 's3motion_',
@@ -34,7 +31,6 @@ export const MOTION_KIND_POLICIES: Record<
   },
   dynamic3d: {
     kind: 'dynamic3d',
-    capabilityToken: 'dynamic3d',
     webPlayback: 'none',
     motionObjectIdPrefix: '__d3motion_',
     sessionIdPrefix: 'd3motion_',

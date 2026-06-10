@@ -17,7 +17,7 @@ SDK MUST 将 `Spatialized2DElement` 动画视为 `xr-animation` 绑定到 `enabl
 
 #### Scenario: Core 控制器等价性
 
-- **WHEN** 开发者调用 `element.motion(config)` 或 `new SpatializedMotionController(config, 'spatialized2d')`
+- **WHEN** 开发者创建 `new SpatializedMotionController(config)` 并在绑定流程中将目标解析为 `spatialized2d`
 - **THEN** 相同 timeline 配置下的播放行为 MUST 等价
 
 ---

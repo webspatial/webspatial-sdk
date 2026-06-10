@@ -68,8 +68,7 @@ flowchart TD
 | `validateSpatializedMotionConfig` | 在播放或 native send 前校验 authoring config。 |
 | `motionConfigToNativeTimeline` | 将归一化后的 motion config 编译为 canonical native wire payload。 |
 | `motionElementBridge` | 将 `play`、`pause`、`resume`、`stop`、`reset`、`finish` 命令从 Core 发送到 native spatialized element，并负责 listener 清理。 |
-| `MOTION_KIND_POLICIES` | 编码每种 kind 的 capability token、Web RAF 可用性和 suppression 规则。 |
-| `element.motion(config)` | `Spatialized2DElement`、`SpatializedStatic3DElement`、`SpatializedDynamic3DElement` 上的 imperative factory，创建已绑定到对应 kind 的 controller。 |
+| `MOTION_KIND_POLICIES` | 编码每种 kind 的 Web RAF 可用性和 suppression 规则。 |
 
 ### 接口
 
@@ -181,6 +180,10 @@ Core 层不定义：
 - `api`
 - `style`
 
+React SDK 面向业务的推荐公开入口保持为 `useAnimation`。`SpatializedMotionController` 与
+`SpatializedMotionHandle` 保留在 Core 层作为 imperative utility / internal seam，
+不再作为 React SDK 根入口或 motion 子入口的公开导出。
+
 #### 绑定
 
 React 层通过 `xr-animation` prop 定义目标绑定通道：
@@ -207,6 +210,8 @@ React 层只在 `animation` 真正绑定时解析 controller target：
 - `Reality` → `dynamic3d`
 
 若在 binding 存在前调用 `api.play()`，命令会排队，并在目标解析后开始执行。
+这意味着 controller 允许在构造阶段没有 `kind`，但在 backend 真正执行 playback 前，
+绑定流程必须已经写入并解析出目标 `kind`。
 
 #### 单绑定约束
 

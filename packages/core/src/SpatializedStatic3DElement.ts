@@ -1,12 +1,6 @@
 import { UpdateSpatializedStatic3DElementProperties } from './JSBCommand'
 import { ReceiveEventData, SpatializedElement } from './SpatializedElement'
 import { executeAnimateSpatializedElementMotion } from './motion/native/executeAnimateSpatializedElementMotion'
-import {
-  SpatializedMotionController,
-  type SpatializedMotionControllerOptions,
-} from './motion/control/SpatializedMotionController'
-import type { SpatializedMotionHandle } from './motion/control/SpatializedMotionHandle'
-import type { SpatializedMotionConfig } from './types/spatializedMotion'
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
@@ -429,16 +423,6 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   > {
     const { targetKind, ...rest } = command
     return executeAnimateSpatializedElementMotion(this.id, targetKind, rest)
-  }
-
-  motion(
-    config: SpatializedMotionConfig,
-    options?: Omit<SpatializedMotionControllerOptions, 'element'>,
-  ): SpatializedMotionHandle {
-    return new SpatializedMotionController(config, 'static3d', {
-      ...options,
-      element: this,
-    })
   }
 }
 
