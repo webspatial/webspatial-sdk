@@ -127,10 +127,18 @@ interface SpatializedMotionSegmentConfig {
 
 | 对外 | 说明 |
 |------|------|
-| **`SpatializedMotionController`** | 唯一控制器实现；由绑定目标（组件类型）决定 |
-| **`SpatializedMotionHandle`** | imperative 接口（`play` / `pause` / `resume` / `stop` / `reset` / `finish` / …） |
-| `element.motion(config)` | 各 `Spatialized*Element` 工厂，返回 `SpatializedMotionHandle` |
+| **`SpatializedMotionController`** | Core 层统一控制器实现；通过绑定流程解析目标 kind，并暴露 `config` / `updateConfig` |
+| **`SpatializedMotionHandle`** | Core 层 imperative 接口（`play` / `pause` / `resume` / `stop` / `reset` / `finish` / …） |
 | `supports('useAnimation', [target])` | 能力探测（`spatialized2d` / `static3d` / `dynamic3d`） |
+
+补充约束：
+
+- React SDK 面向业务的推荐公开入口仍为 `useAnimation`
+- `SpatializedMotionController` 与 `SpatializedMotionHandle` 不再作为 React SDK 根入口或 motion 子入口公开导出
+- `supportsMotionKind` 与 `forceNativePlayback` 继续保留在 controller options 中，定位为注入 seam / 覆盖开关，而不是 React SDK 推荐公开 API
+- controller 继续使用单一 options 容器；`kind` 不进入 options，而是在绑定阶段解析
+- controller 允许在构造阶段没有 `kind`，但 backend 真正执行前必须已经通过绑定流程拿到目标 `kind`
+- `attachElement(...)`、`autoStart`、`pendingPlay` 本轮维持现状，不在这次收敛中调整语义
 
 ## 7. 与模型内嵌动画区分
 

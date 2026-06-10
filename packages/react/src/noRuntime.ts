@@ -166,25 +166,26 @@ export function validateSpatializedMotionConfig(_config: unknown): void {}
 export class SpatializedMotionController {
   readonly id = `__no_runtime_motion_${++motionControllerId}`
 
-  private config: NoRuntimeMotionConfig
+  private motionConfig: NoRuntimeMotionConfig
   private state: NoRuntimeMotionPlayState = 'idle'
   private destroyed = false
   private kind: 'spatialized2d' | 'static3d' | 'dynamic3d' | null = null
 
-  constructor(config: any, _kindOrOptions?: unknown, _options?: unknown) {
-    this.config = normalizeMotionConfig(config)
+  constructor(config: any, options?: unknown) {
+    void options
+    this.motionConfig = normalizeMotionConfig(config)
   }
 
   get isDestroyed() {
     return this.destroyed
   }
 
-  get nativeSessionAnimating() {
-    return false
-  }
-
   get targetKind() {
     return this.kind
+  }
+
+  get config() {
+    return this.motionConfig
   }
 
   get isAnimating() {
@@ -203,8 +204,8 @@ export class SpatializedMotionController {
     return this.state
   }
 
-  updateDefinition(config: any): void {
-    this.config = normalizeMotionConfig(config)
+  updateConfig(config: any): void {
+    this.motionConfig = normalizeMotionConfig(config)
   }
 
   attachElement(
@@ -226,19 +227,19 @@ export class SpatializedMotionController {
   stop(): void {
     if (this.destroyed) return
     this.state = 'idle'
-    this.config.onStop?.({})
+    this.motionConfig.onStop?.({})
   }
 
   reset(): void {
     if (this.destroyed) return
     this.state = 'idle'
-    this.config.onReset?.({})
+    this.motionConfig.onReset?.({})
   }
 
   finish(): void {
     if (this.destroyed) return
     this.state = 'finished'
-    this.config.onComplete?.({})
+    this.motionConfig.onComplete?.({})
   }
 
   destroy(): void {

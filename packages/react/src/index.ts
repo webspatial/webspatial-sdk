@@ -9,16 +9,12 @@ export * from './spatialized-container'
 export * from './spatialized-container-monitor'
 export * from './reality'
 export { useEntityAnimation } from './useAnimation'
-export {
-  useAnimation,
-  SpatializedMotionController,
-} from './spatialized-container/motion'
+export { useAnimation } from './spatialized-container/motion'
 export type {
   UseSpatializedMotionResult,
   SpatializedMotionConfig,
   SpatializedMotionSegmentConfig,
 } from './spatialized-container/motion'
-export type { SpatializedMotionHandle } from '@webspatial/core-sdk'
 export * from './Model'
 export { SSRProvider } from './ssr'
 export { useMetrics } from './useMetrics'

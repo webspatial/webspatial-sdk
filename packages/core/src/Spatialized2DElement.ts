@@ -3,12 +3,6 @@ import {
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
 import { executeAnimateSpatializedElementMotion } from './motion/native/executeAnimateSpatializedElementMotion'
-import {
-  SpatializedMotionController,
-  type SpatializedMotionControllerOptions,
-} from './motion/control/SpatializedMotionController'
-import type { SpatializedMotionHandle } from './motion/control/SpatializedMotionHandle'
-import type { SpatializedMotionConfig } from './types/spatializedMotion'
 import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
@@ -77,20 +71,5 @@ export class Spatialized2DElement extends SpatializedElement {
   > {
     const { targetKind, ...rest } = command
     return executeAnimateSpatializedElementMotion(this.id, targetKind, rest)
-  }
-
-  /**
-   * Create a motion controller bound to this spatialized 2D element.
-   * Prefer {@link SpatializedMotionController} for imperative playback; React apps
-   * typically use `useAnimation({ ... })` instead.
-   */
-  motion(
-    config: SpatializedMotionConfig,
-    options?: Omit<SpatializedMotionControllerOptions, 'element'>,
-  ): SpatializedMotionHandle {
-    return new SpatializedMotionController(config, 'spatialized2d', {
-      ...options,
-      element: this,
-    })
   }
 }

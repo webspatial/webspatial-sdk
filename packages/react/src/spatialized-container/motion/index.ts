@@ -7,13 +7,11 @@ export type {
   SpatializedPlaybackApi,
 } from './useSpatializedMotion'
 export {
-  SpatializedMotionController,
   evaluateMotionTimeline,
   validateSpatializedMotionConfig,
   segmentConfigToMotionConfig,
 } from '@webspatial/core-sdk'
 export type {
-  SpatializedMotionHandle,
   Static3DMotionBindingInternal,
   Dynamic3DMotionBindingInternal,
 } from '@webspatial/core-sdk'
