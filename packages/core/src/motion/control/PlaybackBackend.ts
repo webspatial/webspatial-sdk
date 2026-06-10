@@ -34,10 +34,19 @@ export interface PlaybackBackendContext {
  */
 export interface PlaybackBackend {
   readonly playState: SpatializedMotionPlayState
+  readonly isAnimating: boolean
+  readonly isPaused: boolean
+  readonly finished: boolean
+  /** Whether a native session is currently animating (always false for web). */
+  readonly sessionAnimating: boolean
   play(): void
   pause(keys?: SpatializedMotionPropertyKeys): void
   resume(keys?: SpatializedMotionPropertyKeys): void
   stop(): void
   reset(): void
   finish(): void
+  /** Fields to suppress on the Portal while this backend drives playback. */
+  getSuppressedFields(): Set<string> | null
+  /** Release all resources (raf loop / native session). */
+  destroy(): void
 }

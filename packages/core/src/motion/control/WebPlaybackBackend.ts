@@ -36,22 +36,37 @@ export class WebPlaybackBackend implements PlaybackBackend {
     return this.webState
   }
 
-  get state(): SpatializedMotionPlayState {
-    return this.webState
+  get isAnimating(): boolean {
+    return this.webState === 'running' || this.webState === 'queued'
+  }
+
+  get isPaused(): boolean {
+    return (
+      this.webState === 'paused' ||
+      (this.webState === 'running' && this.sampler.hasFrozen)
+    )
   }
 
   get finished(): boolean {
     return this.webFinished
   }
 
-  /** Mark backend queued (e.g. kind not yet resolved, or native-only awaiting runtime). */
-  markQueued(resetFinished = false): void {
-    this.webState = 'queued'
-    if (resetFinished) this.webFinished = false
-    this.ctx.notifyStateChange()
+  /** Web playback never owns a native session. */
+  get sessionAnimating(): boolean {
+    return false
   }
 
-  stopRaf(): void {
+  /** Web playback drives the Portal directly, so it never suppresses fields. */
+  getSuppressedFields(): Set<string> | null {
+    return null
+  }
+
+  /** Release the raf loop (reusable: a later play() can restart the clock). */
+  destroy(): void {
+    this.stopRaf()
+  }
+
+  private stopRaf(): void {
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId)
       this.rafId = null

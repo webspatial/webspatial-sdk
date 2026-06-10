@@ -340,7 +340,7 @@ describe('SpatializedMotionController portal suppression timing', () => {
       { forceNativePlayback: true },
     )
 
-    ;(controller as any).native.session = {
+    ;(controller as any).backend.session = {
       animationId: 'native-queued',
       state: 'running',
       config: controller.definition,
@@ -379,7 +379,7 @@ describe('SpatializedMotionController portal suppression timing', () => {
       { forceNativePlayback: true },
     )
 
-    ;(controller as any).native.session = {
+    ;(controller as any).backend.session = {
       animationId: 'native-1',
       state: 'paused',
       config: controller.definition,
@@ -419,14 +419,14 @@ describe('SpatializedMotionController portal suppression timing', () => {
     )
 
     for (const state of ['finished', 'idle'] as const) {
-      ;(controller as any).web.webState = 'queued'
-      ;(controller as any).native.session = {
+      ;(controller as any).backend.webState = 'queued'
+      ;(controller as any).backend.session = {
         animationId: `native-${state}`,
         state,
         config: controller.definition,
       }
       ;(controller as any).pendingPlay = false
-      ;(controller as any).native.nativeControlling = false
+      ;(controller as any).backend.nativeControlling = false
 
       expect(controller.getSuppressedFields()).toBeNull()
     }
@@ -438,7 +438,7 @@ describe('SpatializedMotionController portal suppression timing', () => {
       'spatialized2d',
       { forceNativePlayback: false },
     )
-    ;(web2dController as any).web.webState = 'queued'
+    ;(web2dController as any).backend.webState = 'queued'
     expect(web2dController.getSuppressedFields()).toBeNull()
 
     const static3dController = new SpatializedMotionController(
@@ -446,7 +446,7 @@ describe('SpatializedMotionController portal suppression timing', () => {
       'static3d',
       { forceNativePlayback: true },
     )
-    ;(static3dController as any).native.session = {
+    ;(static3dController as any).backend.session = {
       animationId: 'native-2',
       state: 'queued',
       config: static3dController.definition,
