@@ -12,7 +12,6 @@ import { Sampler } from './Sampler'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
   SpatializedMotionConfig,
-  SpatializedPlaybackApi,
   SpatializedMotionPlayState,
   SpatializedMotionPropertyKeys,
 } from '../../types/spatializedMotion'
@@ -53,9 +52,7 @@ const CONTROLLER_LABEL = 'SpatializedMotionController'
  * {@link nativeCapable}, delegates the six playback verbs and aggregates state
  * for the public API.
  */
-export class SpatializedMotionController
-  implements SpatializedPlaybackApi, SpatializedMotionHandle
-{
+export class SpatializedMotionController implements SpatializedMotionHandle {
   readonly id: string
 
   private kind: SpatializedMotionKind | null
