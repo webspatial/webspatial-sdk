@@ -10,6 +10,7 @@ The **Manifest API** lets WebSpatial apps declare default scene configuration fo
   - [Table of Contents](#table-of-contents)
   - [Quick Start](#quick-start)
   - [Configuration Priority](#configuration-priority)
+    - [Merge Order Diagram](#merge-order-diagram)
   - [Schema Reference](#schema-reference)
     - [`xr_spatial_scene`](#xr_spatial_scene)
     - [`overrides`](#overrides)
@@ -19,6 +20,7 @@ The **Manifest API** lets WebSpatial apps declare default scene configuration fo
   - [Units](#units)
   - [Full Example](#full-example)
   - [Interaction with `initScene()`](#interaction-with-initscene)
+    - [initScene Data Flow](#initscene-data-flow)
   - [Manifest Loading](#manifest-loading)
   - [Type Definitions](#type-definitions)
 
@@ -70,6 +72,17 @@ When the SDK resolves a scene's configuration, values are merged in the followin
 
 > **Note:** `initScene(...)` always wins. Its callback receives the manifest-resolved defaults as the `pre` argument and can selectively override any property.
 
+### Merge Order Diagram
+
+```mermaid
+%% Scene config merge order, highest priority last
+flowchart TB
+  A[SDK hard-coded defaults] --> B[xr_spatial_scene top-level]
+  B --> C[overrides by scene type]
+  C --> D[initScene callback return]
+  D --> E[final resolved config]
+```
+
 ---
 
 ## Schema Reference
@@ -87,6 +100,28 @@ Top-level configuration block inside `manifest.json`. All fields are optional.
 | `baseplateVisibility` | `"automatic" \| "visible" \| "hidden"` | Baseplate visibility for volumes |
 | `overrides` | [`XRSpatialSceneOverrides`](#overrides) | Per-scene-type overrides |
 
+**Aliases**
+
+- The SDK accepts both snake_case and camelCase for the fields below:
+  - `default_size` / `defaultSize`
+  - `world_scaling` / `worldScaling`
+  - `world_alignment` / `worldAlignment`
+  - `baseplate_visibility` / `baseplateVisibility`
+- If both snake_case and camelCase are present in the same object, snake_case wins.
+- Values passed to `initScene(..., pre => ...)` are normalized to camelCase keys.
+
+```mermaid
+%% Alias resolution and normalization pipeline
+flowchart LR
+  A[manifest json object] --> B[read config object]
+  B --> C{snake_case and camelCase both present}
+  C -->|yes| D[use snake_case value]
+  C -->|no| E[use present key]
+  D --> F[normalize keys to camelCase]
+  E --> F
+  F --> G[pre passed to initScene callback]
+```
+
 ### `overrides`
 
 Optional per-scene-type overrides that are **deep-merged** on top of the top-level `xr_spatial_scene` fields.
@@ -95,6 +130,8 @@ Optional per-scene-type overrides that are **deep-merged** on top of the top-lev
 |-------|------|-------------|
 | `window_scene` | `XRSpatialSceneDefaults` | Overrides applied only to **window** scenes |
 | `volume_scene` | `XRSpatialSceneDefaults` | Overrides applied only to **volume** scenes |
+
+> Both `window_scene` / `windowScene` and `volume_scene` / `volumeScene` are accepted.
 
 Each override object supports the same fields as the top-level `xr_spatial_scene` (excluding `overrides` itself).
 
@@ -120,6 +157,8 @@ Defines the min/max constraints for scene dimensions.
 | `minHeight` | `SceneUnit` | No | Minimum height |
 | `maxWidth` | `SceneUnit` | No | Maximum width |
 | `maxHeight` | `SceneUnit` | No | Maximum height |
+
+> Snake_case keys are also accepted for resizability: `min_width`, `min_height`, `max_width`, `max_height`.
 
 ### Enum Values
 
@@ -240,7 +279,7 @@ Scene dimensions accept the `SceneUnit` type, which supports three formats:
 
 The `initScene()` API continues to work exactly as before. The only difference is what the `pre` argument contains:
 
-```ts
+```js
 import { initScene } from '@webspatial/core-sdk'
 
 initScene('my-scene', (pre) => {
@@ -257,6 +296,30 @@ initScene('my-scene', (pre) => {
 
 **Scenes opened without `initScene`**: When `window.open()` is called with a named target that has no prior `initScene`, the SDK synthesizes a default window config from the manifest (or SDK defaults) automatically.
 
+### initScene Data Flow
+
+```mermaid
+%% initScene pre argument behavior and callback chaining
+sequenceDiagram
+  participant App
+  participant SDK
+  participant Manifest
+  participant SceneManager
+
+  Manifest->>SDK: resolve manifest defaults once
+  App->>SDK: initScene name callback type
+  SDK->>SceneManager: compute pre from manifest and overrides
+  SceneManager-->>SDK: pre defaults
+  SDK-->>App: callback pre
+  App-->>SDK: return merged config
+  SDK->>SceneManager: store config for name
+
+  App->>SDK: initScene same name second callback
+  SDK->>SceneManager: load previous callback return as pre
+  SceneManager-->>SDK: pre from previous return
+  SDK-->>App: callback pre
+```
+
 ---
 
 ## Manifest Loading
@@ -266,6 +329,23 @@ The SDK resolves the manifest using the following strategy:
 1. **`<link rel="manifest">`** — looks for the first matching element in the document head.
 2. **Data URIs** — supports both `base64` and percent-encoded inline manifests.
 3. **Fetch with fallback** — first attempts `credentials: 'same-origin'`, then falls back to an unauthenticated fetch if the first attempt fails (e.g., due to CORS).
+
+```mermaid
+%% Manifest discovery and fetch strategy
+flowchart TD
+  A[start] --> B[find first link rel manifest]
+  B --> C{href is data uri}
+  C -->|yes| D[decode inline manifest]
+  C -->|no| E[fetch with credentials same origin]
+  E --> F{fetch ok}
+  F -->|yes| G[parse json]
+  F -->|no| H[fetch without credentials]
+  H --> I[parse json]
+  D --> J[parse json]
+  G --> K[resolve xr_spatial_scene defaults]
+  I --> K
+  J --> K
+```
 
 The manifest is loaded **once** during `SceneManager.init()`. All `initScene()` calls and hook-based scene polyfills (`window.xrCurrentSceneDefaults`) wait for manifest resolution before executing.
 
