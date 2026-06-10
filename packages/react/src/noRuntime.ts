@@ -96,6 +96,163 @@ export const PhysicalMetrics = {
 }
 // --- Web bundle: browser-only utilities (no native runtime needed) ---
 
+type NoRuntimeMotionPlayState =
+  | 'idle'
+  | 'queued'
+  | 'running'
+  | 'paused'
+  | 'finished'
+
+interface NoRuntimeMotionConfig {
+  duration: number
+  tracks: Array<unknown>
+  autoStart?: boolean
+  loop?: boolean | { reverse?: boolean }
+  playbackRate?: number
+  delay?: number
+  onStart?: () => void
+  onComplete?: (values: Record<string, unknown>) => void
+  onStop?: (values: Record<string, unknown>) => void
+  onReset?: (values: Record<string, unknown>) => void
+  onError?: (error: unknown) => void
+}
+
+let motionControllerId = 0
+
+// Keep the no-runtime bundle self-contained: exports exist for build/runtime
+// compatibility, but motion playback is intentionally a no-op on plain web.
+export function normalizeMotionConfig(config: any): NoRuntimeMotionConfig {
+  if (config && Array.isArray(config.tracks)) {
+    return {
+      duration: Number.isFinite(config.duration) ? config.duration : 0,
+      tracks: config.tracks,
+      autoStart: config.autoStart,
+      loop: config.loop,
+      playbackRate: config.playbackRate,
+      delay: config.delay,
+      onStart: config.onStart,
+      onComplete: config.onComplete,
+      onStop: config.onStop,
+      onReset: config.onReset,
+      onError: config.onError,
+    }
+  }
+
+  return {
+    duration:
+      config && Number.isFinite(config.duration) ? Number(config.duration) : 0,
+    tracks: [],
+    autoStart: config?.autoStart,
+    loop: config?.loop,
+    playbackRate: config?.playbackRate,
+    delay: config?.delay,
+    onStart: config?.onStart,
+    onComplete: config?.onComplete,
+    onStop: config?.onStop,
+    onReset: config?.onReset,
+    onError: config?.onError,
+  }
+}
+
+export function evaluateMotionTimeline(
+  _config: NoRuntimeMotionConfig,
+  _timeSec: number,
+) {
+  return {}
+}
+
+export function validateSpatializedMotionConfig(_config: unknown): void {}
+
+export class SpatializedMotionController {
+  readonly id = `__no_runtime_motion_${++motionControllerId}`
+
+  private config: NoRuntimeMotionConfig
+  private state: NoRuntimeMotionPlayState = 'idle'
+  private destroyed = false
+  private kind: 'spatialized2d' | 'static3d' | 'dynamic3d' | null = null
+
+  constructor(config: any, _kindOrOptions?: unknown, _options?: unknown) {
+    this.config = normalizeMotionConfig(config)
+  }
+
+  get isDestroyed() {
+    return this.destroyed
+  }
+
+  get nativeSessionAnimating() {
+    return false
+  }
+
+  get targetKind() {
+    return this.kind
+  }
+
+  get isAnimating() {
+    return false
+  }
+
+  get isPaused() {
+    return false
+  }
+
+  get finished() {
+    return this.state === 'finished'
+  }
+
+  get playState() {
+    return this.state
+  }
+
+  updateDefinition(config: any): void {
+    this.config = normalizeMotionConfig(config)
+  }
+
+  attachElement(
+    _element: unknown,
+    targetKind?: 'spatialized2d' | 'static3d' | 'dynamic3d',
+  ): void {
+    this.kind = targetKind ?? this.kind
+  }
+
+  play(): void {
+    if (this.destroyed) return
+    this.state = 'idle'
+  }
+
+  pause(_keys?: unknown): void {}
+
+  resume(_keys?: unknown): void {}
+
+  stop(): void {
+    if (this.destroyed) return
+    this.state = 'idle'
+    this.config.onStop?.({})
+  }
+
+  reset(): void {
+    if (this.destroyed) return
+    this.state = 'idle'
+    this.config.onReset?.({})
+  }
+
+  finish(): void {
+    if (this.destroyed) return
+    this.state = 'finished'
+    this.config.onComplete?.({})
+  }
+
+  destroy(): void {
+    this.destroyed = true
+    this.state = 'idle'
+  }
+
+  getSuppressedFields(): Set<string> | null {
+    return null
+  }
+
+  handleMotionUnbind(): void {}
+}
+
 /** Compose position/rotation/scale into a 4x4 transform matrix.
  *  Uses browser-native DOMMatrix — works without the native runtime. */
 export function composeSRT(
