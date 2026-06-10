@@ -114,6 +114,10 @@ export const routes = [
       { path: '/memory-stats', label: 'Memory Stats' },
       { path: '/nested-fix-position', label: 'Nested Fix Position' },
       { path: '/nested-scroll', label: 'Nested Scroll' },
+      {
+        path: '/nested-spatial-overflow',
+        label: 'Nested Spatial Overflow',
+      },
       { path: '/spatial-converter', label: 'Spatial Converter' },
       { path: '/spatial-corner', label: 'Spatial Corner' },
       { path: '/geometry-verify', label: 'Geometry Verify' },
