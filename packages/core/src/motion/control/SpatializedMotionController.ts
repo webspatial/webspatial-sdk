@@ -119,9 +119,6 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
         clearPendingPlay: () => {
           this.pendingPlay = false
         },
-        stopWeb: () => this.web.stopRaf(),
-        jsReset: () => this.web.reset(),
-        jsFinish: () => this.web.finish(),
       },
       this.sampler,
     )
