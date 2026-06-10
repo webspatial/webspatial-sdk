@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type Ref,
 } from 'react'
 import {
   SpatializedContainerContext,
@@ -28,6 +29,7 @@ import {
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
 import { withSSRSupported } from '../ssr'
+import { SpatialWindowContext } from './context/SpatialWindowContext'
 
 /**
  * Degraded fallback: strips spatial-only props and renders plain HTML.
@@ -115,11 +117,25 @@ function DegradedContainer<T extends SpatializedElementRef>({
     [innerRef],
   )
 
-  return (
+  const host = (
     <Component ref={setHostRef} {...restProps}>
       {children}
     </Component>
   )
+
+  // Degraded SpatialDiv still renders in the host page document. Expose that
+  // window through SpatialWindowContext so useSpatialPortalContainer() works
+  // for Radix menus without an app-level fallback (spec: provider absent →
+  // undefined only when not inside any SpatialDiv subtree).
+  if (typeof window !== 'undefined') {
+    return (
+      <SpatialWindowContext.Provider value={window as unknown as WindowProxy}>
+        {host}
+      </SpatialWindowContext.Provider>
+    )
+  }
+
+  return host
 }
 
 export function SpatializedContainerBase<T extends SpatializedElementRef>(
@@ -197,6 +213,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
       return (
         <SpatialLayerContext.Provider value={layer}>
           <PortalSpatializedContainer<T>
+            hostRef={ref as Ref<HTMLElement>}
             {...spatialIdProps}
             {...props}
             {...spatialEvents}

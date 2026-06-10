@@ -203,6 +203,153 @@ describe('PortalInstanceObject', () => {
     expect(parentSpatialized2DElement.addSpatializedElement).toHaveBeenCalled()
   })
 
+  it('adds floating overlay elements to parent even when position is fixed', async () => {
+    const { PortalInstanceObject } = await import('./PortalInstanceContext')
+
+    const parentContainerObject = {
+      onSpatialTransformVisibilityChange: vi.fn(),
+      offSpatialTransformVisibilityChange: vi.fn(),
+      querySpatialDomBySpatialId: vi.fn(),
+      queryParentSpatialDomBySpatialId: vi.fn(),
+      unregisterSpatialDom: vi.fn(),
+    } as any
+    const parentPortal = new PortalInstanceObject(
+      'parent',
+      parentContainerObject,
+      null,
+    )
+    const parentSpatialized2DElement = { addSpatializedElement: vi.fn() } as any
+    parentPortal.attachSpatializedElement(parentSpatialized2DElement)
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    const callbacks: Record<string, any> = {}
+    const childContainerObject = {
+      onSpatialTransformVisibilityChange: vi.fn((id: string, cb: any) => {
+        callbacks[id] = cb
+      }),
+      offSpatialTransformVisibilityChange: vi.fn(),
+      querySpatialDomBySpatialId: vi.fn(),
+      queryParentSpatialDomBySpatialId: vi.fn(),
+      unregisterSpatialDom: vi.fn(),
+    } as any
+
+    const dom = document.createElement('div')
+    dom.getBoundingClientRect = () => new DOMRect(10, 20, 100, 50)
+    childContainerObject.querySpatialDomBySpatialId.mockReturnValue(dom)
+
+    const computedStyle = makeComputedStyle({
+      position: 'fixed',
+      opacity: '1',
+      display: 'block',
+      '--xr-z-index': '0',
+      '--xr-back': '12',
+      '--xr-depth': '40',
+      'transform-origin': '0 0',
+      width: '100',
+      height: '50',
+    })
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue(computedStyle)
+
+    const childPortal = new PortalInstanceObject(
+      'overlay',
+      childContainerObject,
+      parentPortal,
+    )
+    childPortal.setFloatingOverlay(true)
+    childPortal.init()
+    addSpatializedElement.mockClear()
+    parentSpatialized2DElement.addSpatializedElement.mockClear()
+    childPortal.attachSpatializedElement({
+      id: 'overlay-child',
+      updateProperties: vi.fn(),
+      updateTransform: vi.fn(),
+    } as any)
+    callbacks.overlay({ transform: [], visibility: 'visible' })
+    childPortal.notify2DFrameChange()
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(
+      parentSpatialized2DElement.addSpatializedElement,
+    ).toHaveBeenCalledTimes(1)
+    expect(addSpatializedElement).not.toHaveBeenCalled()
+  })
+
+  it('overlay surface stays visible even when the placeholder computed visibility is hidden', async () => {
+    const { PortalInstanceObject } = await import('./PortalInstanceContext')
+
+    const parentContainerObject = {
+      onSpatialTransformVisibilityChange: vi.fn(),
+      offSpatialTransformVisibilityChange: vi.fn(),
+      querySpatialDomBySpatialId: vi.fn(),
+      queryParentSpatialDomBySpatialId: vi.fn(),
+      unregisterSpatialDom: vi.fn(),
+    } as any
+    const parentPortal = new PortalInstanceObject(
+      'parent',
+      parentContainerObject,
+      null,
+    )
+    parentPortal.attachSpatializedElement({
+      addSpatializedElement: vi.fn(),
+    } as any)
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    // Placeholder host is intentionally `visibility: hidden`; a nested overlay
+    // has no transform/visibility probe, so the watcher callback never fires.
+    const computedStyle = makeComputedStyle({
+      position: 'relative',
+      visibility: 'hidden',
+      display: 'block',
+      opacity: '1',
+      '--xr-z-index': '0',
+      '--xr-back': '12',
+      '--xr-depth': '40',
+      'transform-origin': '0 0',
+    })
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue(computedStyle)
+
+    const containerObject = {
+      onSpatialTransformVisibilityChange: vi.fn(),
+      offSpatialTransformVisibilityChange: vi.fn(),
+      querySpatialDomBySpatialId: vi.fn(),
+      queryParentSpatialDomBySpatialId: vi.fn(),
+      unregisterSpatialDom: vi.fn(),
+    } as any
+    const dom = document.createElement('div')
+    dom.getBoundingClientRect = () => new DOMRect(30, 40, 120, 80)
+    containerObject.querySpatialDomBySpatialId.mockReturnValue(dom)
+
+    const updateProperties = vi.fn()
+    const updateTransform = vi.fn()
+    const overlayPortal = new PortalInstanceObject(
+      'overlay',
+      containerObject,
+      parentPortal,
+    )
+    overlayPortal.setFloatingOverlay(true)
+    overlayPortal.init()
+    overlayPortal.attachSpatializedElement({
+      id: 'overlay-el',
+      updateProperties,
+      updateTransform,
+    } as any)
+    // No transform/visibility callback is invoked (no probe for the overlay).
+    overlayPortal.notify2DFrameChange()
+
+    expect(updateProperties).toHaveBeenCalledWith(
+      expect.objectContaining({
+        visible: true,
+        clientX: 30,
+        clientY: 40,
+        width: 120,
+        height: 80,
+        backOffset: 12,
+        depth: 40,
+      }),
+    )
+    expect(updateTransform).toHaveBeenCalled()
+  })
+
   it('adjusts client coordinates relative to parent dom when available', async () => {
     const { PortalInstanceObject } = await import('./PortalInstanceContext')
 

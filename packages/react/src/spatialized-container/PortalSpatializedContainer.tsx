@@ -1,4 +1,5 @@
-import { useMemo, useContext, useEffect } from 'react'
+import { useMemo, useContext, useEffect, useCallback, useRef } from 'react'
+import type { CSSProperties, ReactNode, Ref } from 'react'
 import {
   PortalInstanceObject,
   PortalInstanceContext,
@@ -30,12 +31,76 @@ function constrainedAxisKey(
 }
 
 import { SpatialID } from './SpatialID'
+import { isFloatingOverlayContent } from './overlayDetection'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
 import { useSpatializedElement } from './hooks/useSpatializedElement'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
 } from './context/SpatializedContainerContext'
+
+function assignForwardedRef<T>(ref: Ref<T> | undefined, node: T | null) {
+  if (ref == null) return
+  if (typeof ref === 'function') {
+    ref(node)
+  } else {
+    ;(ref as React.MutableRefObject<T | null>).current = node
+  }
+}
+
+/**
+ * Splits the floating content's props into the menu children (rendered into the
+ * child spatial webview by `Content`) and the remaining props injected by the
+ * floating library (style, data-*, role, handlers) that must be mirrored onto
+ * the hidden placeholder host so the library can measure/position it.
+ */
+function splitOverlayProps(restProps: Record<string, unknown>): {
+  children: ReactNode
+  radixProps: Record<string, unknown>
+} {
+  const {
+    component: _component,
+    children,
+    ...radixProps
+  } = restProps as {
+    component?: unknown
+    children?: ReactNode
+  } & Record<string, unknown>
+  return { children: children ?? null, radixProps }
+}
+
+/**
+ * Scenario 3 overlay placeholder host. A hidden-but-real DOM host rendered in
+ * the parent spatial window where the floating library's `asChild` ref/props
+ * land. It renders a hidden copy of the menu children so the library measures a
+ * real, non-zero size (mirrors the proven root/standard-instance dual-render).
+ * The visible menu is rendered into the child spatial webview by `Content`.
+ */
+function renderOverlayPlaceholder(
+  portalInstanceObject: PortalInstanceObject,
+  El: React.ElementType,
+  opts: {
+    hostRef: Ref<HTMLElement>
+    children: ReactNode
+    radixProps: Record<string, unknown>
+  },
+) {
+  const spatialIdProps = { [SpatialID]: portalInstanceObject.spatialId }
+  const { style: radixStyle, ...radixRest } = opts.radixProps as {
+    style?: CSSProperties
+  } & Record<string, unknown>
+  const style: CSSProperties = {
+    ...radixStyle,
+    position: 'relative',
+    visibility: 'hidden',
+    pointerEvents: 'none',
+  }
+  return (
+    <El ref={opts.hostRef} {...radixRest} {...spatialIdProps} style={style}>
+      {opts.children}
+    </El>
+  )
+}
 
 function renderPlaceholderInSubPortal(
   portalInstanceObject: PortalInstanceObject,
@@ -50,8 +115,8 @@ function renderPlaceholderInSubPortal(
     inPortalInstanceEnv &&
     portalInstanceObject &&
     portalInstanceObject.domRect &&
-    position !== 'absolute' &&
-    position !== 'fixed'
+    (portalInstanceObject.isFloatingOverlay ||
+      (position !== 'absolute' && position !== 'fixed'))
 
   if (!shouldRenderPlaceHolder) {
     return <></>
@@ -95,6 +160,7 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     onSpatialMagnify,
     onSpatialMagnifyEnd,
     spatialEventOptions,
+    hostRef,
     [SpatialID]: spatialId,
     ...restProps
   } = props
@@ -104,16 +170,40 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   )!
 
   const parentPortalInstanceObject = useContext(PortalInstanceContext)
-  const portalInstanceObject = useMemo(
-    () =>
-      new PortalInstanceObject(
-        spatialId,
-        spatializedContainerObject,
-        parentPortalInstanceObject,
-        getExtraSpatializedElementProperties,
-      ),
-    [],
+  const isOverlayMode =
+    !!parentPortalInstanceObject &&
+    isFloatingOverlayContent(restProps as Record<string, unknown>)
+  const portalInstanceObject = useMemo(() => {
+    const portal = new PortalInstanceObject(
+      spatialId,
+      spatializedContainerObject,
+      parentPortalInstanceObject,
+      getExtraSpatializedElementProperties,
+    )
+    if (isOverlayMode) {
+      portal.setFloatingOverlay(true)
+    }
+    return portal
+  }, [])
+
+  // Overlay placeholder host ref: forward the floating library's `asChild` ref
+  // (so it can measure/position the hidden host) and register the host so
+  // `notify2DFrameChange` can find and measure it in the parent spatial window.
+  const hostRefBox = useRef(hostRef)
+  hostRefBox.current = hostRef
+  const overlayPlaceholderRef = useCallback(
+    (node: HTMLElement | null) => {
+      assignForwardedRef(hostRefBox.current, node)
+      if (node) {
+        spatializedContainerObject.registerSpatialDom(spatialId, node)
+        portalInstanceObject.notify2DFrameChange()
+      } else {
+        spatializedContainerObject.unregisterSpatialDom(spatialId)
+      }
+    },
+    [spatializedContainerObject, spatialId, portalInstanceObject],
   )
+
   useEffect(() => {
     portalInstanceObject.init()
     return () => {
@@ -133,10 +223,26 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     spatializedElement,
   )
 
-  const PlaceholderEl = renderPlaceholderInSubPortal(
-    portalInstanceObject,
-    props.component,
-  )
+  let PlaceholderEl: React.ReactNode
+  if (isOverlayMode) {
+    const { children, radixProps } = splitOverlayProps(
+      restProps as Record<string, unknown>,
+    )
+    PlaceholderEl = renderOverlayPlaceholder(
+      portalInstanceObject,
+      props.component,
+      {
+        hostRef: overlayPlaceholderRef,
+        children,
+        radixProps,
+      },
+    )
+  } else {
+    PlaceholderEl = renderPlaceholderInSubPortal(
+      portalInstanceObject,
+      props.component,
+    )
+  }
 
   useEffect(() => {
     if (spatializedElement) {

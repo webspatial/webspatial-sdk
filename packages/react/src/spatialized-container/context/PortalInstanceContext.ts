@@ -29,6 +29,8 @@ export class PortalInstanceObject {
   readonly spatializedContainerObject: SpatializedContainerObject
   readonly parentPortalInstanceObject: PortalInstanceObject | null
   spatializedElement?: SpatializedElement
+  isFloatingOverlay = false
+  overlayHostElement: HTMLElement | null = null
 
   // cachedDomInfo used for cache dom info
   // when dom is updated, this property should be updated as well
@@ -108,6 +110,15 @@ export class PortalInstanceObject {
       this.spatialId,
       this.onSpatialTransformVisibilityChange,
     )
+    this.spatializedContainerObject.unregisterSpatialDom(this.spatialId)
+  }
+
+  setFloatingOverlay(enabled: boolean) {
+    this.isFloatingOverlay = enabled
+  }
+
+  setOverlayHostElement(element: HTMLElement | null) {
+    this.overlayHostElement = element
   }
 
   private onSpatialTransformVisibilityChange = (
@@ -128,11 +139,15 @@ export class PortalInstanceObject {
     if (!dom) {
       return
     }
-    const computedStyle = getComputedStyle(dom)
+    const styleSource = this.overlayHostElement ?? dom
+    const computedStyle = getComputedStyle(styleSource)
+    const isFixedPosition =
+      !this.isFloatingOverlay &&
+      computedStyle.getPropertyValue('position') === 'fixed'
     this.cachedDomInfo = {
       dom,
       computedStyle,
-      isFixedPosition: computedStyle.getPropertyValue('position') === 'fixed',
+      isFixedPosition,
     }
 
     this.updateSpatializedElementProperties()
@@ -166,8 +181,14 @@ export class PortalInstanceObject {
     }
     this.inAddingToParent = true
 
-    if (this.isFixedPosition || !this.parentPortalInstanceObject) {
+    if (
+      !this.isFloatingOverlay &&
+      (this.isFixedPosition || !this.parentPortalInstanceObject)
+    ) {
       // Add as a child of the current page
+      var spatialScene = await getSession()!.getSpatialScene()
+      await spatialScene.addSpatializedElement(spatializedElement!)
+    } else if (!this.parentPortalInstanceObject) {
       var spatialScene = await getSession()!.getSpatialScene()
       await spatialScene.addSpatializedElement(spatializedElement!)
     } else {
@@ -185,20 +206,37 @@ export class PortalInstanceObject {
     const dom = this.dom
     const spatializedElement = this.spatializedElement
     const visibility = this.visibility
-    if (!dom || !spatializedElement || !visibility || !this.transformMatrix) {
-      // console.log(
-      //   `not ready to  updateSpatializedElementProperties! dom is ${!!dom} spatializedElement is ${spatializedElement} visibility is ${visibility}`,
-      // )
+    // Overlay (Scenario 3): the measurement placeholder is intentionally
+    // `visibility: hidden` in the parent window (the visible copy is the child
+    // webview), and a nested overlay has no transform/visibility probe of its
+    // own. So the watcher-driven `visibility`/`transformMatrix` may be absent or
+    // report `hidden`. Native surface visibility must NOT be derived from the
+    // hidden placeholder — overlay surfaces supply their own defaults below.
+    if (
+      !dom ||
+      !spatializedElement ||
+      (!this.isFloatingOverlay && (!visibility || !this.transformMatrix))
+    ) {
       return
     }
 
+    // Radix already encodes the popper position in the placeholder's rect (via
+    // the fixed wrapper transform), so the overlay surface uses identity here.
+    const transformMatrix = this.transformMatrix ?? new DOMMatrix()
+
     const computedStyle = this.computedStyle!
-    const isFixedPosition = this.isFixedPosition!
+    const isFixedPosition = this.isFloatingOverlay
+      ? false
+      : this.isFixedPosition!
 
     let domRect = dom.getBoundingClientRect()
 
     let { x, y } = domRect
-    if (!isFixedPosition) {
+    // Overlay (Scenario 3): the placeholder host lives in the parent spatial
+    // window, so its getBoundingClientRect is already in that window's viewport
+    // coordinates, and the surface is attached as a child of the parent. Use the
+    // raw rect directly — do not subtract a DOM ancestor or add host-page scroll.
+    if (!this.isFloatingOverlay && !isFixedPosition) {
       const parentDom =
         this.spatializedContainerObject.queryParentSpatialDomBySpatialId(
           this.spatialId,
@@ -230,7 +268,11 @@ export class PortalInstanceObject {
     const scrollWithParent = !isFixedPosition
 
     const display = computedStyle.getPropertyValue('display')
-    const visible = visibility === 'visible' && display !== 'none'
+    // Overlay native visibility is decoupled from the hidden measurement
+    // placeholder: show whenever it is laid out (`display !== 'none'`).
+    const visible = this.isFloatingOverlay
+      ? display !== 'none'
+      : visibility === 'visible' && display !== 'none'
 
     const zIndex =
       parseFloat(
@@ -264,8 +306,53 @@ export class PortalInstanceObject {
       ...extraProperties,
     })
 
+    // Dev-only AVP probes (removed after smoke; iwdp cannot read WebKit console).
+    if (
+      this.isFloatingOverlay &&
+      process.env.NODE_ENV !== 'production' &&
+      width > 0 &&
+      height > 0
+    ) {
+      if (dom) {
+        dom.dataset.webspatialOverlayPush = `${width}x${height}:visible:${visible}`
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('webspatial-overlay-update', {
+            detail: {
+              spatialId: this.spatialId,
+              x,
+              y,
+              width,
+              height,
+              visible,
+            },
+          }),
+        )
+        ;(
+          window as Window & {
+            __webspatialOnOverlayUpdate?: (detail: {
+              spatialId: string
+              x: number
+              y: number
+              width: number
+              height: number
+              visible: boolean
+            }) => void
+          }
+        ).__webspatialOnOverlayUpdate?.({
+          spatialId: this.spatialId,
+          x,
+          y,
+          width,
+          height,
+          visible,
+        })
+      }
+    }
+
     // update transform
-    spatializedElement.updateTransform(this.transformMatrix!)
+    spatializedElement.updateTransform(transformMatrix)
 
     // assign spatializedElement to dom
     Object.assign(this.dom, {
