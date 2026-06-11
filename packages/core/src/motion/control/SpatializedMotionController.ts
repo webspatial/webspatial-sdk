@@ -3,7 +3,7 @@ import type { SpatializedMotionHandle } from './SpatializedMotionHandle'
 import { MOTION_KIND_POLICIES, type MotionKindPolicy } from './motionKindPolicy'
 import type { MotionHost } from './MotionHost'
 import {
-  resolverFromOptions,
+  createCapabilityResolverFromOptions,
   type CapabilityResolver,
 } from './CapabilityResolver'
 import { WebPlaybackBackend } from './WebPlaybackBackend'
@@ -75,7 +75,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
   private pendingPlay = false
   /** Terminal flag for the no-backend (kind-unresolved) finish() path. */
   private idleFinished = false
-  private readonly capability: CapabilityResolver
+  private readonly capabilityResolver: CapabilityResolver
 
   constructor(
     config: SpatializedMotionConfig,
@@ -88,12 +88,12 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
       MOTION_KIND_POLICIES[this.kind ?? 'spatialized2d'].motionObjectIdPrefix,
     )
     this.element = options.element ?? null
-    this.capability = resolverFromOptions(options)
+    this.capabilityResolver = createCapabilityResolverFromOptions(options)
     this.onValuesChange = options.onValuesChange
     this.onStateChange = options.onStateChange
 
     this.sampler = new Sampler(() => this._config)
-    this.ensureBackend()
+    this.ensurePlaybackBackend()
 
     this.emitValues(evaluateMotionTimeline(config, 0))
   }
@@ -101,21 +101,22 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
   /**
    * Lazily create the single backend once (and only once) the kind is known.
    * spatialized2d may run on either web or native depending on
-   * {@link nativeCapable}; the 3d kinds are native-only. Choosing here means the
+   * {@link isNativePlaybackSupported}; the 3d kinds are native-only. Choosing
+   * here means the
    * controller holds exactly one strategy for its whole lifetime.
    */
-  private ensureBackend(): void {
+  private ensurePlaybackBackend(): void {
     if (this.backend || !this.kind) return
-    this.backend = this.useNativeBackend
+    this.backend = this.shouldUseNativeBackend
       ? new NativePlaybackBackend(
           {
             getConfig: () => this._config,
             getKind: () => this.kind,
             getElement: () => this.element,
-            isNativeCapable: () => this.nativeCapable,
+            isNativeCapable: () => this.isNativePlaybackSupported,
             isDestroyed: () => this.destroyed,
             emitValues: values => this.emitValues(values),
-            notifyStateChange: () => this.bump(),
+            notifyStateChange: () => this.notifyStateChange(),
             clearPendingPlay: () => {
               this.pendingPlay = false
             },
@@ -126,7 +127,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
           {
             getConfig: () => this._config,
             emitValues: values => this.emitValues(values),
-            notifyStateChange: () => this.bump(),
+            notifyStateChange: () => this.notifyStateChange(),
             isDestroyed: () => this.destroyed,
             isPendingPlay: () => this.pendingPlay,
             clearPendingPlay: () => {
@@ -142,8 +143,8 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
    * dynamic3d) always run on the native session; spatialized2d runs on native
    * when the runtime supports it, otherwise on the raf web backend.
    */
-  private get useNativeBackend(): boolean {
-    return this.nativeCapable || this.policy.webPlayback !== 'raf'
+  private get shouldUseNativeBackend(): boolean {
+    return this.isNativePlaybackSupported || this.policy.webPlayback !== 'raf'
   }
 
   get isDestroyed(): boolean {
@@ -193,10 +194,10 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
     // Kind may have just resolved — create the single backend now (no-op if it
     // already exists). A pending play() is replayed by the autoStart/pending
     // branch below, which now routes through the freshly created backend.
-    this.ensureBackend()
+    this.ensurePlaybackBackend()
 
     if (previousKind !== this.kind || previousElement !== this.element) {
-      this.bump()
+      this.notifyStateChange()
     }
     if (!element) return
 
@@ -242,7 +243,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
     if (this.destroyed) return
     if (!this.backend) {
       // Kind not resolved yet: remember the intent and replay it in
-      // ensureBackend() once a backend exists.
+      // ensurePlaybackBackend() once a backend exists.
       this.idleFinished = false
       this.pendingPlay = true
       return
@@ -278,7 +279,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
       this.idleFinished = false
       const values = evaluateMotionTimeline(this._config, 0)
       this.emitValues(values)
-      this.bump()
+      this.notifyStateChange()
       this._config.onReset?.(values)
       return
     }
@@ -294,7 +295,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
       this.idleFinished = true
       const values = evaluateMotionTimeline(this._config, this._config.duration)
       this.emitValues(values)
-      this.bump()
+      this.notifyStateChange()
       this._config.onComplete?.(values)
       return
     }
@@ -306,12 +307,12 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
     return MOTION_KIND_POLICIES[this.kind ?? 'spatialized2d']
   }
 
-  private get nativeCapable(): boolean {
+  private get isNativePlaybackSupported(): boolean {
     if (!this.kind) return false
-    return this.capability.supports(this.kind)
+    return this.capabilityResolver.supports(this.kind)
   }
 
-  private bump(): void {
+  private notifyStateChange(): void {
     this.onStateChange?.()
   }
 
