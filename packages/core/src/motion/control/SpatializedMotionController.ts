@@ -17,6 +17,9 @@ import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import { evaluateMotionTimeline } from '../compute/sample'
 import { validateSpatializedMotionConfig } from '../compute/validate'
 
+/**
+ * Construction options for the motion controller runtime wrapper.
+ */
 export interface SpatializedMotionControllerOptions {
   /** Initial element; may be set later via {@link attachElement}. */
   element?: MotionHost | null
@@ -34,6 +37,12 @@ export interface SpatializedMotionControllerOptions {
 }
 
 let _motionObjectCounter = 0
+/**
+ * Allocates stable ids for motion objects created in JS.
+ *
+ * @param prefix Motion-object prefix for the current policy.
+ * @returns A unique controller id.
+ */
 function nextMotionObjectId(prefix: string): string {
   return `${prefix}${++_motionObjectCounter}_${Date.now()}`
 }

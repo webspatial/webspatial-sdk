@@ -3,11 +3,17 @@ import type { TimingFunction } from '../../types/animation'
 import type {
   SpatializedMotionConfig,
   SpatializedMotionProperty,
-  SpatializedMotionTimelineConfig,
   SpatializedMotionSegmentConfig,
   SpatializedMotionTrack,
+  SpatializedMotionTimelineConfig,
 } from '../../types/spatializedMotion'
 
+/**
+ * Flattens visual values into motion-property/value pairs.
+ *
+ * @param values Visual values to inspect.
+ * @param out Collector for discovered motion property samples.
+ */
 function collectScalars(
   values: SpatializedVisualValues,
   out: Array<{ property: SpatializedMotionProperty; value: number }>,
@@ -32,6 +38,11 @@ function collectScalars(
   }
 }
 
+/**
+ * Guards timeline shorthand against mixing with canonical config fields.
+ *
+ * @param config Timeline config to validate.
+ */
 function validateTimelineConfigShape(
   config: SpatializedMotionTimelineConfig,
 ): void {
@@ -42,6 +53,12 @@ function validateTimelineConfigShape(
   }
 }
 
+/**
+ * Converts `0%`-style timeline keys into [0, 1] ratios.
+ *
+ * @param key Percentage key from the timeline config.
+ * @returns The normalized ratio represented by the key.
+ */
 function parsePercentageKey(key: string): number {
   if (!/^\d+(\.\d+)?%$/.test(key)) {
     throw new Error(`[SpatializedMotion] invalid timeline key "${key}"`)
@@ -53,7 +70,12 @@ function parsePercentageKey(key: string): number {
   return ratio / 100
 }
 
-/** Desugar simple from/to config into a timeline config. */
+/**
+ * Desugars shorthand from/to motion config into canonical tracks.
+ *
+ * @param simple Shorthand segment config.
+ * @returns Canonical track-based motion config.
+ */
 export function segmentConfigToMotionConfig(
   simple: SpatializedMotionSegmentConfig,
 ): SpatializedMotionConfig {
@@ -108,7 +130,12 @@ export function segmentConfigToMotionConfig(
   }
 }
 
-/** Desugar percentage-key timeline config into canonical tracks. */
+/**
+ * Desugars percentage-key timeline config into canonical tracks.
+ *
+ * @param config Timeline config using percentage keys.
+ * @returns Canonical track-based motion config.
+ */
 export function desugarTimelineConfig(
   config: SpatializedMotionTimelineConfig,
 ): SpatializedMotionConfig {
@@ -180,6 +207,12 @@ export function desugarTimelineConfig(
   }
 }
 
+/**
+ * Normalizes any supported motion config shape into canonical tracks.
+ *
+ * @param config Motion config in shorthand, timeline, or canonical form.
+ * @returns Canonical track-based motion config.
+ */
 export function normalizeMotionConfig(
   config:
     | SpatializedMotionSegmentConfig
