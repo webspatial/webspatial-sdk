@@ -1,11 +1,16 @@
+// Hooks
 export { useMotionController } from './useMotionController'
 export { useAnimation } from './useAnimation'
+
+// Types
 export type {
   UseAnimationResult,
   SpatializedMotionConfig,
   SpatializedMotionSegmentConfig,
   SpatializedPlaybackApi,
 } from './useAnimation'
+
+// Utilities
 export {
   evaluateMotionTimeline,
   validateSpatializedMotionConfig,
@@ -13,4 +18,6 @@ export {
 } from '@webspatial/core-sdk'
 export { valuesToMotionStyle } from './style'
 export { resolveMotionStyle } from './resolveMotionStyle'
+
+// Internal binding types
 export type { SpatializedMotionBindingInternal } from './motionBindingTypes'
