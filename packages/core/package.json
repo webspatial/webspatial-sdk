@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/core-sdk",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "this is the core js API for webspatial",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
+    "happy-dom": "^20.9.0",
     "jsdom": "^26.1.0",
     "tsup": "^8.4.0",
     "typedoc": "^0.26.5",

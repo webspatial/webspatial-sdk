@@ -553,10 +553,10 @@ This two-step approach via the window coordinate system ensures cross-Reality co
 
 ## References
 
-- [`Vec3`](./Vec3.md) — 3D vector type used for positions
-- [`<Reality>`](./Reality.md) — Reality volume component
-- [`<Entity>`](./Entity.md) — Entity component and `EntityRef`
+- [`Vec3`](../packages/core/src/types/types.ts) — 3D vector type used for positions
+- [`<Reality>`](./dynamic-3d-api-prd.md#5-reality) — Reality volume component
+- [`<Entity>`](./dynamic-3d-api-prd.md#6-entity-group-container) — Entity component and `EntityRef`
 - [`<Model>`](./Model.md) — Model component and `ModelRef`
-- [`SpatializedElementRef`](./SpatializedContainer.md) — Spatialized container ref type
+- [`SpatializedElementRef`](../packages/react/src/spatialized-container/types.ts) — Spatialized container ref type
 - [RealityKit — Entity coordinate conversion](https://developer.apple.com/documentation/realitykit/entity/convert(position:from:))
 - [RealityKit — RealityViewContent](https://developer.apple.com/documentation/realitykit/realityviewcontent)

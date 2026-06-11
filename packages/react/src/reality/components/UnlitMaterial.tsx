@@ -16,7 +16,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
 }) => {
   const ctx = useRealityContext()
   const materialRef = useRef<SpatialUnlitMaterial | undefined>(undefined)
-  const isInitializedRef = useRef(false)
+  const [isInitialized, setIsInitialized] = useState(false)
   const [textureRevision, setTextureRevision] = useState(0)
 
   useEffect(() => {
@@ -34,17 +34,20 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     const init = async () => {
       try {
         let textureIdForNative: string | undefined = options.textureId
-        if (options.textureId) {
-          const texturePromise = resourceRegistry.get(options.textureId)
+        if (options.textureId && resourceRegistry.has(options.textureId)) {
           try {
-            const textureResource = await texturePromise
+            const textureResource = await resourceRegistry.get(
+              options.textureId,
+            )
             if (cancelled) return
             textureIdForNative = textureResource.id
           } catch {
-            // Texture failed: still create material so entities do not hang on materialId;
-            // tint-only / no texture until the texture resolves.
+            // failed texture → tint-only
             textureIdForNative = ''
           }
+        } else if (options.textureId) {
+          // no Texture for this id yet → tint-only; subscribe picks up add() later
+          textureIdForNative = ''
         }
         if (cancelled) return
         const commandOptions: SpatialUnlitMaterialOptions = {
@@ -58,7 +61,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
         const mat = await materialPromise
         if (cancelled) return
         materialRef.current = mat
-        isInitializedRef.current = true
+        setIsInitialized(true)
       } catch (error) {
         console.error(' ~ UnlitMaterial ~ error:', error)
       }
@@ -70,13 +73,13 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
       // Use registry to schedule destruction after promise resolves
       resourceRegistry.removeAndDestroy(materialId)
       materialRef.current = undefined
-      isInitializedRef.current = false
+      setIsInitialized(false)
     }
   }, [ctx, options.id])
 
   // Dynamic property updates
   useEffect(() => {
-    if (!ctx || !isInitializedRef.current || !materialRef.current) return
+    if (!ctx || !isInitialized || !materialRef.current) return
     let cancelled = false
     void (async () => {
       const updates: Partial<SpatialUnlitMaterialOptions> = {}
@@ -86,6 +89,8 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
       if (options.opacity !== undefined) updates.opacity = options.opacity
       if (options.textureId !== undefined) {
         if (options.textureId === '') {
+          updates.textureId = ''
+        } else if (!ctx.resourceRegistry.has(options.textureId)) {
           updates.textureId = ''
         } else {
           const texturePromise = ctx.resourceRegistry.get(options.textureId)
@@ -109,6 +114,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     }
   }, [
     ctx,
+    isInitialized,
     options.color,
     options.textureId,
     options.transparent,

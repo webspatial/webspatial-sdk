@@ -1,7 +1,7 @@
 {
   "name": "web-content",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "test": "tsc -p ./tsconfig.json",
@@ -68,7 +68,8 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
     "postcss-modules": "^6.0.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vite": "6.4.2"
   },
   "husky": {
     "hooks": {

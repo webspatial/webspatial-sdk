@@ -9,7 +9,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
 } from 'react'
 import { SpatializedContainer } from './SpatializedContainer'
 import { getSession } from '../utils'
@@ -20,7 +19,6 @@ import {
   SpatializedStatic3DElementRef,
 } from './types'
 import {
-  ModelLoadingMode,
   ModelSource,
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
@@ -99,7 +97,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     loop,
     loading = 'eager',
   } = props
-  const portalInstanceObject = useContext(PortalInstanceContext)!
+  const portalInstanceObject = useContext(PortalInstanceContext)
   const wasVisible = useRef(false)
 
   const modelURL = useMemo(() => getAbsoluteURL(src), [src])
@@ -109,10 +107,18 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
 
   // Observe when model becomes visible and then stop until sources change
   useEffect(() => {
+    const target = portalInstanceObject?.dom
     wasVisible.current = false
-    const target = portalInstanceObject.dom
-    if (loading !== 'lazy' || !target) {
+    if (loading !== 'lazy') {
       wasVisible.current = true
+      return
+    }
+    if (!target) {
+      return
+    }
+    if (typeof IntersectionObserver === 'undefined') {
+      wasVisible.current = true
+      spatializedElement.updateProperties({ loading: 'eager' })
       return
     }
     const observer = new IntersectionObserver(entries => {
@@ -124,7 +130,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     })
     observer.observe(target)
     return () => observer.disconnect()
-  }, [modelURL, sourcesKey, portalInstanceObject])
+  }, [modelURL, sourcesKey, portalInstanceObject?.dom])
 
   useEffect(() => {
     if (loading !== 'lazy') wasVisible.current = true
@@ -142,32 +148,34 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   }, [modelURL, sourcesKey, autoPlay, loop, posterURL, loading])
 
   useEffect(() => {
-    if (onLoad) {
+    const dom = portalInstanceObject?.dom
+    if (onLoad && dom) {
       spatializedElement.onLoadCallback = () => {
         onLoad(
           createLoadSuccessEvent(
-            () => portalInstanceObject.dom as SpatializedStatic3DElementRef,
+            () => dom as SpatializedStatic3DElementRef,
           ),
         )
       }
     } else {
       spatializedElement.onLoadCallback = undefined
     }
-  }, [onLoad])
+  }, [onLoad, portalInstanceObject?.dom])
 
   useEffect(() => {
-    if (onError) {
+   const dom = portalInstanceObject?.dom
+    if (onError && dom) {
       spatializedElement.onLoadFailureCallback = () => {
         onError(
           createLoadFailureEvent(
-            () => portalInstanceObject.dom as SpatializedStatic3DElementRef,
+            () => dom as SpatializedStatic3DElementRef,
           ),
         )
       }
     } else {
       spatializedElement.onLoadFailureCallback = undefined
     }
-  }, [onError])
+  }, [onError, portalInstanceObject?.dom])
 
   return <></>
 }

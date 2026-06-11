@@ -1,4 +1,37 @@
-# @webspatial/platform-avp
+# @webspatial/platform-visionos
+
+## 1.7.0
+
+### Minor Changes
+
+- 9801a07: Add lazy loading support to Model
+- 550b3fe: Add currentTime property to Model to read and seek animation time
+- 9be9a9f: add poster attribute to <Model>
+- 68c3fdd: Add loadable texture resources for Dynamic 3D: core `SpatialTextureResource`, `CreateTexture` / `UpdateTextureProperties`, and `textureId` on unlit materials; React `<Texture>` plus `UnlitMaterial` wiring that resolves logical ids to platform ids; VisionOS async `TextureResource` loading and scene handlers. Test-server includes a textured unlit box demo; Dynamic 3D PRD documents textures and trims out-of-scope sections.
+
+### Patch Changes
+
+- ecacefb: Upgrade the builder CLI image pipeline to `jimp` 1.x so the workspace no
+  longer resolves the vulnerable `jimp@0.22.x -> file-type@16.x` chain flagged
+  by Dependabot. This keeps the existing icon loading and generation flow while
+  refreshing the lockfile to patched transitive versions.
+
+  The published package metadata now declares Node.js 22+ support to match the
+  current dependency requirements, and CI verifies the workspace on Node.js 22,
+  24, and latest.
+
+  Verified with `pnpm -C packages/cli test` and `pnpm audit --json`.
+
+- c2aed90: Clone model resource per SpatialModelEntity to prevent shared native instance lifecycle.
+- 1cb2c85: fix: incorrect load/error callbacks on Model
+- 5053a15: Remove the unused RealityKitContent product dependency from the visionOS app target so automated builds do not compile unused Reality Composer Pro assets.
+- 685b545: **ResourceRegistry:** add `subscribe(id, listener)` and `notify(id)`. Subscribers run when a resource promise settles after `add()` (success or failure), and on `remove`, `removeAndDestroy`, and `destroy()`.
+
+  **React `<Texture>`:** call `notify(id)` after in-place `updateProperties({ url })` so materials refresh when the URL changes without a new `add()` for the same logical texture id.
+
+  **React `<UnlitMaterial>`:** subscribe to the bound `textureId` and bump an internal revision so the update path re-runs when the texture settles or is replaced; remove `surfaceSyncRev`. Material init still creates a tint-only material when the texture promise rejects so entities keep a valid material id until a later successful load.
+
+  **visionOS `Dynamic3DManager`:** coalesce remote downloads per URL string and write cache files under `Documents` using a SHA256-prefix plus basename so concurrent loads no longer `removeItem` the same path another reader is using.
 
 ## 1.6.1
 

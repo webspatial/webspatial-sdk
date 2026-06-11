@@ -484,7 +484,7 @@ describe('spatialized-container/hooks', () => {
       handler?.()
     })
 
-    expect(portalInstanceObject.notify2DFrameChange).toHaveBeenCalledTimes(1)
+    expect(portalInstanceObject.notify2DFrameChange).toHaveBeenCalledTimes(2)
     expect(renders).toBeGreaterThan(1)
 
     r.unmount()
@@ -1095,14 +1095,15 @@ describe('TransformVisibilityTaskContainer', () => {
     ) as HTMLDivElement
     expect(host).toBeTruthy()
 
-    const div = host.querySelector('div') as HTMLDivElement
-    expect(div).toBeTruthy()
-    expect(div.getAttribute(SpatialID)).toBe('tv1')
-    expect(div.className).toBe('c')
-    expect(div.style.left).toBe('-10000px')
-    expect(div.style.top).toBe('-10000px')
-    expect(div.style.opacity).toBe('0')
-    expect(div.style.pointerEvents).toBe('none')
+    const probe = host.querySelector(
+      `div[${SpatialID}="tv1"]`,
+    ) as HTMLDivElement
+    expect(probe).toBeTruthy()
+    expect(probe.className).toBe('c')
+    expect(probe.style.left).toBe('-10000px')
+    expect(probe.style.top).toBe('-10000px')
+    expect(probe.style.opacity).toBe('0')
+    expect(probe.style.pointerEvents).toBe('none')
 
     r.unmount()
     host.remove()
@@ -1206,6 +1207,7 @@ describe('PortalSpatializedContainer', () => {
         computedStyle: any
         dom: HTMLElement | null
         attachSpatializedElement = vi.fn()
+        notify2DFrameChange = vi.fn()
         init = vi.fn(() => initCalls.push(this.spatialId))
         destroy = vi.fn(() => destroyCalls.push(this.spatialId))
         constructor(
@@ -1236,7 +1238,7 @@ describe('PortalSpatializedContainer', () => {
       return { useSpatializedElement: () => spatializedElement }
     })
     vi.doMock('./spatialized-container/hooks/useSync2DFrame', () => {
-      return { useSync2DFrame: vi.fn() }
+      return { useSync2DFrame: () => vi.fn() }
     })
 
     const { PortalInstanceContext } = await import(
@@ -1550,7 +1552,7 @@ describe('utils/getSession', () => {
     vi.doUnmock('./utils/getSession')
 
     const session = { ok: true }
-    const Spatial = vi.fn().mockImplementation(() => {
+    const Spatial = vi.fn().mockImplementation(function () {
       return {
         isSupported: () => true,
         requestSession: vi.fn(() => session),
@@ -1577,7 +1579,7 @@ describe('utils/getSession', () => {
     vi.resetModules()
     vi.doUnmock('./utils/getSession')
 
-    const Spatial = vi.fn().mockImplementation(() => {
+    const Spatial = vi.fn().mockImplementation(function () {
       return {
         isSupported: () => false,
         requestSession: vi.fn(),
@@ -1728,6 +1730,7 @@ describe('Spatialized2DElementContainer', () => {
             ? React.createElement(props.spatializedContent, {
                 component: 'div',
                 style: {},
+                portalInstanceObject,
                 'data-name': 'hello',
                 spatializedElement: el,
               })

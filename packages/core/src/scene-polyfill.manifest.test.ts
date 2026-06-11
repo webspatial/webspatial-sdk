@@ -9,9 +9,11 @@ vi.mock('./spatial-host', () => ({
 
 vi.mock('./JSBCommand', () => {
   return {
-    FocusScene: vi.fn().mockImplementation(() => ({
-      execute: vi.fn().mockResolvedValue(undefined),
-    })),
+    FocusScene: vi.fn().mockImplementation(function () {
+      return {
+        execute: vi.fn().mockResolvedValue(undefined),
+      }
+    }),
   }
 })
 

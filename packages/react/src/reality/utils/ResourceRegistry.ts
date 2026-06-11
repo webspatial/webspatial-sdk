@@ -8,18 +8,16 @@ import { SpatialObject } from '@webspatial/core-sdk'
  * JSX order does not need to match registration order. Callers are responsible for using the
  * correct id for each resource kind (same as with string ids today).
  *
- * Callers can `await get(id)` before `add(id, promise)` runs: `get` returns a promise that
- * settles when something later calls `add` with the same id.
+ * `get(id)` before `add()` is fine — resolves when `add()` runs.
+ * `has(id)` is true only after `add()`, not after `get()` alone.
  *
- * **Subscriptions:** `subscribe(id, listener)` runs `listener` whenever `notify(id)` is invoked.
- * The registry auto-notifies after each `add()` promise settles (then or catch), and on
- * `remove`, `removeAndDestroy`, and `destroy()`. Components such as `<Texture>` may call
- * `notify(id)` manually when a resource mutates in place without a new `add()` (e.g. same texture
- * id, new URL via `updateProperties`).
+ * `subscribe` / `notify`: run when a resource settles, is removed, or updates in place (e.g. texture URL).
  */
 export class ResourceRegistry {
   /** Every id maps to a promise — either the real resource from add(), or a placeholder until then. */
   private resources: Map<string, Promise<SpatialObject>> = new Map()
+  /** ids registered via add(), not get()-only waiters */
+  private registered = new Set<string>()
   /** If get() ran first, we stash resolve/reject so add() can complete the waiting promise. */
   private deferreds = new Map<
     string,
@@ -32,6 +30,7 @@ export class ResourceRegistry {
   private listeners = new Map<string, Set<() => void>>()
 
   add<T extends SpatialObject>(id: string, resource: Promise<T>): void {
+    this.registered.add(id)
     this.resources.set(id, resource)
 
     // Anyone who awaited get(id) early is still holding the placeholder; wire them to this promise.
@@ -71,6 +70,10 @@ export class ResourceRegistry {
     }
   }
 
+  has(id: string): boolean {
+    return this.registered.has(id)
+  }
+
   get(id: string): Promise<SpatialObject> {
     const existing = this.resources.get(id)
     if (existing) {
@@ -86,6 +89,7 @@ export class ResourceRegistry {
   }
 
   remove(id: string): void {
+    this.registered.delete(id)
     this.resources.delete(id)
     this.deferreds.delete(id)
     this.notify(id)
@@ -97,6 +101,7 @@ export class ResourceRegistry {
     if (p) {
       p.then(obj => obj.destroy()).catch(() => {})
     }
+    this.registered.delete(id)
     this.resources.delete(id)
     this.deferreds.delete(id)
     this.notify(id)
@@ -116,6 +121,7 @@ export class ResourceRegistry {
       this.notify(id)
     }
     this.listeners.clear()
+    this.registered.clear()
 
     const pending = Array.from(this.resources.values())
     this.resources.clear()
