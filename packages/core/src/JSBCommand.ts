@@ -28,7 +28,7 @@ import {
   SpatialTextureResourceOptions,
 } from './types/types'
 import type { AnimateTransformCommand } from './types/animation'
-import { composeSRT } from './utils'
+import { composeSRT, toVec3Tuple } from './utils'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -671,13 +671,24 @@ export class InitializeAttachmentCommand extends JSBCommand {
     super()
   }
   protected getParams() {
-    return {
+    const params: Record<string, any> = {
       id: this.attachmentId,
       parentEntityId: this.options.parentEntityId,
-      position: this.options.position ?? [0, 0, 0],
-      size: this.options.size,
+      position: toVec3Tuple(this.options.position) ?? [0, 0, 0],
+      rotation: toVec3Tuple(this.options.rotation) ?? [0, 0, 0],
+      scale: toVec3Tuple(this.options.scale) ?? [1, 1, 1],
       ownerViewId: this.options.ownerViewId,
     }
+    if (this.options.size !== undefined) params.size = this.options.size
+    // width/height are world-space meters; sent as distinct fields so the
+    // legacy point-based `size` payload keeps its meaning.
+    if (this.options.width !== undefined) {
+      params.widthMeters = this.options.width
+    }
+    if (this.options.height !== undefined) {
+      params.heightMeters = this.options.height
+    }
+    return params
   }
 }
 
@@ -690,9 +701,20 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     super()
   }
   protected getParams() {
-    return {
-      id: this.attachmentId,
-      ...this.options,
+    const params: Record<string, any> = { id: this.attachmentId }
+    const position = toVec3Tuple(this.options.position)
+    const rotation = toVec3Tuple(this.options.rotation)
+    const scale = toVec3Tuple(this.options.scale)
+    if (position !== undefined) params.position = position
+    if (rotation !== undefined) params.rotation = rotation
+    if (scale !== undefined) params.scale = scale
+    if (this.options.size !== undefined) params.size = this.options.size
+    if (this.options.width !== undefined) {
+      params.widthMeters = this.options.width
     }
+    if (this.options.height !== undefined) {
+      params.heightMeters = this.options.height
+    }
+    return params
   }
 }

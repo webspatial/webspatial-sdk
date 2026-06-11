@@ -1,11 +1,29 @@
 import Foundation
+import simd
 import SwiftUI
+
+// Converts Euler angles in degrees to a quaternion composed as Rz·Ry·Rx,
+// matching the JS SDK's composeSRT (DOMMatrix.rotate) semantics.
+// simd quaternion multiplication q1 * q2 applies q2 first.
+func quatFromEulerDegreesXYZ(_ deg: SIMD3<Float>) -> simd_quatf {
+    let r = deg * (Float.pi / 180)
+    let qx = simd_quatf(angle: r.x, axis: SIMD3<Float>(1, 0, 0))
+    let qy = simd_quatf(angle: r.y, axis: SIMD3<Float>(0, 1, 0))
+    let qz = simd_quatf(angle: r.z, axis: SIMD3<Float>(0, 0, 1))
+    return qz * qy * qx
+}
 
 struct AttachmentInfo: Identifiable, Equatable {
     let id: String
     var parentEntityId: String
     var position: SIMD3<Float>
+    var orientation: simd_quatf
+    var scale: SIMD3<Float>
+    // Legacy 2D surface size in points; overridden per-axis by the
+    // meter-based dimensions below when present
     var size: CGSize
+    var widthMeters: Double?
+    var heightMeters: Double?
     var webViewModel: SpatialWebViewModel
 
     static func == (lhs: AttachmentInfo, rhs: AttachmentInfo) -> Bool {
@@ -29,7 +47,11 @@ class AttachmentManager {
         id: String,
         parentEntityId: String,
         position: SIMD3<Float>,
+        orientation: simd_quatf = simd_quatf(ix: 0, iy: 0, iz: 0, r: 1),
+        scale: SIMD3<Float> = SIMD3<Float>(1, 1, 1),
         size: CGSize,
+        widthMeters: Double? = nil,
+        heightMeters: Double? = nil,
         webViewModel: SpatialWebViewModel
     ) -> AttachmentInfo {
         webViewModel.setBackgroundTransparent(true)
@@ -39,21 +61,45 @@ class AttachmentManager {
             id: id,
             parentEntityId: parentEntityId,
             position: position,
+            orientation: orientation,
+            scale: scale,
             size: size,
+            widthMeters: widthMeters,
+            heightMeters: heightMeters,
             webViewModel: webViewModel
         )
         attachments[id] = info
         return info
     }
 
-    func update(id: String, position: SIMD3<Float>?, size: CGSize?) {
+    func update(
+        id: String,
+        position: SIMD3<Float>?,
+        orientation: simd_quatf? = nil,
+        scale: SIMD3<Float>? = nil,
+        size: CGSize?,
+        widthMeters: Double? = nil,
+        heightMeters: Double? = nil
+    ) {
         guard var info = attachments[id] else { return }
 
         if let position = position {
             info.position = position
         }
+        if let orientation = orientation {
+            info.orientation = orientation
+        }
+        if let scale = scale {
+            info.scale = scale
+        }
         if let size = size {
             info.size = size
+        }
+        if let widthMeters = widthMeters {
+            info.widthMeters = widthMeters
+        }
+        if let heightMeters = heightMeters {
+            info.heightMeters = heightMeters
         }
 
         attachments[id] = info

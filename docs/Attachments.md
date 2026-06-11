@@ -6,8 +6,8 @@ Attachments allow developers to render interactive 2D HTML/React content — but
 
 The API uses two components with a deliberate separation of concerns:
 
-- **`<AttachmentAsset>`** declares *what* to render (the React content template). Placed outside `<SceneGraph>`.
-- **`<AttachmentEntity>`** declares *where* to render it (position, size, parent entity). Placed inside `<SceneGraph>`.
+- **`<AttachmentAsset>`** declares _what_ to render (the React content template). Placed outside `<SceneGraph>`.
+- **`<AttachmentEntity>`** declares _where_ to render it (position, size, parent entity). Placed inside `<SceneGraph>`.
 
 This enables a 1→N pattern: one content template can be rendered into multiple 3D positions simultaneously, mirroring the existing asset-vs-entity pattern used by models and materials.
 
@@ -36,26 +36,53 @@ The React content to render inside the attachment. This can be any valid React J
 
 Creates a native attachment (a child WKWebView on visionOS) parented under a 3D entity, and registers its DOM container with the `AttachmentRegistry` so that `<AttachmentAsset>` can portal content into it.
 
+`<AttachmentEntity>` is an **entity-like attachment surface, not a true `SpatialEntity` internally**. It supports the familiar transform props (`position`, `rotation`, `scale`) and `<Plane>`-style sizing (`width`/`height` in meters), but the underlying native entity is created and owned by SwiftUI's RealityView attachments mechanism. Because of that, it does **not** support components, materials, models, child entities, event bubbling, or `animateTransform`. The content remains 2D React/HTML.
+
 ### Attributes
 
 `attachment`
 
 **Required.** A string matching the `name` prop on the corresponding `<AttachmentAsset>`. This is how the entity knows which content template to display.
 
+`id`
+
+An optional string providing a stable explicit identity for this attachment placement. It is used as the registry/portal key, so it must be unique across mounted `<AttachmentEntity>` instances and must not change for the lifetime of the component (a duplicate id logs a warning and falls back to a generated id). Defaults to an auto-generated id.
+
 `position`
 
-An optional `[x, y, z]` tuple specifying the attachment's local position relative to its parent entity, in meters. Defaults to `[0, 0, 0]`.
+The attachment's local position relative to its parent entity, in meters. Accepts a `Vec3` object `{ x, y, z }` (preferred, consistent with other entity components) or a legacy `[x, y, z]` tuple. Defaults to `{ x: 0, y: 0, z: 0 }`.
+
+`rotation`
+
+The attachment's local rotation relative to its parent entity, as a `Vec3` of Euler angles in degrees — the same convention as `<Entity rotation>`. Defaults to no rotation.
+
+`scale`
+
+The attachment's local scale relative to its parent entity, as a `Vec3`. Defaults to `{ x: 1, y: 1, z: 1 }`. Scale multiplies the rendered surface on top of the `width`/`height`/`size` dimensions.
+
+`width` / `height`
+
+The attachment surface dimensions in **world-space meters**, working like `<Plane>`'s `width`/`height` from a developer-experience perspective. The native side converts meters to view points via the system's physical metrics, so meter sizing stays correct when the window is rescaled. Each axis takes precedence over the corresponding `size` axis when both are given.
 
 `size`
 
-**Required.** An object `{ width: number, height: number }` specifying the attachment's frame dimensions in points. This controls the SwiftUI `.frame()` applied to the attachment's WKWebView on the native side.
+A legacy object `{ width: number, height: number }` specifying the attachment's frame dimensions in **points** (the SwiftUI `.frame()` applied to the attachment's WKWebView). Still fully supported for backward compatibility. If neither `size` nor `width`/`height` is provided, the native default (100×100 points) is used and a warning is logged.
 
 ### Usage Notes
 
 - `<AttachmentEntity>` must be placed inside `<SceneGraph>`, as a descendant of an `<Entity>`. It inherits the parent entity's transform — when the entity moves, the attachment follows.
 - The `attachment` prop can change at runtime. The component will migrate its registry mapping from the old name to the new name, so the portal tracks correctly.
-- Position and size can change at runtime. Updates are sent to the native side via `UpdateAttachmentEntityCommand`.
+- `position`, `rotation`, `scale`, `width`, `height` and `size` are all reactive — updates are sent to the native side via `UpdateAttachmentEntityCommand`.
 - On unmount, the attachment is destroyed and its container is removed from the registry.
+
+### Sizing Precedence
+
+| Props given           | Resulting frame                                                              |
+| --------------------- | ---------------------------------------------------------------------------- |
+| `width`/`height` only | meters, converted natively to points                                         |
+| `size` only           | points, as-is (legacy behavior)                                              |
+| both                  | meters win per-axis (`width` over `size.width`, `height` over `size.height`) |
+| neither               | native default of 100×100 points, with a console warning                     |
 
 ## Style Sync
 
@@ -72,40 +99,38 @@ Inline styles set directly on elements inside the attachment work as expected.
 
 The following components detect when they are rendered inside an `<AttachmentAsset>` and degrade gracefully:
 
-| Component | Behavior Inside Attachment |
-|-----------|---------------------------|
-| `<Reality>` | Returns `null` with a console warning.  |
+| Component                               | Behavior Inside Attachment                                                    |
+| --------------------------------------- | ----------------------------------------------------------------------------- |
+| `<Reality>`                             | Returns `null` with a console warning.                                        |
 | `<SpatialDiv>` / `SpatializedContainer` | Renders as plain HTML (strips spatial props). Layout and Tailwind still work. |
-| `<Model>` | Renders as a plain `<model>` tag without spatialization. |
-
-
+| `<Model>`                               | Renders as a plain `<model>` tag without spatialization.                      |
 
 ## Technical Summary
 
-|||
-| --- | --- |
-| Permitted content for `<AttachmentAsset>` | Any valid React JSX. Spatial components (`<Reality>`, `<SpatialDiv>`, `<Model>`) will degrade to plain HTML. |
-| Permitted content for `<AttachmentEntity>` | None. Returns `null`. |
-| Permitted parents for `<AttachmentAsset>` | Direct child of `<Reality>`, outside `<SceneGraph>`. |
-| Permitted parents for `<AttachmentEntity>` | Any `<Entity>` descendant inside `<SceneGraph>`. |
-| Rendering mechanism | `createPortal` from the host React tree into each attachment WKWebView's `document.body`. |
-| Native backing | One `WKWebView` per `<AttachmentEntity>` instance, rendered as a RealityKit `ViewAttachmentEntity`. |
+|                                            |                                                                                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Permitted content for `<AttachmentAsset>`  | Any valid React JSX. Spatial components (`<Reality>`, `<SpatialDiv>`, `<Model>`) will degrade to plain HTML. |
+| Permitted content for `<AttachmentEntity>` | None. Returns `null`.                                                                                        |
+| Permitted parents for `<AttachmentAsset>`  | Direct child of `<Reality>`, outside `<SceneGraph>`.                                                         |
+| Permitted parents for `<AttachmentEntity>` | Any `<Entity>` descendant inside `<SceneGraph>`.                                                             |
+| Rendering mechanism                        | `createPortal` from the host React tree into each attachment WKWebView's `document.body`.                    |
+| Native backing                             | One `WKWebView` per `<AttachmentEntity>` instance, rendered as a RealityKit `ViewAttachmentEntity`.          |
 
 ## Browser Compatibility
 
-| Feature | visionOS |
-| --- | --- |
-| `<AttachmentAsset>` |  WebSpatial April |
+| Feature              | visionOS         |
+| -------------------- | ---------------- |
+| `<AttachmentAsset>`  | WebSpatial April |
 | `<AttachmentEntity>` | WebSpatial April |
 
 ### Not Supported
 
-| Feature | Status |
-| --- | --- |
-| Nested `<Reality>` inside attachments | Blocked — returns null with warning |
-| Nested `<SpatialDiv>` inside attachments | Degrades to plain HTML |
-| 3D content inside attachments | Not supported — 2D surfaces only |
-| Billboard / camera-facing policy | Not in this PR |
+| Feature                                  | Status                              |
+| ---------------------------------------- | ----------------------------------- |
+| Nested `<Reality>` inside attachments    | Blocked — returns null with warning |
+| Nested `<SpatialDiv>` inside attachments | Degrades to plain HTML              |
+| 3D content inside attachments            | Not supported — 2D surfaces only    |
+| Billboard / camera-facing policy         | Not in this PR                      |
 
 ## High-Level Architecture
 
@@ -125,11 +150,11 @@ Attachment creation uses `window.open("webspatial://createAttachment?...")` inst
 
 ### Creation Protocol vs. Update/Destroy Protocol
 
-| Operation | Protocol | Reason |
-|-----------|----------|--------|
-| Create | `WebSpatialProtocolCommand` (`window.open`) | Must return `WindowProxy` synchronously |
-| Update | `JSBCommand` (JSB message) | Only sends data (position, size) — no return value needed |
-| Destroy | `DestroyCommand` (JSB message) | Standard spatial object destroy pipeline |
+| Operation | Protocol                                    | Reason                                                                       |
+| --------- | ------------------------------------------- | ---------------------------------------------------------------------------- |
+| Create    | `WebSpatialProtocolCommand` (`window.open`) | Must return `WindowProxy` synchronously                                      |
+| Update    | `JSBCommand` (JSB message)                  | Only sends data (position, rotation, scale, sizing) — no return value needed |
+| Destroy   | `DestroyCommand` (JSB message)              | Standard spatial object destroy pipeline                                     |
 
 ## Constraints
 

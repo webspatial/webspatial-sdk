@@ -15,7 +15,7 @@ export * from './types/types'
 export * from './types/animation'
 export * from './runtime'
 
-export { composeSRT, decomposeSRT } from './utils'
+export { composeSRT, decomposeSRT, toVec3Tuple } from './utils'
 
 // side effects
 import { injectSceneHook } from './scene-polyfill'
