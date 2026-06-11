@@ -1,4 +1,6 @@
 import {
+  AttachmentAsset,
+  AttachmentEntity,
   BoxEntity,
   Entity,
   ModelAsset,
@@ -116,103 +118,271 @@ function SummaryLine({
 }
 
 // =====================================================================
-// 1 — Concurrent same-URL loads
+// 1 — Concurrent same-URL loads (debug)
 // =====================================================================
 
-function ConcurrentSameUrlTexture() {
-  const COUNT = 5
-  const [loads, setLoads] = useState<Record<number, number>>({})
-  const [errors, setErrors] = useState<Record<number, string>>({})
-  const onLoad = useCallback(
-    (i: number) => setLoads(prev => ({ ...prev, [i]: (prev[i] ?? 0) + 1 })),
-    [],
+const REALITY_DEBUG_VIEWPORT: CSSProperties = {
+  width: '100%',
+  height: '600px',
+  maxWidth: 440,
+  border: '1px solid #444',
+  background: '#111',
+  '--xr-depth': 100,
+  '--xr-back': 200,
+} as CSSProperties
+
+/** Same dimensions as reality-debug BoxEntity */
+const LARGE_BOX = {
+  width: 0.2,
+  height: 0.2,
+  depth: 0.1,
+  cornerRadius: 1,
+  position: { x: 0, y: 0, z: 0 },
+  rotation: { x: 0, y: 0, z: 0 },
+} as const
+
+// Flip while debugging
+const SHOW_BOX_RED = true
+
+/** Shared with boxRedNext (the working textured box) */
+const WORKING_ENTITY = {
+  rotation: { x: 0, y: 0, z: 0 },
+  scale: { x: 0.6, y: 0.6, z: 0.6 },
+} as const
+
+const ATTACH_LABEL = {
+  background: 'rgba(0,0,0,0.88)',
+  color: '#fff',
+  padding: '5px 8px',
+  borderRadius: 6,
+  fontSize: 11,
+  fontFamily: 'system-ui, sans-serif',
+  lineHeight: 1.35,
+} as const
+
+const ATTACH_SIZE = { width: 168, height: 52 }
+const ATTACH_ABOVE: [number, number, number] = [0, 0.11, 0]
+
+function AttachLabel({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div style={ATTACH_LABEL}>
+      <strong>{title}</strong>
+      <div style={{ color: '#bbb', fontSize: 10, marginTop: 2 }}>{detail}</div>
+    </div>
   )
-  const onError = useCallback(
-    (i: number, e: unknown) => setErrors(prev => ({ ...prev, [i]: String(e) })),
-    [],
+}
+
+function BoxAttachment({ name }: { name: string }) {
+  return (
+    <AttachmentEntity
+      attachment={name}
+      position={ATTACH_ABOVE}
+      size={ATTACH_SIZE}
+    />
   )
-  const totalLoads = Object.values(loads).reduce((a, b) => a + b, 0)
-  const totalErrors = Object.values(errors).filter(Boolean).length
+}
+
+function ConcurrentSameUrlTextureWorking() {
+  const [loads, setLoads] = useState(0)
+  const [error, setError] = useState<string | undefined>()
 
   return (
     <div>
       <h3 style={{ fontSize: 14, marginTop: 12, color: '#aaa' }}>
-        Texture — Concurrent same-URL loads
+        Texture — narrow down (vs boxRedNext)
       </h3>
       <p style={hint}>
-        {COUNT} Reality containers each load the same texture URL
-        simultaneously. Each should fire onLoad independently.
+        Top row works: boxRed + boxRedNext (y=0.15). Below: each changes ONE
+        thing from boxRedNext. Same material, same scale, same LARGE_BOX.
       </p>
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-          gap: 8,
+          fontSize: 11,
+          color: '#888',
+          marginBottom: 8,
+          lineHeight: 1.6,
         }}
       >
-        {Array.from({ length: COUNT }, (_, i) => (
-          <div key={i}>
-            <div style={{ fontSize: 11, color: '#aaa', marginBottom: 2 }}>
-              Scene {i + 1} <StatusBadge loaded={loads[i]} error={errors[i]} />
-            </div>
-            <div
-              style={{ maxHeight: 130, overflow: 'hidden', marginBottom: 4 }}
-            >
-              <Reality id={`tex-conc-same-${i}`} style={rv}>
-                <Texture
-                  id={`texConcSame-${i}`}
-                  url={buildPublicUrl(IMG_CAR)}
-                  onLoad={() => onLoad(i)}
-                  onError={e => onError(i, e)}
-                />
-                <UnlitMaterial
-                  id={`texConcSameMat-${i}`}
-                  color="#ffffff"
-                  textureId={`texConcSame-${i}`}
-                  transparent={false}
-                  opacity={1}
-                />
-                <SceneGraph>
-                  <Entity scale={SC} rotation={{ x: 0, y: 0.3, z: 0 }}>
-                    <BoxEntity
-                      id={`texConcSameBox-${i}`}
-                      name={`texConcSameBox-${i}`}
-                      width={0.08}
-                      height={0.08}
-                      depth={0.08}
-                      cornerRadius={0.008}
-                      materials={[`texConcSameMat-${i}`]}
-                    />
-                  </Entity>
-                </SceneGraph>
-              </Reality>
-            </div>
-          </div>
-        ))}
+        <div>✓ boxRedNext — baseline (x=0.14, y=0.15)</div>
+        <div>① narrow-id — only id/name → texBox-0 (still y=0.15)</div>
+        <div>② narrow-y — only entity y → 0 (was 0.15)</div>
+        <div>③ narrow-x — only entity x → -0.14 (old texBox x)</div>
+        <div>④ narrow-old — old texBox-0 transform (x=-0.14, y=0)</div>
       </div>
+      <div style={{ fontSize: 11, color: '#aaa', marginBottom: 4 }}>
+        Texture{' '}
+        <StatusBadge loaded={loads > 0 ? loads : undefined} error={error} />
+      </div>
+
+      <Reality id="tex-conc-same" style={REALITY_DEBUG_VIEWPORT}>
+        {/* resources — defined once, not placed in the scene */}
+        <Texture
+          id="texConcSame"
+          url={buildPublicUrl(IMG_CAR)}
+          onLoad={() => setLoads(n => n + 1)}
+          onError={e => setError(String(e))}
+        />
+        <UnlitMaterial
+          id="texConcSameMat"
+          color="#ffffff"
+          textureId="texConcSame"
+          transparent={false}
+          opacity={1}
+        />
+        <UnlitMaterial
+          id="matRed"
+          color="#ff0000"
+          transparent={true}
+          opacity={0.5}
+        />
+
+        <AttachmentAsset name="tex-label-red">
+          <AttachLabel title="control" detail="matRed · no texture" />
+        </AttachmentAsset>
+        <AttachmentAsset name="tex-label-baseline">
+          <AttachLabel title="✓ baseline" detail="texConcSameMat · y=0.15" />
+        </AttachmentAsset>
+        <AttachmentAsset name="tex-label-1">
+          <AttachLabel title="① narrow-id" detail="id=texBox-0 · y=0.15" />
+        </AttachmentAsset>
+        <AttachmentAsset name="tex-label-2">
+          <AttachLabel title="② narrow-y" detail="only y=0 (was 0.15)" />
+        </AttachmentAsset>
+        <AttachmentAsset name="tex-label-3">
+          <AttachLabel title="③ narrow-x" detail="only x=-0.14" />
+        </AttachmentAsset>
+        <AttachmentAsset name="tex-label-4">
+          <AttachLabel title="④ narrow-old" detail="x=-0.14 · y=0" />
+        </AttachmentAsset>
+
+        <SceneGraph>
+          {/* control — identical pattern that works on both platforms */}
+          {SHOW_BOX_RED ? (
+            <Entity
+              position={{ x: 0, y: 0.15, z: 0 }}
+              rotation={{ x: 0, y: 0, z: 0 }}
+              scale={{ x: 0.6, y: 0.6, z: 0.6 }}
+            >
+              <BoxEntity
+                id="boxRed"
+                name="boxRedName"
+                {...LARGE_BOX}
+                materials={['matRed']}
+              />
+              <BoxAttachment name="tex-label-red" />
+            </Entity>
+          ) : null}
+
+          <Entity
+            position={{ x: 0.14, y: 0.15, z: 0 }}
+            rotation={{ x: 0, y: 0, z: 0 }}
+            scale={{ x: 0.6, y: 0.6, z: 0.6 }}
+          >
+            <BoxEntity
+              id="boxRedNext"
+              name="boxRedNext"
+              {...LARGE_BOX}
+              materials={['texConcSameMat']}
+            />
+            <BoxAttachment name="tex-label-baseline" />
+          </Entity>
+
+          {/* ① id/name only — same spot as boxRedNext, old texBox-0 id */}
+          <Entity position={{ x: 0.28, y: 0.15, z: 0 }} {...WORKING_ENTITY}>
+            <BoxEntity
+              id="texBox0"
+              name="texBox0"
+              {...LARGE_BOX}
+              materials={['texConcSameMat']}
+            />
+            <BoxAttachment name="tex-label-1" />
+          </Entity>
+
+          {/* ② entity y=0 only */}
+          <Entity position={{ x: 0.28, y: 0, z: 0 }} {...WORKING_ENTITY}>
+            <BoxEntity
+              id="narrowy"
+              name="narrowy"
+              {...LARGE_BOX}
+              materials={['texConcSameMat']}
+            />
+            <BoxAttachment name="tex-label-2" />
+          </Entity>
+
+          {/* ③ old x only, keep y=0.15 */}
+          <Entity position={{ x: -0.14, y: 0.15, z: 0 }} {...WORKING_ENTITY}>
+            <BoxEntity
+              id="narrowx"
+              name="narrowx"
+              {...LARGE_BOX}
+              materials={['texConcSameMat']}
+            />
+            <BoxAttachment name="tex-label-3" />
+          </Entity>
+
+          {/* ④ exact old texBox-0 entity transform */}
+          <Entity position={{ x: -0.14, y: 0, z: 0 }} {...WORKING_ENTITY}>
+            <BoxEntity
+              id="narrowold"
+              name="narrowold"
+              {...LARGE_BOX}
+              materials={['texConcSameMat']}
+            />
+            <BoxAttachment name="tex-label-4" />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+
       <SummaryLine
-        totalLoads={totalLoads}
-        expected={COUNT}
-        totalErrors={totalErrors}
+        totalLoads={loads}
+        expected={1}
+        totalErrors={error ? 1 : 0}
       />
     </div>
   )
 }
 
+function ConcurrentSameUrlTexture() {
+  return <ConcurrentSameUrlTextureWorking />
+}
+
+/*
+ * --- Other section-1 variants (uncomment in ConcurrentSameUrlTexture to use) ---
+ *
+ * function ConcurrentSameUrlTexture() {
+ *   return (
+ *     <>
+ *       <ConcurrentSameUrlTextureWorking />
+ *       <ConcurrentSameUrlTextureSmallViewport />
+ *       <ConcurrentSameUrlTexturePrevious />
+ *     </>
+ *   )
+ * }
+ *
+ * const SMALL_BOX = { width: 0.08, height: 0.08, depth: 0.08, cornerRadius: 0.008 } as const
+ *
+ * function ViewportCallout({ ... }) { ... }
+ *
+ * function TexturedBoxRow({ ... }) {
+ *   return (
+ *     <>
+ *       {[-1.5, -0.5, 0.5, 1.5].map(i => i * spread).map((x, i) => (
+ *         <Entity key={i} position={{ x, y: 0, z: 0 }} scale={entityScale}>
+ *           <BoxEntity id={`${boxIdPrefix}-${i}`} materials={[matId]} ... />
+ *         </Entity>
+ *       ))}
+ *     </>
+ *   )
+ * }
+ *
+ * function ConcurrentSameUrlTextureSmallViewport() { ... viewport B test ... }
+ * function ConcurrentSameUrlTexturePrevious() { ... viewport C test ... }
+ */
+
 function ConcurrentSameUrlModel() {
   const COUNT = 4
-  const [loads, setLoads] = useState<Record<number, number>>({})
-  const [errors, setErrors] = useState<Record<number, string>>({})
-  const onLoad = useCallback(
-    (i: number) => setLoads(prev => ({ ...prev, [i]: (prev[i] ?? 0) + 1 })),
-    [],
-  )
-  const onError = useCallback(
-    (i: number, e: unknown) => setErrors(prev => ({ ...prev, [i]: String(e) })),
-    [],
-  )
-  const totalLoads = Object.values(loads).reduce((a, b) => a + b, 0)
-  const totalErrors = Object.values(errors).filter(Boolean).length
+  const [loads, setLoads] = useState(0)
+  const [error, setError] = useState<string | undefined>()
 
   return (
     <div>
@@ -220,49 +390,40 @@ function ConcurrentSameUrlModel() {
         Model — Concurrent same-URL loads
       </h3>
       <p style={hint}>
-        {COUNT} Reality containers each load the same model URL simultaneously
-        via ModelAsset + ModelEntity. Each should fire onLoad independently.
+        One Reality, one ModelAsset — {COUNT} ModelEntities in SceneGraph share
+        the same model reference. Model should load once and all entities should
+        display it.
       </p>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-          gap: 8,
-        }}
-      >
-        {Array.from({ length: COUNT }, (_, i) => (
-          <div key={i}>
-            <div style={{ fontSize: 11, color: '#aaa', marginBottom: 2 }}>
-              Scene {i + 1} <StatusBadge loaded={loads[i]} error={errors[i]} />
-            </div>
-            <div
-              style={{ maxHeight: 170, overflow: 'hidden', marginBottom: 4 }}
-            >
-              <Reality id={`model-conc-same-${i}`} style={rvModel}>
-                <ModelAsset
-                  id={`modelConcSame-${i}`}
-                  src={buildPublicUrl(MODEL_CAR)}
-                  onLoad={() => onLoad(i)}
-                  onError={e => onError(i, e)}
-                />
-                <SceneGraph>
-                  <Entity>
-                    <ModelEntity
-                      id={`modelConcSameEnt-${i}`}
-                      model={`modelConcSame-${i}`}
-                      scale={{ x: 0.12, y: 0.12, z: 0.12 }}
-                    />
-                  </Entity>
-                </SceneGraph>
-              </Reality>
-            </div>
-          </div>
-        ))}
+      <div style={{ fontSize: 11, color: '#aaa', marginBottom: 4 }}>
+        Model{' '}
+        <StatusBadge loaded={loads > 0 ? loads : undefined} error={error} />
       </div>
+      <Reality id="model-conc-same" style={rvModel}>
+        <ModelAsset
+          id="modelConcSame"
+          src={buildPublicUrl(MODEL_CAR)}
+          onLoad={() => setLoads(n => n + 1)}
+          onError={e => setError(String(e))}
+        />
+        <SceneGraph>
+          {Array.from({ length: COUNT }, (_, i) => (
+            <Entity
+              key={i}
+              position={{ x: (i - (COUNT - 1) / 2) * 0.12, y: 0, z: 0 }}
+            >
+              <ModelEntity
+                id={`modelConcSameEnt-${i}`}
+                model="modelConcSame"
+                scale={{ x: 0.12, y: 0.12, z: 0.12 }}
+              />
+            </Entity>
+          ))}
+        </SceneGraph>
+      </Reality>
       <SummaryLine
-        totalLoads={totalLoads}
-        expected={COUNT}
-        totalErrors={totalErrors}
+        totalLoads={loads}
+        expected={1}
+        totalErrors={error ? 1 : 0}
       />
     </div>
   )
@@ -302,63 +463,53 @@ function ConcurrentDifferentUrlsTexture() {
         Texture — Concurrent different-URL loads
       </h3>
       <p style={hint}>
-        {COUNT} Reality containers each load a different texture URL
-        simultaneously. Each should load its own distinct texture.
+        One Reality — {COUNT} distinct Texture + UnlitMaterial pairs, each
+        referenced by one PlaneEntity in SceneGraph.
       </p>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-          gap: 8,
-        }}
-      >
+      <Reality id="tex-conc-diff" style={rv}>
+        {DIFF_TEX_URLS.map((url, i) => (
+          <Texture
+            key={`tex-${i}`}
+            id={`texConcDiff-${i}`}
+            url={url}
+            onLoad={() => onLoad(i)}
+            onError={e => onError(i, e)}
+          />
+        ))}
+        {DIFF_TEX_URLS.map((_, i) => (
+          <UnlitMaterial
+            key={`mat-${i}`}
+            id={`texConcDiffMat-${i}`}
+            color="#ffffff"
+            textureId={`texConcDiff-${i}`}
+            transparent={false}
+            opacity={1}
+          />
+        ))}
+        <SceneGraph>
+          {DIFF_TEX_URLS.map((_, i) => (
+            <Entity
+              key={i}
+              position={{ x: (i - (COUNT - 1) / 2) * 0.1, y: 0, z: 0 }}
+              scale={SC}
+              rotation={{ x: 0, y: 0.3, z: 0 }}
+            >
+              <PlaneEntity
+                id={`texConcDiffPlane-${i}`}
+                name={`texConcDiffPlane-${i}`}
+                width={0.1}
+                height={0.1}
+                materials={[`texConcDiffMat-${i}`]}
+              />
+            </Entity>
+          ))}
+        </SceneGraph>
+      </Reality>
+      <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
         {DIFF_TEX_URLS.map((url, i) => (
           <div key={i}>
-            <div style={{ fontSize: 11, color: '#aaa', marginBottom: 2 }}>
-              Scene {i + 1} <StatusBadge loaded={loads[i]} error={errors[i]} />
-            </div>
-            <div
-              style={{
-                fontSize: 10,
-                color: '#555',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                maxWidth: 200,
-              }}
-            >
-              {url}
-            </div>
-            <div
-              style={{ maxHeight: 130, overflow: 'hidden', marginBottom: 4 }}
-            >
-              <Reality id={`tex-conc-diff-${i}`} style={rv}>
-                <Texture
-                  id={`texConcDiff-${i}`}
-                  url={url}
-                  onLoad={() => onLoad(i)}
-                  onError={e => onError(i, e)}
-                />
-                <UnlitMaterial
-                  id={`texConcDiffMat-${i}`}
-                  color="#ffffff"
-                  textureId={`texConcDiff-${i}`}
-                  transparent={false}
-                  opacity={1}
-                />
-                <SceneGraph>
-                  <Entity scale={SC} rotation={{ x: 0, y: 0.3, z: 0 }}>
-                    <PlaneEntity
-                      id={`texConcDiffPlane-${i}`}
-                      name={`texConcDiffPlane-${i}`}
-                      width={0.1}
-                      height={0.1}
-                      materials={[`texConcDiffMat-${i}`]}
-                    />
-                  </Entity>
-                </SceneGraph>
-              </Reality>
-            </div>
+            [{i}] <StatusBadge loaded={loads[i]} error={errors[i]} />{' '}
+            <span style={{ color: '#555', fontSize: 10 }}>{url}</span>
           </div>
         ))}
       </div>
@@ -392,54 +543,39 @@ function ConcurrentDifferentUrlsModel() {
         Model — Concurrent different-URL loads
       </h3>
       <p style={hint}>
-        {COUNT} Reality containers each load a different model URL
-        simultaneously. Each should load its own distinct model.
+        One Reality — {COUNT} distinct ModelAssets, each referenced by one
+        ModelEntity in SceneGraph.
       </p>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-          gap: 8,
-        }}
-      >
+      <Reality id="model-conc-diff" style={rvModel}>
+        {DIFF_MODEL_URLS.map((url, i) => (
+          <ModelAsset
+            key={`asset-${i}`}
+            id={`modelConcDiff-${i}`}
+            src={url}
+            onLoad={() => onLoad(i)}
+            onError={e => onError(i, e)}
+          />
+        ))}
+        <SceneGraph>
+          {DIFF_MODEL_URLS.map((_, i) => (
+            <Entity
+              key={i}
+              position={{ x: (i - (COUNT - 1) / 2) * 0.12, y: 0, z: 0 }}
+            >
+              <ModelEntity
+                id={`modelConcDiffEnt-${i}`}
+                model={`modelConcDiff-${i}`}
+                scale={{ x: 0.12, y: 0.12, z: 0.12 }}
+              />
+            </Entity>
+          ))}
+        </SceneGraph>
+      </Reality>
+      <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
         {DIFF_MODEL_URLS.map((url, i) => (
           <div key={i}>
-            <div style={{ fontSize: 11, color: '#aaa', marginBottom: 2 }}>
-              Scene {i + 1} <StatusBadge loaded={loads[i]} error={errors[i]} />
-            </div>
-            <div
-              style={{
-                fontSize: 10,
-                color: '#555',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                maxWidth: 200,
-              }}
-            >
-              {url}
-            </div>
-            <div
-              style={{ maxHeight: 170, overflow: 'hidden', marginBottom: 4 }}
-            >
-              <Reality id={`model-conc-diff-${i}`} style={rvModel}>
-                <ModelAsset
-                  id={`modelConcDiff-${i}`}
-                  src={url}
-                  onLoad={() => onLoad(i)}
-                  onError={e => onError(i, e)}
-                />
-                <SceneGraph>
-                  <Entity>
-                    <ModelEntity
-                      id={`modelConcDiffEnt-${i}`}
-                      model={`modelConcDiff-${i}`}
-                      scale={{ x: 0.12, y: 0.12, z: 0.12 }}
-                    />
-                  </Entity>
-                </SceneGraph>
-              </Reality>
-            </div>
+            [{i}] <StatusBadge loaded={loads[i]} error={errors[i]} />{' '}
+            <span style={{ color: '#555', fontSize: 10 }}>{url}</span>
           </div>
         ))}
       </div>
@@ -457,6 +593,7 @@ function ConcurrentDifferentUrlsModel() {
 // =====================================================================
 
 function RapidUrlCyclingTexture() {
+  const COUNT = 3
   const [url, setUrl] = useState(buildPublicUrl(IMG_CAR))
   const [loads, setLoads] = useState(0)
   const [errors, setErrors] = useState(0)
@@ -529,17 +666,24 @@ function RapidUrlCyclingTexture() {
             opacity={1}
           />
           <SceneGraph>
-            <Entity scale={SC} rotation={{ x: 0, y: 0.3, z: 0 }}>
-              <BoxEntity
-                id="texRapidCycleBox"
-                name="texRapidCycleBox"
-                width={0.08}
-                height={0.08}
-                depth={0.08}
-                cornerRadius={0.008}
-                materials={['texRapidCycleMat']}
-              />
-            </Entity>
+            {Array.from({ length: COUNT }, (_, i) => (
+              <Entity
+                key={i}
+                position={{ x: (i - (COUNT - 1) / 2) * 0.1, y: 0, z: 0 }}
+                scale={SC}
+                rotation={{ x: 0, y: 0.3, z: 0 }}
+              >
+                <BoxEntity
+                  id={`texRapidCycleBox-${i}`}
+                  name={`texRapidCycleBox-${i}`}
+                  width={0.08}
+                  height={0.08}
+                  depth={0.08}
+                  cornerRadius={0.008}
+                  materials={['texRapidCycleMat']}
+                />
+              </Entity>
+            ))}
           </SceneGraph>
         </Reality>
       </div>
@@ -557,6 +701,7 @@ function RapidUrlCyclingTexture() {
 }
 
 function RapidModelSwitching() {
+  const COUNT = 3
   // ModelAsset doesn't support URL updates, so we switch which ModelAsset id
   // the ModelEntity references (like dynamicAssets test does).
   const [modelId, setModelId] = useState<'modelA' | 'modelB'>('modelA')
@@ -625,13 +770,18 @@ function RapidModelSwitching() {
             onError={() => setErrorsB(n => n + 1)}
           />
           <SceneGraph>
-            <Entity>
-              <ModelEntity
-                id="modelRapidSwitchEnt"
-                model={modelId}
-                scale={{ x: 0.12, y: 0.12, z: 0.12 }}
-              />
-            </Entity>
+            {Array.from({ length: COUNT }, (_, i) => (
+              <Entity
+                key={i}
+                position={{ x: (i - (COUNT - 1) / 2) * 0.12, y: 0, z: 0 }}
+              >
+                <ModelEntity
+                  id={`modelRapidSwitchEnt-${i}`}
+                  model={modelId}
+                  scale={{ x: 0.12, y: 0.12, z: 0.12 }}
+                />
+              </Entity>
+            ))}
           </SceneGraph>
         </Reality>
       </div>
@@ -655,6 +805,7 @@ function RapidModelSwitching() {
 // =====================================================================
 
 function RemountStabilityTexture() {
+  const COUNT = 3
   const [key, setKey] = useState(0)
   const [loads, setLoads] = useState(0)
   const [errors, setErrors] = useState(0)
@@ -716,17 +867,24 @@ function RemountStabilityTexture() {
             opacity={1}
           />
           <SceneGraph>
-            <Entity scale={SC} rotation={{ x: 0, y: 0.3, z: 0 }}>
-              <BoxEntity
-                id="texRemountBox"
-                name="texRemountBox"
-                width={0.08}
-                height={0.08}
-                depth={0.08}
-                cornerRadius={0.008}
-                materials={['texRemountMat']}
-              />
-            </Entity>
+            {Array.from({ length: COUNT }, (_, i) => (
+              <Entity
+                key={i}
+                position={{ x: (i - (COUNT - 1) / 2) * 0.1, y: 0, z: 0 }}
+                scale={SC}
+                rotation={{ x: 0, y: 0.3, z: 0 }}
+              >
+                <BoxEntity
+                  id={`texRemountBox-${i}`}
+                  name={`texRemountBox-${i}`}
+                  width={0.08}
+                  height={0.08}
+                  depth={0.08}
+                  cornerRadius={0.008}
+                  materials={['texRemountMat']}
+                />
+              </Entity>
+            ))}
           </SceneGraph>
         </Reality>
       </div>
@@ -742,6 +900,7 @@ function RemountStabilityTexture() {
 }
 
 function RemountStabilityModel() {
+  const COUNT = 3
   const [key, setKey] = useState(0)
   const [loads, setLoads] = useState(0)
   const [errors, setErrors] = useState(0)
@@ -797,13 +956,18 @@ function RemountStabilityModel() {
             onError={() => setErrors(n => n + 1)}
           />
           <SceneGraph>
-            <Entity>
-              <ModelEntity
-                id="modelRemountEnt"
-                model="modelRemount"
-                scale={{ x: 0.12, y: 0.12, z: 0.12 }}
-              />
-            </Entity>
+            {Array.from({ length: COUNT }, (_, i) => (
+              <Entity
+                key={i}
+                position={{ x: (i - (COUNT - 1) / 2) * 0.12, y: 0, z: 0 }}
+              >
+                <ModelEntity
+                  id={`modelRemountEnt-${i}`}
+                  model="modelRemount"
+                  scale={{ x: 0.12, y: 0.12, z: 0.12 }}
+                />
+              </Entity>
+            ))}
           </SceneGraph>
         </Reality>
       </div>
@@ -823,6 +987,7 @@ function RemountStabilityModel() {
 // =====================================================================
 
 function ErrorRecoveryTexture() {
+  const COUNT = 3
   const [url, setUrl] = useState(buildPublicUrl(IMG_404))
   const [loads, setLoads] = useState(0)
   const [errors, setErrors] = useState(0)
@@ -870,17 +1035,24 @@ function ErrorRecoveryTexture() {
             opacity={1}
           />
           <SceneGraph>
-            <Entity scale={SC} rotation={{ x: 0, y: 0.3, z: 0 }}>
-              <BoxEntity
-                id="texErrorRecoveryBox"
-                name="texErrorRecoveryBox"
-                width={0.08}
-                height={0.08}
-                depth={0.08}
-                cornerRadius={0.008}
-                materials={['texErrorRecoveryMat']}
-              />
-            </Entity>
+            {Array.from({ length: COUNT }, (_, i) => (
+              <Entity
+                key={i}
+                position={{ x: (i - (COUNT - 1) / 2) * 0.1, y: 0, z: 0 }}
+                scale={SC}
+                rotation={{ x: 0, y: 0.3, z: 0 }}
+              >
+                <BoxEntity
+                  id={`texErrorRecoveryBox-${i}`}
+                  name={`texErrorRecoveryBox-${i}`}
+                  width={0.08}
+                  height={0.08}
+                  depth={0.08}
+                  cornerRadius={0.008}
+                  materials={['texErrorRecoveryMat']}
+                />
+              </Entity>
+            ))}
           </SceneGraph>
         </Reality>
       </div>
@@ -901,6 +1073,7 @@ function ErrorRecoveryTexture() {
 }
 
 function ErrorRecoveryModel() {
+  const COUNT = 3
   // ModelAsset doesn't support URL updates, so we use remounting with
   // different src values to test error → valid recovery.
   const [key, setKey] = useState(0)
@@ -958,13 +1131,18 @@ function ErrorRecoveryModel() {
             }}
           />
           <SceneGraph>
-            <Entity>
-              <ModelEntity
-                id="modelErrorRecoveryEnt"
-                model="modelErrorRecovery"
-                scale={{ x: 0.12, y: 0.12, z: 0.12 }}
-              />
-            </Entity>
+            {Array.from({ length: COUNT }, (_, i) => (
+              <Entity
+                key={i}
+                position={{ x: (i - (COUNT - 1) / 2) * 0.12, y: 0, z: 0 }}
+              >
+                <ModelEntity
+                  id={`modelErrorRecoveryEnt-${i}`}
+                  model="modelErrorRecovery"
+                  scale={{ x: 0.12, y: 0.12, z: 0.12 }}
+                />
+              </Entity>
+            ))}
           </SceneGraph>
         </Reality>
       </div>
@@ -1176,7 +1354,7 @@ function MixedConcurrentLoadsModel() {
 // =====================================================================
 
 function ConcurrentCreateDestroyTexture() {
-  const [scenes, setScenes] = useState<number[]>([])
+  const [entities, setEntities] = useState<number[]>([])
   const [loads, setLoads] = useState(0)
   const [errors, setErrors] = useState(0)
   const [running, setRunning] = useState(false)
@@ -1191,15 +1369,15 @@ function ConcurrentCreateDestroyTexture() {
       for (let j = 0; j < 3; j++) {
         newIds.push(nextIdRef.current++)
       }
-      setScenes(prev => [...prev, ...newIds])
+      setEntities(prev => [...prev, ...newIds])
       await new Promise(r => setTimeout(r, 300))
-      setScenes(prev => {
+      setEntities(prev => {
         if (prev.length <= 2) return prev
         return prev.slice(2)
       })
       await new Promise(r => setTimeout(r, 200))
     }
-    setScenes([])
+    setEntities([])
     setRunning(false)
   }, [])
 
@@ -1214,8 +1392,9 @@ function ConcurrentCreateDestroyTexture() {
         Texture — Concurrent create + destroy
       </h3>
       <p style={hint}>
-        Continuously creates and destroys texture-loading scenes. Tests that
-        temp files are cleaned up and no resources leak.
+        One Reality with a shared Texture + UnlitMaterial. Continuously creates
+        and destroys BoxEntities in SceneGraph. Tests that temp files are
+        cleaned up and no resources leak.
       </p>
       <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
         <button type="button" onClick={run} disabled={running}>
@@ -1225,49 +1404,47 @@ function ConcurrentCreateDestroyTexture() {
           Stop
         </button>
         <span style={{ fontSize: 12, color: '#aaa', alignSelf: 'center' }}>
-          active scenes: {scenes.length}
+          active entities: {entities.length}
         </span>
       </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-          gap: 4,
-        }}
-      >
-        {scenes.map(id => (
-          <div key={id} style={{ maxHeight: 110, overflow: 'hidden' }}>
-            <Reality id={`tex-churn-${id}`} style={{ ...rv, height: 100 }}>
-              <Texture
-                id={`texChurn-${id}`}
-                url={buildPublicUrl(IMG_CAR)}
-                onLoad={() => setLoads(n => n + 1)}
-                onError={() => setErrors(n => n + 1)}
+      <Reality id="tex-churn" style={rv}>
+        <Texture
+          id="texChurn"
+          url={buildPublicUrl(IMG_CAR)}
+          onLoad={() => setLoads(n => n + 1)}
+          onError={() => setErrors(n => n + 1)}
+        />
+        <UnlitMaterial
+          id="texChurnMat"
+          color="#ffffff"
+          textureId="texChurn"
+          transparent={false}
+          opacity={1}
+        />
+        <SceneGraph>
+          {entities.map((id, i) => (
+            <Entity
+              key={id}
+              position={{
+                x: (i - (entities.length - 1) / 2) * 0.08,
+                y: 0,
+                z: 0,
+              }}
+              scale={{ x: 0.4, y: 0.4, z: 0.4 }}
+            >
+              <BoxEntity
+                id={`texChurnBox-${id}`}
+                name={`texChurnBox-${id}`}
+                width={0.06}
+                height={0.06}
+                depth={0.06}
+                cornerRadius={0.006}
+                materials={['texChurnMat']}
               />
-              <UnlitMaterial
-                id={`texChurnMat-${id}`}
-                color="#ffffff"
-                textureId={`texChurn-${id}`}
-                transparent={false}
-                opacity={1}
-              />
-              <SceneGraph>
-                <Entity scale={{ x: 0.4, y: 0.4, z: 0.4 }}>
-                  <BoxEntity
-                    id={`texChurnBox-${id}`}
-                    name={`texChurnBox-${id}`}
-                    width={0.06}
-                    height={0.06}
-                    depth={0.06}
-                    cornerRadius={0.006}
-                    materials={[`texChurnMat-${id}`]}
-                  />
-                </Entity>
-              </SceneGraph>
-            </Reality>
-          </div>
-        ))}
-      </div>
+            </Entity>
+          ))}
+        </SceneGraph>
+      </Reality>
       <div style={{ fontSize: 12, marginTop: 4 }}>
         onLoad: <strong>{loads}</strong> · onError:{' '}
         <strong style={{ color: errors > 0 ? '#f66' : '#6f6' }}>
@@ -1279,7 +1456,7 @@ function ConcurrentCreateDestroyTexture() {
 }
 
 function ConcurrentCreateDestroyModel() {
-  const [scenes, setScenes] = useState<number[]>([])
+  const [entities, setEntities] = useState<number[]>([])
   const [loads, setLoads] = useState(0)
   const [errors, setErrors] = useState(0)
   const [running, setRunning] = useState(false)
@@ -1294,15 +1471,15 @@ function ConcurrentCreateDestroyModel() {
       for (let j = 0; j < 2; j++) {
         newIds.push(nextIdRef.current++)
       }
-      setScenes(prev => [...prev, ...newIds])
+      setEntities(prev => [...prev, ...newIds])
       await new Promise(r => setTimeout(r, 600))
-      setScenes(prev => {
+      setEntities(prev => {
         if (prev.length <= 1) return prev
         return prev.slice(1)
       })
       await new Promise(r => setTimeout(r, 300))
     }
-    setScenes([])
+    setEntities([])
     setRunning(false)
   }, [])
 
@@ -1317,8 +1494,9 @@ function ConcurrentCreateDestroyModel() {
         Model — Concurrent create + destroy
       </h3>
       <p style={hint}>
-        Continuously creates and destroys model-loading scenes. Tests that temp
-        files are cleaned up and no resources leak.
+        One Reality with a shared ModelAsset. Continuously creates and destroys
+        ModelEntities in SceneGraph. Tests that temp files are cleaned up and no
+        resources leak.
       </p>
       <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
         <button type="button" onClick={run} disabled={running}>
@@ -1328,41 +1506,35 @@ function ConcurrentCreateDestroyModel() {
           Stop
         </button>
         <span style={{ fontSize: 12, color: '#aaa', alignSelf: 'center' }}>
-          active scenes: {scenes.length}
+          active entities: {entities.length}
         </span>
       </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-          gap: 4,
-        }}
-      >
-        {scenes.map(id => (
-          <div key={id} style={{ maxHeight: 140, overflow: 'hidden' }}>
-            <Reality
-              id={`model-churn-${id}`}
-              style={{ ...rvModel, height: 130 }}
+      <Reality id="model-churn" style={rvModel}>
+        <ModelAsset
+          id="modelChurn"
+          src={buildPublicUrl(MODEL_CONE)}
+          onLoad={() => setLoads(n => n + 1)}
+          onError={() => setErrors(n => n + 1)}
+        />
+        <SceneGraph>
+          {entities.map((id, i) => (
+            <Entity
+              key={id}
+              position={{
+                x: (i - (entities.length - 1) / 2) * 0.1,
+                y: 0,
+                z: 0,
+              }}
             >
-              <ModelAsset
-                id={`modelChurn-${id}`}
-                src={buildPublicUrl(MODEL_CONE)}
-                onLoad={() => setLoads(n => n + 1)}
-                onError={() => setErrors(n => n + 1)}
+              <ModelEntity
+                id={`modelChurnEnt-${id}`}
+                model="modelChurn"
+                scale={{ x: 0.08, y: 0.08, z: 0.08 }}
               />
-              <SceneGraph>
-                <Entity>
-                  <ModelEntity
-                    id={`modelChurnEnt-${id}`}
-                    model={`modelChurn-${id}`}
-                    scale={{ x: 0.08, y: 0.08, z: 0.08 }}
-                  />
-                </Entity>
-              </SceneGraph>
-            </Reality>
-          </div>
-        ))}
-      </div>
+            </Entity>
+          ))}
+        </SceneGraph>
+      </Reality>
       <div style={{ fontSize: 12, marginTop: 4 }}>
         onLoad: <strong>{loads}</strong> · onError:{' '}
         <strong style={{ color: errors > 0 ? '#f66' : '#6f6' }}>
@@ -1397,15 +1569,14 @@ export default function TextureConcurrency() {
       <SectionTitle
         num={1}
         title="Concurrent same-URL loads"
-        desc="Multiple Reality containers load the same resource URL simultaneously. Each should fire onLoad independently. No file corruption or cross-scene interference."
+        desc="Debug: boxRed (matRed) vs texBox-* (shared texConcSameMat). Toggle SHOW_TEX_BOX_* flags at top of section."
       />
       <ConcurrentSameUrlTexture />
-      <ConcurrentSameUrlModel />
-
-      <SectionTitle
+      {/* <ConcurrentSameUrlModel /> */}
+      {/* <SectionTitle
         num={2}
         title="Concurrent different-URL loads"
-        desc="Multiple Reality containers each load a different resource URL simultaneously. Each should load its own distinct resource."
+        desc="One Reality loads multiple distinct resource URLs concurrently. Each Texture/ModelAsset is defined once and referenced by one entity."
       />
       <ConcurrentDifferentUrlsTexture />
       <ConcurrentDifferentUrlsModel />
@@ -1437,7 +1608,7 @@ export default function TextureConcurrency() {
       <SectionTitle
         num={6}
         title="Mixed concurrent loads"
-        desc="Multiple containers loading a mix of same and different URLs simultaneously. Shared-URL scenes should not interfere with each other."
+        desc="One Reality loads a mix of same and different URLs. Shared URLs reuse a single Texture/ModelAsset; multiple entities reference them."
       />
       <MixedConcurrentLoadsTexture />
       <MixedConcurrentLoadsModel />
@@ -1445,10 +1616,10 @@ export default function TextureConcurrency() {
       <SectionTitle
         num={7}
         title="Concurrent create + destroy"
-        desc="Continuously creates and destroys resource-loading scenes. Tests that temp files are cleaned up and no resources leak."
+        desc="One Reality with a shared resource continuously creates and destroys entities in SceneGraph. Tests cleanup and resource lifecycle."
       />
       <ConcurrentCreateDestroyTexture />
-      <ConcurrentCreateDestroyModel />
+      <ConcurrentCreateDestroyModel />  */}
     </div>
   )
 }
