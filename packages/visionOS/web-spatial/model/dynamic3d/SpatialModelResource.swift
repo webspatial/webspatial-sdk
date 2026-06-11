@@ -14,6 +14,11 @@ class SpatialModelResource: SpatialObject {
             switch result {
             case let .success(url):
                 DispatchQueue.main.async {
+                    defer {
+                        if !urlString.starts(with: "file://") {
+                            try? FileManager.default.removeItem(at: url)
+                        }
+                    }
                     do {
                         let entity = try Entity.load(contentsOf: url)
                         self._resource = entity
