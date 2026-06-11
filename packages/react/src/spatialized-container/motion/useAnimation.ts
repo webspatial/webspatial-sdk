@@ -27,9 +27,9 @@ export type SpatializedMotionConfig =
 export type SpatializedMotionSegmentConfig = CoreSpatializedMotionSegmentConfig
 
 export type UseAnimationResult = readonly [
-  SpatializedMotionBindingInternal,
-  SpatializedPlaybackApi,
-  CSSProperties,
+  animation: SpatializedMotionBindingInternal,
+  api: SpatializedPlaybackApi,
+  style: CSSProperties,
 ]
 
 export function useAnimation(
@@ -38,13 +38,13 @@ export function useAnimation(
   const dataSignature = getMotionConfigSignature(config)
 
   // Keep timeline normalization stable across callback-only renders.
-  const normalizedVisualConfig = useMemo(
+  const normalizedTimelineConfig = useMemo(
     () => normalizeMotionConfig(config),
     [dataSignature],
   )
-  const normalizedConfig = useMemo(
+  const controllerConfig = useMemo(
     () => ({
-      ...normalizedVisualConfig,
+      ...normalizedTimelineConfig,
       onStart: config.onStart,
       onComplete: config.onComplete,
       onStop: config.onStop,
@@ -52,7 +52,7 @@ export function useAnimation(
       onError: config.onError,
     }),
     [
-      normalizedVisualConfig,
+      normalizedTimelineConfig,
       config.onStart,
       config.onComplete,
       config.onStop,
@@ -62,14 +62,14 @@ export function useAnimation(
   )
 
   const [values, setValues] = useState<SpatializedVisualValues>(() =>
-    evaluateMotionTimeline(normalizedVisualConfig, 0),
+    evaluateMotionTimeline(normalizedTimelineConfig, 0),
   )
 
   useEffect(() => {
-    setValues(evaluateMotionTimeline(normalizedVisualConfig, 0))
-  }, [normalizedVisualConfig])
+    setValues(evaluateMotionTimeline(normalizedTimelineConfig, 0))
+  }, [normalizedTimelineConfig])
 
-  const controller = useMotionController(normalizedConfig, setValues)
+  const controller = useMotionController(controllerConfig, setValues)
   const animation = useMemo(() => createMotionBinding(controller), [controller])
   const api = useMemo(() => createPlaybackApi(controller), [controller])
 
