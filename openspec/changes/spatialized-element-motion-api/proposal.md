@@ -94,6 +94,7 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 - **Entity-specific API**: entity transform animation is named `useEntityAnimation(config)` and remains on the separate `AnimateTransform` stack.
 - **Portal suppression**: animated fields suppressed during native playback (property-level for opacity, transform-wide for transform).
 - **Session semantics**: state machine, lifecycle callbacks, error handling unified across all paths.
+- **Controller surface**: `pause()` / `resume()` are whole-session operations only; selective pause/resume is intentionally out of scope for this change. If local control is needed later, it must be designed as a separate track/action-level API in a new proposal.
 - **Legacy removal target**: the old `animation` prop path, legacy SpatialDiv session hook path, and the visionOS-specific legacy 2D backend path are removed from the target state; only the unified `xr-animation` motion path remains.
 - **Capability detection**: runtime capability probes continue to use the `useAnimation` family key with sub-tokens (`entity`, `element`, `static3d`, `dynamic3d`). Concrete feature checks MUST use sub-tokens. This family-level naming is retained because the long-term roadmap is to converge `useEntityAnimation` back into the `useAnimation` family.
 

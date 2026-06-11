@@ -8,8 +8,8 @@ export function createPlaybackApi(
 ): SpatializedPlaybackApi {
   return {
     play: () => controller.play(),
-    pause: keys => controller.pause(keys),
-    resume: keys => controller.resume(keys),
+    pause: () => controller.pause(),
+    resume: () => controller.resume(),
     stop: () => controller.stop(),
     reset: () => controller.reset(),
     finish: () => controller.finish(),

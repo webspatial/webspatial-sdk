@@ -7,8 +7,6 @@ import type {
   SpatializedMotionConfig,
   SpatializedMotionKind,
   SpatializedMotionPlayState,
-  SpatializedMotionProperty,
-  SpatializedMotionPropertyKeys,
   SpatializedMotionTimeline,
 } from '../../types/spatializedMotion'
 import type { SpatializedPlaybackError } from '../../types/spatializedPlayback'
@@ -16,7 +14,6 @@ import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import { evaluateMotionTimeline } from '../compute/sample'
 import { motionConfigToNativeTimeline } from '../compute/nativeTimeline'
 import { motionTimeSec } from '../compute/timing'
-import { normalizeMotionPropertyKeys } from '../compute/propertyKeys'
 import { MOTION_KIND_POLICIES } from './motionKindPolicy'
 import { removeMotionEventReceivers } from '../native/motionEventReceivers'
 import type { MotionHost } from './MotionHost'
@@ -128,8 +125,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
     const kind = this.ctx.getKind()
     if (!kind) return null
     const cfg = this.ctx.getConfig()
-    const active = this.sampler.getActiveProperties()
-    const subset = cfg.tracks.filter(t => active.includes(t.property))
+    const subset = cfg.tracks
     if (subset.length === 0) return null
     return MOTION_KIND_POLICIES[kind].getSuppressedFields({
       ...cfg,
@@ -157,17 +153,16 @@ export class NativePlaybackBackend implements PlaybackBackend {
     this.enqueue(() => this.nativePlay())
   }
 
-  pause(keys?: SpatializedMotionPropertyKeys): void {
+  pause(): void {
     const ns = this.session?.state
     if (ns === 'running' || ns === 'queued') {
-      this.enqueue(() => this.nativePause(keys))
+      this.enqueue(() => this.nativePause())
     }
   }
 
-  resume(keys?: SpatializedMotionPropertyKeys): void {
-    const normalized = normalizeMotionPropertyKeys(keys)
+  resume(): void {
     if (this.session?.state === 'paused') {
-      this.enqueue(() => this.nativeResume(normalized))
+      this.enqueue(() => this.nativeResume())
     }
   }
 
@@ -451,17 +446,8 @@ export class NativePlaybackBackend implements PlaybackBackend {
     await this.doNativePlay(session, element)
   }
 
-  private async nativePause(
-    keys?: SpatializedMotionPropertyKeys,
-  ): Promise<void> {
+  private async nativePause(): Promise<void> {
     if (!this.ctx.getKind()) return
-    const properties = normalizeMotionPropertyKeys(keys)
-    if (properties && properties.length > 0) {
-      console.warn(
-        `[${CONTROLLER_LABEL}] Selective native pause is not yet supported; pausing entire session.`,
-      )
-    }
-
     const session = this.session
     if (!session) return
 
@@ -482,7 +468,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
       const values = await this.nativeElementCommand(element, {
         animationId: session.animationId,
         type: 'pause',
-        properties: properties ?? undefined,
       })
       this.nativePausedElapsedMs = performance.now() - this.playStartWallMs
       session.state = 'paused'
@@ -501,9 +486,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
     }
   }
 
-  private async nativeResume(
-    _keys: SpatializedMotionProperty[] | null,
-  ): Promise<void> {
+  private async nativeResume(): Promise<void> {
     await this.nativePlay()
   }
 

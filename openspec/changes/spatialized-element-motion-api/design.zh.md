@@ -87,8 +87,8 @@ flowchart TD
 `SpatializedPlaybackApi` 定义：
 
 - `play()`
-- `pause(keys?)`
-- `resume(keys?)`
+- `pause()`
+- `resume()`
 - `stop()`
 - `reset()`
 - `finish()`
@@ -129,11 +129,14 @@ Core 层接受三种互斥的 authoring 形状：
 
 - `play()` 启动播放，或从暂停进度恢复
 - 已处于 `running` 时再次调用 `play()` 为 no-op
+- `pause()` 会暂停整个 controller 会话；它不接受 keys 或 partial selector
+- `resume()` 会恢复整个 controller 会话；它不接受 keys 或 partial selector
 - `stop()` 只终止 active session，并冻结当前采样值
 - `reset()` 总是跳回起始值，即使当前已处于 idle
 - `finish()` 总是跳到终值，即使当前已处于 idle
 - `stop()` 和 `reset()` 后 `finished` 变为 `false`
 - `finish()` 和自然结束后 `finished` 变为 `true`
+- controller state 只表达整体会话；不建模 partially-paused 聚合状态或 pause reason 叠加
 
 #### 后端策略
 
@@ -379,7 +382,6 @@ interface AnimateSpatializedElementMotionCommand {
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish'
   targetKind: 'spatialized2d' | 'static3d' | 'dynamic3d'
-  properties?: SpatializedMotionProperty[]
   elementId?: string
   timeline?: SpatializedMotionTimeline
 }
@@ -388,7 +390,7 @@ interface AnimateSpatializedElementMotionCommand {
 - 对目标态 `useAnimation` 路径，`play` 使用 `timeline` 作为 canonical execution document
 - `play` 通过 JSB 是 timeline-only 的；顶层时序控制字段不属于稳定 wire 契约
 - `targetKind` 由 Core 在 React 绑定时完成目标解析后填充
-- `properties` 预留给选择性 `pause` 和 `resume` 控制
+- controller 级 `pause` 和 `resume` 只支持整体会话控制；未来如需局部 track/action 控制，必须另起一个新 change 设计独立 API
 
 #### Canonical timeline payload
 

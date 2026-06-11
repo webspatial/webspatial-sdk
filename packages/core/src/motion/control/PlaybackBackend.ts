@@ -1,7 +1,6 @@
 import type {
   SpatializedMotionConfig,
   SpatializedMotionPlayState,
-  SpatializedMotionPropertyKeys,
 } from '../../types/spatializedMotion'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 
@@ -40,8 +39,8 @@ export interface PlaybackBackend {
   /** Whether a native session is currently animating (always false for web). */
   readonly sessionAnimating: boolean
   play(): void
-  pause(keys?: SpatializedMotionPropertyKeys): void
-  resume(keys?: SpatializedMotionPropertyKeys): void
+  pause(): void
+  resume(): void
   stop(): void
   reset(): void
   finish(): void

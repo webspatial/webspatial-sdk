@@ -123,6 +123,14 @@
 - [x] Tests 跟进：覆盖 `from/to` 和 `tracks` 两种 authoring 形状最终进入同一 canonical tracks native 路径；百分比 key 的 `timeline` 覆盖仍保留在 Phase 10
 - [x] 2D native suppression 仅跟随 active native playback，并在 terminal / unbind 时清除
 
+## Phase 9d — Controller pause/resume keys 参数移除
+
+- [x] 类型：`SpatializedPlaybackApi` 的 pause/resume 签名改为 `pause(): void` / `resume(): void`；移除 `SpatializedMotionPropertyKeys`
+- [x] Controller / backend：删除 selective pause/resume 分支、partial-paused 处理，以及运行时路径里的 per-key pause 状态表
+- [x] JSB / bridge：从 `AnimateSpatializedElementMotionCommand` 中移除 `properties`，只保留整体会话的 pause/resume 命令
+- [x] 测试：补充整体 controller pause/resume 覆盖，并验证额外的 controller-control 参数在类型层面被拒绝
+- [x] 文档 / 示例：从 proposal、design、API summary 和 spec 中移除 key-level pause/resume 叙述；同时注明未来的局部控制若需要，必须另起 track/action API
+
 ## Phase 10 — Timeline 百分比关键帧配置 + timingFunction 统一
 
 - [x] 类型：`SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`
