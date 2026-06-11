@@ -1,10 +1,7 @@
-import type {
-  SpatializedPlaybackApi,
-  SpatializedMotionHandle,
-} from '@webspatial/core-sdk'
+import type { SpatializedPlaybackApi } from '@webspatial/core-sdk'
 
 export function createPlaybackApi(
-  controller: SpatializedMotionHandle,
+  controller: SpatializedPlaybackApi,
 ): SpatializedPlaybackApi {
   return {
     play: () => controller.play(),

@@ -1,14 +1,14 @@
 import type {
   Spatialized2DElement,
   SpatializedDynamic3DElement,
-  SpatializedMotionHandle,
+  SpatializedMotionController,
   SpatializedMotionKind,
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
 
 export function createMotionBinding(
-  controller: SpatializedMotionHandle,
+  controller: SpatializedMotionController,
 ): SpatializedMotionBindingInternal {
   const bindElement = (
     element:
@@ -20,7 +20,7 @@ export function createMotionBinding(
     targetKind?: SpatializedMotionKind,
   ) => {
     controller.attachElement(
-      element as Parameters<SpatializedMotionHandle['attachElement']>[0],
+      element as Parameters<SpatializedMotionController['attachElement']>[0],
       targetKind,
     )
   }

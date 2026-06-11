@@ -1,5 +1,9 @@
-import type { SpatializedMotionKind } from '../../types/spatializedMotion'
-import type { SpatializedMotionHandle } from './SpatializedMotionHandle'
+import type {
+  SpatializedMotionConfig,
+  SpatializedMotionKind,
+  SpatializedMotionPlayState,
+  SpatializedPlaybackApi,
+} from '../../types/spatializedMotion'
 import { MOTION_KIND_POLICIES, type MotionKindPolicy } from './motionKindPolicy'
 import type { MotionHost } from './MotionHost'
 import {
@@ -10,10 +14,6 @@ import { WebPlaybackBackend } from './WebPlaybackBackend'
 import { NativePlaybackBackend } from './NativePlaybackBackend'
 import type { PlaybackBackend } from './PlaybackBackend'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
-import type {
-  SpatializedMotionConfig,
-  SpatializedMotionPlayState,
-} from '../../types/spatializedMotion'
 import { evaluateMotionTimeline } from '../compute/sample'
 import { validateSpatializedMotionConfig } from '../compute/validate'
 
@@ -47,7 +47,7 @@ const CONTROLLER_LABEL = 'SpatializedMotionController'
  * then, the controller keeps only the minimal pending state needed to support
  * play, reset, and finish before binding resolves.
  */
-export class SpatializedMotionController implements SpatializedMotionHandle {
+export class SpatializedMotionController implements SpatializedPlaybackApi {
   readonly id: string
 
   private kind: SpatializedMotionKind | null
