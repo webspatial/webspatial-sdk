@@ -30,6 +30,8 @@ import {
 } from './hooks/useSpatialEvents'
 import { withSSRSupported } from '../ssr'
 import { SpatialWindowContext } from './context/SpatialWindowContext'
+import { OverlayRenderModeContext } from './context/OverlayRenderModeContext'
+import { MeasureModeContainer } from './MeasureModeContainer'
 
 /**
  * Degraded fallback: strips spatial-only props and renders plain HTML.
@@ -142,6 +144,11 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
   inprops: SpatializedContainerProps<T>,
   ref: ForwardedRef<SpatializedElementRef<T>>,
 ) {
+  const overlayRenderMode = useContext(OverlayRenderModeContext)
+  if (overlayRenderMode === 'measure') {
+    return <MeasureModeContainer {...inprops} innerRef={ref} />
+  }
+
   const isWebSpatialEnv = getSession() !== null
   const insideAttachment = useInsideAttachment()
 

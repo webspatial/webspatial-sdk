@@ -132,3 +132,66 @@ Automated or demo verification SHALL cover at minimum:
 
 - **WHEN** Scenario 3 implementation is not yet complete
 - **THEN** Phase A tasks (Scenarios 1 and 2) SHALL remain verifiable without Scenario 3 deliverables
+
+### Requirement: SpatialOverlay provides explicit floating overlay surfaces (Phase C)
+
+The React SDK SHALL provide a `SpatialOverlay` component for Scenario 3-style floating content that escapes parent SpatialDiv 2D bounds.
+
+Applications SHALL be able to use `SpatialOverlay` as the Radix `DropdownMenu.Content asChild` target without writing `enable-xr` on a plain `div`.
+
+`SpatialOverlay` SHALL create a child overlay spatial surface attached to the current visible portal parent (parent SpatialDiv or parent visible overlay surface).
+
+Radix positioning (`side`, `align`, offsets, collision) SHALL remain measurable in the parent spatial-window document (non-zero popper geometry).
+
+The visible overlay content SHALL render in a dedicated child overlay webview for interaction and spatial behavior.
+
+Nested `enable-xr` inside `SpatialOverlay` SHALL NOT create duplicate native surfaces during overlay measurement.
+
+`SpatialOverlay` SHALL support recursive nesting: an inner `SpatialOverlay` inside an outer `SpatialOverlay` visible webview.
+
+Radix signal-based auto-detection on plain `div enable-xr` MAY remain as a non-recursive compatibility path but SHALL NOT be the normative API for recursive overlays.
+
+`SpatialOverlay` SHALL provide an optional measurement fallback API (for example `measureChildren`) so applications can avoid mounting effectful or portal-heavy content in the measurement subtree while preserving measurable geometry.
+
+Implementation details (measure/visible trees, `OverlayRenderModeContext`, props/style splitting, private visible host, measurement fallback) are specified in `design.md` §13.
+
+#### Scenario: SpatialOverlay composes with Radix DropdownMenu.Content asChild
+
+- **WHEN** an application renders `DropdownMenu.Content asChild` wrapping `SpatialOverlay`
+- **THEN** Radix SHALL be able to measure and position the overlay in the parent spatial-window document
+- **AND** the visible menu content SHALL render in a child overlay webview
+- **AND** the menu SHALL escape parent SpatialDiv 2D bounds without clipping
+
+#### Scenario: Nested enable-xr inside SpatialOverlay does not duplicate surfaces during measurement
+
+- **WHEN** `SpatialOverlay` content includes a nested `div enable-xr`
+- **THEN** overlay measurement SHALL NOT create additional native surfaces for the nested `enable-xr`
+- **AND** the visible overlay webview SHALL create the nested SpatialDiv normally
+
+#### Scenario: Nested Radix Portal targets parent visible overlay window
+
+- **WHEN** a nested `SpatialOverlay` opens inside another `SpatialOverlay`'s visible child webview
+- **AND** the application passes `DropdownMenu.Portal container={useSpatialPortalContainer()}`
+- **THEN** the portal container SHALL be the parent visible overlay spatial window document body
+- **AND** the inner overlay measurement host SHALL live in that same spatial window document
+
+#### Scenario: Recursive SpatialOverlay attaches to parent visible overlay surface
+
+- **WHEN** a `SpatialOverlay` is open inside another `SpatialOverlay`'s visible child webview
+- **AND** the inner overlay opens (for example a Radix submenu or nested dropdown)
+- **THEN** the inner overlay's visible surface SHALL attach to the outer visible overlay surface
+- **AND** the inner overlay SHALL NOT attach to scene root
+- **AND** the inner overlay SHALL remain visible beyond the outer overlay's 2D bounds without clipping
+- **AND** pointer/tap selection on the inner overlay items SHALL work
+
+#### Scenario: SpatialOverlay pointer selection in recursive overlays
+
+- **WHEN** a menu item inside a nested `SpatialOverlay` is selected via pointer/tap
+- **THEN** Radix SHALL receive the selection and fire `onSelect` for that nested overlay
+
+#### Scenario: Measurement fallback avoids nested portal side effects
+
+- **WHEN** `SpatialOverlay` content includes a nested Radix Portal or other effectful subtree
+- **AND** the application provides the measurement fallback content
+- **THEN** overlay measurement SHALL use the fallback content instead of mounting the effectful visible subtree
+- **AND** the visible overlay webview SHALL still render the full interactive content

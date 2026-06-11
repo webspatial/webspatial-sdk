@@ -68,3 +68,24 @@
 - [x] 7.2 Run `pnpm --filter @webspatial/react-sdk exec tsc -p ./tsconfig.json`.
 - [ ] 7.3 Run test-server typecheck/build for the updated demo page.
 - [ ] 7.4 Manual AVP smoke: child SpatialDiv rises above/in front of parent, remains visible beyond parent width/height, parent spatial window popper non-zero, menu moves with parent panel.
+
+## 8. Phase C — `SpatialOverlay` explicit API + recursive overlays
+
+> **Prerequisite (D4)**: Phase B slice gates (§5.9) pass in AVP before starting Phase C PR.
+>
+> **Decisions locked (2026-06-10, revised)**: D1 nested Portal → parent visible overlay webview; D2 `SpatialOverlayRoot` → `SpatializedContainer(overlayPortalMode)`; D3 default full children + optional `measureChildren`; D6 measure subtree blocks `SpatialWindowContext` inherit; D7 Radix props split measure vs visible. See `design.md` §13.8–§13.14.
+
+- [x] 8.1 Add `OverlayRenderModeContext` (`'measure' | 'visible'`, default `'visible'`).
+- [x] 8.2 Add `MeasureModeContainer` + measure subtree `SpatialWindowContext` block (`null` provider, or typed sentinel); gate WebSpatial side effects only. Extract from `DegradedContainer` pattern (no host-page fallback).
+- [x] 8.3 Implement `SpatialOverlay` + internal `SpatialOverlayRoot` → `SpatializedContainer(overlayPortalMode)` + `SpatialOverlayMeasureHost` + private `SpatialOverlayVisibleHost`; wire `PortalSpatializedContainer` (`overlayPortalMode` primary; `isFloatingOverlayContent` compat). Do not use public `SpatialOverlay` as the visible host.
+- [x] 8.4 Refactor overlay branches: `splitOverlayProps` + `splitOverlayStyle` measure vs visible split (§13.10); `--xr-*` double-write; Radix fixed/transform positioning stays off the visible root; extend `getPortalInheritedStyleProps` overlay branch to strip `transform`/`inset` (or visible host uses `visibleStyle` whitelist); measure subtree with mode + window context block.
+- [x] 8.4b Optional `measureChildren` prop + document dual-mount React effect caveat (§13.11).
+- [x] 8.5 Recursive attach: inner visible `SpatialOverlay` attaches to outer visible overlay `PortalInstanceObject`, not scene root.
+- [x] 8.6 Export `SpatialOverlay` from `@webspatial/react-sdk`.
+- [x] 8.7 Unit tests: measure mode gates nested `enable-xr`; measure tree nested `SpatialOverlay` does not create surface; visible recursive attach parent chain.
+- [x] 8.8 Demo: Scenario 3 migrates to `<SpatialOverlay>`; add nested submenu with inner `Portal container={useSpatialPortalContainer()}` and `measureChildren` or measure-mode conditional rendering for the nested Portal path (D1 convention documented in UI copy).
+- [ ] 8.9 AVP smoke — recursive gates:
+  - [x] 8.9a Outer `SpatialOverlay` menu escapes parent panel bounds (regression). Verified in AVP screenshot `/tmp/webspatial-scenario3-side-top.png`.
+  - [ ] 8.9b `SpatialOverlay` containing nested `div enable-xr`: measure tree zero extra surfaces; visible tree one nested SpatialDiv.
+  - [ ] 8.9c **`SpatialOverlay` inside `SpatialOverlay`**: inner surface on outer visible overlay, not clipped, pointer/tap selects once and closes.
+- [x] 8.10 Document Radix signal auto-detection (`isFloatingOverlayContent`) as compat shim; `SpatialOverlay` is normative for recursion.

@@ -72,6 +72,13 @@ export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
        * library can measure/position the hidden placeholder host.
        */
       hostRef?: React.Ref<HTMLElement>
+      /**
+       * Internal SpatialOverlay mode. Public users should render
+       * `<SpatialOverlay>` rather than setting this prop directly.
+       */
+      overlayPortalMode?: boolean
+      /** Internal SpatialOverlay measurement subtree override. */
+      measureChildren?: React.ReactNode
 
       [SpatialID]: string
     }
@@ -104,6 +111,10 @@ export type Spatialized2DElementContainerProps<P extends ElementType> =
       component: P
       spatialEventOptions?: SpatialEventOptions
       onSpatialContentReady?: SpatialContentReadyCallback
+      /** Internal SpatialOverlay mode; not a public authoring prop. */
+      overlayPortalMode?: boolean
+      /** Internal SpatialOverlay measurement subtree override. */
+      measureChildren?: React.ReactNode
     }
 
 export type SpatializedStatic3DContainerProps =

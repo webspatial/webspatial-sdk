@@ -4,6 +4,7 @@ import { initCSSParserDivContainer } from './TransformVisibilityTaskContainer'
 export { SpatializedContainer } from './SpatializedContainer'
 export { Spatialized2DElementContainer } from './Spatialized2DElementContainer'
 export { SpatializedStatic3DElementContainer } from './SpatializedStatic3DElementContainer'
+export { SpatialOverlay, type SpatialOverlayProps } from './SpatialOverlay'
 export { withSpatialized2DElementContainer } from './Spatialized2DElementContainerFactory'
 export { useSpatialPortalContainer } from './context/SpatialWindowContext'
 export {

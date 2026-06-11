@@ -6,6 +6,7 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useState,
 } from 'react'
 
@@ -107,6 +108,20 @@ function useSyncDocumentTitle(
   }, [name])
 }
 
+function applyOverlayWindowSizing(windowProxy: WindowProxy) {
+  const { document } = windowProxy
+  document.documentElement.style.width = '100%'
+  document.documentElement.style.height = '100%'
+  document.body.style.display = 'block'
+  document.body.style.width = '100%'
+  document.body.style.height = '100%'
+  document.body.style.minWidth = '0px'
+  document.body.style.minHeight = '0px'
+  document.body.style.maxWidth = 'none'
+  document.body.style.maxHeight = 'none'
+  document.body.style.overflow = 'visible'
+}
+
 function SpatializedContent<P extends ElementType>(
   props: SpatializedContentProps<SpatializedElementRef, P>,
 ) {
@@ -118,6 +133,13 @@ function SpatializedContent<P extends ElementType>(
   } = props
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const { windowProxy } = spatialized2DElement
+
+  const isFloatingOverlay = portalInstanceObject.isFloatingOverlay
+  useLayoutEffect(() => {
+    if (isFloatingOverlay) {
+      applyOverlayWindowSizing(windowProxy)
+    }
+  }, [isFloatingOverlay, windowProxy])
 
   const [hostEl, setHostEl] = useState<HTMLElement | null>(null)
 

@@ -32,6 +32,8 @@ function constrainedAxisKey(
 
 import { SpatialID } from './SpatialID'
 import { isFloatingOverlayContent } from './overlayDetection'
+import { OverlayRenderModeContext } from './context/OverlayRenderModeContext'
+import { SpatialWindowContext } from './context/SpatialWindowContext'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
 import { useSpatializedElement } from './hooks/useSpatializedElement'
 import {
@@ -48,6 +50,50 @@ function assignForwardedRef<T>(ref: Ref<T> | undefined, node: T | null) {
   }
 }
 
+const POSITIONING_STYLE_KEYS = new Set([
+  'position',
+  'transform',
+  'top',
+  'right',
+  'bottom',
+  'left',
+  'inset',
+  'insetBlock',
+  'insetBlockEnd',
+  'insetBlockStart',
+  'insetInline',
+  'insetInlineEnd',
+  'insetInlineStart',
+])
+
+function isFloatingStyleVar(key: string) {
+  return key.startsWith('--radix-') || key.startsWith('--floating-')
+}
+
+function splitOverlayStyle(style: CSSProperties | undefined): {
+  measurementStyle?: CSSProperties
+  visibleStyle?: CSSProperties
+} {
+  if (!style) {
+    return {}
+  }
+
+  const measurementStyle: CSSProperties = { ...style }
+  const visibleStyle: CSSProperties = {}
+
+  for (const [key, value] of Object.entries(style) as Array<
+    [keyof CSSProperties | string, unknown]
+  >) {
+    const styleKey = String(key)
+    if (POSITIONING_STYLE_KEYS.has(styleKey) || isFloatingStyleVar(styleKey)) {
+      continue
+    }
+    ;(visibleStyle as Record<string, unknown>)[styleKey] = value
+  }
+
+  return { measurementStyle, visibleStyle }
+}
+
 /**
  * Splits the floating content's props into the menu children (rendered into the
  * child spatial webview by `Content`) and the remaining props injected by the
@@ -56,17 +102,38 @@ function assignForwardedRef<T>(ref: Ref<T> | undefined, node: T | null) {
  */
 function splitOverlayProps(restProps: Record<string, unknown>): {
   children: ReactNode
-  radixProps: Record<string, unknown>
+  measurementProps: Record<string, unknown>
+  visibleProps: Record<string, unknown>
 } {
   const {
     component: _component,
     children,
+    measureChildren,
+    overlayPortalMode: _overlayPortalMode,
+    style,
     ...radixProps
   } = restProps as {
     component?: unknown
     children?: ReactNode
+    measureChildren?: ReactNode
+    overlayPortalMode?: unknown
+    style?: CSSProperties
   } & Record<string, unknown>
-  return { children: children ?? null, radixProps }
+
+  const { measurementStyle, visibleStyle } = splitOverlayStyle(style)
+
+  return {
+    children: measureChildren ?? children ?? null,
+    measurementProps: {
+      ...radixProps,
+      ...(measurementStyle ? { style: measurementStyle } : {}),
+    },
+    visibleProps: {
+      ...radixProps,
+      ...(visibleStyle ? { style: visibleStyle } : {}),
+      children: children ?? null,
+    },
+  }
 }
 
 /**
@@ -91,14 +158,17 @@ function renderOverlayPlaceholder(
   } & Record<string, unknown>
   const style: CSSProperties = {
     ...radixStyle,
-    position: 'relative',
     visibility: 'hidden',
     pointerEvents: 'none',
   }
   return (
-    <El ref={opts.hostRef} {...radixRest} {...spatialIdProps} style={style}>
-      {opts.children}
-    </El>
+    <SpatialWindowContext.Provider value={null}>
+      <OverlayRenderModeContext.Provider value="measure">
+        <El ref={opts.hostRef} {...radixRest} {...spatialIdProps} style={style}>
+          {opts.children}
+        </El>
+      </OverlayRenderModeContext.Provider>
+    </SpatialWindowContext.Provider>
   )
 }
 
@@ -161,6 +231,7 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     onSpatialMagnifyEnd,
     spatialEventOptions,
     hostRef,
+    overlayPortalMode,
     [SpatialID]: spatialId,
     ...restProps
   } = props
@@ -172,7 +243,8 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   const parentPortalInstanceObject = useContext(PortalInstanceContext)
   const isOverlayMode =
     !!parentPortalInstanceObject &&
-    isFloatingOverlayContent(restProps as Record<string, unknown>)
+    (overlayPortalMode ||
+      isFloatingOverlayContent(restProps as Record<string, unknown>))
   const portalInstanceObject = useMemo(() => {
     const portal = new PortalInstanceObject(
       spatialId,
@@ -191,18 +263,60 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   // `notify2DFrameChange` can find and measure it in the parent spatial window.
   const hostRefBox = useRef(hostRef)
   hostRefBox.current = hostRef
+  const overlayPlaceholderCleanupRef = useRef<(() => void) | null>(null)
   const overlayPlaceholderRef = useCallback(
     (node: HTMLElement | null) => {
+      overlayPlaceholderCleanupRef.current?.()
+      overlayPlaceholderCleanupRef.current = null
       assignForwardedRef(hostRefBox.current, node)
       if (node) {
+        let rafId: number | null = null
+        const notify = () => {
+          if (rafId != null) return
+          rafId = window.requestAnimationFrame(() => {
+            rafId = null
+            portalInstanceObject.notify2DFrameChange()
+          })
+        }
+        const resizeObserver =
+          typeof ResizeObserver === 'undefined'
+            ? null
+            : new ResizeObserver(notify)
+        const mutationObserver =
+          typeof MutationObserver === 'undefined'
+            ? null
+            : new MutationObserver(notify)
+
         spatializedContainerObject.registerSpatialDom(spatialId, node)
         portalInstanceObject.notify2DFrameChange()
+        resizeObserver?.observe(node)
+        mutationObserver?.observe(node, {
+          attributes: true,
+          childList: true,
+          subtree: true,
+        })
+        notify()
+        overlayPlaceholderCleanupRef.current = () => {
+          if (rafId != null) {
+            window.cancelAnimationFrame(rafId)
+            rafId = null
+          }
+          resizeObserver?.disconnect()
+          mutationObserver?.disconnect()
+        }
       } else {
         spatializedContainerObject.unregisterSpatialDom(spatialId)
       }
     },
     [spatializedContainerObject, spatialId, portalInstanceObject],
   )
+
+  useEffect(() => {
+    return () => {
+      overlayPlaceholderCleanupRef.current?.()
+      overlayPlaceholderCleanupRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     portalInstanceObject.init()
@@ -224,17 +338,22 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   )
 
   let PlaceholderEl: React.ReactNode
+  let contentProps = restProps
   if (isOverlayMode) {
-    const { children, radixProps } = splitOverlayProps(
+    const { children, measurementProps, visibleProps } = splitOverlayProps(
       restProps as Record<string, unknown>,
     )
+    contentProps = {
+      ...visibleProps,
+      component: props.component,
+    }
     PlaceholderEl = renderOverlayPlaceholder(
       portalInstanceObject,
       props.component,
       {
         hostRef: overlayPlaceholderRef,
         children,
-        radixProps,
+        radixProps: measurementProps,
       },
     )
   } else {
@@ -313,11 +432,13 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>
       {spatializedElement && (
-        <Content
-          spatializedElement={spatializedElement}
-          portalInstanceObject={portalInstanceObject}
-          {...restProps}
-        />
+        <OverlayRenderModeContext.Provider value="visible">
+          <Content
+            spatializedElement={spatializedElement}
+            portalInstanceObject={portalInstanceObject}
+            {...contentProps}
+          />
+        </OverlayRenderModeContext.Provider>
       )}
       {PlaceholderEl}
     </PortalInstanceContext.Provider>

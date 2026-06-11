@@ -224,3 +224,331 @@ tap item(在 B) ──React 合成事件穿透 createPortal──▶ Radix onSel
 5. **「逃出父 2D bounds」是 Scenario 3 的核心区分点**（spec 澄清）：Path A 经独立子 surface 天然满足。**注意**：此条对未来 Path B 是额外约束——native 子区域抬升必须能渲染超出父 webview 边界的区域，否则无法「逃出」。
 
 > 以上已写入 §4/§6 与 `tasks.md`。Path B 作为后续 change，本 change 不阻塞于 native。
+
+## 13. Phase C — `SpatialOverlay` 显式 API 与递归支持
+
+### 13.1 为什么 Phase B MVP 不能递归
+
+当前 `renderOverlayPlaceholder` 在 parent webview A 的 hidden host 里**直接双渲染真实 children**：
+
+```text
+Parent portal webview A          Child overlay webview B
+  hidden measurement host          visible children
+    children copy (full tree)  +   children (full tree)
+```
+
+对单层 flat `DropdownMenu.Item` 可行。但若 children 内含 `enable-xr` 或 nested overlay，measure tree 仍会走 `SpatializedContainer` → `PortalSpatializedContainer`，导致：
+
+- 重复创建 native surface / webview
+- 错误 `PortalInstanceContext` parent 链
+- `init()` / `registerSpatialDom` / effects 双份执行
+
+**递归 overlay 的关键不是 attach 或 rect 算法，而是 measurement tree 必须禁止 spatial side effects。**
+
+### 13.2 核心抽象：`OverlayRenderModeContext`
+
+```ts
+type OverlayRenderMode = 'measure' | 'visible'
+```
+
+`SpatialOverlay` 渲染两条**语义不同**的 tree：
+
+| | Measure tree | Visible tree |
+| --- | --- | --- |
+| 文档 | 当前 portal webview（parent spatial window） | child overlay webview |
+| 职责 | Radix / floating-ui 接 `ref`、`props`、`style`、`data-*`；可测量尺寸 | 真实交互与 spatial behavior |
+| `enable-xr` | 降级为普通 DOM layout element | 正常创建 nested SpatialDiv |
+| `SpatialOverlay` | `MeasureHost` only；**不走 `SpatialOverlayRoot`**、不创建 surface | 走 `SpatialOverlayRoot`；创建 child surface，attach 到当前 visible parent |
+
+### 13.3 行为规则
+
+1. **`SpatialOverlay`（visible mode）**
+   - 创建 child `PortalInstanceObject`
+   - attach 到当前 portal parent surface（父 SpatialDiv 或**父 visible overlay surface**）
+   - 用 measurement host 的 rect 驱动 native child surface rect
+   - visible content 进入 child webview
+
+2. **`SpatialOverlay`（measure mode）**
+   - **不**创建 child surface，**不**走 `SpatialOverlayRoot`
+   - 只渲染 `SpatialOverlayMeasureHost`（接 Radix `asChild` ref/props）
+   - 子树内 nested `SpatialOverlay` 同样在 measure context 下只渲染 `MeasureHost`（可含 children 以测尺寸，但不创建 surface）
+
+3. **`SpatialDiv` / `enable-xr`（measure mode）**
+   - 降级为普通 DOM（`MeasureModeContainer`；`SpatialWindowContext` 规则见 §13.12）
+   - 不调用 `createSpatializedElement`、不注册 spatial dom、不创建 `PortalInstanceObject`
+   - 保留影响 layout 的 `children` / `style` / `className`
+
+4. **Radix 集成**
+   - Radix `asChild` 注入的 props **分流**到 measurement host 与 visible root（见 §13.10）；不是整包 props 只落 measurement host
+   - visible menu item 的 pointer/tap 发生在 child overlay webview
+   - 本期仍只承诺 pointer/tap selection
+
+5. **递归 `SpatialOverlay`（必须支持）**
+   - 外层 visible overlay 的 child webview 内再开 `SpatialOverlay`：
+     - **visible tree**：nested overlay surface attach 到**外层 visible overlay surface**（不是 scene root，也不是被裁剪的 flat DOM）
+     - **measure tree**：nested overlay 仅叠 measurement shell，不在 parent webview A 再开一层 surface
+   - 递归深度无 SDK 硬编码上限；受 webview / native surface 资源约束
+
+### 13.4 实现分层（概览）
+
+```text
+SpatialOverlay（公开）
+  SpatialOverlayRoot → SpatializedContainer(overlayPortalMode)
+    PortalSpatializedContainer
+      SpatialOverlayMeasureHost   ← measure tree
+      createPortal(visible host)  ← visible tree
+
+OverlayRenderModeContext        ← 'measure' | 'visible'
+MeasureModeContainer            ← gate WebSpatial only（§13.11 caveat）
+
+PortalInstanceObject            ← reuse Phase B attach / raw rect / visibility
+```
+
+细节见 §13.8–§13.13。
+
+### 13.5 API 演进
+
+| 阶段 | 写法 | 识别 |
+| --- | --- | --- |
+| Phase B（当前） | `div enable-xr` + Radix `asChild` | `isFloatingOverlayContent(props)` |
+| 过渡 | `div enable-xr data-webspatial-overlay` | 显式 attr + 可选 Radix signal |
+| Phase C（目标） | `<SpatialOverlay>` | 组件 type；**递归保证的基础抽象** |
+
+长期：**不依赖 Radix `data-side` / `data-align` 作递归 overlay 的基础。**
+
+### 13.6 Phase C 验收顺序
+
+1. Radix `DropdownMenu` + `SpatialOverlay`：浮出父面板、不被裁剪、pointer/tap 可点
+2. `SpatialOverlay` 内嵌 `div enable-xr`：measure tree 零额外 surface；visible tree 正常 nested SpatialDiv
+3. **`SpatialOverlay` 内再开 nested `SpatialOverlay`**：nested surface 挂 visible overlay 上、不被上一层 bounds 裁剪、pointer/tap 可点
+
+### 13.7 风险
+
+- measure / visible tree layout 可能不完全一致（尤其 children 依赖 spatial-only side effects 做 sizing）
+- **双渲染会导致 measure tree 与 visible tree 各 mount 一份 children，普通 React effects（`useEffect`、subscription、请求、随机 id 等）会执行两次**；`OverlayRenderModeContext` 只能 gate **WebSpatial / native** side effects，不能消除用户组件副作用（见 §13.11）
+- B→A 尺寸回灌可消除部分双渲染副作用，但带来首帧 0×0、异步 reposition、抖动 — **不作为 MVP**
+
+### 13.8 入口链路（`SpatialOverlay` 如何进入 overlay pipeline）
+
+> **评审修正**：「独立组件、不走 `enable-xr` jsx 改写」≠「普通 React 组件自动进入 `PortalSpatializedContainer`」。当前架构里 `PortalSpatializedContainer` **只**由 `SpatializedContainerBase` 在 portal-instance 路径上挂载；必须写清入口。
+
+**采用方案：对外独立组件 + 对内薄包装 `SpatializedContainer`（私有 overlay 模式），用户不写 `enable-xr`。**
+
+```text
+用户: <DropdownMenu.Content asChild><SpatialOverlay>...</SpatialOverlay></DropdownMenu.Content>
+                              │
+                              ▼
+SpatialOverlay（公开 forwardRef）
+  ├─ OverlayRenderMode === 'measure'
+  │     → SpatialOverlayMeasureHost（hidden；不接 portal pipeline）
+  │
+  └─ OverlayRenderMode === 'visible'（默认）且处于 overlay 编排根
+        → SpatialOverlayRoot（内部专用，不 export）
+              → SpatializedContainer
+                    overlayPortalMode: true      // 私有 prop，等价于 enable-xr portal 分支
+                    component={SpatialOverlayVisibleHost} // 私有 host，避免公开组件自递归
+                    spatializedContent={SpatializedContent}
+                    createSpatializedElement={...}
+                              │
+                              ▼
+                    PortalSpatializedContainer（inPortalInstanceEnv）
+                      isOverlayMode = overlayPortalMode || isFloatingOverlayContent(compat)
+                      ├─ measure branch → MeasureHost in parent spatial-window doc
+                      └─ visible branch → createPortal(SpatialOverlay visible host) → child webview
+```
+
+要点：
+
+| 问题 | 结论 |
+| --- | --- |
+| 用户要不要写 `enable-xr`？ | **不要**；`SpatialOverlay` 自己调 `SpatializedContainer` |
+| 走不走 jsx `replaceToSpatialPrimitiveType`？ | **不走**；不是 `div` + `enable-xr` 属性 |
+| 谁创建 child surface？ | 仍是 `PortalSpatializedContainer` + `PortalInstanceObject`（与 Phase B 相同） |
+| `props.component` 识别还有用吗？ | 有，但**不能**用公开 `SpatialOverlay` 作为 visible host；`overlayPortalMode` 是主信号，`isSpatialOverlayComponent` 仅作内部/兼容保护 |
+
+**防自递归规则**：`SpatialOverlay` 公开组件只负责入口编排；`PortalSpatializedContainer` createPortal 出来的 host 必须是私有 `SpatialOverlayVisibleHost`（或 compat 用的普通 `div`），不得再次执行 `SpatialOverlayRoot -> SpatializedContainer(overlayPortalMode)`。否则 visible branch 会在 child webview 内对**同一层** overlay 重复开 surface。
+
+**公开 `SpatialOverlay` 入口判定（实现伪代码）**：
+
+```tsx
+function SpatialOverlay(props, ref) {
+  const mode = useContext(OverlayRenderModeContext)
+
+  if (mode === 'measure') {
+    // measure copy：永不创建 surface / 永不 Root
+    return <SpatialOverlayMeasureHost ref={ref} {...props} />
+  }
+
+  // visible mode：用户写的 <SpatialOverlay>（含 visible webview 内嵌套 submenu）走 Root
+  return <SpatialOverlayRoot ref={ref} {...props} />
+}
+
+// 私有组件；仅由 PortalSpatializedContainer createPortal 使用
+function SpatialOverlayVisibleHost(props, ref) {
+  return <div ref={ref} {...visibleProps} /> // 永不 Root
+}
+```
+
+| 组件 | `measure` | `visible` |
+| --- | --- | --- |
+| 公开 `SpatialOverlay`（用户 JSX） | `MeasureHost` | `SpatialOverlayRoot` |
+| 私有 `SpatialOverlayVisibleHost`（SDK createPortal） | N/A | 纯 host，**不** Root |
+| visible webview 内用户嵌套 `<SpatialOverlay>` | N/A | `SpatialOverlayRoot`（创建下一层 overlay surface） |
+
+**compat 路径不变**：用户继续写 `div enable-xr` + Radix signal → jsx 改写 → `SpatializedContainer` → `PortalSpatializedContainer` + `isFloatingOverlayContent`。
+
+### 13.9 实现模块
+
+```text
+spatialized-container/
+  SpatialOverlay.tsx              # 公开 API + MeasureHost + 内部 SpatialOverlayRoot
+  SpatialOverlayVisibleHost.tsx   # 私有 visible host；不触发 overlay pipeline
+  MeasureModeContainer.tsx
+  context/OverlayRenderModeContext.ts
+  PortalSpatializedContainer.tsx  # 双树编排；读 overlayPortalMode / __spatialOverlay
+  overlayDetection.ts             # Phase B compat only
+```
+
+### 13.10 Radix props / ref 分流
+
+`splitOverlayProps` 扩展为显式分流（实现时可按 Radix / floating-ui 版本微调）：
+
+| 落到 **measurement host** | 落到 **visible root**（child webview） |
+| --- | --- |
+| `ref`（Radix 定位测量） | `className`（可见样式） |
+| positioning `style`（`transform`、`position`、`top/right/bottom/left`、Radix 写入的尺寸变量） | 交互 handlers（`onPointerDown`、`onClick`、`onKeyDown` 等） |
+| `data-side`、`data-align`、`data-radix-*`（placement） | `aria-*`、`role`、`id`、`data-state`（可见 a11y / 状态） |
+| `--radix-*` / `--floating-*` style 变量 | `children`（唯一一份「真实」交互子树） |
+
+规则：
+
+- **measurement host**：`visibility: hidden`、`pointerEvents: none`；承接 Radix 几何测量。
+- **visible root**：`visibility: visible`、正常 `pointer-events`；承接用户可见交互与 a11y 属性。
+- 若 Radix 某 prop 同时影响测量与交互（少数版本差异），**两份都同步**（allowlist 扩展），以 AVP pointer/tap 为准。
+
+`style` 必须进一步分桶，不能整包只给 measurement host：
+
+| style 类别 | measurement host | visible root | 说明 |
+| --- | --- | --- | --- |
+| Radix/floating 定位样式：`position`、`transform`、`top/right/bottom/left`、placement CSS vars | ✅ | ❌ 默认不传 | Radix 在 parent spatial-window 内定位；visible webview 内不应再套同一 fixed/transform |
+| WebSpatial vars：`--xr-back`、`--xr-depth`、`--xr-background-material`、`--xr-z-index` | ✅ | ✅ | native properties 从 measurement host 读；visible root 也保留变量供子树样式使用 |
+| 影响 intrinsic size 的用户样式：`width/height/min/max-*`、`padding`、`border`、`font*` 等 | ✅ | ✅ | measurement 与 visible 尺寸要尽量一致 |
+| 纯视觉样式：`background`、`color`、`borderRadius`、`boxShadow` 等 | 可选 ✅ | ✅ | visible 必须保留；measurement 可保留以减少尺寸差异 |
+
+实现建议：拆成 `measurementStyle` / `visibleStyle`，不要在 visible root 上保留 Radix 的 fixed positioning transform；不要在 measurement host 上丢失 `--xr-*`，否则 native `back/depth/zIndex/material` 会读不到。
+
+**inherit 链也要 strip**：`Spatialized2DElementContainer` 的 `getPortalInheritedStyleProps(..., { isFloatingOverlay: true })` 目前只删 `position`/`display`，还会继承 `transform`、`top/left/right/bottom`。Phase C 须扩展 overlay 分支：删除全部 Radix positioning 字段，或 visible host 改走 `visibleStyle` 白名单、不依赖 inherit 定位样式。
+
+本期验收仍只覆盖 pointer/tap；keyboard/focus 不在范围，但 visible root 应保留 handlers 以便后续补测。
+
+### 13.11 Measure tree、React effects 与 escape hatch
+
+**已决策 D3（修订表述）**：measure tree **默认渲染完整 `children`**，以便 Radix 测到真实布局尺寸。
+
+**必须写清的 caveat**：
+
+- measure tree 与 visible tree 是 **两次 React mount** → 用户组件的 `useEffect`、fetch、subscription、随机 key 等 **会执行两次**。
+- `OverlayRenderModeContext === 'measure'` **仅保证**：不 `createSpatializedElement`、不 `PortalInstanceObject.init/destroy`、不 `registerSpatialDom`、nested `enable-xr` 走 `MeasureModeContainer`。
+
+**可选 escape hatch（Phase C API）**：
+
+```tsx
+<SpatialOverlay measureChildren={<MenuItemsSkeleton />}>
+  {fullMenuTree}
+</SpatialOverlay>
+```
+
+- `measureChildren` 提供时，measure tree 只渲染该轻量子树；visible tree 仍渲染完整 `children`。
+- 用于：子树含重副作用、嵌套 Radix Portal、或 open 时才挂载的 submenu——避免 hidden copy 触发多余 Portal / effect。
+- **尺寸 caveat**：`measureChildren` skeleton 通常只保证**关闭态** outer 尺寸；submenu 打开后若内容大于 skeleton，Radix 可能需额外 reposition（可接受，demo 文案注明）。
+
+文档与 demo **必须**标注双渲染 effect caveat；不把「只 gate WebSpatial」说成「无副作用」。
+
+### 13.12 `SpatialWindowContext` 在 measure subtree 的规则
+
+> **评审修正**：「MeasureModeContainer 不提供 `SpatialWindowContext`」有歧义——子节点仍可能**继承**外层 provider。
+
+| 上下文 | 规则 |
+| --- | --- |
+| `DegradedContainer`（无 session） | **注入 host page `window`**，plain browser 用 |
+| **measure subtree**（`SpatialOverlayMeasureHost` 内） | **阻断继承**：`SpatialWindowContext.Provider value={null}`（或专用 sentinel；若用 sentinel 需更新 context 类型），使 `useSpatialPortalContainer()` 返回 `undefined` |
+| **visible subtree**（child webview `createPortal` 内） | **正常提供** overlay webview 的 `windowProxy`（现有 `SpatializedContent` 行为） |
+
+理由：
+
+- measure copy 不应把 Radix `Portal` 挂到**活的** spatial window（会在 hidden tree 里重复 portal、污染测量）。
+- `undefined` 时 Radix 若 fallback 到 host `document.body` 仍可能错——故 **`measureChildren` escape hatch** + 文档要求：**嵌套 overlay 的 Radix Portal 只写在 visible tree 会走的子树里**（配合 D1）。
+- measure subtree **不**注入 host-page fallback（与 `DegradedContainer` 不同）。
+
+实现注意：当前 `SpatialWindowContext` 类型是 `WindowProxy | null`，`useSpatialPortalContainer()` 对 `null` 已返回 `undefined`。优先使用 `value={null}` 阻断继承；只有确实需要区分“无 provider”和“被 measure 阻断”时，才引入 sentinel 并同步更新类型与测试。
+
+### 13.13 `PortalSpatializedContainer` 编排（续）
+
+```ts
+const isOverlayMode =
+  !!parentPortalInstanceObject &&
+  (props.overlayPortalMode === true || // Phase C 主信号
+    isFloatingOverlayContent(restProps)) // Phase B compat
+// isSpatialOverlayComponent(props.component) 不作为 Phase C 触发条件：
+// visible host 是 SpatialOverlayVisibleHost，不是公开 SpatialOverlay。
+```
+
+Measure 分支：`OverlayRenderModeContext='measure'` + `SpatialWindowContext` 阻断 + `SpatialOverlayMeasureHost`。
+
+Visible 分支：`OverlayRenderModeContext='visible'` + 现有 `createPortal` 路径 + visible props 分流 + 私有 `SpatialOverlayVisibleHost`。
+
+`PortalInstanceObject` attach / raw rect / visibility：**复用 Phase B**。
+
+#### 递归坐标与 Radix Portal（已决策 D1）
+
+嵌套 `SpatialOverlay` 时，内层 Radix `Portal container` **必须** portal 到**直接父级 visible overlay 的 spatial window**（`useSpatialPortalContainer()` → 外层 overlay child webview 的 `document.body`），**不得** portal 到根 Parent SpatialDiv 的 webview。
+
+```text
+Parent SpatialDiv (webview A)
+  Outer SpatialOverlay
+    measure host → A
+    visible      → webview B (attach A)
+      Inner Radix Portal container={useSpatialPortalContainer()}  → B.body
+        Inner SpatialOverlay
+          measure host → B
+          visible      → webview C (attach B)
+```
+
+这样 inner measure host 与 inner attach parent 在同一 spatial-window 文档，**复用 Phase B raw-rect 逻辑**，无需 cross-webview 坐标变换。
+
+**Stretch（后续）**：薄封装 `SpatialDropdownMenu.Portal` 自动注入正确 container，减少漏配。
+
+#### attach 链
+
+`addToParent` 现有逻辑已满足递归：`isFloatingOverlay` 时挂 `parentPortalInstanceObject.getSpatializedElement()`。内层 overlay 的 parent 自然是外层 visible overlay 的 `PortalInstanceObject`（`PortalInstanceContext` 传递）。
+
+> **一句话**：递归 overlay 的核心不是 `addToParent`，而是 **measure tree 只允许产生 layout，不允许产生 spatial/native side effects**；同时 **不能假装没有普通 React side effects**。
+
+#### nested Radix Portal 与 `measureChildren`
+
+含 nested Radix `Portal` 的 demo / 文档必须满足下面之一：
+
+1. 使用 `measureChildren`，让 measure tree 渲染轻量 skeleton，不渲染会打开 nested `Portal` 的真实子树。
+2. 或由用户组件读取 `OverlayRenderModeContext`，在 `measure` 模式下不挂载 nested Radix `Portal`。
+
+不能只依赖 `SpatialWindowContext` 阻断：Radix 在 `container={undefined}` 时可能 fallback 到 host `document.body`，仍会污染 hidden measurement tree。`SpatialWindowContext` 阻断只是防止继承活的 spatial window，不是 nested Portal 的完整隔离方案。
+
+### 13.14 Phase C 已决策（2026-06-10，含评审修订）
+
+| # | 决策 | 选项 |
+| --- | --- | --- |
+| D1 | 嵌套 Radix Portal 目标 | **父 visible overlay webview**（`useSpatialPortalContainer()`）；stretch 再做自动注入薄封装 |
+| D2 | `SpatialOverlay` 入口 | **公开独立组件** + 内部 `SpatialOverlayRoot` 调 `SpatializedContainer(overlayPortalMode)`；用户不写 `enable-xr`，不走 jsx 改写 |
+| D3 | measure tree children | **默认完整 children**；可选 `measureChildren` escape hatch；仅 gate WebSpatial side effects |
+| D4 | Phase C 启动时机 | **Phase B AVP smoke（§5.9）通过后**再开 Phase C PR |
+| D5 | 公开命名 | **`SpatialOverlay`** |
+| D6 | measure subtree `SpatialWindowContext` | **阻断继承**（优先 `null`，或专用 sentinel），不注入 host-page fallback |
+| D7 | Radix props / style | **分流**到 measurement host 与 visible root；`--xr-*` 双写，visible host 不保留 Radix fixed transform（§13.10） |
+| D8 | visible host | **私有 `SpatialOverlayVisibleHost`**，不得用公开 `SpatialOverlay` 自身，避免 visible branch 自递归 |
+
+实施顺序：
+
+1. **C1** — `OverlayRenderModeContext` + `MeasureModeContainer` + measure subtree `SpatialWindowContext` 阻断 + gate（可改善 compat 路径）
+2. **C2** — `SpatialOverlay` / `SpatialOverlayRoot` / 私有 `SpatialOverlayVisibleHost` + `splitOverlayProps`/`splitOverlayStyle` 分流 + `PortalSpatializedContainer` 双树
+3. **C3** — demo 迁移 + 递归 submenu + effect caveat 文档 + 必含 `measureChildren` 或 measure-mode 条件渲染示例
+4. **C4** — AVP 验收 §8.9a/b/c

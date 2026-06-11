@@ -1,5 +1,5 @@
 import React from 'react'
-import { render } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { PortalSpatializedContainer } from './PortalSpatializedContainer'
@@ -12,6 +12,12 @@ import {
   PortalInstanceObject,
 } from './context/PortalInstanceContext'
 import { SpatialID } from './SpatialID'
+
+class TestDOMMatrix {}
+
+if (!('DOMMatrix' in globalThis)) {
+  ;(globalThis as any).DOMMatrix = TestDOMMatrix
+}
 
 // getSession is only reached if an element is attached (it is not here, because
 // createSpatializedElement resolves to null), but mock it to be safe.
@@ -91,5 +97,123 @@ describe('PortalSpatializedContainer — Scenario 3 overlay placeholder', () => 
 
     // registered so notify2DFrameChange can locate + measure it
     expect(registerSpy).toHaveBeenCalledWith('overlay-sid', el)
+  })
+
+  it('uses explicit overlayPortalMode and splits positioning style away from visible content', async () => {
+    const containerObject = new SpatializedContainerObject()
+    const parentPortal = new PortalInstanceObject(
+      'parent',
+      containerObject,
+      null,
+    )
+    const hostRef = React.createRef<HTMLElement>()
+
+    const Content = vi.fn((props: any) => (
+      <div
+        data-testid="visible-root"
+        data-style-transform={props.style?.transform ?? ''}
+        data-style-position={props.style?.position ?? ''}
+        data-xr-back={props.style?.['--xr-back'] ?? ''}
+        data-background={props.style?.background ?? ''}
+      >
+        {props.children}
+      </div>
+    ))
+
+    render(
+      <SpatializedContainerContext.Provider value={containerObject}>
+        <PortalInstanceContext.Provider value={parentPortal}>
+          <PortalSpatializedContainer
+            component="div"
+            spatializedContent={Content as any}
+            createSpatializedElement={() =>
+              Promise.resolve({
+                updateProperties: vi.fn(),
+                updateTransform: vi.fn(),
+                destroy: vi.fn(),
+              }) as any
+            }
+            hostRef={hostRef}
+            overlayPortalMode
+            data-testid="overlay-host"
+            style={{
+              position: 'fixed',
+              transform: 'translate(10px, 20px)',
+              left: 10,
+              top: 20,
+              width: 160,
+              background: 'rgb(0, 128, 255)',
+              ['--xr-back' as any]: 80,
+            }}
+            {...{ [SpatialID]: 'explicit-overlay-sid' }}
+          >
+            <div data-testid="menu-item">Visible item</div>
+          </PortalSpatializedContainer>
+        </PortalInstanceContext.Provider>
+      </SpatializedContainerContext.Provider>,
+    )
+
+    const host = hostRef.current as HTMLElement
+    expect(host).toBeInstanceOf(HTMLElement)
+    expect(host.style.position).toBe('fixed')
+    expect(host.style.transform).toContain('translate')
+    expect(host.style.getPropertyValue('--xr-back')).toBe('80')
+
+    await waitFor(() => expect(Content).toHaveBeenCalled())
+    const visibleProps = Content.mock.calls.at(-1)?.[0]
+    expect(visibleProps.style.transform).toBeUndefined()
+    expect(visibleProps.style.position).toBeUndefined()
+    expect(visibleProps.style.left).toBeUndefined()
+    expect(visibleProps.style.top).toBeUndefined()
+    expect(visibleProps.style['--xr-back']).toBe(80)
+    expect(visibleProps.style.background).toBe('rgb(0, 128, 255)')
+  })
+
+  it('uses measureChildren only for the hidden overlay placeholder', async () => {
+    const containerObject = new SpatializedContainerObject()
+    const parentPortal = new PortalInstanceObject(
+      'parent',
+      containerObject,
+      null,
+    )
+    const hostRef = React.createRef<HTMLElement>()
+
+    const Content = vi.fn((props: any) => (
+      <div data-testid="visible-root">{props.children}</div>
+    ))
+
+    render(
+      <SpatializedContainerContext.Provider value={containerObject}>
+        <PortalInstanceContext.Provider value={parentPortal}>
+          <PortalSpatializedContainer
+            component="div"
+            spatializedContent={Content as any}
+            createSpatializedElement={() =>
+              Promise.resolve({
+                updateProperties: vi.fn(),
+                updateTransform: vi.fn(),
+                destroy: vi.fn(),
+              }) as any
+            }
+            hostRef={hostRef}
+            overlayPortalMode
+            measureChildren={
+              <div data-testid="measure-child">measure only</div>
+            }
+            {...{ [SpatialID]: 'explicit-overlay-measure-sid' }}
+          >
+            <div data-testid="visible-child">visible only</div>
+          </PortalSpatializedContainer>
+        </PortalInstanceContext.Provider>
+      </SpatializedContainerContext.Provider>,
+    )
+
+    const host = hostRef.current as HTMLElement
+    expect(host.querySelector('[data-testid="measure-child"]')).not.toBeNull()
+    expect(host.querySelector('[data-testid="visible-child"]')).toBeNull()
+
+    await waitFor(() => expect(Content).toHaveBeenCalled())
+    const visibleProps = Content.mock.calls.at(-1)?.[0]
+    expect(visibleProps.children.props['data-testid']).toBe('visible-child')
   })
 })

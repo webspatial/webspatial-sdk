@@ -306,51 +306,6 @@ export class PortalInstanceObject {
       ...extraProperties,
     })
 
-    // Dev-only AVP probes (removed after smoke; iwdp cannot read WebKit console).
-    if (
-      this.isFloatingOverlay &&
-      process.env.NODE_ENV !== 'production' &&
-      width > 0 &&
-      height > 0
-    ) {
-      if (dom) {
-        dom.dataset.webspatialOverlayPush = `${width}x${height}:visible:${visible}`
-      }
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('webspatial-overlay-update', {
-            detail: {
-              spatialId: this.spatialId,
-              x,
-              y,
-              width,
-              height,
-              visible,
-            },
-          }),
-        )
-        ;(
-          window as Window & {
-            __webspatialOnOverlayUpdate?: (detail: {
-              spatialId: string
-              x: number
-              y: number
-              width: number
-              height: number
-              visible: boolean
-            }) => void
-          }
-        ).__webspatialOnOverlayUpdate?.({
-          spatialId: this.spatialId,
-          x,
-          y,
-          width,
-          height,
-          visible,
-        })
-      }
-    }
-
     // update transform
     spatializedElement.updateTransform(transformMatrix)
 
