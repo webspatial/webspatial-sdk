@@ -1,12 +1,19 @@
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
   SpatializedMotionConfig,
-  SpatializedMotionProperty,
   SpatializedMotionTrack,
 } from '../../types/spatializedMotion'
 import { applyTimingFunction } from './timing'
-import { setScalar } from './scalarValues'
+import { setMotionPropertyValue } from './motionPropertyValues'
 
+/**
+ * Resolves track-level easing with keyframe and config fallbacks.
+ *
+ * @param track Track being sampled.
+ * @param keyframeTimingFunction Optional timing function declared on the keyframe.
+ * @param config Motion config that provides the final fallback timing function.
+ * @returns The easing function to use for the sampled segment.
+ */
 function resolveTimingFunction(
   track: SpatializedMotionTrack,
   keyframeTimingFunction: SpatializedMotionTrack['keyframes'][number]['timingFunction'],
@@ -20,6 +27,14 @@ function resolveTimingFunction(
   )
 }
 
+/**
+ * Samples a single motion track at a timeline time in seconds.
+ *
+ * @param track Track to sample.
+ * @param config Motion config that owns the track.
+ * @param timeSec Timeline time in seconds.
+ * @returns The interpolated numeric value for the track.
+ */
 function sampleTrack(
   track: SpatializedMotionTrack,
   config: SpatializedMotionConfig,
@@ -48,15 +63,22 @@ function sampleTrack(
   return last.value
 }
 
-/** Evaluate all tracks at `timeSec` (seconds from timeline start, before delay). */
+/**
+ * Evaluates all motion tracks into visual values at a timeline time.
+ *
+ * @param config Canonical motion config to evaluate.
+ * @param timeSec Seconds from timeline start, before delay is applied.
+ * @returns The sampled visual values for the requested time.
+ */
 export function evaluateMotionTimeline(
   config: SpatializedMotionConfig,
   timeSec: number,
 ): SpatializedVisualValues {
   const t = Math.max(0, Math.min(config.duration, timeSec))
-  const values: SpatializedVisualValues = {}
+  const visualValues: SpatializedVisualValues = {}
   for (const track of config.tracks) {
-    setScalar(values, track.property, sampleTrack(track, config, t))
+    const sampledValue = sampleTrack(track, config, t)
+    setMotionPropertyValue(visualValues, track.property, sampledValue)
   }
-  return values
+  return visualValues
 }

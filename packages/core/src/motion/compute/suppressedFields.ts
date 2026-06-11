@@ -1,6 +1,6 @@
 import type { SpatializedMotionConfig } from '../../types/spatializedMotion'
 
-/** Portal suppression for native / Web motion (matches Plan A transform-wide rule). */
+/** Maps active motion tracks to Portal fields that should be suppressed. */
 export function getMotionSuppressedFields(
   config: SpatializedMotionConfig,
 ): Set<string> {

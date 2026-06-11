@@ -13,6 +13,14 @@ import type { SpatializedPlaybackError } from '../../types/spatializedPlayback'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 
+/**
+ * Bridges motion commands to JSB and normalizes native completion payloads.
+ *
+ * @param elementId Default element id when the command does not provide one.
+ * @param targetKind Motion kind that selects the native backend behavior.
+ * @param command Motion command to execute through JSB.
+ * @returns The native play session handles or immediate visual values, depending on command type.
+ */
 export async function executeAnimateSpatializedElementMotion(
   elementId: string,
   targetKind: SpatializedMotionKind,

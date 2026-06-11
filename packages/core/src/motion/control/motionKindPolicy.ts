@@ -2,6 +2,9 @@ import type { SpatializedMotionConfig } from '../../types/spatializedMotion'
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 import { getMotionSuppressedFields } from '../compute/suppressedFields'
 
+/**
+ * Per-kind playback and suppression policy used by the controller.
+ */
 export interface MotionKindPolicy {
   readonly kind: SpatializedMotionKind
   readonly webPlayback: 'raf' | 'none'
@@ -10,7 +13,12 @@ export interface MotionKindPolicy {
   getSuppressedFields(config: SpatializedMotionConfig): Set<string> | null
 }
 
-/** Suppress `entityTransform` on Model when motion animates root transform. */
+/**
+ * Suppresses model transform ownership while native 3D motion drives it.
+ *
+ * @param config Motion config being played.
+ * @returns The static-3D fields that the Portal should suppress.
+ */
 function getStatic3DMotionSuppressedFields(
   config: SpatializedMotionConfig,
 ): Set<string> {
@@ -23,6 +31,9 @@ function getStatic3DMotionSuppressedFields(
   return fields
 }
 
+/**
+ * Static policy table shared by controller and backends.
+ */
 export const MOTION_KIND_POLICIES: Record<
   SpatializedMotionKind,
   MotionKindPolicy
