@@ -89,6 +89,7 @@ export { useAnimation } from './spatialized-container/motion'
 // consumer IDEs.
 export type {
   // Common scalar types not already covered by `spatialized-container/types`.
+  UseAnimationResult,
   CornerRadius,
   // Backplate / world configuration (consumer-facing scene properties).
   BackgroundMaterialType,

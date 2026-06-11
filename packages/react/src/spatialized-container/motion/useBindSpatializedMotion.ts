@@ -38,7 +38,6 @@ export function useBindSpatializedMotion({
 
     return () => {
       binding.__onUnbind?.()
-      binding.__setElement?.(null, kind)
       suppressedFieldsChangeRef.current?.(null)
     }
   }, [binding, element, kind])
