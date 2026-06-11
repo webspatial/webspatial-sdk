@@ -1,7 +1,6 @@
 import type { SpatializedMotionConfig } from '../../types/spatializedMotion'
 import type { SpatializedMotionKind } from '../../types/spatializedMotion'
 import { getMotionSuppressedFields } from '../compute/suppressedFields'
-import { getStatic3DMotionSuppressedFields } from '../kinds/static3d'
 
 export interface MotionKindPolicy {
   readonly kind: SpatializedMotionKind
@@ -9,6 +8,19 @@ export interface MotionKindPolicy {
   readonly motionObjectIdPrefix: string
   readonly sessionIdPrefix: string
   getSuppressedFields(config: SpatializedMotionConfig): Set<string> | null
+}
+
+/** Suppress `entityTransform` on Model when motion animates root transform. */
+function getStatic3DMotionSuppressedFields(
+  config: SpatializedMotionConfig,
+): Set<string> {
+  const fields = new Set<string>()
+  for (const track of config.tracks) {
+    if (track.property.startsWith('transform.')) {
+      fields.add('entityTransform')
+    }
+  }
+  return fields
 }
 
 export const MOTION_KIND_POLICIES: Record<
