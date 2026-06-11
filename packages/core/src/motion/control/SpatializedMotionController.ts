@@ -14,7 +14,6 @@ import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
   SpatializedMotionConfig,
   SpatializedMotionPlayState,
-  SpatializedMotionPropertyKeys,
 } from '../../types/spatializedMotion'
 import { evaluateMotionTimeline } from '../compute/sample'
 import { validateSpatializedMotionConfig } from '../compute/validate'
@@ -252,12 +251,12 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
     this.backend.play()
   }
 
-  pause(keys?: SpatializedMotionPropertyKeys): void {
-    this.backend?.pause(keys)
+  pause(): void {
+    this.backend?.pause()
   }
 
-  resume(keys?: SpatializedMotionPropertyKeys): void {
-    this.backend?.resume(keys)
+  resume(): void {
+    this.backend?.resume()
   }
 
   stop(): void {

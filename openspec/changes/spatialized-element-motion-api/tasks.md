@@ -123,6 +123,14 @@
 - [x] Tests follow-up: cover `from/to` and `tracks` authoring shapes reaching the same canonical tracks-native path; percentage-key `timeline` coverage remains in Phase 10
 - [x] 2D native suppression stays scoped to active native playback and clears on terminal / unbind
 
+## Phase 9d — Controller pause/resume keys removal
+
+- [x] Types: `SpatializedPlaybackApi` pause/resume signatures are `pause(): void` / `resume(): void`; remove `SpatializedMotionPropertyKeys`
+- [x] Controller / backend: delete selective pause/resume branches, partial-paused handling, and any per-key pause state tables from the runtime path
+- [x] JSB / bridge: remove `properties` from `AnimateSpatializedElementMotionCommand` and keep pause/resume as whole-session commands only
+- [x] Tests: add whole-controller pause/resume coverage, and verify extra controller-control arguments are rejected at the type level
+- [x] Docs / examples: remove key-level pause/resume wording from proposal, design, API summary, and spec; note that future local control would require a separate track/action API
+
 ## Phase 10 — Timeline percentage keyframe config + timingFunction unification
 
 - [x] Types: `SpatializedMotionKeyframeValues` — `SpatializedVisualValues & { timingFunction?: TimingFunction }`

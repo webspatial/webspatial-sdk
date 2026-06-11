@@ -1,7 +1,4 @@
-import type {
-  SpatializedMotionProperty,
-  SpatializedMotionTimeline,
-} from './spatializedMotion'
+import type { SpatializedMotionTimeline } from './spatializedMotion'
 import type { SpatializedMotionKind } from './spatializedMotion'
 import type { SpatializedPlaybackError } from './spatializedPlayback'
 import type { SpatializedVisualValues } from './spatializedVisual'
@@ -11,7 +8,6 @@ export interface AnimateSpatializedElementMotionCommand {
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish'
   targetKind: SpatializedMotionKind
-  properties?: SpatializedMotionProperty[]
   elementId?: string
   timeline?: SpatializedMotionTimeline
 }

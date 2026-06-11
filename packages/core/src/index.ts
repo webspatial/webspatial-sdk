@@ -25,7 +25,6 @@ export type {
   SpatializedMotionConfig,
   SpatializedMotionTimeline,
   SpatializedMotionPlayState,
-  SpatializedMotionPropertyKeys,
   SpatializedPlaybackApi,
 } from './types/spatializedMotion'
 export * from './types/spatializedMotionBinding'
