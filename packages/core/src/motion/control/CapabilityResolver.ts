@@ -22,8 +22,11 @@ export const runtimeCapabilityResolver: CapabilityResolver = {
   },
 }
 
-/** Build a resolver from the legacy controller options (kept for back-compat). */
-export function resolverFromOptions(opts: {
+/**
+ * Create a capability resolver from legacy controller options kept for
+ * backward compatibility.
+ */
+export function createCapabilityResolverFromOptions(opts: {
   forceNativePlayback?: boolean
   supportsMotionKind?: (kind: SpatializedMotionKind) => boolean
 }): CapabilityResolver {
