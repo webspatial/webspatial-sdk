@@ -103,6 +103,7 @@ After completing all artifacts, summarize:
   - These guide what you write, but should never appear in the output
 
 **Guardrails**
+- When creating or modifying WebSpatial entity examples or implementation, do not use hyphens (`-`) in entity `name` values; use USD-safe camelCase or underscores (`_`) for cross-platform compatibility.
 - Create ALL artifacts needed for implementation (as defined by schema's `apply.requires`)
 - Always read dependency artifacts before creating a new one
 - If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum

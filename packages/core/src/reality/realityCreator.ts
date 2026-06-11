@@ -21,9 +21,8 @@ import { ModelComponent } from './component'
 import { SpatialGeometry } from './geometry'
 import { SpatialUnlitMaterial } from './material'
 import { SpatialModelAsset, SpatialTextureResource } from './resource'
-
-export async function createSpatialEntity(
-  userData?: SpatialEntityUserData,
+export async function createSpatialEntity<Name extends string = string>(
+  userData?: SpatialEntityUserData<Name>,
 ): Promise<SpatialEntity> {
   const result = await new CreateSpatialEntityCommand(userData?.name).execute()
   if (!result.success) {
@@ -72,9 +71,9 @@ export async function createModelComponent(options: ModelComponentOptions) {
   }
 }
 
-export async function createSpatialModelEntity(
-  options: SpatialModelEntityCreationOptions,
-  userData?: SpatialEntityUserData,
+export async function createSpatialModelEntity<Name extends string = string>(
+  options: SpatialModelEntityCreationOptions<Name>,
+  userData?: SpatialEntityUserData<Name>,
 ) {
   const result = await new CreateSpatialModelEntityCommand(options).execute()
   if (!result.success) {

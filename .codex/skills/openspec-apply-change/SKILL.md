@@ -139,6 +139,7 @@ What would you like to do?
 ```
 
 **Guardrails**
+- When creating or modifying WebSpatial entity examples or implementation, do not use hyphens (`-`) in entity `name` values; use USD-safe camelCase or underscores (`_`) for cross-platform compatibility.
 - Keep going through tasks until done or blocked
 - Always read context files before starting (from the apply instructions output)
 - If task is ambiguous, pause and ask before implementing

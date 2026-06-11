@@ -1,4 +1,5 @@
 import type { SpatialEntity } from '..'
+import type { SpatialEntityName } from '../reality/entityName'
 import { SpatialGeometry } from '../reality/geometry/SpatialGeometry'
 import { SpatialMaterial } from '../reality/material/SpatialMaterial'
 import type { SpatializedDynamic3DElement } from '../SpatializedDynamic3DElement'
@@ -276,14 +277,16 @@ export interface ModelComponentOptions {
   materials: SpatialMaterial[]
 }
 
-export interface SpatialEntityUserData {
+export interface SpatialEntityUserData<Name extends string = string> {
   id?: string
-  name?: string
+  name?: SpatialEntityName<Name>
 }
 
-export interface SpatialModelEntityCreationOptions {
+export interface SpatialModelEntityCreationOptions<
+  Name extends string = string,
+> {
   modelAssetId: string
-  name?: string
+  name?: SpatialEntityName<Name>
 }
 
 export interface ModelAssetOptions {
