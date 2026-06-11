@@ -4,7 +4,6 @@ import {
   supports,
   validateSpatializedMotionConfig,
   type SpatializedMotionConfig,
-  type SpatializedMotionHandle,
 } from '@webspatial/core-sdk'
 
 export function useMotionController(
@@ -12,11 +11,11 @@ export function useMotionController(
   onValuesChange?: (
     values: import('@webspatial/core-sdk').SpatializedVisualValues,
   ) => void,
-): SpatializedMotionHandle {
+): SpatializedMotionController {
   validateSpatializedMotionConfig(config)
 
   const [, tick] = useReducer((n: number) => n + 1, 0)
-  const controllerRef = useRef<SpatializedMotionHandle | null>(null)
+  const controllerRef = useRef<SpatializedMotionController | null>(null)
   if (!controllerRef.current || controllerRef.current.isDestroyed) {
     controllerRef.current = new SpatializedMotionController(config, {
       onStateChange: () => tick(),
