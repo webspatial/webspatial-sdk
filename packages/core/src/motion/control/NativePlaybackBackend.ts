@@ -12,10 +12,10 @@ import type {
 import type { SpatializedPlaybackError } from '../../types/spatializedPlayback'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import { evaluateMotionTimeline } from '../compute/sample'
-import { motionConfigToNativeTimeline } from '../compute/nativeTimeline'
 import { motionTimeSec } from '../compute/timing'
 import { MOTION_KIND_POLICIES } from './motionKindPolicy'
 import { removeMotionEventReceivers } from '../native/motionEventReceivers'
+import { motionConfigToNativeTimeline } from '../native/serializeMotionTimeline'
 import type { MotionHost } from './MotionHost'
 import type { PlaybackBackend } from './PlaybackBackend'
 
