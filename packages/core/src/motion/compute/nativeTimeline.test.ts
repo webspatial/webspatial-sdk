@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { motionConfigToNativeTimeline } from './nativeTimeline'
+import { motionConfigToNativeTimeline } from '../native/serializeMotionTimeline'
 
 describe('motionConfigToNativeTimeline', () => {
   test('builds timeline payload for multi-track', () => {

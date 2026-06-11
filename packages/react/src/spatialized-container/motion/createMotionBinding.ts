@@ -19,7 +19,10 @@ export function createMotionBinding(
       | null,
     targetKind?: SpatializedMotionKind,
   ) => {
-    controller.attachElement(element, targetKind)
+    controller.attachElement(
+      element as Parameters<SpatializedMotionHandle['attachElement']>[0],
+      targetKind,
+    )
   }
 
   return {
