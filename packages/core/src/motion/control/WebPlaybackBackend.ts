@@ -1,4 +1,7 @@
-import type { SpatializedMotionPlayState } from '../../types/spatializedMotion'
+import type {
+  SpatializedMotionConfig,
+  SpatializedMotionPlayState,
+} from '../../types/spatializedMotion'
 import { evaluateMotionTimeline } from '../compute/sample'
 import { motionTimeSec } from '../compute/timing'
 import type { PlaybackBackend, PlaybackBackendContext } from './PlaybackBackend'
@@ -16,6 +19,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
   private rafId: number | null = null
   private startWallMs = 0
   private pausedElapsedMs = 0
+  private sessionConfig: SpatializedMotionConfig | null = null
 
   constructor(private readonly ctx: PlaybackBackendContext) {}
 
@@ -43,6 +47,12 @@ export class WebPlaybackBackend implements PlaybackBackend {
   /** Release the raf loop (reusable: a later play() can restart the clock). */
   destroy(): void {
     this.stopRaf()
+    this.sessionConfig = null
+  }
+
+  /** Freeze config per web session so re-renders only affect the next play(). */
+  private getCurrentSessionConfig(): SpatializedMotionConfig {
+    return this.sessionConfig ?? this.ctx.getConfig()
   }
 
   private stopRaf(): void {
@@ -53,7 +63,6 @@ export class WebPlaybackBackend implements PlaybackBackend {
   }
 
   play(): void {
-    const cfg = this.ctx.getConfig()
     if (this.webState === 'running') return
 
     if (this.webState === 'paused') {
@@ -64,6 +73,8 @@ export class WebPlaybackBackend implements PlaybackBackend {
       return
     }
 
+    this.sessionConfig = this.ctx.getConfig()
+    const cfg = this.getCurrentSessionConfig()
     if (!this.webStarted) {
       this.webStarted = true
       cfg.onStart?.()
@@ -78,7 +89,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
   }
 
   pause(): void {
-    const cfg = this.ctx.getConfig()
+    const cfg = this.getCurrentSessionConfig()
     if (this.webState !== 'running') return
     this.pausedElapsedMs = performance.now() - this.startWallMs
     this.webState = 'paused'
@@ -95,7 +106,10 @@ export class WebPlaybackBackend implements PlaybackBackend {
   }
 
   reset(): void {
-    const cfg = this.ctx.getConfig()
+    const cfg =
+      this.webState === 'idle'
+        ? this.ctx.getConfig()
+        : this.getCurrentSessionConfig()
     this.stopRaf()
     this.ctx.clearPendingPlay()
     const values = evaluateMotionTimeline(cfg, 0)
@@ -103,12 +117,13 @@ export class WebPlaybackBackend implements PlaybackBackend {
     this.webState = 'idle'
     this.webStarted = false
     this.pausedElapsedMs = 0
+    this.sessionConfig = null
     this.ctx.notifyStateChange()
     cfg.onReset?.(values)
   }
 
   stop(): void {
-    const cfg = this.ctx.getConfig()
+    const cfg = this.getCurrentSessionConfig()
     if (this.webState === 'idle' && !this.ctx.isPendingPlay()) return
     this.stopRaf()
     const wasRunning = this.webState === 'running' || this.webState === 'paused'
@@ -139,12 +154,16 @@ export class WebPlaybackBackend implements PlaybackBackend {
     this.webState = 'idle'
     this.webStarted = false
     this.pausedElapsedMs = 0
+    this.sessionConfig = null
     this.ctx.notifyStateChange()
     cfg.onStop?.(values)
   }
 
   finish(): void {
-    const cfg = this.ctx.getConfig()
+    if (this.webState === 'idle') {
+      this.sessionConfig = this.ctx.getConfig()
+    }
+    const cfg = this.getCurrentSessionConfig()
     this.stopRaf()
     this.ctx.clearPendingPlay()
     const values = evaluateMotionTimeline(cfg, cfg.duration)
@@ -162,7 +181,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
   }
 
   private frame(): void {
-    const cfg = this.ctx.getConfig()
+    const cfg = this.getCurrentSessionConfig()
     if (this.webState !== 'running' || this.ctx.isDestroyed()) return
 
     const elapsed = performance.now() - this.startWallMs
