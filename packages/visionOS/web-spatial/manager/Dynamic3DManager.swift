@@ -1,65 +1,35 @@
-import CryptoKit
 import Foundation
 import RealityKit
 
-/// Downloads remote URL → local file using a unique on-disk name (hash + basename).
-/// Each call downloads independently — concurrent loads for the same URL each write to their
-/// own temp file and atomically rename to the same destination (last writer wins).
-private enum RemoteResourceLoadCache {
-    static func localFileURL(forRemote urlString: String) async throws -> URL {
-        try await downloadInstallIfNeeded(urlString: urlString)
+private func downloadRemoteResource(from urlString: String) async throws -> URL {
+    guard let remote = URL(string: urlString) else {
+        throw NSError(
+            domain: "Invalid URL",
+            code: 0,
+            userInfo: [NSLocalizedDescriptionKey: "Failed to create URL from string: \(urlString)"]
+        )
     }
-
-    private static func downloadInstallIfNeeded(urlString: String) async throws -> URL {
-        guard let remote = URL(string: urlString) else {
-            throw NSError(
-                domain: "Invalid URL",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "Failed to create URL from string: \(urlString)"]
-            )
-        }
-        guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            throw NSError(
-                domain: "Download Error",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "Documents directory is unavailable"]
-            )
-        }
-        let destination = cacheFileURL(documents: documents, urlString: urlString)
-        let fm = FileManager.default
-        if fm.fileExists(atPath: destination.path) {
-            return destination
-        }
-
-        print("start load")
-        let (tempURL, response) = try await URLSession.shared.download(from: remote)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NSError(
-                domain: "HTTP Error",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "Missing HTTP response"]
-            )
-        }
-        guard (200 ... 299).contains(httpResponse.statusCode) else {
-            throw NSError(
-                domain: "HTTP Error",
-                code: httpResponse.statusCode,
-                userInfo: [NSLocalizedDescriptionKey: "HTTP Error \(httpResponse.statusCode)"]
-            )
-        }
-        try await FileCoordinator.shared.moveReplacingIfExists(from: tempURL, to: destination)
-        print("load complete")
-        return destination
+    let (tempURL, response) = try await URLSession.shared.download(from: remote)
+    guard let httpResponse = response as? HTTPURLResponse else {
+        throw NSError(
+            domain: "HTTP Error",
+            code: 0,
+            userInfo: [NSLocalizedDescriptionKey: "Missing HTTP response"]
+        )
     }
-
-    private static func cacheFileURL(documents: URL, urlString: String) -> URL {
-        let digest = SHA256.hash(data: Data(urlString.utf8))
-        let hex = digest.prefix(8).reduce(into: "") { $0.append(String(format: "%02x", $1)) }
-        var baseName = URL(string: urlString)?.lastPathComponent ?? "asset"
-        if baseName.isEmpty { baseName = "asset" }
-        let safe = baseName.replacingOccurrences(of: "/", with: "_")
-        return documents.appendingPathComponent("\(hex)_\(safe)")
+    guard (200 ... 299).contains(httpResponse.statusCode) else {
+        throw NSError(
+            domain: "HTTP Error",
+            code: httpResponse.statusCode,
+            userInfo: [NSLocalizedDescriptionKey: "HTTP Error \(httpResponse.statusCode)"]
+        )
     }
+    let ext = remote.pathExtension.isEmpty ? "bin" : remote.pathExtension
+    let localURL = FileManager.default.temporaryDirectory
+        .appending(path: UUID().uuidString)
+        .appendingPathExtension(ext)
+    try FileManager.default.moveItem(at: tempURL, to: localURL)
+    return localURL
 }
 
 enum GeometryCreationError: LocalizedError {
@@ -151,10 +121,10 @@ class Dynamic3DManager {
             loadComplete(.success(localUrl))
             return
         }
-        // load net file — each call downloads independently to a unique cache filename.
+        // load net file
         Task {
             do {
-                let url = try await RemoteResourceLoadCache.localFileURL(forRemote: urlString)
+                let url = try await downloadRemoteResource(from: urlString)
                 loadComplete(.success(url))
             } catch {
                 loadComplete(.failure(error))
