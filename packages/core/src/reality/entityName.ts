@@ -4,10 +4,10 @@ export type NoHyphen<Name extends string> = Name extends `${string}-${string}`
 
 export type SpatialEntityName<Name extends string = string> = NoHyphen<Name>
 
-export function assertValidSpatialEntityName(name: string | undefined): void {
-  if (name?.includes('-')) {
-    throw new Error(
-      `Invalid WebSpatial entity name "${name}". Entity names must not include hyphens (-); use a USD-safe name with camelCase or underscores (_) instead.`,
-    )
-  }
-}
+/** Compile-time error message for hyphenated JSX entity name literals. */
+export type SpatialEntityNameLiteral<Name extends string = string> =
+  string extends Name
+    ? Name
+    : Name extends `${string}-${string}`
+      ? `Entity names must not include hyphens (-). "${Name}" is invalid. Use camelCase or underscores (_) instead.`
+      : Name

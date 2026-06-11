@@ -1,8 +1,5 @@
 import React, { forwardRef } from 'react'
-import {
-  SpatialEntity,
-  assertValidSpatialEntityName,
-} from '@webspatial/core-sdk'
+import { SpatialEntity } from '@webspatial/core-sdk'
 import {
   ParentContext,
   RealityContextValue,
@@ -23,7 +20,6 @@ type BaseEntityProps = EntityProps &
 
 export const BaseEntity = forwardRef<EntityRefShape, BaseEntityProps>(
   ({ children, createEntity, recreateKey, ...rest }, ref) => {
-    assertValidSpatialEntityName(rest.name)
     const ctx = useRealityContext()
     const entity = useEntity({
       ...rest,

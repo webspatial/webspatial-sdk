@@ -6,7 +6,7 @@ This document records abnormal behaviours that normal web developers would not e
 
 WebSpatial entity `name` values must use USD-safe identifiers. Do **not** use hyphens (`-`) or other special characters in names; prefer camelCase (`robotArm`) or underscores (`robot_arm`).
 
-RealityKit may appear to tolerate some unsupported characters in limited cases, but Reality Composer Pro (RCP) does not preserve them and replaces them with underscores. Runtime workflows such as serialization, USD export, and playback also depend on stable names, so hyphenated entity names are not supported by WebSpatial. The TypeScript API rejects literal hyphenated names at compile time, and dynamic string values are validated at runtime before native entity creation.
+RealityKit may appear to tolerate some unsupported characters in limited cases, but Reality Composer Pro (RCP) does not preserve them and replaces them with underscores. Runtime workflows such as serialization, USD export, and playback also depend on stable names, so hyphenated entity names are not supported by WebSpatial. The TypeScript API rejects literal hyphenated names at compile time.
 
 ## Anchor Navigation
 

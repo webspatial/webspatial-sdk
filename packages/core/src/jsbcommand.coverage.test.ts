@@ -290,21 +290,6 @@ describe('realityCreator', () => {
     ).resolves.toBeInstanceOf(modelEnt.SpatialModelEntity)
   })
 
-  it('rejects hyphenated entity names before calling the platform', async () => {
-    const creator = await import('./reality/realityCreator')
-
-    await expect(
-      creator.createSpatialEntity({ name: 'invalid-name' as string }),
-    ).rejects.toThrow(/must not include hyphens/)
-    await expect(
-      creator.createSpatialModelEntity({
-        modelAssetId: 'asset-1',
-        name: 'invalid-model' as string,
-      }),
-    ).rejects.toThrow(/must not include hyphens/)
-    expect(platformSpy.callJSB).not.toHaveBeenCalled()
-  })
-
   it('throws on creator failures', async () => {
     platformSpy.callJSB.mockResolvedValueOnce({
       success: false,

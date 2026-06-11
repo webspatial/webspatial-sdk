@@ -1,5 +1,5 @@
 import React from 'react'
-import type { SpatialEntityName } from '@webspatial/core-sdk'
+import type { SpatialEntityNameLiteral } from '@webspatial/core-sdk'
 import { EntityRefShape } from '../hooks'
 
 import { Entity as EntityBase } from './Entity'
@@ -12,7 +12,7 @@ import { ModelEntity as ModelEntityBase } from './ModelEntity'
 import { SceneGraph } from './SceneGraph'
 
 type WithEntityName<Props, Name extends string> = Omit<Props, 'name'> & {
-  name?: SpatialEntityName<Name>
+  name?: SpatialEntityNameLiteral<Name>
 }
 
 type EntityComponent<Component extends React.ComponentType<any>> = <
