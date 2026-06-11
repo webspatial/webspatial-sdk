@@ -32,6 +32,7 @@ function constrainedAxisKey(
 import { SpatialID } from './SpatialID'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
 import { useSpatializedElement } from './hooks/useSpatializedElement'
+import { useBindSpatializedMotion } from './motion/useBindSpatializedMotion'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
@@ -134,35 +135,13 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     spatializedElement,
   )
 
-  // ---- SpatialDiv xr-animation binding (Plan B native path) ----
-  useEffect(() => {
-    if (!xrAnimation || !spatializedElement) return
-
-    if (xrAnimation.__setElement) {
-      xrAnimation.__setElement(
-        spatializedElement as unknown as Spatialized2DElement,
-        'spatialized2d',
-      )
-    }
-
-    const suppressedFields = xrAnimation.__getSuppressedFields?.()
-    if (suppressedFields) {
+  useBindSpatializedMotion({
+    binding: xrAnimation,
+    element: spatializedElement as Spatialized2DElement | null,
+    kind: 'spatialized2d',
+    onSuppressedFieldsChange: suppressedFields => {
       portalInstanceObject.setSuppressedFields(suppressedFields)
-    }
-
-    return () => {
-      xrAnimation.__onUnbind?.()
-      if (xrAnimation.__setElement) {
-        xrAnimation.__setElement(null, 'spatialized2d')
-      }
-      portalInstanceObject.setSuppressedFields(null)
-    }
-  }, [xrAnimation, spatializedElement, portalInstanceObject])
-
-  useEffect(() => {
-    if (!xrAnimation || !spatializedElement) return
-    const suppressedFields = xrAnimation.__getSuppressedFields?.()
-    portalInstanceObject.setSuppressedFields(suppressedFields ?? null)
+    },
   })
 
   const PlaceholderEl = renderPlaceholderInSubPortal(

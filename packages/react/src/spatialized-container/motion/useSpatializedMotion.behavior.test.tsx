@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import React, { StrictMode } from 'react'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { useAnimation } from './useSpatializedMotion'
+import { useAnimation } from './useAnimation'
 
 const SIMPLE_ENTRANCE_CONFIG = {
   from: {
@@ -21,7 +21,7 @@ function createMockElement(id = 'motion-element-1') {
   return { id }
 }
 
-describe('useSpatializedMotion tuple api', () => {
+describe('useAnimation tuple api', () => {
   test('2D bind starts playback and updates style', async () => {
     const { result } = renderHook(() => useAnimation(SIMPLE_ENTRANCE_CONFIG))
 
@@ -77,6 +77,62 @@ describe('useSpatializedMotion tuple api', () => {
     await waitFor(() => {
       expect(result.current[2]).toEqual({})
     })
+  })
+
+  test('default autoStart begins playback after bind', async () => {
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 0.2,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 0.2, value: 1 },
+            ],
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(
+        createMockElement() as any,
+        'spatialized2d',
+      )
+    })
+
+    await waitFor(() => {
+      expect(result.current[1].playState).not.toBe('idle')
+    })
+  })
+
+  test('autoStart false does not play when only binding resolves', async () => {
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 0.2,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 0.2, value: 1 },
+            ],
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(
+        createMockElement() as any,
+        'spatialized2d',
+      )
+    })
+
+    expect(result.current[1].playState).toBe('idle')
+    expect(result.current[2].opacity).toBe(0)
   })
 
   test('web pause syncs style to timeline sample at elapsed progress', async () => {

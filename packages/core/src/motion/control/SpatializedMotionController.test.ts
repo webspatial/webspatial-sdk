@@ -30,6 +30,25 @@ function makeConfig(
   }
 }
 
+function createNativeElement(id: string) {
+  const animateMotion = vi.fn(async (command: { type: string }) => {
+    if (command.type === 'play') {
+      return {
+        animationId: `${id}-anim`,
+        finished: new Promise<SpatializedVisualValues>(() => {}),
+        canceled: new Promise<SpatializedVisualValues>(() => {}),
+        failed: new Promise(() => {}),
+      }
+    }
+    return undefined
+  })
+
+  return {
+    id,
+    animateMotion,
+  }
+}
+
 afterEach(() => {
   vi.useRealTimers()
   vi.clearAllMocks()
@@ -450,4 +469,47 @@ describe('SpatializedMotionController portal suppression timing', () => {
     }
     expect(static3dController.getSuppressedFields()).toBeNull()
   })
+})
+
+describe('SpatializedMotionController unbind and rebind', () => {
+  test.each(['spatialized2d', 'static3d', 'dynamic3d'] as const)(
+    'recreates the native backend after %s unbind without reusing the destroyed backend',
+    async kind => {
+      const controller = new SpatializedMotionController(makeConfig(), {
+        forceNativePlayback: true,
+      })
+      const firstElement = createNativeElement(`first-${kind}`)
+      const secondElement = createNativeElement(`second-${kind}`)
+
+      controller.attachElement(firstElement as any, kind)
+      controller.play()
+
+      await vi.waitFor(() => {
+        expect(firstElement.animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'play', targetKind: kind }),
+        )
+      })
+
+      controller.handleMotionUnbind()
+      controller.attachElement(secondElement as any, kind)
+      controller.play()
+
+      await vi.waitFor(() => {
+        expect(secondElement.animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'play', targetKind: kind }),
+        )
+      })
+
+      expect(
+        firstElement.animateMotion.mock.calls.filter(
+          ([command]) => command.type === 'play',
+        ),
+      ).toHaveLength(1)
+      expect(
+        secondElement.animateMotion.mock.calls.filter(
+          ([command]) => command.type === 'play',
+        ),
+      ).toHaveLength(1)
+    },
+  )
 })
