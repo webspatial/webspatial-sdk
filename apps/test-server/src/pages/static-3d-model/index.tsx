@@ -165,6 +165,7 @@ function App() {
         enable-xr
         autoPlay
         loading={loading}
+        stagemode="orbit"
         style={{
           height: '200px',
           '--xr-depth': '100px',

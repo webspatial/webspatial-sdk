@@ -4,6 +4,7 @@ import {
   ModelLoadingMode,
   ModelSource,
   SpatializedStatic3DElementProperties,
+  StageMode,
 } from './types/types'
 import {
   ModelLoadSuccess,
@@ -11,6 +12,7 @@ import {
   SpatialWebMsgType,
   AnimationStateChangeDetail,
   AnimationStateChangeMsg,
+  EntityTransformChangeMsg,
 } from './WebMsgCommand'
 
 /**
@@ -137,6 +139,9 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     }
     if (properties.loading !== undefined) {
       this._loading = properties.loading
+    }
+    if (properties.stagemode !== undefined) {
+      this._stagemode = properties.stagemode
     }
     return new UpdateSpatializedStatic3DElementProperties(
       this,
@@ -297,6 +302,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       this._currentTime = data.detail.currentTime ?? 0
       this._anchorTimestamp = data.detail.timestamp ?? Date.now()
       this._onAnimationStateChangeCallback?.(data.detail)
+    } else if (data.type === SpatialWebMsgType.entitytransformchange) {
+      this._entityTransform = new DOMMatrixReadOnly(data.detail.transform)
     } else {
       // Handle other spatial events using the base class implementation
       super.onReceiveEvent(data)
@@ -363,9 +370,35 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     this._onLoadFailureCallback = callback
   }
 
-  updateModelTransform(transform: DOMMatrixReadOnly) {
-    const modelTransform = Array.from(transform.toFloat64Array())
-    this.updateProperties({ modelTransform })
+  /**
+   * Built-in interaction mode. In `'orbit'` the native layer drives the
+   * transform and `entityTransform` is read-only.
+   */
+  private _stagemode: StageMode = 'none'
+
+  get stagemode(): StageMode {
+    return this._stagemode
+  }
+
+  /**
+   * Latest transform of the model, including native-driven manipulations such
+   * as orbit interaction.
+   */
+  private _entityTransform: DOMMatrixReadOnly = new DOMMatrixReadOnly()
+
+  get entityTransform(): DOMMatrixReadOnly {
+    return this._entityTransform
+  }
+
+  set entityTransform(transform: DOMMatrixReadOnly) {
+    // In orbit mode the native layer owns the transform, so ignore writes.
+    if (this._stagemode === 'orbit') return
+    this._entityTransform = transform
+    // The public API is `entityTransform`, but the JSB property stays
+    // `modelTransform` so the native side remains backward compatible.
+    this.updateProperties({
+      modelTransform: Array.from(transform.toFloat64Array()),
+    })
   }
 }
 
@@ -379,3 +412,4 @@ type Static3DReceiveEventData =
   | ModelLoadFailure
   | ReceiveEventData
   | AnimationStateChangeMsg
+  | EntityTransformChangeMsg
