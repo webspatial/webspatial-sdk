@@ -19,6 +19,11 @@ const FORBIDDEN_PREFIXES = [
   'depth',
 ] as const
 
+/**
+ * Validates any supported motion config shape before playback or serialization.
+ *
+ * @param config Motion config in any supported input shape.
+ */
 export function validateSpatializedMotionConfig(
   config:
     | SpatializedMotionConfig
@@ -29,6 +34,11 @@ export function validateSpatializedMotionConfig(
   validateNormalizedMotionConfig(normalized)
 }
 
+/**
+ * Validates the canonical track-based motion config form.
+ *
+ * @param config Canonical motion config to validate.
+ */
 function validateNormalizedMotionConfig(config: SpatializedMotionConfig): void {
   const { duration, tracks } = config
 
@@ -64,6 +74,13 @@ function validateNormalizedMotionConfig(config: SpatializedMotionConfig): void {
   }
 }
 
+/**
+ * Validates a single track against property and keyframe invariants.
+ *
+ * @param track Motion track to validate.
+ * @param duration Parent motion duration.
+ * @param seen Track-property set used to detect duplicates.
+ */
 function validateTrack(
   track: SpatializedMotionTrack,
   duration: number,
@@ -116,6 +133,12 @@ function validateTrack(
   }
 }
 
+/**
+ * Validates a numeric sample for a specific motion property.
+ *
+ * @param value Numeric sample value to validate.
+ * @param property Motion property the value belongs to.
+ */
 function validateScalar(
   value: number,
   property: SpatializedMotionProperty,

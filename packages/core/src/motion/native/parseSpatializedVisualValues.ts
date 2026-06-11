@@ -1,6 +1,11 @@
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 
-/** Parse native wire payload `{ values }` (or legacy flat shape) into visual values. */
+/**
+ * Parses native wire payload `{ values }` (or legacy flat shape) into visual values.
+ *
+ * @param data Raw payload returned from the native bridge.
+ * @returns Parsed visual values in SDK shape.
+ */
 export function parseSpatializedVisualValues(
   data: unknown,
 ): SpatializedVisualValues {
@@ -11,6 +16,12 @@ export function parseSpatializedVisualValues(
   const record = raw as Record<string, unknown>
   const transformRaw = record.transform as Record<string, unknown> | undefined
 
+  /**
+   * Reads a partial vec3-like payload from native bridge data.
+   *
+   * @param group Candidate vec3 payload.
+   * @returns A partial vec3 when any axis is present.
+   */
   const readVec3 = (group: unknown) => {
     if (!group || typeof group !== 'object') return undefined
     const g = group as Record<string, number | undefined>

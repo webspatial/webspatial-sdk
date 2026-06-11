@@ -23,6 +23,9 @@ type MotionAnimatePlayResult = AnimateSpatializedElementMotionResult
 
 type SessionState = 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 
+/**
+ * Mutable native playback session tracked across async commands.
+ */
 interface NativeSession {
   animationId: string
   state: SessionState
@@ -50,10 +53,22 @@ export interface NativeBackendContext {
 const CONTROLLER_LABEL = 'SpatializedMotionController'
 
 let _sessionCounter = 0
+/**
+ * Allocates unique ids for native animation sessions.
+ *
+ * @param prefix Session id prefix for the resolved motion kind.
+ * @returns A unique animation session id.
+ */
 function nextAnimationId(prefix: string): string {
   return `${prefix}${++_sessionCounter}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 }
 
+/**
+ * Maps a resolved motion kind to its native session id namespace.
+ *
+ * @param kind Motion kind selected by the controller.
+ * @returns The session id prefix for that kind.
+ */
 function sessionIdPrefix(kind: SpatializedMotionKind | null): string {
   switch (kind) {
     case 'static3d':
@@ -222,10 +237,22 @@ export class NativePlaybackBackend implements PlaybackBackend {
     this.ctx.notifyStateChange()
   }
 
+  /**
+   * Serializes native commands so session transitions stay ordered.
+   *
+   * @param fn Async native command to enqueue.
+   */
   private enqueue(fn: () => Promise<void>): void {
     this.commandQueue = this.commandQueue.then(fn, fn)
   }
 
+  /**
+   * Builds the canonical native play payload for a session.
+   *
+   * @param session Native playback session being started.
+   * @param elementId Host element id for the play command.
+   * @returns The native play command payload.
+   */
   private buildPlayCommand(
     session: NativeSession,
     elementId: string,
@@ -241,6 +268,11 @@ export class NativePlaybackBackend implements PlaybackBackend {
     }
   }
 
+  /**
+   * Routes native playback failures into the public motion error channel.
+   *
+   * @param error Normalized native playback failure payload.
+   */
   private reportNativeError(error: {
     animationId: string
     command: string
@@ -357,12 +389,22 @@ export class NativePlaybackBackend implements PlaybackBackend {
     }
   }
 
+  /**
+   * Samples JS-side visual values for pause/stop/reset fallbacks.
+   *
+   * @param elapsedMs Elapsed wall-clock time in milliseconds.
+   */
   private syncNativeStyleAtElapsed(elapsedMs: number): void {
     const cfg = this.ctx.getConfig()
     const t = motionTimeSec(elapsedMs, cfg)
     this.ctx.emitValues(evaluateMotionTimeline(cfg, t))
   }
 
+  /**
+   * Starts or resumes the current native session when possible.
+   *
+   * @param expectedToken Optional play token used to ignore stale queued play requests.
+   */
   private async nativePlay(expectedToken?: number): Promise<void> {
     const kind = this.ctx.getKind()
     if (!kind) return
@@ -432,6 +474,9 @@ export class NativePlaybackBackend implements PlaybackBackend {
     await this.doNativePlay(session, element)
   }
 
+  /**
+   * Pauses the native session and syncs the current sampled values.
+   */
   private async nativePause(): Promise<void> {
     if (!this.ctx.getKind()) return
     const session = this.session
@@ -472,10 +517,16 @@ export class NativePlaybackBackend implements PlaybackBackend {
     }
   }
 
+  /**
+   * Resumes the current native session via the play path.
+   */
   private async nativeResume(): Promise<void> {
     await this.nativePlay()
   }
 
+  /**
+   * Resets the native session back to timeline start.
+   */
   private async nativeReset(): Promise<void> {
     if (!this.ctx.getKind()) return
     const session = this.session
@@ -525,6 +576,9 @@ export class NativePlaybackBackend implements PlaybackBackend {
     }
   }
 
+  /**
+   * Stops the native session and publishes the current values.
+   */
   private async nativeStop(): Promise<void> {
     if (!this.ctx.getKind()) return
     const session = this.session
@@ -573,6 +627,9 @@ export class NativePlaybackBackend implements PlaybackBackend {
     }
   }
 
+  /**
+   * Seeks the native session to timeline end.
+   */
   private async nativeFinish(): Promise<void> {
     if (!this.ctx.getKind()) return
     const session = this.session
