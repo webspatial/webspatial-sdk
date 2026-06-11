@@ -17,7 +17,7 @@ function createBinding() {
 }
 
 describe('useBindSpatializedMotion', () => {
-  test('binds and cleans up static3d targets through the shared lifecycle hook', () => {
+  test('binds static3d targets and cleans up through __onUnbind only', () => {
     const binding = createBinding()
     const element = { id: 'model-1' }
 
@@ -29,23 +29,25 @@ describe('useBindSpatializedMotion', () => {
       }),
     )
 
+    expect(binding.__setElement).toHaveBeenCalledTimes(1)
     expect(binding.__setElement).toHaveBeenCalledWith(element, 'static3d')
 
     unmount()
 
     expect(binding.__onUnbind).toHaveBeenCalledTimes(1)
-    expect(binding.__setElement).toHaveBeenLastCalledWith(null, 'static3d')
+    expect(binding.__setElement).toHaveBeenCalledTimes(1)
   })
 
-  test('syncs suppressed fields for spatialized2d bindings', () => {
+  test('inactive cleanup only unbinds and clears suppressed fields for spatialized2d bindings', () => {
     const binding = createBinding()
+    const element = { id: 'portal-1' }
     const onSuppressedFieldsChange = vi.fn()
 
     const { rerender, unmount } = renderHook(
       ({ active }) =>
         useBindSpatializedMotion({
           binding: active ? (binding as any) : undefined,
-          element: active ? ({ id: 'portal-1' } as any) : null,
+          element: active ? (element as any) : null,
           kind: 'spatialized2d',
           onSuppressedFieldsChange,
         }),
@@ -57,11 +59,18 @@ describe('useBindSpatializedMotion', () => {
     expect(onSuppressedFieldsChange).toHaveBeenCalledWith(
       new Set(['transform']),
     )
+    expect(binding.__setElement).toHaveBeenCalledTimes(1)
+    expect(binding.__setElement).toHaveBeenCalledWith(element, 'spatialized2d')
 
     rerender({ active: false })
+
+    expect(binding.__onUnbind).toHaveBeenCalledTimes(1)
+    expect(binding.__setElement).toHaveBeenCalledTimes(1)
     expect(onSuppressedFieldsChange).toHaveBeenLastCalledWith(null)
 
     unmount()
+
+    expect(binding.__onUnbind).toHaveBeenCalledTimes(1)
   })
 
   test('does not unbind and rebind when only the suppressed-fields callback changes', () => {
@@ -94,6 +103,27 @@ describe('useBindSpatializedMotion', () => {
     unmount()
 
     expect(binding.__onUnbind).toHaveBeenCalledTimes(1)
-    expect(binding.__setElement).toHaveBeenLastCalledWith(null, 'spatialized2d')
+    expect(binding.__setElement).toHaveBeenCalledTimes(1)
+  })
+
+  test('cleanup does not call __setElement(null) after __onUnbind', () => {
+    const binding = createBinding()
+    const element = { id: 'portal-1' }
+
+    const { unmount } = renderHook(() =>
+      useBindSpatializedMotion({
+        binding: binding as any,
+        element: element as any,
+        kind: 'spatialized2d',
+      }),
+    )
+
+    expect(binding.__setElement).toHaveBeenCalledTimes(1)
+    expect(binding.__setElement).toHaveBeenCalledWith(element, 'spatialized2d')
+
+    unmount()
+
+    expect(binding.__onUnbind).toHaveBeenCalledTimes(1)
+    expect(binding.__setElement).toHaveBeenCalledTimes(1)
   })
 })

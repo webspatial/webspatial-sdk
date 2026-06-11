@@ -26,7 +26,7 @@ export type SpatializedMotionConfig =
 
 export type SpatializedMotionSegmentConfig = CoreSpatializedMotionSegmentConfig
 
-export type UseSpatializedMotionResult = readonly [
+export type UseAnimationResult = readonly [
   SpatializedMotionBindingInternal,
   SpatializedPlaybackApi,
   CSSProperties,
@@ -34,7 +34,7 @@ export type UseSpatializedMotionResult = readonly [
 
 export function useAnimation(
   config: SpatializedMotionConfig,
-): UseSpatializedMotionResult {
+): UseAnimationResult {
   const dataSignature = getMotionConfigSignature(config)
 
   // Keep timeline normalization stable across callback-only renders.
