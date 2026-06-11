@@ -9,6 +9,7 @@ import {
   Texture,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
+import type { CSSProperties } from 'react'
 import { useState } from 'react'
 
 function buildPublicUrl(path: string): string {
@@ -25,12 +26,12 @@ const TEX_APPLE = 'https://threejs.org/examples/textures/sprite0.png'
 const TEX_BADGE = 'https://threejs.org/examples/textures/disturb.jpg'
 
 const SC = { x: 0.51, y: 0.51, z: 0.51 }
-const view: React.CSSProperties = {
+const view: CSSProperties = {
   maxHeight: 168,
   overflow: 'hidden',
   marginBottom: 8,
 }
-const rv: React.CSSProperties = {
+const rv: CSSProperties = {
   width: '100%',
   height: 160,
   maxWidth: 440,
@@ -38,7 +39,7 @@ const rv: React.CSSProperties = {
   background: '#111',
   '--xr-depth': 80,
   '--xr-back': 140,
-} as React.CSSProperties
+} as CSSProperties
 const hint = { fontSize: 13, color: '#888' }
 
 function carUrl() {
@@ -65,6 +66,10 @@ export default function TexturedUnlitBox() {
   >('switchTextureCar')
   const [bindColor, setBindColor] = useState('#ffffff')
   const bindMatId = bindTex === '' ? 'bindMat_none' : `bindMat_${bindTex}`
+
+  // 4c remount simulates page refresh
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [refreshLoads, setRefreshLoads] = useState(0)
   return (
     <div
       style={{ padding: 16, color: '#eee', fontFamily: 'system-ui,sans-serif' }}
@@ -180,8 +185,9 @@ export default function TexturedUnlitBox() {
       >
         Buttons exercise runtime URL changes (7306526129), bad URL with tint
         (7306537111, 7306500112), cache-bust with <code>?v=1</code> /{' '}
-        <code>?v=2</code>, and a fast URL+color loop. Refresh the page to repeat
-        any sequence.
+        <code>?v=2</code>, and a fast URL+color loop. Try Car → Badge → Car
+        again to confirm the second swap works. Refresh the page to repeat any
+        sequence.
       </p>
       <div
         style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}
@@ -359,6 +365,124 @@ export default function TexturedUnlitBox() {
       <div style={{ fontSize: 12 }}>
         textureId: <strong>{bindTex || '(none)'}</strong> · material:{' '}
         <code>{bindMatId}</code>
+      </div>
+
+      <h2 style={{ fontSize: 16, marginTop: 22 }}>
+        4 — Swan / AVP regressions
+      </h2>
+
+      <h3 style={{ fontSize: 14, marginTop: 12 }}>
+        4a — Material tint (red material, not green)
+      </h3>
+      <p style={hint}>
+        Box uses <code>matRed</code> (<code>#ff0000</code>) with{' '}
+        <code>tintTex</code>. Expect a red-tinted image — not an untinted /
+        green-looking box.
+      </p>
+      <div style={view}>
+        <Reality id="realityTint" style={rv}>
+          <Texture id="tintTex" url={buildPublicUrl(IMG_CAR)} />
+          <UnlitMaterial
+            id="matRed"
+            color="#ff0000"
+            textureId="tintTex"
+            transparent={false}
+            opacity={1}
+          />
+          <SceneGraph>
+            <Entity scale={SC} rotation={{ x: 0, y: 0.4, z: 0 }}>
+              <BoxEntity
+                id="redTintBox"
+                name="redTintBox"
+                width={0.1}
+                height={0.1}
+                depth={0.1}
+                cornerRadius={0.01}
+                materials={['matRed']}
+              />
+            </Entity>
+          </SceneGraph>
+        </Reality>
+      </div>
+
+      <h3 style={{ fontSize: 14, marginTop: 16 }}>
+        4b — Missing textureId still renders (tint-only)
+      </h3>
+      <p style={hint}>
+        <code>ghostMat</code> references <code>ghostTex</code>, which is never
+        declared. Expect a solid green box — material must not fail to load.
+      </p>
+      <div style={view}>
+        <Reality id="realityGhost" style={rv}>
+          <UnlitMaterial
+            id="ghostMat"
+            color="#00ff00"
+            textureId="ghostTex"
+            transparent={false}
+            opacity={1}
+          />
+          <SceneGraph>
+            <Entity scale={SC} rotation={{ x: 0, y: 0.4, z: 0 }}>
+              <BoxEntity
+                id="ghostBox"
+                name="ghostBox"
+                width={0.1}
+                height={0.1}
+                depth={0.1}
+                cornerRadius={0.01}
+                materials={['ghostMat']}
+              />
+            </Entity>
+          </SceneGraph>
+        </Reality>
+      </div>
+
+      <h3 style={{ fontSize: 14, marginTop: 16 }}>
+        4c — Remount (refresh stability)
+      </h3>
+      <p style={hint}>
+        Remounts the scene like a page refresh. After each remount the car
+        texture should apply to the box; <code>loads</code> should increment.
+      </p>
+      <button
+        type="button"
+        style={{ marginBottom: 8 }}
+        onClick={() => setRefreshKey(k => k + 1)}
+      >
+        Remount scene
+      </button>
+      <div style={view}>
+        <Reality key={refreshKey} id="realityRefresh" style={rv}>
+          <Texture
+            id="refreshTex"
+            url={buildPublicUrl(IMG_CAR)}
+            onLoad={() => setRefreshLoads(n => n + 1)}
+          />
+          <UnlitMaterial
+            id="refreshMat"
+            color="#ffffff"
+            textureId="refreshTex"
+            transparent={false}
+            opacity={1}
+          />
+          <SceneGraph>
+            <Entity scale={SC} rotation={{ x: 0, y: 0.4, z: 0 }}>
+              <BoxEntity
+                id="refreshBox"
+                name="refreshBox"
+                width={0.1}
+                height={0.1}
+                depth={0.1}
+                cornerRadius={0.01}
+                materials={['refreshMat']}
+              />
+            </Entity>
+          </SceneGraph>
+        </Reality>
+      </div>
+      <div style={{ fontSize: 12 }}>
+        remounts: <strong>{refreshKey}</strong> · loads:{' '}
+        <strong>{refreshLoads}</strong>
       </div>
     </div>
   )

@@ -80,7 +80,9 @@ struct SpatializedStatic3DView: View {
                 }
             }
             .onChange(of: spatializedStatic3DElement.animationPaused) { onPlayback(isPaused: $1) }
-            .onChange(of: spatializedStatic3DElement.playbackRate) { asset?.animationPlaybackController?.speed = Float($1) }
+            .onChange(of: spatializedStatic3DElement.playbackRate) {
+                asset?.animationPlaybackController?.speed = spatializedStatic3DElement.animationPaused ? 0 : Float($1)
+            }
             .onChange(of: spatializedStatic3DElement.pendingSeekTime) { _, time in onSeek(time: time) }
             .task(id: spatializedStatic3DElement.allSources) { await loadSources() }
         } else {
@@ -122,7 +124,7 @@ struct SpatializedStatic3DView: View {
             asset.selectedAnimation = asset.availableAnimations.first
         }
         let controller = asset.animationPlaybackController
-        controller?.speed = Float(spatializedStatic3DElement.playbackRate)
+        controller?.speed = isPaused ? 0 : Float(spatializedStatic3DElement.playbackRate)
         if let time = spatializedStatic3DElement.pendingSeekTime, let controller {
             controller.time = time
             spatializedStatic3DElement.pendingSeekTime = nil
@@ -183,13 +185,11 @@ struct SpatializedStatic3DView: View {
         if let result {
             loadState = .loaded(result.asset, result.url.absoluteString)
             onLoadSuccess(src: result.url.absoluteString)
-            if spatializedStatic3DElement.autoplay {
-                // If animationPaused didn't change then SwiftUI will not trigger onChange so manually trigger playback
-                // This happens when play is called before load and autoplay is enabled
-                if spatializedStatic3DElement.animationPaused {
-                    spatializedStatic3DElement.animationPaused = false
-                } else { onPlayback(isPaused: false) }
-            }
+            // If animationPaused didn't change then SwiftUI will not trigger onChange so manually trigger playback
+            // This happens when play is called before load and autoplay is enabled
+            if spatializedStatic3DElement.autoplay, spatializedStatic3DElement.animationPaused {
+                spatializedStatic3DElement.animationPaused = false
+            } else { onPlayback(isPaused: !spatializedStatic3DElement.autoplay) }
         } else {
             loadState = .failed
             onLoadFailure()

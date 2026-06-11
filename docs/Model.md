@@ -187,10 +187,10 @@ import { Model } from '@webspatial/react-sdk'
 
 function LongScrollPage() {
   return (
-    <div>
+    <>
       {/* ... a lot of content ... */}
       <Model loading="lazy" src="/modelasset/cone.glb" enable-xr />
-    </div>
+    </>
   )
 }
 ```
@@ -220,8 +220,8 @@ function LongScrollPage() {
 | autoPlay   | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
 | loop       | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
 | `<source>` | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.1 | ✓<br>1.6       |
-| poster     | ✓<br>26            | ✓<br>6 β2.0                     | ✓<br>1.6       |
-| loading    | 26                 | 6 β2.1                          | June           |
+| poster     | ✓<br>26            | ✓<br>6 β2.0                     | ✓<br>1.7       |
+| loading    | ✓<br>26            | ✓<br>6 β2.1                     | ✓<br>1.7       |
 | stagemode  | 26                 | 6                               | July           |
 
 ### CSS
@@ -248,21 +248,9 @@ function LongScrollPage() {
 | paused             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
 | play()             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
 | pause()            | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
-| currentTime        | ✓<br>26  | ✓<br>6 β2.0 | ✓<br>1.6       |
+| currentTime        | ✓<br>26  | ✓<br>6 β2.0 | ✓<br>1.7       |
 | boundingBoxCenter  | 26       | 6           | July           |
 | boundingBoxExtents | 26       | 6           | July           |
-
-## High-Level Architecture
-
-The implementation will touch four key areas of the WebSpatial SDK.
-
-1. **@webspatial/react-sdk**: The public-facing `<Model>` component and its underlying `SpatializedStatic3DElementContainer` will be updated to accept the new attributes (`poster`, `loading`, `autoplay`, `loop`, `stagemode`) and children (`<source>`). It will also expose the new animation control methods on its `ref`.
-
-2. **@webspatial/core-sdk**: The `SpatializedStatic3DElement` class will manage the state for the new features. New JSB (JavaScript Bridge) commands will be defined in `JSBCommand.ts` to communicate instructions to the native layer, and new `WebMsg` types will be defined in `WebMsgCommand.ts` for events coming from native.
-
-3. **packages/visionOS (Native Swift)**: The native layer will receive JSB commands and translate them into actions. `SpatializedStatic3DView.swift` will handle the rendering logic, `Model3D` loading, gesture recognition for orbit mode, and managing `AnimationPlaybackController` for animations. It will send events back to the web layer via `WebMsgCommand`.
-
-4. **apps/test-server**: New test pages will be created to demonstrate and validate each of the new features in isolation and combination.
 
 ## Feature Implementation Details
 
@@ -290,32 +278,6 @@ This feature provides a built-in, intuitive way for users to inspect a 3D model 
 - **Interaction with&nbsp;entityTransform**: `entityTransform` will not be updated when the model is rotated using the orbit gesture. Similarly updates to `entityTransform` will not affect the model's orientation.
 
 - **Gesture Conflict Resolution**: `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` will be disabled when stagemode is set to orbit.
-
-### 8. Lazy Loading (`loading="lazy"`)
-
-Match `<img loading="lazy" | "eager">`: when `"lazy"`, the asset isn't fetched until the element is near the viewport; once started, it stays loaded.
-
-#### 8.1. React SDK (`@webspatial/react-sdk`)
-
-In `SpatializedStatic3DElementContainer.tsx`, derive `effectiveLoading` from an `IntersectionObserver` on the portal element and forward it via the existing `updateProperties({ … })` call. Initial value is `'lazy'` only when `props.loading === 'lazy'`; once it flips to `'eager'`, it sticks (the observer disconnects). But if the sources change and the loading property is `lazy` then the `IntersectionObserver` is re-attached and `updateProperties({ … })` is called with `loading: lazy`. Lazy loading a Model within a spatialized element is intrinsically handled by this implementation because the root web page contains hidden DOM elements for all spatialized elements.
-
-#### 8.2. Core SDK (`@webspatial/core-sdk`)
-
-In `SpatialSession.ts` update `createSpatializedStatic3DElement` to accept the `loading` property in addition to `src` and `sources`, which defaults to `'eager'`.
-Extend `CreateSpatializedStatic3DElementCommand` and `UpdateSpatializedStatic3DElementProperties` in `JSBCommand.ts` with `loading?: 'eager' | 'lazy'`, forwarded directly to native.
-
-#### 8.3. Native visionOS Layer (`packages/visionOS`)
-
-Add `var loading: String = "eager"` to `SpatializedStatic3DElement.swift` and gate `allSources` on it:
-
-```swift
-var allSources: [ModelSource] {
-    guard loading == "eager" else { return [] }
-    return if let modelURL { [ModelSource(src: modelURL, type: nil)] + sources } else { sources }
-}
-```
-
-While `loading==lazy`, `allSources` is `[]`, the existing `if !allSources.isEmpty` gate falls through to `EmptyView()`, and nothing renders, fetches, or autoplays. Poster and autoplay defer for free — both are only reached via `.task(id: allSources)`, which doesn't fire until the eager transition. `SpatializedStatic3DView.swift` is updated to handle `loading` switching from lazy to eager and correctly reporting lifecycle events load and error.
 
 ## Risks
 

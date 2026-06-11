@@ -254,6 +254,15 @@ function App() {
         <h2 className="text-xl font-bold mb-2">Transform Test</h2>
         <p className="text-sm opacity-80">Test transform operations</p>
       </Link>
+      <Link
+        to="/basicTransformProbeTagTest"
+        className="p-6 bg-blue-500 bg-opacity-25 rounded-xl text-black hover:bg-opacity-40 transition-all"
+      >
+        <h2 className="text-xl font-bold mb-2">Probe tag (h1 CSS)</h2>
+        <p className="text-sm opacity-80">
+          Stylesheet tag selector on h1 enable-xr probe
+        </p>
+      </Link>
 
       {/* Spatial Elements Container */}
       <div

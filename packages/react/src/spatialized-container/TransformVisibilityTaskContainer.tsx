@@ -1,6 +1,8 @@
 import {
+  createElement,
   forwardRef,
   type CSSProperties,
+  type ElementType,
   type ForwardedRef,
   useCallback,
   useRef,
@@ -48,7 +50,14 @@ function useInternalRef(ref: ForwardedRef<HTMLElement | null>) {
 interface TransformVisibilityTaskContainerProps {
   className?: string
   style?: CSSProperties
+  /** Mirrors the spatial host intrinsic tag so tag selectors (e.g. `h1 {}`) apply to the probe. Non-string types fall back to `div`. */
+  component?: ElementType
   [SpatialID]: string
+}
+
+/** Probe must be a real HTMLElement for getComputedStyle; custom components use `div`. */
+export function resolveProbeIntrinsicTag(component?: ElementType): string {
+  return typeof component === 'string' ? component : 'div'
 }
 
 // using css layout engine to calculate SpatializedContainer transform and visibility
@@ -56,7 +65,8 @@ export function TransformVisibilityTaskContainerBase(
   props: TransformVisibilityTaskContainerProps,
   ref: ForwardedRef<HTMLElement | null>,
 ) {
-  const { style: inStyle, ...restProps } = props
+  const { style: inStyle, component, ...restProps } = props
+  const ProbeTag = resolveProbeIntrinsicTag(component)
   const extraStyle: CSSProperties = {
     // when width/height equal to zero, transform: translateX(-50%) won't work
     // to make sure the element is not visible, we set left/top to a very large negative value
@@ -83,7 +93,11 @@ export function TransformVisibilityTaskContainerBase(
   }
 
   return createPortal(
-    <div ref={refInternalCallback} style={style} {...restProps} />,
+    createElement(ProbeTag, {
+      ref: refInternalCallback,
+      style,
+      ...restProps,
+    }),
     cssParserDivContainer,
   )
 }
