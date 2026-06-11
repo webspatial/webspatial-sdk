@@ -1,0 +1,86 @@
+import { useEffect, useMemo, useState } from 'react'
+import type { CSSProperties } from 'react'
+import type {
+  SpatializedMotionConfig as CoreSpatializedMotionConfig,
+  SpatializedMotionSegmentConfig as CoreSpatializedMotionSegmentConfig,
+  SpatializedMotionTimelineConfig as CoreSpatializedMotionTimelineConfig,
+  SpatializedPlaybackApi,
+  SpatializedVisualValues,
+} from '@webspatial/core-sdk'
+import {
+  evaluateMotionTimeline,
+  normalizeMotionConfig,
+  supports,
+} from '@webspatial/core-sdk'
+import { createMotionBinding } from './createMotionBinding'
+import { createPlaybackApi } from './createPlaybackApi'
+import { getMotionConfigSignature } from './motionConfigSignature'
+import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
+import { resolveMotionStyle } from './resolveMotionStyle'
+import { useMotionController } from './useMotionController'
+
+export type SpatializedMotionConfig =
+  | CoreSpatializedMotionSegmentConfig
+  | CoreSpatializedMotionConfig
+  | CoreSpatializedMotionTimelineConfig
+
+export type SpatializedMotionSegmentConfig = CoreSpatializedMotionSegmentConfig
+
+export type UseSpatializedMotionResult = readonly [
+  SpatializedMotionBindingInternal,
+  SpatializedPlaybackApi,
+  CSSProperties,
+]
+
+export function useAnimation(
+  config: SpatializedMotionConfig,
+): UseSpatializedMotionResult {
+  const dataSignature = getMotionConfigSignature(config)
+
+  // Keep timeline normalization stable across callback-only renders.
+  const normalizedVisualConfig = useMemo(
+    () => normalizeMotionConfig(config),
+    [dataSignature],
+  )
+  const normalizedConfig = useMemo(
+    () => ({
+      ...normalizedVisualConfig,
+      onStart: config.onStart,
+      onComplete: config.onComplete,
+      onStop: config.onStop,
+      onReset: config.onReset,
+      onError: config.onError,
+    }),
+    [
+      normalizedVisualConfig,
+      config.onStart,
+      config.onComplete,
+      config.onStop,
+      config.onReset,
+      config.onError,
+    ],
+  )
+
+  const [values, setValues] = useState<SpatializedVisualValues>(() =>
+    evaluateMotionTimeline(normalizedVisualConfig, 0),
+  )
+
+  useEffect(() => {
+    setValues(evaluateMotionTimeline(normalizedVisualConfig, 0))
+  }, [normalizedVisualConfig])
+
+  const controller = useMotionController(normalizedConfig, setValues)
+  const animation = useMemo(() => createMotionBinding(controller), [controller])
+  const api = useMemo(() => createPlaybackApi(controller), [controller])
+
+  const style = resolveMotionStyle({
+    values,
+    targetKind: controller.targetKind,
+    suppressedFields: controller.getSuppressedFields(),
+    nativeElementSupported: supports('useAnimation', ['element']),
+  })
+
+  return [animation, api, style]
+}
+
+export type { SpatializedPlaybackApi as SpatializedPlaybackApi }

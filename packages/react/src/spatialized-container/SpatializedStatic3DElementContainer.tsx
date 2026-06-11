@@ -20,6 +20,7 @@ import {
 } from './types'
 import { ModelSource, SpatializedStatic3DElement } from '@webspatial/core-sdk'
 import { PortalInstanceContext } from './context/PortalInstanceContext'
+import { useBindSpatializedMotion } from './motion/useBindSpatializedMotion'
 
 function getAbsoluteURL(url: string): string
 function getAbsoluteURL(url: undefined): undefined
@@ -187,14 +188,11 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     }
   }, [onError, portalInstanceObject?.dom])
 
-  useEffect(() => {
-    if (!xrAnimation || !spatializedElement) return
-    xrAnimation.__setElement?.(spatializedElement, 'static3d')
-    return () => {
-      xrAnimation.__onUnbind?.()
-      xrAnimation.__setElement?.(null as any, 'static3d')
-    }
-  }, [xrAnimation, spatializedElement])
+  useBindSpatializedMotion({
+    binding: xrAnimation,
+    element: spatializedElement,
+    kind: 'static3d',
+  })
 
   return <></>
 }

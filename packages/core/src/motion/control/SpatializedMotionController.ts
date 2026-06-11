@@ -305,6 +305,7 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
   /** Called when React Portal unbinds motion wiring. */
   handleMotionUnbind(): void {
     this.backend?.destroy()
+    this.backend = null
     this.element = null
   }
 }

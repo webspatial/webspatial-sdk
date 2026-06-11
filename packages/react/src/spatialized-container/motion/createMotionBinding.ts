@@ -2,10 +2,10 @@ import type {
   Spatialized2DElement,
   SpatializedDynamic3DElement,
   SpatializedMotionHandle,
+  SpatializedMotionKind,
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
-import type { SpatializedMotionTargetKind } from './targetKind'
 
 export function createMotionBinding(
   controller: SpatializedMotionHandle,
@@ -17,7 +17,7 @@ export function createMotionBinding(
       | SpatializedStatic3DElement
       | SpatializedDynamic3DElement
       | null,
-    targetKind?: SpatializedMotionTargetKind,
+    targetKind?: SpatializedMotionKind,
   ) => {
     controller.attachElement(element, targetKind)
   }
@@ -28,9 +28,6 @@ export function createMotionBinding(
     __motionObjectId: controller.id,
     get __animating() {
       return controller.isAnimating
-    },
-    get __suppressedFields() {
-      return controller.getSuppressedFields()
     },
     __getSuppressedFields() {
       return controller.getSuppressedFields()

@@ -196,6 +196,18 @@
 - [x] Capability 契约文档：保留 `useAnimation` 顶层 family key，并保留 `entity` 作为 subtoken，因为长期路线仍计划将 entity animation 再整合回 `useAnimation` family
 - [x] Capability 使用约束：文档中明确具体运行时检查 MUST 使用 `supports('useAnimation', [subtoken])`；`supports('useAnimation')` 仅保留 family 级语义，MUST NOT 被当作目标可用性判断
 
+## Phase 16 — PR 1236 React motion 模块后续修复
+
+- [x] 更新 proposal/design/tasks，补充本次 follow-up 范围：命名收敛、binding 生命周期、`autoStart` 归属，以及 React/Core 职责边界
+- [x] 将空间容器 hook 的实现文件重命名为 `useAnimation.ts`，让 motion 子入口通过该文件导出，并确保 React 包公共 surface 只保留 `useAnimation` / `useEntityAnimation`
+- [x] 修复 `SpatializedMotionController.handleMotionUnbind()`，确保 unbind 时清空已 destroy 的 backend 引用，rebind 后能创建新的 backend
+- [x] 将 `autoStart` 责任完全收敛到 Core 的 bind-time 处理；React `useAnimation` 不再在 effect 中主动调用 `controller.play()`
+- [x] 抽取共享的 `useBindSpatializedMotion(...)` 生命周期接线，统一 SpatialDiv、Model、Reality 三类容器
+- [x] 简化 `SpatializedMotionBindingInternal`，仅保留 `__getSuppressedFields()`，并让 React 复用 Core 的 `SpatializedMotionKind`
+- [x] 为 `useAnimation` 抽取纯函数 style fallback resolver，并保持 native 2D suppression 与 3D 空 style 行为不变
+- [x] 用 memoized normalization 加专用 non-function signature helper 替换临时的 config stringify 逻辑
+- [x] 补充 root exports、import routing、unbind/rebind、`autoStart`、queued play、StrictMode、style fallback、容器 binding 一致性的回归测试
+
 ## 阶段 — PicoOS 对齐
 
 - [ ] 归档 picoOS Plan A（`spatial-div-animation-api`）到 `_archived/` ✅（2026-06-04 完成）
