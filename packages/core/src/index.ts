@@ -28,9 +28,6 @@ export type {
   SpatializedMotionPlayState,
   SpatializedPlaybackApi,
 } from './types/spatializedMotion'
-export * from './types/spatializedMotionBinding'
-export * from './types/spatializedStatic3dAnimation'
-export * from './types/spatializedDynamic3dAnimation'
 export * from './types/spatializedElementMotion'
 export * from './motion'
 export * from './runtime'
