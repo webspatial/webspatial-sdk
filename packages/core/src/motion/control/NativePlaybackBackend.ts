@@ -18,7 +18,6 @@ import { MOTION_KIND_POLICIES } from './motionKindPolicy'
 import { removeMotionEventReceivers } from '../native/motionEventReceivers'
 import type { MotionHost } from './MotionHost'
 import type { PlaybackBackend } from './PlaybackBackend'
-import type { Sampler } from './Sampler'
 
 type MotionAnimatePlayResult = AnimateSpatializedElementMotionResult
 
@@ -72,8 +71,8 @@ function sessionIdPrefix(kind: SpatializedMotionKind | null): string {
  *
  * Owns the asynchronous native command queue and the session state machine
  * (idle/queued/running/paused/finished) that previously lived inline in
- * {@link SpatializedMotionController}. Visual sampling for stop is delegated to
- * the shared {@link Sampler}, so this backend never borrows from the web one.
+ * {@link SpatializedMotionController}, plus direct timeline sampling for
+ * fallback visual updates.
  */
 export class NativePlaybackBackend implements PlaybackBackend {
   private session: NativeSession | null = null
@@ -86,10 +85,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
   /** Set when finish() is invoked with no active session (idle terminal). */
   private idleFinished = false
 
-  constructor(
-    private readonly ctx: NativeBackendContext,
-    private readonly sampler: Sampler,
-  ) {}
+  constructor(private readonly ctx: NativeBackendContext) {}
 
   get playState(): SpatializedMotionPlayState {
     const s = this.session?.state
@@ -113,11 +109,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
     return !this.session && this.idleFinished
   }
 
-  get sessionAnimating(): boolean {
-    const s = this.session?.state
-    return s ? ['running', 'paused', 'queued'].includes(s) : false
-  }
-
   /** Fields to suppress on the Portal while the native session drives playback. */
   getSuppressedFields(): Set<string> | null {
     const s = this.session?.state
@@ -125,12 +116,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
     const kind = this.ctx.getKind()
     if (!kind) return null
     const cfg = this.ctx.getConfig()
-    const subset = cfg.tracks
-    if (subset.length === 0) return null
-    return MOTION_KIND_POLICIES[kind].getSuppressedFields({
-      ...cfg,
-      tracks: subset,
-    })
+    return MOTION_KIND_POLICIES[kind].getSuppressedFields(cfg)
   }
 
   /** Cancel any active session and release native wiring. */
@@ -545,7 +531,8 @@ export class NativePlaybackBackend implements PlaybackBackend {
     if (!session || session.state === 'idle' || session.state === 'finished')
       return
 
-    const currentValues = this.sampler.sampleAt(
+    const currentValues = evaluateMotionTimeline(
+      session.config,
       motionTimeSec(
         session.state === 'queued'
           ? 0

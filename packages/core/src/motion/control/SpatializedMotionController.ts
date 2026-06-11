@@ -9,7 +9,6 @@ import {
 import { WebPlaybackBackend } from './WebPlaybackBackend'
 import { NativePlaybackBackend } from './NativePlaybackBackend'
 import type { PlaybackBackend } from './PlaybackBackend'
-import { Sampler } from './Sampler'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import type {
   SpatializedMotionConfig,
@@ -44,14 +43,9 @@ const CONTROLLER_LABEL = 'SpatializedMotionController'
 /**
  * Runtime controller for a spatialized element motion timeline.
  *
- * Facade over a single playback strategy (Strategy pattern). The backend is
- * chosen lazily — exactly once, when the motion `kind` becomes known — between
- * the raf-driven {@link WebPlaybackBackend} and the native-session
- * {@link NativePlaybackBackend}. Both implement the common
- * {@link PlaybackBackend} abstraction, so the controller only ever talks to the
- * interface and stays unaware of the web/native distinction. While the kind is
- * still unresolved the backend is `null` and the controller handles the verbs
- * itself (queueing a pending play, seeking start/end via the timeline).
+ * Chooses a single playback backend once the motion `kind` is known. Until
+ * then, the controller keeps only the minimal pending state needed to support
+ * play, reset, and finish before binding resolves.
  */
 export class SpatializedMotionController implements SpatializedMotionHandle {
   readonly id: string
@@ -62,12 +56,9 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
   private readonly onValuesChange?: (values: SpatializedVisualValues) => void
   private readonly onStateChange?: () => void
 
-  /** Shared visual sampler / freeze registry (used by whichever backend wins). */
-  private readonly sampler: Sampler
   /**
    * The single chosen playback strategy, or `null` until the motion `kind`
-   * resolves. The controller only ever sees the {@link PlaybackBackend}
-   * interface — never the concrete web/native type.
+   * resolves.
    */
   private backend: PlaybackBackend | null = null
 
@@ -92,7 +83,6 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
     this.onValuesChange = options.onValuesChange
     this.onStateChange = options.onStateChange
 
-    this.sampler = new Sampler(() => this._config)
     this.ensurePlaybackBackend()
 
     this.emitValues(evaluateMotionTimeline(config, 0))
@@ -101,41 +91,33 @@ export class SpatializedMotionController implements SpatializedMotionHandle {
   /**
    * Lazily create the single backend once (and only once) the kind is known.
    * spatialized2d may run on either web or native depending on
-   * {@link isNativePlaybackSupported}; the 3d kinds are native-only. Choosing
-   * here means the
-   * controller holds exactly one strategy for its whole lifetime.
+   * {@link isNativePlaybackSupported}; the 3d kinds are native-only.
    */
   private ensurePlaybackBackend(): void {
     if (this.backend || !this.kind) return
     this.backend = this.shouldUseNativeBackend
-      ? new NativePlaybackBackend(
-          {
-            getConfig: () => this._config,
-            getKind: () => this.kind,
-            getElement: () => this.element,
-            isNativeCapable: () => this.isNativePlaybackSupported,
-            isDestroyed: () => this.destroyed,
-            emitValues: values => this.emitValues(values),
-            notifyStateChange: () => this.notifyStateChange(),
-            clearPendingPlay: () => {
-              this.pendingPlay = false
-            },
+      ? new NativePlaybackBackend({
+          getConfig: () => this._config,
+          getKind: () => this.kind,
+          getElement: () => this.element,
+          isNativeCapable: () => this.isNativePlaybackSupported,
+          isDestroyed: () => this.destroyed,
+          emitValues: values => this.emitValues(values),
+          notifyStateChange: () => this.notifyStateChange(),
+          clearPendingPlay: () => {
+            this.pendingPlay = false
           },
-          this.sampler,
-        )
-      : new WebPlaybackBackend(
-          {
-            getConfig: () => this._config,
-            emitValues: values => this.emitValues(values),
-            notifyStateChange: () => this.notifyStateChange(),
-            isDestroyed: () => this.destroyed,
-            isPendingPlay: () => this.pendingPlay,
-            clearPendingPlay: () => {
-              this.pendingPlay = false
-            },
+        })
+      : new WebPlaybackBackend({
+          getConfig: () => this._config,
+          emitValues: values => this.emitValues(values),
+          notifyStateChange: () => this.notifyStateChange(),
+          isDestroyed: () => this.destroyed,
+          isPendingPlay: () => this.pendingPlay,
+          clearPendingPlay: () => {
+            this.pendingPlay = false
           },
-          this.sampler,
-        )
+        })
   }
 
   /**
