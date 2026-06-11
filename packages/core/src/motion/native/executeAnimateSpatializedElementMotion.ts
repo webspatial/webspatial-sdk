@@ -1,6 +1,8 @@
 import { AnimateSpatializedElementMotionJSBCommand } from '../../JSBCommand'
-import { SpatialWebEvent } from '../../SpatialWebEvent'
-import { removeMotionEventReceivers } from './motionEventReceivers'
+import {
+  addMotionEventReceivers,
+  removeMotionEventReceivers,
+} from './motionEventReceivers'
 import { parseSpatializedVisualValues } from './parseSpatializedVisualValues'
 import type {
   AnimateSpatializedElementMotionCommand,
@@ -42,41 +44,36 @@ export async function executeAnimateSpatializedElementMotion(
 
     const cleanup = () => removeMotionEventReceivers(animationId)
 
-    SpatialWebEvent.addEventReceiver(
-      `${animationId}_completed`,
-      (data: any) => {
+    addMotionEventReceivers(animationId, {
+      onCompleted(data) {
         cleanup()
         const finalValues: SpatializedVisualValues =
-          data?.finalValues ?? data?.values ?? data ?? {}
+          (data as any)?.finalValues ?? (data as any)?.values ?? data ?? {}
         resolveFinished(finalValues)
       },
-    )
-
-    SpatialWebEvent.addEventReceiver(`${animationId}_canceled`, (data: any) => {
-      cleanup()
-      const currentValues: SpatializedVisualValues =
-        data?.currentValues ?? data?.values ?? data ?? {}
-      resolveCancel(currentValues)
-    })
-
-    SpatialWebEvent.addEventReceiver(
-      `${animationId}_failed`,
-      (data: {
-        animationId: string
-        command: string
-        code?: string
-        reason: string
-      }) => {
+      onCanceled(data) {
         cleanup()
+        const currentValues: SpatializedVisualValues =
+          (data as any)?.currentValues ?? (data as any)?.values ?? data ?? {}
+        resolveCancel(currentValues)
+      },
+      onFailed(data) {
+        cleanup()
+        const payload = data as {
+          animationId?: string
+          command?: string
+          code?: string
+          reason?: string
+        }
         resolveFailed({
-          animationId: data.animationId ?? animationId,
-          command: (data.command ??
+          animationId: payload.animationId ?? animationId,
+          command: (payload.command ??
             'play') as SpatializedPlaybackError['command'],
-          code: data.code,
-          reason: data.reason ?? `Native ${targetKind} motion failed`,
+          code: payload.code,
+          reason: payload.reason ?? `Native ${targetKind} motion failed`,
         })
       },
-    )
+    })
 
     const result = await new AnimateSpatializedElementMotionJSBCommand(
       bridgeCommand,
