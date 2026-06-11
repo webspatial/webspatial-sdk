@@ -343,7 +343,12 @@ function ConcurrentSameUrlTextureWorking() {
 }
 
 function ConcurrentSameUrlTexture() {
-  return <ConcurrentSameUrlTextureWorking />
+  return (
+    <>
+      <ConcurrentSameUrlTextureWorking />
+      <ConcurrentSameUrlModel />
+    </>
+  )
 }
 
 /*
