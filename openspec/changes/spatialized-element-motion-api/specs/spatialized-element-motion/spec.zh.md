@@ -13,12 +13,17 @@
 
 ### Requirement: 共享的播放 API 形状
 
-支持声明式动画的所有 kind MUST 暴露 `SpatializedPlaybackApi`（`play`、`pause`、`resume`、`stop`、`reset`、`finish`、`playState`、`isAnimating`、`isPaused`、`finished`）。Kind MAY 在后端允许时支持选择性 `pause(keys?)`。
+支持声明式动画的所有 kind MUST 暴露 `SpatializedPlaybackApi`（`play`、`pause`、`resume`、`stop`、`reset`、`finish`、`playState`、`isAnimating`、`isPaused`、`finished`）。Controller 级 `pause()` 与 `resume()` MUST 只表示整体会话控制，且不接受 `keys` 参数。本次变更明确不包含任何按 track / action 的局部控制；如果未来确实需要局部控制，必须作为独立的 track/action 级 API 另行设计，例如 `pauseTrack(trackId)`，不能通过扩展 controller 的 `pause()` / `resume()` 来实现。
 
 #### Scenario: 播放 API 与绑定目标无关
 
 - **WHEN** 开发者从 `useAnimation(config)` 获得 motion 元组
 - **THEN** 返回的 `api` MUST 暴露 `play`、`pause`、`resume`、`stop`、`reset`、`finish`、`playState`、`isAnimating`、`isPaused`、`finished`，无论 `animation` 后续绑定到哪个组件
+
+#### Scenario: pause() 和 resume() 不接受额外参数
+
+- **WHEN** 应用代码尝试以额外参数调用 `api.pause()` 或 `api.resume()`
+- **THEN** controller API MUST 在类型层面拒绝该调用，且公开 surface 上不得提供任何接收附加 controller-control 参数的重载
 
 #### Scenario: stop() 将 active session 冻结在当前值
 
@@ -97,6 +102,12 @@ Config MUST 支持以下生命周期回调：
 
 - **WHEN** 调用 `api.finish()`
 - **THEN** `finished` 标记 MUST 为 `true`
+
+#### Scenario: Controller state 只表达整体会话
+
+- **WHEN** 开发者暂停或恢复 motion controller
+- **THEN** controller 状态机 MUST 只表达整体会话状态（`idle`、`queued`、`running`、`paused`、`finished`）
+- **AND** controller MUST NOT 暴露 partially-paused 或 key-level 聚合状态
 
 ### Requirement: 统一配置接受三种互斥形状
 
