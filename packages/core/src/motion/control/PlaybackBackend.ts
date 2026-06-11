@@ -21,23 +21,13 @@ export interface PlaybackBackendContext {
 }
 
 /**
- * Common abstraction for the two interchangeable playback strategies (Strategy
- * pattern). The controller (Facade) holds a single `PlaybackBackend` reference
- * for the six shared playback verbs plus aggregated `playState`, satisfying the
- * Dependency Inversion Principle.
- *
- * Backend-specific capabilities (raf `frame`/`sampleAt` vs native `detach`/
- * command queue) intentionally stay off this interface to avoid a leaky
- * abstraction; the controller reaches for them through the concrete type only
- * where genuinely needed.
+ * Common playback strategy interface for web and native backends.
  */
 export interface PlaybackBackend {
   readonly playState: SpatializedMotionPlayState
   readonly isAnimating: boolean
   readonly isPaused: boolean
   readonly finished: boolean
-  /** Whether a native session is currently animating (always false for web). */
-  readonly sessionAnimating: boolean
   play(): void
   pause(): void
   resume(): void
