@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useRef } from 'react'
 import {
   SpatializedMotionController,
+  supports,
   validateSpatializedMotionConfig,
   type SpatializedMotionConfig,
   type SpatializedMotionHandle,
@@ -20,6 +21,8 @@ export function useMotionController(
     controllerRef.current = new SpatializedMotionController(config, {
       onStateChange: () => tick(),
       onValuesChange,
+      supportsMotionKind: kind =>
+        supports('useAnimation', [kind === 'spatialized2d' ? 'element' : kind]),
     })
   }
   const controller = controllerRef.current
