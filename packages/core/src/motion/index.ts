@@ -1,5 +1,4 @@
 export * from './compute'
-export * from './kinds'
 export * from './control'
 export { parseSpatializedVisualValues } from './native/parseSpatializedVisualValues'
 export { motionConfigToNativeTimeline } from './native'
