@@ -16,6 +16,7 @@ export * from './types/animation'
 export * from './types/spatializedVisual'
 export * from './types/spatializedPlayback'
 export type {
+  SpatializedMotionKind,
   SpatializedMotionProperty,
   SpatializedMotionKeyframe,
   SpatializedMotionKeyframeValues,

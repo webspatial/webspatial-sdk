@@ -196,6 +196,18 @@
 - [x] Capability contract docs: keep `useAnimation` as the top-level family key and keep `entity` as a sub-token because the long-term roadmap still converges entity animation back into the `useAnimation` family
 - [x] Capability guidance: document that concrete runtime checks MUST use `supports('useAnimation', [subtoken])`; `supports('useAnimation')` remains family-level only and MUST NOT be treated as target availability
 
+## Phase 16 — PR 1236 React motion module follow-up
+
+- [x] Update proposal/design/tasks to document the follow-up scope: naming cleanup, binding lifecycle, `autoStart` ownership, and React/Core responsibility boundaries
+- [x] Rename the spatialized hook implementation file to `useAnimation.ts`, route motion sub-entry exports through it, and keep only `useAnimation` / `useEntityAnimation` on the public React package surface
+- [x] Fix `SpatializedMotionController.handleMotionUnbind()` so unbind clears the destroyed backend reference and rebind recreates a fresh backend
+- [x] Move `autoStart` responsibility fully into Core bind-time handling; React `useAnimation` must not call `controller.play()` from an effect
+- [x] Extract shared `useBindSpatializedMotion(...)` lifecycle wiring for SpatialDiv, Model, and Reality containers
+- [x] Simplify `SpatializedMotionBindingInternal` to keep only `__getSuppressedFields()` and make React reuse Core `SpatializedMotionKind`
+- [x] Extract a pure style fallback resolver for `useAnimation` and keep native 2D suppression plus 3D empty-style behavior unchanged
+- [x] Replace ad-hoc config stringify logic with memoized normalization plus a dedicated non-function signature helper
+- [x] Add regression tests for root exports, import routing, unbind/rebind, `autoStart`, queued play, StrictMode, style fallback, and container binding consistency
+
 ## Phase — PicoOS Alignment
 
 - [ ] Archive picoOS Plan A (`spatial-div-animation-api`) to `_archived/` ✅ (completed 2026-06-04)

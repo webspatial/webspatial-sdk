@@ -1,3 +1,4 @@
+import React, { StrictMode } from 'react'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
@@ -10,7 +11,7 @@ vi.mock('@webspatial/core-sdk', async () => {
   }
 })
 
-const { useAnimation } = await import('./useSpatializedMotion')
+const { useAnimation } = await import('./useAnimation')
 
 function createMockElement(id = 'motion-element-1') {
   const animateMotion = vi.fn().mockImplementation(async (cmd: any) => {
@@ -39,7 +40,7 @@ async function flushPromises() {
   })
 }
 
-describe('useSpatializedMotion tuple api native backend', () => {
+describe('useAnimation tuple api native backend', () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -171,6 +172,40 @@ describe('useSpatializedMotion tuple api native backend', () => {
     expect(playCalls[0][0]).not.toHaveProperty('from')
     expect(playCalls[0][0]).not.toHaveProperty('to')
     expect(rafSpy).not.toHaveBeenCalled()
+  })
+
+  test('StrictMode bind triggers native play only once', async () => {
+    const element = createMockElement('strict-native')
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <StrictMode>{children}</StrictMode>
+    )
+
+    const { result } = renderHook(
+      () =>
+        useAnimation({
+          duration: 1,
+          tracks: [
+            {
+              property: 'opacity',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 1, value: 1 },
+              ],
+            },
+          ],
+        }),
+      { wrapper },
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+    })
+
+    await waitFor(() => {
+      expect(
+        element.animateMotion.mock.calls.filter(([cmd]) => cmd.type === 'play'),
+      ).toHaveLength(1)
+    })
   })
 
   test('native pause syncs style to timeline sample at elapsed progress', async () => {

@@ -1,11 +1,11 @@
 export { useMotionController } from './useMotionController'
-export { useAnimation } from './useSpatializedMotion'
+export { useAnimation } from './useAnimation'
 export type {
   UseSpatializedMotionResult,
   SpatializedMotionConfig,
   SpatializedMotionSegmentConfig,
   SpatializedPlaybackApi,
-} from './useSpatializedMotion'
+} from './useAnimation'
 export {
   evaluateMotionTimeline,
   validateSpatializedMotionConfig,
@@ -16,4 +16,5 @@ export type {
   Dynamic3DMotionBindingInternal,
 } from '@webspatial/core-sdk'
 export { valuesToMotionStyle } from './style'
+export { resolveMotionStyle } from './resolveMotionStyle'
 export type { SpatializedMotionBindingInternal } from './motionBindingTypes'

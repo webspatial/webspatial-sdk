@@ -6,6 +6,7 @@ import React, {
   useState,
 } from 'react'
 import { SpatializedContainer } from '../../spatialized-container/SpatializedContainer'
+import { useBindSpatializedMotion } from '../../spatialized-container/motion/useBindSpatializedMotion'
 import { RealityContext, RealityContextValue } from '../context'
 import { useInsideAttachment } from '../context/InsideAttachmentContext'
 import { getSession } from '../../utils/getSession'
@@ -72,7 +73,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       const id = ++creationId.current
       const resourceRegistry = new ResourceRegistry()
       const attachmentRegistry = new AttachmentRegistry()
-      const session = await getSession()
+      const session = getSession()
       if (!session) {
         resourceRegistry.destroy()
         attachmentRegistry.destroy()
@@ -135,16 +136,11 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       onSpatialMagnifyEnd,
     })
 
-    useEffect(() => {
-      if (!isReady || !xrAnimation) return
-      const reality = ctxRef.current?.reality
-      if (!reality) return
-      xrAnimation.__setElement?.(reality, 'dynamic3d')
-      return () => {
-        xrAnimation.__onUnbind?.()
-        xrAnimation.__setElement?.(null as any, 'dynamic3d')
-      }
-    }, [xrAnimation, isReady])
+    useBindSpatializedMotion({
+      binding: xrAnimation,
+      element: isReady ? (ctxRef.current?.reality ?? null) : null,
+      kind: 'dynamic3d',
+    })
 
     return (
       <RealityContext.Provider value={ctxRef.current}>

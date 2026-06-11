@@ -1,9 +1,9 @@
 import type {
   Spatialized2DElement,
   SpatializedDynamic3DElement,
+  SpatializedMotionKind,
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
-import type { SpatializedMotionTargetKind } from './targetKind'
 
 /** Internal binding surface for Portal (2D `xr-animation`). */
 export interface SpatializedMotionBindingInternal {
@@ -11,7 +11,6 @@ export interface SpatializedMotionBindingInternal {
   readonly __propName: 'xr-animation'
   readonly __motionObjectId: string
   get __animating(): boolean
-  readonly __suppressedFields: Set<string> | null
   __getSuppressedFields(): Set<string> | null
   __setElement?: (
     element:
@@ -20,7 +19,7 @@ export interface SpatializedMotionBindingInternal {
       | SpatializedStatic3DElement
       | SpatializedDynamic3DElement
       | null,
-    targetKind?: SpatializedMotionTargetKind,
+    targetKind?: SpatializedMotionKind,
   ) => void
   __onUnbind?: () => void
 }

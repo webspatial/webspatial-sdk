@@ -169,6 +169,7 @@ The Core layer does not define:
 | `useMotionController` | Connects React lifecycle to the Core controller. |
 | `createMotionBinding` | Produces the opaque `xr-animation` binding object that carries deferred target state. |
 | `createPlaybackApi` | Exposes a stable React-facing playback surface backed by the controller. |
+| `useBindSpatializedMotion` | Internal binding hook that centralizes attach, unbind, cleanup, and optional 2D suppression synchronization. |
 | `PortalSpatializedContainer` | Binds 2D `xr-animation` to `Spatialized2DElement` and coordinates suppression with Portal sync. |
 | `Model` | React integration point that resolves binding target to `static3d`. |
 | `Reality` | React integration point that resolves binding target to `dynamic3d`. |
@@ -202,6 +203,15 @@ The React layer defines the `xr-animation` prop as the target binding channel:
 - For `spatialized2d`, `style` carries active animated values
 - For `static3d` and `dynamic3d`, `style` is an empty object that is safe to spread
 
+The `style` fallback decision remains a React concern, but it is defined as a
+pure mapping from sampled values plus binding state:
+
+- `static3d` and `dynamic3d` always return an empty object
+- `spatialized2d` with active native playback masks suppressed fields such as
+  `opacity` and `transform`
+- Web fallback returns `valuesToMotionStyle(values)` without React re-implementing
+  timeline evaluation rules
+
 ### Behavior
 
 #### Bind-time target resolution
@@ -215,6 +225,11 @@ The React layer resolves the controller target only when `animation` is bound:
 If `api.play()` is called before a bind exists, the command queues and begins once the target resolves.
 This means the controller is allowed to be constructed without `kind`, but the binding flow
 must resolve and write the target `kind` before the backend actually executes playback.
+
+The React hook MUST NOT call `controller.play()` from a mount effect just to
+implement `autoStart`. `autoStart` is handled only by Core when the target
+resolves and `attachElement()` completes. React may still expose pre-bind
+`api.play()` queue semantics through the controller.
 
 #### Single-bind constraint
 
@@ -353,11 +368,10 @@ interface SpatializedMotionBindingInternal {
   readonly __propName: 'xr-animation'
   readonly __motionObjectId: string
   get __animating(): boolean
-  readonly __suppressedFields: Set<string> | null
   __getSuppressedFields(): Set<string> | null
   __setElement?: (
     element: HTMLElement | Spatialized2DElement | SpatializedStatic3DElement | SpatializedDynamic3DElement | null,
-    targetKind?: 'spatialized2d' | 'static3d' | 'dynamic3d',
+    targetKind?: SpatializedMotionKind,
   ) => void
   __onUnbind?: () => void
 }

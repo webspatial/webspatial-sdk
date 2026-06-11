@@ -98,6 +98,23 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 - **legacy 删除目标**：旧的 `animation` prop 路径、legacy SpatialDiv session hook 路径，以及 visionOS 专用的旧 2D backend path 已从目标态中移除；目标态仅保留统一的 `xr-animation` motion 路径。
 - **能力探测**：运行时能力探测继续使用 `useAnimation` family key 和其 subtoken（`entity`、`element`、`static3d`、`dynamic3d`）。判断具体能力时 MUST 使用 subtoken。之所以保留 family 级命名，是因为长期路线仍计划把 `useEntityAnimation` 再整合回 `useAnimation` family。
 
+## PR 1236 后续修复
+
+PR 1236 在 `useAnimation` 重命名落地后暴露出一批 React motion surface 的模块设计问题：
+
+- `useAnimation` 与 `useEntityAnimation` 的入口仍通过含混的文件名和分散的导出路径暴露。
+- React 侧仍重复承担了一部分本应属于 Core 的职责，尤其是 `autoStart` 触发和 motion kind 维护。
+- SpatialDiv、Model、Reality 三种容器的 binding 生命周期逻辑仍有重复实现。
+- binding 协议里仍保留重复的 suppression 访问面。
+
+本次 follow-up 不改变公开 API，但会收紧实现边界：
+
+- `useAnimation` 继续作为 SpatialDiv、Model、Reality 的默认容器动画 hook。
+- `useEntityAnimation` 继续保持 entity 专用。
+- `useSpatializedMotion` 不再作为主概念或公开路由名使用。
+- React 只负责生命周期接线、binding、style fallback 和容器适配。
+- Core 继续负责 config 归一化、校验、timeline 求值、播放状态、backend 选择，以及 bind-time auto-start 行为。
+
 ## 两阶段命名迁移
 
 - **Phase 1**：先把当前公共 `useAnimation` 导出重命名为 `useEntityAnimation`，并优先重构 Entity 相关的 `test-server` 页面，先释放 `useAnimation` 这个符号。
