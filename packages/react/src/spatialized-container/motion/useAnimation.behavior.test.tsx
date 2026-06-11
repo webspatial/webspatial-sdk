@@ -21,6 +21,12 @@ function createMockElement(id = 'motion-element-1') {
   return { id }
 }
 
+function readTranslateX(style: { transform?: unknown }): number {
+  const transform = String(style.transform ?? '')
+  const match = transform.match(/translate3d\(([-\d.]+)px/)
+  return match ? Number(match[1]) : 0
+}
+
 describe('useAnimation tuple api', () => {
   test('2D bind starts playback and updates style', async () => {
     const { result } = renderHook(() => useAnimation(SIMPLE_ENTRANCE_CONFIG))
@@ -171,6 +177,107 @@ describe('useAnimation tuple api', () => {
 
     expect(String(result.current[2].transform)).toContain('translate3d(30px')
     expect(result.current[1].playState).toBe('paused')
+    vi.useRealTimers()
+  })
+
+  test('runtime config update does not affect an in-flight web animation until next play', async () => {
+    vi.useFakeTimers()
+    const { result, rerender } = renderHook(
+      ({ distance }) =>
+        useAnimation({
+          duration: 5,
+          autoStart: false,
+          tracks: [
+            {
+              property: 'transform.translate.x',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 5, value: distance },
+              ],
+              timingFunction: 'linear',
+            },
+          ],
+        }),
+      {
+        initialProps: { distance: 100 },
+      },
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(
+        createMockElement() as any,
+        'spatialized2d',
+      )
+      result.current[1].play()
+    })
+    await act(async () => {
+      vi.advanceTimersByTime(1000)
+      await Promise.resolve()
+    })
+
+    expect(readTranslateX(result.current[2])).toBeCloseTo(20, 0)
+
+    rerender({ distance: 200 })
+    expect(readTranslateX(result.current[2])).toBeCloseTo(20, 0)
+
+    await act(async () => {
+      vi.advanceTimersByTime(500)
+      await Promise.resolve()
+    })
+
+    expect(readTranslateX(result.current[2])).toBeCloseTo(30, 0)
+    vi.useRealTimers()
+  })
+
+  test('updated web config applies on the next play after the current session ends', async () => {
+    vi.useFakeTimers()
+    const { result, rerender } = renderHook(
+      ({ distance }) =>
+        useAnimation({
+          duration: 5,
+          autoStart: false,
+          tracks: [
+            {
+              property: 'transform.translate.x',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 5, value: distance },
+              ],
+              timingFunction: 'linear',
+            },
+          ],
+        }),
+      {
+        initialProps: { distance: 100 },
+      },
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(
+        createMockElement() as any,
+        'spatialized2d',
+      )
+      result.current[1].play()
+    })
+    await act(async () => {
+      vi.advanceTimersByTime(1000)
+      await Promise.resolve()
+    })
+    expect(readTranslateX(result.current[2])).toBeCloseTo(20, 0)
+
+    rerender({ distance: 200 })
+
+    await act(async () => {
+      result.current[1].stop()
+      result.current[1].reset()
+      result.current[1].play()
+    })
+    await act(async () => {
+      vi.advanceTimersByTime(1000)
+      await Promise.resolve()
+    })
+
+    expect(readTranslateX(result.current[2])).toBeCloseTo(40, 0)
     vi.useRealTimers()
   })
 

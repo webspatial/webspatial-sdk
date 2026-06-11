@@ -64,12 +64,14 @@ export function useAnimation(
   const [values, setValues] = useState<SpatializedVisualValues>(() =>
     evaluateMotionTimeline(normalizedTimelineConfig, 0),
   )
+  const controller = useMotionController(controllerConfig, setValues)
 
   useEffect(() => {
+    // Only idle bindings should adopt a new config immediately. Active sessions
+    // keep their original snapshot until the next play().
+    if (controller.playState !== 'idle') return
     setValues(evaluateMotionTimeline(normalizedTimelineConfig, 0))
-  }, [normalizedTimelineConfig])
-
-  const controller = useMotionController(controllerConfig, setValues)
+  }, [controller, normalizedTimelineConfig])
   const animation = useMemo(() => createMotionBinding(controller), [controller])
   const api = useMemo(() => createPlaybackApi(controller), [controller])
 

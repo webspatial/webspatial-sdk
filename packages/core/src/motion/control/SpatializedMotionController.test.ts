@@ -30,6 +30,31 @@ function makeConfig(
   }
 }
 
+function makeSuppressionConfig() {
+  return {
+    duration: 1,
+    autoStart: false,
+    tracks: [
+      {
+        property: 'opacity' as const,
+        timingFunction: 'linear' as const,
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 1 },
+        ],
+      },
+      {
+        property: 'transform.translate.x' as const,
+        timingFunction: 'linear' as const,
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 10 },
+        ],
+      },
+    ],
+  }
+}
+
 function createNativeElement(id: string) {
   const animateMotion = vi.fn(async (command: { type: string }) => {
     if (command.type === 'play') {
@@ -333,28 +358,7 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
 describe('SpatializedMotionController portal suppression timing', () => {
   test('spatialized2d masks opacity and transform while native playback is active', () => {
     const controller = new SpatializedMotionController(
-      {
-        duration: 1,
-        autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            timingFunction: 'linear',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-          {
-            property: 'transform.translate.x',
-            timingFunction: 'linear',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 10 },
-            ],
-          },
-        ],
-      },
+      makeSuppressionConfig(),
       { forceNativePlayback: true },
     )
     controller.attachElement(null, 'spatialized2d')
@@ -371,28 +375,7 @@ describe('SpatializedMotionController portal suppression timing', () => {
 
   test('spatialized2d still returns opacity and transform while native is paused', () => {
     const controller = new SpatializedMotionController(
-      {
-        duration: 1,
-        autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            timingFunction: 'linear',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-          {
-            property: 'transform.translate.x',
-            timingFunction: 'linear',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 10 },
-            ],
-          },
-        ],
-      },
+      makeSuppressionConfig(),
       { forceNativePlayback: true },
     )
     controller.attachElement(null, 'spatialized2d')
@@ -409,28 +392,7 @@ describe('SpatializedMotionController portal suppression timing', () => {
 
   test('spatialized2d releases suppression once native is finished or idle even if webState is stale queued', () => {
     const controller = new SpatializedMotionController(
-      {
-        duration: 1,
-        autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            timingFunction: 'linear',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-          {
-            property: 'transform.translate.x',
-            timingFunction: 'linear',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 10 },
-            ],
-          },
-        ],
-      },
+      makeSuppressionConfig(),
       { forceNativePlayback: true },
     )
     controller.attachElement(null, 'spatialized2d')
@@ -447,6 +409,62 @@ describe('SpatializedMotionController portal suppression timing', () => {
       expect(controller.getSuppressedFields()).toBeNull()
     }
   })
+
+  test.each([
+    {
+      command: 'stop',
+      terminalState: 'idle',
+      nativeResponse: { opacity: 0.4 },
+    },
+    { command: 'reset', terminalState: 'idle', nativeResponse: undefined },
+    { command: 'finish', terminalState: 'finished', nativeResponse: undefined },
+  ] as const)(
+    'spatialized2d releases suppression after %s()',
+    async ({ command, terminalState, nativeResponse }) => {
+      const animateMotion = vi.fn(async (payload: { type: string }) => {
+        if (payload.type === 'play') {
+          return {
+            animationId: 'native-suppression',
+            finished: new Promise<SpatializedVisualValues>(() => {}),
+            canceled: new Promise<SpatializedVisualValues>(() => {}),
+            failed: new Promise(() => {}),
+          }
+        }
+        return nativeResponse
+      })
+
+      const controller = new SpatializedMotionController(
+        makeSuppressionConfig(),
+        {
+          forceNativePlayback: true,
+        },
+      )
+      controller.attachElement(null, 'spatialized2d')
+      controller.attachElement({
+        id: 'native-suppression',
+        animateMotion,
+      } as any)
+
+      controller.play()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'play',
+            targetKind: 'spatialized2d',
+          }),
+        )
+      })
+      expect(controller.getSuppressedFields()).toEqual(
+        new Set(['opacity', 'transform']),
+      )
+      ;(controller as any)[command]()
+
+      await vi.waitFor(() => {
+        expect(controller.playState).toBe(terminalState)
+      })
+      expect(controller.getSuppressedFields()).toBeNull()
+    },
+  )
 
   test('non-native and non-spatialized2d suppression behavior stays unchanged', () => {
     const web2dController = new SpatializedMotionController(

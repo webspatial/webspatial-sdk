@@ -40,6 +40,12 @@ async function flushPromises() {
   })
 }
 
+function getPlayCalls(element: ReturnType<typeof createMockElement>) {
+  return element.animateMotion.mock.calls
+    .map(([cmd]) => cmd)
+    .filter((cmd: { type: string }) => cmd.type === 'play')
+}
+
 describe('useAnimation tuple api native backend', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -391,6 +397,102 @@ describe('useAnimation tuple api native backend', () => {
 
     expect(result.current[2].opacity).toBeUndefined()
     expect(result.current[2].transform).toBeUndefined()
+  })
+
+  test('runtime config update snapshots the active native session and applies on the next play', async () => {
+    const element = createMockElement('native-config-snapshot')
+
+    const { result, rerender } = renderHook(
+      ({ distance, duration }) =>
+        useAnimation({
+          duration,
+          autoStart: false,
+          tracks: [
+            {
+              property: 'transform.translate.x',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: duration, value: distance },
+              ],
+              timingFunction: 'linear',
+            },
+          ],
+        }),
+      {
+        initialProps: { distance: 100, duration: 5 },
+      },
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[1].play()
+    })
+    await waitFor(() => {
+      expect(getPlayCalls(element)).toHaveLength(1)
+    })
+
+    const firstPlay = getPlayCalls(element)[0]
+    expect(firstPlay.timeline).toEqual(
+      expect.objectContaining({
+        duration: 5,
+        tracks: expect.arrayContaining([
+          expect.objectContaining({
+            property: 'transform.translate.x',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 5, value: 100 },
+            ],
+          }),
+        ]),
+      }),
+    )
+
+    rerender({ distance: 200, duration: 10 })
+    await flushPromises()
+
+    expect(getPlayCalls(element)).toHaveLength(1)
+    expect(firstPlay.timeline).toEqual(
+      expect.objectContaining({
+        duration: 5,
+        tracks: expect.arrayContaining([
+          expect.objectContaining({
+            property: 'transform.translate.x',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 5, value: 100 },
+            ],
+          }),
+        ]),
+      }),
+    )
+
+    await act(async () => {
+      result.current[1].stop()
+    })
+    await flushPromises()
+
+    await act(async () => {
+      result.current[1].play()
+    })
+    await waitFor(() => {
+      expect(getPlayCalls(element)).toHaveLength(2)
+    })
+
+    const secondPlay = getPlayCalls(element)[1]
+    expect(secondPlay.timeline).toEqual(
+      expect.objectContaining({
+        duration: 10,
+        tracks: expect.arrayContaining([
+          expect.objectContaining({
+            property: 'transform.translate.x',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 10, value: 200 },
+            ],
+          }),
+        ]),
+      }),
+    )
   })
 
   test('__onUnbind does not invoke onReset', async () => {
