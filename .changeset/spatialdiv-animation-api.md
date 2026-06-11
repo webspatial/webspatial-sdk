@@ -5,18 +5,20 @@
 'web-content': patch
 ---
 
-Add SpatialDiv animation support through the shared `useAnimation` API.
+Add spatialized element motion support through the React `useAnimation` API.
 
 **Core SDK**
-- Add SpatialDiv animation command/types and bridge support for `AnimateSpatialized2DElement`.
-- Add `supports('useAnimation', ['entity'])` and `supports('useAnimation', ['element'])` capability sub-tokens.
+- Add canonical spatialized motion config, validation, timeline sampling, and playback controller.
+- Add web/native playback backends and native timeline serialization for spatialized motion.
+- Add runtime capability routing for spatialized2d, static3d, and dynamic3d motion.
 
 **React SDK**
-- Route `useAnimation(config)` to entity or SpatialDiv animation based on config keys.
-- Add SpatialDiv animation props, validation, lifecycle callbacks, playback controls, and sync suppression for the visual-only whitelist: `transform.translate`, `transform.rotate`, `transform.scale`, and `opacity`.
+- Add `useAnimation` support for spatialized element/container motion.
+- Add spatialized-container motion binding, playback controls, lifecycle callbacks, and sync suppression for transform/opacity motion.
+- Keep entity animation on the existing `useEntityAnimation` entrypoint.
 
 **visionOS native**
-- Add CADisplayLink-driven SpatialDiv animation playback for visual transform/opacity interpolation, including pause/resume/cancel, loop handling, and terminal events.
+- Add native spatialized element motion sessions, timeline sampling, transform adapters, and terminal event callbacks.
 
 **Test server**
-- Add SpatialDiv animation demo pages for visual animation cases such as opacity, transform, delay, and playback rate.
+- Add spatialized element motion demo pages covering opacity, transform, delay, looping, playback rate, and native-backed containers.
