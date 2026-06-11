@@ -1,24 +1,15 @@
+import { SPATIALIZED_MOTION_PROPERTIES } from '../../types/spatializedMotion'
 import type {
-  SpatializedMotionConfig,
   SpatializedMotionProperty,
+  SpatializedMotionConfig,
   SpatializedMotionSegmentConfig,
   SpatializedMotionTimelineConfig,
   SpatializedMotionTrack,
 } from '../../types/spatializedMotion'
 import { normalizeMotionConfig } from './normalize'
-
-const ALLOWED_PROPERTIES = new Set<SpatializedMotionProperty>([
-  'opacity',
-  'transform.translate.x',
-  'transform.translate.y',
-  'transform.translate.z',
-  'transform.rotate.x',
-  'transform.rotate.y',
-  'transform.rotate.z',
-  'transform.scale.x',
-  'transform.scale.y',
-  'transform.scale.z',
-])
+const ALLOWED_PROPERTIES = new Set<SpatializedMotionProperty>(
+  SPATIALIZED_MOTION_PROPERTIES,
+)
 
 const FORBIDDEN_PREFIXES = [
   'width',

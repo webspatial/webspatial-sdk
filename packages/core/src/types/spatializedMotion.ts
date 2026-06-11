@@ -6,17 +6,21 @@ import type { SpatializedVisualValues } from './spatializedVisual'
 export type SpatializedMotionKind = 'spatialized2d' | 'static3d' | 'dynamic3d'
 
 /** Scalar property path on the spatialized visual whitelist. */
+export const SPATIALIZED_MOTION_PROPERTIES = [
+  'opacity',
+  'transform.translate.x',
+  'transform.translate.y',
+  'transform.translate.z',
+  'transform.rotate.x',
+  'transform.rotate.y',
+  'transform.rotate.z',
+  'transform.scale.x',
+  'transform.scale.y',
+  'transform.scale.z',
+] as const
+
 export type SpatializedMotionProperty =
-  | 'opacity'
-  | 'transform.translate.x'
-  | 'transform.translate.y'
-  | 'transform.translate.z'
-  | 'transform.rotate.x'
-  | 'transform.rotate.y'
-  | 'transform.rotate.z'
-  | 'transform.scale.x'
-  | 'transform.scale.y'
-  | 'transform.scale.z'
+  (typeof SPATIALIZED_MOTION_PROPERTIES)[number]
 
 export interface SpatializedMotionKeyframe {
   /** Time in seconds from timeline start, in `[0, duration]`. */

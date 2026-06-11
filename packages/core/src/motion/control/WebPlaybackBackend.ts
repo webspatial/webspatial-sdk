@@ -2,28 +2,22 @@ import type { SpatializedMotionPlayState } from '../../types/spatializedMotion'
 import { evaluateMotionTimeline } from '../compute/sample'
 import { motionTimeSec } from '../compute/timing'
 import type { PlaybackBackend, PlaybackBackendContext } from './PlaybackBackend'
-import type { Sampler } from './Sampler'
 
 /**
  * requestAnimationFrame-driven playback strategy.
  *
  * Owns the entire Web raf state machine that previously lived inside
- * {@link SpatializedMotionController}: clock fields and the frame loop. The
- * visual sampling is delegated to the shared {@link Sampler}, so this backend
- * never borrows from the native backend.
+ * {@link SpatializedMotionController}: clock fields, the frame loop, and
+ * direct timeline sampling for web-driven visual updates.
  */
 export class WebPlaybackBackend implements PlaybackBackend {
   private webState: SpatializedMotionPlayState = 'idle'
-  private webFinished = false
   private webStarted = false
   private rafId: number | null = null
   private startWallMs = 0
   private pausedElapsedMs = 0
 
-  constructor(
-    private readonly ctx: PlaybackBackendContext,
-    private readonly sampler: Sampler,
-  ) {}
+  constructor(private readonly ctx: PlaybackBackendContext) {}
 
   get playState(): SpatializedMotionPlayState {
     return this.webState
@@ -38,12 +32,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
   }
 
   get finished(): boolean {
-    return this.webFinished
-  }
-
-  /** Web playback never owns a native session. */
-  get sessionAnimating(): boolean {
-    return false
+    return this.webState === 'finished'
   }
 
   /** Web playback drives the Portal directly, so it never suppresses fields. */
@@ -75,10 +64,6 @@ export class WebPlaybackBackend implements PlaybackBackend {
       return
     }
 
-    if (this.webState === 'finished') {
-      this.webFinished = false
-    }
-
     if (!this.webStarted) {
       this.webStarted = true
       cfg.onStart?.()
@@ -99,7 +84,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
     this.webState = 'paused'
     this.stopRaf()
     this.ctx.emitValues(
-      this.sampler.sampleAt(motionTimeSec(this.pausedElapsedMs, cfg)),
+      evaluateMotionTimeline(cfg, motionTimeSec(this.pausedElapsedMs, cfg)),
     )
     this.ctx.notifyStateChange()
   }
@@ -116,7 +101,6 @@ export class WebPlaybackBackend implements PlaybackBackend {
     const values = evaluateMotionTimeline(cfg, 0)
     this.ctx.emitValues(values)
     this.webState = 'idle'
-    this.webFinished = false
     this.webStarted = false
     this.pausedElapsedMs = 0
     this.ctx.notifyStateChange()
@@ -132,7 +116,6 @@ export class WebPlaybackBackend implements PlaybackBackend {
     if (!wasRunning && wasQueued) {
       this.ctx.clearPendingPlay()
       this.webState = 'idle'
-      this.webFinished = false
       this.webStarted = false
       this.pausedElapsedMs = 0
       this.ctx.notifyStateChange()
@@ -148,10 +131,12 @@ export class WebPlaybackBackend implements PlaybackBackend {
           ? this.pausedElapsedMs
           : performance.now() - this.startWallMs
     this.ctx.clearPendingPlay()
-    const values = this.sampler.sampleAt(motionTimeSec(elapsedAtStop, cfg))
+    const values = evaluateMotionTimeline(
+      cfg,
+      motionTimeSec(elapsedAtStop, cfg),
+    )
     this.ctx.emitValues(values)
     this.webState = 'idle'
-    this.webFinished = false
     this.webStarted = false
     this.pausedElapsedMs = 0
     this.ctx.notifyStateChange()
@@ -165,7 +150,6 @@ export class WebPlaybackBackend implements PlaybackBackend {
     const values = evaluateMotionTimeline(cfg, cfg.duration)
     this.ctx.emitValues(values)
     this.webState = 'finished'
-    this.webFinished = true
     this.webStarted = false
     this.pausedElapsedMs = 0
     this.ctx.notifyStateChange()
@@ -185,25 +169,24 @@ export class WebPlaybackBackend implements PlaybackBackend {
     const t = motionTimeSec(elapsed, cfg)
 
     if (t >= cfg.duration) {
-      const values = this.sampler.sampleAt(cfg.duration)
+      const values = evaluateMotionTimeline(cfg, cfg.duration)
       this.ctx.emitValues(values)
       if (cfg.loop) {
         this.startWallMs = performance.now()
         this.pausedElapsedMs = 0
-        this.ctx.emitValues(this.sampler.sampleAt(0))
+        this.ctx.emitValues(evaluateMotionTimeline(cfg, 0))
         this.scheduleFrame()
         return
       }
       this.stopRaf()
       this.webState = 'finished'
-      this.webFinished = true
       this.webStarted = false
       this.ctx.notifyStateChange()
       cfg.onComplete?.(values)
       return
     }
 
-    this.ctx.emitValues(this.sampler.sampleAt(t))
+    this.ctx.emitValues(evaluateMotionTimeline(cfg, t))
     this.scheduleFrame()
   }
 }
