@@ -11,10 +11,6 @@ export {
   validateSpatializedMotionConfig,
   segmentConfigToMotionConfig,
 } from '@webspatial/core-sdk'
-export type {
-  Static3DMotionBindingInternal,
-  Dynamic3DMotionBindingInternal,
-} from '@webspatial/core-sdk'
 export { valuesToMotionStyle } from './style'
 export { resolveMotionStyle } from './resolveMotionStyle'
 export type { SpatializedMotionBindingInternal } from './motionBindingTypes'
