@@ -10,7 +10,7 @@ export * from './spatialized-container-monitor'
 export * from './reality'
 export { useAnimation, useEntityAnimation } from './useAnimation'
 export type {
-  UseSpatializedMotionResult,
+  UseAnimationResult,
   SpatializedMotionConfig,
   SpatializedMotionSegmentConfig,
 } from './spatialized-container/motion'

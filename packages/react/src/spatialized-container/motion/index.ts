@@ -1,7 +1,7 @@
 export { useMotionController } from './useMotionController'
 export { useAnimation } from './useAnimation'
 export type {
-  UseSpatializedMotionResult,
+  UseAnimationResult,
   SpatializedMotionConfig,
   SpatializedMotionSegmentConfig,
   SpatializedPlaybackApi,
