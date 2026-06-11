@@ -169,6 +169,7 @@ Core 层不定义：
 | `useMotionController` | 将 React 生命周期与 Core controller 连接起来。 |
 | `createMotionBinding` | 生成承载延迟目标状态的 opaque `xr-animation` binding 对象。 |
 | `createPlaybackApi` | 暴露由 controller 驱动的稳定 React-facing playback surface。 |
+| `useBindSpatializedMotion` | 内部 binding hook，集中处理 attach、unbind、cleanup，以及可选的 2D suppression 同步。 |
 | `PortalSpatializedContainer` | 将 2D `xr-animation` 绑定到 `Spatialized2DElement`，并协调 suppression 与 Portal sync。 |
 | `Model` | 将 binding target 解析为 `static3d` 的 React 集成点。 |
 | `Reality` | 将 binding target 解析为 `dynamic3d` 的 React 集成点。 |
@@ -202,6 +203,12 @@ React 层通过 `xr-animation` prop 定义目标绑定通道：
 - 对 `spatialized2d`，`style` 携带 active animated values
 - 对 `static3d` 和 `dynamic3d`，`style` 是可安全 spread 的空对象
 
+`style` fallback 的决策仍属于 React，但它应被定义为一个纯映射：
+
+- `static3d` 和 `dynamic3d` 始终返回空对象
+- `spatialized2d` 在 native playback 活跃时，对被 suppression 的 `opacity` 和 `transform` 做字段屏蔽
+- Web fallback 直接返回 `valuesToMotionStyle(values)`，而不是在 React 中重复实现 timeline 求值规则
+
 ### 行为
 
 #### 绑定时目标解析
@@ -215,6 +222,11 @@ React 层只在 `animation` 真正绑定时解析 controller target：
 若在 binding 存在前调用 `api.play()`，命令会排队，并在目标解析后开始执行。
 这意味着 controller 允许在构造阶段没有 `kind`，但在 backend 真正执行 playback 前，
 绑定流程必须已经写入并解析出目标 `kind`。
+
+React hook MUST NOT 为了实现 `autoStart` 而在挂载 effect 中直接调用
+`controller.play()`。`autoStart` 只由 Core 在目标解析完成且
+`attachElement()` 完成后处理。React 仍可通过 controller 保留 bind 前
+`api.play()` 的排队语义。
 
 #### 单绑定约束
 
@@ -353,11 +365,10 @@ interface SpatializedMotionBindingInternal {
   readonly __propName: 'xr-animation'
   readonly __motionObjectId: string
   get __animating(): boolean
-  readonly __suppressedFields: Set<string> | null
   __getSuppressedFields(): Set<string> | null
   __setElement?: (
     element: HTMLElement | Spatialized2DElement | SpatializedStatic3DElement | SpatializedDynamic3DElement | null,
-    targetKind?: 'spatialized2d' | 'static3d' | 'dynamic3d',
+    targetKind?: SpatializedMotionKind,
   ) => void
   __onUnbind?: () => void
 }

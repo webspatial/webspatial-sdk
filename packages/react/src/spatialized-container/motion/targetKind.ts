@@ -1,4 +1,3 @@
-export type SpatializedMotionTargetKind =
-  | 'spatialized2d'
-  | 'static3d'
-  | 'dynamic3d'
+import type { SpatializedMotionKind } from '@webspatial/core-sdk'
+
+export type SpatializedMotionTargetKind = SpatializedMotionKind

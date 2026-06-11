@@ -98,6 +98,25 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 - **Legacy removal target**: the old `animation` prop path, legacy SpatialDiv session hook path, and the visionOS-specific legacy 2D backend path are removed from the target state; only the unified `xr-animation` motion path remains.
 - **Capability detection**: runtime capability probes continue to use the `useAnimation` family key with sub-tokens (`entity`, `element`, `static3d`, `dynamic3d`). Concrete feature checks MUST use sub-tokens. This family-level naming is retained because the long-term roadmap is to converge `useEntityAnimation` back into the `useAnimation` family.
 
+## PR 1236 Follow-up
+
+PR 1236 exposed several module-design issues in the React motion surface after the
+`useAnimation` rename landed:
+
+- `useAnimation` and `useEntityAnimation` entrypoints still route through confusing file names and mixed export paths.
+- React still duplicates some responsibilities that belong to Core, especially `autoStart` triggering and motion-kind bookkeeping.
+- Binding lifecycle logic is repeated across SpatialDiv, Model, and Reality containers.
+- The binding protocol still carries duplicated suppression accessors.
+
+This follow-up keeps the public API unchanged but tightens the implementation
+boundaries:
+
+- `useAnimation` remains the default container-motion hook for SpatialDiv, Model, and Reality.
+- `useEntityAnimation` remains entity-only.
+- `useSpatializedMotion` is no longer treated as a primary concept or public routing name.
+- React stays responsible for lifecycle wiring, binding, style fallback, and container adaptation only.
+- Core remains responsible for config normalization, validation, timeline evaluation, playback state, backend choice, and bind-time auto-start behavior.
+
 ## Two-Phase Naming Migration
 
 - **Phase 1**: rename the current public `useAnimation` export to `useEntityAnimation` and refactor entity-focused `test-server` pages first, so the `useAnimation` symbol is freed without breaking the in-repo demos.
