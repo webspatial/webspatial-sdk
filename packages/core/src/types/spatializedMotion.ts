@@ -105,16 +105,11 @@ export type SpatializedMotionPlayState =
   | 'paused'
   | 'finished'
 
-/** One property path or a list (react-spring-style selective control). */
-export type SpatializedMotionPropertyKeys =
-  | SpatializedMotionProperty
-  | readonly SpatializedMotionProperty[]
-
 /** Imperative playback surface (`SpatializedMotionController`, hooks). */
 export interface SpatializedPlaybackApi {
   play(): void
-  pause(keys?: SpatializedMotionPropertyKeys): void
-  resume(keys?: SpatializedMotionPropertyKeys): void
+  pause(): void
+  resume(): void
   stop(): void
   reset(): void
   finish(): void

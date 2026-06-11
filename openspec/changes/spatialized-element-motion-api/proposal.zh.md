@@ -94,6 +94,7 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 - **Entity 专用 API**：Entity transform animation 命名为 `useEntityAnimation(config)`，并继续保留在独立的 `AnimateTransform` 栈上。
 - **Portal 抑制**：native 播放期间抑制被动画控制的字段（opacity 属性级、transform 整体级）。
 - **会话语义**：状态机、生命周期回调、错误处理在所有路径上统一。
+- **Controller surface**：`pause()` / `resume()` 只表示整体会话控制；选择性 pause/resume 本次变更明确不做。如果未来需要局部控制，必须在新的 proposal 中设计独立的 track/action 级 API。
 - **legacy 删除目标**：旧的 `animation` prop 路径、legacy SpatialDiv session hook 路径，以及 visionOS 专用的旧 2D backend path 已从目标态中移除；目标态仅保留统一的 `xr-animation` motion 路径。
 - **能力探测**：运行时能力探测继续使用 `useAnimation` family key 和其 subtoken（`entity`、`element`、`static3d`、`dynamic3d`）。判断具体能力时 MUST 使用 subtoken。之所以保留 family 级命名，是因为长期路线仍计划把 `useEntityAnimation` 再整合回 `useAnimation` family。
 

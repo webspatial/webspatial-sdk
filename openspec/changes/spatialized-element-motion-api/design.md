@@ -87,8 +87,8 @@ flowchart TD
 `SpatializedPlaybackApi` defines:
 
 - `play()`
-- `pause(keys?)`
-- `resume(keys?)`
+- `pause()`
+- `resume()`
 - `stop()`
 - `reset()`
 - `finish()`
@@ -129,11 +129,14 @@ All non-track shapes normalize to canonical `tracks` before execution. Native pl
 
 - `play()` starts playback or resumes from paused progress
 - `play()` while already running is a no-op
+- `pause()` pauses the entire controller session; it does not accept keys or partial selectors
+- `resume()` resumes the entire controller session; it does not accept keys or partial selectors
 - `stop()` terminates only an active session and freezes the sampled current values
 - `reset()` always seeks to start values, even when already idle
 - `finish()` always seeks to end values, even when already idle
 - `finished` becomes `false` after `stop()` and `reset()`
 - `finished` becomes `true` after `finish()` and natural completion
+- controller state is whole-session only; no partially-paused aggregate state or pause-reason stacking is modeled
 
 #### Backend policy
 
@@ -379,7 +382,6 @@ interface AnimateSpatializedElementMotionCommand {
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish'
   targetKind: 'spatialized2d' | 'static3d' | 'dynamic3d'
-  properties?: SpatializedMotionProperty[]
   elementId?: string
   timeline?: SpatializedMotionTimeline
 }
@@ -388,7 +390,7 @@ interface AnimateSpatializedElementMotionCommand {
 - For the target-state `useAnimation` path, `play` uses `timeline` as the canonical execution document
 - `play` is timeline-only across JSB; top-level timing control fields are not part of the stable wire contract
 - `targetKind` is filled in by Core after React bind-time target resolution
-- `properties` is reserved for selective pause and resume control
+- controller-level pause and resume are whole-session operations only; any future local track/action control must be designed as a separate API in a new change
 
 #### Canonical timeline payload
 

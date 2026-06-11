@@ -68,8 +68,8 @@ const [animation, api, style] = useAnimation({
 ```typescript
 interface SpatializedPlaybackApi {
   play(): void
-  pause(keys?: SpatializedMotionPropertyKeys): void
-  resume(keys?: SpatializedMotionPropertyKeys): void
+  pause(): void
+  resume(): void
   stop(): void       // Stop active session, keep current value, then go idle
   reset(): void      // Always seek to from value, emit start value, then go idle
   finish(): void     // Always seek to to value, emit end value, then go finished
@@ -78,6 +78,8 @@ interface SpatializedPlaybackApi {
   readonly finished: boolean
   readonly playState: SpatializedMotionPlayState
 }
+
+`pause()` / `resume()` are whole-session operations only and do not accept keys parameters. If the product later needs local control at track/action granularity, that must be proposed as a separate API and is out of scope for this change.
 
 type SpatializedMotionPlayState = 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 ```

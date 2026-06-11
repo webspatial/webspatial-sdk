@@ -13,12 +13,17 @@ The platform MUST document and implement declarative timeline motion for these t
 
 ### Requirement: Shared playback API shape
 
-All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (`play`, `pause`, `resume`, `stop`, `reset`, `finish`, `playState`, `isAnimating`, `isPaused`, `finished`). Kinds MAY support selective `pause(keys?)` where the backend allows.
+All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (`play`, `pause`, `resume`, `stop`, `reset`, `finish`, `playState`, `isAnimating`, `isPaused`, `finished`). Controller-level `pause()` and `resume()` MUST be whole-session operations with no `keys` parameter. Selective per-track / per-action control is intentionally out of scope for this change and, if needed in the future, MUST be designed as a separate track/action-level API (for example `pauseTrack(trackId)`), not by extending controller `pause()` / `resume()`.
 
 #### Scenario: Playback API is available regardless of binding target
 
 - **WHEN** authors obtain a motion tuple from `useAnimation(config)`
 - **THEN** the returned `api` MUST expose `play`, `pause`, `resume`, `stop`, `reset`, `finish`, `playState`, `isAnimating`, `isPaused`, and `finished` regardless of which component the `animation` is later bound to
+
+#### Scenario: pause() and resume() do not accept extra arguments
+
+- **WHEN** application code attempts to call `api.pause()` or `api.resume()` with an extra argument
+- **THEN** the controller API MUST reject the call at the type level and MUST not expose any public overload that accepts additional controller-control parameters
 
 #### Scenario: stop() freezes active session at current values
 
@@ -97,6 +102,12 @@ The terminal methods MUST remain independent commands: `stop()` terminates an ac
 
 - **WHEN** `api.finish()` is called
 - **THEN** the `finished` flag MUST be `true`
+
+#### Scenario: Controller state is whole-session only
+
+- **WHEN** authors pause or resume a motion controller
+- **THEN** the controller state machine MUST only model whole-session states (`idle`, `queued`, `running`, `paused`, `finished`)
+- **AND** the controller MUST NOT expose a partially-paused or key-level aggregated state
 
 ### Requirement: Unified config accepts three mutually exclusive shapes
 
