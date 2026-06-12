@@ -61,13 +61,6 @@ describe('SpatializedMotionController (spatialized2d) whole pause/resume (Web)',
       expect(values.length).toBeGreaterThan(lenAfterPause)
       expect(controller.isPaused).toBe(false)
 
-      if (false) {
-        // @ts-expect-error pause() no longer accepts keys
-        controller.pause('opacity')
-        // @ts-expect-error resume() no longer accepts keys
-        controller.resume(['opacity'])
-      }
-
       controller.destroy()
     } finally {
       vi.unstubAllGlobals()

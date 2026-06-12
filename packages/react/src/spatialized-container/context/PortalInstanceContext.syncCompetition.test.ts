@@ -155,6 +155,10 @@ describe('Sync Competition Tests (Task 5.4)', () => {
       // Release suppression (passing null)
       portal.setSuppressedFields(null)
 
+      expect(
+        spatializedElement.updateProperties.mock.calls.length,
+      ).toBeGreaterThan(callsWithSuppression)
+
       // setSuppressedFields(null) should trigger a forced sync
       const lastCall =
         spatializedElement.updateProperties.mock.calls[
