@@ -18,7 +18,7 @@ const SIMPLE_ENTRANCE = {
 }
 
 function SimpleEntranceCard() {
-  const [motion, api, style] = useAnimation(SIMPLE_ENTRANCE)
+  const [motion, , style] = useAnimation(SIMPLE_ENTRANCE)
 
   return (
     <div
