@@ -52,6 +52,39 @@
 - **WHEN** 调用 `api.finish()`
 - **THEN** SDK MUST 继续发出 `to` 值，并且 MUST 将 `playState` 切换为 `finished`
 
+#### Scenario: 只有从 idle 或 finished 启动的新 play 会话才会读取最新配置
+
+- **GIVEN** controller 随后收到了 `updateConfig(nextConfig)`
+- **WHEN** `api.play()` 从 `idle` 或 `finished` 启动一个新的播放会话
+- **THEN** SDK MUST 读取并锁定最新 config 作为该新会话的配置
+- **AND** 在下一个新会话开始前，该会话上的终止命令 MUST 始终基于这份已锁定的会话配置生效
+
+#### Scenario: paused 状态下的 play() 只恢复当前会话，不读取更新后的配置
+
+- **GIVEN** controller 当前处于 `paused`，并且已经持有一份会话配置快照
+- **AND** 应用代码调用了 `updateConfig(nextConfig)`
+- **WHEN** 应用代码再次调用 `api.play()`
+- **THEN** 该调用 MUST 等价于 `resume()`
+- **AND** SDK MUST NOT 把 `nextConfig` 读入当前会话
+
+#### Scenario: finish() 之后 reset() 在下一次新 play 之前继续使用已完成会话的配置
+
+- **GIVEN** 一次播放会话由 `configA` 启动
+- **AND** 该会话通过 `api.finish()` 进入 `finished`
+- **AND** 应用代码随后调用 `updateConfig(configB)`
+- **WHEN** 在下一次新 `play()` 之前调用 `api.reset()`
+- **THEN** SDK MUST 恢复由 `configA` 启动的该已完成会话的初始值
+- **AND** SDK MUST NOT 使用 `configB` 的初始值
+
+#### Scenario: stop() 之后 reset() 在下一次新 play 之前继续使用被 stop 的会话配置
+
+- **GIVEN** 一次播放会话由 `configA` 启动
+- **AND** 该会话通过 `api.stop()` 进入 `idle`
+- **AND** 应用代码随后调用 `updateConfig(configB)`
+- **WHEN** 在下一次新 `play()` 之前调用 `api.reset()`
+- **THEN** SDK MUST 恢复由 `configA` 启动的该被 stop 会话的初始值
+- **AND** SDK MUST NOT 使用 `configB` 的初始值
+
 #### Scenario: Style 值来源遵循后端对称性
 
 - **WHEN** 调用终止方法（`stop`、`reset`、`finish`）

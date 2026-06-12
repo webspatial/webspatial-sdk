@@ -30,6 +30,35 @@ function makeConfig(
   }
 }
 
+function makeOpacityConfig(
+  start: number,
+  end: number,
+  overrides: Partial<{
+    autoStart: boolean
+    onReset: (values: SpatializedVisualValues) => void
+    onComplete: (values: SpatializedVisualValues) => void
+    onStop: (values: SpatializedVisualValues) => void
+  }> = {},
+) {
+  return {
+    duration: 1,
+    autoStart: overrides.autoStart ?? false,
+    tracks: [
+      {
+        property: 'opacity' as const,
+        timingFunction: 'linear' as const,
+        keyframes: [
+          { at: 0, value: start },
+          { at: 1, value: end },
+        ],
+      },
+    ],
+    onReset: overrides.onReset,
+    onComplete: overrides.onComplete,
+    onStop: overrides.onStop,
+  }
+}
+
 function makeSuppressionConfig() {
   return {
     duration: 1,
@@ -104,6 +133,7 @@ function createNativeElement(id: string) {
 afterEach(() => {
   vi.useRealTimers()
   vi.clearAllMocks()
+  vi.unstubAllGlobals()
 })
 
 async function flushPromises() {
@@ -181,6 +211,101 @@ describe('SpatializedMotionController terminal semantics (Web)', () => {
     expect(controller.playState).toBe('finished')
     expect(controller.finished).toBe(true)
     expect(onComplete).toHaveBeenCalledWith({ opacity: 1 })
+  })
+
+  test('unbound finish -> updateConfig -> reset keeps using the finished session config', () => {
+    const values: SpatializedVisualValues[] = []
+    const onReset = vi.fn()
+    const onComplete = vi.fn()
+    const configA = makeOpacityConfig(0.2, 0.8, { onReset, onComplete })
+    const configB = makeOpacityConfig(0.4, 0.9, { onReset, onComplete })
+    const controller = new SpatializedMotionController(configA, {
+      onValuesChange: v => values.push(v),
+    })
+
+    controller.play()
+    controller.finish()
+    controller.updateConfig(configB)
+    controller.reset()
+
+    expect(onComplete).toHaveBeenCalledWith({ opacity: 0.8 })
+    expect(values.at(-1)).toEqual({ opacity: 0.2 })
+    expect(controller.playState).toBe('idle')
+    expect(controller.finished).toBe(false)
+    expect(onReset).toHaveBeenCalledWith({ opacity: 0.2 })
+  })
+
+  test('web finish -> updateConfig -> reset keeps using the finished session config', () => {
+    const values: SpatializedVisualValues[] = []
+    const onReset = vi.fn()
+    const onComplete = vi.fn()
+    const configA = makeOpacityConfig(0.2, 0.8, { onReset, onComplete })
+    const configB = makeOpacityConfig(0.4, 0.9, { onReset, onComplete })
+    const controller = new SpatializedMotionController(configA, {
+      onValuesChange: v => values.push(v),
+    })
+    vi.stubGlobal('requestAnimationFrame', () => 1)
+    vi.stubGlobal('cancelAnimationFrame', () => {})
+    controller.attachElement(null, 'spatialized2d')
+
+    controller.play()
+    controller.finish()
+    controller.updateConfig(configB)
+    controller.reset()
+
+    expect(onComplete).toHaveBeenCalledWith({ opacity: 0.8 })
+    expect(values.at(-1)).toEqual({ opacity: 0.2 })
+    expect(controller.playState).toBe('idle')
+    expect(controller.finished).toBe(false)
+    expect(onReset).toHaveBeenCalledWith({ opacity: 0.2 })
+  })
+
+  test('unbound stop -> updateConfig -> reset keeps using the stopped session config', () => {
+    const values: SpatializedVisualValues[] = []
+    const onReset = vi.fn()
+    const onStop = vi.fn()
+    const configA = makeOpacityConfig(0.2, 0.8, { onReset, onStop })
+    const configB = makeOpacityConfig(0.4, 0.9, { onReset, onStop })
+    const controller = new SpatializedMotionController(configA, {
+      onValuesChange: v => values.push(v),
+    })
+
+    controller.play()
+    controller.stop()
+    controller.updateConfig(configB)
+    controller.reset()
+
+    expect(onStop).not.toHaveBeenCalled()
+    expect(values.at(-1)).toEqual({ opacity: 0.2 })
+    expect(controller.playState).toBe('idle')
+    expect(controller.finished).toBe(false)
+    expect(onReset).toHaveBeenCalledWith({ opacity: 0.2 })
+  })
+
+  test('web stop -> updateConfig -> reset keeps using the stopped session config', () => {
+    const values: SpatializedVisualValues[] = []
+    const onReset = vi.fn()
+    const onStop = vi.fn()
+    const configA = makeOpacityConfig(0.2, 0.8, { onReset, onStop })
+    const configB = makeOpacityConfig(0.4, 0.9, { onReset, onStop })
+    const controller = new SpatializedMotionController(configA, {
+      onValuesChange: v => values.push(v),
+    })
+    vi.stubGlobal('requestAnimationFrame', () => 1)
+    vi.stubGlobal('cancelAnimationFrame', () => {})
+    controller.attachElement(null, 'spatialized2d')
+
+    controller.play()
+    controller.stop()
+    controller.updateConfig(configB)
+    controller.reset()
+
+    expect(onStop).toHaveBeenCalledTimes(1)
+    expect(onStop.mock.calls[0]?.[0]?.opacity).toBeCloseTo(0.2, 3)
+    expect(values.at(-1)).toEqual({ opacity: 0.2 })
+    expect(controller.playState).toBe('idle')
+    expect(controller.finished).toBe(false)
+    expect(onReset).toHaveBeenCalledWith({ opacity: 0.2 })
   })
 })
 
@@ -571,6 +696,140 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(stopped.opacity).toBe(0.4)
     expect(controller.finished).toBe(false)
     expect(onStop).toHaveBeenCalledWith(stopped)
+  })
+
+  test('native finish -> updateConfig -> reset keeps using the finished session config', async () => {
+    const values: SpatializedVisualValues[] = []
+    const onReset = vi.fn()
+    const onComplete = vi.fn()
+    const configA = makeOpacityConfig(0.2, 0.8, { onReset, onComplete })
+    const configB = makeOpacityConfig(0.4, 0.9, { onReset, onComplete })
+    const animateMotion = vi.fn(async (command: { type: string }) => {
+      if (command.type === 'play') {
+        return {
+          animationId: 'native-finished-config',
+          finished: new Promise<SpatializedVisualValues>(() => {}),
+          canceled: new Promise<SpatializedVisualValues>(() => {}),
+          failed: new Promise(() => {}),
+        }
+      }
+      return undefined
+    })
+    const controller = new SpatializedMotionController(configA, {
+      forceNativePlayback: true,
+      onValuesChange: v => values.push(v),
+    })
+    controller.attachElement(null, 'spatialized2d')
+    controller.attachElement({ id: 'native-element', animateMotion } as any)
+
+    controller.play()
+    await vi.waitFor(() => {
+      expect(animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ targetKind: 'spatialized2d', type: 'play' }),
+      )
+    })
+
+    controller.finish()
+    await vi.waitFor(() => {
+      expect(controller.playState).toBe('finished')
+    })
+    expect(onComplete).toHaveBeenCalledWith({ opacity: 0.8 })
+
+    controller.updateConfig(configB)
+    controller.reset()
+    await vi.waitFor(() => {
+      expect(animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetKind: 'spatialized2d',
+          type: 'reset',
+          elementId: 'native-element',
+          timeline: expect.objectContaining({
+            tracks: expect.arrayContaining([
+              expect.objectContaining({
+                property: 'opacity',
+                keyframes: expect.arrayContaining([
+                  expect.objectContaining({ at: 0, value: 0.2 }),
+                  expect.objectContaining({ at: 1, value: 0.8 }),
+                ]),
+              }),
+            ]),
+          }),
+        }),
+      )
+    })
+    expect(values.at(-1)).toEqual({ opacity: 0.2 })
+    expect(controller.playState).toBe('idle')
+    expect(controller.finished).toBe(false)
+    expect(onReset).toHaveBeenCalledWith({ opacity: 0.2 })
+  })
+
+  test('native stop -> updateConfig -> reset keeps using the stopped session config', async () => {
+    const values: SpatializedVisualValues[] = []
+    const onReset = vi.fn()
+    const onStop = vi.fn()
+    const configA = makeOpacityConfig(0.2, 0.8, { onReset, onStop })
+    const configB = makeOpacityConfig(0.4, 0.9, { onReset, onStop })
+    const animateMotion = vi.fn(async (command: { type: string }) => {
+      if (command.type === 'play') {
+        return {
+          animationId: 'native-stopped-config',
+          finished: new Promise<SpatializedVisualValues>(() => {}),
+          canceled: new Promise<SpatializedVisualValues>(() => {}),
+          failed: new Promise(() => {}),
+        }
+      }
+      if (command.type === 'stop') return { opacity: 0.2 }
+      return undefined
+    })
+    const controller = new SpatializedMotionController(configA, {
+      forceNativePlayback: true,
+      onValuesChange: v => values.push(v),
+    })
+    controller.attachElement(null, 'spatialized2d')
+    controller.attachElement({ id: 'native-element', animateMotion } as any)
+
+    controller.play()
+    await vi.waitFor(() => {
+      expect(animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ targetKind: 'spatialized2d', type: 'play' }),
+      )
+    })
+
+    controller.stop()
+    await vi.waitFor(() => {
+      expect(animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ targetKind: 'spatialized2d', type: 'stop' }),
+      )
+      expect(controller.playState).toBe('idle')
+    })
+    expect(onStop).toHaveBeenCalledWith({ opacity: 0.2 })
+
+    controller.updateConfig(configB)
+    controller.reset()
+    await vi.waitFor(() => {
+      expect(animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetKind: 'spatialized2d',
+          type: 'reset',
+          elementId: 'native-element',
+          timeline: expect.objectContaining({
+            tracks: expect.arrayContaining([
+              expect.objectContaining({
+                property: 'opacity',
+                keyframes: expect.arrayContaining([
+                  expect.objectContaining({ at: 0, value: 0.2 }),
+                  expect.objectContaining({ at: 1, value: 0.8 }),
+                ]),
+              }),
+            ]),
+          }),
+        }),
+      )
+    })
+    expect(values.at(-1)).toEqual({ opacity: 0.2 })
+    expect(controller.playState).toBe('idle')
+    expect(controller.finished).toBe(false)
+    expect(onReset).toHaveBeenCalledWith({ opacity: 0.2 })
   })
 })
 

@@ -52,6 +52,39 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 - **WHEN** `api.finish()` is called
 - **THEN** the SDK MUST still emit the `to` values and MUST transition `playState` to `finished`
 
+#### Scenario: Only a new play session from idle or finished loads the latest config
+
+- **GIVEN** the controller later receives `updateConfig(nextConfig)`
+- **WHEN** `api.play()` starts a new playback session from `idle` or `finished`
+- **THEN** the SDK MUST read and lock the latest config as the new session config
+- **AND** terminal commands for that session MUST operate against that locked session config until another new session starts
+
+#### Scenario: play() while paused resumes the current session without loading updated config
+
+- **GIVEN** the controller is `paused` with an existing session config snapshot
+- **AND** application code calls `updateConfig(nextConfig)`
+- **WHEN** application code calls `api.play()` again
+- **THEN** that call MUST behave as `resume()`
+- **AND** the SDK MUST NOT load `nextConfig` into the current session
+
+#### Scenario: reset() after finish() uses the finished session config until the next new play
+
+- **GIVEN** a playback session started from `configA`
+- **AND** that session entered `finished` through `api.finish()`
+- **AND** application code then calls `updateConfig(configB)`
+- **WHEN** `api.reset()` is called before the next new `play()`
+- **THEN** the SDK MUST restore the initial values from the finished session started with `configA`
+- **AND** the SDK MUST NOT use the initial values from `configB`
+
+#### Scenario: reset() after stop() keeps using the stopped session config until the next new play
+
+- **GIVEN** a playback session started from `configA`
+- **AND** that session entered `idle` through `api.stop()`
+- **AND** application code then calls `updateConfig(configB)`
+- **WHEN** `api.reset()` is called before the next new `play()`
+- **THEN** the SDK MUST restore the initial values from the stopped session started with `configA`
+- **AND** the SDK MUST NOT use the initial values from `configB`
+
 #### Scenario: Style value source is backend-symmetric
 
 - **WHEN** a termination method (`stop`, `reset`, `finish`) is invoked
