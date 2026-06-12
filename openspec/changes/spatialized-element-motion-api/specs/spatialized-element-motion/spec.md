@@ -4,7 +4,7 @@
 
 ### Requirement: Umbrella defines declarative motion with bind-time target resolution
 
-The platform MUST document and implement declarative timeline motion for these targets: `spatialized2d`, `static3d`, and `dynamic3d`. Each target MUST have a sub-spec defining property whitelists, native backend, and React integration. The public hook MUST NOT require `config.kind`; the target is resolved automatically when the returned `animation` binding is passed as `xr-animation` prop to a component (`<div enable-xr>` → spatialized2d, `<Model>` → static3d, `<Reality>` → dynamic3d). `SpatialEntity` transform timelines are out of scope for this umbrella (use existing `useAnimation`).
+The platform MUST document and implement declarative timeline motion for these targets: `spatialized2d`, `static3d`, and `dynamic3d`. Each target MUST have a sub-spec defining property whitelists, native backend, and React integration. The public hook MUST NOT require `config.kind`; the target is resolved automatically when the returned `animation` binding is passed as `xr-animation` prop to a component (`<div enable-xr>` → spatialized2d, `<Model>` → static3d, `<Reality>` → dynamic3d). `SpatialEntity` transform timelines are out of scope for this umbrella and continue to use `useEntityAnimation` on the separate entity stack.
 
 #### Scenario: Capability matrix is normative
 
@@ -109,13 +109,13 @@ The terminal methods MUST remain independent commands: `stop()` terminates an ac
 - **THEN** the controller state machine MUST only model whole-session states (`idle`, `queued`, `running`, `paused`, `finished`)
 - **AND** the controller MUST NOT expose a partially-paused or key-level aggregated state
 
-### Requirement: Unified config accepts three mutually exclusive shapes
+### Requirement: V1 public authoring centers on from/to and timeline, with tracks retained as the canonical internal model
 
 The hook MUST accept a config that is one of three mutually exclusive shapes:
 
 1. **Segment config** (recommended default): `{ from, to, duration, timingFunction? }`
-2. **Tracks config** (advanced): `{ duration, tracks: [{ property, keyframes: [{ at, value, timingFunction? }], timingFunction? }], timingFunction? }`
-3. **Timeline config** (CSS @keyframes style): `{ duration, timeline: { "0%": { ...values, timingFunction? }, ... "100%": { ...values } }, timingFunction? }`
+2. **Timeline config** (recommended keyframe path): `{ duration, timeline: { "0%": { ...values, timingFunction? }, ... "100%": { ...values } }, timingFunction? }`
+3. **Tracks config** (compatibility / advanced escape hatch): `{ duration, tracks: [{ property, keyframes: [{ at, value, timingFunction? }], timingFunction? }], timingFunction? }`
 
 Passing more than one of `from`/`to`, `tracks`, or `timeline` in the same config object MUST be a type error (discriminated union). Internally, segment config and timeline config MUST compile to tracks before execution. When native playback is used for `useAnimation`, that unified path MUST continue executing the canonical tracks model and MUST NOT downgrade into a legacy native segment command.
 
@@ -136,6 +136,12 @@ All kinds MUST use visual transform paths (`transform.translate.*`, `opacity`, e
 - **WHEN** authors pass `{ duration: 2, timeline: { "0%": { opacity: 0 }, "50%": { opacity: 0.8 }, "100%": { opacity: 1 } } }`
 - **THEN** the SDK MUST compile this to a single track `{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 0.8 }, { at: 2, value: 1 }] }` before execution
 
+#### Scenario: tracks is not the primary v1 review path
+
+- **WHEN** user-facing API summary docs present v1 usage
+- **THEN** they MUST prioritize `from/to` and `timeline` as the public authoring path
+- **AND** `tracks` MAY remain documented only as the canonical internal model or a compatibility / advanced input retained by the current implementation and types
+
 #### Scenario: passing both timeline and tracks is a type error
 
 - **WHEN** authors pass `{ duration, timeline: {...}, tracks: [...] }`
@@ -154,6 +160,8 @@ All kinds MUST use visual transform paths (`transform.translate.*`, `opacity`, e
 ### Requirement: Timeline percentage keyframe config (CSS @keyframes style)
 
 The hook MUST accept a config with a `timeline` field containing percentage keys (strings matching `/^\d+(\.\d+)?%$/`) mapped to `SpatializedMotionKeyframeValues` (`SpatializedVisualValues` extended with optional `timingFunction`). The `timeline` object MUST NOT contain non-percentage keys; all config-level options (`duration`, `timingFunction`, `delay`, `loop`, `playbackRate`, callbacks) remain on the outer config.
+
+`timeline` is a single CSS `@keyframes`-style keyframe object. It is not a sequential choreography primitive. V1 does not support `timeline: []`, multiple actions, or multi-stage orchestration semantics.
 
 Desugaring rules:
 - Each percentage key is parsed to a normalized ratio in `[0, 1]` and multiplied by `duration` to obtain the `at` value in seconds.
@@ -189,6 +197,11 @@ Desugaring rules:
 
 - **WHEN** the `timeline` object contains a key that does not match `/^\d+(\.\d+)?%$/` (e.g. `"halfway"`, `"duration"`)
 - **THEN** validation MUST throw before playback
+
+#### Scenario: timeline array is rejected
+
+- **WHEN** authors pass `timeline: []`
+- **THEN** validation MUST reject the config before playback
 
 #### Scenario: Per-keyframe timingFunction in timeline
 

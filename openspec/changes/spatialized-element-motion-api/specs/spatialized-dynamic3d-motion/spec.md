@@ -23,7 +23,7 @@ Implementation MUST use `SpatializedMotionController` with the `dynamic3d` targe
 
 Child `SpatialEntity` animation MUST continue to use the separate entity stack and MUST NOT route through the container motion controller.
 
-#### Scenario: useAnimation on Entity is not container motion
+#### Scenario: useEntityAnimation on Entity is not container motion
 
-- **WHEN** authors animate a child `Entity` with `useAnimation`
+- **WHEN** authors animate a child `Entity` with `useEntityAnimation`
 - **THEN** that MUST NOT use `SpatializedMotionController`; entity stack remains unchanged

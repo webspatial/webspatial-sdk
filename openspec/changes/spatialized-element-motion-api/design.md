@@ -103,9 +103,9 @@ flowchart TD
 
 The Core layer accepts three mutually exclusive authoring shapes:
 
-- Segment config via `from` and `to`
-- Direct `tracks`
-- Percentage-key `timeline`
+- Segment config via `from` and `to` as the recommended v1 public path
+- Percentage-key `timeline` as the recommended v1 public keyframe path
+- Direct `tracks` as the canonical internal model, still accepted by the current implementation and types as a compatibility / advanced escape hatch
 
 All non-track shapes normalize to canonical `tracks` before execution. Native playback for `useAnimation` always uses this canonical tracks model and must not downgrade to a legacy segment payload.
 
@@ -137,6 +137,7 @@ All non-track shapes normalize to canonical `tracks` before execution. Native pl
 - `finished` becomes `false` after `stop()` and `reset()`
 - `finished` becomes `true` after `finish()` and natural completion
 - controller state is whole-session only; no partially-paused aggregate state or pause-reason stacking is modeled
+- paused `play()` is semantically equivalent to `resume()`
 
 #### Backend policy
 
@@ -200,8 +201,8 @@ The React layer defines the `xr-animation` prop as the target binding channel:
 
 `style` is the only author-facing visual merge outlet:
 
-- For `spatialized2d`, `style` carries active animated values
-- For `static3d` and `dynamic3d`, `style` is an empty object that is safe to spread
+- For `spatialized2d`, `style` carries active animated values and serves as the Web fallback / non-native visual outlet
+- For `static3d` and `dynamic3d`, `style` is always an empty object that is safe to spread; native playback is driven entirely through `xr-animation`
 
 The `style` fallback decision remains a React concern, but it is defined as a
 pure mapping from sampled values plus binding state:
@@ -429,6 +430,7 @@ interface SpatializedMotionTimeline {
 - This is the only stable cross-layer play document for target-state container motion
 - Segment-style `from` and `to` authoring must be compiled to this shape before native send
 - Timeline-level `delay`, `playbackRate`, and `loop` live inside this payload rather than on the outer command
+- Public docs should continue to present `timeline` as a single CSS `@keyframes`-style object, not as a sequential choreography array or multi-action primitive
 
 ### Native Runtime to Core SDK
 

@@ -25,22 +25,15 @@ This **umbrella change** merges both into a single normative surface:
 - The **timeline data model** from Plan B is the canonical config shape
 - The **session semantics** from Plan A remain as historical reference material in the archived spec; the target-state API is the unified `xr-animation` motion path
 - Coverage extends to Static3D and Dynamic3D (native-only, no Web RAF)
-- All `useAnimation` authoring shapes (`from`/`to`, `timeline`, `tracks`) compile to the same canonical `tracks` execution model
+- The v1 recommended public authoring paths are `from`/`to` and `timeline`
+- `tracks` remains the canonical internal execution model; current implementation and types still accept `tracks` as a compatibility / advanced escape hatch, but it is not the primary user-review path
 - The legacy Plan A public path (`useAnimation` + `animation` prop) is removed from the target-state API
 
 ## At a Glance
 
 ```
 // Unified spatialized animation API — hook is target-agnostic; target resolved at bind time
-const [animation, api, style] = useAnimation({
-  duration: 5,
-  tracks: [
-    { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], timingFunction: 'linear' },
-    { property: 'opacity', keyframes: [{ at: 3, value: 0 }, { at: 5, value: 1 }], timingFunction: 'easeOut' },
-  ],
-})
-
-// 2D — target auto-resolved to spatialized2d when bound to enable-xr node
+// 2D style carries Web fallback / non-native animated values
 <div enable-xr style={{ width: 300, height: 200, ...style }} xr-animation={animation}>
   <h2>Hello Spatial</h2>
 </div>
@@ -65,8 +58,9 @@ const [animation, api, style] = useAnimation({
 const [animation, api] = useEntityAnimation({
   from: { opacity: 0 }, to: { opacity: 1 }, duration: 0.5,
 })
-// Entity examples stay on the entity stack for now; the capability family
-// continues to be probed under `useAnimation:entity` until the APIs converge.
+// Entity remains outside this container-motion change. The current entry is
+// useEntityAnimation(); long-term convergence back into the useAnimation
+// family is possible, but not part of this PR.
 ```
 
 ## Target Resolution
@@ -85,11 +79,12 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 
 ## What Changes
 
-- **Unified public API**: `useAnimation(config)` accepts `from/to` (recommended), `tracks` (advanced), or `timeline` (CSS @keyframes style); all authoring shapes compile to tracks internally.
-- **Timeline data model**: per-property tracks with absolute-time keyframes, per-track timingFunction — the canonical config shape.
+- **Unified public API**: v1 user-facing examples and guidance center on `useAnimation(config)` with `from/to` (recommended) or `timeline` (CSS `@keyframes` style). Internally both normalize into the canonical tracks model.
+- **Timeline data model**: per-property tracks with absolute-time keyframes and per-track timingFunction remain the canonical internal config model. The current implementation and types still accept `tracks` input as a compatibility / advanced escape hatch.
 - **Dual backend for 2D**: Web RAF when native unavailable; native uses the canonical tracks path when in WebSpatial runtime.
 - **Timeline-only play payload**: `AnimateSpatializedElementMotion` `play` sends only the canonical `timeline` document across JSB; timing controls such as `duration`, `timingFunction`, `delay`, `loop`, and `playbackRate` live inside the compiled timeline payload rather than as top-level JSB fields.
 - **Native-only for 3D**: Static3D and Dynamic3D use native `animateMotion` exclusively (no Web RAF fallback).
+- **3D style behavior**: Static3D and Dynamic3D always return `style = {}`; playback is driven by the bound `xr-animation` handle, and the empty object is kept only for tuple consistency and safe spreading.
 - **One Core controller**: `SpatializedMotionController` with `MOTION_KIND_POLICIES` per kind.
 - **Entity-specific API**: entity transform animation is named `useEntityAnimation(config)` and remains on the separate `AnimateTransform` stack.
 - **Portal suppression**: animated fields suppressed during native playback (property-level for opacity, transform-wide for transform).
@@ -97,6 +92,7 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 - **Controller surface**: `pause()` / `resume()` are whole-session operations only; selective pause/resume is intentionally out of scope for this change. If local control is needed later, it must be designed as a separate track/action-level API in a new proposal.
 - **Legacy removal target**: the old `animation` prop path, legacy SpatialDiv session hook path, and the visionOS-specific legacy 2D backend path are removed from the target state; only the unified `xr-animation` motion path remains.
 - **Capability detection**: runtime capability probes continue to use the `useAnimation` family key with sub-tokens (`entity`, `element`, `static3d`, `dynamic3d`). Concrete feature checks MUST use sub-tokens. This family-level naming is retained because the long-term roadmap is to converge `useEntityAnimation` back into the `useAnimation` family.
+- **Timeline naming**: `timeline` is a single CSS `@keyframes`-style percentage-key object. It is not a sequential choreography primitive; v1 does not support `timeline: []`, multiple actions, or multi-stage orchestration semantics.
 
 ## PR 1236 Follow-up
 

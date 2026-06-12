@@ -25,22 +25,15 @@
 - Plan B 的 **timeline 数据模型** 为规范配置形状
 - Plan A 的 **会话语义** 仅作为归档 spec 中的历史参考保留；目标态 API 为统一的 `xr-animation` motion 路径
 - 覆盖范围扩展到 Static3D 和 Dynamic3D（仅 native，无 Web RAF）
-- `useAnimation` 的所有 authoring 形状（`from/to`、`timeline`、`tracks`）都编译为同一个 canonical `tracks` 执行模型
+- v1 推荐公开主路径为 `from/to` 与 `timeline`
+- `tracks` 继续作为内部 canonical 执行模型；当前实现 / 类型仍接受 `tracks` 输入作为兼容 / 高级 escape hatch，但它不是面向用户评审的主路径
 - Plan A 的旧公共路径（`useAnimation` + `animation` prop）已从目标态 API 中移除
 
 ## 概览
 
 ```tsx
 // 统一的空间动画 API — hook 与目标无关；目标在绑定时自动解析
-const [animation, api, style] = useAnimation({
-  duration: 5,
-  tracks: [
-    { property: 'transform.translate.x', keyframes: [{ at: 0, value: 0 }, { at: 5, value: 100 }], timingFunction: 'linear' },
-    { property: 'opacity', keyframes: [{ at: 3, value: 0 }, { at: 5, value: 1 }], timingFunction: 'easeOut' },
-  ],
-})
-
-// 2D — 绑定到 enable-xr 节点时自动解析为 spatialized2d
+// 2D 的 style 承载 Web fallback / 非 native 场景下的动画样式
 <div enable-xr style={{ width: 300, height: 200, ...style }} xr-animation={animation}>
   <h2>Hello Spatial</h2>
 </div>
@@ -65,8 +58,9 @@ const [animation, api, style] = useAnimation({
 const [animation, api] = useEntityAnimation({
   from: { opacity: 0 }, to: { opacity: 1 }, duration: 0.5,
 })
-// Entity 示例当前仍位于独立 entity 栈；在 API 重新收敛前，
-// capability 仍通过 `useAnimation:entity` 进行探测。
+// Entity 不在本次容器 motion change 范围内；当前入口为
+// useEntityAnimation()。未来可再收敛回 useAnimation family，
+// 但不是当前 PR 行为。
 ```
 
 ## 目标解析（Target Resolution）
@@ -85,11 +79,12 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 
 ## 变更内容
 
-- **统一公共 API**：`useAnimation(config)` 接受 `from/to`（推荐）、`tracks`（高级）或 `timeline`（CSS @keyframes 风格）三种互斥配置，内部统一编译为 tracks 执行，返回 `[animation, api, style]`。
-- **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe + 每轨 timingFunction — 规范配置形状。
+- **统一公共 API**：v1 用户主路径使用 `useAnimation(config)` 的 `from/to`（推荐）与 `timeline`（CSS `@keyframes` 风格）两种写法，二者内部统一归一化为 canonical tracks 执行。
+- **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe + 每轨 timingFunction 继续作为内部 canonical 配置模型；当前实现 / 类型仍保留 `tracks` 输入作为兼容 / 高级 escape hatch。
 - **2D 双后端**：native 不可用时走 Web RAF；WebSpatial 运行时 native 侧统一走 canonical tracks 路径。
 - **Timeline-only play payload**：`AnimateSpatializedElementMotion` 的 `play` 通过 JSB 仅发送 canonical `timeline` 文档；`duration`、`timingFunction`、`delay`、`loop`、`playbackRate` 等时序控制信息都内嵌在编译后的 timeline payload 中，不再作为 JSB 顶层字段存在。
 - **3D 仅 native**：Static3D 和 Dynamic3D 仅使用 native `animateMotion`（无 Web RAF 降级）。
+- **3D style 语义**：Static3D 与 Dynamic3D 下 `style` 恒为 `{}`；动画通过 `xr-animation` 绑定交给 native 驱动，返回空对象仅用于保持 tuple 形态一致、调用方可安全展开。
 - **单一 Core 控制器**：`SpatializedMotionController`，通过 `MOTION_KIND_POLICIES` 按 kind 分派。
 - **Entity 专用 API**：Entity transform animation 命名为 `useEntityAnimation(config)`，并继续保留在独立的 `AnimateTransform` 栈上。
 - **Portal 抑制**：native 播放期间抑制被动画控制的字段（opacity 属性级、transform 整体级）。
@@ -97,6 +92,7 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 - **Controller surface**：`pause()` / `resume()` 只表示整体会话控制；选择性 pause/resume 本次变更明确不做。如果未来需要局部控制，必须在新的 proposal 中设计独立的 track/action 级 API。
 - **legacy 删除目标**：旧的 `animation` prop 路径、legacy SpatialDiv session hook 路径，以及 visionOS 专用的旧 2D backend path 已从目标态中移除；目标态仅保留统一的 `xr-animation` motion 路径。
 - **能力探测**：运行时能力探测继续使用 `useAnimation` family key 和其 subtoken（`entity`、`element`、`static3d`、`dynamic3d`）。判断具体能力时 MUST 使用 subtoken。之所以保留 family 级命名，是因为长期路线仍计划把 `useEntityAnimation` 再整合回 `useAnimation` family。
+- **timeline 命名**：`timeline` 指单个 CSS `@keyframes` 风格的百分比关键帧对象，不是串行动画编排器。v1 不支持 `timeline: []`、多个 action 或多段编排语义。
 
 ## PR 1236 后续修复
 
