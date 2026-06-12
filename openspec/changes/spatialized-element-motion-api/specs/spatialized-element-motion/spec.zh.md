@@ -4,7 +4,7 @@
 
 ### Requirement: 伞式定义绑定时目标解析的声明式动画
 
-平台 MUST 为以下目标文档化和实现声明式 timeline 动画：`spatialized2d`、`static3d`、`dynamic3d`。每个目标 MUST 有子 spec 定义属性白名单、native 后端和 React 集成。公开 hook MUST NOT 需要 `config.kind`；目标在返回的 `animation` binding 作为 `xr-animation` prop 传给组件时自动解析（`<div enable-xr>` → spatialized2d、`<Model>` → static3d、`<Reality>` → dynamic3d）。`SpatialEntity` transform timeline 不在本伞式范围内（使用现有 `useAnimation`）。
+平台 MUST 为以下目标文档化和实现声明式 timeline 动画：`spatialized2d`、`static3d`、`dynamic3d`。每个目标 MUST 有子 spec 定义属性白名单、native 后端和 React 集成。公开 hook MUST NOT 需要 `config.kind`；目标在返回的 `animation` binding 作为 `xr-animation` prop 传给组件时自动解析（`<div enable-xr>` → spatialized2d、`<Model>` → static3d、`<Reality>` → dynamic3d）。`SpatialEntity` transform timeline 不在本伞式范围内，当前继续通过独立 entity 栈上的 `useEntityAnimation` 处理。
 
 #### Scenario: 能力矩阵为规范
 
@@ -109,13 +109,13 @@ Config MUST 支持以下生命周期回调：
 - **THEN** controller 状态机 MUST 只表达整体会话状态（`idle`、`queued`、`running`、`paused`、`finished`）
 - **AND** controller MUST NOT 暴露 partially-paused 或 key-level 聚合状态
 
-### Requirement: 统一配置接受三种互斥形状
+### Requirement: v1 公开 authoring 以 from/to 与 timeline 为主，tracks 保留为内部 canonical 模型
 
 Hook MUST 接受三种互斥配置形状之一：
 
 1. **段配置**（推荐默认）：`{ from, to, duration, timingFunction? }`
-2. **Tracks 配置**（高级）：`{ duration, tracks: [{ property, keyframes: [{ at, value, timingFunction? }], timingFunction? }], timingFunction? }`
-3. **Timeline 配置**（CSS @keyframes 风格）：`{ duration, timeline: { "0%": { ...values, timingFunction? }, ... "100%": { ...values } }, timingFunction? }`
+2. **Timeline 配置**（推荐关键帧路径）：`{ duration, timeline: { "0%": { ...values, timingFunction? }, ... "100%": { ...values } }, timingFunction? }`
+3. **Tracks 配置**（兼容 / 高级 escape hatch）：`{ duration, tracks: [{ property, keyframes: [{ at, value, timingFunction? }], timingFunction? }], timingFunction? }`
 
 在同一配置对象中同时传递 `from`/`to`、`tracks`、`timeline` 中多于一项 MUST 是类型错误（判别联合）。内部实现中，段配置和 timeline 配置 MUST 编译为 tracks 后再执行。当 `useAnimation` 使用 native 播放时，这条统一路径 MUST 持续执行 canonical tracks 模型，且 MUST NOT 降级到旧版 native segment 命令。
 
@@ -136,6 +136,12 @@ Hook MUST 接受三种互斥配置形状之一：
 - **WHEN** 开发者传入 `{ duration: 2, timeline: { "0%": { opacity: 0 }, "50%": { opacity: 0.8 }, "100%": { opacity: 1 } } }`
 - **THEN** SDK MUST 编译为单条 track `{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 0.8 }, { at: 2, value: 1 }] }` 后再执行
 
+#### Scenario: tracks 不是 v1 用户评审主路径
+
+- **WHEN** 面向用户的 API 摘要文档展示 v1 用法
+- **THEN** 它们 MUST 优先展示 `from/to` 与 `timeline` 作为公开 authoring 路径
+- **AND** `tracks` MAY 仅以内部 canonical 模型或当前实现 / 类型保留的兼容高级输入身份出现
+
 #### Scenario: 同时传入 timeline 和 tracks 是类型错误
 
 - **WHEN** 开发者传入 `{ duration, timeline: {...}, tracks: [...] }`
@@ -154,6 +160,8 @@ Hook MUST 接受三种互斥配置形状之一：
 ### Requirement: Timeline 百分比关键帧配置（CSS @keyframes 风格）
 
 Hook MUST 接受含 `timeline` 字段的配置，该字段包含百分比 key（匹配 `/^\d+(\.\d+)?%$/` 的字符串）映射到 `SpatializedMotionKeyframeValues`（`SpatializedVisualValues` 扩展了可选 `timingFunction`）。`timeline` 对象 MUST NOT 包含非百分比 key；所有 config 级选项（`duration`、`timingFunction`、`delay`、`loop`、`playbackRate`、回调）保留在外层 config 上。
+
+`timeline` 是单个 CSS `@keyframes` 风格的关键帧对象，不是串行动画编排原语。v1 不支持 `timeline: []`、多个 action 或多段编排语义。
 
 脱糖规则：
 - 每个百分比 key 解析为 `[0, 1]` 归一化比例，乘以 `duration` 得到秒级 `at` 值。
@@ -189,6 +197,11 @@ Hook MUST 接受含 `timeline` 字段的配置，该字段包含百分比 key（
 
 - **WHEN** `timeline` 对象包含不匹配 `/^\d+(\.\d+)?%$/` 的 key（如 `"halfway"`、`"duration"`）
 - **THEN** 校验 MUST 在播放前抛错
+
+#### Scenario: timeline 数组会被拒绝
+
+- **WHEN** 开发者传入 `timeline: []`
+- **THEN** 校验 MUST 在播放前拒绝该配置
 
 #### Scenario: timeline 中 per-keyframe timingFunction
 

@@ -103,9 +103,9 @@ flowchart TD
 
 Core 层接受三种互斥的 authoring 形状：
 
-- 通过 `from` 和 `to` 表示的段配置
-- 直接给出的 `tracks`
-- 百分比 key 的 `timeline`
+- 通过 `from` 和 `to` 表示的段配置，作为 v1 推荐公开主路径
+- 百分比 key 的 `timeline`，作为 v1 推荐公开关键帧主路径
+- 直接给出的 `tracks`，作为内部 canonical 模型；当前实现 / 类型仍保留其兼容 / 高级 escape hatch 输入
 
 所有非 track 形状都会在执行前归一化为 canonical `tracks`。对于 `useAnimation` 的 native 播放，始终使用这套 canonical tracks 模型，不得降级到旧版 segment payload。
 
@@ -137,6 +137,7 @@ Core 层接受三种互斥的 authoring 形状：
 - `stop()` 和 `reset()` 后 `finished` 变为 `false`
 - `finish()` 和自然结束后 `finished` 变为 `true`
 - controller state 只表达整体会话；不建模 partially-paused 聚合状态或 pause reason 叠加
+- paused 状态下再次调用 `play()`，语义等同于 `resume()`
 
 #### 后端策略
 
@@ -200,8 +201,8 @@ React 层通过 `xr-animation` prop 定义目标绑定通道：
 
 `style` 是唯一的 author-facing visual merge outlet：
 
-- 对 `spatialized2d`，`style` 携带 active animated values
-- 对 `static3d` 和 `dynamic3d`，`style` 是可安全 spread 的空对象
+- 对 `spatialized2d`，`style` 携带 active animated values，并作为 Web fallback / 非 native 的视觉输出口
+- 对 `static3d` 和 `dynamic3d`，`style` 始终是可安全 spread 的空对象；native 播放完全由 `xr-animation` 驱动
 
 `style` fallback 的决策仍属于 React，但它应被定义为一个纯映射：
 
@@ -426,6 +427,7 @@ interface SpatializedMotionTimeline {
 - 这是目标态容器 motion 唯一稳定的跨层播放文档
 - segment 风格的 `from` 和 `to` authoring 必须在 native send 前编译为该形状
 - timeline 级别的 `delay`、`playbackRate`、`loop` 都位于该 payload 内部，而不是外层命令上
+- 对外文档应继续把 `timeline` 表述为单个 CSS `@keyframes` 风格对象，而不是串行动画数组或多 action 编排原语
 
 ### Native Runtime 到 Core SDK
 
