@@ -10,7 +10,7 @@
 
 **Capability contract:** `supports('useAnimation')` is family-level only. Concrete runtime availability checks MUST use `supports('useAnimation', [subtoken])`.
 
-**Out of scope (this change):** `SpatialEntity` transform timelines inside Reality — keep existing `useAnimation` / `AnimateTransform` for entities.
+**Out of scope (this change):** `SpatialEntity` transform timelines inside Reality — keep the current `useEntityAnimation` / `AnimateTransform` stack for entities. `supports('useAnimation', ['entity'])` remains the real capability sub-token for that path.
 
 ## Property whitelists (summary)
 
