@@ -228,15 +228,20 @@ class SpatializedElementMotionManager: NSObject {
         element: SpatializedElement,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
-        guard let session = getSession(command.animationId) else {
+        if let session = getSession(command.animationId) {
+            let values = buildCurrentValuesPayload(session: session, useTo: false)
+            session.markCanceled()
+            applyTerminalValues(session: session, useTo: false)
+            removeSession(command.animationId)
+            resolve(.success(values))
+            return
+        }
+
+        guard let values = applyTerminalSeek(command: command, element: element, useTo: false) else {
             resolve(.success(nil))
             return
         }
 
-        let values = buildCurrentValuesPayload(session: session, useTo: false)
-        session.markCanceled()
-        applyFromValues(session: session)
-        removeSession(command.animationId)
         resolve(.success(values))
     }
 
@@ -267,15 +272,20 @@ class SpatializedElementMotionManager: NSObject {
         element: SpatializedElement,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
-        guard let session = getSession(command.animationId) else {
+        if let session = getSession(command.animationId) {
+            let values = buildCurrentValuesPayload(session: session, useTo: true)
+            session.markCompleted()
+            applyTerminalValues(session: session, useTo: true)
+            removeSession(command.animationId)
+            resolve(.success(values))
+            return
+        }
+
+        guard let values = applyTerminalSeek(command: command, element: element, useTo: true) else {
             resolve(.success(nil))
             return
         }
 
-        let values = buildCurrentValuesPayload(session: session, useTo: true)
-        session.markCompleted()
-        applyFinalValues(session: session)
-        removeSession(command.animationId)
         resolve(.success(values))
     }
 
@@ -497,19 +507,21 @@ class SpatializedElementMotionManager: NSObject {
         return buildValuesPayload(
             transform: sample.transform,
             opacity: sample.opacity,
-            session: session
+            animatesTransform: session.animatesTransform,
+            animatesOpacity: session.animatesOpacity
         )
     }
 
     private func buildValuesPayload(
         transform: SpatializedMotionTransformComponents,
         opacity: Double,
-        session: SpatializedElementMotionSession
+        animatesTransform: Bool,
+        animatesOpacity: Bool
     ) -> SpatializedMotionValuesPayload {
         var transformPayload: SpatializedMotionTransformPayload? = nil
         var opacityPayload: Double? = nil
 
-        if session.animatesTransform {
+        if animatesTransform {
             transformPayload = SpatializedMotionTransformPayload(
                 translate: Vec3Payload(x: transform.translateX, y: transform.translateY, z: transform.translateZ),
                 rotate: Vec3Payload(x: transform.rotateX, y: transform.rotateY, z: transform.rotateZ),
@@ -517,7 +529,7 @@ class SpatializedElementMotionManager: NSObject {
             )
         }
 
-        if session.animatesOpacity {
+        if animatesOpacity {
             opacityPayload = opacity
         }
 
@@ -536,7 +548,54 @@ class SpatializedElementMotionManager: NSObject {
         return buildValuesPayload(
             transform: sample.transform,
             opacity: sample.opacity,
-            session: session
+            animatesTransform: session.animatesTransform,
+            animatesOpacity: session.animatesOpacity
+        )
+    }
+
+    private func applyTerminalValues(session: SpatializedElementMotionSession, useTo: Bool) {
+        guard let element = findElement(session.elementId) else { return }
+        let adapter = session.transformAdapter
+        let sample = session.timelineSampler.sampleTransformAndOpacity(
+            at: useTo ? session.duration : 0
+        )
+        if session.animatesTransform {
+            adapter.applyAffine(Self.composeTransform(sample.transform), to: element)
+        }
+        if session.animatesOpacity {
+            adapter.applyOpacity(sample.opacity, to: element)
+        }
+    }
+
+    private func applyTerminalSeek(
+        command: AnimateSpatializedElementMotionCommand,
+        element: SpatializedElement,
+        useTo: Bool
+    ) -> SpatializedMotionValuesPayload? {
+        guard let timeline = command.timeline, command.elementId != nil else {
+            return nil
+        }
+
+        let adapter = command.transformAdapter
+        let baselineTransform = Self.decomposeTransform(from: adapter.currentAffineTransform(for: element))
+        let baselineOpacity = adapter.baselineOpacity(for: element)
+        let sampler = SpatializedElementMotionTimelineSampler(
+            timeline: timeline,
+            baselineTransform: baselineTransform,
+            baselineOpacity: baselineOpacity
+        )
+        let sample = sampler.sampleTransformAndOpacity(at: useTo ? sampler.duration : 0)
+        if sampler.animatesTransform {
+            adapter.applyAffine(Self.composeTransform(sample.transform), to: element)
+        }
+        if sampler.animatesOpacity {
+            adapter.applyOpacity(sample.opacity, to: element)
+        }
+        return buildValuesPayload(
+            transform: sample.transform,
+            opacity: sample.opacity,
+            animatesTransform: sampler.animatesTransform,
+            animatesOpacity: sampler.animatesOpacity
         )
     }
 

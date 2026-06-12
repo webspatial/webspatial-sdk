@@ -711,13 +711,9 @@ export class AnimateSpatializedElementMotionJSBCommand extends JSBCommand {
 
     if (elementId !== undefined) params.elementId = elementId
 
-    if (type === 'play') {
-      if (this.command.timeline !== undefined)
-        params.timeline = this.command.timeline
-    }
+    if (this.command.timeline !== undefined)
+      params.timeline = this.command.timeline
 
     return params
   }
 }
-
-

@@ -1428,9 +1428,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             manager.handleResume(command: command, resolve: resolve)
 
         case "reset":
-            guard let session = manager.getSession(command.animationId),
-                  let element: SpatializedElement = findSpatialObject(session.elementId)
-            else {
+            guard let element = resolveSpatializedElementMotionTarget(
+                command: command,
+                sessionElementId: manager.getSession(command.animationId)?.elementId
+            ) else {
                 resolve(.success(nil))
                 return
             }
@@ -1440,9 +1441,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             manager.handleStop(command: command, resolve: resolve)
 
         case "finish":
-            guard let session = manager.getSession(command.animationId),
-                  let element: SpatializedElement = findSpatialObject(session.elementId)
-            else {
+            guard let element = resolveSpatializedElementMotionTarget(
+                command: command,
+                sessionElementId: manager.getSession(command.animationId)?.elementId
+            ) else {
                 resolve(.success(nil))
                 return
             }
@@ -1460,6 +1462,19 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         default:
             resolve(.failure(JsbError(code: .TypeError, message: "\(commandLabel): unknown command type '\(command.type)'")))
         }
+    }
+
+    private func resolveSpatializedElementMotionTarget(
+        command: AnimateSpatializedElementMotionCommand,
+        sessionElementId: String?
+    ) -> SpatializedElement? {
+        if let sessionElementId {
+            return findSpatialObject(sessionElementId)
+        }
+        guard let elementId = command.elementId else {
+            return nil
+        }
+        return findSpatialObject(elementId)
     }
 
     private func onUpdateUnlitMaterialProperties(command: UpdateUnlitMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
