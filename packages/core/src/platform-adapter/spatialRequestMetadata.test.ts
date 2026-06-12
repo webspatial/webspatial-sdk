@@ -76,7 +76,16 @@ describe('PicoOSPlatform SpatialDiv request correlation', () => {
     window.__webspatialsdk__ = { pageEpoch: '3' }
     const { SpatialWebEvent } = await import('../SpatialWebEvent')
     SpatialWebEvent.init()
-    const open = vi.fn(() => null)
+    const open = vi.fn(
+      () =>
+        ({
+          document: {
+            readyState: 'complete',
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+          },
+        }) as unknown as Window,
+    )
     vi.spyOn(window, 'open').mockImplementation(open)
 
     const { PicoOSPlatform } = await import('./pico-os/PicoOSPlatform')
@@ -107,7 +116,16 @@ describe('PicoOSPlatform SpatialDiv request correlation', () => {
     window.__webspatialsdk__ = { pageEpoch: '4' }
     const { SpatialWebEvent } = await import('../SpatialWebEvent')
     SpatialWebEvent.init()
-    const open = vi.fn(() => null)
+    const open = vi.fn(
+      () =>
+        ({
+          document: {
+            readyState: 'complete',
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+          },
+        }) as unknown as Window,
+    )
     vi.spyOn(window, 'open').mockImplementation(open)
 
     const { PicoOSPlatform } = await import('./pico-os/PicoOSPlatform')

@@ -103,6 +103,7 @@ export class PicoOSPlatform implements PlatformAbility {
       const createdId = createSpatialRequestId()
       let settled = false
       let timeoutId: ReturnType<typeof setTimeout> | undefined
+      let cleanupDocumentReadyListener: (() => void) | undefined
 
       // Native creation may respond synchronously, asynchronously, or never.
       // Funnel every path through one settle() helper so receiver cleanup is
@@ -113,12 +114,50 @@ export class PicoOSPlatform implements PlatformAbility {
         if (timeoutId !== undefined) {
           clearTimeout(timeoutId)
         }
+        cleanupDocumentReadyListener?.()
+        cleanupDocumentReadyListener = undefined
         SpatialWebEvent.removeEventReceiver(createdId)
         resolve(result)
       }
 
       try {
         let windowProxy: WindowProxy | null = null
+        const settleWhenDocumentComplete = (spatialId: string) => {
+          const successResult = CommandResultSuccess({
+            windowProxy: windowProxy,
+            id: spatialId,
+          })
+          const childDocument = windowProxy?.document
+
+          if (!childDocument) {
+            settle(
+              CommandResultFailure(
+                'E_SPATIAL_DOCUMENT_UNAVAILABLE',
+                `${command} document is unavailable`,
+              ),
+            )
+            return
+          }
+
+          if (childDocument.readyState === 'complete') {
+            settle(successResult)
+            return
+          }
+
+          const onReadyStateChange = () => {
+            if (childDocument.readyState !== 'complete') return
+            settle(successResult)
+          }
+
+          cleanupDocumentReadyListener = () => {
+            childDocument.removeEventListener(
+              'readystatechange',
+              onReadyStateChange,
+            )
+          }
+          childDocument.addEventListener('readystatechange', onReadyStateChange)
+        }
+
         timeoutId = setTimeout(() => {
           settle(
             CommandResultFailure(
@@ -131,12 +170,7 @@ export class PicoOSPlatform implements PlatformAbility {
         SpatialWebEvent.addEventReceiver(
           createdId,
           (result: { spatialId: string }) => {
-            settle(
-              CommandResultSuccess({
-                windowProxy: windowProxy,
-                id: result.spatialId,
-              }),
-            )
+            settleWhenDocumentComplete(result.spatialId)
           },
         )
         windowProxy = this.openWindow(
