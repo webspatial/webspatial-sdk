@@ -136,6 +136,9 @@ Core 层接受三种互斥的 authoring 形状：
 - `finish()` 总是跳到终值，即使当前已处于 idle
 - `stop()` 和 `reset()` 后 `finished` 变为 `false`
 - `finish()` 和自然结束后 `finished` 变为 `true`
+- 从 `idle` 或 `finished` 启动的新会话会锁定当时最新的 config
+- `paused` 状态下的 `play()` 仍然只是纯粹的 `resume()`，MUST NOT 读取新的 config
+- `stop()` / `reset()` / `finish()` 必须作用于当前会话或最近一次被 `stop()` / `finish()` 结束的会话快照，而不是后续的 `updateConfig(...)`
 - controller state 只表达整体会话；不建模 partially-paused 聚合状态或 pause reason 叠加
 - paused 状态下再次调用 `play()`，语义等同于 `resume()`
 

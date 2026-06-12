@@ -215,9 +215,14 @@
 - [x] Tests: add regressions for static3d native terminal seek, idle one-shot commands, and JS fallback on native no-return/failure
 - [ ] Manual validation: verify `apps/test-server/src/pages/spatial-div-motion/model-container.tsx` Play -> Finish -> Reset returns Static3D model visuals to the start state
 
+## Phase 16c — Session config snapshot semantics
+
+- [x] Spec/design: define that only a new `play()` from `idle` or `finished` loads the latest config, while paused `play()` remains `resume()`
+- [x] Core: keep `stop()` / `finish()` terminal snapshots pinned across `updateConfig()` until the next new play
+- [x] Tests: cover unbound controller, web backend, and native backend session-snapshot semantics
+
 ## Phase — PicoOS Alignment
 
-- [ ] Archive picoOS Plan A (`spatial-div-animation-api`) to `_archived/` ✅ (completed 2026-06-04)
 - [ ] Create unified `spatialized-element-motion-api` change in picoOS repo ✅ (completed 2026-06-04)
 - [ ] picoOS Phase 1: JSB protocol migration (`AnimateSpatialized2DElement` → `AnimateSpatializedElementMotion` + `targetKind`)
 - [ ] picoOS Phase 2: Canonical tracks execution (replace single from/to lerp with multi-track evaluator)
