@@ -10,7 +10,7 @@
 
 **能力契约：** `supports('useAnimation')` 仅保留 family 级语义。具体运行时可用性 MUST 使用 `supports('useAnimation', [subtoken])`。
 
-**不在本变更范围：** Reality 内部的 `SpatialEntity` transform timeline — 继续使用现有 `useAnimation` / `AnimateTransform`。
+**不在本变更范围：** Reality 内部的 `SpatialEntity` transform timeline — 当前继续使用 `useEntityAnimation` / `AnimateTransform`。`supports('useAnimation', ['entity'])` 仍是该能力的真实 sub-token。
 
 ## 属性白名单（汇总）
 

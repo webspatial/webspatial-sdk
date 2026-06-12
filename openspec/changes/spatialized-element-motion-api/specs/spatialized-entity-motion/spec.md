@@ -2,7 +2,7 @@
 
 ## ADDED Requirements
 
-> **Status: deferred.** Container motion (`SpatializedMotionController` / `useAnimation`) does **not** include entity targets. Entity animation continues via `useEntityAnimation` + `AnimateTransform`. Requirements below are aspirational until a dedicated change lands.
+> **Status: deferred.** Container motion (`SpatializedMotionController` / `useAnimation`) does **not** include entity targets. Entity animation currently continues via `useEntityAnimation` + `AnimateTransform`. Requirements below are aspirational until a dedicated change lands.
 
 ### Requirement: Entity timeline uses transform property paths
 
@@ -23,11 +23,11 @@ Entity timeline tracks MUST use `position.x|y|z`, `rotation.x|y|z`, `scale.x|y|z
 - **WHEN** `SpatialEntity.animateTransform({ type: 'play', timeline, entityId })` is sent
 - **THEN** native `EntityAnimationManager` MUST interpolate per-track samples and drive RealityKit transform (segment `from`/`to` ignored for that play)
 
-### Requirement: Segment API remains valid
+### Requirement: Segment API remains valid on the current entity entry
 
-The legacy segment `useAnimation` shape MUST continue to work for entity motion where no timeline is provided.
+The legacy segment `useEntityAnimation` shape MUST continue to work for entity motion where no timeline is provided.
 
 #### Scenario: segment play unchanged
 
-- **WHEN** `useAnimation({ to: { position: … }, duration })` is used without timeline
+- **WHEN** `useEntityAnimation({ to: { position: … }, duration })` is used without timeline
 - **THEN** existing segment behavior MUST continue to work
