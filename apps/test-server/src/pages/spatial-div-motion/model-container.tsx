@@ -1,7 +1,7 @@
 import { supports } from '@webspatial/core-sdk'
 import { Model, useAnimation } from '@webspatial/react-sdk'
 import { useState } from 'react'
-import { btnCls, btnPrimary, fmtValues, Log } from './shared'
+import { btnCls, btnPrimary, fmtValues, Log, PlayStateBadge } from './shared'
 
 const DURATION = 4
 
@@ -70,6 +70,9 @@ export function SpatializedMotionModelContainerPage() {
           : 'supports(static3d)=false — rebuild visionOS shell (≥1.8.0). Plain browser cannot play native-only motion.'}
       </p>
       <p className="text-xs text-emerald-400/90 mb-4 font-mono">{hint}</p>
+      <div className="mb-3 flex items-center gap-3">
+        <PlayStateBadge state={api.playState} />
+      </div>
       <p className="text-xs text-gray-500 mb-4 font-mono">
         supports(useAnimation, static3d)={String(static3dAnim)} · xr-animation=
         {motion ? 'yes' : 'no'} · playState={api.playState}
@@ -96,6 +99,7 @@ export function SpatializedMotionModelContainerPage() {
         </Model>
       </div>
 
+      {/* Expose full playback controls for manual motion verification. */}
       <div className="flex flex-wrap gap-2 mb-4">
         <button type="button" className={btnPrimary} onClick={() => api.play()}>
           Play
@@ -105,6 +109,12 @@ export function SpatializedMotionModelContainerPage() {
         </button>
         <button type="button" className={btnCls} onClick={() => api.resume()}>
           Resume
+        </button>
+        <button type="button" className={btnCls} onClick={() => api.stop()}>
+          Stop
+        </button>
+        <button type="button" className={btnCls} onClick={() => api.finish()}>
+          Finish
         </button>
         <button type="button" className={btnCls} onClick={() => api.reset()}>
           Reset
