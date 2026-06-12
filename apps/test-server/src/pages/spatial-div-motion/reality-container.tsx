@@ -8,7 +8,7 @@ import {
   useAnimation,
 } from '@webspatial/react-sdk'
 import { useState } from 'react'
-import { btnCls, btnPrimary, fmtValues, Log } from './shared'
+import { btnCls, btnPrimary, fmtValues, Log, PlayStateBadge } from './shared'
 
 const DURATION = 4
 
@@ -38,7 +38,7 @@ export function SpatializedMotionRealityContainerPage() {
         property: 'transform.rotate.y',
         keyframes: [
           { at: 0, value: 0 },
-          { at: DURATION, value: 180 },
+          { at: DURATION, value: 90 },
         ],
         timingFunction: 'linear',
       },
@@ -78,6 +78,9 @@ export function SpatializedMotionRealityContainerPage() {
           : 'supports(dynamic3d)=false — rebuild visionOS shell (≥1.8.0). Plain browser cannot play native-only motion.'}
       </p>
       <p className="text-xs text-emerald-400/90 mb-4 font-mono">{hint}</p>
+      <div className="mb-3 flex items-center gap-3">
+        <PlayStateBadge state={api.playState} />
+      </div>
       <p className="text-xs text-gray-500 mb-4 font-mono">
         supports(useAnimation, dynamic3d)={String(dynamic3dAnim)} ·
         xr-animation=
@@ -98,14 +101,14 @@ export function SpatializedMotionRealityContainerPage() {
           <UnlitMaterial id="motionDemoBlue" color="#3b82f6" />
           <SceneGraph>
             <BoxEntity
-              width={0.2}
-              height={0.2}
-              depth={0.14}
+              width={0.1}
+              height={0.1}
+              depth={0.07}
               materials={['motionDemoRed']}
               position={{ x: -0.12, y: 0, z: 0 }}
             />
             <SphereEntity
-              radius={0.1}
+              radius={0.05}
               materials={['motionDemoBlue']}
               position={{ x: 0.12, y: 0, z: 0 }}
             />
@@ -113,6 +116,7 @@ export function SpatializedMotionRealityContainerPage() {
         </Reality>
       </div>
 
+      {/* Expose full playback controls for manual motion verification. */}
       <div className="flex flex-wrap gap-2 mb-4">
         <button type="button" className={btnPrimary} onClick={() => api.play()}>
           Play
@@ -122,6 +126,12 @@ export function SpatializedMotionRealityContainerPage() {
         </button>
         <button type="button" className={btnCls} onClick={() => api.resume()}>
           Resume
+        </button>
+        <button type="button" className={btnCls} onClick={() => api.stop()}>
+          Stop
+        </button>
+        <button type="button" className={btnCls} onClick={() => api.finish()}>
+          Finish
         </button>
         <button type="button" className={btnCls} onClick={() => api.reset()}>
           Reset
