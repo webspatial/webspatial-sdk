@@ -99,6 +99,8 @@ export class NativePlaybackBackend implements PlaybackBackend {
   private warnedQueued = false
   /** Set when finish() is invoked with no active session (idle terminal). */
   private idleFinished = false
+  /** Retains the last stopped/finished session snapshot until the next new play() or reset(). */
+  private terminalSessionConfig: SpatializedMotionConfig | null = null
 
   constructor(private readonly ctx: NativeBackendContext) {}
 
@@ -147,6 +149,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
       sessionState === 'idle' ||
       sessionState === 'finished'
     ) {
+      this.terminalSessionConfig = null
       const token = ++this.nativePlayToken
       this.enqueue(() => this.nativePlay(token))
       return
@@ -202,6 +205,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
       }
     }
     this.session = null
+    this.terminalSessionConfig = null
     this.nativePlayToken++
     this.ctx.clearPendingPlay()
     this.ctx.notifyStateChange()
@@ -304,8 +308,9 @@ export class NativePlaybackBackend implements PlaybackBackend {
         if (this.session !== session) return
         if (session.state === 'finished' || session.state === 'idle') return
         session.state = 'finished'
+        this.terminalSessionConfig = session.config
         this.ctx.notifyStateChange()
-        this.ctx.getConfig().onComplete?.(finalValues)
+        session.config.onComplete?.(finalValues)
         this.ctx.emitValues(finalValues)
       })
 
@@ -315,8 +320,9 @@ export class NativePlaybackBackend implements PlaybackBackend {
         if (session.state === 'finished' || session.state === 'idle') return
         session.state = 'idle'
         this.session = null
+        this.terminalSessionConfig = null
         this.ctx.notifyStateChange()
-        this.ctx.getConfig().onReset?.(currentValues)
+        session.config.onReset?.(currentValues)
         this.ctx.emitValues(currentValues)
       })
 
@@ -326,6 +332,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
         if (session.state === 'finished' || session.state === 'idle') return
         session.state = 'idle'
         this.session = null
+        this.terminalSessionConfig = null
         this.ctx.notifyStateChange()
         this.reportNativeError(error)
       })
@@ -350,6 +357,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
       if (this.ctx.isDestroyed() || session.unmounted) return
       session.state = 'idle'
       this.session = null
+      this.terminalSessionConfig = null
       this.ctx.notifyStateChange()
       this.reportNativeError({
         animationId: session.animationId,
@@ -519,9 +527,10 @@ export class NativePlaybackBackend implements PlaybackBackend {
     if (!element) {
       session.state = 'idle'
       this.session = null
+      this.terminalSessionConfig = session.config
       this.ctx.notifyStateChange()
       this.ctx.emitValues(currentValues)
-      this.ctx.getConfig().onStop?.(currentValues)
+      session.config.onStop?.(currentValues)
       return
     }
 
@@ -532,16 +541,18 @@ export class NativePlaybackBackend implements PlaybackBackend {
       })
       session.state = 'idle'
       this.session = null
+      this.terminalSessionConfig = session.config
       this.ctx.notifyStateChange()
       const output = values ?? currentValues
       this.ctx.emitValues(output)
-      this.ctx.getConfig().onStop?.(output)
+      session.config.onStop?.(output)
     } catch {
       session.state = 'idle'
       this.session = null
+      this.terminalSessionConfig = session.config
       this.ctx.notifyStateChange()
       this.ctx.emitValues(currentValues)
-      this.ctx.getConfig().onStop?.(currentValues)
+      session.config.onStop?.(currentValues)
     }
   }
 
@@ -552,12 +563,13 @@ export class NativePlaybackBackend implements PlaybackBackend {
     const kind = this.ctx.getKind()
     if (!kind) return
 
-    const cfg = this.ctx.getConfig()
-    const terminalState = mode === 'reset' ? 'idle' : 'finished'
     const session = this.session
     const activeSession =
       !!session && session.state !== 'idle' && session.state !== 'finished'
-    const sessionConfig = session?.config ?? cfg
+    const latestConfig = this.ctx.getConfig()
+    const sessionConfig =
+      session?.config ?? this.terminalSessionConfig ?? latestConfig
+    const terminalState = mode === 'reset' ? 'idle' : 'finished'
     const terminalTime = mode === 'reset' ? 0 : sessionConfig.duration
     const fallbackValues = evaluateMotionTimeline(sessionConfig, terminalTime)
     const element = this.ctx.getElement()
@@ -572,6 +584,7 @@ export class NativePlaybackBackend implements PlaybackBackend {
         this.cleanupNativeListeners(session.animationId)
       }
       this.idleFinished = mode === 'finish'
+      this.terminalSessionConfig = mode === 'finish' ? sessionConfig : null
       if (session && activeSession && this.session === session) {
         session.state = terminalState
         this.session = null
@@ -583,9 +596,9 @@ export class NativePlaybackBackend implements PlaybackBackend {
       this.ctx.notifyStateChange()
       this.ctx.emitValues(values)
       if (mode === 'reset') {
-        cfg.onReset?.(values)
+        sessionConfig.onReset?.(values)
       } else {
-        cfg.onComplete?.(values)
+        sessionConfig.onComplete?.(values)
       }
     }
 
