@@ -262,6 +262,61 @@ describe('JSBCommand', () => {
       }),
     )
   })
+
+  it('serializes terminal motion timeline payloads for one-shot native seek', async () => {
+    const { AnimateSpatializedElementMotionJSBCommand } = await import(
+      './JSBCommand'
+    )
+    const timeline = {
+      duration: 1,
+      tracks: [
+        {
+          property: 'transform.translate.x',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 10 },
+          ],
+          timingFunction: 'linear',
+        },
+      ],
+    }
+
+    await new AnimateSpatializedElementMotionJSBCommand({
+      animationId: 'terminal-reset',
+      type: 'reset',
+      targetKind: 'static3d',
+      elementId: 'model-1',
+      timeline,
+    }).execute()
+    await new AnimateSpatializedElementMotionJSBCommand({
+      animationId: 'terminal-finish',
+      type: 'finish',
+      targetKind: 'static3d',
+      elementId: 'model-1',
+      timeline,
+    }).execute()
+
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'AnimateSpatializedElementMotion',
+      JSON.stringify({
+        type: 'reset',
+        animationId: 'terminal-reset',
+        targetKind: 'static3d',
+        elementId: 'model-1',
+        timeline,
+      }),
+    )
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'AnimateSpatializedElementMotion',
+      JSON.stringify({
+        type: 'finish',
+        animationId: 'terminal-finish',
+        targetKind: 'static3d',
+        elementId: 'model-1',
+        timeline,
+      }),
+    )
+  })
 })
 
 describe('SpatialObject', () => {

@@ -177,41 +177,11 @@ export class NativePlaybackBackend implements PlaybackBackend {
   }
 
   reset(): void {
-    const ns = this.session?.state
-    if (ns && ns !== 'idle') {
-      this.enqueue(() => this.nativeReset())
-      return
-    }
-    // No active session: seek to start synchronously (spec: reset always seeks
-    // start, even when idle).
-    this.nativePlayToken++
-    this.idleFinished = false
-    const cfg = this.ctx.getConfig()
-    const values = evaluateMotionTimeline(cfg, 0)
-    this.ctx.clearPendingPlay()
-    this.ctx.emitValues(values)
-    this.ctx.notifyStateChange()
-    cfg.onReset?.(values)
+    this.enqueue(() => this.nativeSeekTerminal('reset'))
   }
 
   finish(): void {
-    const ns = this.session?.state
-    if (ns && ns !== 'idle' && ns !== 'finished') {
-      this.enqueue(() => this.nativeFinish())
-      return
-    }
-    if (!ns || ns === 'idle') {
-      // No active session: seek to end synchronously (spec: finish always seeks
-      // end, even when idle).
-      this.nativePlayToken++
-      this.idleFinished = true
-      const cfg = this.ctx.getConfig()
-      const values = evaluateMotionTimeline(cfg, cfg.duration)
-      this.ctx.clearPendingPlay()
-      this.ctx.emitValues(values)
-      this.ctx.notifyStateChange()
-      cfg.onComplete?.(values)
-    }
+    this.enqueue(() => this.nativeSeekTerminal('finish'))
   }
 
   detach(opts: { cancelSession: boolean }): void {
@@ -525,58 +495,6 @@ export class NativePlaybackBackend implements PlaybackBackend {
   }
 
   /**
-   * Resets the native session back to timeline start.
-   */
-  private async nativeReset(): Promise<void> {
-    if (!this.ctx.getKind()) return
-    const session = this.session
-    if (!session || session.state === 'idle') return
-
-    if (session.state === 'finished') {
-      const values = evaluateMotionTimeline(session.config, 0)
-      session.state = 'idle'
-      this.session = null
-      this.ctx.notifyStateChange()
-      this.ctx.emitValues(values)
-      this.ctx.getConfig().onReset?.(values)
-      return
-    }
-
-    const element = this.ctx.getElement()
-    if (!element) {
-      session.state = 'idle'
-      this.session = null
-      this.ctx.notifyStateChange()
-      const values = evaluateMotionTimeline(session.config, 0)
-      this.ctx.getConfig().onReset?.(values)
-      this.ctx.emitValues(values)
-      return
-    }
-
-    try {
-      const values = await this.nativeElementCommand(element, {
-        animationId: session.animationId,
-        type: 'reset',
-      })
-      session.state = 'idle'
-      this.session = null
-      this.ctx.notifyStateChange()
-      if (values) {
-        this.ctx.emitValues(values)
-        this.ctx.getConfig().onReset?.(values)
-      } else {
-        const fallback = evaluateMotionTimeline(session.config, 0)
-        this.ctx.emitValues(fallback)
-        this.ctx.getConfig().onReset?.(fallback)
-      }
-    } catch {
-      session.state = 'idle'
-      this.session = null
-      this.ctx.notifyStateChange()
-    }
-  }
-
-  /**
    * Stops the native session and publishes the current values.
    */
   private async nativeStop(): Promise<void> {
@@ -628,48 +546,77 @@ export class NativePlaybackBackend implements PlaybackBackend {
   }
 
   /**
-   * Seeks the native session to timeline end.
+   * Seeks the current or transient native motion state to a terminal edge.
    */
-  private async nativeFinish(): Promise<void> {
-    if (!this.ctx.getKind()) return
+  private async nativeSeekTerminal(mode: 'reset' | 'finish'): Promise<void> {
+    const kind = this.ctx.getKind()
+    if (!kind) return
+
+    const cfg = this.ctx.getConfig()
+    const terminalState = mode === 'reset' ? 'idle' : 'finished'
     const session = this.session
-    if (!session || session.state === 'idle' || session.state === 'finished')
-      return
-
+    const activeSession =
+      !!session && session.state !== 'idle' && session.state !== 'finished'
+    const sessionConfig = session?.config ?? cfg
+    const terminalTime = mode === 'reset' ? 0 : sessionConfig.duration
+    const fallbackValues = evaluateMotionTimeline(sessionConfig, terminalTime)
     const element = this.ctx.getElement()
-    if (!element) {
-      session.state = 'finished'
+
+    this.nativePlayToken++
+    this.ctx.clearPendingPlay()
+
+    const finalize = (values: SpatializedVisualValues): void => {
+      // Terminal seek short-circuits the native session, so the play listeners
+      // must be removed here because no terminal event will fire to clean them up.
+      if (session && activeSession) {
+        this.cleanupNativeListeners(session.animationId)
+      }
+      this.idleFinished = mode === 'finish'
+      if (session && activeSession && this.session === session) {
+        session.state = terminalState
+        this.session = null
+      } else {
+        if (session) {
+          this.session = null
+        }
+      }
       this.ctx.notifyStateChange()
-      const values = evaluateMotionTimeline(
-        session.config,
-        session.config.duration,
-      )
       this.ctx.emitValues(values)
-      this.ctx.getConfig().onComplete?.(values)
-      return
+      if (mode === 'reset') {
+        cfg.onReset?.(values)
+      } else {
+        cfg.onComplete?.(values)
+      }
     }
 
-    try {
-      const values = await this.nativeElementCommand(element, {
-        animationId: session.animationId,
-        type: 'finish',
-      })
-      session.state = 'finished'
-      this.ctx.notifyStateChange()
-      const output =
-        values ??
-        evaluateMotionTimeline(session.config, session.config.duration)
-      this.ctx.emitValues(output)
-      this.ctx.getConfig().onComplete?.(output)
-    } catch {
-      session.state = 'finished'
-      this.ctx.notifyStateChange()
-      const fallback = evaluateMotionTimeline(
-        session.config,
-        session.config.duration,
-      )
-      this.ctx.emitValues(fallback)
-      this.ctx.getConfig().onComplete?.(fallback)
+    if (activeSession && element && this.ctx.isNativeCapable()) {
+      try {
+        const values = await this.nativeElementCommand(element, {
+          animationId: session!.animationId,
+          type: mode,
+        })
+        finalize(values ?? fallbackValues)
+        return
+      } catch {
+        // Fall through to the JS evaluator.
+      }
     }
+
+    if (!activeSession && element && this.ctx.isNativeCapable()) {
+      try {
+        const values = await this.nativeElementCommand(element, {
+          animationId: nextAnimationId(sessionIdPrefix(kind)),
+          type: mode,
+          elementId: element.id,
+          timeline: motionConfigToNativeTimeline(sessionConfig),
+        })
+        finalize(values ?? fallbackValues)
+        return
+      } catch {
+        // Fall through to the JS evaluator.
+      }
+    }
+
+    finalize(fallbackValues)
   }
 }

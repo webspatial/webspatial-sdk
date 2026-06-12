@@ -208,6 +208,13 @@
 - [x] Replace ad-hoc config stringify logic with memoized normalization plus a dedicated non-function signature helper
 - [x] Add regression tests for root exports, import routing, unbind/rebind, `autoStart`, queued play, StrictMode, style fallback, and container binding consistency
 
+## Phase 16b — Native terminal seek correction (Plan 2)
+
+- [x] Core: unify `reset()` / `finish()` terminal seek handling in `NativePlaybackBackend`
+- [x] visionOS: share terminal seek/apply helpers in `SpatializedElementMotionManager` and support transient one-shot seek commands
+- [x] Tests: add regressions for static3d native terminal seek, idle one-shot commands, and JS fallback on native no-return/failure
+- [ ] Manual validation: verify `apps/test-server/src/pages/spatial-div-motion/model-container.tsx` Play -> Finish -> Reset returns Static3D model visuals to the start state
+
 ## Phase — PicoOS Alignment
 
 - [ ] Archive picoOS Plan A (`spatial-div-animation-api`) to `_archived/` ✅ (completed 2026-06-04)

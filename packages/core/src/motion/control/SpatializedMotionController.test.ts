@@ -55,6 +55,33 @@ function makeSuppressionConfig() {
   }
 }
 
+function makeStatic3DConfig(
+  overrides: Partial<{
+    autoStart: boolean
+    onReset: (values: SpatializedVisualValues) => void
+    onComplete: (values: SpatializedVisualValues) => void
+    onStop: (values: SpatializedVisualValues) => void
+  }> = {},
+) {
+  return {
+    duration: 1,
+    autoStart: overrides.autoStart ?? false,
+    tracks: [
+      {
+        property: 'transform.translate.x' as const,
+        timingFunction: 'linear' as const,
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 10 },
+        ],
+      },
+    ],
+    onReset: overrides.onReset,
+    onComplete: overrides.onComplete,
+    onStop: overrides.onStop,
+  }
+}
+
 function createNativeElement(id: string) {
   const animateMotion = vi.fn(async (command: { type: string }) => {
     if (command.type === 'play') {
@@ -224,7 +251,7 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(onStop).not.toHaveBeenCalled()
   })
 
-  test('idle reset and finish fall back to JS-side emit without native session', () => {
+  test('idle reset and finish fall back to JS-side emit without native session', async () => {
     const values: SpatializedVisualValues[] = []
     const onStop = vi.fn()
     const onReset = vi.fn()
@@ -247,6 +274,7 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(onStop).not.toHaveBeenCalled()
 
     controller.reset()
+    await flushPromises()
     expect(values).toHaveLength(2)
     expect(values.at(-1)).toEqual({ opacity: 0 })
     expect(controller.playState).toBe('idle')
@@ -254,6 +282,7 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(onReset).toHaveBeenCalledWith({ opacity: 0 })
 
     controller.finish()
+    await flushPromises()
     expect(values).toHaveLength(3)
     expect(values.at(-1)).toEqual({ opacity: 1 })
     expect(controller.playState).toBe('finished')
@@ -261,12 +290,247 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(onComplete).toHaveBeenCalledWith({ opacity: 1 })
   })
 
-  test('native stop, reset, and finish match web semantics without absorbing one another', async () => {
+  test.each(['static3d', 'dynamic3d'] as const)(
+    '%s play -> finish -> reset uses native terminal seek and one-shot idle terminal commands',
+    async kind => {
+      const values: SpatializedVisualValues[] = []
+      const onReset = vi.fn()
+      const onComplete = vi.fn()
+
+      const animateMotion = vi.fn(async (command: { type: string }) => {
+        if (command.type === 'play') {
+          return {
+            animationId: 'native-model-1',
+            finished: new Promise<SpatializedVisualValues>(() => {}),
+            canceled: new Promise<SpatializedVisualValues>(() => {}),
+            failed: new Promise(() => {}),
+          }
+        }
+        return undefined
+      })
+
+      const controller = new SpatializedMotionController(
+        makeStatic3DConfig({ onReset, onComplete }),
+        {
+          forceNativePlayback: true,
+          onValuesChange: v => values.push(v),
+        },
+      )
+      controller.attachElement(null, kind)
+      controller.attachElement({ id: 'native-model', animateMotion } as any)
+
+      controller.play()
+      await vi.waitFor(() => {
+        expect(
+          animateMotion.mock.calls.filter(
+            ([c]) => (c as { type: string }).type === 'play',
+          ),
+        ).toHaveLength(1)
+      })
+      const playCall = animateMotion.mock.calls.find(
+        ([c]) => (c as { type: string }).type === 'play',
+      )?.[0] as {
+        timeline?: { duration: number; tracks: unknown[] }
+        targetKind?: string
+        from?: unknown
+        to?: unknown
+      }
+      expect(playCall).toEqual(
+        expect.objectContaining({
+          targetKind: kind,
+          timeline: expect.objectContaining({
+            duration: 1,
+            tracks: expect.arrayContaining([
+              expect.objectContaining({
+                property: 'transform.translate.x',
+                timingFunction: 'linear',
+              }),
+            ]),
+          }),
+        }),
+      )
+      expect(playCall).not.toHaveProperty('from')
+      expect(playCall).not.toHaveProperty('to')
+      expect(controller.playState).toBe('running')
+
+      controller.finish()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({ targetKind: kind, type: 'finish' }),
+        )
+      })
+      await vi.waitFor(() => {
+        expect(controller.playState).toBe('finished')
+      })
+      expect(controller.playState).toBe('finished')
+      expect(controller.finished).toBe(true)
+      expect(onComplete).toHaveBeenCalledWith(
+        expect.objectContaining({
+          transform: expect.objectContaining({
+            translate: expect.objectContaining({ x: 10 }),
+          }),
+        }),
+      )
+
+      controller.reset()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            targetKind: kind,
+            type: 'reset',
+            elementId: 'native-model',
+            timeline: expect.objectContaining({
+              duration: 1,
+              tracks: expect.arrayContaining([
+                expect.objectContaining({
+                  property: 'transform.translate.x',
+                }),
+              ]),
+            }),
+          }),
+        )
+      })
+      await vi.waitFor(() => {
+        expect(controller.playState).toBe('idle')
+        expect(controller.finished).toBe(false)
+      })
+      expect(values.at(-1)).toEqual(
+        expect.objectContaining({
+          transform: expect.objectContaining({
+            translate: expect.objectContaining({ x: 0 }),
+          }),
+        }),
+      )
+      expect(controller.playState).toBe('idle')
+      expect(controller.finished).toBe(false)
+      expect(onReset).toHaveBeenCalledWith(
+        expect.objectContaining({
+          transform: expect.objectContaining({
+            translate: expect.objectContaining({ x: 0 }),
+          }),
+        }),
+      )
+
+      controller.finish()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            targetKind: kind,
+            type: 'finish',
+            elementId: 'native-model',
+            timeline: expect.objectContaining({
+              duration: 1,
+              tracks: expect.arrayContaining([
+                expect.objectContaining({
+                  property: 'transform.translate.x',
+                }),
+              ]),
+            }),
+          }),
+        )
+      })
+      expect(values.at(-1)).toEqual(
+        expect.objectContaining({
+          transform: expect.objectContaining({
+            translate: expect.objectContaining({ x: 10 }),
+          }),
+        }),
+      )
+      expect(controller.playState).toBe('finished')
+      expect(controller.finished).toBe(true)
+      expect(onComplete).toHaveBeenCalledTimes(2)
+    },
+  )
+
+  test.each(['static3d', 'dynamic3d'] as const)(
+    'idle %s reset and finish fall back to JS values when native returns no payload or fails',
+    async kind => {
+      const values: SpatializedVisualValues[] = []
+      const onReset = vi.fn()
+      const onComplete = vi.fn()
+
+      const animateMotion = vi.fn(async (command: { type: string }) => {
+        if (command.type === 'reset') return undefined
+        if (command.type === 'finish') {
+          throw new Error('native finish failed')
+        }
+        return undefined
+      })
+
+      const controller = new SpatializedMotionController(
+        makeStatic3DConfig({ onReset, onComplete }),
+        {
+          forceNativePlayback: true,
+          onValuesChange: v => values.push(v),
+        },
+      )
+      controller.attachElement(null, kind)
+      controller.attachElement({ id: 'native-model', animateMotion } as any)
+
+      controller.reset()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            targetKind: kind,
+            type: 'reset',
+            elementId: 'native-model',
+            timeline: expect.objectContaining({ duration: 1 }),
+          }),
+        )
+      })
+      expect(values.at(-1)).toEqual(
+        expect.objectContaining({
+          transform: expect.objectContaining({
+            translate: expect.objectContaining({ x: 0 }),
+          }),
+        }),
+      )
+      expect(controller.playState).toBe('idle')
+      expect(controller.finished).toBe(false)
+      expect(onReset).toHaveBeenCalledWith(
+        expect.objectContaining({
+          transform: expect.objectContaining({
+            translate: expect.objectContaining({ x: 0 }),
+          }),
+        }),
+      )
+
+      controller.finish()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            targetKind: kind,
+            type: 'finish',
+            elementId: 'native-model',
+            timeline: expect.objectContaining({ duration: 1 }),
+          }),
+        )
+      })
+      await vi.waitFor(() => {
+        expect(controller.playState).toBe('finished')
+      })
+      expect(values.at(-1)).toEqual(
+        expect.objectContaining({
+          transform: expect.objectContaining({
+            translate: expect.objectContaining({ x: 10 }),
+          }),
+        }),
+      )
+      expect(controller.playState).toBe('finished')
+      expect(controller.finished).toBe(true)
+      expect(onComplete).toHaveBeenCalledWith(
+        expect.objectContaining({
+          transform: expect.objectContaining({
+            translate: expect.objectContaining({ x: 10 }),
+          }),
+        }),
+      )
+    },
+  )
+
+  test('native stop remains unchanged for active sessions', async () => {
     const values: SpatializedVisualValues[] = []
     const onStop = vi.fn()
-    const onReset = vi.fn()
-    const onComplete = vi.fn()
-
     const animateMotion = vi.fn(async (command: { type: string }) => {
       if (command.type === 'play') {
         return {
@@ -279,13 +543,8 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
       if (command.type === 'stop') return { opacity: 0.4 }
       return undefined
     })
-    const sessionCalls = () =>
-      animateMotion.mock.calls.filter(
-        ([c]) => (c as { type: string }).type !== 'play',
-      )
-
     const controller = new SpatializedMotionController(
-      makeConfig({ autoStart: false, onStop, onReset, onComplete }),
+      makeConfig({ autoStart: false, onStop }),
       {
         forceNativePlayback: true,
         onValuesChange: v => values.push(v),
@@ -296,62 +555,22 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
 
     controller.play()
     await vi.waitFor(() => {
-      expect(
-        animateMotion.mock.calls.filter(
-          ([c]) => (c as { type: string }).type === 'play',
-        ),
-      ).toHaveLength(1)
+      expect(animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ targetKind: 'spatialized2d', type: 'play' }),
+      )
     })
-    const playCall = animateMotion.mock.calls.find(
-      ([c]) => (c as { type: string }).type === 'play',
-    )?.[0] as {
-      timeline?: { duration: number; tracks: unknown[] }
-      targetKind?: string
-      from?: unknown
-      to?: unknown
-    }
-    expect(playCall).toEqual(
-      expect.objectContaining({
-        targetKind: 'spatialized2d',
-        timeline: expect.objectContaining({
-          duration: 1,
-          tracks: expect.arrayContaining([
-            expect.objectContaining({
-              property: 'opacity',
-              timingFunction: 'linear',
-            }),
-          ]),
-        }),
-      }),
-    )
-    expect(playCall).not.toHaveProperty('from')
-    expect(playCall).not.toHaveProperty('to')
-    expect(controller.playState).toBe('running')
 
     controller.stop()
     await vi.waitFor(() => {
       expect(animateMotion).toHaveBeenCalledWith(
         expect.objectContaining({ targetKind: 'spatialized2d', type: 'stop' }),
       )
+      expect(controller.playState).toBe('idle')
     })
     const stopped = values.at(-1)!
     expect(stopped.opacity).toBe(0.4)
-    expect(controller.playState).toBe('idle')
     expect(controller.finished).toBe(false)
     expect(onStop).toHaveBeenCalledWith(stopped)
-
-    controller.reset()
-    expect(values.at(-1)).toEqual({ opacity: 0 })
-    expect(controller.playState).toBe('idle')
-    expect(controller.finished).toBe(false)
-    expect(onReset).toHaveBeenCalledWith({ opacity: 0 })
-
-    controller.finish()
-    expect(values.at(-1)).toEqual({ opacity: 1 })
-    expect(controller.playState).toBe('finished')
-    expect(controller.finished).toBe(true)
-    expect(onComplete).toHaveBeenCalledWith({ opacity: 1 })
-    expect(sessionCalls()).toHaveLength(1)
   })
 })
 
