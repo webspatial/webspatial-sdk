@@ -208,6 +208,13 @@
 - [x] 用 memoized normalization 加专用 non-function signature helper 替换临时的 config stringify 逻辑
 - [x] 补充 root exports、import routing、unbind/rebind、`autoStart`、queued play、StrictMode、style fallback、容器 binding 一致性的回归测试
 
+## Phase 16b — Native terminal seek 修正 Plan 2
+
+- [x] Core：在 `NativePlaybackBackend` 中统一 `reset()` / `finish()` 的 terminal seek 处理
+- [x] visionOS：在 `SpatializedElementMotionManager` 中抽取共享 terminal seek apply helper，并支持一次性 transient seek 命令
+- [x] 测试：补充 static3d native terminal seek、idle one-shot 命令，以及 native 无返回值或失败时 JS fallback 的回归覆盖
+- [ ] 手工验证：确认 `apps/test-server/src/pages/spatial-div-motion/model-container.tsx` 中 Play -> Finish -> Reset 可让 Static3D 模型视觉回到起始状态
+
 ## 阶段 — PicoOS 对齐
 
 - [ ] 归档 picoOS Plan A（`spatial-div-animation-api`）到 `_archived/` ✅（2026-06-04 完成）
