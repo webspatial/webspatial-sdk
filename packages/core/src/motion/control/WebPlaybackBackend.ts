@@ -20,6 +20,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
   private startWallMs = 0
   private pausedElapsedMs = 0
   private sessionConfig: SpatializedMotionConfig | null = null
+  private loopDirection: 1 | -1 = 1
 
   constructor(private readonly ctx: PlaybackBackendContext) {}
 
@@ -62,6 +63,14 @@ export class WebPlaybackBackend implements PlaybackBackend {
     }
   }
 
+  private resetLoopDirection(): void {
+    this.loopDirection = 1
+  }
+
+  private evaluateTime(rawTimeSec: number, durationSec: number): number {
+    return this.loopDirection === 1 ? rawTimeSec : durationSec - rawTimeSec
+  }
+
   play(): void {
     if (this.webState === 'running') return
 
@@ -75,6 +84,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
 
     this.sessionConfig = this.ctx.getConfig()
     const cfg = this.getCurrentSessionConfig()
+    this.resetLoopDirection()
     if (!this.webStarted) {
       this.webStarted = true
       cfg.onStart?.()
@@ -95,7 +105,13 @@ export class WebPlaybackBackend implements PlaybackBackend {
     this.webState = 'paused'
     this.stopRaf()
     this.ctx.emitValues(
-      evaluateMotionTimeline(cfg, motionTimeSec(this.pausedElapsedMs, cfg)),
+      evaluateMotionTimeline(
+        cfg,
+        this.evaluateTime(
+          motionTimeSec(this.pausedElapsedMs, cfg),
+          cfg.duration,
+        ),
+      ),
     )
     this.ctx.notifyStateChange()
   }
@@ -118,6 +134,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
     this.webStarted = false
     this.pausedElapsedMs = 0
     this.sessionConfig = null
+    this.resetLoopDirection()
     this.ctx.notifyStateChange()
     cfg.onReset?.(values)
   }
@@ -133,6 +150,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
       this.webState = 'idle'
       this.webStarted = false
       this.pausedElapsedMs = 0
+      this.resetLoopDirection()
       this.ctx.notifyStateChange()
       return
     }
@@ -148,13 +166,14 @@ export class WebPlaybackBackend implements PlaybackBackend {
     this.ctx.clearPendingPlay()
     const values = evaluateMotionTimeline(
       cfg,
-      motionTimeSec(elapsedAtStop, cfg),
+      this.evaluateTime(motionTimeSec(elapsedAtStop, cfg), cfg.duration),
     )
     this.ctx.emitValues(values)
     this.webState = 'idle'
     this.webStarted = false
     this.pausedElapsedMs = 0
     this.sessionConfig = null
+    this.resetLoopDirection()
     this.ctx.notifyStateChange()
     cfg.onStop?.(values)
   }
@@ -171,6 +190,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
     this.webState = 'finished'
     this.webStarted = false
     this.pausedElapsedMs = 0
+    this.resetLoopDirection()
     this.ctx.notifyStateChange()
     cfg.onComplete?.(values)
   }
@@ -185,12 +205,21 @@ export class WebPlaybackBackend implements PlaybackBackend {
     if (this.webState !== 'running' || this.ctx.isDestroyed()) return
 
     const elapsed = performance.now() - this.startWallMs
-    const t = motionTimeSec(elapsed, cfg)
+    const rawTimeSec = motionTimeSec(elapsed, cfg)
+    const t = this.evaluateTime(rawTimeSec, cfg.duration)
 
-    if (t >= cfg.duration) {
-      const values = evaluateMotionTimeline(cfg, cfg.duration)
+    if (rawTimeSec >= cfg.duration) {
+      const loopEndpoint = this.loopDirection === 1 ? cfg.duration : 0
+      const values = evaluateMotionTimeline(cfg, loopEndpoint)
       this.ctx.emitValues(values)
       if (cfg.loop) {
+        if (typeof cfg.loop === 'object' && cfg.loop.reverse) {
+          this.loopDirection = this.loopDirection === 1 ? -1 : 1
+          this.startWallMs = performance.now()
+          this.pausedElapsedMs = 0
+          this.scheduleFrame()
+          return
+        }
         this.startWallMs = performance.now()
         this.pausedElapsedMs = 0
         this.ctx.emitValues(evaluateMotionTimeline(cfg, 0))
