@@ -1,7 +1,19 @@
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { act, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { resetRuntimeCacheForTests } from '@webspatial/core-sdk'
+
+function installFakeRaf() {
+  vi.useFakeTimers()
+  vi.stubGlobal(
+    'requestAnimationFrame',
+    (cb: FrameRequestCallback): number =>
+      setTimeout(() => cb(performance.now()), 16) as unknown as number,
+  )
+  vi.stubGlobal('cancelAnimationFrame', (id: number) => {
+    clearTimeout(id)
+  })
+}
 
 describe('SpatializedContainer degraded xr-animation binding', () => {
   beforeEach(() => {
@@ -9,7 +21,13 @@ describe('SpatializedContainer degraded xr-animation binding', () => {
     resetRuntimeCacheForTests()
   })
 
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.useRealTimers()
+  })
+
   test('binds xr-animation to the degraded host so web playback can advance', async () => {
+    installFakeRaf()
     const { Spatialized2DElementContainer } = await import(
       './Spatialized2DElementContainer'
     )
@@ -49,29 +67,31 @@ describe('SpatializedContainer degraded xr-animation binding', () => {
 
     render(<TestPage />)
 
-    const host = await screen.findByTestId('host')
+    const host = screen.getByTestId('host')
     expect(host.textContent).toContain('Hello Spatial')
+    expect(host.style.opacity).toBe('0')
+    expect(host.style.transform).toContain('40px')
 
-    await waitFor(() => {
-      expect(host.style.opacity).toBe('0')
-      expect(host.style.transform).toContain('40px')
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(screen.getByTestId('play-state').textContent).toBe('running')
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(20)
     })
 
-    await waitFor(
-      () => {
-        expect(screen.getByTestId('play-state').textContent).toBe('running')
-        expect(Number(host.style.opacity)).toBeGreaterThan(0)
-      },
-      { timeout: 1000 },
-    )
+    expect(Number(host.style.opacity)).toBeGreaterThan(0)
+    expect(Number(host.style.opacity)).toBeLessThan(1)
+    expect(host.style.transform).not.toContain('40px')
+    expect(host.style.transform).not.toContain('0px, 0px, 0px')
 
-    await waitFor(
-      () => {
-        expect(screen.getByTestId('play-state').textContent).toBe('finished')
-        expect(host.style.opacity).toBe('1')
-        expect(host.style.transform).toContain('0px')
-      },
-      { timeout: 1500 },
-    )
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100)
+    })
+
+    expect(screen.getByTestId('play-state').textContent).toBe('finished')
+    expect(host.style.opacity).toBe('1')
+    expect(host.style.transform).toContain('0px')
   })
 })
