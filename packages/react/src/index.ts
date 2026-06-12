@@ -8,6 +8,12 @@ export * from './initScene'
 export * from './spatialized-container'
 export * from './spatialized-container-monitor'
 export * from './reality'
+export { useAnimation, useEntityAnimation } from './useAnimation'
+export type {
+  UseAnimationResult,
+  SpatializedMotionConfig,
+  SpatializedMotionSegmentConfig,
+} from './spatialized-container/motion'
 export * from './Model'
 export { SSRProvider } from './ssr'
 export { useMetrics } from './useMetrics'

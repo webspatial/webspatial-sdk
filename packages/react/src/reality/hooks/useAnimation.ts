@@ -56,16 +56,18 @@ function nextAnimationId(): string {
 const _boundAnimations = new WeakMap<object, string>()
 
 /**
- * `useAnimation` hook — the primary public API for entity transform animation.
- *
- * Returns `[AnimatedProps, AnimationApi]`. Pass `AnimatedProps` to the
- * entity's `animation` prop. Use `AnimationApi` to control playback.
+ * Internal entity animation hook.
+ * Called unconditionally by the dispatch layer; `active` controls whether effects run.
+ * When `active` is false, all hooks still execute but effects short-circuit.
  */
-export function useAnimation(
+export function useEntityAnimation(
   config: AnimationConfig,
+  active: boolean = true,
 ): [AnimatedProps, AnimationApi] {
-  // Validate config eagerly (throws on invalid)
-  validateAnimationConfig(config)
+  // Validate config eagerly (throws on invalid) — only when active
+  if (active) {
+    validateAnimationConfig(config)
+  }
 
   const animatedFields = useMemo(
     () => getAnimatedFields(config),
@@ -107,7 +109,7 @@ export function useAnimation(
     if (cfg.onError) {
       cfg.onError(error)
     } else {
-      console.error('[useAnimation] Animation error:', error)
+      console.error('[useEntityAnimation] Animation error:', error)
     }
   }, [])
 
@@ -262,7 +264,7 @@ export function useAnimation(
       if (!warnedRef.current) {
         warnedRef.current = true
         console.warn(
-          '[useAnimation] Entity transform animation is not supported in the current runtime.',
+          '[useEntityAnimation] Entity transform animation is not supported in the current runtime.',
         )
       }
       return
@@ -521,7 +523,7 @@ export function useAnimation(
     const existingId = _boundAnimations.get(animatedProps)
     if (existingId && existingId !== entity.id) {
       throw new Error(
-        '[useAnimation] The same animation object must not be bound to multiple entities.',
+        '[useEntityAnimation] The same animation object must not be bound to multiple entities.',
       )
     }
     _boundAnimations.set(animatedProps, entity.id)
@@ -569,6 +571,7 @@ export function useAnimation(
 
   // ---- Cleanup on unmount ----
   useEffect(() => {
+    if (!active) return
     unmountedRef.current = false
     return () => {
       unmountedRef.current = true
@@ -577,15 +580,16 @@ export function useAnimation(
         session.unmounted = true
       }
     }
-  }, [])
+  }, [active])
 
   // ---- Auto-start logic ----
   useEffect(() => {
+    if (!active) return
     const autoStart = config.autoStart !== false
     if (autoStart && !sessionRef.current) {
       play()
     }
-  }, []) // only on mount
+  }, [active]) // only on mount
 
   return [animatedProps, api]
 }

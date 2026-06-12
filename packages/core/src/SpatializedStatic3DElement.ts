@@ -1,5 +1,11 @@
 import { UpdateSpatializedStatic3DElementProperties } from './JSBCommand'
 import { ReceiveEventData, SpatializedElement } from './SpatializedElement'
+import { executeAnimateSpatializedElementMotion } from './motion/native/executeAnimateSpatializedElementMotion'
+import type {
+  AnimateSpatializedElementMotionCommand,
+  AnimateSpatializedElementMotionResult,
+} from './types/spatializedElementMotion'
+import type { SpatializedVisualValues } from './types/spatializedVisual'
 import {
   ModelLoadingMode,
   ModelSource,
@@ -366,6 +372,24 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   updateModelTransform(transform: DOMMatrixReadOnly) {
     const modelTransform = Array.from(transform.toFloat64Array())
     this.updateProperties({ modelTransform })
+  }
+
+  // ---- Static3D root transform motion (timeline) ----
+
+  animateMotion(
+    command: AnimateSpatializedElementMotionCommand & { type: 'play' },
+  ): Promise<AnimateSpatializedElementMotionResult>
+  animateMotion(
+    command: AnimateSpatializedElementMotionCommand & { type: 'pause' },
+  ): Promise<SpatializedVisualValues>
+  animateMotion(command: AnimateSpatializedElementMotionCommand): Promise<void>
+  async animateMotion(
+    command: AnimateSpatializedElementMotionCommand,
+  ): Promise<
+    AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
+  > {
+    const { targetKind, ...rest } = command
+    return executeAnimateSpatializedElementMotion(this.id, targetKind, rest)
   }
 }
 

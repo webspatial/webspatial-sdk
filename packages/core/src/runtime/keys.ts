@@ -103,7 +103,7 @@ export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
     'baseplateVisibility',
   ],
   SpatialRotateEvent: ['constrainedToAxis'],
-  useAnimation: ['entity'],
+  useAnimation: ['entity', 'element', 'static3d', 'dynamic3d'],
   Model: [
     'autoplay',
     'loop',

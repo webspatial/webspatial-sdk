@@ -18,11 +18,9 @@ import {
   SpatializedStatic3DContentProps,
   SpatializedStatic3DElementRef,
 } from './types'
-import {
-  ModelSource,
-  SpatializedStatic3DElement,
-} from '@webspatial/core-sdk'
+import { ModelSource, SpatializedStatic3DElement } from '@webspatial/core-sdk'
 import { PortalInstanceContext } from './context/PortalInstanceContext'
+import { useBindSpatializedMotion } from './motion/useBindSpatializedMotion'
 
 function getAbsoluteURL(url: string): string
 function getAbsoluteURL(url: undefined): undefined
@@ -96,6 +94,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     autoPlay,
     loop,
     loading = 'eager',
+    'xr-animation': xrAnimation,
   } = props
   const portalInstanceObject = useContext(PortalInstanceContext)
   const wasVisible = useRef(false)
@@ -152,9 +151,7 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     if (onLoad && dom) {
       spatializedElement.onLoadCallback = () => {
         onLoad(
-          createLoadSuccessEvent(
-            () => dom as SpatializedStatic3DElementRef,
-          ),
+          createLoadSuccessEvent(() => dom as SpatializedStatic3DElementRef),
         )
       }
     } else {
@@ -163,19 +160,23 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
   }, [onLoad, portalInstanceObject?.dom])
 
   useEffect(() => {
-   const dom = portalInstanceObject?.dom
+    const dom = portalInstanceObject?.dom
     if (onError && dom) {
       spatializedElement.onLoadFailureCallback = () => {
         onError(
-          createLoadFailureEvent(
-            () => dom as SpatializedStatic3DElementRef,
-          ),
+          createLoadFailureEvent(() => dom as SpatializedStatic3DElementRef),
         )
       }
     } else {
       spatializedElement.onLoadFailureCallback = undefined
     }
   }, [onError, portalInstanceObject?.dom])
+
+  useBindSpatializedMotion({
+    binding: xrAnimation,
+    element: spatializedElement,
+    kind: 'static3d',
+  })
 
   return <></>
 }
@@ -184,6 +185,15 @@ function SpatializedStatic3DElementContainerBase(
   props: SpatializedStatic3DContainerProps,
   ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
+  const { 'xr-animation': xrAnimation, ...containerProps } = props
+  const spatializedContent = useMemo(() => {
+    function ContentWithXrAnimation(
+      contentProps: SpatializedStatic3DContentProps,
+    ) {
+      return <SpatializedContent {...contentProps} xr-animation={xrAnimation} />
+    }
+    return ContentWithXrAnimation
+  }, [xrAnimation])
   const promiseRef = useRef<Promise<SpatializedStatic3DElement> | null>(null)
 
   const createSpatializedElement = useCallback(() => {
@@ -216,6 +226,8 @@ function SpatializedStatic3DElementContainerBase(
           return modelTransform
         },
         set entityTransform(value: DOMMatrixReadOnly) {
+          const suppressed = xrAnimation?.__getSuppressedFields?.()
+          if (suppressed?.has('entityTransform')) return
           modelTransform = value
           const spatializedElement = (domProxy as any).__spatializedElement as
             | SpatializedStatic3DElement
@@ -276,7 +288,7 @@ function SpatializedStatic3DElementContainerBase(
         },
       }
     },
-    [],
+    [xrAnimation],
   )
 
   return (
@@ -284,9 +296,9 @@ function SpatializedStatic3DElementContainerBase(
       ref={ref}
       component="div"
       createSpatializedElement={createSpatializedElement}
-      spatializedContent={SpatializedContent}
+      spatializedContent={spatializedContent}
       extraRefProps={extraRefProps}
-      {...props}
+      {...containerProps}
     />
   )
 }

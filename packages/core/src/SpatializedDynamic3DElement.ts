@@ -2,6 +2,12 @@ import {
   SetParentForEntityCommand,
   UpdateSpatializedDynamic3DElementProperties,
 } from './JSBCommand'
+import { executeAnimateSpatializedElementMotion } from './motion/native/executeAnimateSpatializedElementMotion'
+import type {
+  AnimateSpatializedElementMotionCommand,
+  AnimateSpatializedElementMotionResult,
+} from './types/spatializedElementMotion'
+import type { SpatializedVisualValues } from './types/spatializedVisual'
 import { SpatialEntity } from './reality'
 import { SpatializedElement } from './SpatializedElement'
 import {
@@ -44,5 +50,23 @@ export class SpatializedDynamic3DElement extends SpatializedElement {
       this,
       properties,
     ).execute()
+  }
+
+  // ---- Dynamic3D container motion (native timeline on element.transform) ----
+
+  animateMotion(
+    command: AnimateSpatializedElementMotionCommand & { type: 'play' },
+  ): Promise<AnimateSpatializedElementMotionResult>
+  animateMotion(
+    command: AnimateSpatializedElementMotionCommand & { type: 'pause' },
+  ): Promise<SpatializedVisualValues>
+  animateMotion(command: AnimateSpatializedElementMotionCommand): Promise<void>
+  async animateMotion(
+    command: AnimateSpatializedElementMotionCommand,
+  ): Promise<
+    AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
+  > {
+    const { targetKind, ...rest } = command
+    return executeAnimateSpatializedElementMotion(this.id, targetKind, rest)
   }
 }
