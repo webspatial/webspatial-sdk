@@ -167,7 +167,7 @@ describe('SpatialWebEvent', () => {
     expect(cb2).toHaveBeenCalledTimes(1)
   })
 
-  it('supports targeted removal and deletes empty receiver entries', () => {
+  it('supports targeted removal and stops delivery once all receivers are removed', () => {
     SpatialWebEvent.init()
     const cb1 = vi.fn()
     const cb2 = vi.fn()
@@ -180,10 +180,11 @@ describe('SpatialWebEvent', () => {
 
     expect(cb1).not.toHaveBeenCalled()
     expect(cb2).toHaveBeenCalledTimes(1)
-    expect(SpatialWebEvent.eventReceiver.get('shared-remove')).toBeDefined()
 
     SpatialWebEvent.removeEventReceiver('shared-remove', cb2)
-    expect(SpatialWebEvent.eventReceiver.get('shared-remove')).toBeUndefined()
+    window.__SpatialWebEvent({ id: 'shared-remove', data: { ok: false } })
+    expect(cb1).not.toHaveBeenCalled()
+    expect(cb2).toHaveBeenCalledTimes(1)
   })
 
   it('isolates receiver failures so remaining receivers still run', () => {

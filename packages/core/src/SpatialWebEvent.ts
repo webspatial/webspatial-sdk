@@ -4,7 +4,8 @@ interface SpatialWebEventData {
 }
 
 export class SpatialWebEvent {
-  static eventReceiver: Map<string, Set<(data: any) => void>> = new Map()
+  private static readonly eventReceiver: Map<string, Set<(data: any) => void>> =
+    new Map()
   static init() {
     // inject __SpatialWebEvent
     window.__SpatialWebEvent = ({ id, data }: SpatialWebEventData) => {
