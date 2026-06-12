@@ -215,9 +215,14 @@
 - [x] 测试：补充 static3d native terminal seek、idle one-shot 命令，以及 native 无返回值或失败时 JS fallback 的回归覆盖
 - [ ] 手工验证：确认 `apps/test-server/src/pages/spatial-div-motion/model-container.tsx` 中 Play -> Finish -> Reset 可让 Static3D 模型视觉回到起始状态
 
+## Phase 16c — 会话配置快照语义
+
+- [x] Spec/design：明确只有从 `idle` 或 `finished` 启动的新 `play()` 才读取最新 config，paused 状态下的 `play()` 仍然等价于 `resume()`
+- [x] Core：让 `stop()` / `finish()` 的 terminal snapshot 在下一次新 play 之前跨 `updateConfig()` 保持稳定
+- [x] 测试：覆盖 unbound controller、web backend、native backend 的会话快照语义
+
 ## 阶段 — PicoOS 对齐
 
-- [ ] 归档 picoOS Plan A（`spatial-div-animation-api`）到 `_archived/` ✅（2026-06-04 完成）
 - [ ] 在 picoOS 仓库创建统一 `spatialized-element-motion-api` 变更 ✅（2026-06-04 完成）
 - [ ] picoOS 阶段 1：JSB 协议迁移（`AnimateSpatialized2DElement` → `AnimateSpatializedElementMotion` + `targetKind`）
 - [ ] picoOS 阶段 2：Canonical tracks 执行（将单一 from/to lerp 替换为多轨道评估器）

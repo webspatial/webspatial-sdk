@@ -122,10 +122,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
   }
 
   reset(): void {
-    const cfg =
-      this.webState === 'idle'
-        ? this.ctx.getConfig()
-        : this.getCurrentSessionConfig()
+    const cfg = this.getCurrentSessionConfig()
     this.stopRaf()
     this.ctx.clearPendingPlay()
     const values = evaluateMotionTimeline(cfg, 0)
@@ -150,6 +147,7 @@ export class WebPlaybackBackend implements PlaybackBackend {
       this.webState = 'idle'
       this.webStarted = false
       this.pausedElapsedMs = 0
+      this.sessionConfig = null
       this.resetLoopDirection()
       this.ctx.notifyStateChange()
       return
@@ -172,14 +170,13 @@ export class WebPlaybackBackend implements PlaybackBackend {
     this.webState = 'idle'
     this.webStarted = false
     this.pausedElapsedMs = 0
-    this.sessionConfig = null
     this.resetLoopDirection()
     this.ctx.notifyStateChange()
     cfg.onStop?.(values)
   }
 
   finish(): void {
-    if (this.webState === 'idle') {
+    if (this.webState === 'idle' && !this.sessionConfig) {
       this.sessionConfig = this.ctx.getConfig()
     }
     const cfg = this.getCurrentSessionConfig()

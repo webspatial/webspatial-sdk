@@ -136,6 +136,9 @@ All non-track shapes normalize to canonical `tracks` before execution. Native pl
 - `finish()` always seeks to end values, even when already idle
 - `finished` becomes `false` after `stop()` and `reset()`
 - `finished` becomes `true` after `finish()` and natural completion
+- starting a new session from `idle` or `finished` snapshots the latest config
+- `play()` while `paused` is still a pure `resume()` and MUST NOT load a new config
+- `stop()` / `reset()` / `finish()` operate on the current or most recently stopped/finished session snapshot, not on later `updateConfig(...)` calls
 - controller state is whole-session only; no partially-paused aggregate state or pause-reason stacking is modeled
 - paused `play()` is semantically equivalent to `resume()`
 

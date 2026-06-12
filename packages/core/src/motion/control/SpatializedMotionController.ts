@@ -75,6 +75,8 @@ export class SpatializedMotionController implements SpatializedPlaybackApi {
   private pendingPlay = false
   /** Terminal flag for the no-backend (kind-unresolved) finish() path. */
   private idleFinished = false
+  /** Session snapshot retained while target kind is still unresolved. */
+  private unboundSessionConfig: SpatializedMotionConfig | null = null
   private readonly capabilityResolver: CapabilityResolver
 
   constructor(
@@ -230,11 +232,18 @@ export class SpatializedMotionController implements SpatializedPlaybackApi {
     return this.backend?.getSuppressedFields() ?? null
   }
 
+  private getCurrentUnboundSessionConfig(): SpatializedMotionConfig {
+    return this.unboundSessionConfig ?? this._config
+  }
+
   play(): void {
     if (this.destroyed) return
     if (!this.backend) {
       // Kind not resolved yet: remember the intent and replay it in
       // ensurePlaybackBackend() once a backend exists.
+      if (!this.pendingPlay || this.idleFinished) {
+        this.unboundSessionConfig = this._config
+      }
       this.idleFinished = false
       this.pendingPlay = true
       return
@@ -266,12 +275,14 @@ export class SpatializedMotionController implements SpatializedPlaybackApi {
     if (!this.backend) {
       // Kind not resolved yet: seek to start directly (spec: reset always
       // seeks start, even when idle/unbound).
+      const cfg = this.getCurrentUnboundSessionConfig()
       this.pendingPlay = false
       this.idleFinished = false
-      const values = evaluateMotionTimeline(this._config, 0)
+      this.unboundSessionConfig = null
+      const values = evaluateMotionTimeline(cfg, 0)
       this.emitValues(values)
       this.notifyStateChange()
-      this._config.onReset?.(values)
+      cfg.onReset?.(values)
       return
     }
     this.backend.reset()
@@ -282,12 +293,14 @@ export class SpatializedMotionController implements SpatializedPlaybackApi {
     if (!this.backend) {
       // Kind not resolved yet: seek to end directly (spec: finish always seeks
       // end, even when idle/unbound).
+      const cfg = this.getCurrentUnboundSessionConfig()
       this.pendingPlay = false
       this.idleFinished = true
-      const values = evaluateMotionTimeline(this._config, this._config.duration)
+      this.unboundSessionConfig = cfg
+      const values = evaluateMotionTimeline(cfg, cfg.duration)
       this.emitValues(values)
       this.notifyStateChange()
-      this._config.onComplete?.(values)
+      cfg.onComplete?.(values)
       return
     }
     this.backend.finish()
