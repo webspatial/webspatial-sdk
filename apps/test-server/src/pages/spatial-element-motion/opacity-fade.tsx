@@ -81,6 +81,7 @@ export default function OpacityFadePage() {
           <span style={{ color: 'white', fontSize: 16 }}>Fade Me</span>
         </div>
 
+        {/* Full playback controls for manual motion verification. */}
         <div className="flex flex-wrap gap-2 mt-3">
           <button className={btnPrimary} onClick={() => api.play()}>
             Play
@@ -93,6 +94,12 @@ export default function OpacityFadePage() {
           </button>
           <button className={btnCls} onClick={() => api.reset()}>
             Reset
+          </button>
+          <button className={btnCls} onClick={() => api.stop()}>
+            Stop
+          </button>
+          <button className={btnCls} onClick={() => api.finish()}>
+            Finish
           </button>
           <button
             className={btnCls + ' !bg-yellow-700 !text-white'}
