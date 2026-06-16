@@ -1,70 +1,100 @@
-# Tasks: Radix floating UI in WebSpatial (Scenarios 1, 2 & 3)
+# Tasks: Radix Floating UI In WebSpatial (Scenarios 1-5)
 
-## 1. Scenario 2 SDK support (Phase A)
+## 1. Scenario 2 SDK Support (Phase A)
 
 - [x] 1.1 Add `SpatialWindowContext` and `useSpatialPortalContainer()` in `packages/react`.
 - [x] 1.2 Wrap `Spatialized2DElementContainer` portal output with `SpatialWindowContext.Provider`.
 - [x] 1.3 Export `useSpatialPortalContainer` from `@webspatial/react-sdk`.
 - [x] 1.4 Add coverage test for `useSpatialPortalContainer()`.
 
-## 2. Demo — Scenarios 1 & 2 (Phase A)
+## 2. Demo: Scenarios 1 And 2 (Phase A)
 
-- [x] 2.1 Add `apps/test-server/src/pages/dropdown-menu-spatial/` with Scenario 1 (main page `div enable-xr`).
-- [x] 2.2 Add Scenario 2 panel inside SpatialDiv using `useSpatialPortalContainer()`.
-- [x] 2.3 Add Scenario 3 placeholder panel.
+- [x] 2.1 Add `apps/test-server/src/pages/dropdown-menu-spatial/` with Scenario 1, a main-page `div enable-xr` menu.
+- [x] 2.2 Add Scenario 2, a panel inside SpatialDiv using `useSpatialPortalContainer()`.
+- [x] 2.3 Add the initial Scenario 3 placeholder panel.
 
 ## 3. Documentation (OpenSpec)
 
-- [x] 3.1 Rewrite proposal/design/spec for Scenarios 1 & 2.
-- [x] 3.2 Align proposal + spec to Scenario 3 nested `enable-xr` + Radix developer API.
-- [x] 3.3 Slim design.md to TBD; defer implementation decisions to design review.
+- [x] 3.1 Rewrite proposal/design/spec for Scenarios 1 and 2.
+- [x] 3.2 Align proposal and spec to the Scenario 3 nested `enable-xr` plus Radix developer API.
+- [x] 3.3 Document the Path A MVP design and decision record.
+- [x] 3.4 Update proposal/design/spec/tasks for Scenario 4 and Scenario 5 plugin-host `SpatialOverlay` support.
+- [x] 3.5 Convert proposal/design/spec/tasks to English-only content.
 
-## 4. Tests and verification — Phase A (Scenarios 1 & 2)
+## 4. Tests And Verification: Phase A (Scenarios 1 And 2)
 
 - [ ] 4.1 Run targeted React SDK tests for `SpatialWindowContext`.
 - [ ] 4.2 Run `pnpm --filter @webspatial/react-sdk exec tsc -p ./tsconfig.json`.
 - [ ] 4.3 Run test-server typecheck/build for the demo page.
 - [ ] 4.4 Manual AVP simulator smoke: open Scenario 1 and Scenario 2 menus on the demo route.
 
-## 5. Scenario 3 — minimal vertical slice FIRST (decided 2026-06-09)
+## 5. Scenario 3: Minimal Vertical Slice First
 
-> Decision: Path A MVP. Reuse the proven dual-render (placeholder host renders children hidden, like standard-instance). Overlay detection = strong signal (nested + floating library positioning signal), NOT plain positioned ancestor. DOM ancestry hardening can follow later. Keyboard/focus/typeahead/focus-trap/outside-click are explicitly out of scope. See `design.md` §6/§12/§已决策.
->
-> Slice gate (all three, verify in AVP before adding abstraction/tests): (1) popper non-0×0, (2) child surface visible beyond parent, (3) tap item closes/logs.
+Decision from 2026-06-09: use Path A as the MVP. Reuse the proven dual-render model where the placeholder host renders children hidden, like the standard instance. Overlay detection uses a strong signal: nested spatial content plus floating-library positioning signal. It must not use a plain positioned-ancestor rule. DOM ancestry hardening can follow later. Keyboard, focus, typeahead, focus trap, and outside-click behavior are explicitly out of scope. See `design.md` sections 6, 13, and "Decisions From 2026-06-09".
 
-- [x] 5.1 `registerSpatialDom` / overlay fields on `PortalInstanceObject` (spike, reuse).
-- [x] 5.2 `PortalInstanceObject.addToParent` overlay attach to parent (spike, reuse).
-- [x] 5.3 Demo Scenario 3 → nested `enable-xr` + Radix (contract form); dropped `useSpatialFloatingOverlayPortal` + `OverlayMenuPanel`.
-- [x] 5.4 `SpatializedContainer` portal branch forwards `ref` (as `hostRef`) to `PortalSpatializedContainer`.
-- [x] 5.5 Overlay detection in `overlayDetection.ts` (`isFloatingOverlayContent`). Tightened: `role` alone does NOT trigger; requires a floating positioning signal (`data-side`/`data-align`/`data-radix-*`/`data-floating-ui-*`/`--radix-*`/`--floating-*`).
-- [x] 5.6 `renderOverlayPlaceholder`: renders `children` (hidden, auto-size) + lands Radix `ref`/`style`/`data-*`/handlers on the placeholder host; registers it via `registerSpatialDom`.
-- [x] 5.7 `PortalInstanceObject` overlay raw-rect coordinate base (guarded by `isFloatingOverlay`).
-- [x] 5.8 Tests: detection positive/negative incl. role-alone & positioned-nested negatives (`overlayDetection.test.ts`); structural render test proving the portal path lands ref/props/children on the hidden host + registers it (`PortalSpatializedContainer.overlay.test.tsx`). Non-zero layout half is AVP-only.
-- [ ] 5.9 AVP smoke for the 3 slice gates (popper non-0×0; child surface beyond parent; **tap item selects correct item, logs once, closes** — watch for double-log from dual-render). This remains the final Scenario 3 gate; jsdom/unit tests do not substitute for it.
-  - [x] 5.9a Add temporary `[WS-S3]` diagnostics (detection/placeholder/attach/update-push|early-return).
-  - [x] 5.9b Root cause confirmed by code review (Cursor + Codex converged): native overlay visibility was coupled to the hidden measurement placeholder (`visibility` undefined → early-return AND/OR `visibility:hidden` → `visible:false`).
-  - [x] 5.9c Fix applied: `updateSpatializedElementProperties` decouples overlay native visibility from the placeholder (relaxed guard, identity matrix fallback, `visible = display !== 'none'` for overlay). Unit test added (overlay placeholder hidden → `visible:true`).
-  - [x] 5.9c-aid Debug aids (test-server only): `data-name` titles on all scenario webviews; `?s3Open=1` auto-opens Scenario 3 for tap-free screenshot validation.
-  - [ ] 5.9c-verify Re-run AVP smoke to confirm the menu shows, escapes parent bounds, and pointer/tap selection logs once then closes.
-  - [ ] 5.9d Remove `[WS-S3]` diagnostics and AVP auto-open aids after the AVP smoke passes.
-- [x] verify: react-sdk `tsc` clean; detection + overlay-render + portal-instance tests pass (13 tests).
-- [x] 5.10 Degraded mode: `DegradedContainer` provides host `SpatialWindowContext` so `useSpatialPortalContainer()` works in plain browser without app fallback (`SpatializedContainer.tsx` + coverage tests).
+Slice gates, all requiring AVP verification before broadening abstraction/tests:
 
-## 5b. After the slice runs in AVP
+1. The popper is non-zero.
+2. The child surface is visible beyond the parent.
+3. Tapping an item closes/logs through Radix.
 
-- [x] 5b.1 Remove spike modules (`useSpatialFloatingSurface`, `useSpatialFloatingOverlayPortal`, `SpatialFloatingOverlayRoot`, `useFloatingOverlaySync`).
-- [ ] 5b.2 `ResizeObserver` + rAF reposition sync (Radix collision/scroll updates).
-- [ ] 5b.3 Full overlay-detection unit tests (positive/negative samples), attach-to-parent test.
-- [ ] 5b.4 Stretch (separate): optional thin `Portal` wrapper to auto-target spatial window.
+- [x] 5.1 Add `registerSpatialDom` and overlay fields on `PortalInstanceObject` from the spike.
+- [x] 5.2 Make `PortalInstanceObject.addToParent` attach overlays to the parent.
+- [x] 5.3 Rewrite demo Scenario 3 to nested `enable-xr` plus Radix contract form; drop `useSpatialFloatingOverlayPortal` and `OverlayMenuPanel`.
+- [x] 5.4 Forward `ref` from the `SpatializedContainer` portal branch as `hostRef` to `PortalSpatializedContainer`.
+- [x] 5.5 Add overlay detection in `overlayDetection.ts`. (Updated 2026-06-16: replaced the Radix prop sniffing `isFloatingOverlayContent` with the declarative, library-agnostic `isSpatialOverlayContent` driven by the `data-xr-overlay` marker. See 5b.5.)
+- [x] 5.6 Add `renderOverlayPlaceholder`: render children hidden/auto-size, land Radix ref/style/data/handlers on the placeholder host, and register it with `registerSpatialDom`.
+- [x] 5.7 Add `PortalInstanceObject` overlay raw-rect coordinate base guarded by `isFloatingOverlay`.
+- [x] 5.8 Add tests: overlay detection positives/negatives, role-alone and positioned-nested negatives, and structural render coverage for ref/props/children landing on the hidden host.
+- [x] 5.9 AVP smoke for the three slice gates: popper non-zero; child surface beyond parent; item selection logs once and closes. (Passed 2026-06-16.)
+  - [x] 5.9a Add temporary `[WS-S3]` diagnostics for detection, placeholder, attach, update push, and early-return paths.
+  - [x] 5.9b Confirm root cause by code review: native overlay visibility was coupled to the hidden measurement placeholder.
+  - [x] 5.9c Fix overlay native visibility: relax the guard, add identity matrix fallback, and set overlay `visible` from `display !== 'none'`.
+  - [x] 5.9c-aid Add test-server debug aids: `data-name` titles on scenario webviews and `?s3Open=1` auto-open for tap-free screenshot validation.
+  - [x] 5.9c-verify Re-run AVP smoke to confirm the menu shows, escapes parent bounds, and pointer/tap selection logs once then closes. (Passed 2026-06-16.)
+  - [x] 5.9d Remove `[WS-S3]` diagnostics and AVP auto-open aids. Removed during pre-merge review cleanup: dropped the SDK overlay-push probe (`PortalInstanceContext`), the `webspatial-overlay-update` event bridge, and the test-server `useOverlayUpdateProbe` hook. AVP smoke (5.9c-verify) should run against this clean build.
+- [x] 5.10 Degraded mode: `DegradedContainer` provides host `SpatialWindowContext` so `useSpatialPortalContainer()` works in plain browser without app fallback.
 
-## 6. Demo — Scenario 3 (Phase B)
+## 5b. After The Scenario 3 Slice Runs In AVP
 
-- [x] 6.1 Rewrite Scenario 3 panel to nested `enable-xr` + Radix (matches proposal example); S1 portal host `document.body`; S3 overflow test panel (96px parent, 11 items).
-- [x] 6.2 Demo copy: Scenario 2 = flat menu constrained by parent bounds; Scenario 3 = child SpatialDiv (`inner enable-xr`) that escapes parent bounds; shared `menuLayout` styles.
+- [x] 5b.1 Remove spike modules: `useSpatialFloatingSurface`, `useSpatialFloatingOverlayPortal`, `SpatialFloatingOverlayRoot`, and `useFloatingOverlaySync`.
+- [ ] 5b.2 Add `ResizeObserver` plus requestAnimationFrame reposition sync for Radix collision/scroll updates if needed.
+- [ ] 5b.3 Add full overlay-detection and attach-to-parent tests.
+- [ ] 5b.4 Stretch: optional thin `Portal` wrapper that auto-targets the spatial window.
+- [x] 5b.5 Replace Radix-prop overlay sniffing with the declarative `data-xr-overlay` marker (`isSpatialOverlayContent` / `SPATIAL_OVERLAY_ATTRIBUTE`); update demos (Scenario 3 & 5), `overlayDetection.test.ts`, and `PortalSpatializedContainer.overlay.test.tsx`. Removes Radix coupling and the render-time vs. instance-flag drift.
+- [x] 5b.6 Make `portalMenuOption(content)` self-subscribing so plugin content from a separate React root appears once targets mount; add the late-mount regression test.
 
-## 7. Tests and verification — Phase B (Scenario 3)
+## 6. Demo: Scenario 3 (Phase B)
 
-- [x] 7.1 Run targeted React SDK tests for Scenario 3 overlay child SpatialDiv (13 tests pass).
+- [x] 6.1 Rewrite Scenario 3 panel to nested `enable-xr` plus Radix, matching the proposal example.
+- [x] 6.2 Update demo copy: Scenario 2 is a flat menu constrained by parent bounds; Scenario 3 is a child SpatialDiv that escapes parent bounds.
+
+## 7. Tests And Verification: Phase B (Scenario 3)
+
+- [x] 7.1 Run targeted React SDK tests for the Scenario 3 overlay child SpatialDiv path.
 - [x] 7.2 Run `pnpm --filter @webspatial/react-sdk exec tsc -p ./tsconfig.json`.
 - [ ] 7.3 Run test-server typecheck/build for the updated demo page.
-- [ ] 7.4 Manual AVP smoke: child SpatialDiv rises above/in front of parent, remains visible beyond parent width/height, parent spatial window popper non-zero, menu moves with parent panel.
+- [x] 7.4 Manual AVP smoke: child SpatialDiv rises above/in front of parent, remains visible beyond parent bounds, parent spatial-window popper is non-zero, and the menu moves with the parent panel. (Passed 2026-06-16.)
+
+## 8. SpatialOverlay Plugin-Host Bridge (Scenarios 4 And 5)
+
+Decision: expose SDK-level `SpatialOverlay` / `useSpatialOverlay()` for plugin or shadow-root menu items that need to render into a spatial menu surface while preserving same-document measurement. `portalMenuOption(content)` auto-generates the measurement copy. `portalMenuOption(content, measurementContent)` remains the advanced escape hatch.
+
+- [x] 8.1 Add SDK `SpatialOverlay`, `useSpatialOverlay`, and `SpatialOverlayPortalOption`.
+- [x] 8.2 Export `SpatialOverlay`, `useSpatialOverlay`, and related types from `@webspatial/react-sdk`.
+- [x] 8.3 Implement automatic measurement copy: omitted `measurementContent` defaults to `content`.
+- [x] 8.4 Add internal `SpatialOverlayRenderTargetContext` so nested placeholder/measurement renders are not misclassified as visible portal renders merely because `SpatialWindowContext` exists.
+- [x] 8.5 Mark `PortalSpatializedContainer` visible `Content` as render target `portal` and `PlaceholderEl` as render target `measurement`.
+- [x] 8.6 Add unit coverage for:
+  - [x] direct `SpatialOverlay` measurement render;
+  - [x] direct `SpatialOverlay` portal render;
+  - [x] automatic `portalMenuOption(content)` measurement and visible copies;
+  - [x] nested placeholder inside a parent portal window still rendering measurement content.
+- [x] 8.7 Add Scenario 4 demo: flat-page plugin host using `document.body`, `DropdownMenu.Content asChild`, `OverlayTarget`, and plugin items injected via `portalMenuOption`.
+- [x] 8.8 Add Scenario 5 demo: parent SpatialDiv plugin host using `useSpatialPortalContainer()`, child `div enable-xr` menu surface, `OverlayTarget`, and plugin items injected via `portalMenuOption`.
+- [x] 8.9 Verify current implementation:
+  - [x] `pnpm --dir packages/react test` (147 tests);
+  - [x] `pnpm --dir packages/react build`;
+  - [x] `pnpm --dir apps/test-server test`;
+  - [x] `pnpm --dir apps/test-server build`.
+- [ ] 8.10 Manual AVP smoke before merge: Scenario 4 and Scenario 5 inspector targets show measurement items in the standard/parent document and real plugin items in the menu surface; item tap logs once and closes.

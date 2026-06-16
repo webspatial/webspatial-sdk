@@ -30,7 +30,6 @@ export class PortalInstanceObject {
   readonly parentPortalInstanceObject: PortalInstanceObject | null
   spatializedElement?: SpatializedElement
   isFloatingOverlay = false
-  overlayHostElement: HTMLElement | null = null
 
   // cachedDomInfo used for cache dom info
   // when dom is updated, this property should be updated as well
@@ -117,10 +116,6 @@ export class PortalInstanceObject {
     this.isFloatingOverlay = enabled
   }
 
-  setOverlayHostElement(element: HTMLElement | null) {
-    this.overlayHostElement = element
-  }
-
   private onSpatialTransformVisibilityChange = (
     spatialTransform: SpatialTransformVisibility,
   ) => {
@@ -139,8 +134,7 @@ export class PortalInstanceObject {
     if (!dom) {
       return
     }
-    const styleSource = this.overlayHostElement ?? dom
-    const computedStyle = getComputedStyle(styleSource)
+    const computedStyle = getComputedStyle(dom)
     const isFixedPosition =
       !this.isFloatingOverlay &&
       computedStyle.getPropertyValue('position') === 'fixed'
@@ -182,14 +176,13 @@ export class PortalInstanceObject {
     this.inAddingToParent = true
 
     if (
-      !this.isFloatingOverlay &&
-      (this.isFixedPosition || !this.parentPortalInstanceObject)
+      (!this.isFloatingOverlay && this.isFixedPosition) ||
+      !this.parentPortalInstanceObject
     ) {
-      // Add as a child of the current page
-      var spatialScene = await getSession()!.getSpatialScene()
-      await spatialScene.addSpatializedElement(spatializedElement!)
-    } else if (!this.parentPortalInstanceObject) {
-      var spatialScene = await getSession()!.getSpatialScene()
+      // Add as a child of the current page.
+      // Floating overlays (Scenario 3) always have a parent portal, so they
+      // skip this branch and attach to the parent below.
+      const spatialScene = await getSession()!.getSpatialScene()
       await spatialScene.addSpatializedElement(spatializedElement!)
     } else {
       const parentSpatialized2DElement =
@@ -305,51 +298,6 @@ export class PortalInstanceObject {
       rotationAnchor,
       ...extraProperties,
     })
-
-    // Dev-only AVP probes (removed after smoke; iwdp cannot read WebKit console).
-    if (
-      this.isFloatingOverlay &&
-      process.env.NODE_ENV !== 'production' &&
-      width > 0 &&
-      height > 0
-    ) {
-      if (dom) {
-        dom.dataset.webspatialOverlayPush = `${width}x${height}:visible:${visible}`
-      }
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('webspatial-overlay-update', {
-            detail: {
-              spatialId: this.spatialId,
-              x,
-              y,
-              width,
-              height,
-              visible,
-            },
-          }),
-        )
-        ;(
-          window as Window & {
-            __webspatialOnOverlayUpdate?: (detail: {
-              spatialId: string
-              x: number
-              y: number
-              width: number
-              height: number
-              visible: boolean
-            }) => void
-          }
-        ).__webspatialOnOverlayUpdate?.({
-          spatialId: this.spatialId,
-          x,
-          y,
-          width,
-          height,
-          visible,
-        })
-      }
-    }
 
     // update transform
     spatializedElement.updateTransform(transformMatrix)

@@ -5,6 +5,14 @@ export { SpatializedContainer } from './SpatializedContainer'
 export { Spatialized2DElementContainer } from './Spatialized2DElementContainer'
 export { SpatializedStatic3DElementContainer } from './SpatializedStatic3DElementContainer'
 export { withSpatialized2DElementContainer } from './Spatialized2DElementContainerFactory'
+export {
+  SpatialOverlay,
+  useSpatialOverlay,
+  type SpatialOverlayPortalOption,
+  type SpatialOverlayProps,
+  type UseSpatialOverlayOptions,
+  type UseSpatialOverlayResult,
+} from './SpatialOverlay'
 export { useSpatialPortalContainer } from './context/SpatialWindowContext'
 export {
   type Point3D,

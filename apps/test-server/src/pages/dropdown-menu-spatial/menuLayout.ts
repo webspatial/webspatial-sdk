@@ -1,7 +1,7 @@
 import type React from 'react'
 
 export const dropdownMenuFloatingGeometry = {
-  back: 0,
+  back: 10,
   depth: 0,
   backgroundMaterial: 'transparent',
 } as const
@@ -18,7 +18,7 @@ export const dropdownMenuPanelStyle: React.CSSProperties = {
   width: '240px',
   minWidth: '240px',
   maxWidth: '240px',
-  maxHeight: 'min(360px, 70vh)',
+  // maxHeight: 'min(360px, 70vh)',
   overflowX: 'hidden',
   overflowY: 'auto',
   padding: '6px',

@@ -41,8 +41,10 @@ describe('PortalSpatializedContainer — Scenario 3 overlay placeholder', () => 
 
     const hostRef = React.createRef<HTMLElement>()
 
-    // Props a floating library (Radix) injects onto the asChild content node.
+    // The developer declares the floating surface via `data-xr-overlay`; Radix
+    // still injects `asChild` positioning props/ref that must land on the host.
     const radixLike = {
+      'data-xr-overlay': true,
       role: 'menu',
       'data-side': 'bottom',
       'data-align': 'end',

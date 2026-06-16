@@ -31,13 +31,14 @@ function constrainedAxisKey(
 }
 
 import { SpatialID } from './SpatialID'
-import { isFloatingOverlayContent } from './overlayDetection'
+import { isSpatialOverlayContent } from './overlayDetection'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
 import { useSpatializedElement } from './hooks/useSpatializedElement'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
 } from './context/SpatializedContainerContext'
+import { SpatialOverlayRenderTargetContext } from './context/SpatialOverlayRenderTargetContext'
 
 function assignForwardedRef<T>(ref: Ref<T> | undefined, node: T | null) {
   if (ref == null) return
@@ -172,7 +173,7 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   const parentPortalInstanceObject = useContext(PortalInstanceContext)
   const isOverlayMode =
     !!parentPortalInstanceObject &&
-    isFloatingOverlayContent(restProps as Record<string, unknown>)
+    isSpatialOverlayContent(restProps as Record<string, unknown>)
   const portalInstanceObject = useMemo(() => {
     const portal = new PortalInstanceObject(
       spatialId,
@@ -313,13 +314,17 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>
       {spatializedElement && (
-        <Content
-          spatializedElement={spatializedElement}
-          portalInstanceObject={portalInstanceObject}
-          {...restProps}
-        />
+        <SpatialOverlayRenderTargetContext.Provider value="portal">
+          <Content
+            spatializedElement={spatializedElement}
+            portalInstanceObject={portalInstanceObject}
+            {...restProps}
+          />
+        </SpatialOverlayRenderTargetContext.Provider>
       )}
-      {PlaceholderEl}
+      <SpatialOverlayRenderTargetContext.Provider value="measurement">
+        {PlaceholderEl}
+      </SpatialOverlayRenderTargetContext.Provider>
     </PortalInstanceContext.Provider>
   )
 }
