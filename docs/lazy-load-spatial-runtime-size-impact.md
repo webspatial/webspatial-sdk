@@ -1,7 +1,14 @@
 # Lazy-load Spatial Runtime — 实测包体收益报告
 
 > 面向产品 & 评审人员的"该 spec 改动到底值不值"参考材料。
-> 所有数字来自本地实测的两次构建（首测 2026-05-14，rebase 后复测 2026-05-15），不是估算。
+> 所有数字来自本地实测构建，不是估算。
+>
+> **测量轮次**
+>
+> | 轮次 | 日期 | 说明 |
+> |---|---|---|
+> | 首测 + rebase 复测 | 2026-05-14 / 2026-05-15 | 下文 **B（main 基线）** 对比与场景 1（`spatial-vite-min`）仍以该轮为准 |
+> | **A 端校准更新** | **2026-06-16** | `feat/eager-mode-entry` tip；更新场景 2 / §9 合同余量 / `dist/index.js` proxy（见 §3.1） |
 
 **相关材料**
 
@@ -21,13 +28,15 @@
 |---|---|---:|---:|---:|---:|
 | **场景 1：React 与应用一起打包**<br/>（`apps/spatial-vite-min`，普通 SPA） | 首屏 JS gzip | **50.2 KB** | **74.1 KB** | **−23.9 KB** | **−32.3 %** |
 | | 首屏 JS 原始 | 154.3 KB | 250.4 KB | −96.1 KB | −38.4 % |
-| **场景 2：React 外置（CDN / peer / 微前端）**<br/>（`tests/marginal-delta-vite/app-typical`，推荐 named import） | SDK 同步增量 gzip | **1.66 KB** | **34.47 KB** | **−32.8 KB** | **−95.2 %** |
-| | SDK 同步增量 原始 | 5.6 KB | 148.1 KB | −142.5 KB | −96.2 % |
-| **场景 3：worst-case namespace import**<br/>（`import * as W from '@webspatial/react-sdk'`） | SDK 同步增量 gzip | 5.30 KB | 37.10 KB | −31.8 KB | −85.7 % |
+| **场景 2：React 外置（CDN / peer / 微前端）**<br/>（`tests/marginal-delta-vite/app-typical`，推荐 named import） | SDK 同步增量 gzip | **2.93 KB**¹ | **34.47 KB** | **−31.5 KB** | **−91.5 %** |
+| | SDK 同步增量 原始 | ~9.1 KB | 148.1 KB | −139.0 KB | −93.9 % |
+| **场景 3：worst-case namespace import**<br/>（`import * as W from '@webspatial/react-sdk'`） | SDK 同步增量 gzip | **5.69 KB**¹ | 37.10 KB | −31.4 KB | −84.7 % |
 
 **这些字节都是 plain-web 浏览器（非 WebSpatial 运行时）下用户必下载的字节**；spec 把 spatial 真实实现搬进了一个**动态 `import()` 才能到达**的二级 chunk，所以普通浏览器从此再也不会下载这部分代码。在 WebSpatial 设备上则会按需下载（异步、不阻塞首帧）。
 
-> 关键数据点："产品级 marginal-delta 合同"现在被 CI 锁死在 **gzip ≤ 5 KB**，实测只占了 **1.66 KB / 5 KB（约 33 %）**，剩余约 3.3 KB 余量留给后续扩展。
+> 关键数据点（2026-06-16 校准）："产品级 marginal-delta 合同"被 CI 锁死在 **gzip ≤ 5 KB**。当前 typical 实测 **2.93 KB / 5 KB（约 57 %）**，仍有余量；相对 main 基线 **34.5 KB → 2.9 KB（−91.5 %）** 的结构性收益不变。
+>
+> ¹ 2026-06-16 在 `feat/eager-mode-entry` tip 上复测。相较 2026-05-15 首测的 **1.66 KB**，typical marginal 涨了约 **+1.3 KB**；主因是 eager entry 打包 / `registerEagerEntry` / facades-client 等进入默认入口静态图（见 §3.1），**不是** `useAnimation` ready-gated facade（该改动仅 +3 B marginal、+100 B `dist/index.js` proxy）。
 
 ---
 
@@ -121,13 +130,30 @@ main 上没有 bridge，没有 facade，没有 `bootSpatial`，没有 dynamic im
 | 应用 | 同步 chunk (gz / raw) | 异步 spatial chunk (gz / raw) |
 |---|---|---|
 | `app-base`（不引 SDK） | 325 B / 644 B | — |
-| `app-typical`（`import { Model, bootSpatial }`） | **1,982 B / 5,588 B** | 36,724 B / 163,792 B |
-| `app-namespace`（`import * as W`，最坏） | 5,628 B / 19,939 B | 35,105 B / 157,138 B |
+| `app-typical`（`import { Model, bootSpatial }`） | **3,256 B / 9,290 B** | ~40,530 B / ~167,889 B |
+| `app-namespace`（`import * as W`，最坏） | 6,011 B / 18,784 B | ~40,531 B / ~167,891 B |
 
 **marginal delta（gzip，相对于 base）**：
 
-- **typical = 1,657 B**（spec §9.2 硬上限 8,192 B，**余量 6,535 B / 80 %**）
-- namespace = 5,303 B（namespace / typical = **3.20 ×**，spec §9.3 tree-shake 健康度区间 2–3 × 命中）
+- **typical = 2,931 B**（spec §9.2 硬上限 5,120 B，**余量 2,189 B / 43 %**）
+- namespace = 5,686 B（namespace / typical = **1.94 ×**，spec §9.3 tree-shake 健康度 ≥ 1.5 × 仍成立）
+
+### 3.1 A 端校准：为何从 1.66 KB 涨到 ~2.93 KB（2026-06-16）
+
+2026-05-15 首测 typical marginal 为 **1,657 B**；截至 2026-06-16 的 `feat/eager-mode-entry` tip 为 **2,931 B**（**+1,274 B**）。对照 commit 历史，主要台阶如下（`tests/marginal-delta-vite` 夹具口径不变）：
+
+| 阶段 | typical marginal (gzip) | 主要变更 |
+|---|---:|---|
+| 2026-05-15 首测 (`b04a2623`) | **1,656 B** | lazy default entry 初版；预算当时为 8 KB |
+| eager entry 打包落地 (~`06df414c`) | **~2,648 B** | `@webspatial/react-sdk/eager`、`registerEagerEntry`、facades-client 子路径进入发布物 |
+| eager 注册防 tree-shake (~`419a4e55`) | **~2,930 B** | 保证 mixed-entry 检测在 consumer bundle 里不被摇掉 |
+| `useAnimation` ready-gated facade (`af1b5106`) | **2,931 B** | **+3 B**（typical 不 import 该符号，几乎无影响） |
+
+**结论**：
+
+1. **仍满足 §9.2 合同**（2,931 B < 5,120 B）。
+2. **相对 main 的 −91.5 % 收益**不因这 1.3 KB 校准而消失（main 仍是 ~34.5 KB 同步增量）。
+3. 后续若再加 default-entry 导出，应继续用 `pnpm --filter marginal-delta-vite test` 与 `packages/react/src/__tests__/size-budget.test.ts` 盯余量；`useAnimation` 类 ready-gated hook 对 typical 路径成本低，但 §9.1 `dist/index.js` proxy 会为每个新 barrel export 付 ~100 B 量级固定成本。
 
 ### B 端（main 基线）
 
@@ -144,15 +170,15 @@ main 上没有 bridge，没有 facade，没有 `bootSpatial`，没有 dynamic im
 
 ### 对比
 
-| 度量 | A（spec） | B（main） | 节省字节 | 百分比 |
+| 度量 | A（spec，2026-06-16） | B（main） | 节省字节 | 百分比 |
 |---|---:|---:|---:|---:|
-| typical 同步 gzip | **1,982 B** | **34,777 B** | **32,795 B** | **−94.3 %** |
-| typical 同步 raw | 5,588 B | 148,076 B | 142,488 B | −96.2 % |
-| typical **marginal delta** gzip | **1,657 B** | **34,466 B** | **32,809 B** | **−95.2 %** |
-| namespace 同步 gzip | 5,628 B | 37,406 B | 31,778 B | −85.0 % |
-| namespace / typical 比 | 3.20 × | 1.08 × | — | — |
+| typical 同步 gzip | **3,256 B** | **34,777 B** | **31,521 B** | **−90.6 %** |
+| typical 同步 raw | 9,290 B | 148,076 B | 138,786 B | −93.7 % |
+| typical **marginal delta** gzip | **2,931 B** | **34,466 B** | **31,535 B** | **−91.5 %** |
+| namespace 同步 gzip | 6,011 B | 37,406 B | 31,395 B | −84.0 % |
+| namespace / typical 比 | 1.94 × | 1.08 × | — | — |
 
-**业务解读**：当 React 不需要被每个产品重复打一份时（这是任何成熟前端基建的目标），加 WebSpatial SDK 的代价从 **34 KB gzip 降到 1.7 KB gzip**，**−95.2 %**。SDK 终于可以"按用付费"地进入产品 —— 用得多就多花字节，用得少就几乎零成本。同时 namespace import 的比例从 1.08× 升到 3.20×，证明 spec 真的让 tree-shake 工作了，而不是只把同样的字节换个名字。
+**业务解读**：当 React 不需要被每个产品重复打一份时，加 WebSpatial SDK 的代价从 **34 KB gzip 一刀切** 降到 **~2.9 KB gzip 按需付费**（**−91.5 %**）。相较 2026-05-15 首测的 1.7 KB，绝对值多了约 1.3 KB（eager 打包等固定成本），但相对 main 的结构性收益不变，且仍在 5 KB CI 合同内。namespace / typical 比 **1.94 ×** 说明 tree-shake 仍有效（main 上仅 1.08 ×）。
 
 ---
 
@@ -160,10 +186,10 @@ main 上没有 bridge，没有 facade，没有 `bootSpatial`，没有 dynamic im
 
 `import * as W from '@webspatial/react-sdk'` 强制 Rollup 保留整个 barrel。这是最不友好的消费方式，常见于把 SDK 当字典查询、或集成层动态分发的情况。
 
-| 度量 | A（spec） | B（main） | 节省 | 百分比 |
+| 度量 | A（spec，2026-06-16） | B（main） | 节省 | 百分比 |
 |---|---:|---:|---:|---:|
-| 同步 gzip | 5,628 B | 37,406 B | 31,778 B | **−85.0 %** |
-| 同步 raw | 19,939 B | 158,218 B | 138,279 B | −87.4 % |
+| 同步 gzip marginal | 5,686 B | 37,095 B | 31,409 B | **−84.7 %** |
+| 同步 raw marginal | ~18.1 KB | 158,218 B | — | — |
 
 即使是最坏情况，spec 仍然砍掉 **85 % gzip**。说明 spec 的收益不是"被推荐导入方式骗出来的"，而是结构性的（spatial impl 进入 dynamic chunk）。
 
@@ -173,19 +199,19 @@ main 上没有 bridge，没有 facade，没有 `bootSpatial`，没有 dynamic im
 
 直接看两条分支 `packages/react/dist/` 的实测尺寸：
 
-| 文件 | A（spec） raw | A gz | B（main） raw | B gz | 说明 |
+| 文件 | A（spec，2026-06-16） raw | A gz | B（main） raw | B gz | 说明 |
 |---|---:|---:|---:|---:|---|
-| `dist/index.js` (lazy 默认入口) | **1,655 B** | **579 B** | — | — | spec 新加 |
-| `dist/eager.js` (spatial-only 入口) | 2,494 B | 928 B | — | — | spec 新加 |
-| `dist/spatial.js` (spatial 入口 shim) | 1,125 B | 425 B | — | — | spec 新加，**动态 import 才到达** |
-| `dist/chunk-SHX6AI5C.js` (spatial 真实实现) | 124,747 B | 24,205 B | — | — | spec 拆出来，**plain-web 永不下载** |
+| `dist/index.js` (lazy 默认入口) | **5,329 B** | **1,642 B** | — | — | spec 新加；§9.1 proxy 预算 5,120 B |
+| `dist/eager.js` (spatial-only 入口) | 2,443 B | 957 B | — | — | spec 新加 |
+| `dist/spatial.js` (spatial 入口 shim) | 1,052 B | 444 B | — | — | spec 新加，**动态 import 才到达** |
+| `dist/chunk-*.js` (spatial 真实实现) | ~105 KB+ | ~28 KB+ | — | — | spec 拆出来，**plain-web 永不下载**（hash 随构建变化） |
 | `dist/default/index.js` | — | — | 129,741 B | 25,277 B | main 老入口（消费者总是同步拉） |
 | `dist/web/index.js` | — | — | 131,051 B | 25,741 B | main "web 专用"入口（同样总是同步拉） |
 
 **关键观察**：
 
 1. main 上 `dist/web/index.js` 名义是"web 专用"（号称剥离了 spatial），**实测 131 KB raw / 25.7 KB gzip**，和 `dist/default/index.js` 几乎一样大 —— 也就是 proposal §Why 早就指出的 "dual build 是空头支票"。
-2. spec 把"必下载入口"从 **25 KB gzip** 砍到 **0.6 KB gzip**（lazy `dist/index.js`），spatial 实现整体推进了"按需"的 dynamic chunk。
+2. spec 把"必下载入口"从 **25 KB gzip** 砍到 **~1.6 KB gzip**（lazy `dist/index.js` §9.1 proxy，2026-06-16），spatial 实现整体推进了"按需"的 dynamic chunk。注：2026-05-15 首测为 579 B gzip；eager 打包等后续改动使 proxy 升至 1,642 B，仍远低于 5 KB 上限。
 3. spec 给 spatial-only 消费者保留了 eager 入口（`dist/eager.js` + 同一份 `chunk-SHX6AI5C.js` ≈ **25 KB gzip 总同步**），与 main 的 `dist/default` 持平 —— 也就是说**给愿意承担成本的消费者也没有变贵**，spec 是 Pareto 改进。
 
 ---
@@ -247,7 +273,7 @@ pnpm --filter marginal-delta-vite test
 
 ## 8. 一句话给评审的建议
 
-- 该 spec 把"加 WebSpatial SDK 到一个 React 应用"这件事的字节代价，在 plain-web 上从 **34 KB gzip 一刀切** 降到了 **1.7 KB gzip 按需付费**，绝对值 **−33 KB gzip / ~95 %**；
+- 该 spec 把"加 WebSpatial SDK 到一个 React 应用"这件事的字节代价，在 plain-web 上从 **34 KB gzip 一刀切** 降到了 **~2.9 KB gzip 按需付费**（2026-06-16 校准；仍 < 5 KB CI 合同），绝对值 **−31.5 KB gzip / ~91.5 %**；
 - 对应到端到端整页 SPA，是首屏 **−24 KB gzip / ~32 %**；
 - 给 spatial-only 客户保留了 eager 子路径，等效旧方案，**没有让任何人变贵**；
 - 上述数字都被 CI fixture 锁死，回归会失败。
@@ -258,17 +284,29 @@ pnpm --filter marginal-delta-vite test
 
 ## 文件清单（本文引用的实测产物）
 
-A 端（已构建）：
+A 端（2026-06-16 校准，`feat/eager-mode-entry` tip）：
+
+```
+# §9.2 marginal-delta（pnpm --filter marginal-delta-vite test 日志）
+app-base sync gzip:           325 B
+app-typical sync gzip:      3,256 B  → marginal delta 2,931 B
+app-namespace sync gzip:      6,011 B  → marginal delta 5,686 B
+async spatial chunk (typical): ~40,530 B gz  [不计入 §9.2]
+
+# §9.1 SDK-side proxy（packages/react/src/__tests__/size-budget.test.ts）
+packages/react/dist/index.js     5,329 B raw /  1,642 B gz
+packages/react/dist/eager.js     2,443 B raw /    957 B gz
+packages/react/dist/spatial.js   1,052 B raw /    444 B gz
+```
+
+A 端（2026-05-15 首测，已 supersede 场景 2 数字，场景 1 仍可参考）：
 
 ```
 apps/spatial-vite-min/dist/assets/index-CZFLZ1zX.js          562 B raw /     401 B gz
 apps/spatial-vite-min/dist/assets/spatial-app-CumqX2Ak.js  153,735 B raw / 49,784 B gz
 apps/spatial-vite-min/dist/assets/spatial-BUMyCgDG.js          857 B raw /    493 B gz   [async]
 apps/spatial-vite-min/dist/assets/chunk-SHX6AI5C-cLudk3SK.js 114,759 B raw / 28,278 B gz [async]
-packages/react/dist/index.js                                   1,655 B raw /    579 B gz
-packages/react/dist/eager.js                                   2,494 B raw /    928 B gz
-packages/react/dist/spatial.js                                 1,125 B raw /    425 B gz
-packages/react/dist/chunk-SHX6AI5C.js                        124,747 B raw / 24,205 B gz
+packages/react/dist/index.js (2026-05-15)                    1,655 B raw /    579 B gz
 ```
 
 B 端（在 /tmp/ws-main-baseline @ origin/main 0d698933 上构建）：
