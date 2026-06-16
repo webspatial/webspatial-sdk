@@ -116,6 +116,12 @@ function hijackDocumentElementStyle() {
       return ret
     },
     get: function (target, prop: string) {
+      if (prop === SpatialGlobalCustomVars.backgroundMaterial) {
+        return target.getPropertyValue(
+          SpatialGlobalCustomVars.backgroundMaterial,
+        )
+      }
+
       if (typeof target[prop as keyof CSSStyleDeclaration] === 'function') {
         return function (this: any, ...args: any[]) {
           if (prop === 'setProperty') {

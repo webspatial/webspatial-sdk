@@ -484,6 +484,13 @@ describe('spatialWindowPolyfill', () => {
         .getPropertyValue('--xr-background-material')
         .trim(),
     ).toBe('translucent')
+    expect(
+      (
+        (document.documentElement.style as any)[
+          '--xr-background-material'
+        ] as string
+      ).trim(),
+    ).toBe('translucent')
 
     updateSpatialProperties.mockClear()
     document.documentElement.style.setProperty('border-radius', '80px')
