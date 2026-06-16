@@ -38,7 +38,9 @@ Target shape:
     </DropdownMenu.Trigger>
     <DropdownMenu.Portal container={parentSpatialWindowBody}>
       <DropdownMenu.Content asChild>
-        <div enable-xr>{items}</div>
+        <div enable-xr data-xr-overlay>
+          {items}
+        </div>
       </DropdownMenu.Content>
     </DropdownMenu.Portal>
   </DropdownMenu.Root>
@@ -101,15 +103,112 @@ Items render in A for Radix and are cloned or mirrored into B for display. This 
 
 ## 5. Recommendation
 
-1. Ship Path A as the MVP. The visible developer code shape is nested `enable-xr` plus Radix, with `modal={false}` and pointer/tap selection as the supported interaction boundary.
+1. Ship Path A as the MVP. The visible developer code shape is nested `enable-xr` plus Radix plus the declarative `data-xr-overlay` marker, with `modal={false}` and pointer/tap selection as the supported interaction boundary.
 2. Track Path B as the native-backed future path. If native sub-region elevation becomes available, the implementation can change under the same developer code shape.
 
-## 6. Path A SDK Design
+## 6. Architecture Decision Record
 
-### 6.1 Overlay Detection
+### 6.1 Radix Owns Placement, WebSpatial Owns Elevation
+
+The SDK does not replace Radix or any floating UI library. Radix still owns:
+
+- trigger and content relationship;
+- `side`, `align`, `offset`, collision, and transform placement;
+- pointer/tap selection dispatch through `DropdownMenu.Item`;
+- open/close state owned by the application or Radix root.
+
+WebSpatial owns only the spatial part:
+
+- deciding that a marked nested `enable-xr` is an overlay surface;
+- keeping a measurable host in Radix's document;
+- creating the visible child webview;
+- attaching that child surface to the parent SpatialDiv;
+- syncing the positioned rect, depth, back offset, and visibility to native.
+
+This separation is intentional. It keeps the integration library-agnostic and avoids reimplementing floating placement logic inside WebSpatial.
+
+### 6.2 Overlay Mode Is Explicit
+
+Overlay mode is a declarative opt-in:
+
+```tsx
+<DropdownMenu.Content asChild>
+  <div enable-xr data-xr-overlay>
+    {items}
+  </div>
+</DropdownMenu.Content>
+```
+
+The SDK must not infer overlay mode from Radix or Floating UI internals. Earlier prototypes sniffed props such as `data-side`, `data-radix-*`, or `--radix-*`. That created three problems:
+
+- it coupled WebSpatial behavior to Radix implementation details;
+- it did not generalize cleanly to Floating UI, Headless UI, React Aria, or custom portal code;
+- those props can appear after the floating library measures/positions, while `PortalSpatializedContainer` needs a stable overlay decision during the first render.
+
+The `data-xr-overlay` marker is known on the first render, is library-agnostic, and prevents ordinary nested SpatialDivs from being misclassified. A nested `enable-xr` without this marker remains a normal nested SpatialDiv.
+
+### 6.3 Hidden Placeholder Is The Measurement Source
+
+The visible menu items cannot be the measurement source once they move into a child webview. The parent spatial window must keep a hidden but real DOM host under Radix's popper wrapper.
+
+That hidden host:
+
+- receives the `asChild` ref and props that Radix injects into `DropdownMenu.Content`;
+- keeps Radix attributes and inline placement style;
+- renders a hidden copy of the menu children so the layout is non-zero;
+- registers itself with the spatial container object so `notify2DFrameChange()` can measure it.
+
+The visible child webview renders the real interactive copy. There is no child-webview-to-parent size feedback loop in the MVP; the parent hidden host is the source of truth for width, height, and positioned rect.
+
+### 6.4 Overlay Coordinates Use The Parent Spatial Window Rect
+
+For ordinary nested SpatialDivs, WebSpatial may subtract the nearest parent DOM rect to convert page coordinates into parent-relative coordinates.
+
+Floating overlays are different. The overlay placeholder is already inside the parent spatial window, and Radix already places it through the popper wrapper. Therefore overlay mode uses the placeholder's raw `getBoundingClientRect()` in that parent spatial window. It must not:
+
+- subtract a DOM ancestor found through `queryParentSpatialDomBySpatialId`;
+- add host page scroll;
+- attach fixed overlays to the scene root.
+
+Instead, the overlay child surface attaches to the parent `Spatialized2DElement`, and native receives the raw rect from the parent spatial window.
+
+### 6.5 `SpatialOverlay` Is A Dual-Root Bridge, Not A Positioning Primitive
+
+`SpatialOverlay` exists for plugin-hosted menus where the visible menu shell and plugin items may be rendered by different React roots or shadow roots.
+
+It does not compute placement and does not decide where the menu floats. Its job is to expose two targets with one API:
+
+- a measurement target in Radix's current document;
+- a visible portal target in the spatial menu webview.
+
+`portalMenuOption(content)` writes the same content to both targets by default. Advanced callers can pass `portalMenuOption(realContent, measurementContent)` when the real content has side effects or should not fully render in the measurement tree.
+
+The returned node self-subscribes to target mount changes. This matters when a plugin root renders before `OverlayTarget` exists; once the measurement and portal targets mount, the plugin item re-renders and portals into both targets.
+
+### 6.6 Render-Target Context Beats Spatial Window Presence
+
+`useSpatialPortalContainer()` answers "which document body should Radix portal into?" It does not answer "is this render the measurement copy or the visible portal copy?"
+
+Scenario 5 proves the difference. The measurement placeholder for the child menu lives inside the parent spatial window, so `SpatialWindowContext` is present. If `SpatialOverlay` used that alone, it would mistake the measurement placeholder for the visible portal target.
+
+The internal `SpatialOverlayRenderTargetContext` is therefore authoritative:
+
+- visible `PortalSpatializedContainer` content is marked `portal`;
+- hidden placeholder content is marked `measurement`;
+- `SpatialOverlay` falls back to `SpatialWindowContext` only when no render-target marker exists, such as plain DOM/degraded paths.
+
+### 6.7 Interaction Scope
+
+The MVP supports pointer/tap selection. Keyboard navigation, typeahead, focus trapping, modal focus management, and outside-click semantics across parent and child webviews are explicitly out of scope for this change.
+
+This boundary is part of the design. The current architecture splits visible menu content into a child webview, so full same-document Radix focus semantics are not guaranteed until a future native sub-region elevation model exists.
+
+## 7. Path A SDK Design
+
+### 7.1 Overlay Detection
 
 Overlay mode is an explicit, declarative opt-in via the `data-xr-overlay`
-marker (`overlayDetection.ts` → `isSpatialOverlayContent` /
+marker (`overlayDetection.ts` -> `isSpatialOverlayContent` /
 `SPATIAL_OVERLAY_ATTRIBUTE`).
 
 A nested `enable-xr` enters overlay mode only when:
@@ -118,9 +217,9 @@ A nested `enable-xr` enters overlay mode only when:
 2. its props carry the `data-xr-overlay` marker.
 
 Rationale: the earlier MVP sniffed floating-library positioning signals
-(`data-side`, `data-radix-*`, `--radix-*`, …). That bound detection to Radix
+(`data-side`, `data-radix-*`, `--radix-*`, etc.). That bound detection to Radix
 internals, did not generalize to other floating libraries or custom portals, and
-was only resolved after the library measured/positioned — so the render-time
+was only resolved after the library measured/positioned, so the render-time
 `isOverlayMode` could drift from the instance flag captured in `useMemo`.
 
 A declarative marker is library-agnostic, known on the first render (so the
@@ -130,7 +229,7 @@ not carry the marker. Radix (or any library) still injects its `asChild`
 ref/props onto the marked element; the SDK mirrors those onto the hidden
 placeholder host for measurement/positioning exactly as before.
 
-### 6.2 Hidden Host Dual Render
+### 7.2 Hidden Host Dual Render
 
 Root and standard-instance `enable-xr` already render children twice: a hidden standard host with real size for measurement, and a visible webview copy. Scenario 1 works because of that model.
 
@@ -142,7 +241,7 @@ The nested overlay path reuses the same idea:
 | Overlay attach | `PortalInstanceObject.addToParent` | Overlay surfaces attach to the parent `Spatialized2DElement` even when Radix uses fixed positioning |
 | Raw rect base | `PortalInstanceObject.updateSpatializedElementProperties` | Overlay placeholder rect is already in the parent spatial-window viewport, so it should not subtract DOM ancestors or add page scroll |
 
-### 6.3 Spike API Removal
+### 7.3 Spike API Removal
 
 The old manual spike hooks are not public API:
 
@@ -153,19 +252,19 @@ The old manual spike hooks are not public API:
 
 Their useful ideas are moved into the automatic portal branch. The measurement source is the hidden host in the parent document, not child-webview-to-parent size feedback.
 
-## 7. Auto Portal Container Stretch
+## 8. Auto Portal Container Stretch
 
 Radix `Portal` defaults to `globalThis.document.body`, which is the host page document in this React runtime. Inside a SpatialDiv, that can leave the trigger in the spatial window and the content in the host page, producing cross-document measurement problems.
 
 Radix does not read WebSpatial context. Automatic portal routing would require either patching/wrapping Radix Portal behavior or providing a thin SDK wrapper. Until then, `container={useSpatialPortalContainer()}` is the practical transition path.
 
-### 7.1 Plain Browser / Degraded Mode
+### 8.1 Plain Browser / Degraded Mode
 
 When there is no WebSpatial session, `enable-xr` degrades to ordinary HTML. `DegradedContainer` provides the host page `window` through `SpatialWindowContext`, so `useSpatialPortalContainer()` returns the host document body within degraded SpatialDiv subtrees.
 
 `undefined` from `useSpatialPortalContainer()` means the caller is outside any SpatialDiv subtree and should use an application default such as `document.body`.
 
-## 8. Path A Data Flow
+## 9. Path A Data Flow
 
 ```text
 Radix mounts Content asChild -> inner enable-xr
@@ -187,7 +286,7 @@ Pointer item selection in B propagates through React portal ownership to Radix
 onSelect, then menu close unmounts B and unregisters the placeholder.
 ```
 
-## 9. SpatialOverlay Plugin-Host Dual-Root Bridge
+## 10. SpatialOverlay Plugin-Host Dual-Root Bridge
 
 Scenario 4/5 are plugin dual-root paths rather than ordinary Radix `Content` children paths:
 
@@ -196,7 +295,7 @@ Scenario 4/5 are plugin dual-root paths rather than ordinary Radix `Content` chi
 
 If plugin items render only into the standard host, they are hidden with the placeholder and never appear in the raised menu surface. If plugin items render only into the portal webview, Radix and WebSpatial lose same-document measurement. `SpatialOverlay` packages both targets behind one SDK API.
 
-### 9.1 Public API Shape
+### 10.1 Public API Shape
 
 ```ts
 type SpatialOverlayPortalOption = (
@@ -223,7 +322,7 @@ Contract:
 - When `measurementContent` is omitted, the SDK uses `content` as the measurement copy.
 - Advanced callers can pass `portalMenuOption(realContent, measurementContent)` when the real item has side effects or should not be fully rendered in the measurement tree.
 
-### 9.2 Measurement Vs Portal Target Selection
+### 10.2 Measurement Vs Portal Target Selection
 
 `SpatialOverlay` renders differently depending on which copy of a spatial element is rendering:
 
@@ -243,7 +342,7 @@ Current design:
 
 This keeps Scenario 4 working and fixes the nested Scenario 5 path.
 
-### 9.3 Scenario 4/5 Data Flow
+### 10.3 Scenario 4/5 Data Flow
 
 ```text
 Visible root mounts DropdownMenu.Content asChild -> div enable-xr
@@ -261,7 +360,7 @@ Visible root mounts DropdownMenu.Content asChild -> div enable-xr
 
 For Scenario 5, Radix's current document is the parent SpatialDiv webview, not the host page. The render-target context makes that parent-webview placeholder become measurement instead of being mistaken for the final visible portal target.
 
-### 9.4 Compatibility
+### 10.4 Compatibility
 
 Plain Chrome and degraded mode remain compatible:
 
@@ -269,30 +368,30 @@ Plain Chrome and degraded mode remain compatible:
 - `DegradedContainer` provides host `SpatialWindowContext`, so `useSpatialPortalContainer()` returns the host document body inside degraded SpatialDiv subtrees.
 - `SpatialOverlayRenderTargetContext` is normally absent in plain DOM paths; `SpatialOverlay` falls back to container-based behavior.
 
-## 10. Risks And Open Questions
+## 11. Risks And Open Questions
 
-1. Overlay misclassification: the design avoids the broad positioned-ancestor rule and instead requires nested spatial content plus floating positioning signals. Tests must cover positive and negative samples.
+1. Overlay misclassification: overlay mode requires explicit `data-xr-overlay`, so ordinary nested SpatialDivs and floating-library props alone must not trigger overlay mode. Tests must cover marker positives and no-marker negatives.
 2. `asChild` prop/ref landing: success depends on Radix Slot props/ref landing on the hidden placeholder host. Tests must prove the placeholder receives ref, style, data attributes, handlers, and children.
 3. AVP hit testing: jsdom cannot verify native hit testing. AVP smoke must confirm item selection logs once and closes the menu.
 4. Timing: the hidden host has intrinsic size directly, avoiding child-to-parent size feedback. Rect-to-native sync still needs batching for Radix reposition events.
 5. Coordinate contamination: raw-rect behavior must be guarded by overlay mode and must not affect ordinary nested SpatialDivs.
 6. Path B requires native scheduling and does not block this change.
 
-## 11. Task Mapping
+## 12. Task Mapping
 
 - Path A MVP: tasks 5.3-5.7 and 6.x in `tasks.md`.
 - Path B native follow-up: add a later native/core-sdk task set if chosen.
 - SpatialOverlay plugin bridge: tasks 8.x in `tasks.md`.
 
-## 12. Verification
+## 13. Verification
 
-- Unit tests: overlay detection positive/negative samples; `asChild` placeholder ref/props/children landing; attach-to-parent behavior; overlay raw-rect behavior.
+- Unit tests: `data-xr-overlay` detection positive/negative samples; `asChild` placeholder ref/props/children landing; attach-to-parent behavior; overlay raw-rect behavior.
 - `SpatialOverlay.test.tsx`: automatic measurement copy and nested placeholder behavior where `SpatialWindowContext` exists but render target must still be `measurement`.
 - Demo: Scenario 3 uses nested `enable-xr` plus Radix; Scenario 4/5 use `useSpatialOverlay()` for plugin dual-root bridging.
 - AVP smoke: popper non-zero, child surface visible beyond parent bounds, item tap closes/logs, menu follows parent, and close destroys the surface.
 - Scenario 4/5 Safari Inspector smoke: standard or parent target contains measurement target/items; menu surface target contains real plugin items; no visible zero-height or white shell remains on the main page or parent SpatialDiv.
 
-## 13. Minimal Vertical Slice
+## 14. Minimal Vertical Slice
 
 Principle: first make the Scenario 3 demo pass the three AVP-visible gates with minimal implementation. Add broader abstraction and test hardening afterwards.
 
@@ -304,9 +403,9 @@ Slice gates:
 
 Minimal change set:
 
-- Update the dropdown-menu-spatial Scenario 3 demo to nested `enable-xr` plus Radix.
+- Update the dropdown-menu-spatial Scenario 3 demo to nested `enable-xr` plus Radix plus `data-xr-overlay`.
 - Forward refs from the portal branch in `SpatializedContainer` to `PortalSpatializedContainer`.
-- Detect overlay mode in `PortalSpatializedContainer`.
+- Detect explicit overlay mode in `PortalSpatializedContainer`.
 - Render hidden placeholder children and land Radix ref/props on the placeholder.
 - Use overlay raw-rect coordinate behavior in `PortalInstanceContext`.
 - Add one focused test proving the portal path lands `asChild` props/ref on the placeholder host.
@@ -315,14 +414,14 @@ After the slice:
 
 - Remove spike hooks.
 - Add `ResizeObserver` plus requestAnimationFrame reposition sync if needed.
-- Expand overlay detection tests.
+- Expand overlay detection tests for marker and no-marker paths.
 - Complete AVP smoke coverage.
 
 ## Decisions From 2026-06-09
 
 1. MVP path: ship Path A first, with pointer/tap support and focus/keyboard caveats. Track Path B as a later native-backed replacement that preserves developer code shape.
 2. Interaction boundary: accept `modal={false}` and do not guarantee keyboard, focus, typeahead, focus trap, or outside-click semantics for Scenario 3 in this change.
-3. Overlay detection: use nested spatial content plus strong floating positioning signals. Do not use plain positioned ancestors. (Superseded — see Decisions From 2026-06-16.)
+3. Overlay detection initially used nested spatial content plus strong floating positioning signals. That decision is superseded by the explicit marker decision from 2026-06-16.
 4. Keyboard/focus/typeahead/focus-trap/outside-click are out of scope. Pointer/tap selection is the required Radix interaction.
 5. Escaping parent 2D bounds is the key Scenario 3 distinction. Any future Path B native implementation must also render beyond the parent webview bounds, or it does not satisfy Scenario 3.
 

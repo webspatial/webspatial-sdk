@@ -55,7 +55,7 @@ Inside a parent `div enable-xr`, an application SHALL be able to open a Radix `D
 
 The child floating menu SHALL appear above or in front of the parent SpatialDiv and SHALL NOT be clipped by the parent SpatialDiv's 2D viewport, width, height, or overflow bounds. This is the core behavior that differentiates Scenario 3 from a SpatialDiv-local flat menu.
 
-Child-surface overlay mode SHALL be an explicit, declarative opt-in via the `data-xr-overlay` marker on the inner `enable-xr`. The SDK MUST NOT infer overlay mode from floating-library-specific props (`data-side`, `data-radix-*`, `--radix-*`, …); detection MUST be library-agnostic. The developer path SHALL require only nested `enable-xr` + Radix + the `data-xr-overlay` marker, with no imperative Scenario-3-specific hooks.
+Child-surface overlay mode SHALL be an explicit, declarative opt-in via the `data-xr-overlay` marker on the inner `enable-xr`. The SDK MUST NOT infer overlay mode from floating-library-specific props (`data-side`, `data-radix-*`, `--radix-*`, etc.); detection MUST be library-agnostic. The developer path SHALL require only nested `enable-xr` + Radix + the `data-xr-overlay` marker, with no imperative Scenario-3-specific hooks.
 
 Until auto portal routing ships, applications MAY pass `DropdownMenu.Portal container={useSpatialPortalContainer()}` as interim plumbing shared with Scenario 2.
 

@@ -30,7 +30,7 @@
 
 ## 5. Scenario 3: Minimal Vertical Slice First
 
-Decision from 2026-06-09: use Path A as the MVP. Reuse the proven dual-render model where the placeholder host renders children hidden, like the standard instance. Overlay detection uses a strong signal: nested spatial content plus floating-library positioning signal. It must not use a plain positioned-ancestor rule. DOM ancestry hardening can follow later. Keyboard, focus, typeahead, focus trap, and outside-click behavior are explicitly out of scope. See `design.md` sections 6, 13, and "Decisions From 2026-06-09".
+Decision from 2026-06-09: use Path A as the MVP. Reuse the proven dual-render model where the placeholder host renders children hidden, like the standard instance. The initial floating-signal detection idea has been superseded: overlay mode now requires the explicit, declarative `data-xr-overlay` marker. Keyboard, focus, typeahead, focus trap, and outside-click behavior are explicitly out of scope. See the architecture decision record in `design.md`.
 
 Slice gates, all requiring AVP verification before broadening abstraction/tests:
 
