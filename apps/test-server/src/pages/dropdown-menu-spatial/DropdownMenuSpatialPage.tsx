@@ -46,7 +46,7 @@ export function DropdownMenuSpatialPage() {
       </div>
 
       <section style={{ marginTop: '24px' }}>
-        {/* <Scenario4PluginHostMenu onLog={logPluginHost} /> */}
+        <Scenario4PluginHostMenu onLog={logPluginHost} />
       </section>
 
       <section style={{ marginTop: '24px' }}>
