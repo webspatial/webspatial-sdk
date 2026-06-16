@@ -78,10 +78,20 @@ function hijackDocumentElementStyle() {
   const rawDocumentStyle = document.documentElement.style
   const styleProxy = new Proxy(rawDocumentStyle, {
     set: function (target, key, value) {
-      const ret = Reflect.set(target, key, value)
+      let ret: boolean
 
       if (key === SpatialGlobalCustomVars.backgroundMaterial) {
-        setCurrentWindowStyle(value)
+        target.setProperty(
+          SpatialGlobalCustomVars.backgroundMaterial,
+          String(value),
+        )
+        ret = true
+      } else {
+        ret = Reflect.set(target, key, value)
+      }
+
+      if (key === SpatialGlobalCustomVars.backgroundMaterial) {
+        setCurrentWindowStyle(String(value))
       }
 
       if (
