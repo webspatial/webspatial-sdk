@@ -95,6 +95,7 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     // demotion cascades automatically — the parity contract continues to
     // hold (both entries omit them).
     'useMetrics',
+    'useAnimation',
   ] as const
 
   const EXPECTED_LAZY_RUNTIME_STUBS = [

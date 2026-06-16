@@ -215,8 +215,9 @@ export type {
   UnlitMaterialProps,
 } from './facades'
 
-// --- Hooks (placeholder-or-real selector per spec "Hook placeholders") ------
+// --- Hooks (placeholder / ready-gated per spec "Hook placeholders") ---------
 export { useMetrics } from './hooks-web/useMetrics'
+export { useAnimation } from './hooks-web/useAnimation'
 
 // --- Public type surface (no runtime values) --------------------------------
 // Spatial event + ref types — referenced by facade prop / ref typing.

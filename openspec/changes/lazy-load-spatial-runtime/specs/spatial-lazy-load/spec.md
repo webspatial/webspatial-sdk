@@ -11,7 +11,7 @@ Throughout this spec, **"WebSpatial runtime"** means a runtime classified by the
 The published default entry of `@webspatial/react-sdk` MUST contain only:
 
 - Lightweight facades for every public spatial component, plus internal HOC wrapper facades used by the SDK's JSX runtime (per "Component facades")
-- Hook placeholders for every public spatial hook (per "Hook placeholders")
+- Hook placeholders and ready-gated hook facades for every public spatial hook (per "Hook placeholders")
 - The runtime bridge, the boot helper, the public readiness API (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`), and the recommended React integration component `SpatialBoot` (per "`SpatialBoot` React integration")
 - The unified JSX runtime (per "JSX runtime strips spatial markers and wraps with facade HOCs")
 - Stateless utility APIs and pure re-exports (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry")
@@ -366,17 +366,23 @@ Additional file-level constraints on facade modules (the `'use client'` directiv
 
 ### Requirement: Hook placeholders
 
-For every spatial Hook publicly exported from the default entry of `@webspatial/react-sdk`, the default entry MUST provide a placeholder that is invoked unconditionally per render and returns a documented stable default value. Real hook implementations MUST be loaded only after `bootSpatial()` resolves and MUST NOT be invoked during the placeholder phase.
+For every spatial Hook publicly exported from the default entry of `@webspatial/react-sdk`, the default entry MUST provide either:
+
+- a placeholder that is invoked unconditionally per render and returns a documented stable default value; or
+- a ready-gated hook facade that synchronously delegates to the real hook implementation only when `bootSpatial()` has already resolved.
+
+Real hook implementations MUST be loaded only after `bootSpatial()` resolves and MUST NOT be invoked during the placeholder phase. A ready-gated hook facade MUST NOT statically or dynamically import `@webspatial/react-sdk/spatial`, MUST NOT import `@webspatial/core-sdk` or any core-sdk runtime subpath at runtime from the default entry, and MUST NOT schedule the spatial chunk by itself.
 
 Internal hooks consumed only by spatial components (the `useEntity` family, `useEntityRef`, `useEntityTransform`, `useEntityEvent`, `useEntityId`, `useRealityEvents`, `useForceUpdate`) are NOT publicly exported and MUST NOT appear in the default entry. They live in `@webspatial/react-sdk/spatial` and ship with the spatial chunk; they have no placeholder and MUST be unreachable from the default entry.
 
-A given component instance MUST consistently use either the placeholder hook (web mode) or the real hook (spatial mode) for its entire lifetime. The SDK MUST NOT switch between placeholder and real hook implementations within a single component instance, even if `isSpatialReady()` transitions from `false` to `true` during that instance's lifetime. Switching to the real hook implementation MUST happen only when the component is unmounted and remounted (for example via a `key` change, a parent unmount, or a fresh page load).
+A given component instance MUST consistently use either the placeholder hook (web mode) or the real hook (spatial mode) for its entire lifetime. The SDK MUST NOT switch between placeholder and real hook implementations within a single component instance, even if `isSpatialReady()` transitions from `false` to `true` during that instance's lifetime. Switching to the real hook implementation MUST happen only when the component is unmounted and remounted (for example via a `key` change, a parent unmount, or a fresh page load). Ready-gated hook facades make this rule explicit by throwing before readiness instead of returning a placeholder value that could later switch implementation.
 
 #### Public spatial Hooks and their documented web-mode defaults
 
-| Hook         | Signature                                                                                                                  | Web-mode return value                                                                                                                                                                                                                                                                                                |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `useMetrics` | `() => { pointToPhysical: (pt: number, opts?: object) => number; physicalToPoint: (m: number, opts?: object) => number }` | An object whose `pointToPhysical` and `physicalToPoint` properties are module-level constant function references. The two function identities MUST remain stable across all renders and all `bootSpatial()` calls during the page lifetime. Invoking either function while the placeholder is active (non-WebSpatial browser, SSR, WebSpatial runtime before `bootSpatial()` resolves, or a component instance pinned to the placeholder) MUST throw `WebSpatialRuntimeError` with capability `'useMetrics'`. |
+| Hook           | Signature                                                                                                                  | Web-mode return value                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useMetrics`   | `() => { pointToPhysical: (pt: number, opts?: object) => number; physicalToPoint: (m: number, opts?: object) => number }` | An object whose `pointToPhysical` and `physicalToPoint` properties are module-level constant function references. The two function identities MUST remain stable across all renders and all `bootSpatial()` calls during the page lifetime. Invoking either function while the placeholder is active (non-WebSpatial browser, SSR, WebSpatial runtime before `bootSpatial()` resolves, or a component instance pinned to the placeholder) MUST throw `WebSpatialRuntimeError` with capability `'useMetrics'`. |
+| `useAnimation` | `(config: AnimationConfig) => [AnimatedProps, AnimationApi]`                                                               | No web-mode value. `useAnimation` is a ready-gated hook facade: invoking it before `bootSpatial()` has resolved MUST synchronously throw `WebSpatialRuntimeError` with capability `'useAnimation'` and a message that points consumers to `SpatialBoot` or `await bootSpatial()` before mounting the component.                                                                                                   |
 
 #### Scenario: useMetrics placeholder throws on conversion while unavailable
 
@@ -399,31 +405,56 @@ A given component instance MUST consistently use either the placeholder hook (we
 - **AND** invoking either conversion function during SSR MUST throw `WebSpatialRuntimeError` because runtime detection resolves to non-WebSpatial
 - **AND** if the implementation uses `useSyncExternalStore`, it MUST provide a `getServerSnapshot` that returns a stable value without touching `window`
 
-#### Scenario: Real hook is used only after boot in spatial runtime
+#### Scenario: useAnimation facade is default-entry safe
+
+- **WHEN** an application imports `useAnimation` from `@webspatial/react-sdk`
+- **THEN** the default entry MUST provide the `useAnimation` binding
+- **AND** the binding MUST NOT statically import the real reality hook implementation from `@webspatial/react-sdk/spatial`
+- **AND** the default-entry static import closure MUST remain free of `@webspatial/core-sdk` runtime imports
+- **AND** invoking `useAnimation(config)` before readiness MUST NOT schedule the spatial chunk
+- **AND** it MUST synchronously throw `WebSpatialRuntimeError` with capability `'useAnimation'`
+
+#### Scenario: useAnimation delegates after boot
+
+- **WHEN** a component calls `useAnimation(config)` from the default entry in a WebSpatial runtime
+- **AND** `bootSpatial()` has already resolved before that component mounts
+- **THEN** the facade MUST synchronously call the real `useAnimation` implementation from the loaded spatial namespace
+- **AND** the returned `[AnimatedProps, AnimationApi]` tuple MUST have the same runtime behavior as importing `useAnimation` from the spatial implementation directly
+- **AND** invalid `config` values MUST be validated by the real implementation with the same user-facing errors
+
+#### Scenario: useAnimation is unavailable before boot
+
+- **WHEN** a component calls `useAnimation(config)` from the default entry in a non-WebSpatial browser, during SSR, or in a WebSpatial runtime where `bootSpatial()` is never called
+- **THEN** the hook MUST synchronously throw `WebSpatialRuntimeError` with capability `'useAnimation'`
+- **AND** no spatial chunk MUST be requested
+- **AND** user-facing docs MUST direct consumers to mount the component under `<SpatialBoot>` or render it only after an explicit `await bootSpatial()`
+
+#### Scenario: Placeholder real-hook pair is used only after boot in spatial runtime
 
 - **WHEN** `bootSpatial()` has resolved in a WebSpatial runtime
-- **AND** a component that calls a public spatial hook is mounted for the first time
+- **AND** a component that calls a public spatial hook implemented as a placeholder / real-hook pair is mounted for the first time
 - **THEN** the real hook implementation from the spatial chunk MUST be invoked
 
-#### Scenario: Hook implementation does not switch mid-life
+#### Scenario: Placeholder hook implementation does not switch mid-life
 
-- **WHEN** a component instance has rendered at least once while `isSpatialReady()` was `false`
+- **WHEN** a component instance has rendered at least once with a public spatial hook implemented as a placeholder / real-hook pair while `isSpatialReady()` was `false`
 - **AND** `isSpatialReady()` later becomes `true`
 - **THEN** that component instance MUST continue to invoke the placeholder hook for the remainder of its lifetime
 - **AND** to start using the real hook implementation the component MUST be unmounted and remounted
 
-#### Scenario: Remount picks up the real hook implementation
+#### Scenario: Remount picks up the real hook implementation for placeholder hooks
 
-- **WHEN** a component using a public spatial hook unmounts after `isSpatialReady()` has become `true`
+- **WHEN** a component using a public spatial hook implemented as a placeholder / real-hook pair unmounts after `isSpatialReady()` has become `true`
 - **AND** the same component (or a new instance with a different React `key`) mounts again
 - **THEN** the new instance MUST invoke the real hook implementation from the spatial chunk
 
 #### Scenario: New publicly exported spatial hooks must define documented defaults
 
 - **WHEN** a future SDK version adds a new spatial Hook to the default entry's public exports
-- **THEN** the table in this Requirement MUST be updated with that Hook's signature and its documented web-mode default value
-- **AND** an automated test in the react-sdk package MUST verify the placeholder against those documented defaults
-- **AND** the new placeholder MUST satisfy the SSR-safety, identity-stability, and no-mid-life-switch constraints already defined for `useMetrics`
+- **THEN** the table in this Requirement MUST be updated with that Hook's signature and either its documented web-mode default value or its default-safe controller behavior
+- **AND** an automated test in the react-sdk package MUST verify the placeholder or controller against those documented defaults
+- **AND** new placeholder hooks MUST satisfy the SSR-safety, identity-stability, and no-mid-life-switch constraints already defined for `useMetrics`
+- **AND** new ready-gated hook facades MUST satisfy the no-spatial-import, no-core-sdk-runtime-import, no-self-boot, and pre-ready synchronous-throw constraints already defined for `useAnimation`
 
 ---
 
@@ -840,7 +871,7 @@ The eager entry MUST re-export the same TypeScript surface as the default entry 
 
 Within that named-export set:
 
-- **Spatial primitives** (the facade names — `Model`, `Reality`, `Entity`, `BoxEntity` family, materials / assets, `SceneGraph` / `World`, and `useMetrics`) MUST resolve to the **real spatial implementations** loaded statically from `@webspatial/react-sdk/spatial`, not to facade fallbacks. Factory-style HOCs remain internal-only after the `internalize-hoc-factories` change; the public marker path is `enable-xr` / `enable-xr-monitor`, and the eager entry preloads the bridge so JSX-runtime marker wrappers reached through `@webspatial/react-sdk/internal/facades-client` render real implementations on first client render.
+- **Spatial primitives** (the facade names — `Model`, `Reality`, `Entity`, `BoxEntity` family, materials / assets, `SceneGraph` / `World`, `useMetrics`, and `useAnimation`) MUST resolve to the **real spatial implementations** loaded statically from `@webspatial/react-sdk/spatial`, not to facade fallbacks. Factory-style HOCs remain internal-only after the `internalize-hoc-factories` change; the public marker path is `enable-xr` / `enable-xr-monitor`, and the eager entry preloads the bridge so JSX-runtime marker wrappers reached through `@webspatial/react-sdk/internal/facades-client` render real implementations on first client render.
 - **Stateless utilities** (Group B / Group C per "Stateless utility APIs and pure re-exports remain in the default entry": `enableDebugTool`, `convertCoordinate`, `initScene`, `WebSpatialRuntime`, `WebSpatialRuntimeError`, `version`, `createElement` (`@deprecated` per "createElement export is deprecated"), type-only re-exports including the core-sdk type re-exports) MUST be the same module-level references the default entry exposes (re-export, not redeclare). This guarantees behavior parity and allows shared code paths. The `@deprecated` `createElement` export MUST carry its JSDoc on the eager-entry surface too — re-export via `from './index'` preserves the annotation automatically.
 - **Lazy-load runtime API** (`bootSpatial`, `isSpatialReady`, `useSpatialReady`, `onSpatialLoadError`, `WebSpatialBootError`, `SpatialBoot`) MUST be exposed as **compatibility stubs** (or real `SpatialBoot` with eager semantics) so that consumer code written against the default entry still type-checks and runs unchanged when its import root switches to the eager entry. The stub semantics are pinned by the Scenarios below. A public `useBootSpatial` hook MUST NOT be required on either entry in v1.
 

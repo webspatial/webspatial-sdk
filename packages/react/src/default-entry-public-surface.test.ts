@@ -68,6 +68,7 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       // `src/internal/facades-client.ts`.
       // Hooks
       'useMetrics',
+      'useAnimation',
       // Deprecated v1 export
       'createElement',
       // Constants
@@ -244,6 +245,13 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       const selectorMod = await import('./hooks-web/useMetrics')
       expect((sdk as Record<string, unknown>).useMetrics).toBe(
         selectorMod.useMetrics,
+      )
+    })
+
+    it('the default-entry `useAnimation` is the ready-gated facade', async () => {
+      const facadeMod = await import('./hooks-web/useAnimation')
+      expect((sdk as Record<string, unknown>).useAnimation).toBe(
+        facadeMod.useAnimation,
       )
     })
   })

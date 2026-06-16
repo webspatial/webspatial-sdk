@@ -162,6 +162,23 @@ A subset of the public API works without `bootSpatial()` ever being called and i
 
 The full normative contract lives in [`openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md`](../../openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md) — search for "Stateless utility APIs and pure re-exports". Internal `Model` / `SpatializedContainer` host wrappers use `useSyncExternalStore` for SSR + hydration — you do **not** wrap the app in a provider for that.
 
+### Spatial hooks
+
+Import public spatial hooks from the default entry:
+
+```ts
+import { useAnimation, useMetrics } from '@webspatial/react-sdk'
+```
+
+`useMetrics()` has a stable web placeholder. A component instance that first
+invokes it before `bootSpatial()` resolves keeps that placeholder until it
+unmounts and remounts.
+
+`useAnimation(config)` has no web fallback. Call it only from components that
+mount after spatial readiness, such as children of `<SpatialBoot>` or a tree
+rendered after an explicit `await bootSpatial()`. Calling it before readiness
+throws `WebSpatialRuntimeError` with capability `useAnimation`.
+
 ### RSC, server requests, and runtime detection
 
 The default entry carries `'use client'` at the top of its emitted `dist/index.js`. Frameworks that support React Server Components treat imports from `@webspatial/react-sdk` as a **client boundary**: you can still **render** facade components from a Server Component file (they become client components), but you cannot **call** hook-style APIs from server-only modules.

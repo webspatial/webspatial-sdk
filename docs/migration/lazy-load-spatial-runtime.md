@@ -163,7 +163,12 @@ function Drone() {
 }
 ```
 
-There is one caveat: **public spatial hooks (currently `useMetrics`) do NOT switch mid-life**. A component instance that first invoked `useMetrics()` while the bridge was unready continues using the placeholder for its entire lifetime. To start using the real hook, the component must be unmounted and remounted (e.g. via a `key` change, parent unmount, or page reload). This is intentional — it keeps the React Hook call sequence consistent for the instance's lifetime.
+There are two hook contracts to keep in mind:
+
+- `useMetrics()` uses a stable web placeholder. A component instance that first invoked it while the bridge was unready continues using the placeholder for its entire lifetime. To start using the real hook, the component must be unmounted and remounted (e.g. via a `key` change, parent unmount, or page reload).
+- `useAnimation(config)` has no web fallback. Import it from `@webspatial/react-sdk`, but call it only from components that mount after spatial readiness, such as children of `<SpatialBoot>` or a tree rendered after an explicit `await bootSpatial()`. Calling it before readiness throws `WebSpatialRuntimeError` with capability `useAnimation`.
+
+This is intentional — it keeps hook behavior deterministic and avoids changing the React Hook call sequence within a mounted component instance.
 
 ### Boot before vs after `hydrateRoot`
 
@@ -352,6 +357,8 @@ This change is required by the spec's "Hook implementation does not switch mid-l
 
 The placeholder conversion functions throw `WebSpatialRuntimeError` while the placeholder is active (plain web, SSR, pre-boot, or pinned placeholder instances). Guard with `useSpatialReady()` or only call conversions after `bootSpatial()` resolves and the component remounts.
 
+`useAnimation(config)` is ready-gated instead of placeholder-backed: it delegates to the real spatial implementation only after `bootSpatial()` has resolved, and otherwise throws synchronously with guidance to use `<SpatialBoot>` or `await bootSpatial()` before mounting the component.
+
 ---
 
 ## CHANGELOG-style summary of breaking changes
@@ -361,7 +368,7 @@ The placeholder conversion functions throw `WebSpatialRuntimeError` while the pl
 - **BREAKING**: removed public exports `SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor` — use the `enable-xr` / `enable-xr-monitor` JSX markers.
 - **BREAKING**: `react` and `react-dom` are now required peer dependencies (`>=18.0`); React 17 and earlier are no longer supported.
 - **BREAKING**: spatial code is now lazy-loaded via `bootSpatial()`; React applications should wrap spatial UI in `<SpatialBoot>`, or use imperative `await bootSpatial()` before `ReactDOM.createRoot(...).render(...)` as a CSR-only optimization.
-- **BREAKING**: a component instance that calls `useMetrics()` (and any future spatial Hooks) now pins the placeholder-vs-real choice for its lifetime; remount required to switch to the real implementation after a late `bootSpatial()`.
+- **BREAKING**: a component instance that calls `useMetrics()` now pins the placeholder-vs-real choice for its lifetime; remount required to switch to the real implementation after a late `bootSpatial()`. `useAnimation(config)` is exported from the default entry but is ready-gated: call it only after `<SpatialBoot>` / `await bootSpatial()`, otherwise it throws `WebSpatialRuntimeError`.
 - **DEPRECATED**: `createElement` named export — migrate to the automatic JSX transform (`./jsx-runtime` / `./jsx-dev-runtime`). Removal scheduled for v2.
 - **BREAKING**: removed **`SSRProvider`** from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. On the default entry, hydration gating is handled by the facade's `useSpatialReady` (`useSyncExternalStore`); real `Model` / `SpatializedContainer` are reached only through the facade delegate and mount after hydration commits, so no app-level Context or internal SSR wrapper is required — delete any `<SSRProvider>` wrapper; no replacement import is required. Spatial primitives imported from `@webspatial/react-sdk/eager` are CSR-only: if you server-render them, gate the subtree to the client (e.g. `dynamic(..., { ssr: false })`) or import from the default entry instead.
 - **BREAKING**: removed `withSpatialized2DElementContainer` and `withSpatialMonitor` named exports (plus the `Spatialized2DElementContainerProps` type) from `@webspatial/react-sdk` and `@webspatial/react-sdk/eager`. The factory HOCs were demoted to internal-only — the documented public mechanism for wrapping intrinsic elements remains the `enable-xr` / `enable-xr-monitor` JSX marker. If you imported the factory directly to compose with a third-party HOC (e.g. `animated(withSpatialized2DElementContainer('div'))`), wrap your own `forwardRef` shim around `<div enable-xr ref={ref} />` and pass _that_ to the third-party HOC (see `packages/react/README.md` → "Advanced: composing with third-party HOCs" for the recipe).
