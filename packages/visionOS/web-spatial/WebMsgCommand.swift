@@ -27,6 +27,8 @@ enum SpatialWebMsgType: String, Encodable {
 
     case animationstatechange
 
+    case entitytransformchange
+
     case objectdestroy
 }
 
@@ -127,6 +129,18 @@ struct AnimationStateChangeDetail: Encodable {
 struct AnimationStateChangeEvent: Encodable {
     let type: SpatialWebMsgType = .animationstatechange
     let detail: AnimationStateChangeDetail
+}
+
+/// 16-element column-major representation of the new `entityTransform`,
+/// matching the wire format that JS already uses when sending the matrix to
+/// native via `UpdateSpatializedStatic3DElementProperties.modelTransform`.
+struct EntityTransformChangeDetail: Encodable {
+    let transform: [Double]
+}
+
+struct EntityTransformChangeEvent: Encodable {
+    let type: SpatialWebMsgType = .entitytransformchange
+    let detail: EntityTransformChangeDetail
 }
 
 struct SpatialObjectDestroiedEvent: Encodable {

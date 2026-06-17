@@ -41,8 +41,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     var attachmentManager = AttachmentManager()
-    // NOTE: `@Observable` + `lazy` 在新版本 Swift 宏展开下会触发编译器报错（init accessor 访问 backing storage）。
-    // 这里不需要让动画管理器参与 Observation，避免生成 `@ObservationTracked` 相关访问器即可。
+    /// NOTE: `@Observable` + `lazy` 在新版本 Swift 宏展开下会触发编译器报错（init accessor 访问 backing storage）。
+    /// 这里不需要让动画管理器参与 Observation，避免生成 `@ObservationTracked` 相关访问器即可。
     @ObservationIgnored
     lazy var animationManager: EntityAnimationManager = .init(scene: self)
 
@@ -682,7 +682,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             let column3 = simd_double4(array[12], array[13], array[14], array[15])
             let simd_double4x4 = simd_double4x4(columns: (column0, column1, column2, column3))
             let affineTransform3D = AffineTransform3D(truncating: simd_double4x4)
-            spatializedElement.modelTransform = affineTransform3D
+            spatializedElement.entityTransform = affineTransform3D
         }
 
         if let autoplay = command.autoplay {
@@ -711,6 +711,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         if let loading = command.loading {
             spatializedElement.loading = Loading(stringValue: loading)
+        }
+
+        if let stagemode = command.stagemode {
+            spatializedElement.stagemode = StageMode(stringValue: stagemode)
         }
 
         resolve(.success(baseReplyData))

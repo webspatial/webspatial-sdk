@@ -15,11 +15,20 @@ enum Loading: String {
     }
 }
 
+enum StageMode: String {
+    case none
+    case orbit
+
+    init(stringValue value: String) {
+        self = StageMode(rawValue: value) ?? .none
+    }
+}
+
 @Observable
 class SpatializedStatic3DElement: SpatializedElement {
     var modelURL: String?
     var sources: [ModelSource] = []
-    var modelTransform: AffineTransform3D = .identity
+    var entityTransform: AffineTransform3D = .identity
     var autoplay: Bool = false
     var loop: Bool = false
     var animationPaused: Bool = true
@@ -29,9 +38,17 @@ class SpatializedStatic3DElement: SpatializedElement {
     var pendingSeekTime: Double?
     var posterURL: String?
     var loading: Loading = .eager
+    var stagemode: StageMode = .none
     var allSources: [ModelSource] {
         if let modelURL { [ModelSource(src: modelURL, type: nil)] + sources }
         else { sources }
+    }
+
+    /// In orbit stagemode the model owns its own drag handling, so all
+    /// `onSpatial*` gestures (and the gesture flag transmitted to JS) are
+    /// suppressed regardless of the individual `enableXxxGesture` flags.
+    override var enableGesture: Bool {
+        stagemode == .orbit ? false : super.enableGesture
     }
 
     enum CodingKeys: String, CodingKey {
