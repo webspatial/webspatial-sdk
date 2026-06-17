@@ -90,6 +90,20 @@
 - **WHEN** 调用终止方法（`stop`、`reset`、`finish`）
 - **THEN** Web 后端 MUST 由 JS timeline 评估器计算 style 值；Native 后端 MUST 由 native 运行时提供 style 值（native 未返回值时以 JS 评估器作为 fallback）
 
+#### Scenario: 显式声明的 `style.opacity` 在 2D 终态控制权切换中优先
+
+- **GIVEN** 一个绑定到 React 节点的 `spatialized2d` motion，并且该节点显式传入了 `style.opacity`
+- **WHEN** `stop()`、`reset()` 或 `finish()` 完成且 suppression 被释放
+- **THEN** `opacity` 的终态后视觉控制方 MUST 变成这个显式声明的 `style.opacity`
+- **AND** 终态原生采样值仍然 MUST 作为回调参数与终态会话语义的来源
+
+#### Scenario: 非显式声明的 CSS `opacity` 不参与终态控制权切换
+
+- **GIVEN** `opacity` 仅通过 `className`、样式表规则、父层造成的视觉变暗，或 `getComputedStyle()` 结果体现出来
+- **WHEN** 一个 `spatialized2d` motion 到达 `stop()`、`reset()` 或 `finish()`
+- **THEN** SDK MUST NOT 将该值视为用于终态控制权切换的显式声明透明度
+- **AND** 当不存在显式 React `style.opacity` 时，终态 `opacity` 控制权 MUST 保持在原生采样结果一侧
+
 ### Requirement: 共享生命周期回调
 
 Config MUST 支持以下生命周期回调：
@@ -141,6 +155,12 @@ Config MUST 支持以下生命周期回调：
 - **WHEN** 开发者暂停或恢复 motion controller
 - **THEN** controller 状态机 MUST 只表达整体会话状态（`idle`、`queued`、`running`、`paused`、`finished`）
 - **AND** controller MUST NOT 暴露 partially-paused 或 key-level 聚合状态
+
+#### Scenario: `opacity` 的终态控制权切换不允许双重控制权
+
+- **GIVEN** 一个 `spatialized2d` motion 正在动画化 `opacity`
+- **WHEN** `stop()`、`reset()` 或 `finish()` 之后 suppression 被释放
+- **THEN** SDK MUST 避免进入 native 外层 `opacity` 与 inner DOM `opacity` 在终态后同时继续控制同一视觉 `opacity` 的状态
 
 ### Requirement: v1 公开 authoring 以 from/to 与 timeline 为主，tracks 保留为内部 canonical 模型
 

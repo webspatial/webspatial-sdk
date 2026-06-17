@@ -221,6 +221,15 @@
 - [x] Core: keep `stop()` / `finish()` terminal snapshots pinned across `updateConfig()` until the next new play
 - [x] Tests: cover unbound controller, web backend, and native backend session-snapshot semantics
 
+## Phase 16d — 2D opacity terminal ownership handoff
+
+- [x] Spec/tasks follow-up: align implementation scope with the new bilingual rule that only explicit React `style.opacity` counts as authored opacity for `spatialized2d` terminal handoff
+- [x] TDD: add failing regression tests for `stop()` / `reset()` / `finish()` covering both explicit React `style.opacity` and no-authored-opacity cases
+- [x] React binding: capture explicit authored `style.opacity` from the bound 2D React props without inferring from `className`, stylesheets, or `getComputedStyle()`
+- [x] Terminal ownership: implement post-terminal `opacity` ownership selection so explicit React `style.opacity` wins, otherwise terminal native sampled opacity remains authoritative
+- [x] Portal sync: update suppression release and 2D portal/native sync so outer native opacity and inner DOM opacity do not continue owning the same visual `opacity` after terminal handoff
+- [x] Verification: run targeted diagnostics/tests and perform manual validation on the 2D opacity demo page if automated coverage is insufficient
+
 ## Phase — PicoOS Alignment
 
 - [ ] Create unified `spatialized-element-motion-api` change in picoOS repo ✅ (completed 2026-06-04)
