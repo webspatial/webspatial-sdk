@@ -193,11 +193,12 @@ class SpatializedElementMotionManager: NSObject {
             return
         }
 
+        let timestamp = CACurrentMediaTime()
         let values = buildSampledValuesPayload(
             session: session,
-            at: CACurrentMediaTime()
+            at: timestamp
         )
-        session.markPaused()
+        session.markPaused(at: timestamp)
         let payload = SpatializedMotionPausedPayload(type: "paused", values: values)
         resolve(.success(payload))
     }
@@ -217,7 +218,7 @@ class SpatializedElementMotionManager: NSObject {
             return
         }
 
-        session.markResumed()
+        session.markResumed(at: CACurrentMediaTime())
         resolve(.success(nil))
     }
 

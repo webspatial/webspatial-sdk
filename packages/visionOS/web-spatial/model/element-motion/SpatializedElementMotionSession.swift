@@ -104,14 +104,21 @@ class SpatializedElementMotionSession {
         isCanceled = true
     }
 
-    func markPaused() {
+    func markPaused(at timestamp: CFTimeInterval = CACurrentMediaTime()) {
+        guard !isPaused else { return }
         isPaused = true
-        pauseStartTime = CACurrentMediaTime()
+        pauseStartTime = timestamp
     }
 
-    func markResumed() {
+    func markResumed(at timestamp: CFTimeInterval = CACurrentMediaTime()) {
+        guard isPaused else { return }
         isPaused = false
-        pausedDuration += CACurrentMediaTime() - pauseStartTime
+        pausedDuration += timestamp - pauseStartTime
+    }
+
+    /// Freeze time-dependent sampling at the pause boundary while paused.
+    private func samplingTimestamp(for timestamp: CFTimeInterval) -> CFTimeInterval {
+        return isPaused ? pauseStartTime : timestamp
     }
 
     // MARK: - Timing Calculations
@@ -119,7 +126,7 @@ class SpatializedElementMotionSession {
     /// Calculate the raw linear progress (0...1) at the given timestamp.
     func rawProgress(at timestamp: CFTimeInterval) -> Double {
         guard delayCompleted else { return 0 }
-        let elapsed = (timestamp - startTime - pausedDuration) * speed
+        let elapsed = (samplingTimestamp(for: timestamp) - startTime - pausedDuration) * speed
         return min(max(elapsed / duration, 0.0), 1.0)
     }
 
