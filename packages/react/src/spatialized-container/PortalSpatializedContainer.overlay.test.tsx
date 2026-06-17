@@ -49,7 +49,12 @@ describe('PortalSpatializedContainer — Scenario 3 overlay placeholder', () => 
       'data-side': 'bottom',
       'data-align': 'end',
       'data-testid': 'overlay-host',
-      style: { ['--xr-back']: 12, color: 'rgb(255, 0, 0)' },
+      style: {
+        ['--xr-back']: 12,
+        animation: 'scaleIn 140ms ease-out',
+        color: 'rgb(255, 0, 0)',
+        transition: 'opacity 120ms ease-out',
+      },
     }
 
     render(
@@ -90,6 +95,13 @@ describe('PortalSpatializedContainer — Scenario 3 overlay placeholder', () => 
 
     // Radix/user inline style (incl. the spatial var) is preserved for measurement
     expect(el.style.getPropertyValue('--xr-back')).toBe('12')
+    expect(el.style.color).toBe('rgb(255, 0, 0)')
+
+    // Measurement must not sample transient animation/transition frames.
+    // The visible portal copy can animate; the hidden parent-window host only
+    // exists to provide stable geometry/style inputs for native surface sync.
+    expect(el.style.animation).toBe('none')
+    expect(el.style.transition).toBe('none')
 
     // registered so notify2DFrameChange can locate + measure it
     expect(registerSpy).toHaveBeenCalledWith('overlay-sid', el)

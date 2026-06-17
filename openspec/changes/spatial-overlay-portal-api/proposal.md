@@ -11,17 +11,17 @@ WebSpatial applications need five related integration modes. This change keeps t
 | | Scenario 1 | Scenario 2 | Scenario 3 | Scenario 4 | Scenario 5 |
 | --- | --- | --- | --- | --- | --- |
 | Trigger location | Main page, flat DOM | Inside a raised SpatialDiv | Inside a raised SpatialDiv | Main-page plugin host | Plugin host inside a parent SpatialDiv |
-| Menu presentation | New spatial surface | Flat 2D UI in the same spatial window, constrained by the parent panel | Child SpatialDiv that floats above/in front of the parent and escapes parent bounds | Independent spatial menu shell, plugin items injected from another root | Child spatial menu surface, plugin items injected from another root in the parent spatial window |
+| Menu presentation | New spatial surface | Flat 2D UI in the same spatial window, constrained by the parent panel | Overlay SpatialDiv used as floating UI content | Independent spatial menu shell, plugin items injected from another root | Overlay SpatialDiv menu surface, plugin items injected from another root in the parent spatial window |
 | Inner `enable-xr` | Required | Not used | Required, nested + `data-xr-overlay` | Required on menu surface | Required on child menu surface + `data-xr-overlay` |
 | Radix `Portal container` | `document.body` or `#root` | `useSpatialPortalContainer()` during the transition | Ideally omitted; transition path matches Scenario 2 | `document.body` | `useSpatialPortalContainer()` |
 | Developer mental model | Main-page trigger opens a raised menu | Panel trigger opens a normal in-panel dropdown | Panel trigger opens another raised child panel for the menu | Plugin receives only `portalMenuOption` and contributes items | Plugin inside SpatialDiv also receives only `portalMenuOption` and contributes items |
 
-Scenario 2 and Scenario 3 differ by whether the menu content itself becomes a spatial surface:
+Scenario 2 and Scenario 3 differ by whether the floating content itself becomes an Overlay SpatialDiv:
 
 - Scenario 2: the menu is ordinary 2D DOM inside the parent SpatialDiv. It does not become its own spatial surface and is therefore constrained by the parent SpatialDiv's 2D viewport, size, and clipping.
-- Scenario 3: the menu leaves the parent SpatialDiv as a child SpatialDiv. It floats above or in front of the parent, can use `--xr-back` / `--xr-depth`, and is not clipped by the parent panel size.
+- Scenario 3: the floating content is a child SpatialDiv marked as overlay content. It keeps a same-document measurement host for the floating UI system and renders the visible content in a child spatial surface.
 
-The practical distinction is simple: Scenario 3 has an inner `div enable-xr` inside `DropdownMenu.Content`.
+The practical distinction is simple: use plain `enable-xr` for ordinary SpatialDiv content, and use `enable-xr data-xr-overlay` when the nested SpatialDiv is the popup layer/content controlled by a floating UI or portal system.
 
 ## Developer Mental Model
 
@@ -35,11 +35,16 @@ I already have a raised SpatialDiv panel. When a trigger inside that panel opens
 
 ### Scenario 3
 
-I already have a raised SpatialDiv panel. When a trigger inside that panel opens, the menu can escape the parent panel bounds and appear as a child SpatialDiv above or in front of the panel.
+I already have a raised SpatialDiv panel. When a trigger inside that panel opens floating UI, the popup content can be an Overlay SpatialDiv: the floating UI system still measures and positions a host in the current document, while WebSpatial renders the visible popup as a child surface above or in front of the panel.
 
-Scenario 3 does not introduce a new spatial primitive. The outer `enable-xr` is the parent panel; the inner `enable-xr` is the child menu surface, declared with the `data-xr-overlay` marker so the SDK raises it as a child surface that escapes the parent bounds. Radix continues to own DOM placement and pointer/tap selection. WebSpatial makes the child menu surface rise outside the parent's 2D bounds. Keyboard navigation, focus, typeahead, focus trap, and outside-click dismissal are not in scope for the first Scenario 3 milestone.
+Scenario 3 does not introduce a new spatial primitive. The outer `enable-xr` is the parent panel; the inner `enable-xr` is the popup surface. The `data-xr-overlay` marker declares that this nested SpatialDiv is floating UI content. The SDK then keeps a hidden measurement host in the floating UI system's document and renders the visible content as a child surface. Radix, Floating UI, or a custom portal system continues to own placement and pointer/tap selection. Keyboard navigation, focus, typeahead, focus trap, and outside-click dismissal are not in scope for the first Scenario 3 milestone.
 
 The `data-xr-overlay` marker is a declarative, library-agnostic opt-in. The SDK does not sniff floating-library internals (`data-radix-*`, `data-side`, `--radix-*`) to decide overlay mode; any floating library or a custom portal works as long as the surface carries the marker.
+
+Use this rule:
+
+- Use `<div enable-xr>` for ordinary spatial content, panels, cards, or nested SpatialDivs that are part of normal layout.
+- Use `<div enable-xr data-xr-overlay>` when the element is the popup layer/content of a menu, popover, tooltip, context menu, floating toolbar, or another portal-based UI that expects to measure and position that element in the current document.
 
 `useSpatialPortalContainer()` is not the Scenario 3 mental model. It is transition plumbing shared with Scenario 2 until automatic portal routing exists.
 
@@ -108,7 +113,7 @@ Contract:
 
 ### Scenario 3: Child SpatialDiv Floating Menu
 
-Ideal path: nested `enable-xr` and Radix, with no additional hook.
+Ideal path: nested `enable-xr data-xr-overlay` and a floating UI library, with no imperative WebSpatial hook. The example below uses Radix DropdownMenu, but the marker is not Radix-specific.
 
 ```tsx
 function SpatialDivFloatingMenu() {
@@ -152,9 +157,10 @@ const container = useSpatialPortalContainer()
 Contract:
 
 - The outer `div enable-xr` is the parent panel.
-- `Content asChild` with an inner `div enable-xr` marked `data-xr-overlay` creates the child menu SpatialDiv.
-- The `data-xr-overlay` marker is the declarative, library-agnostic opt-in for child-surface overlay mode. Without it, the nested `enable-xr` behaves like an ordinary nested SpatialDiv (Scenario 2 constraints).
-- The menu must be able to escape the parent panel's 2D bounds. If Radix positions the menu outside the parent panel size, the visible menu should remain complete.
+- `Content asChild` with an inner `div enable-xr` marked `data-xr-overlay` creates an Overlay SpatialDiv for floating UI content.
+- The `data-xr-overlay` marker is the declarative, library-agnostic opt-in for overlay mode. It preserves the same-document measurement host required by the floating UI system and renders the visible content as a child spatial surface.
+- Without `data-xr-overlay`, the nested `enable-xr` behaves like an ordinary nested SpatialDiv. In a floating-content composition, that means the floating UI system may not receive a measurable host and the popup can be incorrectly sized or positioned.
+- The visible popup remains complete when the floating UI system positions it outside the parent panel's visible rectangle.
 - Do not introduce Scenario-3-specific hooks such as `useSpatialFloatingSurface()` or `useSpatialFloatingOverlayPortal()`. The marker is a declarative attribute, not an imperative hook.
 - Do not replace Radix with hand-written `createPortal` menu logic.
 - `modal={false}` is recommended for the MVP.
@@ -215,6 +221,7 @@ These are proposal-level acceptance criteria. Implementation details live in `de
 ### Common To All Scenarios
 
 - Child-surface overlay mode is opt-in via the declarative `data-xr-overlay` marker and is independent of any specific floating library. The SDK does not sniff floating-library internals to decide overlay mode.
+- `data-xr-overlay` modifies a nested `enable-xr`; it does not replace `enable-xr`. Plain `enable-xr` means ordinary SpatialDiv content. `enable-xr data-xr-overlay` means floating UI content that needs a same-document measurement host plus a visible child surface.
 - The SDK does not rewrite Radix `side`, `align`, `sideOffset`, or collision behavior.
 - Scenario 1/2 Radix focus, keyboard navigation, outside click, and close behavior remain owned by Radix.
 - Scenario 3 initially guarantees pointer/tap selection only. Keyboard navigation, focus, typeahead, focus trap, and outside-click dismissal are not in scope.
@@ -238,7 +245,7 @@ These are proposal-level acceptance criteria. Implementation details live in `de
 - The child surface attaches to the parent SpatialDiv, not the scene root.
 - The child menu follows when the parent panel moves.
 - The child surface is destroyed when the menu closes.
-- The Radix trigger, popper wrapper, and hidden measurement host remain measurable in the same parent spatial-window document. The visible menu content may render in a child SpatialDiv webview.
+- The floating UI trigger, positioning wrapper, and hidden measurement host remain measurable in the same parent spatial-window document. The visible popup content may render in a child SpatialDiv webview.
 
 ### Scenario 4 / 5
 
@@ -276,22 +283,22 @@ Breaking changes: none.
 ## Out Of Scope
 
 - Rewriting Radix or Floating UI placement, collision, or focus management.
-- Popover / Tooltip / Dialog support beyond the DropdownMenu MVP.
+- Prebuilt wrappers for Popover, Tooltip, Dialog, or other floating UI libraries beyond the DropdownMenu demo.
 - Making `spatialTransformMode=layout` the main path.
 
 ## Open Design Questions
 
-1. How should nested `enable-xr` and Radix same-document measurement constraints remain compatible over time?
+1. How should nested `enable-xr` and same-document measurement constraints remain compatible over time across floating UI libraries?
 2. How should native child SpatialDiv surfaces and parent spatial-window DOM divide responsibilities?
-3. How should Radix `position: fixed` poppers attach to the parent SpatialDiv instead of the scene root?
-4. How should child menus escape the parent SpatialDiv's 2D bounds while preserving parent-child spatial association?
-5. Should automatic portal containers use context injection, a thin Radix wrapper, or another approach?
+3. How should fixed-position floating layers attach to the parent SpatialDiv instead of the scene root?
+4. How should child overlay surfaces remain visible outside the parent SpatialDiv's 2D rectangle while preserving parent-child spatial association?
+5. Should automatic portal containers use context injection, thin library wrappers, or another approach?
 6. What are the MVP limits for nesting depth, modal mode, and animations?
 7. Should `SpatialOverlay` grow into a more general overlay primitive for Popover, Tooltip, and Dialog, or remain a low-level bridge API?
 
 ## Capabilities
 
-- New: `spatial-overlay-portal-api` covers the five Radix floating UI integration modes and the SDK-level `SpatialOverlay` / `useSpatialOverlay` bridge API.
+- New: `spatial-overlay-portal-api` covers the Radix demo scenarios, the generalized Overlay SpatialDiv marker, and the SDK-level `SpatialOverlay` / `useSpatialOverlay` bridge API.
 - Modified: none.
 
 ## Delivery

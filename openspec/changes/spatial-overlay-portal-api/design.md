@@ -26,7 +26,7 @@ Every spatial surface is a separate webview. `Spatialized2DElementContainer` ren
 
 ## 2. Why Scenario 3 Breaks With A Naive Implementation
 
-Scenario 3 is not merely "create another surface." Its purpose is to avoid Scenario 2's limitation: a flat DOM menu inside a parent SpatialDiv is clipped by the parent SpatialDiv's 2D viewport, width, height, and overflow. Scenario 3 should keep the Radix developer shape while letting the menu rise above or in front of the parent panel and remain visible outside the parent bounds.
+Scenario 3 is not merely "create another surface." It introduces Overlay SpatialDiv mode: a nested SpatialDiv used as the popup layer/content of a floating UI or portal system. The floating system still expects a measurable content element in the current document, while WebSpatial needs the visible content to move into a child webview so it can rise above or in front of the parent panel.
 
 Target shape:
 
@@ -103,7 +103,7 @@ Items render in A for Radix and are cloned or mirrored into B for display. This 
 
 ## 5. Recommendation
 
-1. Ship Path A as the MVP. The visible developer code shape is nested `enable-xr` plus Radix plus the declarative `data-xr-overlay` marker, with `modal={false}` and pointer/tap selection as the supported interaction boundary.
+1. Ship Path A as the MVP. The visible developer code shape is nested `enable-xr` plus the declarative `data-xr-overlay` marker inside a floating UI composition, with `modal={false}` and pointer/tap selection as the supported interaction boundary for Radix DropdownMenu.
 2. Track Path B as the native-backed future path. If native sub-region elevation becomes available, the implementation can change under the same developer code shape.
 
 ## 6. Architecture Decision Record
@@ -127,9 +127,9 @@ WebSpatial owns only the spatial part:
 
 This separation is intentional. It keeps the integration library-agnostic and avoids reimplementing floating placement logic inside WebSpatial.
 
-### 6.2 Overlay Mode Is Explicit
+### 6.2 Overlay SpatialDiv Mode Is Explicit
 
-Overlay mode is a declarative opt-in:
+Overlay SpatialDiv mode is a declarative opt-in. It is not a new primitive separate from `enable-xr`; it is a behavior marker on a nested SpatialDiv that is being used as floating UI content.
 
 ```tsx
 <DropdownMenu.Content asChild>
@@ -147,14 +147,21 @@ The SDK must not infer overlay mode from Radix or Floating UI internals. Earlier
 
 The `data-xr-overlay` marker is known on the first render, is library-agnostic, and prevents ordinary nested SpatialDivs from being misclassified. A nested `enable-xr` without this marker remains a normal nested SpatialDiv.
 
+Developer rule:
+
+- use plain `enable-xr` for ordinary spatial content that belongs to the layout of the page or panel;
+- add `data-xr-overlay` when that nested `enable-xr` is the popup layer/content of a menu, popover, tooltip, context menu, floating toolbar, or another portal-based UI that measures and positions the content element in the current document.
+
+The marker is required for correctness in these compositions. Without it, the nested `enable-xr` moves its real children to another webview but leaves the floating UI system without the hidden, child-bearing measurement host it expects.
+
 ### 6.3 Hidden Placeholder Is The Measurement Source
 
-The visible menu items cannot be the measurement source once they move into a child webview. The parent spatial window must keep a hidden but real DOM host under Radix's popper wrapper.
+The visible popup items cannot be the measurement source once they move into a child webview. The parent spatial window must keep a hidden but real DOM host under the floating UI system's positioned wrapper.
 
 That hidden host:
 
-- receives the `asChild` ref and props that Radix injects into `DropdownMenu.Content`;
-- keeps Radix attributes and inline placement style;
+- receives the `asChild` ref and props that the floating UI system injects into its content element;
+- keeps floating-library attributes and inline placement style;
 - renders a hidden copy of the menu children so the layout is non-zero;
 - registers itself with the spatial container object so `notify2DFrameChange()` can measure it.
 
@@ -164,7 +171,7 @@ The visible child webview renders the real interactive copy. There is no child-w
 
 For ordinary nested SpatialDivs, WebSpatial may subtract the nearest parent DOM rect to convert page coordinates into parent-relative coordinates.
 
-Floating overlays are different. The overlay placeholder is already inside the parent spatial window, and Radix already places it through the popper wrapper. Therefore overlay mode uses the placeholder's raw `getBoundingClientRect()` in that parent spatial window. It must not:
+Overlay SpatialDivs are different. The overlay placeholder is already inside the parent spatial window, and the floating UI system already places it through a positioned wrapper. Therefore overlay mode uses the placeholder's raw `getBoundingClientRect()` in that parent spatial window. It must not:
 
 - subtract a DOM ancestor found through `queryParentSpatialDomBySpatialId`;
 - add host page scroll;
@@ -225,7 +232,7 @@ was only resolved after the library measured/positioned, so the render-time
 A declarative marker is library-agnostic, known on the first render (so the
 overlay flag is stable for the element's lifetime), and still avoids
 misclassifying ordinary absolute/fixed nested SpatialDivs because they simply do
-not carry the marker. Radix (or any library) still injects its `asChild`
+not carry the marker. Radix (or any floating UI system) still injects its `asChild`
 ref/props onto the marked element; the SDK mirrors those onto the hidden
 placeholder host for measurement/positioning exactly as before.
 
@@ -237,7 +244,7 @@ The nested overlay path reuses the same idea:
 
 | Mechanism | Files | Behavior |
 | --- | --- | --- |
-| Hidden host with children | `SpatializedContainer`, `PortalSpatializedContainer`, placeholder rendering | The overlay placeholder renders children hidden, receives Radix Slot props/ref, and becomes measurable |
+| Hidden host with children | `SpatializedContainer`, `PortalSpatializedContainer`, placeholder rendering | The overlay placeholder renders children hidden, receives floating UI props/ref, and becomes measurable |
 | Overlay attach | `PortalInstanceObject.addToParent` | Overlay surfaces attach to the parent `Spatialized2DElement` even when Radix uses fixed positioning |
 | Raw rect base | `PortalInstanceObject.updateSpatializedElementProperties` | Overlay placeholder rect is already in the parent spatial-window viewport, so it should not subtract DOM ancestors or add page scroll |
 
@@ -267,12 +274,12 @@ When there is no WebSpatial session, `enable-xr` degrades to ordinary HTML. `Deg
 ## 9. Path A Data Flow
 
 ```text
-Radix mounts Content asChild -> inner enable-xr
+Floating UI mounts content asChild -> inner enable-xr data-xr-overlay
   |
   |-- Parent spatial window A:
   |     hidden overlay host renders menu children
-  |     hidden host receives Radix ref/style/data/handlers
-  |     Radix measures non-zero content and positions the popper wrapper
+  |     hidden host receives floating UI ref/style/data/handlers
+  |     the floating UI system measures non-zero content and positions its wrapper
   |
   |-- Child spatial webview B:
   |     same menu children render visibly
@@ -282,8 +289,8 @@ Radix mounts Content asChild -> inner enable-xr
         attaches B to the parent SpatialDiv
         syncs clientX/clientY/width/height/back/depth
 
-Pointer item selection in B propagates through React portal ownership to Radix
-onSelect, then menu close unmounts B and unregisters the placeholder.
+Pointer item selection in B propagates through React portal ownership to the
+floating UI system, then menu close unmounts B and unregisters the placeholder.
 ```
 
 ## 10. SpatialOverlay Plugin-Host Dual-Root Bridge
@@ -397,7 +404,7 @@ Principle: first make the Scenario 3 demo pass the three AVP-visible gates with 
 
 Slice gates:
 
-1. Popper is non-zero because the placeholder host has children and Radix ref/props.
+1. The positioned content host is non-zero because the placeholder host has children and floating UI ref/props.
 2. Child surface is visible beyond the parent because it is an independent surface attached to the parent.
 3. Pointer/tap item selection closes and logs through Radix `onSelect`.
 

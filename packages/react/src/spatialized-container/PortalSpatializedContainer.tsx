@@ -92,7 +92,9 @@ function renderOverlayPlaceholder(
   } & Record<string, unknown>
   const style: CSSProperties = {
     ...radixStyle,
+    animation: 'none',
     position: 'relative',
+    transition: 'none',
     visibility: 'hidden',
     pointerEvents: 'none',
   }

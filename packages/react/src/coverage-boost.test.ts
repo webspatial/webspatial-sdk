@@ -806,6 +806,7 @@ describe('StandardSpatializedContainer', () => {
     // Hidden-host rules are scoped to the spatial class so unrelated DOM
     // carrying `data-xr-host` is not affected.
     expect(css).toContain('.xr-spatial-default[data-xr-host]')
+    expect(css).toContain('animation: none !important')
     expect(css).toContain('translateZ(0)')
   })
 })

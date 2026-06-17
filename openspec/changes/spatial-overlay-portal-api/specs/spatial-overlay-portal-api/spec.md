@@ -49,13 +49,15 @@ In degraded mode (no WebSpatial session; `enable-xr` renders as plain HTML), `De
 - **THEN** it SHALL return `undefined`
 - **AND** applications SHALL fall back to their default portal target (for example `document.body` on the main page)
 
-### Requirement: SpatialDiv child floating menu can escape parent bounds
+### Requirement: Overlay SpatialDiv content can be measured and rendered as a child surface
 
-Inside a parent `div enable-xr`, an application SHALL be able to open a Radix `DropdownMenu` whose floating content is a **child SpatialDiv** (`div enable-xr` marked `data-xr-overlay` via `DropdownMenu.Content asChild`) attached to the parent SpatialDiv.
+Inside a parent `div enable-xr`, an application SHALL be able to render floating UI content as an **Overlay SpatialDiv**: a nested `div enable-xr` marked `data-xr-overlay` and used as the popup layer/content of a menu, popover, tooltip, context menu, floating toolbar, or custom portal/floating UI system.
 
-The child floating menu SHALL appear above or in front of the parent SpatialDiv and SHALL NOT be clipped by the parent SpatialDiv's 2D viewport, width, height, or overflow bounds. This is the core behavior that differentiates Scenario 3 from a SpatialDiv-local flat menu.
+The Overlay SpatialDiv SHALL keep a same-document hidden measurement host for the floating UI system and render the visible content as a child spatial surface attached to the parent SpatialDiv.
 
-Child-surface overlay mode SHALL be an explicit, declarative opt-in via the `data-xr-overlay` marker on the inner `enable-xr`. The SDK MUST NOT infer overlay mode from floating-library-specific props (`data-side`, `data-radix-*`, `--radix-*`, etc.); detection MUST be library-agnostic. The developer path SHALL require only nested `enable-xr` + Radix + the `data-xr-overlay` marker, with no imperative Scenario-3-specific hooks.
+The child floating content SHALL appear above or in front of the parent SpatialDiv and SHALL NOT be clipped by the parent SpatialDiv's 2D viewport, width, height, or overflow bounds. This is the visible behavior that differentiates Overlay SpatialDiv mode from SpatialDiv-local flat content.
+
+Child-surface overlay mode SHALL be an explicit, declarative opt-in via the `data-xr-overlay` marker on the inner `enable-xr`. The SDK MUST NOT infer overlay mode from floating-library-specific props (`data-side`, `data-radix-*`, `--radix-*`, etc.); detection MUST be library-agnostic. The developer path SHALL require only nested `enable-xr` + the `data-xr-overlay` marker inside a floating UI composition, with no imperative Scenario-3-specific hooks.
 
 Until auto portal routing ships, applications MAY pass `DropdownMenu.Portal container={useSpatialPortalContainer()}` as interim plumbing shared with Scenario 2.
 
@@ -65,6 +67,13 @@ Until auto portal routing ships, applications MAY pass `DropdownMenu.Portal cont
 - **AND** `DropdownMenu.Content asChild` wraps a child `div enable-xr` marked `data-xr-overlay` with spatial CSS variables
 - **THEN** the menu SHALL rise above or in front of the parent SpatialDiv as a child spatial surface attached to the parent SpatialDiv
 - **AND** the menu SHALL NOT attach to scene root
+
+#### Scenario: Generic floating content uses Overlay SpatialDiv mode
+
+- **WHEN** a floating UI or portal system uses a nested `div enable-xr data-xr-overlay` as its popup content element inside a parent SpatialDiv
+- **THEN** the SDK SHALL treat that element as an Overlay SpatialDiv
+- **AND** the SDK SHALL keep a hidden measurement host in the floating UI system's current document
+- **AND** the SDK SHALL render the visible content in a child spatial surface
 
 #### Scenario: Overlay mode is a library-agnostic declarative opt-in
 
@@ -112,7 +121,7 @@ Until auto portal routing ships, applications MAY pass `DropdownMenu.Portal cont
 
 ### Requirement: Scenario 3 menu supports pointer selection
 
-The floating content measurement host SHALL remain a real DOM element measurable by Radix in the parent spatial-window document.
+The floating content measurement host SHALL remain a real DOM element measurable by the floating UI system in the parent spatial-window document.
 
 Pointer/tap selection (`onSelect`) SHALL be handled by Radix.
 
@@ -191,7 +200,7 @@ Automated or demo verification SHALL cover at minimum:
 #### Scenario: CI and demo cover all in-scope scenarios
 
 - **WHEN** tests and demo verification run for this change
-- **THEN** they SHALL cover a main-page floating spatial menu, a SpatialDiv-local flat menu, a SpatialDiv child SpatialDiv floating menu that can escape parent bounds, a flat-page plugin-host menu, and a parent-SpatialDiv plugin-host menu
+- **THEN** they SHALL cover a main-page floating spatial menu, a SpatialDiv-local flat menu, an Overlay SpatialDiv child surface, a flat-page plugin-host menu, and a parent-SpatialDiv plugin-host menu
 
 #### Scenario: Phase A can verify independently
 
