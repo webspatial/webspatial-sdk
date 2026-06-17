@@ -751,7 +751,7 @@ describe('SpatializedStatic3DElement', () => {
     vi.unmock('./JSBCommand')
   })
 
-  it('updateModelTransform passes float64 array to updateProperties', async () => {
+  it('entityTransform setter passes float64 array to updateProperties', async () => {
     const execute = vi.fn().mockResolvedValue({
       success: true,
       data: undefined,
@@ -803,7 +803,7 @@ describe('SpatializedStatic3DElement', () => {
     }
 
     const el = new SpatializedStatic3DElement('m2')
-    el.updateModelTransform(new DOMMatrixWithArray() as any)
+    el.entityTransform = new DOMMatrixWithArray() as any
     expect(execute).toHaveBeenCalledTimes(1)
   })
 })

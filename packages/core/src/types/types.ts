@@ -102,11 +102,14 @@ export interface ModelSource {
 
 export type ModelLoadingMode = 'eager' | 'lazy'
 
+export type StageMode = 'orbit' | 'none'
+
 export interface SpatializedStatic3DElementProperties
   extends SpatializedElementProperties {
   modelURL: string
   sources?: ModelSource[]
   modelTransform?: number[]
+  stagemode?: StageMode
   autoplay?: boolean
   loop?: boolean
   animationPaused?: boolean
