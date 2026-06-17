@@ -1,7 +1,7 @@
 'use client'
 
 import { ComponentType, ElementType, Ref, forwardRef } from 'react'
-import { getSpatialImpl } from '../runtime/bridge'
+import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { warnBootForgotten } from './shared/warnBootForgotten'
 
@@ -39,7 +39,7 @@ export function withSpatialMonitor(El: ElementType): ElementType {
       const Element = El
       return <Element {...(passthrough as any)} ref={ref as any} />
     }
-    const RealHOC = getSpatialImpl()!
+    const RealHOC = requireSpatialImpl()
       .withSpatialMonitor as typeof withSpatialMonitor
     const RealWrapper = RealHOC(El) as unknown as ComponentType<
       Record<string, unknown> & { ref?: unknown }

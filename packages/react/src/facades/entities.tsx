@@ -10,13 +10,13 @@ import type {
 } from '@webspatial/core-sdk'
 import type { EntityRefShape } from '../reality/hooks/useEntityRef'
 import type { EntityEventHandler, EntityProps } from '../reality/type'
-import { getSpatialImpl } from '../runtime/bridge'
+import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { warnBootForgotten } from './shared/warnBootForgotten'
 
 export type { EntityRefShape }
 
-type SpatialImpl = NonNullable<ReturnType<typeof getSpatialImpl>>
+type SpatialImpl = ReturnType<typeof requireSpatialImpl>
 
 /**
  * Factory for entity-class facades whose documented fallback is `null`.
@@ -45,7 +45,7 @@ function createEntityRefFacade<P>(
       warnBootForgotten(componentName)
       return null
     }
-    const RealComponent = pickReal(getSpatialImpl()!) as ComponentType<
+    const RealComponent = pickReal(requireSpatialImpl()) as ComponentType<
       P & { ref?: unknown }
     >
     return <RealComponent {...(props as P)} ref={ref as any} />
@@ -66,7 +66,7 @@ function createNullFacade<P>(
       warnBootForgotten(componentName)
       return null
     }
-    const RealComponent = pickReal(getSpatialImpl()!) as ComponentType<any>
+    const RealComponent = pickReal(requireSpatialImpl()) as ComponentType<any>
     return <RealComponent {...(props as any)} />
   }
   Facade.displayName = componentName

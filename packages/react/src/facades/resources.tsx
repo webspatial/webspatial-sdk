@@ -2,11 +2,11 @@
 
 import { ComponentType, ReactNode } from 'react'
 import type { SpatialUnlitMaterialOptions } from '@webspatial/core-sdk'
-import { getSpatialImpl } from '../runtime/bridge'
+import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { warnBootForgotten } from './shared/warnBootForgotten'
 
-type SpatialImpl = NonNullable<ReturnType<typeof getSpatialImpl>>
+type SpatialImpl = ReturnType<typeof requireSpatialImpl>
 
 /**
  * Factory for material / texture / asset facades. Fallback is `null` per
@@ -30,7 +30,7 @@ function createNullFacade<P>(
       warnBootForgotten(componentName)
       return null
     }
-    const RealComponent = pickReal(getSpatialImpl()!) as ComponentType<any>
+    const RealComponent = pickReal(requireSpatialImpl()) as ComponentType<any>
     return <RealComponent {...(props as any)} />
   }
   Facade.displayName = componentName

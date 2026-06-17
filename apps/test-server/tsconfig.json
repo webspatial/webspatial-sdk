@@ -21,6 +21,12 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@webspatial/core-sdk": ["../../packages/core/src"],
+      "@webspatial/core-sdk/runtime": [
+        "../../packages/core/src/runtime/index.ts"
+      ],
+      "@webspatial/core-sdk/runtime/keys": [
+        "../../packages/core/src/runtime/keys.ts"
+      ],
       "@webspatial/react-sdk": ["../../packages/react/src/index.ts"],
       "@webspatial/react-sdk/spatial": [
         "../../packages/react/src/spatial/index.ts"

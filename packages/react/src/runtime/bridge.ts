@@ -58,6 +58,13 @@ export function getSpatialImpl(): SpatialImplementation | null {
   return spatialImpl
 }
 
+export function requireSpatialImpl(): SpatialImplementation {
+  if (spatialImpl === null) {
+    throw new Error('WebSpatial implementation is not ready')
+  }
+  return spatialImpl
+}
+
 export function isSpatialReady(): boolean {
   return spatialImpl !== null
 }

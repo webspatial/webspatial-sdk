@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { getSpatialImpl } from '../runtime/bridge'
+import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { warnBootForgotten } from './shared/warnBootForgotten'
 
@@ -27,7 +27,7 @@ export function SceneGraph({ children }: SceneGraphProps) {
     warnBootForgotten('SceneGraph')
     return null
   }
-  const RealSceneGraph = getSpatialImpl()!.SceneGraph
+  const RealSceneGraph = requireSpatialImpl().SceneGraph
   return <RealSceneGraph>{children}</RealSceneGraph>
 }
 SceneGraph.displayName = 'SceneGraph'

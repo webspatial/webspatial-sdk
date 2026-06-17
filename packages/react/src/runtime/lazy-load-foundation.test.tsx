@@ -8,6 +8,7 @@ import {
   isSpatialReady,
   loadSpatialImpl,
   onSpatialLoadError,
+  requireSpatialImpl,
   subscribeSpatialReady,
   type SpatialImplementation,
 } from './bridge'
@@ -91,6 +92,19 @@ describe('lazy-load runtime foundation', () => {
 
     expect(loader).toHaveBeenCalledTimes(1)
     expect(__getSpatialLoadAttemptForTests()).toBe(1)
+  })
+
+  it('requireSpatialImpl returns the non-null implementation after boot', async () => {
+    setPuppeteerUserAgent()
+    __setSpatialImplLoaderForTests(() => Promise.resolve(spatialImpl))
+
+    expect(() => requireSpatialImpl()).toThrow(
+      'WebSpatial implementation is not ready',
+    )
+
+    await bootSpatial()
+
+    expect(requireSpatialImpl()).toBe(spatialImpl)
   })
 
   it('loadSpatialImpl resolves null and skips loader in plain web', async () => {

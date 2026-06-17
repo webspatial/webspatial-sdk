@@ -5,7 +5,7 @@ import type {
   Spatialized2DElementContainerProps,
   SpatializedElementRef,
 } from '../spatialized-container/types'
-import { getSpatialImpl } from '../runtime/bridge'
+import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { warnBootForgotten } from './shared/warnBootForgotten'
 
@@ -36,7 +36,7 @@ const facadeCache = new Map<ElementType, ComponentType<any>>()
  * {...passthroughProps} ref={ref} />` after stripping spatial-only event
  * handlers / spatial-only options. Once `bootSpatial()` resolves, the
  * wrapper renders the real spatialized container by delegating to the real
- * HOC produced via `getSpatialImpl()!.withSpatialized2DElementContainer`
+ * HOC produced via `requireSpatialImpl().withSpatialized2DElementContainer`
  * (the real HOC has its own internal cache, so `RealHOC(Component)`
  * returns a stable reference across renders).
  *
@@ -75,7 +75,7 @@ export function withSpatialized2DElementContainer<P extends ElementType>(
       const Element = Component as ElementType
       return <Element {...(passthrough as any)} ref={ref as any} />
     }
-    const RealHOC = getSpatialImpl()!
+    const RealHOC = requireSpatialImpl()
       .withSpatialized2DElementContainer as typeof withSpatialized2DElementContainer
     const RealWrapper = RealHOC(Component)
     const RealComponent = RealWrapper as unknown as ComponentType<

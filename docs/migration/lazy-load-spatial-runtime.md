@@ -1,8 +1,8 @@
 # Migrating to lazy-load `@webspatial/react-sdk`
 
-This guide covers the upgrade from `@webspatial/react-sdk` `1.5.x` (or earlier) to the lazy-load architecture. **It is a BREAKING change.** All breaking removals listed below happen in this major upgrade.
+This guide covers the upgrade from `@webspatial/react-sdk` v1 to v2. **It is a BREAKING change.** All breaking removals listed below happen in this major upgrade.
 
-The new architecture removes the dual-build (`dist/web` + `dist/default`) plus the alias-switching `@webspatial/vite-plugin` in favor of a single flat `dist/` layout where the spatial implementation lives in a dynamically importable subpath (`@webspatial/react-sdk/spatial`). Plain browsers pay only the lean default entry; the spatial chunk is fetched only when an application opts in via `bootSpatial()` from a WebSpatial-capable runtime.
+The v2 default entry is web-first: plain browsers and SSR render documented fallback HTML, and the real spatial implementation loads only after `bootSpatial()` runs in a WebSpatial-capable runtime. Spatial-only client apps can import `@webspatial/react-sdk/eager` to link the spatial implementation immediately.
 
 The full normative contract lives in [`openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md`](../../openspec/changes/lazy-load-spatial-runtime/specs/spatial-lazy-load/spec.md) and [`openspec/specs/runtime-capabilities/spec.md`](../../openspec/specs/runtime-capabilities/spec.md). This guide is the human-readable summary plus the migration recipes.
 
@@ -10,11 +10,11 @@ The full normative contract lives in [`openspec/changes/lazy-load-spatial-runtim
 
 ## TL;DR
 
-1. **Remove `@webspatial/vite-plugin`** from your build pipeline (uninstall + delete the plugin entry from `vite.config.ts` / `webpack.config.js` / etc.).
-2. **Wrap React spatial UI in `<SpatialBoot>`** from `@webspatial/react-sdk`. It calls `bootSpatial()` after mount, renders `null` while boot is pending, mounts children only after boot succeeds, and invokes `onError` on `WebSpatialBootError`.
+1. **Choose one React SDK import root per bundle.** Use `@webspatial/react-sdk` for web / SSR-capable apps; use `@webspatial/react-sdk/eager` only for CSR-only spatial apps.
+2. **Wrap React spatial UI in `<SpatialBoot>`** from `@webspatial/react-sdk`. It calls `bootSpatial()` after mount, renders `null` while boot is pending, and mounts children only after boot succeeds.
 3. **Use `await bootSpatial()` before `createRoot()` only as a CSR / imperative optimization.** In plain browsers it resolves immediately and never fetches the spatial chunk; in WebSpatial shells it loads the spatial chunk over the network.
-4. **Stop importing removed public exports**: internal containers (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`), factory HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`), `Spatialized2DElementContainerProps`, `SSRProvider`, and `getAbsoluteUrl`.
-5. **Replace `@webspatial/react-sdk/web` and `@webspatial/react-sdk/default` imports** with the default `@webspatial/react-sdk` entry. Both legacy subpaths are removed.
+4. **Replace `@webspatial/react-sdk/web` and `@webspatial/react-sdk/default` imports** with `@webspatial/react-sdk` or `@webspatial/react-sdk/eager`. Both legacy subpaths are removed.
+5. **Stop importing removed public exports**: internal containers (`SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor`), factory HOCs (`withSpatialized2DElementContainer`, `withSpatialMonitor`), `Spatialized2DElementContainerProps`, `SSRProvider`, and `getAbsoluteUrl`.
 6. **Confirm React `>=18.0`** is installed. React 18's `useSyncExternalStore` is a hard requirement.
 
 ---
@@ -33,61 +33,23 @@ Further detail: [`packages/react/README.md` → "Two distribution forms"](../../
 
 ---
 
-## Step 1 — Drop `@webspatial/vite-plugin`
-
-Before:
-
-```ts
-// vite.config.ts (1.5.x)
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import webSpatial from '@webspatial/vite-plugin'
-
-export default defineConfig({
-  plugins: [react(), webSpatial({ output: 'avp' })],
-})
-```
-
-After:
-
-```ts
-// vite.config.ts (lazy-load v1)
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-})
-```
-
-The lazy-load v1 SDK does not need a build plugin. The single bundle output works in both plain web and WebSpatial runtimes; the runtime decides which path to take.
-
-If you also have `@webspatial/builder` invocations (e.g. `webspatial build --xrTarget=avp`), they continue to work for packaging-only concerns; they no longer rewrite the SDK's import path.
-
----
-
-## Step 2 — Boot with `<SpatialBoot>` in React apps
+## Step 1 — Boot with `<SpatialBoot>` in React apps
 
 The lazy-load SDK loads the real spatial implementation on demand. For React applications, the recommended integration is `<SpatialBoot>`:
 
 ```tsx
-import { SpatialBoot, WebSpatialBootError } from '@webspatial/react-sdk'
+import { SpatialBoot } from '@webspatial/react-sdk'
 
 export function AppRoot() {
   return (
-    <SpatialBoot
-      onError={(err: WebSpatialBootError) => {
-        // Show error UI; retry with bootSpatial() if needed.
-        console.error(err)
-      }}
-    >
+    <SpatialBoot>
       <App />
     </SpatialBoot>
   )
 }
 ```
 
-`SpatialBoot` calls `bootSpatial()` after mount. While boot is pending it renders `null`; children mount only after boot succeeds. There is no public `gate` or `fallback` prop — render loading UI in your surrounding app layout if needed.
+`SpatialBoot` calls `bootSpatial()` after mount. While boot is pending it renders `null`; children mount only after boot succeeds. There is no public `gate` or `fallback` prop — render loading UI in your surrounding app layout if needed. Use `onError` to show application-specific error UI if the spatial chunk fails to load.
 
 ### Optional CSR pre-boot
 
@@ -120,7 +82,12 @@ If you call `bootSpatial()` without `<SpatialBoot>`, facades and hook placeholde
 
 ### Imperative refs during a late boot
 
-If a facade mounts before `bootSpatial()` resolves, refs point at the fallback output for that first commit. For `Model`, that means a forwarded ref can initially point at the degraded native `<model>` fallback. When the spatial chunk becomes ready, the facade replaces that fallback with the real `Model` implementation; React does not re-run a parent `useEffect([])` just because `ref.current` changed.
+If a facade mounts before `bootSpatial()` resolves, refs point at the fallback output for that first commit. For `Model`, that means a forwarded ref can initially point at the degraded native `<model>` fallback, not a spatial `ModelRef`. Do not use `modelRef.current.ready`, `entityTransform`, or other `ModelRef` APIs as a boot readiness signal from that fallback.
+
+Those APIs are safe only after the component mounts with the real spatial implementation:
+
+- Put the spatial subtree inside `<SpatialBoot>`; children mount only after the real implementation is ready.
+- Or render/remount the spatial subtree only after `useSpatialReady()` returns `true`.
 
 Avoid one-shot effects that capture a facade ref before boot and imperatively attach listeners or renderer state:
 
@@ -142,10 +109,7 @@ function Drone() {
 
 In that pattern the effect captures the fallback element; after the boot swap, the listener remains attached to the detached fallback node and is not attached to the real spatial implementation.
 
-Prefer one of these patterns:
-
-- Wrap the spatial subtree in `<SpatialBoot>` so children mount only after the real implementation is ready.
-- For late-boot custom wiring, include `useSpatialReady()` in the effect dependencies and treat fallback vs real nodes as separate lifetimes.
+For late-boot custom wiring, gate the mounted `Model` itself on `useSpatialReady()`:
 
 ```tsx
 function Drone() {
@@ -156,12 +120,17 @@ function Drone() {
     if (!ready) return
     const model = modelRef.current
     if (!model) return
-    // Attach spatial-only imperative work here, after the real implementation mounts.
+    void model.ready.then(() => {
+      model.entityTransform = new DOMMatrix()
+    })
   }, [ready])
 
+  if (!ready) return null
   return <Model ref={modelRef} src="/drone.glb" />
 }
 ```
+
+When the component above mounts, `ready` is already true, so `modelRef.current` is the real spatial `ModelRef`; `ready` and `entityTransform` are available on that object.
 
 There are two hook contracts to keep in mind:
 
@@ -181,7 +150,7 @@ Both timings produce identical hydration safety because `useSpatialReady` is imp
 
 ---
 
-## Step 3 — Use JSX markers instead of internal containers
+## Step 2 — Use JSX markers instead of internal containers
 
 The four internal container classes are no longer publicly exported:
 
@@ -231,7 +200,7 @@ The factory HOCs (`withSpatialized2DElementContainer` / `withSpatialMonitor`) st
 
 ---
 
-## Step 4 — Drop `@webspatial/react-sdk/web` and `/default` subpaths
+## Step 3 — Drop `@webspatial/react-sdk/web` and `/default` subpaths
 
 Both legacy subpaths have been hard-removed. Use the default entry:
 
@@ -248,7 +217,7 @@ The default entry contains facades that handle web-mode and spatial-mode renderi
 
 ---
 
-## Step 5 — `createElement` (classic JSX transform) is deprecated
+## Step 4 — `createElement` (classic JSX transform) is deprecated
 
 Applications using the classic JSX transform (`tsconfig` `"jsx": "react"` plus `"jsxFactory": "createElement"`) imported `createElement` from the SDK. That export is now `@deprecated`:
 
@@ -364,7 +333,6 @@ The placeholder conversion functions throw `WebSpatialRuntimeError` while the pl
 ## CHANGELOG-style summary of breaking changes
 
 - **BREAKING**: removed `@webspatial/react-sdk/web` and `@webspatial/react-sdk/default` subpaths — use the default `@webspatial/react-sdk` entry.
-- **BREAKING**: `@webspatial/vite-plugin` is no longer required and the SDK no longer participates in any plugin-driven import rewriting.
 - **BREAKING**: removed public exports `SpatializedContainer`, `Spatialized2DElementContainer`, `SpatializedStatic3DElementContainer`, `SpatialMonitor` — use the `enable-xr` / `enable-xr-monitor` JSX markers.
 - **BREAKING**: `react` and `react-dom` are now required peer dependencies (`>=18.0`); React 17 and earlier are no longer supported.
 - **BREAKING**: spatial code is now lazy-loaded via `bootSpatial()`; React applications should wrap spatial UI in `<SpatialBoot>`, or use imperative `await bootSpatial()` before `ReactDOM.createRoot(...).render(...)` as a CSR-only optimization.

@@ -3,7 +3,7 @@
 import { ForwardedRef, forwardRef } from 'react'
 import type { RealityProps } from '../reality/components/Reality'
 import type { SpatializedElementRef } from '../spatialized-container/types'
-import { getSpatialImpl } from '../runtime/bridge'
+import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { markWebSpatialPrimitive } from '../jsx/primitive-marker'
 import { warnBootForgotten } from './shared/warnBootForgotten'
@@ -35,7 +35,7 @@ function RealityFacadeImpl(
     warnBootForgotten('Reality')
     return renderRealityFallback(props, ref)
   }
-  const RealReality = getSpatialImpl()!.Reality
+  const RealReality = requireSpatialImpl().Reality
   return <RealReality {...props} ref={ref} />
 }
 

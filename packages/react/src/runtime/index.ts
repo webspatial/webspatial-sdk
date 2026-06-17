@@ -4,6 +4,7 @@ export {
   isSpatialReady,
   loadSpatialImpl,
   onSpatialLoadError,
+  requireSpatialImpl,
 } from './bridge'
 export { WebSpatialBootError } from './errors'
 export { SpatialBoot } from './SpatialBoot'

@@ -1,8 +1,8 @@
 'use client'
 
-import { ForwardedRef, createElement, forwardRef } from 'react'
+import { ForwardedRef, forwardRef } from 'react'
 import type { ModelProps, ModelRef } from '../Model'
-import { getSpatialImpl } from '../runtime/bridge'
+import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { markWebSpatialPrimitive } from '../jsx/primitive-marker'
 import { warnBootForgotten } from './shared/warnBootForgotten'
@@ -18,14 +18,6 @@ export type { ModelProps, ModelRef }
  * Per spatial-lazy-load spec "Component facades" + "Model fallback
  * renders degraded `<model>` tag" Scenarios. Not wrapped in
  * `React.memo` (per facade conventions).
- *
- * **PARITY (spec tasks.md §15.6)**: this Path 1 fallback MUST stay
- * structurally identical to the real-impl Path 2 unsupported branch in
- * `src/Model.tsx` (the `enable-xr={false}` / `!Spatial.runInSpatialWeb()`
- * gate), per `runtime-capabilities` "`Model` exception fallback"
- * Scenario. Verified by `src/__tests__/parity.test.tsx` ("Model parity"
- * suite); changes to either path MUST update both paths or the parity
- * test will fail.
  */
 function ModelFacadeImpl(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const ready = useSpatialReady()
@@ -33,7 +25,7 @@ function ModelFacadeImpl(props: ModelProps, ref: ForwardedRef<ModelRef>) {
     warnBootForgotten('Model')
     return renderModelFallback(props, ref)
   }
-  const RealModel = getSpatialImpl()!.Model
+  const RealModel = requireSpatialImpl().Model
   return <RealModel {...props} ref={ref} />
 }
 
@@ -63,7 +55,5 @@ function renderModelFallback(
     'enable-xr': _enableXR,
     ...modelProps
   } = props
-  // Native <model> is a non-React intrinsic; createElement bypasses the
-  // JSX intrinsic-type check while still preserving ref forwarding.
-  return createElement('model', { ...modelProps, ref })
+  return <model ref={ref} {...modelProps} />
 }

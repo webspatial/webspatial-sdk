@@ -6,16 +6,6 @@ import { version } from './package.json'
 
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@webspatial/core-sdk': fileURLToPath(
-        new URL('../core/src/index.ts', import.meta.url),
-      ),
-      '@webspatial/react-sdk': fileURLToPath(
-        new URL('./src/index.ts', import.meta.url),
-      ),
-    },
-  },
   // tsup replaces `__WEBSPATIAL_REACT_SDK_VERSION__` at build time via its
   // `esbuildOptions.define`. Vitest doesn't run through tsup, so tests that
   // import `src/index.ts` (which references the constant) need an equivalent
@@ -46,6 +36,16 @@ export default defineConfig({
       {
         find: '@webspatial/core-sdk/install-polyfills',
         replacement: resolve(__dirname, '../core/src/install-polyfills.ts'),
+      },
+      {
+        find: '@webspatial/core-sdk',
+        replacement: fileURLToPath(
+          new URL('../core/src/index.ts', import.meta.url),
+        ),
+      },
+      {
+        find: '@webspatial/react-sdk',
+        replacement: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
       },
     ],
   },
