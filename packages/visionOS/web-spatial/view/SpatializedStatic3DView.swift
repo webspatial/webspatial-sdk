@@ -22,7 +22,7 @@ struct SpatializedStatic3DView: View {
 
     var body: some View {
         let depth = spatializedStatic3DElement.depth
-        let transform = spatializedStatic3DElement.modelTransform
+        let transform = spatializedStatic3DElement.entityTransform
         let translation = transform.translation
         let scale = transform.scale
         let rotation = transform.rotation!
