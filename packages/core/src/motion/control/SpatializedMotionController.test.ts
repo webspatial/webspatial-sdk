@@ -698,6 +698,92 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     expect(onStop).toHaveBeenCalledWith(stopped)
   })
 
+  test('native stop after pause uses the native frozen paused sample', async () => {
+    vi.useFakeTimers()
+    const values: SpatializedVisualValues[] = []
+    const onStop = vi.fn()
+    const animateMotion = vi.fn(async (command: { type: string }) => {
+      if (command.type === 'play') {
+        return {
+          animationId: 'native-paused-stop',
+          finished: new Promise<SpatializedVisualValues>(() => {}),
+          canceled: new Promise<SpatializedVisualValues>(() => {}),
+          failed: new Promise(() => {}),
+        }
+      }
+      if (command.type === 'pause') return { opacity: 0.76 }
+      if (command.type === 'stop') return { opacity: 0.76 }
+      return undefined
+    })
+    const controller = new SpatializedMotionController(
+      {
+        duration: 2,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            timingFunction: 'linear',
+            keyframes: [
+              { at: 0, value: 1 },
+              { at: 2, value: 0.2 },
+            ],
+          },
+        ],
+        onStop,
+      },
+      {
+        forceNativePlayback: true,
+        onValuesChange: v => values.push(v),
+      },
+    )
+    controller.attachElement(null, 'spatialized2d')
+    controller.attachElement({ id: 'native-element', animateMotion } as any)
+
+    try {
+      controller.play()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            targetKind: 'spatialized2d',
+            type: 'play',
+          }),
+        )
+      })
+
+      await vi.advanceTimersByTimeAsync(500)
+      controller.pause()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            targetKind: 'spatialized2d',
+            type: 'pause',
+          }),
+        )
+        expect(controller.playState).toBe('paused')
+      })
+      const paused = values.at(-1)
+      expect(paused?.opacity).toBeCloseTo(0.76, 5)
+
+      await vi.advanceTimersByTimeAsync(1200)
+      controller.stop()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            targetKind: 'spatialized2d',
+            type: 'stop',
+          }),
+        )
+        expect(controller.playState).toBe('idle')
+      })
+
+      const stopped = values.at(-1)
+      expect(stopped?.opacity).toBeCloseTo(paused?.opacity ?? 0, 5)
+      expect(onStop).toHaveBeenCalledWith(stopped)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   test('native finish -> updateConfig -> reset keeps using the finished session config', async () => {
     const values: SpatializedVisualValues[] = []
     const onReset = vi.fn()
