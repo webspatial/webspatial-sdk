@@ -190,6 +190,45 @@ Native MUST 在 timeline 时间 `t` 独立采样每条 track，然后按与 Web 
 
 ---
 
+### Requirement: `opacity` 的终态控制权切换必须区分显式声明的 React `style.opacity`
+
+对于 `spatialized2d`，`opacity` suppression 在终态阶段释放时，SDK MUST 区分显式声明的 React `style.opacity` 与其他一切 CSS 来源。显式声明透明度仅指绑定节点的 React props 中直接提供的 `style.opacity`。仅通过 `className`、样式表规则、父层带来的视觉变暗，或 `getComputedStyle()` 结果出现的值，MUST NOT 被视为显式声明透明度。
+
+#### Scenario: `stop()` 在释放 suppression 后恢复显式声明的 `style.opacity`
+
+- **GIVEN** 一个 `opacity` motion 绑定到 `enable-xr` 节点，并且该节点的 React props 中显式包含 `style.opacity`
+- **WHEN** `api.stop()` 完成
+- **THEN** `opacity` 的终态后视觉控制方 MUST 变成这个显式声明的 `style.opacity`
+- **AND** native 返回值或当前原生采样值仍然 MUST 用于 `onStop`
+
+#### Scenario: `finish()` 在释放 suppression 后恢复显式声明的 `style.opacity`
+
+- **GIVEN** 一个 `opacity` motion 绑定到 `enable-xr` 节点，并且该节点的 React props 中显式包含 `style.opacity`
+- **WHEN** `api.finish()` 完成
+- **THEN** `opacity` 的终态后视觉控制方 MUST 变成这个显式声明的 `style.opacity`
+- **AND** native 返回值或最终原生采样值仍然 MUST 用于 `onComplete`
+
+#### Scenario: `reset()` 在释放 suppression 后恢复显式声明的 `style.opacity`
+
+- **GIVEN** 一个 `opacity` motion 绑定到 `enable-xr` 节点，并且该节点的 React props 中显式包含 `style.opacity`
+- **WHEN** `api.reset()` 完成
+- **THEN** `opacity` 的终态后视觉控制方 MUST 变成这个显式声明的 `style.opacity`
+- **AND** reset 的起始值仍然 MUST 用于 `onReset`
+
+#### Scenario: 不存在显式 React `style.opacity` 时，终态原生 `opacity` 保持权威
+
+- **GIVEN** 一个 `opacity` motion 绑定到 `enable-xr` 节点，且该节点不存在显式 React `style.opacity`
+- **WHEN** `api.stop()`、`api.reset()` 或 `api.finish()` 完成
+- **THEN** `opacity` 的终态后视觉结果 MUST 继续来自终态原生采样值
+
+#### Scenario: 终态控制权切换忽略仅由计算样式得到的 `opacity`
+
+- **GIVEN** 绑定节点的可见 `opacity` 仅来自 `className`、样式表规则、父层造成的视觉变暗，或 `getComputedStyle()`
+- **WHEN** 在 `stop()`、`reset()` 或 `finish()` 之后执行终态控制权切换
+- **THEN** SDK MUST NOT 将该值判定为显式声明透明度
+
+---
+
 ### Requirement: Native 会话使用 xr-animation binding
 
 Native 会话 MUST 使用 `xr-animation` prop / `SpatializedMotionBinding`，而非旧版 `animation` prop。

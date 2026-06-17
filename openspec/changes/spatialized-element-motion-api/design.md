@@ -216,6 +216,14 @@ pure mapping from sampled values plus binding state:
 - Web fallback returns `valuesToMotionStyle(values)` without React re-implementing
   timeline evaluation rules
 
+For `spatialized2d`, terminal handling of `opacity` adds one more ownership rule:
+
+- Explicit authored opacity means only `style.opacity` provided directly in React props on the bound node
+- `className`, external stylesheets, inherited visual dimming, and `getComputedStyle()` results are not treated as explicit authored opacity
+- After `stop()`, `reset()`, or `finish()`, explicit authored opacity wins as the visual source of truth for `opacity`
+- When no explicit authored opacity exists, the terminal sampled/native opacity remains the visual source of truth
+- This rule is limited to visual handoff for `opacity`; terminal callbacks and sampled values still come from Core/native semantics
+
 ### Behavior
 
 #### Bind-time target resolution
@@ -250,6 +258,57 @@ For `static3d` and `dynamic3d`:
 
 - React does not drive root transform playback through `style`
 - Native playback is triggered by the bound `xr-animation` handle
+
+#### 2D opacity terminal ownership design
+
+The `spatialized2d` opacity issue is treated as an ownership problem, not an
+interpolation problem. `stop()`, `reset()`, and `finish()` keep their existing
+terminal sampled-value semantics. The design change applies only to who remains
+responsible for visual `opacity` after a terminal transition.
+
+This design follows four implementation principles:
+
+- single-writer principle: visual `opacity` has exactly one effective owner at a time
+- explicit state modeling: terminal ownership is represented as a small ownership state machine rather than scattered boolean checks
+- strategy-based terminal selection: terminal ownership is selected from explicit React `style.opacity` vs terminal native opacity
+- controlled/uncontrolled boundary: explicit React `style.opacity` is treated as authored control; otherwise the runtime terminal value remains authoritative
+
+The ownership state machine is intentionally small:
+
+```mermaid
+stateDiagram-v2
+    [*] --> none
+    none --> native_active : native opacity playback starts
+    native_active --> dom_authored_terminal : terminal plus explicit style.opacity
+    native_active --> native_terminal : terminal plus no explicit style.opacity
+    dom_authored_terminal --> native_active : next play
+    native_terminal --> native_active : next play
+    dom_authored_terminal --> none : unbind
+    native_terminal --> none : unbind
+```
+
+The practical rule is:
+
+- when explicit React `style.opacity` exists on the bound node, terminal ownership hands back to the DOM side after `stop()`, `reset()`, or `finish()`
+- when explicit React `style.opacity` does not exist, terminal ownership stays with the native sampled terminal opacity
+
+Module responsibilities are split deliberately:
+
+- `Spatialized2DElementContainer` captures whether the bound React node explicitly authored `style.opacity`
+- `useAnimation` coordinates terminal ownership using sampled values, suppression state, and authored-opacity metadata
+- `resolveMotionStyle` decides whether inner DOM `opacity` is omitted or restored to the explicit authored value
+- `PortalInstanceContext` coordinates outer native sync so terminal handoff does not leave both outer native opacity and inner DOM opacity active
+- `NativePlaybackBackend` continues to provide terminal sampled values and does not infer authored ownership
+
+This keeps terminal callbacks unchanged:
+
+- `onStop(values)` still receives the sampled current values
+- `onReset(values)` still receives the start values
+- `onComplete(values)` for `finish()` still receives the end values
+
+Only post-terminal visual ownership changes. The design goal is to prevent a
+post-terminal state where outer native opacity and inner DOM opacity continue
+controlling the same visual result at the same time.
 
 ### Boundaries
 
@@ -477,6 +536,13 @@ Those values are consumed by Core as the source of:
 - `onComplete(values)` for `finish()`
 - style synchronization after terminal state transitions
 
+For `spatialized2d`, style synchronization after terminal transitions is split
+into two concerns:
+
+- terminal sampled/native values remain the source for callbacks and terminal session semantics
+- `opacity` visual ownership may hand off to explicit authored `style.opacity` when one exists on the bound React node
+- the handoff MUST avoid leaving native outer opacity and inner DOM opacity active at the same time after suppression clears
+
 #### Error contract
 
 ```typescript
@@ -535,6 +601,17 @@ Portal suppression remains a shared cross-layer rule:
 - `opacity` tracks suppress only `opacity` sync
 - any `transform.*` track suppresses transform sync as a whole
 - suppression clears on terminal state or unbind
+
+For `spatialized2d` opacity, suppression release is therefore paired with the
+terminal ownership decision above. Releasing suppression is not permission for
+dual ownership; it is the point where the system reassigns the single visual
+owner of `opacity`.
+
+For `spatialized2d` terminal `opacity` handoff, clearing suppression is a
+release of DOM sync authority, not permission for simultaneous ownership:
+
+- if explicit authored `style.opacity` exists, suppression release restores that authored opacity as the only post-terminal visual owner
+- if explicit authored `style.opacity` does not exist, suppression release preserves terminal native opacity ownership for the post-terminal visual result
 
 ## Non-goals
 

@@ -213,6 +213,14 @@ React 层通过 `xr-animation` prop 定义目标绑定通道：
 - `spatialized2d` 在 native playback 活跃时，对被 suppression 的 `opacity` 和 `transform` 做字段屏蔽
 - Web fallback 直接返回 `valuesToMotionStyle(values)`，而不是在 React 中重复实现 timeline 求值规则
 
+对于 `spatialized2d`，终态阶段的 `opacity` 还增加一条控制权规则：
+
+- 显式声明透明度仅指绑定节点的 React props 中直接提供的 `style.opacity`
+- `className`、外部样式表、父层带来的视觉变暗，以及 `getComputedStyle()` 的结果都不视为显式声明透明度
+- 在 `stop()`、`reset()`、`finish()` 后，如果存在显式声明透明度，它就是 `opacity` 的最终控制源
+- 如果不存在显式声明透明度，则终态原生采样值继续作为 `opacity` 的最终控制源
+- 该规则只作用于 `opacity` 的终态控制权切换；终态回调和采样值语义仍由 Core/native 保持
+
 ### 行为
 
 #### 绑定时目标解析
@@ -247,6 +255,55 @@ React hook MUST NOT 为了实现 `autoStart` 而在挂载 effect 中直接调用
 
 - React 不通过 `style` 驱动 root transform 播放
 - native 播放由已绑定的 `xr-animation` handle 触发
+
+#### 2D `opacity` 终态控制权设计
+
+`spatialized2d` 的 `opacity` 问题被视为控制权问题，而不是插值算法问题。
+`stop()`、`reset()`、`finish()` 继续保持现有的终态采样值语义。此次设计变更
+只作用于终态切换后，视觉 `opacity` 由谁继续负责。
+
+该设计遵循四条实现原则：
+
+- 单一控制方原则：视觉 `opacity` 在任一时刻只能有一个有效控制方
+- 显式状态建模：终态控制权使用一个很小的状态机表达，而不是散落的布尔判断
+- 策略化终态选择：终态控制方在显式 React `style.opacity` 与原生终态 `opacity` 之间选择
+- 受控与非受控边界：显式 React `style.opacity` 视为用户控制；否则运行时终态值保持权威
+
+终态控制权状态机刻意保持很小：
+
+```mermaid
+stateDiagram-v2
+    [*] --> none
+    none --> native_active : native opacity playback starts
+    native_active --> dom_authored_terminal : terminal plus explicit style.opacity
+    native_active --> native_terminal : terminal plus no explicit style.opacity
+    dom_authored_terminal --> native_active : next play
+    native_terminal --> native_active : next play
+    dom_authored_terminal --> none : unbind
+    native_terminal --> none : unbind
+```
+
+落到具体规则上：
+
+- 当绑定节点上存在显式 React `style.opacity` 时，`stop()`、`reset()`、`finish()` 之后由 DOM 侧接回 `opacity` 的终态控制权
+- 当绑定节点上不存在显式 React `style.opacity` 时，`opacity` 的终态控制权继续保持在原生终态采样值一侧
+
+模块职责有意拆分如下：
+
+- `Spatialized2DElementContainer` 负责识别绑定 React 节点是否显式声明了 `style.opacity`
+- `useAnimation` 负责结合采样值、suppression 状态与 authored-opacity 元信息来协调终态控制权
+- `resolveMotionStyle` 负责决定 inner DOM 的 `opacity` 是省略，还是恢复为显式声明的值
+- `PortalInstanceContext` 负责协调 outer native 同步，确保终态切换后不会同时保留 outer native `opacity` 与 inner DOM `opacity`
+- `NativePlaybackBackend` 继续只提供终态采样值，不负责推断 authored 控制权
+
+这样可以保持终态回调语义不变：
+
+- `onStop(values)` 仍然接收当前采样值
+- `onReset(values)` 仍然接收起始值
+- `finish()` 场景下的 `onComplete(values)` 仍然接收终值
+
+变化的只有终态后的视觉控制权。设计目标是避免进入这样一种状态：终态后
+outer native `opacity` 与 inner DOM `opacity` 仍然同时控制同一个视觉结果。
 
 ### 边界
 
@@ -474,6 +531,12 @@ Core 消费这些值，并将其作为以下语义的来源：
 - `finish()` 场景下的 `onComplete(values)`
 - 终态切换后的 style 同步
 
+对于 `spatialized2d`，终态切换后的 style 同步要拆成两个关注点：
+
+- 终态原生采样值仍然是回调参数与终态会话语义的来源
+- 如果绑定 React 节点上存在显式声明的 `style.opacity`，`opacity` 的视觉控制权 MAY 在终态控制权切换时回交给该值
+- 该控制权切换 MUST 避免在 suppression 释放后让 native 外层 `opacity` 与 inner DOM `opacity` 同时继续生效
+
 #### Error 契约
 
 ```typescript
@@ -532,6 +595,15 @@ Portal suppression 仍然是共享的跨层规则：
 - `opacity` track 仅抑制 `opacity` 同步
 - 任意 `transform.*` track 抑制 transform 整体同步
 - 在 terminal state 或 unbind 时释放 suppression
+
+因此，对于 `spatialized2d` 的 `opacity`，suppression 的释放会与上面的终态
+控制权决策绑定在一起。释放 suppression 不代表允许双重控制权，而是系统重新
+指定 `opacity` 唯一视觉控制方的时刻。
+
+对于 `spatialized2d` 的终态 `opacity` 控制权切换，释放 suppression 表示释放 DOM 同步权限，不表示允许双重控制权：
+
+- 如果存在显式声明的 `style.opacity`，释放 suppression 后恢复该值作为终态后的唯一视觉控制方
+- 如果不存在显式声明的 `style.opacity`，释放 suppression 后保持终态原生 `opacity` 的控制权作为终态后的视觉结果
 
 ## 非目标
 

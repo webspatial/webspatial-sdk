@@ -190,6 +190,45 @@ While native playback is actively controlling the session, until the session rea
 
 ---
 
+### Requirement: Terminal opacity handoff distinguishes explicit React authored opacity
+
+For `spatialized2d`, terminal release of `opacity` suppression MUST distinguish between explicit React authored opacity and all other CSS sources. Explicit authored opacity means only `style.opacity` provided directly in React props on the bound node. Values that appear only through `className`, stylesheet rules, inherited visual dimming, or `getComputedStyle()` output MUST NOT be treated as explicit authored opacity.
+
+#### Scenario: stop restores explicit authored opacity after suppression release
+
+- **GIVEN** an `opacity` motion is bound to an `enable-xr` node whose React props explicitly include `style.opacity`
+- **WHEN** `api.stop()` completes
+- **THEN** the post-terminal visual owner for `opacity` MUST become that explicit authored `style.opacity`
+- **AND** the native/current sampled stop value MUST still be used for `onStop`
+
+#### Scenario: finish restores explicit authored opacity after suppression release
+
+- **GIVEN** an `opacity` motion is bound to an `enable-xr` node whose React props explicitly include `style.opacity`
+- **WHEN** `api.finish()` completes
+- **THEN** the post-terminal visual owner for `opacity` MUST become that explicit authored `style.opacity`
+- **AND** the native/final sampled finish value MUST still be used for `onComplete`
+
+#### Scenario: reset restores explicit authored opacity after suppression release
+
+- **GIVEN** an `opacity` motion is bound to an `enable-xr` node whose React props explicitly include `style.opacity`
+- **WHEN** `api.reset()` completes
+- **THEN** the post-terminal visual owner for `opacity` MUST become that explicit authored `style.opacity`
+- **AND** the reset start value MUST still be used for `onReset`
+
+#### Scenario: native terminal opacity stays authoritative when no explicit React style.opacity exists
+
+- **GIVEN** an `opacity` motion is bound to an `enable-xr` node without an explicit React `style.opacity`
+- **WHEN** `api.stop()`, `api.reset()`, or `api.finish()` completes
+- **THEN** the post-terminal visual result for `opacity` MUST continue to come from the terminal sampled/native value
+
+#### Scenario: terminal handoff ignores computed CSS-only opacity
+
+- **GIVEN** the bound node's visible `opacity` comes only from `className`, stylesheet rules, inherited visual dimming, or `getComputedStyle()`
+- **WHEN** terminal handoff runs after `stop()`, `reset()`, or `finish()`
+- **THEN** the SDK MUST NOT classify that value as explicit authored opacity
+
+---
+
 ### Requirement: Motion binding for native sessions
 
 Native sessions MUST use `xr-animation` prop / `SpatializedMotionBinding`, not the legacy `animation` prop.

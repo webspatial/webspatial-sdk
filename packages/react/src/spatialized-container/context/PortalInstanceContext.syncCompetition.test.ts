@@ -184,6 +184,40 @@ describe('Sync Competition Tests (Task 5.4)', () => {
       ).toBeGreaterThan(callsBefore)
     })
 
+    it('restores authored terminal opacity by neutralizing outer native opacity after release', () => {
+      const { portal, spatializedElement } = createPortalWithElement()
+
+      portal.setExplicitStyleOpacity(0.8)
+      portal.setTerminalOpacityOwner('authored')
+      portal.setSuppressedFields(new Set(['opacity']))
+      spatializedElement.updateProperties.mockClear()
+
+      portal.setSuppressedFields(null)
+
+      const lastCall =
+        spatializedElement.updateProperties.mock.calls[
+          spatializedElement.updateProperties.mock.calls.length - 1
+        ]
+      expect(lastCall[0]).toHaveProperty('opacity', 1)
+    })
+
+    it('keeps native terminal opacity authoritative after release when no authored opacity exists', () => {
+      const { portal, spatializedElement } = createPortalWithElement()
+
+      portal.setExplicitStyleOpacity(undefined)
+      portal.setTerminalOpacityOwner('native')
+      portal.setSuppressedFields(new Set(['opacity']))
+      spatializedElement.updateProperties.mockClear()
+
+      portal.setSuppressedFields(null)
+
+      const lastCall =
+        spatializedElement.updateProperties.mock.calls[
+          spatializedElement.updateProperties.mock.calls.length - 1
+        ]
+      expect(lastCall[0]).not.toHaveProperty('opacity')
+    })
+
     it('uncontrolled fields continue to update during suppression', () => {
       const { portal, spatializedElement } = createPortalWithElement()
 
