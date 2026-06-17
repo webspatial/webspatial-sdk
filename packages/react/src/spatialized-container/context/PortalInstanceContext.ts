@@ -1,33 +1,55 @@
 import { Spatialized2DElement, SpatializedElement } from '@webspatial/core-sdk'
 import { createContext } from 'react'
+import type { CSSProperties } from 'react'
 import { SpatializedContainerObject } from './SpatializedContainerContext'
 import { parseTransformOrigin } from '../utils'
 import { SpatialCustomStyleVars, SpatialTransformVisibility } from '../types'
 import { getSession } from '../../utils'
+import type { TerminalOpacityOwner } from '../motion/motionBindingTypes'
+import { getMotionFieldPlugin } from '../motion/plugins/registry'
 
+/** Cached viewport-relative DOM bounds. */
 type DomRect = {
+  /** The viewport-relative x coordinate. */
   x: number
+  /** The viewport-relative y coordinate. */
   y: number
+  /** The measured width. */
   width: number
+  /** The measured height. */
   height: number
 }
 
+/** Cached DOM metadata derived from the current bound element. */
 type CachedDomInfo = {
-  // point to 2DFrame dom in StandardInstanceContainer
+  /** Points to the live 2D frame DOM node in the standard container tree. */
   dom: HTMLElement
+  /** Stores the computed style snapshot used for portal sync. */
   computedStyle: CSSStyleDeclaration
+  /** Indicates whether the DOM node uses fixed positioning. */
   isFixedPosition: boolean
 }
 
+/** Cached transform/visibility data received from the spatial container. */
 type CachedTransformVisibilityInfo = {
+  /** The current visibility string reported by the spatial container. */
   visibility: string
+  /** The latest spatial transform matrix applied to the element. */
   transformMatrix: DOMMatrix
 }
 
+/**
+ * Runtime portal instance that coordinates DOM measurements, spatial element
+ * lifecycle, and motion suppression handoff for a single spatial node.
+ */
 export class PortalInstanceObject {
+  /** Stable spatial id used to query DOM and container state. */
   readonly spatialId: string
+  /** Owning spatialized container runtime object. */
   readonly spatializedContainerObject: SpatializedContainerObject
+  /** Parent portal instance when nested portals are in use. */
   readonly parentPortalInstanceObject: PortalInstanceObject | null
+  /** The attached spatial element once creation succeeds. */
   spatializedElement?: SpatializedElement
 
   /**
@@ -36,6 +58,12 @@ export class PortalInstanceObject {
    * preventing DOM sync from overwriting native animation intermediate values.
    */
   private _suppressedFields: Set<string> | null = null
+
+  /** Caches explicit React `style.opacity` captured for terminal handoff. */
+  private _explicitStyleOpacity: CSSProperties['opacity'] | undefined
+
+  /** Caches which layer should remain responsible for terminal opacity. */
+  private _terminalOpacityOwner: TerminalOpacityOwner = null
 
   /**
    * Set suppressed fields for SpatialDiv animation.
@@ -52,55 +80,96 @@ export class PortalInstanceObject {
   }
 
   /**
+   * Stores the explicit React `style.opacity` captured for terminal handoff.
+   *
+   * @param opacity - The explicit React opacity value, if one exists.
+   */
+  setExplicitStyleOpacity(opacity: CSSProperties['opacity'] | undefined) {
+    this._explicitStyleOpacity = opacity
+  }
+
+  /**
+   * Stores which layer should remain responsible for visual opacity after
+   * suppression clears.
+   *
+   * @param owner - The requested terminal opacity owner.
+   */
+  setTerminalOpacityOwner(owner: TerminalOpacityOwner) {
+    // Authored handoff only makes sense when an explicit React opacity was
+    // actually captured. Otherwise the default DOM sync path should remain.
+    this._terminalOpacityOwner =
+      owner === 'authored' && this._explicitStyleOpacity === undefined
+        ? null
+        : owner
+  }
+
+  /**
    * Check if a specific field is currently suppressed.
    */
   isFieldSuppressed(field: string): boolean {
     return this._suppressedFields?.has(field) ?? false
   }
 
-  // cachedDomInfo used for cache dom info
-  // when dom is updated, this property should be updated as well
+  /** Caches DOM metadata refreshed from the current bound node. */
   private cachedDomInfo?: CachedDomInfo
 
+  /** Returns the cached DOM node used by this portal instance. */
   get dom(): HTMLElement | undefined {
     return this.cachedDomInfo?.dom
   }
 
+  /** Returns the cached computed style snapshot for the DOM node. */
   get computedStyle(): CSSStyleDeclaration | undefined {
     return this.cachedDomInfo?.computedStyle
   }
 
+  /** Returns whether the cached DOM node is fixed-positioned. */
   get isFixedPosition(): boolean | undefined {
     return this.cachedDomInfo?.isFixedPosition
   }
 
-  // cachedDomRect used for cache dom rect
+  /** Caches the most recent viewport-relative DOM rect. */
   private cachedDomRect?: DomRect
+
+  /** Returns the most recent cached DOM rect. */
   get domRect(): DomRect | undefined {
     return this.cachedDomRect
   }
 
-  // cachedTransformVisibilityInfo used for cache transform visibility info
+  /** Caches transform/visibility data pushed by the container runtime. */
   private cachedTransformVisibilityInfo?: CachedTransformVisibilityInfo
+
+  /** Returns the cached spatial transform matrix. */
   get transformMatrix() {
     return this.cachedTransformVisibilityInfo?.transformMatrix
   }
+
+  /** Returns the cached visibility string. */
   get visibility() {
     return this.cachedTransformVisibilityInfo?.visibility
   }
 
-  // spatializedElementPromise used for get spatialized element
-  // SpatializedElement is when attachSpatializedElement is called
+  /** Resolves once a spatialized element has been attached to this portal. */
   private spatializedElementPromise?: Promise<SpatializedElement>
+
+  /** Resolves the deferred spatialized element promise. */
   private spatializedElementResolver?: (
     spatializedElement: SpatializedElement,
   ) => void
 
-  // used for get extra spatialized element properties
+  /** Computes additional spatial element properties from computed style. */
   private getExtraSpatializedElementProperties?: (
     computedStyle: CSSStyleDeclaration,
   ) => Record<string, string | number>
 
+  /**
+   * Creates a portal runtime object for a spatial node.
+   *
+   * @param spatialId - Stable spatial id used to locate the node.
+   * @param spatializedContainerObject - Owning container runtime object.
+   * @param parentPortalInstanceObject - Parent portal instance, if nested.
+   * @param getExtraSpatializedElementProperties - Optional extra property mapper.
+   */
   constructor(
     spatialId: string,
     spatializedContainerObject: SpatializedContainerObject,
@@ -122,7 +191,7 @@ export class PortalInstanceObject {
     )
   }
 
-  // called when PortalSpatializedContainer is mounted
+  /** Registers container listeners required by this portal instance. */
   init() {
     this.spatializedContainerObject.onSpatialTransformVisibilityChange(
       this.spatialId,
@@ -130,7 +199,7 @@ export class PortalInstanceObject {
     )
   }
 
-  // called when PortalSpatializedContainer is unmounted
+  /** Unregisters container listeners when the portal instance unmounts. */
   destroy() {
     this.spatializedContainerObject.offSpatialTransformVisibilityChange(
       this.spatialId,
@@ -138,6 +207,7 @@ export class PortalInstanceObject {
     )
   }
 
+  /** Handles transform/visibility updates pushed by the spatial container. */
   private onSpatialTransformVisibilityChange = (
     spatialTransform: SpatialTransformVisibility,
   ) => {
@@ -148,7 +218,7 @@ export class PortalInstanceObject {
     this.updateSpatializedElementProperties()
   }
 
-  // called when 2D frame change
+  /** Refreshes cached DOM state after the bound 2D frame changes. */
   notify2DFrameChange() {
     const dom = this.spatializedContainerObject.querySpatialDomBySpatialId(
       this.spatialId,
@@ -172,11 +242,16 @@ export class PortalInstanceObject {
     })
   }
 
+  /** Returns the deferred spatialized element promise for parent attachment. */
   private async getSpatializedElement() {
     return this.spatializedElementPromise
   }
 
-  // called when SpatializedElement is created
+  /**
+   * Attaches the created spatial element to this portal instance.
+   *
+   * @param spatializedElement - The created spatial element instance.
+   */
   attachSpatializedElement(spatializedElement: SpatializedElement) {
     this.spatializedElement = spatializedElement
     // attach to spatializedContainerObject
@@ -186,8 +261,15 @@ export class PortalInstanceObject {
     this.updateSpatializedElementProperties()
   }
 
+  /** Prevents duplicate parent attachment work from racing. */
   private inAddingToParent: boolean = false
 
+  /**
+   * Attaches the spatial element to either the page or the parent portal
+   * element, depending on layout.
+   *
+   * @param spatializedElement - The spatial element to attach.
+   */
   private async addToParent(spatializedElement: SpatializedElement) {
     if (this.inAddingToParent) {
       return
@@ -207,6 +289,7 @@ export class PortalInstanceObject {
     this.inAddingToParent = false
   }
 
+  /** Recomputes and syncs spatial element properties from cached DOM state. */
   private updateSpatializedElementProperties() {
     // console.log('updateSpatializedElement', this.spatializedElement)
     // read from spatializedContainerContext
@@ -292,7 +375,22 @@ export class PortalInstanceObject {
     if (!this.isFieldSuppressed('width')) properties.width = width
     if (!this.isFieldSuppressed('height')) properties.height = height
     if (!this.isFieldSuppressed('depth')) properties.depth = depth
-    if (!this.isFieldSuppressed('opacity')) properties.opacity = opacity
+    if (!this.isFieldSuppressed('opacity')) {
+      const opacityDecision = getMotionFieldPlugin('opacity')?.resolveOuterSync(
+        {
+          owner: this._terminalOpacityOwner,
+          authoredValue: this._explicitStyleOpacity,
+          domValue: opacity,
+        },
+      )
+      if (opacityDecision?.mode === 'set') {
+        // Keep outer opacity neutral so authored DOM opacity remains unique.
+        properties.opacity = opacityDecision.value
+      } else if (opacityDecision?.mode !== 'omit') {
+        // Skip DOM-to-native opacity sync when native keeps terminal opacity.
+        properties.opacity = opacity
+      }
+    }
     if (!this.isFieldSuppressed('backOffset'))
       properties.backOffset = backOffset
 

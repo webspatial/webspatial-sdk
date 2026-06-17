@@ -100,6 +100,10 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     [SpatialID]: spatialId,
     ...restProps
   } = props
+  // This bridge only forwards the current bound-node opacity signal into the
+  // motion binding / Portal sync path. Ownership decisions stay elsewhere.
+  const explicitStyleOpacity = (restProps as { style?: { opacity?: any } })
+    .style?.opacity
 
   const spatializedContainerObject: SpatializedContainerObject = useContext(
     SpatializedContainerContext,
@@ -139,8 +143,13 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     binding: xrAnimation,
     element: spatializedElement as Spatialized2DElement | null,
     kind: 'spatialized2d',
+    explicitStyleOpacity,
     onSuppressedFieldsChange: suppressedFields => {
       portalInstanceObject.setSuppressedFields(suppressedFields)
+    },
+    onTerminalOpacityOwnerChange: owner => {
+      portalInstanceObject.setExplicitStyleOpacity(explicitStyleOpacity)
+      portalInstanceObject.setTerminalOpacityOwner(owner)
     },
   })
 

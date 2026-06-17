@@ -221,6 +221,15 @@
 - [x] Core：让 `stop()` / `finish()` 的 terminal snapshot 在下一次新 play 之前跨 `updateConfig()` 保持稳定
 - [x] 测试：覆盖 unbound controller、web backend、native backend 的会话快照语义
 
+## Phase 16d — 2D `opacity` 终态控制权切换
+
+- [x] Spec/tasks 跟进：让实现范围与最新双语规则对齐，明确只有 React 显式传入的 `style.opacity` 才算 `spatialized2d` 终态控制权切换中的显式声明透明度
+- [x] TDD：先补失败回归测试，覆盖 `stop()` / `reset()` / `finish()` 在“显式 React `style.opacity`”与“无显式声明透明度”两类场景下的行为
+- [x] React 绑定层：从已绑定的 2D React props 中采集显式声明的 `style.opacity`，不得通过 `className`、样式表或 `getComputedStyle()` 推断
+- [x] 终态控制权：实现终态后的 `opacity` 控制方选择逻辑，存在显式 React `style.opacity` 时由其接管，否则保持终态原生采样 `opacity` 为权威结果
+- [x] Portal 同步：调整 suppression 释放与 2D portal/native 同步，避免 outer native `opacity` 与 inner DOM `opacity` 在终态控制权切换后继续同时控制同一视觉 `opacity`
+- [x] 验证：运行针对性的诊断与测试；若自动化覆盖不足，则补充 2D `opacity` 演示页的手工验证
+
 ## 阶段 — PicoOS 对齐
 
 - [ ] 在 picoOS 仓库创建统一 `spatialized-element-motion-api` 变更 ✅（2026-06-04 完成）

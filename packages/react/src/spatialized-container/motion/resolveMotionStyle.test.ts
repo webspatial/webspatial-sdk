@@ -14,6 +14,7 @@ describe('resolveMotionStyle', () => {
         targetKind: 'static3d',
         suppressedFields: null,
         nativeElementSupported: true,
+        terminalOpacityOwner: null,
       }),
     ).toEqual({})
 
@@ -23,6 +24,7 @@ describe('resolveMotionStyle', () => {
         targetKind: 'dynamic3d',
         suppressedFields: null,
         nativeElementSupported: true,
+        terminalOpacityOwner: null,
       }),
     ).toEqual({})
   })
@@ -36,6 +38,7 @@ describe('resolveMotionStyle', () => {
       targetKind: 'spatialized2d',
       suppressedFields: new Set(['opacity', 'transform']),
       nativeElementSupported: true,
+      terminalOpacityOwner: null,
     })
 
     expect(style.opacity).toBeUndefined()
@@ -51,6 +54,7 @@ describe('resolveMotionStyle', () => {
       targetKind: 'spatialized2d',
       suppressedFields: null,
       nativeElementSupported: false,
+      terminalOpacityOwner: null,
     })
 
     expect(style.opacity).toBe(0.5)

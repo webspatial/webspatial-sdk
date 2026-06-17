@@ -399,6 +399,113 @@ describe('useAnimation tuple api native backend', () => {
     expect(result.current[2].transform).toBeUndefined()
   })
 
+  test.each([
+    ['stop', { opacity: 0.5 }, 'idle'],
+    ['reset', { opacity: 1 }, 'idle'],
+    ['finish', { opacity: 0.2 }, 'finished'],
+  ] as const)(
+    'explicit authored opacity wins terminal %s handoff on native spatialized2d',
+    async (command, terminalValue, expectedPlayState) => {
+      const element = createMockElement(`authored-${command}`)
+      element.animateMotion = vi.fn().mockImplementation(async (cmd: any) => {
+        if (cmd.type === 'play') {
+          return {
+            animationId: cmd.animationId,
+            finished: new Promise(() => {}),
+            canceled: new Promise(() => {}),
+            failed: new Promise(() => {}),
+          }
+        }
+        if (cmd.type === command) {
+          return terminalValue
+        }
+        return undefined
+      })
+
+      const { result } = renderHook(() =>
+        useAnimation({
+          duration: 2,
+          autoStart: false,
+          from: { opacity: 1 },
+          to: { opacity: 0.2 },
+          timingFunction: 'linear',
+        }),
+      )
+
+      await act(async () => {
+        ;(result.current[0] as any).__setExplicitStyleOpacity?.(0.8)
+        result.current[0].__setElement?.(element as any, 'spatialized2d')
+        result.current[1].play()
+      })
+      await waitFor(() => {
+        expect(element.animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'play' }),
+        )
+      })
+
+      await act(async () => {
+        result.current[1][command]()
+      })
+      await flushPromises()
+
+      expect(result.current[1].playState).toBe(expectedPlayState)
+      expect(result.current[2].opacity).toBe(0.8)
+    },
+  )
+
+  test.each([
+    ['stop', { opacity: 0.5 }, 'idle'],
+    ['reset', { opacity: 1 }, 'idle'],
+    ['finish', { opacity: 0.2 }, 'finished'],
+  ] as const)(
+    'native terminal %s handoff omits inner DOM opacity when no explicit authored opacity exists',
+    async (command, terminalValue, expectedPlayState) => {
+      const element = createMockElement(`native-owned-${command}`)
+      element.animateMotion = vi.fn().mockImplementation(async (cmd: any) => {
+        if (cmd.type === 'play') {
+          return {
+            animationId: cmd.animationId,
+            finished: new Promise(() => {}),
+            canceled: new Promise(() => {}),
+            failed: new Promise(() => {}),
+          }
+        }
+        if (cmd.type === command) {
+          return terminalValue
+        }
+        return undefined
+      })
+
+      const { result } = renderHook(() =>
+        useAnimation({
+          duration: 2,
+          autoStart: false,
+          from: { opacity: 1 },
+          to: { opacity: 0.2 },
+          timingFunction: 'linear',
+        }),
+      )
+
+      await act(async () => {
+        result.current[0].__setElement?.(element as any, 'spatialized2d')
+        result.current[1].play()
+      })
+      await waitFor(() => {
+        expect(element.animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'play' }),
+        )
+      })
+
+      await act(async () => {
+        result.current[1][command]()
+      })
+      await flushPromises()
+
+      expect(result.current[1].playState).toBe(expectedPlayState)
+      expect(result.current[2].opacity).toBeUndefined()
+    },
+  )
+
   test('runtime config update snapshots the active native session and applies on the next play', async () => {
     const element = createMockElement('native-config-snapshot')
 

@@ -90,6 +90,20 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 - **WHEN** a termination method (`stop`, `reset`, `finish`) is invoked
 - **THEN** on Web backend the style values MUST be computed by the JS timeline evaluator; on native backend the style values MUST be provided by the native runtime (with JS evaluator as fallback if native does not return values)
 
+#### Scenario: Explicit authored style.opacity wins terminal 2D handoff
+
+- **GIVEN** a `spatialized2d` motion bound to a React node with an explicit `style.opacity`
+- **WHEN** `stop()`, `reset()`, or `finish()` completes and suppression clears
+- **THEN** the post-terminal visual owner of `opacity` MUST become that explicit authored `style.opacity`
+- **AND** terminal sampled/native values MUST still remain the source for callback payloads and terminal session semantics
+
+#### Scenario: Non-authored CSS opacity does not qualify for terminal handoff
+
+- **GIVEN** `opacity` is present only through `className`, stylesheet rules, inherited visual dimming, or `getComputedStyle()` output
+- **WHEN** a `spatialized2d` motion reaches `stop()`, `reset()`, or `finish()`
+- **THEN** the SDK MUST NOT treat that value as explicit authored opacity for terminal handoff purposes
+- **AND** terminal `opacity` ownership MUST stay with the sampled/native result when no explicit React `style.opacity` exists
+
 ### Requirement: Shared lifecycle callbacks
 
 The config MUST support the following lifecycle callbacks:
@@ -141,6 +155,12 @@ The terminal methods MUST remain independent commands: `stop()` terminates an ac
 - **WHEN** authors pause or resume a motion controller
 - **THEN** the controller state machine MUST only model whole-session states (`idle`, `queued`, `running`, `paused`, `finished`)
 - **AND** the controller MUST NOT expose a partially-paused or key-level aggregated state
+
+#### Scenario: Terminal opacity handoff does not allow simultaneous ownership
+
+- **GIVEN** a `spatialized2d` motion animates `opacity`
+- **WHEN** suppression clears after `stop()`, `reset()`, or `finish()`
+- **THEN** the SDK MUST avoid a post-terminal state where native outer opacity and inner DOM opacity both continue to own the same visual `opacity`
 
 ### Requirement: V1 public authoring centers on from/to and timeline, with tracks retained as the canonical internal model
 
