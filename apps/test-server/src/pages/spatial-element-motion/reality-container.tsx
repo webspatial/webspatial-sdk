@@ -79,7 +79,10 @@ export default function SpatialElementMotionRealityContainerPage() {
         </>
       }
     >
-      <section className="rounded-2xl border border-gray-800 bg-[#111] p-6 text-gray-200">
+      <section
+        enable-xr-monitor
+        className="rounded-2xl border border-gray-800 bg-[#111] p-6 text-gray-200"
+      >
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <PlayStateBadge state={api.playState} />
           <span className="text-xs font-mono text-gray-500">
