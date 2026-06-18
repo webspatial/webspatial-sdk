@@ -4,9 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
-  useRef,
   useState,
   type Ref,
 } from 'react'
@@ -37,11 +35,9 @@ import { SpatialWindowContext } from './context/SpatialWindowContext'
  */
 function DegradedContainer<T extends SpatializedElementRef>({
   innerRef,
-  enableOnSpatialContentReadyFallback,
   ...inprops
 }: SpatializedContainerProps<T> & {
   innerRef: ForwardedRef<SpatializedElementRef<T>>
-  enableOnSpatialContentReadyFallback: boolean
 }) {
   type DegradedProps = SpatializedContainerProps<T> & {
     'enable-xr'?: unknown
@@ -71,62 +67,12 @@ function DegradedContainer<T extends SpatializedElementRef>({
     // exists (the portal path via `useSpatialContentReady`); a degraded plain
     // HTML host has no such host, so the callback MUST NOT be invoked here —
     // this covers both the non-WebSpatial and attachment-degraded paths.
-    // Exception: when `enableOnSpatialContentReadyFallback` is true (plain
-    // non-WebSpatial, not inside Attachment), the layout effect below may
-    // invoke it with the real DOM host for overlay/Radix portal consumers.
     onSpatialContentReady: _onSpatialContentReady,
     ...restProps
   } = inprops as DegradedProps
 
-  const [hostEl, setHostEl] = useState<HTMLElement | null>(null)
-  const callbackRef = useRef(_onSpatialContentReady)
-  callbackRef.current = _onSpatialContentReady
-
-  useLayoutEffect(() => {
-    if (
-      !enableOnSpatialContentReadyFallback ||
-      !hostEl ||
-      !hostEl.isConnected ||
-      !callbackRef.current
-    ) {
-      return () => {}
-    }
-
-    let cleanup: void | (() => void)
-    try {
-      cleanup = callbackRef.current({ host: hostEl })
-    } catch (e) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.error('[WebSpatial] onSpatialContentReady threw', e)
-      }
-    }
-
-    return () => {
-      if (typeof cleanup !== 'function') return
-      try {
-        cleanup()
-      } catch (e) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('[WebSpatial] onSpatialContentReady cleanup threw', e)
-        }
-      }
-    }
-  }, [enableOnSpatialContentReadyFallback, hostEl])
-
-  const setHostRef = useCallback(
-    (node: SpatializedElementRef<T> | null) => {
-      if (typeof innerRef === 'function') {
-        innerRef(node)
-      } else if (innerRef != null) {
-        innerRef.current = node
-      }
-      setHostEl(node as HTMLElement | null)
-    },
-    [innerRef],
-  )
-
   const host = (
-    <Component ref={setHostRef} {...restProps}>
+    <Component ref={innerRef} {...restProps}>
       {children}
     </Component>
   )
@@ -159,15 +105,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
         `[WebSpatial] ${inprops.component || 'Spatial element'} cannot be used inside AttachmentAsset. Rendering as plain HTML.`,
       )
     }
-    return (
-      <DegradedContainer
-        {...inprops}
-        innerRef={ref}
-        enableOnSpatialContentReadyFallback={
-          !isWebSpatialEnv && !insideAttachment
-        }
-      />
-    )
+    return <DegradedContainer {...inprops} innerRef={ref} />
   }
 
   const layer = useContext(SpatialLayerContext) + 1
