@@ -82,6 +82,7 @@ import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loo
 import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
 import SpatialDivAnimationPage from './src/pages/spatial-div-animation/index'
 import SpatialElementMotionPage from './src/pages/spatial-element-motion/index'
+import SpatialElementMotionRealityContainerPage from './src/pages/spatial-element-motion/reality-container'
 import SpatialElementMotionFadeInEntrancePage from './src/pages/spatial-element-motion/fade-in-entrance'
 import { SpatialDivMotionTimelinePercentPage } from './src/pages/spatial-div-motion/timeline-percent'
 import SpatialElementMotionScaleExpandPage from './src/pages/spatial-element-motion/scale-expand'
@@ -257,6 +258,10 @@ function App() {
                 <Route
                   path="/spatial-element-motion"
                   element={<SpatialElementMotionPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/reality-container"
+                  element={<SpatialElementMotionRealityContainerPage />}
                 />
                 <Route
                   path="/spatial-element-motion/fade-in-entrance"
