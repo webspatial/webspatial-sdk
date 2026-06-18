@@ -458,6 +458,44 @@ describe('spatialWindowPolyfill', () => {
     expect(updateSpatialProperties).toHaveBeenCalledWith({
       material: 'none',
     })
+
+    await Promise.resolve()
+    await Promise.resolve()
+    updateSpatialProperties.mockClear()
+    ;(document.documentElement.style as any)['--xr-background-material'] =
+      'translucent'
+    expect(updateSpatialProperties).toHaveBeenCalledWith({
+      material: 'translucent',
+    })
+    expect(
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--xr-background-material')
+        .trim(),
+    ).toBe('translucent')
+    expect(
+      (
+        (document.documentElement.style as any)[
+          '--xr-background-material'
+        ] as string
+      ).trim(),
+    ).toBe('translucent')
+
+    updateSpatialProperties.mockClear()
+    document.documentElement.style.setProperty('border-radius', '80px')
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(updateSpatialProperties).toHaveBeenCalledWith({
+      cornerRadius: {
+        topLeading: 80,
+        topTrailing: 80,
+        bottomLeading: 80,
+        bottomTrailing: 80,
+      },
+    })
+    expect(updateSpatialProperties).not.toHaveBeenCalledWith({
+      material: 'none',
+    })
   })
 })
 
