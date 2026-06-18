@@ -38,12 +38,12 @@ export function useSpatialContentReady(params: {
 
   const callbackRef = useRef(onSpatialContentReady)
   callbackRef.current = onSpatialContentReady
+  const portalDom = portalInstanceObject?.dom
 
   useLayoutEffect(() => {
-    const dom = portalInstanceObject?.dom
     const isReady = !!(
       spatializedElement &&
-      dom &&
+      portalDom &&
       hostElement &&
       hostElement.isConnected
     )
@@ -69,10 +69,5 @@ export function useSpatialContentReady(params: {
     return () => {
       safeInvokeCleanup(cleanupFromCallback)
     }
-  }, [
-    spatializedElement,
-    portalInstanceObject,
-    portalInstanceObject?.dom,
-    hostElement,
-  ])
+  }, [spatializedElement, portalDom, hostElement])
 }

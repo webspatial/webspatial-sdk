@@ -1,6 +1,10 @@
 /**
- * Canonical `supports(name)` keys (OpenSpec `review.md` §3).
+ * Canonical `supports(name)` key registry (OpenSpec `review.md` §3).
  * Aliases are normalized before lookup (see `normalizeCapabilityName`).
+ *
+ * @internal SDK contract data — not part of the public `@webspatial/react-sdk`
+ * surface. Import via `@webspatial/core-sdk/runtime/keys` only for SDK demos,
+ * contract tests, and capability-matrix tooling.
  */
 
 export const COMPONENT_KEYS = [

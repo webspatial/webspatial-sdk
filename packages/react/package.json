@@ -2,37 +2,49 @@
   "name": "@webspatial/react-sdk",
   "version": "1.7.0",
   "description": "React components for WebSpatial",
-  "main": "./dist/default/index.js",
+  "main": "./dist/index.js",
   "type": "module",
-  "types": "./dist/default/index.d.ts",
+  "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/eager.js",
+    "./dist/spatial.js",
+    "./src/eager.ts",
+    "./src/runtime/registerEagerEntry.ts",
+    "./src/spatial/index.ts"
+  ],
   "exports": {
-    ".": "./dist/default/index.js",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./eager": {
+      "types": "./dist/eager.d.ts",
+      "default": "./dist/eager.js"
+    },
+    "./spatial": {
+      "types": "./dist/spatial.d.ts",
+      "default": "./dist/spatial.js"
+    },
     "./jsx-runtime": {
-      "react-server": "./dist/jsx/jsx-runtime.web.js",
+      "types": "./dist/jsx/jsx-runtime.d.ts",
       "default": "./dist/jsx/jsx-runtime.js"
     },
     "./jsx-dev-runtime": {
-      "react-server": "./dist/jsx/jsx-dev-runtime.web.js",
+      "types": "./dist/jsx/jsx-dev-runtime.d.ts",
       "default": "./dist/jsx/jsx-dev-runtime.js"
     },
-    "./default": "./dist/default/index.js",
-    "./default/jsx-dev-runtime": {
-      "react-server": "./dist/jsx/jsx-dev-runtime.web.js",
-      "default": "./dist/jsx/jsx-dev-runtime.js"
+    "./internal/facades-client": {
+      "types": "./dist/internal/facades-client.d.ts",
+      "default": "./dist/internal/facades-client.js"
     },
-    "./default/jsx-runtime": {
-      "react-server": "./dist/jsx/jsx-runtime.web.js",
-      "default": "./dist/jsx/jsx-runtime.js"
-    },
-    "./web": "./dist/web/index.js",
-    "./web/jsx-dev-runtime": "./dist/jsx/jsx-dev-runtime.web.js",
-    "./web/jsx-runtime": "./dist/jsx/jsx-runtime.web.js"
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "test": "tsc -p ./tsconfig.json && vitest run",
+    "test": "tsc -p ./tsconfig.json && tsup && vitest run",
     "dev": "tsup --watch",
     "build": "tsup",
     "start": "npm run dev",
@@ -49,24 +61,24 @@
     "url": "https://github.com/webspatial/webspatial-sdk/issues"
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
+  "dependencies": {
+    "@webspatial/core-sdk": "workspace:^"
+  },
   "peerDependencies": {
-    "@webspatial/core-sdk": "^1.5.0",
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react": ">=18.0",
+    "react-dom": ">=18.0"
   },
   "peerDependenciesMeta": {
-    "@webspatial/core-sdk": {
+    "react": {
       "optional": false
     },
-    "react": {
-      "optional": true
-    },
     "react-dom": {
-      "optional": true
+      "optional": false
     }
   },
   "devDependencies": {
-    "@webspatial/core-sdk": "workspace:*",
+    "@babel/parser": "^7.29.3",
+    "@babel/types": "^7.29.0",
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
     "@types/node": "^22.5.5",
@@ -75,12 +87,13 @@
     "@types/unist": "^3.0.2",
     "@vitest/coverage-v8": "^4.1.8",
     "@vitejs/plugin-react": "^4.4.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "@webspatial/core-sdk": "workspace:*",
     "esbuild": "^0.25.0",
     "esbuild-plugin-d.ts": "^1.3.1",
     "esbuild-plugin-define": "^0.5.0",
     "jsdom": "^24.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "tiny-glob": "^0.2.9",
     "tsup": "^8.4.0",
     "typedoc": "^0.26.5",
