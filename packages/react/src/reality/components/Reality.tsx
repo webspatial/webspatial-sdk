@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
+import type { PortalInstanceObject } from '../../spatialized-container/context/PortalInstanceContext'
 import { SpatializedContainer } from '../../spatialized-container/SpatializedContainer'
 import { useBindSpatializedMotion } from '../../spatialized-container/motion/useBindSpatializedMotion'
 import { RealityContext, RealityContextValue } from '../context'
@@ -27,6 +28,39 @@ export type RealityProps = Omit<
     /** Native root-transform motion on the Reality container (`SpatializedDynamic3DElement`). */
     'xr-animation'?: SpatializedMotionBindingInternal
   }
+
+type RealityPortalInstanceBridgeProps = {
+  /** The active portal instance backing the current Reality root host. */
+  portalInstanceObject: PortalInstanceObject
+  /** Updates the parent Reality component with the current portal instance. */
+  onPortalInstanceChange: (
+    portalInstanceObject: PortalInstanceObject | null,
+  ) => void
+}
+
+/**
+ * Keeps the parent Reality component synchronized with the current portal
+ * instance so root-motion suppression can coordinate with portal DOM sync.
+ *
+ * @param props - Portal bridge registration callbacks.
+ * @returns Null because the bridge only synchronizes lifecycle state.
+ */
+function RealityPortalInstanceBridge({
+  portalInstanceObject,
+  onPortalInstanceChange,
+}: RealityPortalInstanceBridgeProps) {
+  useEffect(() => {
+    onPortalInstanceChange(portalInstanceObject)
+
+    return () => {
+      // Clear any active suppression when the portal instance is replaced.
+      portalInstanceObject.setSuppressedFields(null)
+      onPortalInstanceChange(null)
+    }
+  }, [onPortalInstanceChange, portalInstanceObject])
+
+  return null
+}
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
   function RealityBase({ children, ...inProps }, ref) {
@@ -54,6 +88,8 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     const creationId = useRef(0)
 
     const [isReady, setIsReady] = useState(false)
+    const [portalInstanceObject, setPortalInstanceObject] =
+      useState<PortalInstanceObject | null>(null)
 
     const cleanupReality = useCallback(() => {
       ctxRef.current?.attachmentRegistry.destroy()
@@ -123,7 +159,19 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       }
     }, [cleanupReality])
 
-    const content = useCallback(() => <></>, [])
+    const content = useCallback(
+      ({
+        portalInstanceObject: inPortalInstanceObject,
+      }: {
+        portalInstanceObject: PortalInstanceObject
+      }) => (
+        <RealityPortalInstanceBridge
+          portalInstanceObject={inPortalInstanceObject}
+          onPortalInstanceChange={setPortalInstanceObject}
+        />
+      ),
+      [],
+    )
 
     useRealityEvents({
       instance: ctxRef.current?.reality ?? null,
@@ -141,6 +189,9 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       binding: xrAnimation,
       element: isReady ? (ctxRef.current?.reality ?? null) : null,
       kind: 'dynamic3d',
+      onSuppressedFieldsChange: suppressedFields => {
+        portalInstanceObject?.setSuppressedFields(suppressedFields)
+      },
     })
 
     return (
