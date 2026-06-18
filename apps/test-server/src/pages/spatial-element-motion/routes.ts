@@ -6,12 +6,6 @@ export type SpatialElementMotionRoute = {
 
 export const spatialElementMotionRoutes: SpatialElementMotionRoute[] = [
   {
-    path: '/spatial-element-motion/reality-container',
-    label: 'Reality Container Timeline',
-    description:
-      'Timeline keyframes on <Reality xr-animation> with opacity and 3D transform.',
-  },
-  {
     path: '/spatial-element-motion/fade-in-entrance',
     label: 'Fade-In Entrance',
     description:
@@ -93,5 +87,17 @@ export const spatialElementMotionRoutes: SpatialElementMotionRoute[] = [
     label: 'Nested Animation',
     description:
       'Independent animations on nested enable-xr divs (parent/child/grandchild).',
+  },
+  {
+    path: '/spatial-element-motion/reality-container',
+    label: 'Reality Container Timeline',
+    description:
+      'Timeline keyframes on <Reality xr-animation> with opacity and 3D transform.',
+  },
+  {
+    path: '/spatial-element-motion/static-model-container',
+    label: 'Static Model Container',
+    description:
+      'Timeline keyframes on <Model xr-animation> for monitor snap-back comparison.',
   },
 ]
