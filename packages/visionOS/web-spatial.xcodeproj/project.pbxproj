@@ -105,6 +105,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				LoadingView.swift,
+				OrbitInteraction.swift,
 				SceneHandlerUIView.swift,
 				Spatialized2DElementView.swift,
 				SpatializedDynamic3DView.swift,
