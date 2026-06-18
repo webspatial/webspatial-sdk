@@ -44,13 +44,6 @@ class SpatializedStatic3DElement: SpatializedElement {
         else { sources }
     }
 
-    /// In orbit stagemode the model owns its own drag handling, so all
-    /// `onSpatial*` gestures (and the gesture flag transmitted to JS) are
-    /// suppressed regardless of the individual `enableXxxGesture` flags.
-    override var enableGesture: Bool {
-        stagemode == .orbit ? false : super.enableGesture
-    }
-
     enum CodingKeys: String, CodingKey {
         case modelURL, type
     }

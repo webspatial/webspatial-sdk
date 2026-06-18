@@ -49,12 +49,13 @@ struct SpatializedStatic3DView: View {
                     posterView {}
                 }
             }
-            // Apply the full affine matrix verbatim rather than decomposing it
-            // into scale/rotation/translation. Orbit writes a non-TRS matrix
-            // (rotation composed onto the base pose); decomposing and re-applying
-            // it in a fixed order distorts position/scale, so render it directly.
             .transform3DEffect(transform)
-            .orbitInteraction(isOrbit, element: spatializedStatic3DElement, scene: spatialScene)
+            .orbitInteraction(isOrbit, element: spatializedStatic3DElement) { transform in
+                spatialScene.sendWebMsg(
+                    spatializedElement.id,
+                    EntityTransformChangeEvent(detail: EntityTransformChangeDetail(transform: transform.columnMajorArray))
+                )
+            }
             .onChange(of: asset?.animationPlaybackController?.isComplete) { _, isComplete in
                 guard isComplete == true else { return }
                 if spatializedStatic3DElement.loop,
@@ -197,6 +198,23 @@ struct SpatializedStatic3DView: View {
             }
         }
         return nil
+    }
+}
+
+private extension AffineTransform3D {
+    /// Column-major 16-element flattening matching the format JS uses when
+    /// sending the matrix into native via
+    /// `UpdateSpatializedStatic3DElementProperties`. `AffineTransform3D.matrix`
+    /// only stores the upper 3 rows; the implicit `[0, 0, 0, 1]` bottom row
+    /// is re-introduced here.
+    var columnMajorArray: [Double] {
+        let c = matrix.columns
+        return [
+            c.0.x, c.0.y, c.0.z, 0,
+            c.1.x, c.1.y, c.1.z, 0,
+            c.2.x, c.2.y, c.2.z, 0,
+            c.3.x, c.3.y, c.3.z, 1,
+        ]
     }
 }
 
