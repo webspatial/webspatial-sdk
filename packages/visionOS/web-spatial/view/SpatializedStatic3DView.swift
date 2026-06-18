@@ -26,7 +26,6 @@ struct SpatializedStatic3DView: View {
 
     var body: some View {
         let depth = spatializedElement.depth
-        let transform = spatializedStatic3DElement.entityTransform
         let isOrbit = spatializedStatic3DElement.stagemode == .orbit
         let enableGesture = spatializedElement.enableGesture
         if spatializedStatic3DElement.loading == .eager {
@@ -49,7 +48,7 @@ struct SpatializedStatic3DView: View {
                     posterView {}
                 }
             }
-            .transform3DEffect(transform)
+            .transform3DEffect(spatializedStatic3DElement.entityTransform)
             .orbitInteraction(isOrbit, element: spatializedStatic3DElement) { transform in
                 spatialScene.sendWebMsg(
                     spatializedElement.id,
