@@ -2,10 +2,27 @@ import { describe, expect, test } from 'vitest'
 import { defaultOpacityPlugin } from './defaultOpacityPlugin'
 
 describe('defaultOpacityPlugin', () => {
+  test('reads authored opacity from React style descriptor input', () => {
+    expect(
+      defaultOpacityPlugin.readAuthoredValue({
+        authoredInputs: {
+          style: {
+            opacity: 0.75,
+          },
+        },
+      }),
+    ).toBe(0.75)
+    expect(
+      defaultOpacityPlugin.readAuthoredValue({
+        authoredInputs: {},
+      }),
+    ).toBeUndefined()
+  })
+
   test('captures authored opacity from React-authored inputs only', () => {
     expect(
       defaultOpacityPlugin.captureAuthoredValue({
-        authoredInputs: { opacity: 0.75 },
+        authoredInputs: { style: { opacity: 0.75 } },
       }),
     ).toBe(0.75)
     expect(

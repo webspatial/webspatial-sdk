@@ -2,10 +2,31 @@ import { describe, expect, test } from 'vitest'
 import { defaultTransformPlugin } from './defaultTransformPlugin'
 
 describe('defaultTransformPlugin', () => {
+  test('reads authored transform from React style descriptor input', () => {
+    expect(
+      defaultTransformPlugin.readAuthoredValue({
+        authoredInputs: {
+          style: {
+            transform: 'translate3d(12px, 0px, 0px)',
+          },
+        },
+      }),
+    ).toBe('translate3d(12px, 0px, 0px)')
+    expect(
+      defaultTransformPlugin.readAuthoredValue({
+        authoredInputs: {},
+      }),
+    ).toBeUndefined()
+  })
+
   test('captures authored transform from React-authored inputs only', () => {
     expect(
       defaultTransformPlugin.captureAuthoredValue({
-        authoredInputs: { transform: 'translate3d(12px, 0px, 0px)' },
+        authoredInputs: {
+          style: {
+            transform: 'translate3d(12px, 0px, 0px)',
+          },
+        },
       }),
     ).toBe('translate3d(12px, 0px, 0px)')
     expect(

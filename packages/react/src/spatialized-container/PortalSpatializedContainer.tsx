@@ -1,4 +1,5 @@
 import { useMemo, useContext, useEffect } from 'react'
+import type { CSSProperties } from 'react'
 import {
   PortalInstanceObject,
   PortalInstanceContext,
@@ -100,12 +101,6 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     [SpatialID]: spatialId,
     ...restProps
   } = props
-  // This bridge only forwards the current bound-node opacity signal into the
-  // motion binding / Portal sync path. Ownership decisions stay elsewhere.
-  const explicitStyleOpacity = (restProps as { style?: { opacity?: any } })
-    .style?.opacity
-  const explicitStyleTransform = (restProps as { style?: { transform?: any } })
-    .style?.transform
 
   const spatializedContainerObject: SpatializedContainerObject = useContext(
     SpatializedContainerContext,
@@ -145,17 +140,13 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     binding: xrAnimation,
     element: spatializedElement as Spatialized2DElement | null,
     kind: 'spatialized2d',
-    explicitStyleOpacity,
-    explicitStyleTransform,
+    style: (restProps as { style?: CSSProperties }).style,
+    authoredProps: restProps as Record<string, unknown>,
     onSuppressedFieldsChange: suppressedFields => {
       portalInstanceObject.setSuppressedFields(suppressedFields)
     },
-    onTerminalOpacityOwnerChange: owner => {
-      portalInstanceObject.setExplicitStyleOpacity(explicitStyleOpacity)
-      portalInstanceObject.setTerminalOpacityOwner(owner)
-    },
-    onTerminalTransformOwnerChange: owner => {
-      portalInstanceObject.setTerminalTransformOwner(owner)
+    onMotionFieldMetadataChange: (field, metadata) => {
+      portalInstanceObject.setMotionFieldMetadata(field, metadata)
     },
   })
 

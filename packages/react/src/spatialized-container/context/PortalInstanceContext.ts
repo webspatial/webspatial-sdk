@@ -6,10 +6,13 @@ import { parseTransformOrigin } from '../utils'
 import { SpatialCustomStyleVars, SpatialTransformVisibility } from '../types'
 import { getSession } from '../../utils'
 import type {
+  MotionFieldMetadata,
+  MotionFieldMetadataMap,
   TerminalOpacityOwner,
   TerminalTransformOwner,
 } from '../motion/motionBindingTypes'
-import { getMotionFieldPlugin } from '../motion/plugins/registry'
+import { getMotionFieldDescriptors } from '../motion/plugins/registry'
+import type { MotionOwnershipField } from '../motion/plugins/types'
 
 /** Cached viewport-relative DOM bounds. */
 type DomRect = {
@@ -62,14 +65,8 @@ export class PortalInstanceObject {
    */
   private _suppressedFields: Set<string> | null = null
 
-  /** Caches explicit React `style.opacity` captured for terminal handoff. */
-  private _explicitStyleOpacity: CSSProperties['opacity'] | undefined
-
-  /** Caches which layer should remain responsible for terminal opacity. */
-  private _terminalOpacityOwner: TerminalOpacityOwner = null
-
-  /** Caches which layer should remain responsible for terminal transform. */
-  private _terminalTransformOwner: TerminalTransformOwner = null
+  /** Caches field metadata mirrored from React motion bindings. */
+  private _motionFieldMetadata: MotionFieldMetadataMap = {}
 
   /**
    * Set suppressed fields for SpatialDiv animation.
@@ -91,7 +88,9 @@ export class PortalInstanceObject {
    * @param opacity - The explicit React opacity value, if one exists.
    */
   setExplicitStyleOpacity(opacity: CSSProperties['opacity'] | undefined) {
-    this._explicitStyleOpacity = opacity
+    this.setMotionFieldMetadata('opacity', {
+      authoredValue: opacity,
+    })
   }
 
   /**
@@ -103,10 +102,12 @@ export class PortalInstanceObject {
   setTerminalOpacityOwner(owner: TerminalOpacityOwner) {
     // Authored handoff only makes sense when an explicit React opacity was
     // actually captured. Otherwise the default DOM sync path should remain.
-    this._terminalOpacityOwner =
-      owner === 'authored' && this._explicitStyleOpacity === undefined
-        ? null
-        : owner
+    const authoredOpacity = this.getMotionFieldMetadata('opacity').authoredValue
+    const normalizedOwner =
+      owner === 'authored' && authoredOpacity === undefined ? null : owner
+    this.setMotionFieldMetadata('opacity', {
+      terminalOwner: normalizedOwner,
+    })
   }
 
   /**
@@ -116,7 +117,54 @@ export class PortalInstanceObject {
    * @param owner - The requested terminal transform owner.
    */
   setTerminalTransformOwner(owner: TerminalTransformOwner) {
-    this._terminalTransformOwner = owner
+    this.setMotionFieldMetadata('transform', {
+      terminalOwner: owner,
+    })
+  }
+
+  /**
+   * Stores unified motion field metadata mirrored from React bindings.
+   *
+   * @param field - The field whose metadata changed.
+   * @param metadata - The partial metadata payload that should be merged in.
+   */
+  setMotionFieldMetadata(
+    field: MotionOwnershipField,
+    metadata: Partial<MotionFieldMetadata>,
+  ) {
+    const current = this._motionFieldMetadata[field] ?? {
+      terminalOwner: null,
+    }
+    const next: MotionFieldMetadata = {
+      authoredValue:
+        'authoredValue' in metadata
+          ? metadata.authoredValue
+          : current.authoredValue,
+      terminalOwner:
+        'terminalOwner' in metadata
+          ? (metadata.terminalOwner ?? null)
+          : current.terminalOwner,
+    }
+    this._motionFieldMetadata = {
+      ...this._motionFieldMetadata,
+      [field]: next,
+    }
+  }
+
+  /**
+   * Returns the unified metadata cached for a motion field.
+   *
+   * @param field - The field whose metadata should be returned.
+   * @returns The normalized field metadata snapshot.
+   */
+  private getMotionFieldMetadata(
+    field: MotionOwnershipField,
+  ): MotionFieldMetadata {
+    return (
+      this._motionFieldMetadata[field] ?? {
+        terminalOwner: null,
+      }
+    )
   }
 
   /**
@@ -353,7 +401,6 @@ export class PortalInstanceObject {
 
     const width = domRect.width
     const height = domRect.height
-    const opacity = parseFloat(computedStyle.getPropertyValue('opacity'))
     const scrollWithParent = !isFixedPosition
 
     const display = computedStyle.getPropertyValue('display')
@@ -391,41 +438,39 @@ export class PortalInstanceObject {
     if (!this.isFieldSuppressed('width')) properties.width = width
     if (!this.isFieldSuppressed('height')) properties.height = height
     if (!this.isFieldSuppressed('depth')) properties.depth = depth
-    if (!this.isFieldSuppressed('opacity')) {
-      const opacityDecision = getMotionFieldPlugin('opacity')?.resolveOuterSync(
-        {
-          owner: this._terminalOpacityOwner,
-          authoredValue: this._explicitStyleOpacity,
-          domValue: opacity,
-        },
-      )
-      if (opacityDecision?.mode === 'set') {
-        // Keep outer opacity neutral so authored DOM opacity remains unique.
-        properties.opacity = opacityDecision.value
-      } else if (opacityDecision?.mode !== 'omit') {
-        // Skip DOM-to-native opacity sync when native keeps terminal opacity.
-        properties.opacity = opacity
-      }
-    }
     if (!this.isFieldSuppressed('backOffset'))
       properties.backOffset = backOffset
 
+    let nextTransform: DOMMatrix | null = null
+    for (const descriptor of getMotionFieldDescriptors()) {
+      if (this.isFieldSuppressed(descriptor.field)) {
+        continue
+      }
+      const metadata = this.getMotionFieldMetadata(descriptor.field)
+      const domValue = descriptor.readOuterDomValue({
+        computedStyle,
+        transformMatrix: this.transformMatrix!,
+      })
+      const decision = descriptor.resolveOuterSync({
+        owner: metadata.terminalOwner,
+        authoredValue: metadata.authoredValue,
+        domValue,
+      })
+      if (decision.mode === 'omit') {
+        continue
+      }
+      const resolvedValue = decision.mode === 'set' ? decision.value : domValue
+      if (descriptor.nativeSink.kind === 'property') {
+        properties[descriptor.nativeSink.property] = resolvedValue
+        continue
+      }
+      nextTransform = resolvedValue as DOMMatrix
+    }
+
     spatializedElement.updateProperties(properties)
 
-    // update transform
-    // Suppress transform sync while animation controls it (spec §3.6)
-    const transformDecision = getMotionFieldPlugin(
-      'transform',
-    )?.resolveOuterSync({
-      owner: this._terminalTransformOwner,
-      authoredValue: undefined,
-      domValue: this.transformMatrix,
-    })
-    if (
-      !this.isFieldSuppressed('transform') &&
-      transformDecision?.mode !== 'omit'
-    ) {
-      spatializedElement.updateTransform(this.transformMatrix!)
+    if (nextTransform) {
+      spatializedElement.updateTransform(nextTransform)
     }
 
     // assign spatializedElement to dom

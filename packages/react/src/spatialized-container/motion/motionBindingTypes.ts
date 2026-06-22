@@ -24,6 +24,23 @@ export type TerminalOpacityOwner = MotionTerminalOwner
 export type TerminalTransformOwner = MotionTerminalOwner
 
 /**
+ * Unified runtime metadata tracked for one ownership-managed motion field.
+ */
+export interface MotionFieldMetadata {
+  /** Explicit React-authored value captured for terminal handoff. */
+  authoredValue?: unknown
+  /** The layer that should remain responsible after suppression clears. */
+  terminalOwner: MotionTerminalOwner
+}
+
+/**
+ * Field-keyed metadata bag used by React-only motion wiring.
+ */
+export type MotionFieldMetadataMap = Partial<
+  Record<MotionOwnershipField, MotionFieldMetadata>
+>
+
+/**
  * Internal binding contract shared between React container wiring and the Core
  * motion controller for `xr-animation`.
  */
@@ -51,6 +68,24 @@ export interface SpatializedMotionBindingInternal {
    * @param field - The field whose plugin should be resolved.
    */
   __getMotionFieldPlugin?(field: MotionOwnershipField): MotionFieldPlugin | null
+
+  /**
+   * Returns the React-only metadata cached for a field.
+   *
+   * @param field - The field whose metadata should be returned.
+   */
+  __getMotionFieldMetadata?(field: MotionOwnershipField): MotionFieldMetadata
+
+  /**
+   * Updates the React-only metadata cached for a field.
+   *
+   * @param field - The field whose metadata should be updated.
+   * @param metadata - The partial metadata payload that should be merged in.
+   */
+  __setMotionFieldMetadata?(
+    field: MotionOwnershipField,
+    metadata: Partial<MotionFieldMetadata>,
+  ): void
 
   /**
    * Returns the authored value cached for a field during suppression.

@@ -14,7 +14,11 @@ import {
 } from '@webspatial/core-sdk'
 import { createMotionBinding } from './createMotionBinding'
 import { getMotionConfigSignature } from './motionConfigSignature'
-import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
+import type {
+  MotionFieldMetadata,
+  MotionFieldMetadataMap,
+  SpatializedMotionBindingInternal,
+} from './motionBindingTypes'
 import { resolveMotionStyle } from './resolveMotionStyle'
 import { useMotionController } from './useMotionController'
 import type { MotionOwnershipField } from './plugins/types'
@@ -78,28 +82,8 @@ export function useAnimation(
   const [values, setValues] = useState<SpatializedVisualValues>(() =>
     evaluateMotionTimeline(normalizedTimelineConfig, 0),
   )
-  /** Mirrors explicit React `style.opacity` captured on the binding. */
-  const [explicitStyleOpacity, setExplicitStyleOpacity] = useState<
-    CSSProperties['opacity'] | undefined
-  >(undefined)
-  /** Mirrors explicit React `style.transform` captured on the binding. */
-  const [explicitStyleTransform, setExplicitStyleTransform] = useState<
-    CSSProperties['transform'] | undefined
-  >(undefined)
-  /**
-   * Tracks who should remain responsible for visual opacity after a terminal
-   * command completes. Core still owns sampled values and callbacks.
-   */
-  const [terminalOpacityOwner, setTerminalOpacityOwner] = useState<
-    'authored' | 'native' | null
-  >(null)
-  /**
-   * Tracks who should remain responsible for visual transform after a terminal
-   * command completes.
-   */
-  const [terminalTransformOwner, setTerminalTransformOwner] = useState<
-    'authored' | 'native' | null
-  >(null)
+  /** React-only field metadata mirrored from the opaque motion binding. */
+  const [fieldMetadata, setFieldMetadata] = useState<MotionFieldMetadataMap>({})
   const controller = useMotionController(controllerConfig, setValues)
 
   useEffect(() => {
@@ -108,34 +92,39 @@ export function useAnimation(
     if (controller.playState !== 'idle') return
     setValues(evaluateMotionTimeline(normalizedTimelineConfig, 0))
   }, [controller, normalizedTimelineConfig])
+
+  /**
+   * Mirrors binding metadata into React state while avoiding no-op updates.
+   *
+   * @param field - The field whose metadata changed.
+   * @param metadata - The latest metadata snapshot for the field.
+   */
+  const handleMotionFieldMetadataChange = (
+    field: MotionOwnershipField,
+    metadata: MotionFieldMetadata,
+  ) => {
+    setFieldMetadata(prev => {
+      const current = prev[field]
+      if (
+        current?.authoredValue === metadata.authoredValue &&
+        current?.terminalOwner === metadata.terminalOwner
+      ) {
+        return prev
+      }
+      return {
+        ...prev,
+        [field]: metadata,
+      }
+    })
+  }
+
   const animation = useMemo(
     () =>
       createMotionBinding(controller, {
-        onExplicitStyleOpacityChange: setExplicitStyleOpacity,
-        onTerminalOpacityOwnerChange: setTerminalOpacityOwner,
-        onExplicitStyleTransformChange: setExplicitStyleTransform,
-        onTerminalTransformOwnerChange: setTerminalTransformOwner,
+        onMotionFieldMetadataChange: handleMotionFieldMetadataChange,
       }),
     [controller],
   )
-  /**
-   * Resolves the current terminal owner for `opacity` from the binding plugin
-   * runtime without changing Core playback semantics.
-   */
-  const resolveOpacityTerminalOwner = () => {
-    if (!controller.getSuppressedFields()?.has('opacity')) {
-      return null
-    }
-    const opacityPlugin = animation.__getMotionFieldPlugin?.('opacity')
-    if (!opacityPlugin) {
-      return animation.__getAuthoredFieldValue?.('opacity') !== undefined
-        ? 'authored'
-        : 'native'
-    }
-    return opacityPlugin.resolveTerminalOwner({
-      authoredValue: animation.__getAuthoredFieldValue?.('opacity'),
-    })
-  }
   /**
    * Resolves the current terminal owner for an ownership-managed field from the
    * binding plugin runtime without changing Core playback semantics.
@@ -161,45 +150,44 @@ export function useAnimation(
     () => ({
       play: () => {
         // A new play session clears any previous terminal owner choice.
-        animation.__setTerminalFieldOwner?.('opacity', null)
-        animation.__setTerminalFieldOwner?.('transform', null)
+        for (const field of animation.__getSupportedMotionOwnershipFields?.() ??
+          []) {
+          animation.__setTerminalFieldOwner?.(field, null)
+        }
         controller.play()
       },
       pause: () => controller.pause(),
       resume: () => controller.resume(),
       stop: () => {
         // stop/reset/finish keep Core terminal semantics but also decide who
-        // should own visual opacity after native suppression is released.
-        animation.__setTerminalFieldOwner?.(
-          'opacity',
-          resolveOpacityTerminalOwner(),
-        )
-        animation.__setTerminalFieldOwner?.(
-          'transform',
-          resolveTerminalOwner('transform'),
-        )
+        // should own visual fields after native suppression is released.
+        for (const field of animation.__getSupportedMotionOwnershipFields?.() ??
+          []) {
+          animation.__setTerminalFieldOwner?.(
+            field,
+            resolveTerminalOwner(field),
+          )
+        }
         controller.stop()
       },
       reset: () => {
-        animation.__setTerminalFieldOwner?.(
-          'opacity',
-          resolveOpacityTerminalOwner(),
-        )
-        animation.__setTerminalFieldOwner?.(
-          'transform',
-          resolveTerminalOwner('transform'),
-        )
+        for (const field of animation.__getSupportedMotionOwnershipFields?.() ??
+          []) {
+          animation.__setTerminalFieldOwner?.(
+            field,
+            resolveTerminalOwner(field),
+          )
+        }
         controller.reset()
       },
       finish: () => {
-        animation.__setTerminalFieldOwner?.(
-          'opacity',
-          resolveOpacityTerminalOwner(),
-        )
-        animation.__setTerminalFieldOwner?.(
-          'transform',
-          resolveTerminalOwner('transform'),
-        )
+        for (const field of animation.__getSupportedMotionOwnershipFields?.() ??
+          []) {
+          animation.__setTerminalFieldOwner?.(
+            field,
+            resolveTerminalOwner(field),
+          )
+        }
         controller.finish()
       },
       get isAnimating() {
@@ -223,10 +211,7 @@ export function useAnimation(
     targetKind: controller.targetKind,
     suppressedFields: controller.getSuppressedFields(),
     nativeElementSupported: supports('useAnimation', ['element']),
-    explicitStyleOpacity,
-    explicitStyleTransform,
-    terminalOpacityOwner,
-    terminalTransformOwner,
+    fieldMetadata,
   })
 
   return [animation, api, style]
