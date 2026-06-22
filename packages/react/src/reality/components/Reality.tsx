@@ -55,7 +55,9 @@ function RealityPortalInstanceBridge({
     return () => {
       // Clear any active suppression when the portal instance is replaced.
       portalInstanceObject.setSuppressedFields(null)
-      portalInstanceObject.setTerminalTransformOwner(null)
+      portalInstanceObject.setMotionFieldMetadata('transform', {
+        terminalOwner: null,
+      })
       onPortalInstanceChange(null)
     }
   }, [onPortalInstanceChange, portalInstanceObject])
