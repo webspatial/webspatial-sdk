@@ -1,10 +1,19 @@
 'use client'
 
-import { ComponentType, ElementType, ForwardedRef, forwardRef } from 'react'
+import {
+  ComponentType,
+  ElementType,
+  ForwardedRef,
+  forwardRef,
+  useCallback,
+  useLayoutEffect,
+  useState,
+} from 'react'
 import type {
   Spatialized2DElementContainerProps,
   SpatializedElementRef,
 } from '../spatialized-container/types'
+import type { SpatializedMotionBindingInternal } from '../spatialized-container/motion/motionBindingTypes'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { warnBootForgotten } from './shared/warnBootForgotten'
@@ -20,6 +29,7 @@ const SPATIAL_EVENT_PROPS = [
   'onSpatialMagnifyEnd',
   'spatialEventOptions',
   'onSpatialContentReady',
+  'xr-animation',
 ] as const
 
 const facadeCache = new Map<ElementType, ComponentType<any>>()
@@ -59,6 +69,35 @@ export function withSpatialized2DElementContainer<P extends ElementType>(
     ref: ForwardedRef<SpatializedElementRef>,
   ) {
     const ready = useSpatialReady()
+    const [fallbackElement, setFallbackElement] = useState<HTMLElement | null>(
+      null,
+    )
+    const xrAnimation = (givenProps as Record<string, unknown>)[
+      'xr-animation'
+    ] as SpatializedMotionBindingInternal | undefined
+
+    const setFallbackRef = useCallback(
+      (node: SpatializedElementRef | null) => {
+        if (typeof ref === 'function') {
+          ref(node)
+        } else if (ref != null) {
+          ref.current = node
+        }
+        setFallbackElement(node instanceof HTMLElement ? node : null)
+      },
+      [ref],
+    )
+
+    useLayoutEffect(() => {
+      if (ready || !xrAnimation || !fallbackElement) return
+
+      xrAnimation.__setElement?.(fallbackElement, 'spatialized2d')
+      return () => {
+        xrAnimation.__onUnbind?.()
+        xrAnimation.__setElement?.(null, 'spatialized2d')
+      }
+    }, [ready, xrAnimation, fallbackElement])
+
     if (!ready) {
       warnBootForgotten('withSpatialized2DElementContainer')
       const { component: _component, ...rest } = givenProps as Record<
@@ -73,7 +112,7 @@ export function withSpatialized2DElementContainer<P extends ElementType>(
       // props) so it is neither invoked here nor leaked as a DOM attribute.
       const passthrough = stripSpatialOnlyProps(rest)
       const Element = Component as ElementType
-      return <Element {...(passthrough as any)} ref={ref as any} />
+      return <Element {...(passthrough as any)} ref={setFallbackRef as any} />
     }
     const RealHOC = requireSpatialImpl()
       .withSpatialized2DElementContainer as typeof withSpatialized2DElementContainer

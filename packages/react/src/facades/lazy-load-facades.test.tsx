@@ -58,6 +58,18 @@ function setPuppeteerUserAgent(): void {
   setUserAgent('Mozilla/5.0 Chrome/120.0.0.0 Puppeteer Safari/537.36')
 }
 
+function installFakeRaf() {
+  vi.useFakeTimers()
+  vi.stubGlobal(
+    'requestAnimationFrame',
+    (cb: FrameRequestCallback): number =>
+      setTimeout(() => cb(performance.now()), 16) as unknown as number,
+  )
+  vi.stubGlobal('cancelAnimationFrame', (id: number) => {
+    clearTimeout(id)
+  })
+}
+
 function makeSentinelSpatialImpl(): SpatialImplementation {
   const SentinelModel = forwardRef<HTMLDivElement>((_, ref) => (
     <div data-sentinel="Model" ref={ref} />
@@ -383,6 +395,59 @@ describe('lazy-load facades', () => {
       expect(section.hasAttribute('onspatialtap')).toBe(false)
       expect(section.hasAttribute('spatialeventoptions')).toBe(false)
       expect(ref.current).toBe(section)
+    })
+
+    it('withSpatialized2DElementContainer fallback binds xr-animation to the raw host for web playback', async () => {
+      installFakeRaf()
+      const { useAnimation } = await import(
+        '../spatialized-container/motion/useAnimation'
+      )
+      const Wrapped = withSpatialized2DElementContainer(
+        'section',
+      ) as unknown as React.ComponentType<Record<string, unknown>>
+
+      function TestPage() {
+        const [motion, api, style] = useAnimation({
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+          duration: 0.05,
+          timingFunction: 'linear',
+          autoStart: false,
+        })
+
+        return (
+          <>
+            <Wrapped
+              xr-animation={motion}
+              style={style}
+              data-testid="fallback-motion-host"
+            >
+              Motion host
+            </Wrapped>
+            <button type="button" onClick={() => api.play()}>
+              Play
+            </button>
+            <output data-testid="fallback-motion-state">{api.playState}</output>
+          </>
+        )
+      }
+
+      const { getByRole, getByTestId } = render(<TestPage />)
+      const host = getByTestId('fallback-motion-host')
+      expect(host.hasAttribute('xr-animation')).toBe(false)
+      expect(getByTestId('fallback-motion-state').textContent).toBe('idle')
+
+      await act(async () => {
+        getByRole('button', { name: 'Play' }).click()
+      })
+
+      expect(getByTestId('fallback-motion-state').textContent).toBe('running')
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(20)
+      })
+
+      expect(Number((host as HTMLElement).style.opacity)).toBeGreaterThan(0)
     })
 
     it('withSpatialMonitor fallback renders the raw El transparently', () => {
