@@ -9,6 +9,7 @@ import { useEffect, useRef } from 'react'
 import type {
   SpatializedMotionBindingInternal,
   TerminalOpacityOwner,
+  TerminalTransformOwner,
 } from './motionBindingTypes'
 import type { MotionFieldAuthoredInputs } from './plugins/types'
 
@@ -34,6 +35,9 @@ interface UseBindSpatializedMotionOptions {
   /** The explicit React `style.opacity` value currently present on the node. */
   explicitStyleOpacity?: CSSProperties['opacity']
 
+  /** The explicit React `style.transform` value currently present on the node. */
+  explicitStyleTransform?: CSSProperties['transform']
+
   /** Field-authored inputs collected from the currently bound React node. */
   authoredValues?: Partial<MotionFieldAuthoredInputs>
 
@@ -50,6 +54,13 @@ interface UseBindSpatializedMotionOptions {
    * @param owner - The layer that should remain responsible for visual opacity.
    */
   onTerminalOpacityOwnerChange?: (owner: TerminalOpacityOwner) => void
+
+  /**
+   * Receives post-terminal transform owner changes.
+   *
+   * @param owner - The layer that should remain responsible for visual transform.
+   */
+  onTerminalTransformOwnerChange?: (owner: TerminalTransformOwner) => void
 }
 
 /**
@@ -63,24 +74,33 @@ export function useBindSpatializedMotion({
   element,
   kind,
   explicitStyleOpacity,
+  explicitStyleTransform,
   authoredValues,
   onSuppressedFieldsChange,
   onTerminalOpacityOwnerChange,
+  onTerminalTransformOwnerChange,
 }: UseBindSpatializedMotionOptions): void {
   const onSuppressedFieldsChangeRef = useRef(onSuppressedFieldsChange)
   onSuppressedFieldsChangeRef.current = onSuppressedFieldsChange
   const onTerminalOpacityOwnerChangeRef = useRef(onTerminalOpacityOwnerChange)
   onTerminalOpacityOwnerChangeRef.current = onTerminalOpacityOwnerChange
+  const onTerminalTransformOwnerChangeRef = useRef(
+    onTerminalTransformOwnerChange,
+  )
+  onTerminalTransformOwnerChangeRef.current = onTerminalTransformOwnerChange
 
   useEffect(() => {
     if (!binding || !element) return
 
     binding.__setElement?.(element, kind)
-    onSuppressedFieldsChangeRef.current?.(
-      binding.__getSuppressedFields?.() ?? null,
-    )
     onTerminalOpacityOwnerChangeRef.current?.(
       binding.__getTerminalOpacityOwner?.() ?? null,
+    )
+    onTerminalTransformOwnerChangeRef.current?.(
+      binding.__getTerminalTransformOwner?.() ?? null,
+    )
+    onSuppressedFieldsChangeRef.current?.(
+      binding.__getSuppressedFields?.() ?? null,
     )
 
     return () => {
@@ -93,8 +113,11 @@ export function useBindSpatializedMotion({
       }
       binding.__setExplicitStyleOpacity?.(undefined)
       binding.__setTerminalOpacityOwner?.(null)
+      binding.__setExplicitStyleTransform?.(undefined)
+      binding.__setTerminalTransformOwner?.(null)
       onSuppressedFieldsChangeRef.current?.(null)
       onTerminalOpacityOwnerChangeRef.current?.(null)
+      onTerminalTransformOwnerChangeRef.current?.(null)
     }
   }, [binding, element, kind])
 
@@ -107,6 +130,7 @@ export function useBindSpatializedMotion({
     const authoredInputs: MotionFieldAuthoredInputs = {
       ...authoredValues,
       opacity: explicitStyleOpacity,
+      transform: explicitStyleTransform,
     }
 
     for (const field of binding.__getSupportedMotionOwnershipFields?.() ?? []) {
@@ -140,9 +164,12 @@ export function useBindSpatializedMotion({
       binding.__setPreviousFieldSuppression?.(field, isSuppressed)
     }
 
-    onSuppressedFieldsChangeRef.current?.(suppressedFields)
     onTerminalOpacityOwnerChangeRef.current?.(
       binding.__getTerminalOpacityOwner?.() ?? null,
     )
+    onTerminalTransformOwnerChangeRef.current?.(
+      binding.__getTerminalTransformOwner?.() ?? null,
+    )
+    onSuppressedFieldsChangeRef.current?.(suppressedFields)
   })
 }

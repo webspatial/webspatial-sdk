@@ -5,7 +5,10 @@ import { SpatializedContainerObject } from './SpatializedContainerContext'
 import { parseTransformOrigin } from '../utils'
 import { SpatialCustomStyleVars, SpatialTransformVisibility } from '../types'
 import { getSession } from '../../utils'
-import type { TerminalOpacityOwner } from '../motion/motionBindingTypes'
+import type {
+  TerminalOpacityOwner,
+  TerminalTransformOwner,
+} from '../motion/motionBindingTypes'
 import { getMotionFieldPlugin } from '../motion/plugins/registry'
 
 /** Cached viewport-relative DOM bounds. */
@@ -65,6 +68,9 @@ export class PortalInstanceObject {
   /** Caches which layer should remain responsible for terminal opacity. */
   private _terminalOpacityOwner: TerminalOpacityOwner = null
 
+  /** Caches which layer should remain responsible for terminal transform. */
+  private _terminalTransformOwner: TerminalTransformOwner = null
+
   /**
    * Set suppressed fields for SpatialDiv animation.
    * Pass null to release suppression (resume normal sync).
@@ -101,6 +107,16 @@ export class PortalInstanceObject {
       owner === 'authored' && this._explicitStyleOpacity === undefined
         ? null
         : owner
+  }
+
+  /**
+   * Stores which layer should remain responsible for visual transform after
+   * suppression clears.
+   *
+   * @param owner - The requested terminal transform owner.
+   */
+  setTerminalTransformOwner(owner: TerminalTransformOwner) {
+    this._terminalTransformOwner = owner
   }
 
   /**
@@ -398,7 +414,17 @@ export class PortalInstanceObject {
 
     // update transform
     // Suppress transform sync while animation controls it (spec §3.6)
-    if (!this.isFieldSuppressed('transform')) {
+    const transformDecision = getMotionFieldPlugin(
+      'transform',
+    )?.resolveOuterSync({
+      owner: this._terminalTransformOwner,
+      authoredValue: undefined,
+      domValue: this.transformMatrix,
+    })
+    if (
+      !this.isFieldSuppressed('transform') &&
+      transformDecision?.mode !== 'omit'
+    ) {
       spatializedElement.updateTransform(this.transformMatrix!)
     }
 

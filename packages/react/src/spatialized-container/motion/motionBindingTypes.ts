@@ -18,6 +18,12 @@ import type {
 export type TerminalOpacityOwner = MotionTerminalOwner
 
 /**
+ * Describes which layer owns visual `transform` after native host-transform
+ * suppression clears.
+ */
+export type TerminalTransformOwner = MotionTerminalOwner
+
+/**
  * Internal binding contract shared between React container wiring and the Core
  * motion controller for `xr-animation`.
  */
@@ -125,6 +131,35 @@ export interface SpatializedMotionBindingInternal {
    * @param owner - The layer that should remain responsible for visual opacity.
    */
   __setTerminalOpacityOwner?(owner: TerminalOpacityOwner): void
+
+  /**
+   * Returns the cached explicit React `style.transform` value captured for
+   * terminal handoff decisions.
+   */
+  __getExplicitStyleTransform?(): CSSProperties['transform'] | undefined
+
+  /**
+   * Updates the cached explicit React `style.transform` value used by terminal
+   * handoff logic.
+   *
+   * @param transform - The explicit React transform value, if one exists.
+   */
+  __setExplicitStyleTransform?(
+    transform: CSSProperties['transform'] | undefined,
+  ): void
+
+  /**
+   * Returns the cached owner that should remain responsible for visual
+   * `transform` after suppression clears.
+   */
+  __getTerminalTransformOwner?(): TerminalTransformOwner
+
+  /**
+   * Updates the cached post-terminal `transform` owner.
+   *
+   * @param owner - The layer that should remain responsible for visual transform.
+   */
+  __setTerminalTransformOwner?(owner: TerminalTransformOwner): void
 
   /**
    * Attaches or detaches the resolved runtime element from the binding.

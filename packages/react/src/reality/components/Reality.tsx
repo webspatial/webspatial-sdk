@@ -55,6 +55,7 @@ function RealityPortalInstanceBridge({
     return () => {
       // Clear any active suppression when the portal instance is replaced.
       portalInstanceObject.setSuppressedFields(null)
+      portalInstanceObject.setTerminalTransformOwner(null)
       onPortalInstanceChange(null)
     }
   }, [onPortalInstanceChange, portalInstanceObject])
@@ -83,6 +84,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       'xr-animation': xrAnimation,
       ...props
     } = inProps
+    const explicitStyleTransform = props.style?.transform
     const ctxRef = useRef<RealityContextValue | null>(null)
 
     const creationId = useRef(0)
@@ -189,8 +191,12 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       binding: xrAnimation,
       element: isReady ? (ctxRef.current?.reality ?? null) : null,
       kind: 'dynamic3d',
+      explicitStyleTransform,
       onSuppressedFieldsChange: suppressedFields => {
         portalInstanceObject?.setSuppressedFields(suppressedFields)
+      },
+      onTerminalTransformOwnerChange: owner => {
+        portalInstanceObject?.setTerminalTransformOwner(owner)
       },
     })
 

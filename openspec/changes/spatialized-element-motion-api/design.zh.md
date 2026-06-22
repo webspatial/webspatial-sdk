@@ -305,6 +305,65 @@ stateDiagram-v2
 变化的只有终态后的视觉控制权。设计目标是避免进入这样一种状态：终态后
 outer native `opacity` 与 inner DOM `opacity` 仍然同时控制同一个视觉结果。
 
+#### Host transform 终态控制权设计
+
+Host transform 目标（`spatialized2d` 与 `dynamic3d`）存在与 `opacity`
+同类的终态控制权问题：active 播放期间 suppression 能正确屏蔽 outer
+transform 同步，但 `stop()`、`reset()`、`finish()` 当前会在没有定义后续控制方
+的情况下直接释放 suppression。结果就是终态闪回，Portal / DOM 同步会立刻把
+静态 host transform 写回去，覆盖原生采样到的终态 pose。
+
+该设计沿用与 `opacity` 相同的 ownership 模型，但 host transform 的 sink
+按目标类型区分：
+
+- 单一控制方原则：视觉 host `transform` 在任一时刻只能有一个有效控制方
+- 显式状态建模：suppression 的释放点是 transform 控制权决策点，而不是默认允许 DOM 同步恢复
+- 策略化终态选择：终态控制方在显式 React `style.transform` 与原生采样的终态 host transform 之间选择
+- 目标作用域边界：`spatialized2d` 与 `dynamic3d` 参与 host transform 控制权切换，`static3d` 暂不纳入，因为其 motion sink 主要是 `modelTransform`
+
+终态控制权状态机依旧刻意保持很小：
+
+```mermaid
+stateDiagram-v2
+    [*] --> none
+    none --> native_active : native transform playback starts
+    native_active --> dom_authored_terminal : terminal plus explicit style.transform
+    native_active --> native_terminal : terminal plus no explicit style.transform
+    dom_authored_terminal --> native_active : next play
+    native_terminal --> native_active : next play
+    dom_authored_terminal --> none : unbind
+    native_terminal --> none : unbind
+```
+
+落到具体规则上：
+
+- 对 host transform 目标，绑定节点上显式声明的 React `style.transform` 可以在 `stop()`、`reset()`、`finish()` 之后作为 DOM 侧终态控制源
+- 仅通过 `className`、样式表规则、继承布局副作用、`useAnimation()` 返回的 `style` outlet 或 `getComputedStyle()` 出现的 transform，不算显式 authored host transform 控制权
+- 当不存在显式 React `style.transform` 时，终态控制权继续保持在原生采样到的 terminal host transform 一侧
+
+各目标的结果是有意区分的：
+
+- `spatialized2d`：`style` outlet 仍是 active 阶段的 merge outlet，但终态后在没有显式 authored `style.transform` 时，不得静默退回初始 DOM transform
+- `dynamic3d`：当原生终态 transform 仍然持有控制权时，Portal 的 host transform 同步不得重新把静态 DOM transform 写回去
+- `static3d`：该设计不改变 `modelTransform` 的控制权；如果未来要为 `static3d` 的 host transform 增加语义，必须单独定义
+
+模块职责有意拆分如下：
+
+- React 绑定层负责识别绑定 host 是否显式声明了 `style.transform`
+- `useAnimation` 与 binding 元信息负责结合采样值、suppression 状态和 authored-transform 元信息协调终态控制权
+- 各目标的 style / Portal 适配层负责在 suppression 释放后决定 DOM 侧 transform 是省略还是恢复
+- `PortalInstanceContext` 负责协调 outer native transform 同步，确保终态切换后不会同时保留 native host transform 与 DOM host transform 两个控制方
+- `NativePlaybackBackend` 继续只提供终态采样值，不负责推断 authored transform 控制权
+
+这样可以保持终态回调语义不变：
+
+- `onStop(values)` 仍然接收当前采样值
+- `onReset(values)` 仍然接收起始值
+- `finish()` 场景下的 `onComplete(values)` 仍然接收终值
+
+变化的只有终态后的视觉控制权。设计目标是避免进入这样一种状态：终态后
+native host transform 与 DOM / Portal host transform 仍然同时控制同一个视觉结果。
+
 ### 边界
 
 React 层不定义：

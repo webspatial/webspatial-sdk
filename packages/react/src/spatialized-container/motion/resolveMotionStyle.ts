@@ -4,7 +4,10 @@ import type {
 } from '@webspatial/core-sdk'
 import type { CSSProperties } from 'react'
 import { valuesToMotionStyle } from './style'
-import type { TerminalOpacityOwner } from './motionBindingTypes'
+import type {
+  TerminalOpacityOwner,
+  TerminalTransformOwner,
+} from './motionBindingTypes'
 import { getMotionFieldPlugin } from './plugins/registry'
 
 /** Shared immutable empty style for targets that do not render React motion. */
@@ -46,6 +49,41 @@ function resolveOpacityStylePatch(
 }
 
 /**
+ * Applies the ownership plugin decision for `transform` to the React style
+ * outlet.
+ *
+ * @param rawTransform - The raw sampled transform value from the motion timeline.
+ * @param suppressed - Whether native playback is currently suppressing transform.
+ * @param owner - The post-terminal owner selected for transform.
+ * @param authoredTransform - The explicit React-authored transform, if present.
+ * @returns The transform patch that should be merged into the final style.
+ */
+function resolveTransformStylePatch(
+  rawTransform: CSSProperties['transform'],
+  suppressed: boolean,
+  owner: TerminalTransformOwner,
+  authoredTransform: CSSProperties['transform'] | undefined,
+): CSSProperties {
+  const transformPlugin = getMotionFieldPlugin('transform')
+  const decision = transformPlugin?.resolveInnerStyle({
+    suppressed,
+    owner,
+    authoredValue: authoredTransform,
+    rawValue: rawTransform,
+  })
+
+  if (decision?.mode === 'omit') {
+    return {}
+  }
+  if (decision?.mode === 'set') {
+    return {
+      transform: decision.value as CSSProperties['transform'],
+    }
+  }
+  return rawTransform === undefined ? {} : { transform: rawTransform }
+}
+
+/**
  * Inputs required to compute the React style outlet for a motion binding.
  */
 interface ResolveMotionStyleOptions {
@@ -59,8 +97,12 @@ interface ResolveMotionStyleOptions {
   nativeElementSupported: boolean
   /** The explicit React `style.opacity` captured for terminal handoff. */
   explicitStyleOpacity?: CSSProperties['opacity']
+  /** The explicit React `style.transform` captured for terminal handoff. */
+  explicitStyleTransform?: CSSProperties['transform']
   /** The layer that should remain responsible for terminal opacity. */
   terminalOpacityOwner: TerminalOpacityOwner
+  /** The layer that should remain responsible for terminal transform. */
+  terminalTransformOwner: TerminalTransformOwner
 }
 
 /**
@@ -76,7 +118,9 @@ export function resolveMotionStyle({
   suppressedFields,
   nativeElementSupported,
   explicitStyleOpacity,
+  explicitStyleTransform,
   terminalOpacityOwner,
+  terminalTransformOwner,
 }: ResolveMotionStyleOptions): CSSProperties {
   if (targetKind === 'static3d' || targetKind === 'dynamic3d') {
     return EMPTY_STYLE
@@ -97,9 +141,12 @@ export function resolveMotionStyle({
         null,
         explicitStyleOpacity,
       ),
-      ...(suppressedFields.has('transform')
-        ? {}
-        : { transform: rawStyle.transform }),
+      ...resolveTransformStylePatch(
+        rawStyle.transform,
+        suppressedFields.has('transform'),
+        null,
+        explicitStyleTransform,
+      ),
     }
   }
 
@@ -111,9 +158,12 @@ export function resolveMotionStyle({
         terminalOpacityOwner,
         explicitStyleOpacity,
       ),
-      ...(rawStyle.transform === undefined
-        ? {}
-        : { transform: rawStyle.transform }),
+      ...resolveTransformStylePatch(
+        rawStyle.transform,
+        false,
+        terminalTransformOwner,
+        explicitStyleTransform,
+      ),
     }
   }
 

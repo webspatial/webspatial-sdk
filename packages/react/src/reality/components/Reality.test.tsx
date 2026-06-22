@@ -5,8 +5,10 @@ import { Reality } from './Reality'
 
 const useBindSpatializedMotionMock = vi.fn()
 const setSuppressedFieldsMock = vi.fn()
+const setTerminalTransformOwnerMock = vi.fn()
 const portalInstanceObject = {
   setSuppressedFields: setSuppressedFieldsMock,
+  setTerminalTransformOwner: setTerminalTransformOwnerMock,
 }
 
 beforeEach(() => {
@@ -23,6 +25,7 @@ vi.mock('../../spatialized-container/SpatializedContainer', () => ({
       spatializedElement: unknown
       portalInstanceObject: {
         setSuppressedFields: typeof setSuppressedFieldsMock
+        setTerminalTransformOwner: typeof setTerminalTransformOwnerMock
       }
     }>
   }) => (
@@ -72,5 +75,27 @@ describe('Reality', () => {
     })
 
     expect(setSuppressedFieldsMock).toHaveBeenCalledWith(new Set(['transform']))
+  })
+
+  test('bridges terminal transform ownership updates to the current portal instance for dynamic3d root motion', async () => {
+    const xrAnimation = { __kind: 'spatializedMotion' }
+
+    render(<Reality xr-animation={xrAnimation as any} />)
+
+    await waitFor(() => {
+      const bindCall = useBindSpatializedMotionMock.mock.calls.at(-1)?.[0] as
+        | {
+            onTerminalTransformOwnerChange?: (
+              owner: 'authored' | 'native' | null,
+            ) => void
+          }
+        | undefined
+
+      expect(bindCall?.onTerminalTransformOwnerChange).toBeTypeOf('function')
+
+      bindCall?.onTerminalTransformOwnerChange?.('native')
+    })
+
+    expect(setTerminalTransformOwnerMock).toHaveBeenCalledWith('native')
   })
 })

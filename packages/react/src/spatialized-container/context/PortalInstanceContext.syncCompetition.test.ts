@@ -272,6 +272,18 @@ describe('Sync Competition Tests (Task 5.4)', () => {
       expect(spatializedElement.updateTransform).toHaveBeenCalled()
     })
 
+    it('keeps native terminal transform authoritative after suppression release', () => {
+      const { portal, spatializedElement } = createPortalWithElement()
+
+      portal.setTerminalTransformOwner('native')
+      portal.setSuppressedFields(new Set(['transform']))
+      spatializedElement.updateTransform.mockClear()
+
+      portal.setSuppressedFields(null)
+
+      expect(spatializedElement.updateTransform).not.toHaveBeenCalled()
+    })
+
     it('suppresses both opacity and transform simultaneously', () => {
       const { portal, spatializedElement } = createPortalWithElement()
 
