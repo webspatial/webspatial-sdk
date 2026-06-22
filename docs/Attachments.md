@@ -13,13 +13,13 @@ This enables a 1→N pattern: one content template can be rendered into multiple
 
 ## `<AttachmentAsset>`
 
-Declares an attachment content template by name. When one or more `<AttachmentEntity>` components register containers for that name, `<AttachmentAsset>` uses `createPortal` to render its children into each container.
+Declares an attachment content template by id. When one or more `<AttachmentEntity>` components register containers for that asset id, `<AttachmentAsset>` uses `createPortal` to render its children into each container.
 
 ### Attributes
 
-`name`
+`id`
 
-**Required.** A string identifier that links this content template to one or more `<AttachmentEntity>` instances. Must match the `attachment` prop on the corresponding entities.
+**Required.** A string identifier for this attachment asset, consistent with `<ModelAsset id>` and other resource declarations. `<AttachmentEntity attachment="...">` must match this id (same pattern as `<ModelEntity model="...">` referencing a model asset id).
 
 `children`
 
@@ -28,8 +28,8 @@ The React content to render inside the attachment. This can be any valid React J
 ### Usage Notes
 
 - `<AttachmentAsset>` must be a direct child of `<Reality>`, placed **outside** `<SceneGraph>`.
-- If no `<AttachmentEntity>` has registered for the given `name`, the asset renders nothing.
-- Multiple `<AttachmentEntity>` components with the same `attachment` name will each receive a portal of the same children.
+- If no `<AttachmentEntity>` has registered for the given asset `id`, the asset renders nothing.
+- Multiple `<AttachmentEntity>` components with the same `attachment` id will each receive a portal of the same children.
 - Spatial components (`<SpatialDiv>`, `<Reality>`, `<Model>`) inside an `<AttachmentAsset>` will gracefully degrade to plain HTML with a console warning. Attachments are 2D surfaces only.
 
 ## `<AttachmentEntity>`
@@ -42,11 +42,11 @@ Creates a native attachment (a child WKWebView on visionOS) parented under a 3D 
 
 `attachment`
 
-**Required.** A string matching the `name` prop on the corresponding `<AttachmentAsset>`. This is how the entity knows which content template to display.
+**Required.** The `id` of the corresponding `<AttachmentAsset>`. Same pattern as the `model` prop on `<ModelEntity>` referencing a `<ModelAsset id>`.
 
 `id`
 
-An optional string providing a stable explicit identity for this attachment placement. It is used as the registry/portal key, so it must be unique across mounted `<AttachmentEntity>` instances and must not change for the lifetime of the component (a duplicate id logs a warning and falls back to a generated id). Defaults to an auto-generated id.
+Optional stable identity for this **placement** (registry/portal instance key), not the asset id. Must be unique across mounted `<AttachmentEntity>` instances and must not change for the lifetime of the component (a duplicate placement id logs a warning and falls back to a generated id). Defaults to an auto-generated id.
 
 `position`
 
@@ -71,7 +71,7 @@ A legacy object `{ width: number, height: number }` specifying the attachment's 
 ### Usage Notes
 
 - `<AttachmentEntity>` must be placed inside `<SceneGraph>`, as a descendant of an `<Entity>`. It inherits the parent entity's transform — when the entity moves, the attachment follows.
-- The `attachment` prop can change at runtime. The component will migrate its registry mapping from the old name to the new name, so the portal tracks correctly.
+- The `attachment` prop (asset id) can change at runtime. The component will migrate its registry mapping from the old id to the new one, so the portal tracks correctly.
 - `position`, `rotation`, `scale`, `width`, `height` and `size` are all reactive — updates are sent to the native side via `UpdateAttachmentEntityCommand`.
 - On unmount, the attachment is destroyed and its container is removed from the registry.
 

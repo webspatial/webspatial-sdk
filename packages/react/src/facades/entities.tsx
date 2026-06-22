@@ -7,6 +7,7 @@ import type {
   SpatialCylinderGeometryOptions,
   SpatialPlaneGeometryOptions,
   SpatialSphereGeometryOptions,
+  Vec3,
 } from '@webspatial/core-sdk'
 import type { EntityRefShape } from '../reality/hooks/useEntityRef'
 import type { EntityEventHandler, EntityProps } from '../reality/type'
@@ -98,9 +99,16 @@ export type ModelEntityProps = WithChildren<
   EntityProps & EntityEventHandler & { model: string; materials?: string[] }
 >
 export type AttachmentEntityProps = {
+  /** Optional stable placement id (portal key); distinct from asset `attachment`. */
+  id?: string
+  /** `<AttachmentAsset id>` this entity displays (like `model` on `ModelEntity`). */
   attachment: string
-  position?: [number, number, number]
-  size: { width: number; height: number }
+  position?: Vec3 | [number, number, number]
+  rotation?: Vec3
+  scale?: Vec3
+  size?: { width: number; height: number }
+  width?: number
+  height?: number
 }
 
 // `/* @__PURE__ */` annotations on each factory call: tells the consumer

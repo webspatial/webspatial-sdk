@@ -64,14 +64,19 @@ async function getOrCreateAttachment(
   return pending
 }
 
-type AttachmentEntityProps = {
+export type AttachmentEntityProps = {
   /**
-   * Stable explicit identity for this attachment placement. Must be unique
-   * across mounted AttachmentEntity instances and must not change for the
-   * lifetime of the component. Defaults to an auto-generated id.
+   * Stable explicit identity for this attachment **placement** (portal key).
+   * Must be unique across mounted AttachmentEntity instances and must not
+   * change for the lifetime of the component. Defaults to an auto-generated id.
+   * Distinct from the asset reference (`attachment`), which matches
+   * `<AttachmentAsset id>`.
    */
   id?: string
-  /** Name of the <AttachmentAsset> whose content renders into this surface. */
+  /**
+   * Id of the `<AttachmentAsset>` whose content renders into this surface
+   * (same pattern as `model` on `<ModelEntity>` referencing `<ModelAsset id>`).
+   */
   attachment: string
   /** Position relative to the parent entity in meters (Vec3 or [x, y, z]). */
   position?: Vec3 | [number, number, number]
@@ -92,7 +97,7 @@ type AttachmentEntityProps = {
 
 export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   id,
-  attachment: attachmentName,
+  attachment: assetId,
   position,
   rotation,
   scale,
@@ -108,7 +113,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   if (instanceIdRef.current === null) {
     instanceIdRef.current = claimAttachmentInstanceId(id)
   }
-  const attachmentNameRef = useRef(attachmentName)
+  const assetIdRef = useRef(assetId)
   const [childWindow, setChildWindow] = useState<WindowProxy | null>(null)
 
   // Keep the id claimed while mounted (re-claims after StrictMode remount)
@@ -200,7 +205,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
         attachmentRef.current = att
         setChildWindow(windowProxy)
         ctx.attachmentRegistry.addContainer(
-          attachmentNameRef.current,
+          assetIdRef.current,
           instanceIdRef.current!,
           att.getContainer(),
         )
@@ -219,10 +224,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
       const instanceId = instanceIdRef.current!
       const att = attachmentRef.current
       if (att) {
-        ctx.attachmentRegistry.removeContainer(
-          attachmentNameRef.current,
-          instanceId,
-        )
+        ctx.attachmentRegistry.removeContainer(assetIdRef.current, instanceId)
         attachmentRef.current = null
         setChildWindow(null)
         // Defer destroy so a StrictMode remount can reclaim the same attachment.
@@ -236,23 +238,26 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     }
   }, [ctx, parent])
 
-  // If attachment name changes at runtime, migrate the container mapping
+  // If the referenced asset id changes at runtime, migrate the container mapping
   useEffect(() => {
     if (!ctx) return
     const att = attachmentRef.current
-    const prevName = attachmentNameRef.current
-    if (att && prevName !== attachmentName) {
-      ctx.attachmentRegistry.removeContainer(prevName, instanceIdRef.current!)
+    const prevAssetId = assetIdRef.current
+    if (att && prevAssetId !== assetId) {
+      ctx.attachmentRegistry.removeContainer(
+        prevAssetId,
+        instanceIdRef.current!,
+      )
       ctx.attachmentRegistry.addContainer(
-        attachmentName,
+        assetId,
         instanceIdRef.current!,
         att.getContainer(),
       )
-      attachmentNameRef.current = attachmentName
+      assetIdRef.current = assetId
     } else {
-      attachmentNameRef.current = attachmentName
+      assetIdRef.current = assetId
     }
-  }, [ctx, attachmentName])
+  }, [ctx, assetId])
 
   useSyncHeadStyles(childWindow)
 
