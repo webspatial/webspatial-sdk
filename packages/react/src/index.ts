@@ -45,20 +45,6 @@ export type { SpatialBootProps } from './runtime/SpatialBoot'
 export { WebSpatialRuntime } from './webSpatialRuntime'
 export { WebSpatialRuntimeError } from '@webspatial/core-sdk'
 export type { CapabilityKey } from '@webspatial/core-sdk'
-export { enableDebugTool } from './utils'
-export * from './initScene'
-export * from './spatialized-container'
-export * from './spatialized-container-monitor'
-export * from './reality'
-export { useAnimation, useEntityAnimation } from './useAnimation'
-export {
-  WebSpatialRuntimeError,
-  type CapabilityKey,
-  useAnimation,
-  SpatializedMotionController,
-  type WebSpatialRuntimeSnapshot,
-  type WebSpatialRuntimeType,
-} from '@webspatial/core-sdk/runtime'
 
 // --- Core-sdk type re-exports (zero runtime cost) ---------------------------
 // `@webspatial/core-sdk` remains a regular dependency of this package because
@@ -83,13 +69,17 @@ export {
 //
 // Names that already resolve to a richer parameterized type via
 // `./spatialized-container/types` (the `SpatialTapEvent` / `SpatialDragEvent`
-export { useAnimation } from './spatialized-container/motion'
+export type {
+  UseAnimationResult,
+  SpatializedMotionConfig,
+  SpatializedMotionSegmentConfig,
+  SpatializedPlaybackApi,
+} from './spatialized-container/motion'
 // family) intentionally do NOT appear here — re-exporting the simpler
 // core-sdk version of the same name would shadow the more useful one in
 // consumer IDEs.
 export type {
   // Common scalar types not already covered by `spatialized-container/types`.
-  UseAnimationResult,
   CornerRadius,
   // Backplate / world configuration (consumer-facing scene properties).
   BackgroundMaterialType,
@@ -229,7 +219,7 @@ export type {
 
 // --- Hooks (placeholder / ready-gated per spec "Hook placeholders") ---------
 export { useMetrics } from './hooks-web/useMetrics'
-export { useAnimation } from './hooks-web/useAnimation'
+export { useAnimation, useEntityAnimation } from './hooks-web/useAnimation'
 
 // --- Public type surface (no runtime values) --------------------------------
 // Spatial event + ref types — referenced by facade prop / ref typing.
