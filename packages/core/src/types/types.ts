@@ -422,19 +422,14 @@ export type SpatialMagnifyEndEvent = CustomEvent<SpatialMagnifyEndEventDetail>
 
 export type SpatialEntityOrReality = SpatialEntity | SpatializedDynamic3DElement
 
-/**
- * A 3D vector accepted either as a Vec3 object or a legacy [x, y, z] tuple.
- */
-export type Vec3Like = Vec3 | [number, number, number]
-
 export interface AttachmentEntityOptions {
   parentEntityId: string
   /** Position relative to the parent entity, in meters. */
-  position?: Vec3Like
+  position?: Vec3
   /** Rotation relative to the parent entity, Euler angles in degrees (XYZ). */
-  rotation?: Vec3Like
+  rotation?: Vec3
   /** Scale relative to the parent entity. */
-  scale?: Vec3Like
+  scale?: Vec3
   /**
    * 2D surface size in SwiftUI points (legacy). Ignored per-axis when the
    * meter-based `width`/`height` are provided.
@@ -448,9 +443,9 @@ export interface AttachmentEntityOptions {
 }
 
 export interface AttachmentEntityUpdateOptions {
-  position?: Vec3Like
-  rotation?: Vec3Like
-  scale?: Vec3Like
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
   size?: { width: number; height: number }
   width?: number
   height?: number

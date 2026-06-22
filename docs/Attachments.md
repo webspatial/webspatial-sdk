@@ -50,7 +50,7 @@ Optional stable identity for this **placement** (registry/portal instance key), 
 
 `position`
 
-The attachment's local position relative to its parent entity, in meters. Accepts a `Vec3` object `{ x, y, z }` (preferred, consistent with other entity components) or a legacy `[x, y, z]` tuple. Defaults to `{ x: 0, y: 0, z: 0 }`.
+The attachment's local position relative to its parent entity, in meters, as a `Vec3` object `{ x, y, z }` — the same convention as `<Entity position>`. Defaults to `{ x: 0, y: 0, z: 0 }`.
 
 `rotation`
 
@@ -83,6 +83,44 @@ A legacy object `{ width: number, height: number }` specifying the attachment's 
 | `size` only           | points, as-is (legacy behavior)                                              |
 | both                  | meters win per-axis (`width` over `size.width`, `height` over `size.height`) |
 | neither               | native default of 100×100 points, with a console warning                     |
+
+## Migration (breaking changes)
+
+This release cleans up the attachment public API for consistency with other entity components.
+
+### `<AttachmentAsset name>` → `<AttachmentAsset id>`
+
+Attachment assets are now declared by `id`, matching `<ModelAsset id>` and other resource declarations:
+
+```tsx
+// Before
+<AttachmentAsset name="hud-panel">...</AttachmentAsset>
+<AttachmentEntity attachment="hud-panel" ... />
+
+// After
+<AttachmentAsset id="hud-panel">...</AttachmentAsset>
+<AttachmentEntity attachment="hud-panel" ... />
+```
+
+The `<AttachmentEntity attachment="...">` prop is unchanged — it still references the asset id.
+
+### Tuple `position` → `Vec3` object
+
+`position`, `rotation`, and `scale` on `<AttachmentEntity>` (and on `SpatialSession.createAttachmentEntity()` / `Attachment.update()`) now accept `Vec3` objects only, consistent with `<Entity>`:
+
+```tsx
+// Before
+<AttachmentEntity attachment="hud" position={[0, 0.12, 0]} size={{ width: 200, height: 100 }} />
+
+// After
+<AttachmentEntity
+  attachment="hud"
+  position={{ x: 0, y: 0.12, z: 0 }}
+  size={{ width: 200, height: 100 }}
+/>
+```
+
+Legacy point-based `size={{ width, height }}` remains supported. Meter-based `width` / `height` are preferred for new code.
 
 ## Style Sync
 

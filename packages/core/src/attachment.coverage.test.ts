@@ -30,10 +30,9 @@ function lastPayload(commandType: string) {
 }
 
 describe('toVec3Tuple', () => {
-  it('normalizes Vec3 objects and tuples, passes undefined through', async () => {
+  it('converts Vec3 objects to wire tuples and passes undefined through', async () => {
     const { toVec3Tuple } = await import('./utils')
     expect(toVec3Tuple({ x: 1, y: 2, z: 3 })).toEqual([1, 2, 3])
-    expect(toVec3Tuple([4, 5, 6])).toEqual([4, 5, 6])
     expect(toVec3Tuple(undefined)).toBeUndefined()
   })
 })
@@ -68,12 +67,12 @@ describe('Attachment JSB commands', () => {
     expect('heightMeters' in payload).toBe(false)
   })
 
-  it('InitializeAttachmentCommand normalizes Vec3 and tuple inputs and maps width/height to meters fields', async () => {
+  it('InitializeAttachmentCommand serializes Vec3 transforms and maps width/height to meters fields', async () => {
     const { InitializeAttachmentCommand } = await import('./JSBCommand')
     await new InitializeAttachmentCommand('att-1', {
       parentEntityId: 'parent-1',
       ownerViewId: 'view-1',
-      position: [1, 2, 3],
+      position: { x: 1, y: 2, z: 3 },
       rotation: { x: 0, y: 90, z: 0 },
       scale: { x: 2, y: 2, z: 2 },
       size: { width: 300, height: 200 },
@@ -99,7 +98,7 @@ describe('Attachment JSB commands', () => {
 
     await new UpdateAttachmentEntityCommand('att-1', {
       position: { x: 0, y: 1, z: 0 },
-      scale: [3, 3, 3],
+      scale: { x: 3, y: 3, z: 3 },
       size: { width: 100, height: 50 },
       width: 1,
       height: 2,
@@ -143,7 +142,7 @@ describe('Attachment entity-like setters', () => {
       position: [1, 2, 3],
     })
 
-    await att.setRotation([0, 0, 90])
+    await att.setRotation({ x: 0, y: 0, z: 90 })
     expect(lastPayload('UpdateAttachmentEntity')).toEqual({
       id: 'att-1',
       rotation: [0, 0, 90],
@@ -166,7 +165,7 @@ describe('Attachment entity-like setters', () => {
     })
     await att.destroy()
     platformSpy.callJSB.mockClear()
-    await att.update({ position: [1, 1, 1] })
+    await att.update({ position: { x: 1, y: 1, z: 1 } })
     expect(platformSpy.callJSB).not.toHaveBeenCalled()
   })
 })

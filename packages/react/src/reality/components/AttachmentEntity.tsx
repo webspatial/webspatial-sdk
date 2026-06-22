@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
   Attachment,
-  toVec3Tuple,
   Vec3,
   AttachmentCreationCancelledError,
   scheduleAttachmentDestroy,
@@ -78,8 +77,8 @@ export type AttachmentEntityProps = {
    * (same pattern as `model` on `<ModelEntity>` referencing `<ModelAsset id>`).
    */
   attachment: string
-  /** Position relative to the parent entity in meters (Vec3 or [x, y, z]). */
-  position?: Vec3 | [number, number, number]
+  /** Position relative to the parent entity in meters. */
+  position?: Vec3
   /** Rotation relative to the parent entity, Euler angles in degrees. */
   rotation?: Vec3
   /** Scale relative to the parent entity. */
@@ -264,7 +263,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   // Update transform/sizing when props change. `childWindow` is a dep so the
   // effect re-fires once after the async create completes, flushing any prop
   // values that changed while creation was in flight.
-  const pos = toVec3Tuple(position)
   useEffect(() => {
     if (!attachmentRef.current) return
     attachmentRef.current.update({
@@ -276,9 +274,9 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
       height,
     })
   }, [
-    pos?.[0],
-    pos?.[1],
-    pos?.[2],
+    position?.x,
+    position?.y,
+    position?.z,
     rotation?.x,
     rotation?.y,
     rotation?.z,

@@ -8,7 +8,7 @@ import { createNativeAttachment } from '../spatial-host'
 import {
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
-  Vec3Like,
+  Vec3,
 } from '../types/types'
 import {
   AttachmentCreationCancelledError,
@@ -43,17 +43,17 @@ export class Attachment extends SpatialObject {
   }
 
   /** Set position relative to the parent entity, in meters. */
-  async setPosition(position: Vec3Like) {
+  async setPosition(position: Vec3) {
     return this.update({ position })
   }
 
   /** Set rotation relative to the parent entity, Euler degrees (XYZ). */
-  async setRotation(rotation: Vec3Like) {
+  async setRotation(rotation: Vec3) {
     return this.update({ rotation })
   }
 
   /** Set scale relative to the parent entity. */
-  async setScale(scale: Vec3Like) {
+  async setScale(scale: Vec3) {
     return this.update({ scale })
   }
 

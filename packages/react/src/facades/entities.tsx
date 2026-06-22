@@ -103,7 +103,7 @@ export type AttachmentEntityProps = {
   id?: string
   /** `<AttachmentAsset id>` this entity displays (like `model` on `ModelEntity`). */
   attachment: string
-  position?: Vec3 | [number, number, number]
+  position?: Vec3
   rotation?: Vec3
   scale?: Vec3
   size?: { width: number; height: number }
