@@ -119,6 +119,10 @@ export const routes = [
       { path: '/geometry-verify', label: 'Geometry Verify' },
       { path: '/transform-verify', label: 'Transform Verify' },
       { path: '/static-3d-model', label: 'Static 3D Model' },
+      {
+        path: '/static-3d-model/nested-ready',
+        label: 'Nested Model Ready',
+      },
       { path: '/visible-test', label: 'Visible Test' },
     ],
   },
