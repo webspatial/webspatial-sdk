@@ -109,6 +109,7 @@ export const routes = [
       },
       { path: '/dropdown-menu-test', label: 'Dropdown menu test' },
       { path: '/dropdown-menu-spatial', label: 'Dropdown menu spatial' },
+      { path: '/spatial-semi-modal', label: 'Spatial Semi Modal' },
       { path: '/background-material', label: 'Background Material' },
       { path: '/fixed-position-test', label: 'Fixed Position' },
       { path: '/display-test', label: 'Display Test' },

@@ -7,7 +7,7 @@ struct PWAManager: Codable {
     var isLocal: Bool = false
 
 //    var start_url: String = "http://localhost:5173/#/"
-    var start_url: String = "http://localhost:5173/#/dropdown-menu-spatial"
+    var start_url: String = "http://localhost:5173/lazyEntryTest"
 
     // var start_url: String = "http://localhost:5173/#/spatial-drag-gesture"
 
