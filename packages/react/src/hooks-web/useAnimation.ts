@@ -10,6 +10,7 @@ import type {
   SpatializedMotionConfig,
   UseAnimationResult,
 } from '../spatialized-container/motion'
+import { useAnimation as useSpatializedElementAnimation } from '../spatialized-container/motion/useAnimation'
 import { getSpatialImpl } from '../runtime/bridge'
 
 function throwAnimationUnavailable(capability: string): never {
@@ -20,19 +21,16 @@ function throwAnimationUnavailable(capability: string): never {
 }
 
 /**
- * Ready-gated default-entry facade for the real spatial useAnimation hook.
+ * Default-entry spatialized element motion hook.
  *
- * Unlike placeholder hooks, useAnimation has no meaningful web-mode value:
- * callers must render only after bootSpatial() readiness, for example under
- * <SpatialBoot>. This facade intentionally does not call bootSpatial() or
- * import the spatial chunk by itself.
+ * Spatialized element motion has a meaningful web fallback, so it must be
+ * callable before bootSpatial() resolves. Native playback is selected inside
+ * the shared motion controller when the runtime reports support.
  */
 export function useAnimation(
   config: SpatializedMotionConfig,
 ): UseAnimationResult {
-  const real = getSpatialImpl()?.useAnimation
-  if (!real) return throwAnimationUnavailable('useAnimation')
-  return real(config)
+  return useSpatializedElementAnimation(config)
 }
 
 /**
