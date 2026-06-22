@@ -1,6 +1,5 @@
 import { Spatialized2DElement, SpatializedElement } from '@webspatial/core-sdk'
 import { createContext } from 'react'
-import type { CSSProperties } from 'react'
 import { SpatializedContainerObject } from './SpatializedContainerContext'
 import { parseTransformOrigin } from '../utils'
 import { SpatialCustomStyleVars, SpatialTransformVisibility } from '../types'
@@ -8,8 +7,6 @@ import { getSession } from '../../utils'
 import type {
   MotionFieldMetadata,
   MotionFieldMetadataMap,
-  TerminalOpacityOwner,
-  TerminalTransformOwner,
 } from '../motion/motionBindingTypes'
 import { getMotionFieldDescriptors } from '../motion/plugins/registry'
 import type { MotionOwnershipField } from '../motion/plugins/types'
@@ -80,46 +77,6 @@ export class PortalInstanceObject {
     if (hadSuppression && (fields === null || fields.size === 0)) {
       this.updateSpatializedElementProperties()
     }
-  }
-
-  /**
-   * Stores the explicit React `style.opacity` captured for terminal handoff.
-   *
-   * @param opacity - The explicit React opacity value, if one exists.
-   */
-  setExplicitStyleOpacity(opacity: CSSProperties['opacity'] | undefined) {
-    this.setMotionFieldMetadata('opacity', {
-      authoredValue: opacity,
-    })
-  }
-
-  /**
-   * Stores which layer should remain responsible for visual opacity after
-   * suppression clears.
-   *
-   * @param owner - The requested terminal opacity owner.
-   */
-  setTerminalOpacityOwner(owner: TerminalOpacityOwner) {
-    // Authored handoff only makes sense when an explicit React opacity was
-    // actually captured. Otherwise the default DOM sync path should remain.
-    const authoredOpacity = this.getMotionFieldMetadata('opacity').authoredValue
-    const normalizedOwner =
-      owner === 'authored' && authoredOpacity === undefined ? null : owner
-    this.setMotionFieldMetadata('opacity', {
-      terminalOwner: normalizedOwner,
-    })
-  }
-
-  /**
-   * Stores which layer should remain responsible for visual transform after
-   * suppression clears.
-   *
-   * @param owner - The requested terminal transform owner.
-   */
-  setTerminalTransformOwner(owner: TerminalTransformOwner) {
-    this.setMotionFieldMetadata('transform', {
-      terminalOwner: owner,
-    })
   }
 
   /**

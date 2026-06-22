@@ -187,8 +187,10 @@ describe('Sync Competition Tests (Task 5.4)', () => {
     it('restores authored terminal opacity by neutralizing outer native opacity after release', () => {
       const { portal, spatializedElement } = createPortalWithElement()
 
-      portal.setExplicitStyleOpacity(0.8)
-      portal.setTerminalOpacityOwner('authored')
+      portal.setMotionFieldMetadata('opacity', {
+        authoredValue: 0.8,
+        terminalOwner: 'authored',
+      })
       portal.setSuppressedFields(new Set(['opacity']))
       spatializedElement.updateProperties.mockClear()
 
@@ -204,8 +206,10 @@ describe('Sync Competition Tests (Task 5.4)', () => {
     it('keeps native terminal opacity authoritative after release when no authored opacity exists', () => {
       const { portal, spatializedElement } = createPortalWithElement()
 
-      portal.setExplicitStyleOpacity(undefined)
-      portal.setTerminalOpacityOwner('native')
+      portal.setMotionFieldMetadata('opacity', {
+        authoredValue: undefined,
+        terminalOwner: 'native',
+      })
       portal.setSuppressedFields(new Set(['opacity']))
       spatializedElement.updateProperties.mockClear()
 
@@ -275,7 +279,9 @@ describe('Sync Competition Tests (Task 5.4)', () => {
     it('keeps native terminal transform authoritative after suppression release', () => {
       const { portal, spatializedElement } = createPortalWithElement()
 
-      portal.setTerminalTransformOwner('native')
+      portal.setMotionFieldMetadata('transform', {
+        terminalOwner: 'native',
+      })
       portal.setSuppressedFields(new Set(['transform']))
       spatializedElement.updateTransform.mockClear()
 
