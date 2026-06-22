@@ -232,7 +232,6 @@ function SpatializedStatic3DElementContainerBase(
         set entityTransform(value: DOMMatrixReadOnly) {
           const suppressed = xrAnimation?.__getSuppressedFields?.()
           if (suppressed?.has('entityTransform')) return
-          modelTransform = value
           const spatializedElement = (domProxy as any).__spatializedElement as
             | SpatializedStatic3DElement
             | undefined

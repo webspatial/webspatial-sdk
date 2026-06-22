@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from 'react'
@@ -25,7 +26,6 @@ import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
-import { withSSRSupported } from '../ssr'
 import type { SpatializedMotionBindingInternal } from './motion/motionBindingTypes'
 
 /**
@@ -74,8 +74,6 @@ function DegradedContainer<T extends SpatializedElementRef>({
   } = inprops as DegradedProps
 
   const [hostEl, setHostEl] = useState<HTMLElement | null>(null)
-  const callbackRef = useRef(_onSpatialContentReady)
-  callbackRef.current = _onSpatialContentReady
 
   useLayoutEffect(() => {
     if (!xrAnimation || !hostEl || !hostEl.isConnected) return () => {}
@@ -88,37 +86,6 @@ function DegradedContainer<T extends SpatializedElementRef>({
       xrAnimation.__setElement?.(null, 'spatialized2d')
     }
   }, [hostEl, xrAnimation])
-
-  useLayoutEffect(() => {
-    if (
-      !enableOnSpatialContentReadyFallback ||
-      !hostEl ||
-      !hostEl.isConnected ||
-      !callbackRef.current
-    ) {
-      return () => {}
-    }
-
-    let cleanup: void | (() => void)
-    try {
-      cleanup = callbackRef.current({ host: hostEl })
-    } catch (e) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.error('[WebSpatial] onSpatialContentReady threw', e)
-      }
-    }
-
-    return () => {
-      if (typeof cleanup !== 'function') return
-      try {
-        cleanup()
-      } catch (e) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('[WebSpatial] onSpatialContentReady cleanup threw', e)
-        }
-      }
-    }
-  }, [enableOnSpatialContentReadyFallback, hostEl])
 
   const setHostRef = useCallback(
     (node: SpatializedElementRef<T> | null) => {
@@ -133,7 +100,7 @@ function DegradedContainer<T extends SpatializedElementRef>({
   )
 
   return (
-    <Component ref={innerRef} {...restProps}>
+    <Component ref={setHostRef} {...restProps}>
       {children}
     </Component>
   )
