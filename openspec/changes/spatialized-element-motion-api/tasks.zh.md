@@ -213,7 +213,7 @@
 - [x] Core：在 `NativePlaybackBackend` 中统一 `reset()` / `finish()` 的 terminal seek 处理
 - [x] visionOS：在 `SpatializedElementMotionManager` 中抽取共享 terminal seek apply helper，并支持一次性 transient seek 命令
 - [x] 测试：补充 static3d native terminal seek、idle one-shot 命令，以及 native 无返回值或失败时 JS fallback 的回归覆盖
-- [ ] 手工验证：确认 `apps/test-server/src/pages/spatial-div-motion/model-container.tsx` 中 Play -> Finish -> Reset 可让 Static3D 模型视觉回到起始状态
+- [x] 手工验证：确认 `apps/test-server/src/pages/spatial-div-motion/model-container.tsx` 中 Play -> Finish -> Reset 可让 Static3D 模型视觉回到起始状态
 
 ## Phase 16c — 会话配置快照语义
 
@@ -232,21 +232,9 @@
 
 ## Phase 16e — Host transform 终态控制权切换
 
-- [ ] Spec/design 跟进：为 `spatialized2d` 与 `dynamic3d` 定义 host transform 的终态控制权，复用 `opacity` 的 ownership 模型，同时明确 `static3d` 暂不纳入，因为其主要 motion sink 是 `modelTransform`
-- [ ] TDD：先补失败回归测试，覆盖 `Reality` root motion 在 `stop()` 后保留终态采样 pose，以及 `spatialized2d` 在不存在显式 authored `style.transform` 时 `stop()` 后仍保留终态 transform
-- [ ] React 绑定层：从已绑定的 host props 中采集显式声明的 `style.transform`，不得通过 `className`、样式表、`useAnimation()` 返回的 `style` outlet 或 `getComputedStyle()` 推断
-- [ ] 终态控制权：实现终态后的 host transform 控制方选择逻辑，存在显式 React `style.transform` 时由其接管，否则保持终态原生采样 host transform 为权威结果
-- [ ] Portal 同步：调整 suppression 释放与 host transform 同步，避免 native 终态 transform 在切换后被 DOM 或 Portal host transform 覆盖
-- [ ] 验证：运行针对性的诊断与测试，并对 `Reality` container demo 与 2D transform demo 执行 `play` / `stop` / `reset` / `finish` 的手工验证
-
-## 阶段 — PicoOS 对齐
-
-- [ ] 在 picoOS 仓库创建统一 `spatialized-element-motion-api` 变更 ✅（2026-06-04 完成）
-- [ ] picoOS 阶段 1：JSB 协议迁移（`AnimateSpatialized2DElement` → `AnimateSpatializedElementMotion` + `targetKind`）
-- [ ] picoOS 阶段 2：Canonical tracks 执行（将单一 from/to lerp 替换为多轨道评估器）
-- [ ] picoOS 阶段 3：扩展终止命令（`stop`/`reset`/`finish` 及正确的值发射语义）
-- [ ] picoOS 阶段 4：3 级 timingFunction 级联（keyframe > track > config > 'linear'）
-- [ ] picoOS 阶段 5：Timeline 百分比关键帧反糖
-- [ ] picoOS 阶段 6：遗留清理（JS SDK 迁移确认后移除 `AnimateSpatialized2DElement` 处理器）
-- [ ] picoOS 阶段 7：测试（单元 + 集成，目标是与上游 Web RAF 评估器值对齐）
-- [ ] 确认 JS SDK 不再发射 `AnimateSpatialized2DElement` → picoOS 可移除双监听适配
+- [x] Spec/design 跟进：为 `spatialized2d` 与 `dynamic3d` 定义 host transform 的终态控制权，复用 `opacity` 的 ownership 模型，同时明确 `static3d` 暂不纳入，因为其主要 motion sink 是 `modelTransform`
+- [x] TDD：先补失败回归测试，覆盖 `Reality` root motion 在 `stop()` 后保留终态采样 pose，以及 `spatialized2d` 在不存在显式 authored `style.transform` 时 `stop()` 后仍保留终态 transform
+- [x] React 绑定层：从已绑定的 host props 中采集显式声明的 `style.transform`，不得通过 `className`、样式表、`useAnimation()` 返回的 `style` outlet 或 `getComputedStyle()` 推断
+- [x] 终态控制权：实现终态后的 host transform 控制方选择逻辑，存在显式 React `style.transform` 时由其接管，否则保持终态原生采样 host transform 为权威结果
+- [x] Portal 同步：调整 suppression 释放与 host transform 同步，避免 native 终态 transform 在切换后被 DOM 或 Portal host transform 覆盖
+- [x] 验证：运行针对性的诊断与测试，并对 `Reality` container demo 与 2D transform demo 执行 `play` / `stop` / `reset` / `finish` 的手工验证

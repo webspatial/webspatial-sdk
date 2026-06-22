@@ -213,7 +213,7 @@
 - [x] Core: unify `reset()` / `finish()` terminal seek handling in `NativePlaybackBackend`
 - [x] visionOS: share terminal seek/apply helpers in `SpatializedElementMotionManager` and support transient one-shot seek commands
 - [x] Tests: add regressions for static3d native terminal seek, idle one-shot commands, and JS fallback on native no-return/failure
-- [ ] Manual validation: verify `apps/test-server/src/pages/spatial-div-motion/model-container.tsx` Play -> Finish -> Reset returns Static3D model visuals to the start state
+- [x] Manual validation: verify `apps/test-server/src/pages/spatial-div-motion/model-container.tsx` Play -> Finish -> Reset returns Static3D model visuals to the start state
 
 ## Phase 16c — Session config snapshot semantics
 
@@ -232,21 +232,9 @@
 
 ## Phase 16e — Host transform terminal ownership handoff
 
-- [ ] Spec/design follow-up: define host-transform terminal ownership for `spatialized2d` and `dynamic3d`, reusing the ownership model from `opacity` while keeping `static3d` out of scope because its primary motion sink is `modelTransform`
-- [ ] TDD: add failing regression tests for `Reality` root motion `stop()` retaining the sampled terminal pose and `spatialized2d` `stop()` retaining terminal transform when no explicit authored `style.transform` exists
-- [ ] React binding: capture explicit authored `style.transform` from bound host props without inferring from `className`, stylesheets, the `useAnimation()` style outlet, or `getComputedStyle()`
-- [ ] Terminal ownership: implement post-terminal host-transform ownership selection so explicit React `style.transform` wins, otherwise terminal native sampled host transform remains authoritative
-- [ ] Portal sync: update suppression release and host transform sync so native terminal transform is not overwritten by DOM or Portal host transform after handoff
-- [ ] Verification: run targeted diagnostics/tests and manually validate both the `Reality` container demo and the 2D transform demo for `play` / `stop` / `reset` / `finish`
-
-## Phase — PicoOS Alignment
-
-- [ ] Create unified `spatialized-element-motion-api` change in picoOS repo ✅ (completed 2026-06-04)
-- [ ] picoOS Phase 1: JSB protocol migration (`AnimateSpatialized2DElement` → `AnimateSpatializedElementMotion` + `targetKind`)
-- [ ] picoOS Phase 2: Canonical tracks execution (replace single from/to lerp with multi-track evaluator)
-- [ ] picoOS Phase 3: Extended terminal commands (`stop`/`reset`/`finish` with correct value-emission semantics)
-- [ ] picoOS Phase 4: 3-level timingFunction cascade (keyframe > track > config > 'linear')
-- [ ] picoOS Phase 5: Timeline percentage keyframe desugaring
-- [ ] picoOS Phase 6: Legacy cleanup (remove `AnimateSpatialized2DElement` handler after JS SDK migration confirmed)
-- [ ] picoOS Phase 7: Testing (unit + integration, targeting value parity with upstream Web RAF evaluator)
-- [ ] Confirm JS SDK no longer emits `AnimateSpatialized2DElement` → picoOS can remove dual-listen shim
+- [x] Spec/design follow-up: define host-transform terminal ownership for `spatialized2d` and `dynamic3d`, reusing the ownership model from `opacity` while keeping `static3d` out of scope because its primary motion sink is `modelTransform`
+- [x] TDD: add failing regression tests for `Reality` root motion `stop()` retaining the sampled terminal pose and `spatialized2d` `stop()` retaining terminal transform when no explicit authored `style.transform` exists
+- [x] React binding: capture explicit authored `style.transform` from bound host props without inferring from `className`, stylesheets, the `useAnimation()` style outlet, or `getComputedStyle()`
+- [x] Terminal ownership: implement post-terminal host-transform ownership selection so explicit React `style.transform` wins, otherwise terminal native sampled host transform remains authoritative
+- [x] Portal sync: update suppression release and host transform sync so native terminal transform is not overwritten by DOM or Portal host transform after handoff
+- [x] Verification: run targeted diagnostics/tests and manually validate both the `Reality` container demo and the 2D transform demo for `play` / `stop` / `reset` / `finish`
