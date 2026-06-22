@@ -113,6 +113,22 @@ class AttachmentManager {
         }
     }
 
+    func removeBatch(ids: [String]) {
+        let idSet = Set(ids)
+        guard !idSet.isEmpty else { return }
+
+        let toDestroy = attachments.filter { idSet.contains($0.key) }.map { $0.value }
+        guard !toDestroy.isEmpty else { return }
+
+        attachments = attachments.filter { !idSet.contains($0.key) }
+
+        DispatchQueue.main.async {
+            for info in toDestroy {
+                info.webViewModel.destroy()
+            }
+        }
+    }
+
     func get(id: String) -> AttachmentInfo? {
         attachments[id]
     }

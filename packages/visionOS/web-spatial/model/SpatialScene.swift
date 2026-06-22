@@ -292,6 +292,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             )
 
         spatialWebViewModel.addJSBListener(DestroyCommand.self, onDestroySpatialObjectCommand)
+        spatialWebViewModel.addJSBListener(DestroyAttachmentsCommand.self, onDestroyAttachmentsCommand)
+        spatialWebViewModel.addJSBListener(DestroyAllAttachmentsCommand.self, onDestroyAllAttachmentsCommand)
 
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneProperties.self, onUpdateSpatialSceneProperties)
 
@@ -623,6 +625,16 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Failed to destroy SpatialObject: invalid inspect spatial object id \(command.id) not exsit!")))
             return
         }
+    }
+
+    private func onDestroyAttachmentsCommand(command: DestroyAttachmentsCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        attachmentManager.removeBatch(ids: command.ids)
+        resolve(.success(nil))
+    }
+
+    private func onDestroyAllAttachmentsCommand(_ command: DestroyAllAttachmentsCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        attachmentManager.destroyAll()
+        resolve(.success(nil))
     }
 
     private func onCreateSpatializedStatic3DElement(command: CreateSpatializedStatic3DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {

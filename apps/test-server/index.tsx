@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter as Router, Routes, Route } from 'react-router-dom'
+import { SpatialBoot, WebSpatialBootError } from '@webspatial/react-sdk'
 import Sidebar from './src/components/Sidebar'
 import Home from './src/pages/Home'
 // Static route registry: add your test component here to expose it in the SPA
@@ -102,6 +103,49 @@ class ErrorBoundary extends React.Component<
     }
     return this.props.children as any
   }
+}
+
+function SpatialBootErrorPanel({ error }: { error: WebSpatialBootError }) {
+  const cause = error.cause
+  const causeMessage =
+    cause instanceof Error ? cause.message : cause ? String(cause) : null
+
+  return (
+    <div className="min-h-screen bg-[#111827] p-8 text-gray-100">
+      <div className="max-w-3xl rounded border border-red-500/50 bg-red-950/30 p-6">
+        <h1 className="mb-3 text-xl font-semibold">
+          WebSpatial runtime failed to boot
+        </h1>
+        <p className="mb-4 text-sm text-gray-300">{error.message}</p>
+        {causeMessage ? (
+          <pre className="overflow-auto rounded bg-black/40 p-3 text-xs text-red-100">
+            {causeMessage}
+          </pre>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function TestServerRoot() {
+  const [bootError, setBootError] = React.useState<WebSpatialBootError | null>(
+    null,
+  )
+
+  if (bootError) {
+    return <SpatialBootErrorPanel error={bootError} />
+  }
+
+  return (
+    <SpatialBoot
+      onError={(err: WebSpatialBootError) => {
+        console.error('[test-server] bootSpatial failed', err)
+        setBootError(err)
+      }}
+    >
+      <App />
+    </SpatialBoot>
+  )
 }
 
 function App() {
@@ -320,7 +364,7 @@ const init = () => {
 
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <App />
+      <TestServerRoot />
     </React.StrictMode>,
   )
 }

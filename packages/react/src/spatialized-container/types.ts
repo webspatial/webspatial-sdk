@@ -13,6 +13,7 @@ import {
   SpatialMagnifyEvent as CoreSpatialMagnifyEvent,
   SpatialMagnifyEndEvent as CoreSpatialMagnifyEndEvent,
   SpatializedStatic3DElement,
+  type StageMode,
   type Vec3,
 } from '@webspatial/core-sdk'
 
@@ -107,6 +108,7 @@ export type SpatializedStatic3DContainerProps =
       autoPlay?: boolean
       loop?: boolean
       loading?: ModelLoadingMode
+      stagemode?: StageMode
       children?: React.ReactNode
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
@@ -120,6 +122,7 @@ export type SpatializedStatic3DContentProps = {
   autoPlay?: boolean
   loop?: boolean
   loading?: ModelLoadingMode
+  stagemode?: StageMode
   children?: React.ReactNode
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void

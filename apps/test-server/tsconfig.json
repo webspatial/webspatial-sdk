@@ -21,17 +21,31 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@webspatial/core-sdk": ["../../packages/core/src"],
-      "@webspatial/react-sdk": ["../../packages/react/src"],
+      "@webspatial/core-sdk/runtime": [
+        "../../packages/core/src/runtime/index.ts"
+      ],
+      "@webspatial/core-sdk/runtime/keys": [
+        "../../packages/core/src/runtime/keys.ts"
+      ],
+      "@webspatial/react-sdk": ["../../packages/react/src/index.ts"],
+      "@webspatial/react-sdk/spatial": [
+        "../../packages/react/src/spatial/index.ts"
+      ],
+      "@webspatial/react-sdk/eager": ["../../packages/react/src/eager.ts"],
       "@webspatial/react-sdk/jsx-runtime": [
         "../../packages/react/src/jsx/jsx-runtime.ts"
       ],
       "@webspatial/react-sdk/jsx-dev-runtime": [
         "../../packages/react/src/jsx/jsx-dev-runtime.ts"
       ],
+      "@webspatial/react-sdk/internal/facades-client": [
+        "../../packages/react/src/internal/facades-client.ts"
+      ],
       "web-spatial": ["../npmLib/src"]
     }
   },
   "include": [
+    "index.tsx",
     "src",
     "../../packages/react/src/types/global.d.ts",
     "../../packages/core/src/types/global.d.ts"

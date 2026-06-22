@@ -27,8 +27,6 @@ import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
-import { withSSRSupported } from '../ssr'
-
 /**
  * Degraded fallback: strips spatial-only props and renders plain HTML.
  * This is a separate component so that SpatializedContainerBase never
@@ -336,9 +334,15 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
   }
 }
 
-export const SpatializedContainer = withSSRSupported(
-  forwardRef(SpatializedContainerBase),
-) as <T extends SpatializedElementRef>(
+// No `withSSRSupported` wrapper: on the default entry this container is reached
+// only via the facade HOC delegate (`facades/withSpatialized2DElementContainer`)
+// once `useSpatialReady()` is ready — i.e. as a fresh client mount AFTER
+// hydration commits, never during the SSR or hydration pass. The eager entry is
+// CSR-only for spatial primitives (see `spatial-lazy-load` spec "Entry
+// routing"); SSR safety in mixed eager setups is the consumer's responsibility.
+export const SpatializedContainer = forwardRef(SpatializedContainerBase) as <
+  T extends SpatializedElementRef,
+>(
   props: SpatializedContainerProps<T> & {
     ref?: ForwardedRef<SpatializedElementRef<T>>
   },

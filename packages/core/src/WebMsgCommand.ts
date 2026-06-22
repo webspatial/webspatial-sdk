@@ -21,6 +21,9 @@ export enum SpatialWebMsgType {
 
   animationstatechange = 'animationstatechange',
 
+  // Native-driven transform updates (e.g. while in `stagemode="orbit"`)
+  entitytransformchange = 'entitytransformchange',
+
   // Animation terminal events (keyed by animationId, not by this enum)
   animationcompleted = 'animationcompleted',
   animationstopped = 'animationstopped',
@@ -101,6 +104,16 @@ export interface AnimationStateChangeDetail {
 export interface AnimationStateChangeMsg {
   type: SpatialWebMsgType.animationstatechange
   detail: AnimationStateChangeDetail
+}
+
+export interface EntityTransformChangeDetail {
+  /** Column-major 4x4 matrix (16 numbers) representing the manipulated transform. */
+  transform: number[]
+}
+
+export interface EntityTransformChangeMsg {
+  type: SpatialWebMsgType.entitytransformchange
+  detail: EntityTransformChangeDetail
 }
 
 // Animation terminal event payloads (delivered via SpatialWebEvent keyed by animationId)
