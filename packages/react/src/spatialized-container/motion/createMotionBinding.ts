@@ -7,6 +7,7 @@ import type {
 } from '@webspatial/core-sdk'
 import type { CSSProperties } from 'react'
 import type {
+  MotionFieldMetadata,
   SpatializedMotionBindingInternal,
   TerminalOpacityOwner,
   TerminalTransformOwner,
@@ -21,6 +22,17 @@ import type { MotionOwnershipField, MotionTerminalOwner } from './plugins/types'
  * React-only callbacks used to mirror binding metadata back into hook state.
  */
 interface CreateMotionBindingOptions {
+  /**
+   * Receives unified field metadata updates captured on the binding.
+   *
+   * @param field - The field whose metadata changed.
+   * @param metadata - The latest metadata snapshot for the field.
+   */
+  onMotionFieldMetadataChange?: (
+    field: MotionOwnershipField,
+    metadata: MotionFieldMetadata,
+  ) => void
+
   /**
    * Receives explicit React `style.opacity` updates captured on the binding.
    *
@@ -87,26 +99,44 @@ export function createMotionBinding(
   const previousFieldSuppression = new Map<MotionOwnershipField, boolean>()
 
   /**
-   * Caches the explicit React `style.opacity` value used for terminal handoff.
+   * Returns the latest normalized metadata snapshot for a field.
+   *
+   * @param field - The field whose metadata should be read.
+   * @returns The normalized metadata snapshot for the field.
    */
-  let explicitStyleOpacity: CSSProperties['opacity'] | undefined
+  const getMotionFieldMetadata = (
+    field: MotionOwnershipField,
+  ): MotionFieldMetadata => ({
+    authoredValue: authoredFieldValues.get(field),
+    terminalOwner: terminalFieldOwners.get(field) ?? null,
+  })
 
   /**
-   * Caches the explicit React `style.transform` value used for terminal handoff.
+   * Emits unified metadata and field-specific compatibility callbacks.
+   *
+   * @param field - The field whose metadata changed.
    */
-  let explicitStyleTransform: CSSProperties['transform'] | undefined
-
-  /**
-   * Caches the owner that should remain responsible for visual opacity after
-   * native suppression clears.
-   */
-  let terminalOpacityOwner: TerminalOpacityOwner = null
-
-  /**
-   * Caches the owner that should remain responsible for visual transform after
-   * native suppression clears.
-   */
-  let terminalTransformOwner: TerminalTransformOwner = null
+  const emitMotionFieldMetadataChange = (field: MotionOwnershipField) => {
+    const metadata = getMotionFieldMetadata(field)
+    options?.onMotionFieldMetadataChange?.(field, metadata)
+    if (field === 'opacity') {
+      options?.onExplicitStyleOpacityChange?.(
+        metadata.authoredValue as CSSProperties['opacity'] | undefined,
+      )
+      options?.onTerminalOpacityOwnerChange?.(
+        metadata.terminalOwner as TerminalOpacityOwner,
+      )
+      return
+    }
+    if (field === 'transform') {
+      options?.onExplicitStyleTransformChange?.(
+        metadata.authoredValue as CSSProperties['transform'] | undefined,
+      )
+      options?.onTerminalTransformOwnerChange?.(
+        metadata.terminalOwner as TerminalTransformOwner,
+      )
+    }
+  }
 
   /**
    * Forwards the resolved runtime element into the Core controller.
@@ -145,31 +175,31 @@ export function createMotionBinding(
     __getMotionFieldPlugin(field) {
       return fieldPlugins.get(field) ?? null
     },
+    __getMotionFieldMetadata(field) {
+      return getMotionFieldMetadata(field)
+    },
+    __setMotionFieldMetadata(field, metadata) {
+      if ('authoredValue' in metadata) {
+        authoredFieldValues.set(field, metadata.authoredValue)
+      }
+      if ('terminalOwner' in metadata) {
+        terminalFieldOwners.set(field, metadata.terminalOwner ?? null)
+      }
+      emitMotionFieldMetadataChange(field)
+    },
     __getAuthoredFieldValue(field) {
-      return authoredFieldValues.get(field)
+      return getMotionFieldMetadata(field).authoredValue
     },
     __setAuthoredFieldValue(field, value) {
       authoredFieldValues.set(field, value)
-      if (field === 'opacity') {
-        explicitStyleOpacity = value as CSSProperties['opacity'] | undefined
-        options?.onExplicitStyleOpacityChange?.(explicitStyleOpacity)
-      } else if (field === 'transform') {
-        explicitStyleTransform = value as CSSProperties['transform'] | undefined
-        options?.onExplicitStyleTransformChange?.(explicitStyleTransform)
-      }
+      emitMotionFieldMetadataChange(field)
     },
     __getTerminalFieldOwner(field) {
-      return terminalFieldOwners.get(field) ?? null
+      return getMotionFieldMetadata(field).terminalOwner
     },
     __setTerminalFieldOwner(field, owner) {
       terminalFieldOwners.set(field, owner)
-      if (field === 'opacity') {
-        terminalOpacityOwner = owner as TerminalOpacityOwner
-        options?.onTerminalOpacityOwnerChange?.(terminalOpacityOwner)
-      } else if (field === 'transform') {
-        terminalTransformOwner = owner as TerminalTransformOwner
-        options?.onTerminalTransformOwnerChange?.(terminalTransformOwner)
-      }
+      emitMotionFieldMetadataChange(field)
     },
     __getPreviousFieldSuppression(field) {
       return previousFieldSuppression.get(field) ?? false
@@ -178,36 +208,38 @@ export function createMotionBinding(
       previousFieldSuppression.set(field, suppressed)
     },
     __getExplicitStyleOpacity() {
-      return explicitStyleOpacity
+      return getMotionFieldMetadata('opacity').authoredValue as
+        | CSSProperties['opacity']
+        | undefined
     },
     __setExplicitStyleOpacity(opacity) {
       authoredFieldValues.set('opacity', opacity)
-      explicitStyleOpacity = opacity
-      options?.onExplicitStyleOpacityChange?.(opacity)
+      emitMotionFieldMetadataChange('opacity')
     },
     __getTerminalOpacityOwner() {
-      return terminalOpacityOwner
+      return getMotionFieldMetadata('opacity')
+        .terminalOwner as TerminalOpacityOwner
     },
     __setTerminalOpacityOwner(owner) {
       terminalFieldOwners.set('opacity', owner)
-      terminalOpacityOwner = owner
-      options?.onTerminalOpacityOwnerChange?.(owner)
+      emitMotionFieldMetadataChange('opacity')
     },
     __getExplicitStyleTransform() {
-      return explicitStyleTransform
+      return getMotionFieldMetadata('transform').authoredValue as
+        | CSSProperties['transform']
+        | undefined
     },
     __setExplicitStyleTransform(transform) {
       authoredFieldValues.set('transform', transform)
-      explicitStyleTransform = transform
-      options?.onExplicitStyleTransformChange?.(transform)
+      emitMotionFieldMetadataChange('transform')
     },
     __getTerminalTransformOwner() {
-      return terminalTransformOwner
+      return getMotionFieldMetadata('transform')
+        .terminalOwner as TerminalTransformOwner
     },
     __setTerminalTransformOwner(owner) {
       terminalFieldOwners.set('transform', owner)
-      terminalTransformOwner = owner
-      options?.onTerminalTransformOwnerChange?.(owner)
+      emitMotionFieldMetadataChange('transform')
     },
     __setElement: bindElement,
     __onUnbind: () => {

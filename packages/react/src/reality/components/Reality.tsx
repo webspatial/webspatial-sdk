@@ -84,7 +84,6 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       'xr-animation': xrAnimation,
       ...props
     } = inProps
-    const explicitStyleTransform = props.style?.transform
     const ctxRef = useRef<RealityContextValue | null>(null)
 
     const creationId = useRef(0)
@@ -191,12 +190,13 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       binding: xrAnimation,
       element: isReady ? (ctxRef.current?.reality ?? null) : null,
       kind: 'dynamic3d',
-      explicitStyleTransform,
+      style: props.style,
+      authoredProps: props as Record<string, unknown>,
       onSuppressedFieldsChange: suppressedFields => {
         portalInstanceObject?.setSuppressedFields(suppressedFields)
       },
-      onTerminalTransformOwnerChange: owner => {
-        portalInstanceObject?.setTerminalTransformOwner(owner)
+      onMotionFieldMetadataChange: (field, metadata) => {
+        portalInstanceObject?.setMotionFieldMetadata(field, metadata)
       },
     })
 
