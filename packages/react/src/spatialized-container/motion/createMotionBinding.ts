@@ -9,6 +9,7 @@ import type { CSSProperties } from 'react'
 import type {
   SpatializedMotionBindingInternal,
   TerminalOpacityOwner,
+  TerminalTransformOwner,
 } from './motionBindingTypes'
 import {
   getMotionFieldPlugin,
@@ -35,6 +36,22 @@ interface CreateMotionBindingOptions {
    * @param owner - The owner that should remain responsible for visual opacity.
    */
   onTerminalOpacityOwnerChange?: (owner: TerminalOpacityOwner) => void
+
+  /**
+   * Receives explicit React `style.transform` updates captured on the binding.
+   *
+   * @param transform - The explicit React transform value, if one exists.
+   */
+  onExplicitStyleTransformChange?: (
+    transform: CSSProperties['transform'] | undefined,
+  ) => void
+
+  /**
+   * Receives post-terminal transform owner updates captured on the binding.
+   *
+   * @param owner - The owner that should remain responsible for visual transform.
+   */
+  onTerminalTransformOwnerChange?: (owner: TerminalTransformOwner) => void
 }
 
 /**
@@ -75,10 +92,21 @@ export function createMotionBinding(
   let explicitStyleOpacity: CSSProperties['opacity'] | undefined
 
   /**
+   * Caches the explicit React `style.transform` value used for terminal handoff.
+   */
+  let explicitStyleTransform: CSSProperties['transform'] | undefined
+
+  /**
    * Caches the owner that should remain responsible for visual opacity after
    * native suppression clears.
    */
   let terminalOpacityOwner: TerminalOpacityOwner = null
+
+  /**
+   * Caches the owner that should remain responsible for visual transform after
+   * native suppression clears.
+   */
+  let terminalTransformOwner: TerminalTransformOwner = null
 
   /**
    * Forwards the resolved runtime element into the Core controller.
@@ -125,6 +153,9 @@ export function createMotionBinding(
       if (field === 'opacity') {
         explicitStyleOpacity = value as CSSProperties['opacity'] | undefined
         options?.onExplicitStyleOpacityChange?.(explicitStyleOpacity)
+      } else if (field === 'transform') {
+        explicitStyleTransform = value as CSSProperties['transform'] | undefined
+        options?.onExplicitStyleTransformChange?.(explicitStyleTransform)
       }
     },
     __getTerminalFieldOwner(field) {
@@ -135,6 +166,9 @@ export function createMotionBinding(
       if (field === 'opacity') {
         terminalOpacityOwner = owner as TerminalOpacityOwner
         options?.onTerminalOpacityOwnerChange?.(terminalOpacityOwner)
+      } else if (field === 'transform') {
+        terminalTransformOwner = owner as TerminalTransformOwner
+        options?.onTerminalTransformOwnerChange?.(terminalTransformOwner)
       }
     },
     __getPreviousFieldSuppression(field) {
@@ -158,6 +192,22 @@ export function createMotionBinding(
       terminalFieldOwners.set('opacity', owner)
       terminalOpacityOwner = owner
       options?.onTerminalOpacityOwnerChange?.(owner)
+    },
+    __getExplicitStyleTransform() {
+      return explicitStyleTransform
+    },
+    __setExplicitStyleTransform(transform) {
+      authoredFieldValues.set('transform', transform)
+      explicitStyleTransform = transform
+      options?.onExplicitStyleTransformChange?.(transform)
+    },
+    __getTerminalTransformOwner() {
+      return terminalTransformOwner
+    },
+    __setTerminalTransformOwner(owner) {
+      terminalFieldOwners.set('transform', owner)
+      terminalTransformOwner = owner
+      options?.onTerminalTransformOwnerChange?.(owner)
     },
     __setElement: bindElement,
     __onUnbind: () => {

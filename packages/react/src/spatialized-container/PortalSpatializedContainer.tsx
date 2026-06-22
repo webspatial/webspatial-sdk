@@ -104,6 +104,8 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
   // motion binding / Portal sync path. Ownership decisions stay elsewhere.
   const explicitStyleOpacity = (restProps as { style?: { opacity?: any } })
     .style?.opacity
+  const explicitStyleTransform = (restProps as { style?: { transform?: any } })
+    .style?.transform
 
   const spatializedContainerObject: SpatializedContainerObject = useContext(
     SpatializedContainerContext,
@@ -144,12 +146,16 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     element: spatializedElement as Spatialized2DElement | null,
     kind: 'spatialized2d',
     explicitStyleOpacity,
+    explicitStyleTransform,
     onSuppressedFieldsChange: suppressedFields => {
       portalInstanceObject.setSuppressedFields(suppressedFields)
     },
     onTerminalOpacityOwnerChange: owner => {
       portalInstanceObject.setExplicitStyleOpacity(explicitStyleOpacity)
       portalInstanceObject.setTerminalOpacityOwner(owner)
+    },
+    onTerminalTransformOwnerChange: owner => {
+      portalInstanceObject.setTerminalTransformOwner(owner)
     },
   })
 

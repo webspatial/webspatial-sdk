@@ -506,6 +506,116 @@ describe('useAnimation tuple api native backend', () => {
     },
   )
 
+  test.each([
+    ['stop', { transform: { translate: { x: 50 } } }, 'idle'],
+    ['reset', { transform: { translate: { x: 0 } } }, 'idle'],
+    ['finish', { transform: { translate: { x: 100 } } }, 'finished'],
+  ] as const)(
+    'explicit authored transform wins terminal %s handoff on native spatialized2d',
+    async (command, terminalValue, expectedPlayState) => {
+      const element = createMockElement(`authored-transform-${command}`)
+      element.animateMotion = vi.fn().mockImplementation(async (cmd: any) => {
+        if (cmd.type === 'play') {
+          return {
+            animationId: cmd.animationId,
+            finished: new Promise(() => {}),
+            canceled: new Promise(() => {}),
+            failed: new Promise(() => {}),
+          }
+        }
+        if (cmd.type === command) {
+          return terminalValue
+        }
+        return undefined
+      })
+
+      const { result } = renderHook(() =>
+        useAnimation({
+          duration: 2,
+          autoStart: false,
+          from: { transform: { translate: { x: 0 } } },
+          to: { transform: { translate: { x: 100 } } },
+          timingFunction: 'linear',
+        }),
+      )
+
+      await act(async () => {
+        result.current[0].__setAuthoredFieldValue?.(
+          'transform',
+          'translate3d(12px, 0px, 0px)',
+        )
+        result.current[0].__setElement?.(element as any, 'spatialized2d')
+        result.current[1].play()
+      })
+      await waitFor(() => {
+        expect(element.animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'play' }),
+        )
+      })
+
+      await act(async () => {
+        result.current[1][command]()
+      })
+      await flushPromises()
+
+      expect(result.current[1].playState).toBe(expectedPlayState)
+      expect(result.current[2].transform).toBe('translate3d(12px, 0px, 0px)')
+    },
+  )
+
+  test.each([
+    ['stop', { transform: { translate: { x: 50 } } }, 'idle'],
+    ['reset', { transform: { translate: { x: 0 } } }, 'idle'],
+    ['finish', { transform: { translate: { x: 100 } } }, 'finished'],
+  ] as const)(
+    'native terminal %s handoff omits inner DOM transform when no explicit authored transform exists',
+    async (command, terminalValue, expectedPlayState) => {
+      const element = createMockElement(`native-transform-${command}`)
+      element.animateMotion = vi.fn().mockImplementation(async (cmd: any) => {
+        if (cmd.type === 'play') {
+          return {
+            animationId: cmd.animationId,
+            finished: new Promise(() => {}),
+            canceled: new Promise(() => {}),
+            failed: new Promise(() => {}),
+          }
+        }
+        if (cmd.type === command) {
+          return terminalValue
+        }
+        return undefined
+      })
+
+      const { result } = renderHook(() =>
+        useAnimation({
+          duration: 2,
+          autoStart: false,
+          from: { transform: { translate: { x: 0 } } },
+          to: { transform: { translate: { x: 100 } } },
+          timingFunction: 'linear',
+        }),
+      )
+
+      await act(async () => {
+        result.current[0].__setElement?.(element as any, 'spatialized2d')
+        result.current[1].play()
+      })
+      await waitFor(() => {
+        expect(element.animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({ type: 'play' }),
+        )
+      })
+
+      await act(async () => {
+        result.current[1][command]()
+      })
+      await flushPromises()
+
+      expect(result.current[1].playState).toBe(expectedPlayState)
+      expect(result.current[2].transform).toBeUndefined()
+    },
+  )
+
   test('runtime config update snapshots the active native session and applies on the next play', async () => {
     const element = createMockElement('native-config-snapshot')
 

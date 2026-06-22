@@ -15,6 +15,7 @@ describe('resolveMotionStyle', () => {
         suppressedFields: null,
         nativeElementSupported: true,
         terminalOpacityOwner: null,
+        terminalTransformOwner: null,
       }),
     ).toEqual({})
 
@@ -25,6 +26,7 @@ describe('resolveMotionStyle', () => {
         suppressedFields: null,
         nativeElementSupported: true,
         terminalOpacityOwner: null,
+        terminalTransformOwner: null,
       }),
     ).toEqual({})
   })
@@ -39,6 +41,7 @@ describe('resolveMotionStyle', () => {
       suppressedFields: new Set(['opacity', 'transform']),
       nativeElementSupported: true,
       terminalOpacityOwner: null,
+      terminalTransformOwner: null,
     })
 
     expect(style.opacity).toBeUndefined()
@@ -55,9 +58,41 @@ describe('resolveMotionStyle', () => {
       suppressedFields: null,
       nativeElementSupported: false,
       terminalOpacityOwner: null,
+      terminalTransformOwner: null,
     })
 
     expect(style.opacity).toBe(0.5)
     expect(String(style.transform)).toContain('translate3d(12px, 4px, 0px)')
+  })
+
+  test('restores explicit authored transform after native suppression releases', () => {
+    const style = resolveMotionStyle({
+      values: {
+        transform: { translate: { x: 50, y: 0, z: 0 } },
+      },
+      targetKind: 'spatialized2d',
+      suppressedFields: null,
+      nativeElementSupported: true,
+      explicitStyleTransform: 'translate3d(12px, 0px, 0px)',
+      terminalOpacityOwner: null,
+      terminalTransformOwner: 'authored',
+    })
+
+    expect(style.transform).toBe('translate3d(12px, 0px, 0px)')
+  })
+
+  test('keeps native terminal transform authoritative after suppression releases', () => {
+    const style = resolveMotionStyle({
+      values: {
+        transform: { translate: { x: 50, y: 0, z: 0 } },
+      },
+      targetKind: 'spatialized2d',
+      suppressedFields: null,
+      nativeElementSupported: true,
+      terminalOpacityOwner: null,
+      terminalTransformOwner: 'native',
+    })
+
+    expect(style.transform).toBeUndefined()
   })
 })

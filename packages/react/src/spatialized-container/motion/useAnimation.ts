@@ -17,6 +17,7 @@ import { getMotionConfigSignature } from './motionConfigSignature'
 import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
 import { resolveMotionStyle } from './resolveMotionStyle'
 import { useMotionController } from './useMotionController'
+import type { MotionOwnershipField } from './plugins/types'
 
 /**
  * React-facing motion config accepted by `useAnimation()`.
@@ -81,11 +82,22 @@ export function useAnimation(
   const [explicitStyleOpacity, setExplicitStyleOpacity] = useState<
     CSSProperties['opacity'] | undefined
   >(undefined)
+  /** Mirrors explicit React `style.transform` captured on the binding. */
+  const [explicitStyleTransform, setExplicitStyleTransform] = useState<
+    CSSProperties['transform'] | undefined
+  >(undefined)
   /**
    * Tracks who should remain responsible for visual opacity after a terminal
    * command completes. Core still owns sampled values and callbacks.
    */
   const [terminalOpacityOwner, setTerminalOpacityOwner] = useState<
+    'authored' | 'native' | null
+  >(null)
+  /**
+   * Tracks who should remain responsible for visual transform after a terminal
+   * command completes.
+   */
+  const [terminalTransformOwner, setTerminalTransformOwner] = useState<
     'authored' | 'native' | null
   >(null)
   const controller = useMotionController(controllerConfig, setValues)
@@ -101,6 +113,8 @@ export function useAnimation(
       createMotionBinding(controller, {
         onExplicitStyleOpacityChange: setExplicitStyleOpacity,
         onTerminalOpacityOwnerChange: setTerminalOpacityOwner,
+        onExplicitStyleTransformChange: setExplicitStyleTransform,
+        onTerminalTransformOwnerChange: setTerminalTransformOwner,
       }),
     [controller],
   )
@@ -122,11 +136,33 @@ export function useAnimation(
       authoredValue: animation.__getAuthoredFieldValue?.('opacity'),
     })
   }
+  /**
+   * Resolves the current terminal owner for an ownership-managed field from the
+   * binding plugin runtime without changing Core playback semantics.
+   *
+   * @param field - The field whose post-terminal owner should be resolved.
+   * @returns The terminal owner decision for the field.
+   */
+  const resolveTerminalOwner = (field: MotionOwnershipField) => {
+    if (!controller.getSuppressedFields()?.has(field)) {
+      return null
+    }
+    const plugin = animation.__getMotionFieldPlugin?.(field)
+    if (!plugin) {
+      return animation.__getAuthoredFieldValue?.(field) !== undefined
+        ? 'authored'
+        : 'native'
+    }
+    return plugin.resolveTerminalOwner({
+      authoredValue: animation.__getAuthoredFieldValue?.(field),
+    })
+  }
   const api = useMemo(
     () => ({
       play: () => {
         // A new play session clears any previous terminal owner choice.
         animation.__setTerminalFieldOwner?.('opacity', null)
+        animation.__setTerminalFieldOwner?.('transform', null)
         controller.play()
       },
       pause: () => controller.pause(),
@@ -138,6 +174,10 @@ export function useAnimation(
           'opacity',
           resolveOpacityTerminalOwner(),
         )
+        animation.__setTerminalFieldOwner?.(
+          'transform',
+          resolveTerminalOwner('transform'),
+        )
         controller.stop()
       },
       reset: () => {
@@ -145,12 +185,20 @@ export function useAnimation(
           'opacity',
           resolveOpacityTerminalOwner(),
         )
+        animation.__setTerminalFieldOwner?.(
+          'transform',
+          resolveTerminalOwner('transform'),
+        )
         controller.reset()
       },
       finish: () => {
         animation.__setTerminalFieldOwner?.(
           'opacity',
           resolveOpacityTerminalOwner(),
+        )
+        animation.__setTerminalFieldOwner?.(
+          'transform',
+          resolveTerminalOwner('transform'),
         )
         controller.finish()
       },
@@ -176,7 +224,9 @@ export function useAnimation(
     suppressedFields: controller.getSuppressedFields(),
     nativeElementSupported: supports('useAnimation', ['element']),
     explicitStyleOpacity,
+    explicitStyleTransform,
     terminalOpacityOwner,
+    terminalTransformOwner,
   })
 
   return [animation, api, style]
