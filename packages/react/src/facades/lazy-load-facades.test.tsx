@@ -299,7 +299,8 @@ describe('lazy-load facades', () => {
             src="s"
             id="n"
             attachment="a"
-            size={{ width: 0, height: 0 }}
+            width={0}
+            height={0}
           >
             <span data-testid={`${name}-child`} />
           </Component>,

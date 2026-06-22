@@ -75,7 +75,6 @@ describe('Attachment JSB commands', () => {
       position: { x: 1, y: 2, z: 3 },
       rotation: { x: 0, y: 90, z: 0 },
       scale: { x: 2, y: 2, z: 2 },
-      size: { width: 300, height: 200 },
       width: 0.5,
       height: 0.25,
     }).execute()
@@ -83,7 +82,7 @@ describe('Attachment JSB commands', () => {
     expect(payload.position).toEqual([1, 2, 3])
     expect(payload.rotation).toEqual([0, 90, 0])
     expect(payload.scale).toEqual([2, 2, 2])
-    expect(payload.size).toEqual({ width: 300, height: 200 })
+    expect('size' in payload).toBe(false)
     expect(payload.widthMeters).toBe(0.5)
     expect(payload.heightMeters).toBe(0.25)
   })
@@ -99,7 +98,6 @@ describe('Attachment JSB commands', () => {
     await new UpdateAttachmentEntityCommand('att-1', {
       position: { x: 0, y: 1, z: 0 },
       scale: { x: 3, y: 3, z: 3 },
-      size: { width: 100, height: 50 },
       width: 1,
       height: 2,
     }).execute()
@@ -108,10 +106,10 @@ describe('Attachment JSB commands', () => {
       id: 'att-1',
       position: [0, 1, 0],
       scale: [3, 3, 3],
-      size: { width: 100, height: 50 },
       widthMeters: 1,
       heightMeters: 2,
     })
+    expect('size' in full).toBe(false)
   })
 })
 
@@ -133,7 +131,8 @@ describe('Attachment entity-like setters', () => {
     const att = await createAttachmentEntity({
       parentEntityId: 'parent-1',
       ownerViewId: 'view-1',
-      size: { width: 100, height: 100 },
+      width: 0.5,
+      height: 0.5,
     })
 
     await att.setPosition({ x: 1, y: 2, z: 3 })

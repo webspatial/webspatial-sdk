@@ -22,7 +22,7 @@ import {
 /**
  * Entity-like attachment surface. Not a SpatialEntity: the native entity is
  * created and owned by SwiftUI's RealityView attachments mechanism, so only
- * transform-style behavior (position/rotation/scale/sizing) is exposed —
+ * transform-style behavior (position/rotation/scale/width/height) is exposed —
  * no components, children, events or transform animation.
  */
 export class Attachment extends SpatialObject {
@@ -62,7 +62,6 @@ export class Attachment extends SpatialObject {
     if (options.position) this.options.position = options.position
     if (options.rotation) this.options.rotation = options.rotation
     if (options.scale) this.options.scale = options.scale
-    if (options.size) this.options.size = options.size
     if (options.width !== undefined) this.options.width = options.width
     if (options.height !== undefined) this.options.height = options.height
     return new UpdateAttachmentEntityCommand(this.id, options).execute()

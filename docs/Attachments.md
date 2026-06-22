@@ -7,7 +7,7 @@ Attachments allow developers to render interactive 2D HTML/React content — but
 The API uses two components with a deliberate separation of concerns:
 
 - **`<AttachmentAsset>`** declares _what_ to render (the React content template). Placed outside `<SceneGraph>`.
-- **`<AttachmentEntity>`** declares _where_ to render it (position, size, parent entity). Placed inside `<SceneGraph>`.
+- **`<AttachmentEntity>`** declares _where_ to render it (transform, width/height, parent entity). Placed inside `<SceneGraph>`.
 
 This enables a 1→N pattern: one content template can be rendered into multiple 3D positions simultaneously, mirroring the existing asset-vs-entity pattern used by models and materials.
 
@@ -58,31 +58,18 @@ The attachment's local rotation relative to its parent entity, as a `Vec3` of Eu
 
 `scale`
 
-The attachment's local scale relative to its parent entity, as a `Vec3`. Defaults to `{ x: 1, y: 1, z: 1 }`. Scale multiplies the rendered surface on top of the `width`/`height`/`size` dimensions.
+The attachment's local scale relative to its parent entity, as a `Vec3`. Defaults to `{ x: 1, y: 1, z: 1 }`. Scale multiplies the rendered surface on top of the `width`/`height` dimensions.
 
 `width` / `height`
 
-The attachment surface dimensions in **world-space meters**, working like `<Plane>`'s `width`/`height` from a developer-experience perspective. The native side converts meters to view points via the system's physical metrics, so meter sizing stays correct when the window is rescaled. Each axis takes precedence over the corresponding `size` axis when both are given.
-
-`size`
-
-A legacy object `{ width: number, height: number }` specifying the attachment's frame dimensions in **points** (the SwiftUI `.frame()` applied to the attachment's WKWebView). Still fully supported for backward compatibility. If neither `size` nor `width`/`height` is provided, the native default (100×100 points) is used and a warning is logged.
+The attachment surface dimensions in **world-space meters**, matching `<Plane>`'s `width`/`height`. The native side converts meters to view points via the system's physical metrics, so sizing stays correct when the window is rescaled. If neither dimension is provided, the native implementation falls back to 100×100 points and a console warning is logged.
 
 ### Usage Notes
 
 - `<AttachmentEntity>` must be placed inside `<SceneGraph>`, as a descendant of an `<Entity>`. It inherits the parent entity's transform — when the entity moves, the attachment follows.
 - The `attachment` prop (asset id) can change at runtime. The component will migrate its registry mapping from the old id to the new one, so the portal tracks correctly.
-- `position`, `rotation`, `scale`, `width`, `height` and `size` are all reactive — updates are sent to the native side via `UpdateAttachmentEntityCommand`.
+- `position`, `rotation`, `scale`, `width`, and `height` are all reactive — updates are sent to the native side via `UpdateAttachmentEntityCommand`.
 - On unmount, the attachment is destroyed and its container is removed from the registry.
-
-### Sizing Precedence
-
-| Props given           | Resulting frame                                                              |
-| --------------------- | ---------------------------------------------------------------------------- |
-| `width`/`height` only | meters, converted natively to points                                         |
-| `size` only           | points, as-is (legacy behavior)                                              |
-| both                  | meters win per-axis (`width` over `size.width`, `height` over `size.height`) |
-| neither               | native default of 100×100 points, with a console warning                     |
 
 ## Migration (breaking changes)
 
@@ -116,11 +103,22 @@ The `<AttachmentEntity attachment="...">` prop is unchanged — it still referen
 <AttachmentEntity
   attachment="hud"
   position={{ x: 0, y: 0.12, z: 0 }}
-  size={{ width: 200, height: 100 }}
+  width={0.3}
+  height={0.15}
 />
 ```
 
-Legacy point-based `size={{ width, height }}` remains supported. Meter-based `width` / `height` are preferred for new code.
+### `size={{ width, height }}` → `width` / `height` in meters
+
+Point-based `size` is removed. Use meter dimensions like `<Plane>`:
+
+```tsx
+// Before
+<AttachmentEntity attachment="card" size={{ width: 300, height: 160 }} />
+
+// After
+<AttachmentEntity attachment="card" width={0.3} height={0.15} />
+```
 
 ## Style Sync
 

@@ -19,9 +19,6 @@ struct AttachmentInfo: Identifiable, Equatable {
     var position: SIMD3<Float>
     var orientation: simd_quatf
     var scale: SIMD3<Float>
-    // Legacy 2D surface size in points; overridden per-axis by the
-    // meter-based dimensions below when present
-    var size: CGSize
     var widthMeters: Double?
     var heightMeters: Double?
     var webViewModel: SpatialWebViewModel
@@ -49,7 +46,6 @@ class AttachmentManager {
         position: SIMD3<Float>,
         orientation: simd_quatf = simd_quatf(ix: 0, iy: 0, iz: 0, r: 1),
         scale: SIMD3<Float> = SIMD3<Float>(1, 1, 1),
-        size: CGSize,
         widthMeters: Double? = nil,
         heightMeters: Double? = nil,
         webViewModel: SpatialWebViewModel
@@ -63,7 +59,6 @@ class AttachmentManager {
             position: position,
             orientation: orientation,
             scale: scale,
-            size: size,
             widthMeters: widthMeters,
             heightMeters: heightMeters,
             webViewModel: webViewModel
@@ -77,7 +72,6 @@ class AttachmentManager {
         position: SIMD3<Float>?,
         orientation: simd_quatf? = nil,
         scale: SIMD3<Float>? = nil,
-        size: CGSize?,
         widthMeters: Double? = nil,
         heightMeters: Double? = nil
     ) {
@@ -91,9 +85,6 @@ class AttachmentManager {
         }
         if let scale = scale {
             info.scale = scale
-        }
-        if let size = size {
-            info.size = size
         }
         if let widthMeters = widthMeters {
             info.widthMeters = widthMeters

@@ -489,11 +489,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             scale = SIMD3<Float>(scaleArray[0], scaleArray[1], scaleArray[2])
         }
 
-        let size = CGSize(
-            width: command.size?.width ?? 100,
-            height: command.size?.height ?? 100
-        )
-
         let ownerId = command.ownerViewId
         if spatialObjects[ownerId] == nil {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "ownerViewId must belong to the current scene for attachment \(command.id)")))
@@ -505,7 +500,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             position: position,
             orientation: orientation,
             scale: scale,
-            size: size,
             widthMeters: command.widthMeters,
             heightMeters: command.heightMeters,
             webViewModel: webViewModel
@@ -1355,16 +1349,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let scaleArray = command.scale, scaleArray.count >= 3 {
             newScale = SIMD3<Float>(scaleArray[0], scaleArray[1], scaleArray[2])
         }
-        var newSize: CGSize? = nil
-        if let sizeObj = command.size {
-            newSize = CGSize(width: sizeObj.width, height: sizeObj.height)
-        }
         attachmentManager.update(
             id: command.id,
             position: newPosition,
             orientation: newOrientation,
             scale: newScale,
-            size: newSize,
             widthMeters: command.widthMeters,
             heightMeters: command.heightMeters
         )

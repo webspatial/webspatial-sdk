@@ -699,9 +699,6 @@ export class InitializeAttachmentCommand extends JSBCommand {
       scale: toVec3Tuple(this.options.scale) ?? [1, 1, 1],
       ownerViewId: this.options.ownerViewId,
     }
-    if (this.options.size !== undefined) params.size = this.options.size
-    // width/height are world-space meters; sent as distinct fields so the
-    // legacy point-based `size` payload keeps its meaning.
     if (this.options.width !== undefined) {
       params.widthMeters = this.options.width
     }
@@ -728,7 +725,6 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     if (position !== undefined) params.position = position
     if (rotation !== undefined) params.rotation = rotation
     if (scale !== undefined) params.scale = scale
-    if (this.options.size !== undefined) params.size = this.options.size
     if (this.options.width !== undefined) {
       params.widthMeters = this.options.width
     }

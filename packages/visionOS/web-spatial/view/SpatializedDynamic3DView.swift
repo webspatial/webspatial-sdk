@@ -175,8 +175,8 @@ struct SpatializedDynamic3DView: View {
                 Attachment(id: info.id) {
                     info.webViewModel.getView()
                         .frame(
-                            width: attachmentFramePoints(meters: info.widthMeters, fallbackPoints: info.size.width),
-                            height: attachmentFramePoints(meters: info.heightMeters, fallbackPoints: info.size.height)
+                            width: attachmentFramePoints(meters: info.widthMeters),
+                            height: attachmentFramePoints(meters: info.heightMeters)
                         )
                 }
             }
@@ -195,19 +195,17 @@ struct SpatializedDynamic3DView: View {
         return spatialScene.findSpatialObject(spatialId)
     }
 
-    // Entity scale multiplies on top of the frame computed from
-    // widthMeters/heightMeters (or the legacy point-based size).
+    // Entity scale multiplies on top of the meter-based frame dimensions.
     private func applyAttachmentTransform(_ entity: Entity, _ info: AttachmentInfo) {
         entity.position = info.position
         entity.orientation = info.orientation
         entity.scale = info.scale
     }
 
-    // Meter-based dimensions win per-axis over the legacy point-based size.
-    // The physicalMetrics conversion keeps meter sizing correct in world
-    // space when the window's scale changes.
-    private func attachmentFramePoints(meters: Double?, fallbackPoints: CGFloat) -> CGFloat {
-        guard let meters = meters else { return fallbackPoints }
+    // Converts meter dimensions to view points; falls back to 100 pt per axis
+    // when widthMeters/heightMeters are not set.
+    private func attachmentFramePoints(meters: Double?) -> CGFloat {
+        guard let meters = meters else { return 100 }
         return CGFloat(physicalMetrics.worldScalingCompensation(.scaled).convert(meters, from: .meters))
     }
 }

@@ -430,14 +430,9 @@ export interface AttachmentEntityOptions {
   rotation?: Vec3
   /** Scale relative to the parent entity. */
   scale?: Vec3
-  /**
-   * 2D surface size in SwiftUI points (legacy). Ignored per-axis when the
-   * meter-based `width`/`height` are provided.
-   */
-  size?: { width: number; height: number }
-  /** Surface width in world-space meters. Takes precedence over `size.width`. */
+  /** Surface width in world-space meters, like `<Plane>`. */
   width?: number
-  /** Surface height in world-space meters. Takes precedence over `size.height`. */
+  /** Surface height in world-space meters, like `<Plane>`. */
   height?: number
   ownerViewId: string
 }
@@ -446,7 +441,6 @@ export interface AttachmentEntityUpdateOptions {
   position?: Vec3
   rotation?: Vec3
   scale?: Vec3
-  size?: { width: number; height: number }
   width?: number
   height?: number
 }

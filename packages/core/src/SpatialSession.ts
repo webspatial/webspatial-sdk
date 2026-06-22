@@ -210,11 +210,10 @@ export class SpatialSession {
    * Creates an attachment entity that renders 2D HTML content as a child
    * of a 3D entity in the scene graph. The result is an entity-like
    * attachment surface (not a full SpatialEntity): it supports position,
-   * rotation (Euler degrees), scale, meter-based width/height and legacy
-   * point-based size, but no components, children or events.
+   * rotation (Euler degrees), scale, meter-based width/height,
+   * but no components, children or events.
    * @param options Configuration options including parent entity ID,
-   * transform (position/rotation/scale) and sizing (width/height in meters,
-   * or legacy size in points)
+   * transform (position/rotation/scale) and sizing (width/height in meters)
    * @returns Promise resolving to a new Attachment instance
    */
   createAttachmentEntity(

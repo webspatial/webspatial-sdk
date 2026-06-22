@@ -83,11 +83,6 @@ export type AttachmentEntityProps = {
   rotation?: Vec3
   /** Scale relative to the parent entity. */
   scale?: Vec3
-  /**
-   * 2D surface size in points (legacy). Prefer the meter-based
-   * `width`/`height`, which take precedence per axis when both are given.
-   */
-  size?: { width: number; height: number }
   /** Surface width in world-space meters, like <Plane>. */
   width?: number
   /** Surface height in world-space meters, like <Plane>. */
@@ -100,7 +95,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   position,
   rotation,
   scale,
-  size,
   width,
   height,
 }) => {
@@ -138,9 +132,9 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 
     const init = async () => {
       try {
-        if (size === undefined && width === undefined && height === undefined) {
+        if (width === undefined && height === undefined) {
           console.warn(
-            '[AttachmentEntity] No size, width or height provided; the native default size will be used.',
+            '[AttachmentEntity] No width or height provided; the native default size will be used.',
           )
         }
         const att = await getOrCreateAttachment(
@@ -151,7 +145,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
               position,
               rotation,
               scale,
-              size,
               width,
               height,
               ownerViewId: ctx.reality.id,
@@ -269,7 +262,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
       position,
       rotation,
       scale,
-      size,
       width,
       height,
     })
@@ -283,8 +275,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     scale?.x,
     scale?.y,
     scale?.z,
-    size?.width,
-    size?.height,
     width,
     height,
     childWindow,

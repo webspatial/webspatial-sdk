@@ -100,7 +100,7 @@ function BasicUsage() {
           >
             <p style={{ margin: 0, fontWeight: 600 }}>HUD panel</p>
             <p style={{ margin: '8px 0 0', fontSize: 12, opacity: 0.85 }}>
-              Rendered via createPortal into a child webview.
+              Attachment appeared!
             </p>
           </div>
         </AttachmentAsset>
@@ -225,7 +225,6 @@ function LiveTransformAndSizing() {
   const [scale, setScale] = React.useState(1)
   const [widthM, setWidthM] = React.useState(0.24)
   const [heightM, setHeightM] = React.useState(0.14)
-  const [useLegacySize, setUseLegacySize] = React.useState(false)
 
   const rotation = { x: 0, y: 0, z: rotZ }
   const scaleVec = { x: scale, y: scale, z: scale }
@@ -233,7 +232,7 @@ function LiveTransformAndSizing() {
   return (
     <Section
       title="Live transform & sizing"
-      description="Drag sliders to update position, rotation, scale, and size without remounting. Meter width/height align with PlaneEntity; legacy size uses points."
+      description="Drag sliders to update position, rotation, scale, and meter width/height without remounting. Attachment dimensions align with the sibling PlaneEntity."
     >
       <div className="mb-4 space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
         <SliderRow
@@ -270,9 +269,7 @@ function LiveTransformAndSizing() {
           max={0.4}
           step={0.01}
           onChange={setWidthM}
-          format={v =>
-            useLegacySize ? `${Math.round(v * 1360)} pt` : `${v.toFixed(2)} m`
-          }
+          format={v => `${v.toFixed(2)} m`}
         />
         <SliderRow
           label="Height"
@@ -281,19 +278,8 @@ function LiveTransformAndSizing() {
           max={0.28}
           step={0.01}
           onChange={setHeightM}
-          format={v =>
-            useLegacySize ? `${Math.round(v * 1360)} pt` : `${v.toFixed(2)} m`
-          }
+          format={v => `${v.toFixed(2)} m`}
         />
-        <label className="flex items-center gap-2 text-sm text-gray-700 pt-1">
-          <input
-            type="checkbox"
-            checked={useLegacySize}
-            onChange={e => setUseLegacySize(e.target.checked)}
-          />
-          Use legacy <code className="text-xs">size</code> (points) instead of
-          meters
-        </label>
       </div>
       <Reality style={realityStyle}>
         <UnlitMaterial id="att-live-mat" color="#d946ef" />
@@ -328,14 +314,8 @@ function LiveTransformAndSizing() {
               position={{ x: 0, y: posY, z: 0 }}
               rotation={rotation}
               scale={scaleVec}
-              {...(useLegacySize
-                ? {
-                    size: {
-                      width: Math.round(widthM * 1360),
-                      height: Math.round(heightM * 1360),
-                    },
-                  }
-                : { width: widthM, height: heightM })}
+              width={widthM}
+              height={heightM}
             />
           </Entity>
         </SceneGraph>

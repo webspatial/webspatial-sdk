@@ -106,7 +106,6 @@ export type AttachmentEntityProps = {
   position?: Vec3
   rotation?: Vec3
   scale?: Vec3
-  size?: { width: number; height: number }
   width?: number
   height?: number
 }

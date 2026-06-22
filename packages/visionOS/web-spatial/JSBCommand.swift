@@ -408,8 +408,6 @@ struct InitializeAttachmentCommand: CommandDataProtocol {
     // JS SDK's composeSRT/DOMMatrix.rotate semantics
     let rotation: [Float]?
     let scale: [Float]?
-    let size: AttachmentSize?
-    // World-space meters; take precedence per-axis over the point-based size
     let widthMeters: Double?
     let heightMeters: Double?
     let ownerViewId: String
@@ -421,12 +419,6 @@ struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     let position: [Float]?
     let rotation: [Float]?
     let scale: [Float]?
-    let size: AttachmentSize?
     let widthMeters: Double?
     let heightMeters: Double?
-}
-
-struct AttachmentSize: Codable {
-    let width: Double
-    let height: Double
 }
