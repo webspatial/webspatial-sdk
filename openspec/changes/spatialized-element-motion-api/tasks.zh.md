@@ -230,6 +230,15 @@
 - [x] Portal 同步：调整 suppression 释放与 2D portal/native 同步，避免 outer native `opacity` 与 inner DOM `opacity` 在终态控制权切换后继续同时控制同一视觉 `opacity`
 - [x] 验证：运行针对性的诊断与测试；若自动化覆盖不足，则补充 2D `opacity` 演示页的手工验证
 
+## Phase 16e — Host transform 终态控制权切换
+
+- [ ] Spec/design 跟进：为 `spatialized2d` 与 `dynamic3d` 定义 host transform 的终态控制权，复用 `opacity` 的 ownership 模型，同时明确 `static3d` 暂不纳入，因为其主要 motion sink 是 `modelTransform`
+- [ ] TDD：先补失败回归测试，覆盖 `Reality` root motion 在 `stop()` 后保留终态采样 pose，以及 `spatialized2d` 在不存在显式 authored `style.transform` 时 `stop()` 后仍保留终态 transform
+- [ ] React 绑定层：从已绑定的 host props 中采集显式声明的 `style.transform`，不得通过 `className`、样式表、`useAnimation()` 返回的 `style` outlet 或 `getComputedStyle()` 推断
+- [ ] 终态控制权：实现终态后的 host transform 控制方选择逻辑，存在显式 React `style.transform` 时由其接管，否则保持终态原生采样 host transform 为权威结果
+- [ ] Portal 同步：调整 suppression 释放与 host transform 同步，避免 native 终态 transform 在切换后被 DOM 或 Portal host transform 覆盖
+- [ ] 验证：运行针对性的诊断与测试，并对 `Reality` container demo 与 2D transform demo 执行 `play` / `stop` / `reset` / `finish` 的手工验证
+
 ## 阶段 — PicoOS 对齐
 
 - [ ] 在 picoOS 仓库创建统一 `spatialized-element-motion-api` 变更 ✅（2026-06-04 完成）

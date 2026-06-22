@@ -4,7 +4,11 @@ import { useBindSpatializedMotion } from './useBindSpatializedMotion'
 
 function createBinding() {
   let explicitStyleOpacity: number | undefined
+  let explicitStyleTransform: string | undefined
+  let terminalOpacityOwner: 'authored' | 'native' | null = null
+  let terminalTransformOwner: 'authored' | 'native' | null = null
   let previousOpacitySuppression = false
+  let previousTransformSuppression = false
   const opacityPlugin: any = {
     field: 'opacity' as const,
     captureAuthoredValue: vi.fn(
@@ -18,6 +22,19 @@ function createBinding() {
     resolveInnerStyle: vi.fn(() => ({ mode: 'default' as const })),
     resolveOuterSync: vi.fn(() => ({ mode: 'default' as const })),
   }
+  const transformPlugin: any = {
+    field: 'transform' as const,
+    captureAuthoredValue: vi.fn(
+      ({ authoredInputs }: { authoredInputs: { transform?: string } }) =>
+        authoredInputs.transform,
+    ),
+    resolveTerminalOwner: vi.fn(
+      ({ authoredValue }: { authoredValue?: string }) =>
+        authoredValue !== undefined ? 'authored' : 'native',
+    ),
+    resolveInnerStyle: vi.fn(() => ({ mode: 'default' as const })),
+    resolveOuterSync: vi.fn(() => ({ mode: 'default' as const })),
+  }
   return {
     __kind: 'spatializedMotion' as const,
     __propName: 'xr-animation' as const,
@@ -26,24 +43,53 @@ function createBinding() {
       return false
     },
     __getSuppressedFields: vi.fn(() => new Set(['transform'])),
-    __getTerminalOpacityOwner: vi.fn(() => null),
+    __getTerminalOpacityOwner: vi.fn(() => terminalOpacityOwner),
+    __getTerminalTransformOwner: vi.fn(() => terminalTransformOwner),
     __getExplicitStyleOpacity: vi.fn(() => explicitStyleOpacity),
+    __getExplicitStyleTransform: vi.fn(() => explicitStyleTransform),
     __setExplicitStyleOpacity: vi.fn((opacity?: number) => {
       explicitStyleOpacity = opacity
     }),
-    __setTerminalOpacityOwner: vi.fn(),
-    __getSupportedMotionOwnershipFields: vi.fn(() => ['opacity'] as const),
-    __getMotionFieldPlugin: vi.fn(() => opacityPlugin),
-    __getAuthoredFieldValue: vi.fn(() => explicitStyleOpacity),
-    __setAuthoredFieldValue: vi.fn((field: string, value?: number) => {
-      if (field === 'opacity') explicitStyleOpacity = value
+    __setExplicitStyleTransform: vi.fn((transform?: string) => {
+      explicitStyleTransform = transform
     }),
-    __getTerminalFieldOwner: vi.fn(() => null),
-    __setTerminalFieldOwner: vi.fn(),
-    __getPreviousFieldSuppression: vi.fn(() => previousOpacitySuppression),
+    __setTerminalOpacityOwner: vi.fn((owner?: 'authored' | 'native' | null) => {
+      terminalOpacityOwner = owner ?? null
+    }),
+    __setTerminalTransformOwner: vi.fn(),
+    __getSupportedMotionOwnershipFields: vi.fn(
+      () => ['opacity', 'transform'] as const,
+    ),
+    __getMotionFieldPlugin: vi.fn((field: string) =>
+      field === 'transform' ? transformPlugin : opacityPlugin,
+    ),
+    __getAuthoredFieldValue: vi.fn((field: string) =>
+      field === 'transform' ? explicitStyleTransform : explicitStyleOpacity,
+    ),
+    __setAuthoredFieldValue: vi.fn((field: string, value?: number | string) => {
+      if (field === 'opacity')
+        explicitStyleOpacity = value as number | undefined
+      if (field === 'transform')
+        explicitStyleTransform = value as string | undefined
+    }),
+    __getTerminalFieldOwner: vi.fn((field: string) =>
+      field === 'transform' ? terminalTransformOwner : terminalOpacityOwner,
+    ),
+    __setTerminalFieldOwner: vi.fn(
+      (field: string, owner: 'authored' | 'native' | null) => {
+        if (field === 'transform') terminalTransformOwner = owner
+        if (field === 'opacity') terminalOpacityOwner = owner
+      },
+    ),
+    __getPreviousFieldSuppression: vi.fn((field: string) =>
+      field === 'transform'
+        ? previousTransformSuppression
+        : previousOpacitySuppression,
+    ),
     __setPreviousFieldSuppression: vi.fn(
       (field: string, suppressed: boolean) => {
         if (field === 'opacity') previousOpacitySuppression = suppressed
+        if (field === 'transform') previousTransformSuppression = suppressed
       },
     ),
     __setElement: vi.fn(),
@@ -293,9 +339,40 @@ describe('useBindSpatializedMotion', () => {
       'opacity',
       'authored',
     )
-    expect(binding.__setPreviousFieldSuppression).toHaveBeenLastCalledWith(
+    expect(binding.__setPreviousFieldSuppression).toHaveBeenCalledWith(
       'opacity',
       false,
     )
+  })
+
+  test('notifies terminal transform owner before suppression release callbacks', () => {
+    const binding = createBinding()
+    const element = { id: 'portal-transform-release-order' }
+    const calls: string[] = []
+    binding.__getSuppressedFields.mockReturnValue(new Set(['transform']))
+
+    const { rerender } = renderHook(() =>
+      useBindSpatializedMotion({
+        binding: binding as any,
+        element: element as any,
+        kind: 'dynamic3d',
+        onSuppressedFieldsChange: suppressedFields => {
+          calls.push(
+            suppressedFields?.has('transform')
+              ? 'suppressed:transform'
+              : 'suppressed:none',
+          )
+        },
+        onTerminalTransformOwnerChange: owner => {
+          calls.push(`owner:${owner}`)
+        },
+      }),
+    )
+
+    calls.length = 0
+    binding.__getSuppressedFields.mockReturnValue(null as any)
+    rerender()
+
+    expect(calls).toEqual(['owner:native', 'suppressed:none'])
   })
 })

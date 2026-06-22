@@ -310,6 +310,68 @@ Only post-terminal visual ownership changes. The design goal is to prevent a
 post-terminal state where outer native opacity and inner DOM opacity continue
 controlling the same visual result at the same time.
 
+#### Host transform terminal ownership design
+
+Host-transform targets (`spatialized2d` and `dynamic3d`) have the same class of
+post-terminal ownership problem as `opacity`: active playback suppresses outer
+transform sync correctly, but `stop()`, `reset()`, and `finish()` currently
+clear suppression without defining who continues to own the visual host
+transform. The result is a terminal snap-back where Portal / DOM sync
+immediately re-applies the static host transform and overwrites the sampled
+native terminal pose.
+
+This design reuses the same ownership model as `opacity`, but with
+target-specific host-transform sinks:
+
+- single-writer principle: visual host `transform` has exactly one effective owner at a time
+- explicit state modeling: suppression release is a transform ownership decision point, not implicit permission for DOM sync to resume
+- strategy-based terminal selection: the terminal owner is chosen from explicit React `style.transform` vs the native sampled terminal host transform
+- target-scoped sinks: `spatialized2d` and `dynamic3d` both participate in host-transform ownership, while `static3d` remains out of scope because its motion sink is primarily `modelTransform`
+
+The ownership state machine remains intentionally small:
+
+```mermaid
+stateDiagram-v2
+    [*] --> none
+    none --> native_active : native transform playback starts
+    native_active --> dom_authored_terminal : terminal plus explicit style.transform
+    native_active --> native_terminal : terminal plus no explicit style.transform
+    dom_authored_terminal --> native_active : next play
+    native_terminal --> native_active : next play
+    dom_authored_terminal --> none : unbind
+    native_terminal --> none : unbind
+```
+
+The practical rule is:
+
+- for host-transform targets, explicit React `style.transform` on the bound node qualifies as the authored DOM-side terminal source after `stop()`, `reset()`, or `finish()`
+- values that appear only through `className`, stylesheet rules, inherited layout effects, the `useAnimation()` style outlet, or `getComputedStyle()` do not qualify as authored host-transform ownership
+- when explicit React `style.transform` does not exist, terminal ownership stays with the native sampled terminal host transform
+
+Target-specific consequences are deliberate:
+
+- `spatialized2d`: the style outlet remains the active merge outlet, but post-terminal ownership must not silently fall back to the initial DOM transform when no explicit authored `style.transform` exists
+- `dynamic3d`: Portal host transform sync must not re-apply the static DOM transform while native terminal transform ownership remains active
+- `static3d`: this design does not change `modelTransform` ownership; any future `static3d` host-transform semantics must be specified separately
+
+Module responsibilities are split deliberately:
+
+- the React binding layer captures whether the bound host explicitly authored `style.transform`
+- `useAnimation` and binding metadata coordinate post-terminal transform ownership using sampled values, suppression state, and authored-transform metadata
+- target-specific style / Portal adapters decide whether DOM-side transform should be omitted or restored after suppression clears
+- `PortalInstanceContext` coordinates outer native transform sync so terminal handoff does not leave both native host transform and DOM host transform active at the same time
+- `NativePlaybackBackend` continues to provide terminal sampled values and does not infer authored transform ownership
+
+This keeps terminal callbacks unchanged:
+
+- `onStop(values)` still receives the sampled current values
+- `onReset(values)` still receives the start values
+- `onComplete(values)` for `finish()` still receives the end values
+
+Only post-terminal visual ownership changes. The design goal is to prevent a
+post-terminal state where native host transform and DOM / Portal host transform
+continue controlling the same visual result at the same time.
+
 ### Boundaries
 
 The React layer does not define:

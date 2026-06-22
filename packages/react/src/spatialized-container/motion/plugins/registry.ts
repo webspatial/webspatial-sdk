@@ -1,9 +1,11 @@
 import { defaultOpacityPlugin } from './defaultOpacityPlugin'
+import { defaultTransformPlugin } from './defaultTransformPlugin'
 import type { MotionFieldPlugin, MotionOwnershipField } from './types'
 
 /** Default field list enabled in the minimal ownership plugin rollout. */
 const DEFAULT_MOTION_OWNERSHIP_FIELDS: readonly MotionOwnershipField[] = [
   'opacity',
+  'transform',
 ]
 
 /** Default plugin lookup table keyed by field name. */
@@ -11,6 +13,7 @@ const DEFAULT_MOTION_FIELD_PLUGINS: Readonly<
   Record<MotionOwnershipField, MotionFieldPlugin>
 > = {
   opacity: defaultOpacityPlugin,
+  transform: defaultTransformPlugin,
 }
 
 /**

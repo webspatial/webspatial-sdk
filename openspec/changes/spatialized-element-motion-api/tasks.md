@@ -230,6 +230,15 @@
 - [x] Portal sync: update suppression release and 2D portal/native sync so outer native opacity and inner DOM opacity do not continue owning the same visual `opacity` after terminal handoff
 - [x] Verification: run targeted diagnostics/tests and perform manual validation on the 2D opacity demo page if automated coverage is insufficient
 
+## Phase 16e — Host transform terminal ownership handoff
+
+- [ ] Spec/design follow-up: define host-transform terminal ownership for `spatialized2d` and `dynamic3d`, reusing the ownership model from `opacity` while keeping `static3d` out of scope because its primary motion sink is `modelTransform`
+- [ ] TDD: add failing regression tests for `Reality` root motion `stop()` retaining the sampled terminal pose and `spatialized2d` `stop()` retaining terminal transform when no explicit authored `style.transform` exists
+- [ ] React binding: capture explicit authored `style.transform` from bound host props without inferring from `className`, stylesheets, the `useAnimation()` style outlet, or `getComputedStyle()`
+- [ ] Terminal ownership: implement post-terminal host-transform ownership selection so explicit React `style.transform` wins, otherwise terminal native sampled host transform remains authoritative
+- [ ] Portal sync: update suppression release and host transform sync so native terminal transform is not overwritten by DOM or Portal host transform after handoff
+- [ ] Verification: run targeted diagnostics/tests and manually validate both the `Reality` container demo and the 2D transform demo for `play` / `stop` / `reset` / `finish`
+
 ## Phase — PicoOS Alignment
 
 - [ ] Create unified `spatialized-element-motion-api` change in picoOS repo ✅ (completed 2026-06-04)

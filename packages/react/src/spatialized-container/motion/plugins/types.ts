@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 
 /** Supported motion ownership fields in the first pluginized rollout. */
-export type MotionOwnershipField = 'opacity'
+export type MotionOwnershipField = 'opacity' | 'transform'
 
 /** Declares which layer keeps visual ownership after suppression clears. */
 export type MotionTerminalOwner = 'authored' | 'native' | null
@@ -10,6 +10,8 @@ export type MotionTerminalOwner = 'authored' | 'native' | null
 export interface MotionFieldAuthoredInputs {
   /** Explicit React-authored `style.opacity`, if present. */
   opacity?: CSSProperties['opacity']
+  /** Explicit React-authored `style.transform`, if present. */
+  transform?: CSSProperties['transform']
 }
 
 /** Context used when a field plugin captures authored input values. */
@@ -28,7 +30,10 @@ export interface ResolveMotionTerminalOwnerContext {
 export type MotionInnerStyleDecision =
   | { mode: 'default' }
   | { mode: 'omit' }
-  | { mode: 'set'; value: CSSProperties['opacity'] }
+  | {
+      mode: 'set'
+      value: CSSProperties['opacity'] | CSSProperties['transform']
+    }
 
 /** Context used when a field plugin resolves inner DOM output. */
 export interface ResolveMotionInnerStyleContext {
@@ -39,14 +44,14 @@ export interface ResolveMotionInnerStyleContext {
   /** The authored value cached for the field while suppression was active. */
   authoredValue: unknown
   /** The raw React motion value sampled from the controller timeline. */
-  rawValue: CSSProperties['opacity']
+  rawValue: CSSProperties['opacity'] | CSSProperties['transform']
 }
 
 /** Field-level decision applied to outer native property synchronization. */
 export type MotionOuterSyncDecision =
   | { mode: 'default' }
   | { mode: 'omit' }
-  | { mode: 'set'; value: number }
+  | { mode: 'set'; value: unknown }
 
 /** Context used when a field plugin resolves outer native sync behavior. */
 export interface ResolveMotionOuterSyncContext {
@@ -55,7 +60,7 @@ export interface ResolveMotionOuterSyncContext {
   /** The authored value cached for the field while suppression was active. */
   authoredValue: unknown
   /** The DOM-derived value that would normally sync to native. */
-  domValue: number
+  domValue: unknown
 }
 
 /** Hook-like strategy object that customizes ownership behavior for one field. */
