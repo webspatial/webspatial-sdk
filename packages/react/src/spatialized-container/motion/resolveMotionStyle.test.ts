@@ -14,8 +14,7 @@ describe('resolveMotionStyle', () => {
         targetKind: 'static3d',
         suppressedFields: null,
         nativeElementSupported: true,
-        terminalOpacityOwner: null,
-        terminalTransformOwner: null,
+        fieldMetadata: {},
       }),
     ).toEqual({})
 
@@ -25,8 +24,7 @@ describe('resolveMotionStyle', () => {
         targetKind: 'dynamic3d',
         suppressedFields: null,
         nativeElementSupported: true,
-        terminalOpacityOwner: null,
-        terminalTransformOwner: null,
+        fieldMetadata: {},
       }),
     ).toEqual({})
   })
@@ -40,8 +38,7 @@ describe('resolveMotionStyle', () => {
       targetKind: 'spatialized2d',
       suppressedFields: new Set(['opacity', 'transform']),
       nativeElementSupported: true,
-      terminalOpacityOwner: null,
-      terminalTransformOwner: null,
+      fieldMetadata: {},
     })
 
     expect(style.opacity).toBeUndefined()
@@ -57,8 +54,7 @@ describe('resolveMotionStyle', () => {
       targetKind: 'spatialized2d',
       suppressedFields: null,
       nativeElementSupported: false,
-      terminalOpacityOwner: null,
-      terminalTransformOwner: null,
+      fieldMetadata: {},
     })
 
     expect(style.opacity).toBe(0.5)
@@ -73,9 +69,12 @@ describe('resolveMotionStyle', () => {
       targetKind: 'spatialized2d',
       suppressedFields: null,
       nativeElementSupported: true,
-      explicitStyleTransform: 'translate3d(12px, 0px, 0px)',
-      terminalOpacityOwner: null,
-      terminalTransformOwner: 'authored',
+      fieldMetadata: {
+        transform: {
+          authoredValue: 'translate3d(12px, 0px, 0px)',
+          terminalOwner: 'authored',
+        },
+      },
     })
 
     expect(style.transform).toBe('translate3d(12px, 0px, 0px)')
@@ -89,10 +88,32 @@ describe('resolveMotionStyle', () => {
       targetKind: 'spatialized2d',
       suppressedFields: null,
       nativeElementSupported: true,
-      terminalOpacityOwner: null,
-      terminalTransformOwner: 'native',
+      fieldMetadata: {
+        transform: {
+          terminalOwner: 'native',
+        },
+      },
     })
 
     expect(style.transform).toBeUndefined()
+  })
+
+  test('resolves terminal transform from unified field metadata without field-specific options', () => {
+    const style = resolveMotionStyle({
+      values: {
+        transform: { translate: { x: 50, y: 0, z: 0 } },
+      },
+      targetKind: 'spatialized2d',
+      suppressedFields: null,
+      nativeElementSupported: true,
+      fieldMetadata: {
+        transform: {
+          authoredValue: 'translate3d(12px, 0px, 0px)',
+          terminalOwner: 'authored',
+        },
+      },
+    } as any)
+
+    expect(style.transform).toBe('translate3d(12px, 0px, 0px)')
   })
 })

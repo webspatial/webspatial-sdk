@@ -11,9 +11,19 @@ function createBinding() {
   let previousTransformSuppression = false
   const opacityPlugin: any = {
     field: 'opacity' as const,
+    readAuthoredValue: vi.fn(
+      ({
+        authoredInputs,
+      }: {
+        authoredInputs: { style?: { opacity?: number } }
+      }) => authoredInputs.style?.opacity,
+    ),
     captureAuthoredValue: vi.fn(
-      ({ authoredInputs }: { authoredInputs: { opacity?: number } }) =>
-        authoredInputs.opacity,
+      ({
+        authoredInputs,
+      }: {
+        authoredInputs: { style?: { opacity?: number } }
+      }) => authoredInputs.style?.opacity,
     ),
     resolveTerminalOwner: vi.fn(
       ({ authoredValue }: { authoredValue?: number }) =>
@@ -24,9 +34,19 @@ function createBinding() {
   }
   const transformPlugin: any = {
     field: 'transform' as const,
+    readAuthoredValue: vi.fn(
+      ({
+        authoredInputs,
+      }: {
+        authoredInputs: { style?: { transform?: string } }
+      }) => authoredInputs.style?.transform,
+    ),
     captureAuthoredValue: vi.fn(
-      ({ authoredInputs }: { authoredInputs: { transform?: string } }) =>
-        authoredInputs.transform,
+      ({
+        authoredInputs,
+      }: {
+        authoredInputs: { style?: { transform?: string } }
+      }) => authoredInputs.style?.transform,
     ),
     resolveTerminalOwner: vi.fn(
       ({ authoredValue }: { authoredValue?: string }) =>
@@ -208,7 +228,7 @@ describe('useBindSpatializedMotion', () => {
     expect(binding.__setElement).toHaveBeenCalledTimes(1)
   })
 
-  test('forwards explicit style.opacity metadata without inferring from computed CSS', () => {
+  test('forwards authored style.opacity metadata without inferring from computed CSS', () => {
     const binding = createBinding()
     const element = { id: 'portal-explicit-opacity' }
     binding.__getSuppressedFields.mockReturnValue(new Set(['opacity']))
@@ -218,7 +238,26 @@ describe('useBindSpatializedMotion', () => {
         binding: binding as any,
         element: element as any,
         kind: 'spatialized2d',
-        explicitStyleOpacity: 0.8,
+        style: { opacity: 0.8 },
+      } as any),
+    )
+
+    expect(binding.__setAuthoredFieldValue).toHaveBeenCalledWith('opacity', 0.8)
+  })
+
+  test('captures authored opacity from descriptor-driven style input without field-specific wiring', () => {
+    const binding = createBinding()
+    const element = { id: 'portal-descriptor-style-opacity' }
+    binding.__getSuppressedFields.mockReturnValue(new Set(['opacity']))
+
+    renderHook(() =>
+      useBindSpatializedMotion({
+        binding: binding as any,
+        element: element as any,
+        kind: 'spatialized2d',
+        style: {
+          opacity: 0.8,
+        },
       } as any),
     )
 
@@ -236,7 +275,7 @@ describe('useBindSpatializedMotion', () => {
           binding: binding as any,
           element: element as any,
           kind: 'spatialized2d',
-          explicitStyleOpacity: opacity,
+          style: { opacity },
         } as any),
       {
         initialProps: { opacity: 0.8 },
@@ -252,7 +291,7 @@ describe('useBindSpatializedMotion', () => {
     )
   })
 
-  test('updating explicit style.opacity metadata does not trigger unbind or rebind', () => {
+  test('updating authored style.opacity metadata does not trigger unbind or rebind', () => {
     const binding = createBinding()
     const element = { id: 'portal-explicit-opacity-rerender' }
 
@@ -262,7 +301,7 @@ describe('useBindSpatializedMotion', () => {
           binding: binding as any,
           element: element as any,
           kind: 'spatialized2d',
-          explicitStyleOpacity: opacity,
+          style: { opacity },
         } as any),
       {
         initialProps: { opacity: undefined as number | undefined },
@@ -282,7 +321,7 @@ describe('useBindSpatializedMotion', () => {
     expect(binding.__onUnbind).toHaveBeenCalledTimes(1)
   })
 
-  test('captures authored opacity through the ownership plugin runtime while suppressed', () => {
+  test('captures authored opacity through the descriptor runtime while suppressed', () => {
     const binding = createBinding()
     const element = { id: 'portal-plugin-authored-capture' }
     binding.__getSuppressedFields.mockReturnValue(new Set(['opacity']))
@@ -292,13 +331,13 @@ describe('useBindSpatializedMotion', () => {
         binding: binding as any,
         element: element as any,
         kind: 'spatialized2d',
-        explicitStyleOpacity: 0.6,
+        style: { opacity: 0.6 },
       } as any),
     )
 
     expect(binding.__getMotionFieldPlugin).toHaveBeenCalledWith('opacity')
     expect(
-      binding.__getMotionFieldPlugin.mock.results[0].value.captureAuthoredValue,
+      binding.__getMotionFieldPlugin.mock.results[0].value.readAuthoredValue,
     ).toHaveBeenCalled()
     expect(binding.__setAuthoredFieldValue).toHaveBeenCalledWith('opacity', 0.6)
     expect(binding.__setTerminalFieldOwner).toHaveBeenCalledWith(
@@ -322,7 +361,7 @@ describe('useBindSpatializedMotion', () => {
           binding: binding as any,
           element: element as any,
           kind: 'spatialized2d',
-          explicitStyleOpacity: opacity,
+          style: { opacity },
         } as any),
       {
         initialProps: { opacity: 0.6 },

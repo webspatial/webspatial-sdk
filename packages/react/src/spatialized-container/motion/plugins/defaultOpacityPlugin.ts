@@ -3,8 +3,22 @@ import type { MotionFieldPlugin } from './types'
 /** Default ownership plugin for `opacity` handoff in native SpatialDiv playback. */
 export const defaultOpacityPlugin: MotionFieldPlugin = {
   field: 'opacity',
+  styleKey: 'opacity',
+  nativeSink: {
+    kind: 'property',
+    property: 'opacity',
+  },
+  readAuthoredValue({ authoredInputs }) {
+    return authoredInputs.style?.opacity
+  },
+  readRawValue({ rawStyle }) {
+    return rawStyle.opacity
+  },
+  readOuterDomValue({ computedStyle }) {
+    return parseFloat(computedStyle.getPropertyValue('opacity'))
+  },
   captureAuthoredValue({ authoredInputs }) {
-    return authoredInputs.opacity
+    return authoredInputs.style?.opacity
   },
   resolveTerminalOwner({ authoredValue }) {
     return authoredValue !== undefined ? 'authored' : 'native'

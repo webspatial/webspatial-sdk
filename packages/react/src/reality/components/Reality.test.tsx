@@ -5,10 +5,10 @@ import { Reality } from './Reality'
 
 const useBindSpatializedMotionMock = vi.fn()
 const setSuppressedFieldsMock = vi.fn()
-const setTerminalTransformOwnerMock = vi.fn()
+const setMotionFieldMetadataMock = vi.fn()
 const portalInstanceObject = {
   setSuppressedFields: setSuppressedFieldsMock,
-  setTerminalTransformOwner: setTerminalTransformOwnerMock,
+  setMotionFieldMetadata: setMotionFieldMetadataMock,
 }
 
 beforeEach(() => {
@@ -25,7 +25,7 @@ vi.mock('../../spatialized-container/SpatializedContainer', () => ({
       spatializedElement: unknown
       portalInstanceObject: {
         setSuppressedFields: typeof setSuppressedFieldsMock
-        setTerminalTransformOwner: typeof setTerminalTransformOwnerMock
+        setMotionFieldMetadata: typeof setMotionFieldMetadataMock
       }
     }>
   }) => (
@@ -85,17 +85,25 @@ describe('Reality', () => {
     await waitFor(() => {
       const bindCall = useBindSpatializedMotionMock.mock.calls.at(-1)?.[0] as
         | {
-            onTerminalTransformOwnerChange?: (
-              owner: 'authored' | 'native' | null,
+            onMotionFieldMetadataChange?: (
+              field: 'transform',
+              metadata: {
+                authoredValue?: unknown
+                terminalOwner: 'authored' | 'native' | null
+              },
             ) => void
           }
         | undefined
 
-      expect(bindCall?.onTerminalTransformOwnerChange).toBeTypeOf('function')
+      expect(bindCall?.onMotionFieldMetadataChange).toBeTypeOf('function')
 
-      bindCall?.onTerminalTransformOwnerChange?.('native')
+      bindCall?.onMotionFieldMetadataChange?.('transform', {
+        terminalOwner: 'native',
+      })
     })
 
-    expect(setTerminalTransformOwnerMock).toHaveBeenCalledWith('native')
+    expect(setMotionFieldMetadataMock).toHaveBeenCalledWith('transform', {
+      terminalOwner: 'native',
+    })
   })
 })
