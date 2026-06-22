@@ -1,14 +1,11 @@
 import { Spatialized2DElement, SpatializedElement } from '@webspatial/core-sdk'
 import { createContext } from 'react'
 import { SpatializedContainerObject } from './SpatializedContainerContext'
+import { PortalMotionController } from '../motion/PortalMotionController'
 import { parseTransformOrigin } from '../utils'
 import { SpatialCustomStyleVars, SpatialTransformVisibility } from '../types'
 import { getSession } from '../../utils'
-import type {
-  MotionFieldMetadata,
-  MotionFieldMetadataMap,
-} from '../motion/motionBindingTypes'
-import { getMotionFieldDescriptors } from '../motion/plugins/registry'
+import type { MotionFieldMetadata } from '../motion/motionBindingTypes'
 import type { MotionOwnershipField } from '../motion/plugins/types'
 
 /** Cached viewport-relative DOM bounds. */
@@ -55,26 +52,17 @@ export class PortalInstanceObject {
   /** The attached spatial element once creation succeeds. */
   spatializedElement?: SpatializedElement
 
-  /**
-   * Fields currently suppressed by an active SpatialDiv animation session.
-   * When set, updateSpatializedElementProperties() will skip these fields,
-   * preventing DOM sync from overwriting native animation intermediate values.
-   */
-  private _suppressedFields: Set<string> | null = null
-
-  /** Caches field metadata mirrored from React motion bindings. */
-  private _motionFieldMetadata: MotionFieldMetadataMap = {}
+  /** Encapsulates motion-specific sync state and descriptor resolution. */
+  private readonly motionController: PortalMotionController
 
   /**
    * Set suppressed fields for SpatialDiv animation.
    * Pass null to release suppression (resume normal sync).
    */
   setSuppressedFields(fields: Set<string> | null) {
-    const hadSuppression =
-      this._suppressedFields !== null && this._suppressedFields.size > 0
-    this._suppressedFields = fields
+    const shouldForceSync = this.motionController.setSuppressedFields(fields)
     // When suppression is released, force a sync so DOM values override native animation end values
-    if (hadSuppression && (fields === null || fields.size === 0)) {
+    if (shouldForceSync) {
       this.updateSpatializedElementProperties()
     }
   }
@@ -89,46 +77,14 @@ export class PortalInstanceObject {
     field: MotionOwnershipField,
     metadata: Partial<MotionFieldMetadata>,
   ) {
-    const current = this._motionFieldMetadata[field] ?? {
-      terminalOwner: null,
-    }
-    const next: MotionFieldMetadata = {
-      authoredValue:
-        'authoredValue' in metadata
-          ? metadata.authoredValue
-          : current.authoredValue,
-      terminalOwner:
-        'terminalOwner' in metadata
-          ? (metadata.terminalOwner ?? null)
-          : current.terminalOwner,
-    }
-    this._motionFieldMetadata = {
-      ...this._motionFieldMetadata,
-      [field]: next,
-    }
-  }
-
-  /**
-   * Returns the unified metadata cached for a motion field.
-   *
-   * @param field - The field whose metadata should be returned.
-   * @returns The normalized field metadata snapshot.
-   */
-  private getMotionFieldMetadata(
-    field: MotionOwnershipField,
-  ): MotionFieldMetadata {
-    return (
-      this._motionFieldMetadata[field] ?? {
-        terminalOwner: null,
-      }
-    )
+    this.motionController.setMotionFieldMetadata(field, metadata)
   }
 
   /**
    * Check if a specific field is currently suppressed.
    */
   isFieldSuppressed(field: string): boolean {
-    return this._suppressedFields?.has(field) ?? false
+    return this.motionController.isFieldSuppressed(field)
   }
 
   /** Caches DOM metadata refreshed from the current bound node. */
@@ -202,6 +158,7 @@ export class PortalInstanceObject {
     this.spatialId = spatialId
     this.spatializedContainerObject = spatializedContainerObject
     this.parentPortalInstanceObject = parentPortalInstanceObject
+    this.motionController = new PortalMotionController()
     this.getExtraSpatializedElementProperties =
       getExtraSpatializedElementProperties
 
@@ -398,36 +355,16 @@ export class PortalInstanceObject {
     if (!this.isFieldSuppressed('backOffset'))
       properties.backOffset = backOffset
 
-    let nextTransform: DOMMatrix | null = null
-    for (const descriptor of getMotionFieldDescriptors()) {
-      if (this.isFieldSuppressed(descriptor.field)) {
-        continue
-      }
-      const metadata = this.getMotionFieldMetadata(descriptor.field)
-      const domValue = descriptor.readOuterDomValue({
-        computedStyle,
-        transformMatrix: this.transformMatrix!,
-      })
-      const decision = descriptor.resolveOuterSync({
-        owner: metadata.terminalOwner,
-        authoredValue: metadata.authoredValue,
-        domValue,
-      })
-      if (decision.mode === 'omit') {
-        continue
-      }
-      const resolvedValue = decision.mode === 'set' ? decision.value : domValue
-      if (descriptor.nativeSink.kind === 'property') {
-        properties[descriptor.nativeSink.property] = resolvedValue
-        continue
-      }
-      nextTransform = resolvedValue as DOMMatrix
-    }
+    const motionSyncResult = this.motionController.buildSyncResult({
+      computedStyle,
+      transformMatrix: this.transformMatrix!,
+    })
+    Object.assign(properties, motionSyncResult.properties)
 
     spatializedElement.updateProperties(properties)
 
-    if (nextTransform) {
-      spatializedElement.updateTransform(nextTransform)
+    if (motionSyncResult.nextTransform) {
+      spatializedElement.updateTransform(motionSyncResult.nextTransform)
     }
 
     // assign spatializedElement to dom
