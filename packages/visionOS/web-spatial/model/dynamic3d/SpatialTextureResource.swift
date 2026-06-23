@@ -20,6 +20,11 @@ class SpatialTextureResource: SpatialObject {
                 continuation.resume(with: result)
             }
         }
+        defer {
+            if !url.hasPrefix("file://") {
+                try? FileManager.default.removeItem(at: localURL)
+            }
+        }
         _resource = try await Task { @MainActor in
             try await TextureResource(contentsOf: localURL)
         }.value
@@ -30,6 +35,11 @@ class SpatialTextureResource: SpatialObject {
         let localURL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
             Dynamic3DManager.loadResourceToLocal(url) { result in
                 continuation.resume(with: result)
+            }
+        }
+        defer {
+            if !url.hasPrefix("file://") {
+                try? FileManager.default.removeItem(at: localURL)
             }
         }
         _resource = try await Task { @MainActor in
