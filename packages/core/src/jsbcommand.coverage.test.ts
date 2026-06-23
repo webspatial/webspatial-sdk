@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { SpatializedMotionTimeline } from './types/spatializedMotion'
 
 class DOMMatrixPolyfill {
   private tx = 0
@@ -267,7 +268,7 @@ describe('JSBCommand', () => {
     const { AnimateSpatializedElementMotionJSBCommand } = await import(
       './JSBCommand'
     )
-    const timeline = {
+    const timeline: SpatializedMotionTimeline = {
       duration: 1,
       tracks: [
         {
