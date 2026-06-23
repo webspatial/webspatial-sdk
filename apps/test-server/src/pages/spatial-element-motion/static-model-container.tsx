@@ -14,7 +14,6 @@ const DURATION = 4
 
 const TIMELINE_CONFIG = {
   '0%': {
-    opacity: 0.35,
     transform: {
       translate: { y: 12, z: 0 },
       rotate: { x: 30, z: -20 },
@@ -22,7 +21,6 @@ const TIMELINE_CONFIG = {
     },
   },
   '50%': {
-    opacity: 1,
     transform: {
       translate: { y: -8, z: 55 },
       rotate: { x: 10, z: 80 },
@@ -30,7 +28,6 @@ const TIMELINE_CONFIG = {
     },
   },
   '100%': {
-    opacity: 0.9,
     transform: {
       translate: { y: 0, z: 20 },
       rotate: { x: 20 },
@@ -67,9 +64,9 @@ export default function SpatialElementMotionStaticModelContainerPage() {
       description={
         <>
           Tests <code>useAnimation</code> timeline percentage keyframes on the{' '}
-          <code>Model</code> container root. Use this page to compare whether{' '}
-          <code>enable-xr-monitor</code> causes the same play or pause snap-back
-          issue previously seen on <code>Reality</code>.
+          <code>Model</code> container root transform. Use this page to compare
+          whether <code>enable-xr-monitor</code> causes the same play or pause
+          snap-back issue previously seen on <code>Reality</code>.
         </>
       }
     >
@@ -93,7 +90,7 @@ export default function SpatialElementMotionStaticModelContainerPage() {
 
         <p className="mb-4 text-xs text-amber-400/90">
           {static3dAnim
-            ? 'Native backend available. Verify the whole Model container changes pose and opacity over time.'
+            ? 'Native backend available. Verify the Model root pose changes over time.'
             : 'supports(static3d)=false. In a plain browser this page can still expose hook state, but native Model motion will not play.'}
         </p>
 
@@ -151,9 +148,9 @@ export default function SpatialElementMotionStaticModelContainerPage() {
 
         <Log
           lines={[
-            'timeline: 0% opacity 0.35 y 12 z 0 scale 0.75',
-            'timeline: 50% opacity 1 y -8 z 55 scale 1.12',
-            'timeline: 100% opacity 0.9 y 0 z 20 scale x 2 y 1 z 1',
+            'timeline: 0% y 12 z 0 scale 0.75',
+            'timeline: 50% y -8 z 55 scale 1.12',
+            'timeline: 100% y 0 z 20 scale x 2 y 1 z 1',
             ...lines,
           ]}
         />
