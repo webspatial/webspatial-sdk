@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
+import type { SpatializedMotionConfig } from '../../types/spatializedMotion'
 import type { SpatializedVisualValues } from '../../types/spatializedVisual'
 import { WebPlaybackBackend } from './WebPlaybackBackend'
 
@@ -14,19 +15,9 @@ function installFakeRaf() {
   })
 }
 
-function makeConfig(loop?: boolean | { reverse?: boolean }): {
-  duration: number
-  autoStart: false
-  loop?: boolean | { reverse?: boolean }
-  tracks: Array<{
-    property: 'opacity'
-    timingFunction: 'linear'
-    keyframes: Array<{ at: number; value: number }>
-  }>
-  onStart: ReturnType<typeof vi.fn>
-  onComplete: ReturnType<typeof vi.fn>
-} {
-  return {
+function makeConfig(loop?: boolean | { reverse?: boolean }) {
+  const onComplete = vi.fn((_values: SpatializedVisualValues) => {})
+  const config: SpatializedMotionConfig & { autoStart: false } = {
     duration: 1,
     autoStart: false,
     loop,
@@ -40,15 +31,17 @@ function makeConfig(loop?: boolean | { reverse?: boolean }): {
         ],
       },
     ],
-    onStart: vi.fn(),
-    onComplete: vi.fn(),
+    onStart: vi.fn(() => {}),
+    onComplete,
   }
+
+  return { config, onComplete }
 }
 
 function createBackend(loop?: boolean | { reverse?: boolean }) {
   const values: SpatializedVisualValues[] = []
   const stateChanges: string[] = []
-  const config = makeConfig(loop)
+  const { config, onComplete } = makeConfig(loop)
   const ctx = {
     getConfig: () => config,
     emitValues: (value: SpatializedVisualValues) => {
@@ -65,6 +58,7 @@ function createBackend(loop?: boolean | { reverse?: boolean }) {
   return {
     backend: new WebPlaybackBackend(ctx),
     config,
+    onComplete,
     values,
     stateChanges,
   }
@@ -79,7 +73,7 @@ afterEach(() => {
 describe('WebPlaybackBackend looping behavior', () => {
   test('keeps reset-loop behavior for loop: true', async () => {
     installFakeRaf()
-    const { backend, values, config } = createBackend(true)
+    const { backend, values, onComplete } = createBackend(true)
 
     backend.play()
     await vi.advanceTimersByTimeAsync(1100)
@@ -91,12 +85,12 @@ describe('WebPlaybackBackend looping behavior', () => {
 
     expect(one).toBeGreaterThanOrEqual(0)
     expect(zeroAfterOne).toBeGreaterThan(one)
-    expect(config.onComplete).not.toHaveBeenCalled()
+    expect(onComplete).not.toHaveBeenCalled()
   })
 
   test('ping-pongs for loop: { reverse: true } without jumping back to start', async () => {
     installFakeRaf()
-    const { backend, values, config } = createBackend({ reverse: true })
+    const { backend, values, onComplete } = createBackend({ reverse: true })
 
     backend.play()
     await vi.advanceTimersByTimeAsync(1100)
@@ -109,7 +103,7 @@ describe('WebPlaybackBackend looping behavior', () => {
     expect(afterPeak[0]).toBeLessThan(1)
     expect(afterPeak[0]).toBeGreaterThan(0)
     expect(afterPeak).not.toContain(0)
-    expect(config.onComplete).not.toHaveBeenCalled()
+    expect(onComplete).not.toHaveBeenCalled()
   })
 
   test('resumes reverse loop without losing direction after pause and starts new plays forward', async () => {
