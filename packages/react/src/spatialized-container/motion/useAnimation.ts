@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type {
-  SpatializedMotionConfig as CoreSpatializedMotionConfig,
+  SpatializedMotionAuthorConfig as CoreSpatializedMotionAuthorConfig,
   SpatializedMotionSegmentConfig as CoreSpatializedMotionSegmentConfig,
-  SpatializedMotionTimelineConfig as CoreSpatializedMotionTimelineConfig,
   SpatializedPlaybackApi,
   SpatializedVisualValues,
 } from '@webspatial/core-sdk'
@@ -26,10 +25,7 @@ import type { MotionOwnershipField } from './plugins/types'
 /**
  * React-facing motion config accepted by `useAnimation()`.
  */
-export type SpatializedMotionConfig =
-  | CoreSpatializedMotionSegmentConfig
-  | CoreSpatializedMotionConfig
-  | CoreSpatializedMotionTimelineConfig
+export type SpatializedMotionConfig = CoreSpatializedMotionAuthorConfig
 
 /** Convenience alias for the segment-style authoring shape. */
 export type SpatializedMotionSegmentConfig = CoreSpatializedMotionSegmentConfig

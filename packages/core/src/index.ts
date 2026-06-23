@@ -44,6 +44,7 @@ export type {
   SpatializedMotionSegmentConfig,
   SpatializedMotionTimelineConfig,
   SpatializedMotionConfig,
+  SpatializedMotionAuthorConfig,
   SpatializedMotionTimeline,
   SpatializedMotionPlayState,
   SpatializedPlaybackApi,
