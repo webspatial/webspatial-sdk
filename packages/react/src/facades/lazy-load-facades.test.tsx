@@ -293,15 +293,7 @@ describe('lazy-load facades', () => {
     for (const { name, Component } of nullCases) {
       it(`${name} renders null in fallback (children NOT mounted) and has no ref-forwarding contract`, () => {
         const { container } = render(
-          <Component
-            id="x"
-            url="u"
-            src="s"
-            id="n"
-            attachment="a"
-            width={0}
-            height={0}
-          >
+          <Component id="x" url="u" src="s" attachment="a" width={0} height={0}>
             <span data-testid={`${name}-child`} />
           </Component>,
         )

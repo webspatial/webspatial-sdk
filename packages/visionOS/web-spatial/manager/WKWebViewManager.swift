@@ -4,9 +4,6 @@ import SwiftUI
 class WKWebViewManager {
     static let Instance = WKWebViewManager()
 
-    /// Shared process pool — reusing it makes subsequent WKWebView creation much faster.
-    private static let sharedProcessPool = WKProcessPool()
-
     private init() {}
 
     func create(controller: SpatialWebController, configuration: WKWebViewConfiguration? = nil, spatialId: String? = "") -> WKWebView {
@@ -17,7 +14,6 @@ class WKWebViewManager {
 //        userContentController.add(controller, name: "bridge")
         userContentController.addScriptMessageHandler(controller, contentWorld: .page, name: "bridge")
         let myConfig = (configuration != nil) ? configuration! : WKWebViewConfiguration()
-        myConfig.processPool = Self.sharedProcessPool
         myConfig.userContentController = userContentController
         myConfig.preferences.javaScriptCanOpenWindowsAutomatically = true
         myConfig.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")

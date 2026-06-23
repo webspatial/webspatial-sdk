@@ -277,18 +277,6 @@ describe('platform adapters', () => {
     vi.unmock('./JSBCommand')
   })
 
-  it('SSRPlatform returns successful no-op results', async () => {
-    const { SSRPlatform } = await import('./platform-adapter/ssr/SSRPlatform')
-    const platform = new SSRPlatform()
-
-    await expect(platform.callJSB('c', '{}')).resolves.toMatchObject({
-      success: true,
-    })
-    expect(platform.openSpatialSceneSync('s', undefined)).toMatchObject({
-      success: true,
-    })
-  })
-
   it('VisionOSPlatform.callJSB returns success and parses failures', async () => {
     ;(window as any).webkit = {
       messageHandlers: {
@@ -468,6 +456,44 @@ describe('spatialWindowPolyfill', () => {
 
     document.documentElement.style.removeProperty('--xr-background-material')
     expect(updateSpatialProperties).toHaveBeenCalledWith({
+      material: 'none',
+    })
+
+    await Promise.resolve()
+    await Promise.resolve()
+    updateSpatialProperties.mockClear()
+    ;(document.documentElement.style as any)['--xr-background-material'] =
+      'translucent'
+    expect(updateSpatialProperties).toHaveBeenCalledWith({
+      material: 'translucent',
+    })
+    expect(
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--xr-background-material')
+        .trim(),
+    ).toBe('translucent')
+    expect(
+      (
+        (document.documentElement.style as any)[
+          '--xr-background-material'
+        ] as string
+      ).trim(),
+    ).toBe('translucent')
+
+    updateSpatialProperties.mockClear()
+    document.documentElement.style.setProperty('border-radius', '80px')
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(updateSpatialProperties).toHaveBeenCalledWith({
+      cornerRadius: {
+        topLeading: 80,
+        topTrailing: 80,
+        bottomLeading: 80,
+        bottomTrailing: 80,
+      },
+    })
+    expect(updateSpatialProperties).not.toHaveBeenCalledWith({
       material: 'none',
     })
   })
@@ -751,7 +777,7 @@ describe('SpatializedStatic3DElement', () => {
     vi.unmock('./JSBCommand')
   })
 
-  it('updateModelTransform passes float64 array to updateProperties', async () => {
+  it('entityTransform setter passes float64 array to updateProperties', async () => {
     const execute = vi.fn().mockResolvedValue({
       success: true,
       data: undefined,
@@ -803,7 +829,7 @@ describe('SpatializedStatic3DElement', () => {
     }
 
     const el = new SpatializedStatic3DElement('m2')
-    el.updateModelTransform(new DOMMatrixWithArray() as any)
+    el.entityTransform = new DOMMatrixWithArray() as any
     expect(execute).toHaveBeenCalledTimes(1)
   })
 })
@@ -913,40 +939,25 @@ describe('SpatializedDynamic3DElement', () => {
   })
 })
 
-describe('ssr-polyfill', () => {
+describe('isSSREnv', () => {
   it('isSSREnv returns false in jsdom', async () => {
-    const { isSSREnv } = await import('./ssr-polyfill')
+    const { isSSREnv } = await import('./isSSREnv')
     expect(isSSREnv()).toBe(false)
   })
 })
 
 describe('platform-adapter', () => {
-  it('createPlatform returns SSRPlatform in SSR env', async () => {
+  it('createPlatform and createPlatformSync throw in SSR env', async () => {
     vi.resetModules()
-    vi.doMock('./ssr-polyfill', () => {
+    vi.doMock('./isSSREnv', () => {
       return { isSSREnv: () => true }
     })
 
-    const { createPlatform } = await import('./platform-adapter')
-    const p = await createPlatform()
-    expect(typeof p.callJSB).toBe('function')
-    expect(typeof p.openSpatialSceneSync).toBe('function')
-    expect(typeof p.createNativeSpatialDiv).toBe('function')
-    expect(typeof p.createNativeAttachment).toBe('function')
-  })
-
-  it('createPlatformSync uses SSR sync noop in SSR env', async () => {
-    vi.resetModules()
-    vi.doMock('./ssr-polyfill', () => {
-      return { isSSREnv: () => true }
-    })
-
-    const { createPlatformSync } = await import(
-      './platform-adapter/createPlatformSync'
+    const { createPlatform, createPlatformSync } = await import(
+      './platform-adapter'
     )
-    const p = createPlatformSync()
-    const r = p.openSpatialSceneSync('https://x', undefined)
-    expect(r.success).toBe(true)
-    expect(r.data).toBeUndefined()
+    const expected = /cannot run during SSR/
+    await expect(createPlatform()).rejects.toThrow(expected)
+    expect(() => createPlatformSync()).toThrow(expected)
   })
 })

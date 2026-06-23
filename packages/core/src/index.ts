@@ -36,15 +36,4 @@ export * from './types/animation'
 export * from './runtime'
 
 export { composeSRT, decomposeSRT } from './utils'
-
-// side effects
-import { injectSceneHook } from './scene-polyfill'
-import { isSSREnv } from './isSSREnv'
-import { spatialWindowPolyfill } from './spatial-window-polyfill'
-
-export { isSSREnv }
-
-if (!isSSREnv() && navigator.userAgent.indexOf('WebSpatial/') > 0) {
-  injectSceneHook()
-  spatialWindowPolyfill()
-}
+export { isSSREnv } from './isSSREnv'
