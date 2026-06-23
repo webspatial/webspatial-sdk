@@ -1,75 +1,45 @@
-# Spatialized element motion (umbrella)
+# Spatialized element motion
 
 ## ADDED Requirements
 
-### Requirement: Umbrella declarative motion with bind-time target resolution
+### Requirement: Declarative motion with bind-time target resolution
 
-The platform MUST provide declarative timeline motion for `spatialized2d`, `static3d`, and `dynamic3d`. The public hook MUST NOT require `config.kind`; the target resolves when the `animation` binding is passed as `xr-animation` (`<div enable-xr>` → spatialized2d, `<Model>` → static3d, `<Reality>` → dynamic3d).
+The platform MUST provide declarative timeline motion for `spatialized2d`, `static3d`, and `dynamic3d`. The hook MUST NOT require `config.kind`; target resolves via `xr-animation`:
 
-#### Scenario: Capability matrix is normative
+| Component | Target | Native write |
+|-----------|--------|--------------|
+| `<div enable-xr>` | `spatialized2d` | `element.transform` + `opacity` |
+| `<Model>` | `static3d` | `modelTransform` (no opacity sink) |
+| `<Reality>` | `dynamic3d` | container `element.transform` + `opacity` |
 
-- **WHEN** product reviews motion support
-- **THEN** [CAPABILITY_MATRIX.md](../../CAPABILITY_MATRIX.md) MUST list delivery status per kind
+Capability: `supports('useAnimation', ['element'|'static3d'|'dynamic3d'])` — native runtime only. Pure web MUST NOT support `useAnimation`.
 
-### Requirement: AnimationObject created by SpatializedElement with native-generated uuid
+### Requirement: AnimationObject created by SpatializedElement
 
-`SpatializedElement` (and subclasses) MUST provide `createAnimation(config)`. The call MUST create native `AnimationObject : SpatialObject` via `CreateSpatializedElementAnimation` JSB and return a Core `AnimationObject` handle whose `id` equals the native uuid.
+`createAnimation(config)` → `CreateSpatializedElementAnimation` → native `AnimationObject : SpatialObject` → Core handle with native uuid.
 
-Timeline MUST be compiled to canonical `tracks` and locked at `createAnimation`; control commands MUST NOT carry timeline. Config changes MUST use `destroy()` then `createAnimation` again.
+Timeline locked at create as canonical `tracks`; control commands carry no timeline. Config change: `destroy()` then `createAnimation`.
 
-#### Scenario: create returns native uuid
+### Requirement: AnimationObject lifecycle
 
-- **WHEN** `await element.createAnimation(config)` succeeds
-- **THEN** `AnimationObject.id` MUST be native-generated
-- **AND** native `SpatialObject` registry MUST contain that id
+`destroy()` via `DestroyCommand`. Whole-session `play` / `pause` / `resume` / `stop` / `reset` / `finish`. Terminal callbacks mutually exclusive.
 
-#### Scenario: timeline locked at create
+### Requirement: Native state and WebMsg
 
-- **WHEN** `createAnimation(configA)` succeeds and `play()` runs
-- **AND** the app later tries to apply `configB` to the same session
-- **THEN** the SDK MUST NOT apply `configB` to the locked timeline
-- **AND** the app MUST `destroy()` then `createAnimation(configB)`
+`SpatialAnimationStateChanged` is sole playState source. JSB: Create + Control; not `AnimateSpatializedElementMotion`.
 
-### Requirement: AnimationObject destroy uses generic SpatialObject path
+### Requirement: Element animating mask
 
-`AnimationObject.destroy()` MUST use generic `DestroyCommand`. Native MUST stop sampling, clear element animating mask, and remove the registry object.
+Ignore conflicting transform JSB while animating; no `PortalInstanceObject` coupling.
 
-### Requirement: Core exposes AnimationObject playback API
+### Requirement: React bind and Proxy
 
-`AnimationObject` MUST expose `SpatializedPlaybackApi`: `play`, `pause`, `resume`, `stop`, `reset`, `finish`, `playState`, `isAnimating`, `isPaused`, `finished`. `pause()` / `resume()` are whole-session only; no `keys` parameter.
+`useAnimation` → `[animation, api, style]`; `AnimationProxy` queues pre-bind API; destroy + recreate on config change.
 
-### Requirement: Native owns playback state and broadcasts via WebMsg
+### Requirement: Authoring and validation
 
-Native `AnimationObject` MUST own the state machine. Changes MUST broadcast via `SpatialAnimationStateChanged` with `animationId` and `action`. Core `AnimationObject` MUST treat native broadcast as the sole `playState` source.
+Mutually exclusive `from/to`, `timeline`, or `tracks`. Whitelist transform + opacity only; reject layout fields; Static3D rejects opacity tracks.
 
-### Requirement: Shared lifecycle callbacks
+### Requirement: Model clip stays separate
 
-Config MUST support `onStart`, `onComplete`, `onStop`, `onReset`, `onError`. Terminal callbacks are mutually exclusive per session.
-
-### Requirement: v1 authoring uses from/to and timeline
-
-Hook MUST accept mutually exclusive shapes: `from/to` segment, `timeline` percentage keyframes, or advanced `tracks`. Internal compilation to canonical tracks MUST happen once at `createAnimation`.
-
-### Requirement: useAnimation supported only on native runtime
-
-`useAnimation` MUST work only when `supports('useAnimation', [subtoken])` is true. Pure web MUST NOT have a Core RAF backend; `useAnimation` MUST fail fast.
-
-### Requirement: Element-level animating mask without Portal coupling
-
-While playing, native `SpatializedElement` MUST mark animating fields. Conflicting transform/opacity JSB updates MUST be ignored on native. Suppression MUST NOT depend on `PortalInstanceObject`.
-
-### Requirement: React creates AnimationObject on bind
-
-`useAnimation` binding MUST call `element.createAnimation(config)` after bind. Pre-bind `api` calls MUST queue on `AnimationProxy` and flush after resolve.
-
-### Requirement: Model clip playback stays separate
-
-USD clip `ref.play()` / `pause()` MUST stay independent from `AnimationObject` timeline.
-
-### Requirement: JSB protocol
-
-JS → Native: `CreateSpatializedElementAnimation`, `ControlSpatializedElementAnimation`.
-
-Native → JS: `SpatialAnimationStateChanged`.
-
-`AnimateSpatializedElementMotion` MUST NOT be the target-state protocol.
+USD `ref.play()` independent from `AnimationObject` timeline.

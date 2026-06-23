@@ -1,158 +1,55 @@
-# SpatializedElement 声明式动画 — API 摘要
+# API 摘要
 
-> Change: `openspec/changes/spatialized-element-motion-api/`  
-> **能力矩阵:** [CAPABILITY_MATRIX.md](./CAPABILITY_MATRIX.md)
+> Normative 需求见 [spec.zh.md](./specs/spatialized-element-motion/spec.zh.md)
 
-## 1. 产品目标
-
-对 **三种 spatialized 容器** 提供统一的 timeline + 声明式播放 API。动画建模为 **Native `AnimationObject`**，由 `SpatializedElement.createAnimation(config)` 创建，uuid 由 native 生成。
-
-**纯 Web 不支持 `useAnimation`。**
-
-## 2. 平台约束
-
-| 环境 | `useAnimation` |
-|------|----------------|
-| Native spatial runtime（visionOS / WebSpatial） | 支持 |
-| 纯浏览器 / 无 native | **不支持** — 使用 CSS、framer-motion 等 |
-
-## 3. 统一入口
+## useAnimation（仅 native）
 
 ```typescript
 const [animation, api, style] = useAnimation({
-  from: { transform: { translate: { y: 24 } }, opacity: 0 },
-  to:   { transform: { translate: { y: 0 } }, opacity: 1 },
+  from: { opacity: 0, transform: { translate: { y: 24 } } },
+  to:   { opacity: 1, transform: { translate: { y: 0 } } },
   duration: 0.6,
-  timingFunction: 'easeOut',
 })
 
-<div enable-xr xr-animation={animation} />   // → spatialized2d
-<Model xr-animation={animation} />            // → static3d
-<Reality xr-animation={animation} />        // → dynamic3d
+<div enable-xr xr-animation={animation} />
+<Model xr-animation={animation} />
+<Reality xr-animation={animation} />
 ```
 
-bind 时：`element.createAnimation(config)` → `AnimationObject`（timeline 锁定）
-
-修改 config：先 `animationObject.destroy()`，React 重新 `createAnimation`。
-
-## 4. Core API
+## Core
 
 ```typescript
-// SpatializedElement
-async createAnimation(
-  config: SpatializedMotionAuthorConfig,
-): Promise<AnimationObject>
-
-class AnimationObject extends SpatialObject {
-  readonly elementId: string
-  readonly targetKind: SpatializedMotionKind
-
-  play(): Promise<void>
-  pause(): Promise<SpatializedVisualValues>
-  resume(): Promise<void>
-  stop(): Promise<SpatializedVisualValues>
-  reset(): Promise<SpatializedVisualValues>
-  finish(): Promise<SpatializedVisualValues>
-  destroy(): Promise<void>
-
-  readonly playState: SpatializedMotionPlayState
-  readonly isAnimating: boolean
-  readonly isPaused: boolean
-  readonly finished: boolean
-}
+const anim = await element.createAnimation(config)
+await anim.play()
+await anim.pause()   // → values
+await anim.stop()    // → values
+await anim.destroy()
 ```
 
-## 5. Playback API（React `api` 元组）
+Timeline 在 `createAnimation` 锁定；改 config 须 destroy + recreate。
 
-```typescript
-interface SpatializedPlaybackApi {
-  play(): void
-  pause(): void
-  resume(): void
-  stop(): void
-  reset(): void
-  finish(): void
-  readonly isAnimating: boolean
-  readonly isPaused: boolean
-  readonly finished: boolean
-  readonly playState: SpatializedMotionPlayState
-}
+## PlaybackApi
 
-type SpatializedMotionPlayState = 'idle' | 'running' | 'paused' | 'finished'
-```
+`play` `pause` `resume` `stop` `reset` `finish` · `playState` `isAnimating` `isPaused` `finished`
 
-`playState` 以 native `SpatialAnimationStateChanged` WebMsg 为准。
+| 命令 | playState | 回调 |
+|------|-----------|------|
+| stop | idle | onStop |
+| reset | idle | onReset |
+| finish / 自然结束 | finished | onComplete |
 
-| 方法 | 行为 |
-|------|------|
-| `stop()` | 终止；当前值；`idle`；`onStop` |
-| `reset()` | seek 起点；`idle`；`onReset` |
-| `finish()` | seek 终点；`finished`；`onComplete` |
-| 自然结束 | `finished`；`onComplete` |
+## Kind 差异
 
-## 6. Config 与回调
+| Kind | 绑定 | Native 写入 | style |
+|------|------|-------------|-------|
+| 2D | `enable-xr` | transform + opacity | 初始 from 预览 |
+| Static3D | `<Model>` | modelTransform | `{}` |
+| Dynamic3D | `<Reality>` | 容器 transform + opacity | `{}` |
 
-```typescript
-interface SpatializedMotionAuthorConfig {
-  // from/to | timeline | tracks（互斥）
-  onStart?: () => void
-  onComplete?: (values: SpatializedVisualValues) => void
-  onStop?: (values: SpatializedVisualValues) => void
-  onReset?: (values: SpatializedVisualValues) => void
-  onError?: (error: SpatializedPlaybackError) => void
-  autoStart?: boolean  // 默认 bind 后自动 play
-}
-```
+## 能力
 
-回调在 `createAnimation` 时注册。无 `updateConfig` — timeline 已锁定。
+`supports('useAnimation', ['element'|'static3d'|'dynamic3d'])`
 
-## 7. JSB 协议
+## 与 Model clip 区分
 
-### JS → Native
-
-| 命令 | 用途 |
-|------|------|
-| `CreateSpatializedElementAnimation` | `elementId`, `targetKind`, `timeline` → `{ animationId }` |
-| `ControlSpatializedElementAnimation` | `animationId`, `type: play\|pause\|resume\|stop\|reset\|finish` |
-| `Destroy` | `id: animationId` |
-
-### Native → JS
-
-`SpatialAnimationStateChanged` — `animationId`, `elementId`, `action`, optional `values` / `error`
-
-## 8. 能力探测
-
-| Token | 含义 |
-|-------|------|
-| `supports('useAnimation', ['element'])` | 2D 容器 |
-| `supports('useAnimation', ['static3d'])` | Model |
-| `supports('useAnimation', ['dynamic3d'])` | Reality 容器 |
-
-仅在 native runtime 为 `true`。
-
-## 9. 类型命名
-
-| 用途 | 类型 |
-|------|------|
-| Authoring | `SpatializedMotionSegmentConfig`, `SpatializedMotionTimelineConfig` |
-| 执行模型 | `SpatializedMotionTrack`, `SpatializedMotionTimeline` |
-| 视觉值 | `SpatializedVisualValues` |
-| 播放 | `SpatializedPlaybackApi`, `SpatializedMotionPlayState` |
-| 句柄 | `AnimationObject` |
-| React binding | `SpatializedMotionBinding`（`xr-animation`） |
-
-## 10. 与 Model clip 区分
-
-`<Model ref.play()>` 播放 USD 片段；与 `AnimationObject` timeline 无关。
-
-## 11. style 语义
-
-| Kind | `style` |
-|------|---------|
-| 2D | 初始 `from` 预览；播放中由 native 写 element |
-| Static3D / Dynamic3D | `{}`（safe spread） |
-
-## 12. 演示页
-
-- Hub: `/#/spatial-div-motion`
-- 2D / Model / Reality container demos
+`ref.play()` — USD clip，与 `AnimationObject` 无关。
