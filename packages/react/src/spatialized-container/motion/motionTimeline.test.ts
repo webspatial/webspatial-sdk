@@ -243,4 +243,44 @@ describe('validateSpatializedMotionConfig', () => {
       }),
     ).toThrow(/duplicate track/)
   })
+
+  test.each([
+    [
+      'tracks',
+      {
+        duration: 1,
+        tracks: [
+          {
+            property: 'opacity' as const,
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+      },
+    ],
+    [
+      'from-to',
+      {
+        from: { opacity: 0 },
+        to: { opacity: 1 },
+        duration: 1,
+      },
+    ],
+    [
+      'timeline',
+      {
+        duration: 1,
+        timeline: {
+          '0%': { opacity: 0 },
+          '100%': { opacity: 1 },
+        },
+      },
+    ],
+  ])('rejects static3d opacity %s configs before playback', (_, config) => {
+    expect(() =>
+      validateSpatializedMotionConfig(config, { targetKind: 'static3d' }),
+    ).toThrow(/static3d targets do not support opacity/)
+  })
 })

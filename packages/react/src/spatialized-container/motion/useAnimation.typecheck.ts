@@ -1,4 +1,5 @@
 import type { SpatializedMotionConfig } from './useAnimation'
+import type { SpatializedPlaybackApi } from '@webspatial/core-sdk'
 
 const validSegment: SpatializedMotionConfig = {
   from: { opacity: 0 },
@@ -80,3 +81,13 @@ void badTimelineTo
 void badTimelineFrom
 void badTracksTimeline
 void badTracksTo
+
+declare const playbackApi: SpatializedPlaybackApi
+
+playbackApi.pause()
+playbackApi.resume()
+
+// @ts-expect-error pause does not accept keys or partial selectors
+playbackApi.pause(['opacity'])
+// @ts-expect-error resume does not accept keys or partial selectors
+playbackApi.resume(['transform'])
