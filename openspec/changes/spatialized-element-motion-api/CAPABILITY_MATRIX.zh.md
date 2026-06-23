@@ -17,7 +17,7 @@
 | Kind | 可动画路径（v1） |
 |------|----------------|
 | 2D | `opacity`、`transform.translate.*`、`transform.rotate.*`、`transform.scale.*` |
-| Static3D | 同 2D（应用到 `modelTransform`） |
+| Static3D | `transform.translate.*`、`transform.rotate.*`、`transform.scale.*` 应用到 `modelTransform`；`opacity` 不属于已交付的 Static3D sink |
 | Dynamic3D | 同 2D（应用到容器 `element.transform` + opacity） |
 
 ## 独立 API（不合并）
@@ -25,4 +25,4 @@
 | API | 用途 |
 |-----|------|
 | Model `ref.play()` / `pause()` | USD 内嵌动画 clip |
-| `motion.play()` / timeline | 空间化容器上的声明式 transform / opacity timeline |
+| `motion.play()` / timeline | 空间化容器上的声明式 transform / opacity timeline；Static3D 当前已交付的仅为 model 根 transform |

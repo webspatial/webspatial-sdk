@@ -2,9 +2,11 @@
 
 ## ADDED Requirements
 
-### Requirement: Static3D timeline animates model root transform and opacity
+### Requirement: Static3D timeline animates model root transform only
 
-The SDK MUST support `SpatializedStatic3DElement` timeline motion applying sampled values to `modelTransform` (translate/rotate/scale) and `opacity` without animating layout fields on the spatialized element shell.
+The SDK MUST support `SpatializedStatic3DElement` timeline motion applying sampled values to `modelTransform` (translate/rotate/scale) without animating layout fields on the spatialized element shell.
+
+Static3D root `opacity` is NOT part of the shipped timeline sink in this change. Authors MAY still set ordinary `opacity` on the element itself, but `xr-animation` bound to `<Model>` MUST NOT claim support for opacity tracks until native behavior is proven and shipped.
 
 Implementation MUST use `SpatializedMotionController` with the `static3d` target, resolved when `animation` is bound to a `<Model>` component (native-only; no Web RAF).
 
@@ -12,7 +14,7 @@ Implementation MUST use `SpatializedMotionController` with the `static3d` target
 
 - **GIVEN** `supports('useAnimation', ['static3d'])` is true
 - **WHEN** `SpatializedStatic3DElement.animateMotion({ type: 'play', timeline })` runs
-- **THEN** native MUST sample the timeline and update `modelTransform` / `opacity` until completion or session termination
+- **THEN** native MUST sample the timeline and update `modelTransform` until completion or session termination
 
 #### Scenario: Model xr-animation binding
 

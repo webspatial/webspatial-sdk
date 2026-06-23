@@ -17,7 +17,7 @@
 | Kind | Animatable paths (v1) |
 |------|------------------------|
 | 2D | `opacity`, `transform.translate.*`, `transform.rotate.*`, `transform.scale.*` |
-| Static3D | Same as 2D (applied to `modelTransform`) |
+| Static3D | `transform.translate.*`, `transform.rotate.*`, `transform.scale.*` applied to `modelTransform`; `opacity` is not a shipped Static3D sink |
 | Dynamic3D | Same as 2D (applied to container `element.transform` + opacity) |
 
 ## Separate APIs (do not merge)
@@ -25,4 +25,4 @@
 | API | Purpose |
 |-----|---------|
 | Model `ref.play()` / `pause()` | USD embedded animation clips |
-| `motion.play()` / timeline | Declarative transform / opacity timeline on the spatialized container |
+| `motion.play()` / timeline | Declarative transform / opacity timeline on the spatialized container; Static3D currently ships model-root transform only |
