@@ -128,12 +128,13 @@ export class NativePlaybackBackend implements PlaybackBackend {
 
   /** Fields to suppress on the Portal while the native session drives playback. */
   getSuppressedFields(): Set<string> | null {
-    const s = this.session?.state
-    if (s !== 'running' && s !== 'paused') return null
+    const session = this.session
+    const state = session?.state
+    if (state !== 'running' && state !== 'paused') return null
+    if (!session) return null
     const kind = this.ctx.getKind()
     if (!kind) return null
-    const cfg = this.ctx.getConfig()
-    return MOTION_KIND_POLICIES[kind].getSuppressedFields(cfg)
+    return MOTION_KIND_POLICIES[kind].getSuppressedFields(session.config)
   }
 
   /** Cancel any active session and release native wiring. */
@@ -371,11 +372,14 @@ export class NativePlaybackBackend implements PlaybackBackend {
    * Samples JS-side visual values for pause/stop/reset fallbacks.
    *
    * @param elapsedMs Elapsed wall-clock time in milliseconds.
+   * @param config Timeline snapshot used for sampling the current native state.
    */
-  private syncNativeStyleAtElapsed(elapsedMs: number): void {
-    const cfg = this.ctx.getConfig()
-    const t = motionTimeSec(elapsedMs, cfg)
-    this.ctx.emitValues(evaluateMotionTimeline(cfg, t))
+  private syncNativeStyleAtElapsed(
+    elapsedMs: number,
+    config = this.session?.config ?? this.ctx.getConfig(),
+  ): void {
+    const t = motionTimeSec(elapsedMs, config)
+    this.ctx.emitValues(evaluateMotionTimeline(config, t))
   }
 
   /**

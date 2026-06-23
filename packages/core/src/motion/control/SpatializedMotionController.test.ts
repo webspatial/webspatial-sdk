@@ -84,6 +84,23 @@ function makeSuppressionConfig() {
   }
 }
 
+function makeTransformConfig() {
+  return {
+    duration: 1,
+    autoStart: false,
+    tracks: [
+      {
+        property: 'transform.translate.x' as const,
+        timingFunction: 'linear' as const,
+        keyframes: [
+          { at: 0, value: 0 },
+          { at: 1, value: 10 },
+        ],
+      },
+    ],
+  }
+}
+
 function makeStatic3DConfig(
   overrides: Partial<{
     autoStart: boolean
@@ -920,6 +937,158 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
 })
 
 describe('SpatializedMotionController portal suppression timing', () => {
+  test('spatialized2d keeps transform suppression from the active native session snapshot after updateConfig', async () => {
+    const animateMotion = vi.fn(async (command: { type: string }) => {
+      if (command.type === 'play') {
+        return {
+          animationId: 'native-snapshot-2d',
+          finished: new Promise<SpatializedVisualValues>(() => {}),
+          canceled: new Promise<SpatializedVisualValues>(() => {}),
+          failed: new Promise(() => {}),
+        }
+      }
+      return undefined
+    })
+    const controller = new SpatializedMotionController(makeTransformConfig(), {
+      forceNativePlayback: true,
+    })
+    controller.attachElement(null, 'spatialized2d')
+    controller.attachElement({ id: 'native-snapshot-2d', animateMotion } as any)
+
+    controller.play()
+    await vi.waitFor(() => {
+      expect(animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'play',
+          targetKind: 'spatialized2d',
+        }),
+      )
+      expect(controller.playState).toBe('running')
+    })
+
+    controller.updateConfig(makeOpacityConfig(0, 1))
+
+    expect(controller.getSuppressedFields()).toEqual(new Set(['transform']))
+  })
+
+  test('static3d keeps entityTransform suppression from the active native session snapshot after updateConfig', async () => {
+    const animateMotion = vi.fn(async (command: { type: string }) => {
+      if (command.type === 'play') {
+        return {
+          animationId: 'native-snapshot-3d',
+          finished: new Promise<SpatializedVisualValues>(() => {}),
+          canceled: new Promise<SpatializedVisualValues>(() => {}),
+          failed: new Promise(() => {}),
+        }
+      }
+      return undefined
+    })
+    const controller = new SpatializedMotionController(makeStatic3DConfig(), {
+      forceNativePlayback: true,
+    })
+    controller.attachElement(null, 'static3d')
+    controller.attachElement({ id: 'native-snapshot-3d', animateMotion } as any)
+
+    controller.play()
+    await vi.waitFor(() => {
+      expect(animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'play',
+          targetKind: 'static3d',
+        }),
+      )
+      expect(controller.playState).toBe('running')
+    })
+
+    controller.updateConfig(makeOpacityConfig(0, 1))
+
+    expect(controller.getSuppressedFields()).toEqual(
+      new Set(['entityTransform']),
+    )
+  })
+
+  test('native pause fallback sampling keeps using the active session snapshot after updateConfig', async () => {
+    vi.useFakeTimers()
+    const values: SpatializedVisualValues[] = []
+    const animateMotion = vi.fn(async (command: { type: string }) => {
+      if (command.type === 'play') {
+        return {
+          animationId: 'native-pause-snapshot',
+          finished: new Promise<SpatializedVisualValues>(() => {}),
+          canceled: new Promise<SpatializedVisualValues>(() => {}),
+          failed: new Promise(() => {}),
+        }
+      }
+      return undefined
+    })
+    const controller = new SpatializedMotionController(
+      {
+        duration: 2,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'transform.translate.x',
+            timingFunction: 'linear',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 2, value: 100 },
+            ],
+          },
+        ],
+      },
+      {
+        forceNativePlayback: true,
+        onValuesChange: v => values.push(v),
+      },
+    )
+    controller.attachElement(null, 'spatialized2d')
+    controller.attachElement({
+      id: 'native-pause-snapshot',
+      animateMotion,
+    } as any)
+
+    try {
+      controller.play()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'play',
+            targetKind: 'spatialized2d',
+          }),
+        )
+        expect(controller.playState).toBe('running')
+      })
+
+      await vi.advanceTimersByTimeAsync(500)
+      controller.updateConfig(makeOpacityConfig(0, 1))
+      controller.pause()
+      await vi.waitFor(() => {
+        expect(animateMotion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'pause',
+            targetKind: 'spatialized2d',
+          }),
+        )
+        expect(controller.playState).toBe('paused')
+      })
+
+      expect(values.at(-1)).toEqual(
+        expect.objectContaining({
+          transform: expect.objectContaining({
+            translate: expect.objectContaining({
+              x: expect.any(Number),
+            }),
+          }),
+        }),
+      )
+      expect(values.at(-1)?.transform?.translate?.x).toBeGreaterThan(0)
+      expect(values.at(-1)?.transform?.translate?.x).toBeLessThan(100)
+      expect(values.at(-1)?.opacity).toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   test('spatialized2d masks opacity and transform while native playback is active', () => {
     const controller = new SpatializedMotionController(
       makeSuppressionConfig(),
