@@ -6,20 +6,26 @@
 
 The SDK MUST support `SpatializedStatic3DElement` timeline motion applying sampled values to `modelTransform` (translate/rotate/scale) without animating layout fields on the spatialized element shell.
 
-Static3D root `opacity` is NOT part of the shipped timeline sink in this change. Authors MAY still set ordinary `opacity` on the element itself, but `xr-animation` bound to `<Model>` MUST NOT claim support for opacity tracks until native behavior is proven and shipped.
+Static3D root `opacity` is NOT part of the shipped timeline sink in this change. Authors MAY still set ordinary `opacity` on the element itself, but `xr-animation` bound to `<Model>` MUST reject opacity tracks during `validateSpatializedMotionConfig`; it MUST NOT silently ignore them.
 
-Implementation MUST use `SpatializedMotionController` with the `static3d` target, resolved when `animation` is bound to a `<Model>` component (native-only; no Web RAF).
+Target-state execution MUST create an `AnimationObject` through `SpatializedElement.createAnimation(config)` when `animation` is bound to a `<Model>` component and resolves to `static3d`.
 
-#### Scenario: Native play sends timeline
+#### Scenario: Native create sends timeline
 
 - **GIVEN** `supports('useAnimation', ['static3d'])` is true
-- **WHEN** `SpatializedStatic3DElement.animateMotion({ type: 'play', timeline })` runs
+- **WHEN** `CreateSpatializedElementAnimation` runs for a `SpatializedStatic3DElement`
 - **THEN** native MUST sample the timeline and update `modelTransform` until completion or session termination
+
+#### Scenario: Static3D opacity tracks are rejected
+
+- **WHEN** an `xr-animation` binding resolves to `static3d` and the normalized timeline contains `opacity`
+- **THEN** `validateSpatializedMotionConfig` MUST reject the config before `CreateSpatializedElementAnimation`
+- **AND** native MUST NOT receive a timeline with ignored Static3D opacity tracks
 
 #### Scenario: Model xr-animation binding
 
 - **WHEN** `<Model xr-animation={binding} />` receives `animation` from `useAnimation(config)`, resolving the target to `static3d`
-- **THEN** play before bind MAY queue; after bind native playback MUST drive transform without fighting React layout writes (suppression rules analogous to 2D)
+- **THEN** play before bind MAY queue; after bind native playback MUST drive transform without fighting React layout writes through the element animating mask
 
 ### Requirement: Clip playback stays separate
 

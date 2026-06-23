@@ -15,7 +15,7 @@
 Plan A 留下了在本设计中仍然保持规范性的基础原语：
 
 - 会话生命周期和播放状态
-- native 控制播放期间的 Portal 抑制
+- native 控制播放期间的 animation-owned 字段 mask
 - native 逐帧采样语义
 - 生命周期回调互斥
 - 以 `from` 和 `to` 表示的单段 authoring 便利形状
@@ -25,17 +25,18 @@ Plan A 留下了在本设计中仍然保持规范性的基础原语：
 Plan B 引入了通用 timeline 模型：
 
 - 按属性拆分的 canonical `tracks`
-- 当 native motion 不可用时，2D 使用 Web RAF
 - 以 `style` 作为唯一的 React merge outlet
 - 通过 `xr-animation` 在绑定时解析目标
+
+目标态有意不再保留 Web RAF backend 作为播放路径。纯 Web runtime 对 spatialized 目标的 `useAnimation` capability 返回 false。
 
 ### 统一目标态
 
 本设计将它们整合为单一的三层架构：
 
-- `React SDK` 定义 authoring 和 binding
-- `Core SDK` 定义配置归一化、播放语义和 bridge payload
-- `Native Runtime` 定义目标特定的播放和写入
+- `React SDK` 定义 authoring、binding 和 React `AnimationProxy`
+- `Core SDK` 定义配置归一化、播放语义和 object-channel payload
+- `Native Runtime` 定义 `AnimationObject : SpatialObject`、目标特定的播放和写入
 
 ## 目标
 
@@ -49,12 +50,16 @@ Plan B 引入了通用 timeline 模型：
 
 ```mermaid
 flowchart TD
-  React[React SDK]
-  Core[Core SDK]
-  Native[Native Runtime]
+  React[React SDK useAnimation]
+  Proxy[React AnimationProxy]
+  Core[Core SDK validation and command model]
+  Element[SpatializedElement.createAnimation]
+  Native[Native AnimationObject]
 
-  React --> Core
-  Core --> Native
+  React --> Proxy
+  Proxy --> Core
+  Core --> Element
+  Element --> Native
 ```
 
 ## Core SDK
@@ -63,12 +68,12 @@ flowchart TD
 
 | 模块 | 职责 |
 |------|------|
-| `SpatializedMotionController` | 容器 motion 的 canonical 播放控制器，负责 play state、后端选择、终止命令语义和 suppression 状态。 |
+| `AnimationProxyCore` | React `AnimationProxy` 背后的 Core 状态持有者，负责 queued commands、公开 playback state 投影、终止命令语义和当前 `AnimationObject` identity。 |
 | `evaluateMotionTimeline` | 在 timeline 时间 `t` 采样 canonical `tracks`，应用 `timingFunction`，并组装视觉值。 |
 | `validateSpatializedMotionConfig` | 在播放或 native send 前校验 authoring config。 |
-| `motionConfigToNativeTimeline` | 将归一化后的 motion config 编译为 canonical native wire payload。 |
-| `motionElementBridge` | 将 `play`、`pause`、`resume`、`stop`、`reset`、`finish` 命令从 Core 发送到 native spatialized element，并负责 listener 清理。 |
-| `MOTION_KIND_POLICIES` | 编码每种 kind 的 Web RAF 可用性和 suppression 规则。 |
+| `motionConfigToAnimationTimeline` | 将归一化后的 motion config 编译为 canonical `CreateSpatializedElementAnimation` payload。 |
+| `animationObjectChannel` | 向 spatialized native elements 发送 create、control、destroy 和 state-listener 请求。 |
+| `ELEMENT_ANIMATING_MASK_POLICIES` | 编码每种 kind 的 animation-owned 字段 mask 行为和 terminal handoff 规则。 |
 
 ### 接口
 
@@ -125,7 +130,7 @@ Core 层接受三种互斥的 authoring 形状：
 
 #### 播放语义
 
-`SpatializedMotionController` 负责规范性播放行为：
+`AnimationProxyCore` 与 native `AnimationObject` 共同负责规范性播放行为：
 
 - `play()` 启动播放，或从暂停进度恢复
 - 已处于 `running` 时再次调用 `play()` 为 no-op
@@ -142,17 +147,16 @@ Core 层接受三种互斥的 authoring 形状：
 - controller state 只表达整体会话；不建模 partially-paused 聚合状态或 pause reason 叠加
 - paused 状态下再次调用 `play()`，语义等同于 `resume()`
 
-#### 后端策略
+#### AnimationObject 生命周期
 
-按 kind 通过 `MOTION_KIND_POLICIES` 选择后端策略：
+每个已解析 binding 在同一时刻最多拥有一个 native `AnimationObject`：
 
-- `spatialized2d`
-  - 允许 Web RAF
-  - 具备能力时允许 native
-- `static3d`
-  - 仅 native
-- `dynamic3d`
-  - 仅 native
+- bind 时通过 `SpatializedElement.createAnimation(config)` 创建
+- create 锁定归一化 timeline config
+- config 变化时 destroy 旧 object 并创建新 object
+- unbind 时 destroy 当前 object
+- 绑定前显式 `play()` 在 proxy 上排队，并在 bind 后发送给 object
+- `autoStart: false` 只禁止 implicit play-on-bind；不会移除已排队的显式命令
 
 ### 边界
 
@@ -170,11 +174,10 @@ Core 层不定义：
 | 模块 | 职责 |
 |------|------|
 | `useAnimation` | 公共 authoring hook，返回 `[animation, api, style]`，在 bind-time 之前与目标无关。 |
-| `useMotionController` | 将 React 生命周期与 Core controller 连接起来。 |
-| `createMotionBinding` | 生成承载延迟目标状态的 opaque `xr-animation` binding 对象。 |
-| `createPlaybackApi` | 暴露由 controller 驱动的稳定 React-facing playback surface。 |
-| `useBindSpatializedMotion` | 内部 binding hook，集中处理 attach、unbind、cleanup，以及可选的 2D suppression 同步。 |
-| `PortalSpatializedContainer` | 将 2D `xr-animation` 绑定到 `Spatialized2DElement`，并协调 suppression 与 Portal sync。 |
+| `createAnimationProxy` | 生成承载延迟目标状态和当前 `AnimationObject` identity 的 opaque `xr-animation` binding 对象。 |
+| `createPlaybackApi` | 暴露由 proxy 驱动的稳定 React-facing playback surface。 |
+| `useBindSpatializedAnimation` | 内部 binding hook，集中处理 attach、unbind、cleanup 和 element animating mask 同步。 |
+| `Spatialized2DElement binding layer` | 将 2D `xr-animation` 绑定到 `Spatialized2DElement`，并协调 element animating mask 与常规 element sync。 |
 | `Model` | 将 binding target 解析为 `static3d` 的 React 集成点。 |
 | `Reality` | 将 binding target 解析为 `dynamic3d` 的 React 集成点。 |
 
@@ -188,9 +191,8 @@ Core 层不定义：
 - `api`
 - `style`
 
-React SDK 面向业务的推荐公开入口保持为 `useAnimation`。`SpatializedMotionController` 与
-`SpatializedMotionHandle` 保留在 Core 层作为 imperative utility / internal seam，
-不再作为 React SDK 根入口或 motion 子入口的公开导出。
+React SDK 面向业务的推荐公开入口保持为 `useAnimation`。旧 controller 与 backend class
+不是目标态执行原语，不再作为 React SDK 根入口或 motion 子入口的公开导出。
 
 #### 绑定
 
@@ -204,14 +206,14 @@ React 层通过 `xr-animation` prop 定义目标绑定通道：
 
 `style` 是唯一的 author-facing visual merge outlet：
 
-- 对 `spatialized2d`，`style` 携带 active animated values，并作为 Web fallback / 非 native 的视觉输出口
+- 对 `spatialized2d`，`style` 携带 terminal 与 authored visual handoff 值；它不是 Web RAF playback backend
 - 对 `static3d` 和 `dynamic3d`，`style` 始终是可安全 spread 的空对象；native 播放完全由 `xr-animation` 驱动
 
 `style` fallback 的决策仍属于 React，但它应被定义为一个纯映射：
 
 - `static3d` 和 `dynamic3d` 始终返回空对象
-- `spatialized2d` 在 native playback 活跃时，对被 suppression 的 `opacity` 和 `transform` 做字段屏蔽
-- Web fallback 直接返回 `valuesToMotionStyle(values)`，而不是在 React 中重复实现 timeline 求值规则
+- `spatialized2d` 在 native playback 活跃时，对 animation-owned 的 `opacity` 和 `transform` 做字段屏蔽
+- 纯 Web runtime 不运行目标态 Web RAF fallback；capability check 返回 false
 
 对于 `spatialized2d`，终态阶段的 `opacity` 还增加一条控制权规则：
 
@@ -225,19 +227,19 @@ React 层通过 `xr-animation` prop 定义目标绑定通道：
 
 #### 绑定时目标解析
 
-React 层只在 `animation` 真正绑定时解析 controller target：
+React 层只在 `animation` 真正绑定时解析 target：
 
 - `enable-xr` 节点 → `spatialized2d`
 - `Model` → `static3d`
 - `Reality` → `dynamic3d`
 
 若在 binding 存在前调用 `api.play()`，命令会排队，并在目标解析后开始执行。
-这意味着 controller 允许在构造阶段没有 `kind`，但在 backend 真正执行 playback 前，
+这意味着 proxy 允许在构造阶段没有 `kind`，但在执行 `SpatializedElement.createAnimation(config)` 前，
 绑定流程必须已经写入并解析出目标 `kind`。
 
 React hook MUST NOT 为了实现 `autoStart` 而在挂载 effect 中直接调用
-`controller.play()`。`autoStart` 只由 Core 在目标解析完成且
-`attachElement()` 完成后处理。React 仍可通过 controller 保留 bind 前
+`api.play()`。`autoStart` 只由 Core 在目标解析完成且
+`attachElement()` 完成后处理。React 仍可通过 proxy 保留 bind 前
 `api.play()` 的排队语义。
 
 #### 单绑定约束
@@ -248,8 +250,8 @@ React hook MUST NOT 为了实现 `autoStart` 而在挂载 effect 中直接调用
 
 对于 `spatialized2d`：
 
-- 当 native motion 不可用时，Web RAF 直接驱动 `style` outlet
-- 在 native 控制播放期间，`style` 仍是 React merge outlet，但中间态由 suppression 控制 native-owned 字段
+- 在 native 控制播放期间，`style` 仍是 React merge outlet，但中间态由 element animating mask 控制 native-owned 字段
+- 当 native spatial animation capability 不可用时，该 spatialized 目标为 unsupported，而不是 fallback 到 Web RAF
 
 对于 `static3d` 和 `dynamic3d`：
 
@@ -291,10 +293,10 @@ stateDiagram-v2
 模块职责有意拆分如下：
 
 - `Spatialized2DElementContainer` 负责识别绑定 React 节点是否显式声明了 `style.opacity`
-- `useAnimation` 负责结合采样值、suppression 状态与 authored-opacity 元信息来协调终态控制权
+- `useAnimation` 负责结合采样值、animating mask 状态与 authored-opacity 元信息来协调终态控制权
 - `resolveMotionStyle` 负责决定 inner DOM 的 `opacity` 是省略，还是恢复为显式声明的值
-- `PortalInstanceContext` 负责协调 outer native 同步，确保终态切换后不会同时保留 outer native `opacity` 与 inner DOM `opacity`
-- `NativePlaybackBackend` 继续只提供终态采样值，不负责推断 authored 控制权
+- element sync 层负责协调常规 element sync，确保终态切换后不会同时保留 outer native `opacity` 与 inner DOM `opacity`
+- `AnimationObject` 继续只提供终态采样值，不负责推断 authored 控制权
 
 这样可以保持终态回调语义不变：
 
@@ -308,16 +310,16 @@ outer native `opacity` 与 inner DOM `opacity` 仍然同时控制同一个视觉
 #### Host transform 终态控制权设计
 
 Host transform 目标（`spatialized2d` 与 `dynamic3d`）存在与 `opacity`
-同类的终态控制权问题：active 播放期间 suppression 能正确屏蔽 outer
-transform 同步，但 `stop()`、`reset()`、`finish()` 当前会在没有定义后续控制方
-的情况下直接释放 suppression。结果就是终态闪回，Portal / DOM 同步会立刻把
+同类的终态控制权问题：active 播放期间 animating mask 能正确屏蔽 animation-owned
+outer transform 同步，但 `stop()`、`reset()`、`finish()` 当前会在没有定义后续控制方
+的情况下改变 mask。结果就是终态闪回，DOM 同步会立刻把
 静态 host transform 写回去，覆盖原生采样到的终态 pose。
 
 该设计沿用与 `opacity` 相同的 ownership 模型，但 host transform 的 sink
 按目标类型区分：
 
 - 单一控制方原则：视觉 host `transform` 在任一时刻只能有一个有效控制方
-- 显式状态建模：suppression 的释放点是 transform 控制权决策点，而不是默认允许 DOM 同步恢复
+- 显式状态建模：animating mask 的释放点是 transform 控制权决策点，而不是默认允许 DOM 同步恢复
 - 策略化终态选择：终态控制方在显式 React `style.transform` 与原生采样的终态 host transform 之间选择
 - 目标作用域边界：`spatialized2d` 与 `dynamic3d` 参与 host transform 控制权切换，`static3d` 暂不纳入，因为其 motion sink 主要是 `modelTransform`
 
@@ -344,16 +346,16 @@ stateDiagram-v2
 各目标的结果是有意区分的：
 
 - `spatialized2d`：`style` outlet 仍是 active 阶段的 merge outlet，但终态后在没有显式 authored `style.transform` 时，不得静默退回初始 DOM transform
-- `dynamic3d`：当原生终态 transform 仍然持有控制权时，Portal 的 host transform 同步不得重新把静态 DOM transform 写回去
+- `dynamic3d`：当原生终态 transform 仍然持有控制权时，host transform 同步不得重新把静态 DOM transform 写回去
 - `static3d`：该设计不改变 `modelTransform` 的控制权；如果未来要为 `static3d` 的 host transform 增加语义，必须单独定义
 
 模块职责有意拆分如下：
 
 - React 绑定层负责识别绑定 host 是否显式声明了 `style.transform`
-- `useAnimation` 与 binding 元信息负责结合采样值、suppression 状态和 authored-transform 元信息协调终态控制权
-- 各目标的 style / Portal 适配层负责在 suppression 释放后决定 DOM 侧 transform 是省略还是恢复
-- `PortalInstanceContext` 负责协调 outer native transform 同步，确保终态切换后不会同时保留 native host transform 与 DOM host transform 两个控制方
-- `NativePlaybackBackend` 继续只提供终态采样值，不负责推断 authored transform 控制权
+- `useAnimation` 与 binding 元信息负责结合采样值、animating mask 状态和 authored-transform 元信息协调终态控制权
+- 各目标的 style / sync 适配层负责在 mask ownership 变化后决定 DOM 侧 transform 是省略还是恢复
+- element sync 层负责协调 outer native transform 同步，确保终态切换后不会同时保留 native host transform 与 DOM host transform 两个控制方
+- `AnimationObject` 继续只提供终态采样值，不负责推断 authored transform 控制权
 
 这样可以保持终态回调语义不变：
 
@@ -362,7 +364,7 @@ stateDiagram-v2
 - `finish()` 场景下的 `onComplete(values)` 仍然接收终值
 
 变化的只有终态后的视觉控制权。设计目标是避免进入这样一种状态：终态后
-native host transform 与 DOM / Portal host transform 仍然同时控制同一个视觉结果。
+native host transform 与 DOM host transform 仍然同时控制同一个视觉结果。
 
 ### 边界
 
@@ -379,10 +381,13 @@ React 层不定义：
 
 | 模块 | 职责 |
 |------|------|
-| `SpatializedElementMotionManager` | 统一的 spatialized element motion native manager，覆盖 2D、Static3D、Dynamic3D。 |
-| `SpatializedElementMotionTimelineSampler` | canonical tracks 播放的 native sampler。 |
-| `SpatializedElementMotionTransformAdapter` | 屏蔽 `element.transform` 和 `modelTransform` 的目标特定写入差异。 |
-| `AnimateSpatializedElementMotion` listener | 接收 motion command 和 timeline payload 的 native JSB 入口。 |
+| `AnimationObject` | Native `SpatialObject`，为单个 spatialized element 持有 locked timeline、playback state、terminal values 和目标特定写入。 |
+| `SpatializedElement.createAnimation(config)` | 创建 `AnimationObject` 并把其 identity 返回给 JS 的 element 方法。 |
+| `SpatializedElementAnimationSampler` | canonical tracks 播放的 native sampler。 |
+| `SpatializedElementAnimationTransformAdapter` | 屏蔽 `element.transform` 和 `modelTransform` 的目标特定写入差异。 |
+| `CreateSpatializedElementAnimation` | 创建并锁定 native animation object 的 JSB/WebMsg 入口。 |
+| `ControlSpatializedElementAnimation` | `play`、`pause`、`resume`、`stop`、`reset`、`finish` 和 `destroy` 命令的 JSB/WebMsg 入口。 |
+| `SpatialAnimationStateChanged` | 上报 state changes、terminal values 和 async errors 的 JSB/WebMsg 事件。 |
 
 ### 接口
 
@@ -390,25 +395,32 @@ React 层不定义：
 
 Native 层接收统一的命令族：
 
+- `create`
 - `play`
 - `pause`
 - `resume`
 - `stop`
 - `reset`
 - `finish`
+- `destroy`
 
-#### Play payload
+#### Create 与 control payload
 
-`play` payload 携带：
+create payload 携带：
 
 - `animationId`
 - `targetKind`
 - `elementId`
 - `timeline`
 
-其中 `timeline` 是由 Core 发送的 canonical tracks 文档，同时承载
+其中 `timeline` 是 Core 在 create 时发送的 canonical tracks 文档，同时承载
 `duration`、逐轨和逐 keyframe 的 `timingFunction`，以及 timeline 级别的
 `delay`、`playbackRate`、`loop`。
+
+control payload 携带：
+
+- `animationId`
+- command type
 
 ### 行为
 
@@ -417,12 +429,12 @@ Native 层接收统一的命令族：
 Native 按 kind 将采样值写入不同 sink：
 
 - `spatialized2d` → `element.transform` 和 `opacity`
-- `static3d` → `modelTransform` 和 `opacity`
+- `static3d` → `modelTransform`；`opacity` 在 create 前被拒绝
 - `dynamic3d` → `element.transform` 和 `opacity`
 
 #### Canonical tracks 执行
 
-Native 必须直接评估 canonical tracks payload。对于该 API，native 播放不得用旧版 `from` 和 `to` 插值路径替换 tracks 执行。
+Native 必须直接评估已锁定的 canonical tracks payload。对于该 API，native 播放不得用旧版 `from` 和 `to` 插值路径替换 tracks 执行。
 
 #### 终止命令行为
 
@@ -458,16 +470,16 @@ Native 层不定义：
 React 层通过以下入口将 authoring config 和生命周期传给 Core：
 
 - `useAnimation(config)`
-- `createMotionBinding`
+- `createAnimationProxy`
 - `createPlaybackApi`
 
-Core 仍然是 normalized config、play state 和 terminal command semantics 的唯一所有者。
+Core 仍然负责 normalized config、queued commands、play state projection 和 terminal command semantics。Native `AnimationObject` 仍是执行所有者。
 
 #### Hook 元组契约
 
 ```typescript
 type UseAnimationResult = readonly [
-  animation: SpatializedMotionBindingInternal,
+  animation: SpatializedAnimationProxyInternal,
   api: SpatializedPlaybackApi,
   style: CSSProperties,
 ]
@@ -480,12 +492,12 @@ type UseAnimationResult = readonly [
 #### Binding 契约
 
 ```typescript
-interface SpatializedMotionBindingInternal {
-  readonly __kind: 'spatializedMotion'
+interface SpatializedAnimationProxyInternal {
+  readonly __kind: 'spatializedAnimation'
   readonly __propName: 'xr-animation'
-  readonly __motionObjectId: string
+  readonly __animationObjectId: string | null
   get __animating(): boolean
-  __getSuppressedFields(): Set<string> | null
+  __getAnimatingMask(): Set<string> | null
   __setElement?: (
     element: HTMLElement | Spatialized2DElement | SpatializedStatic3DElement | SpatializedDynamic3DElement | null,
     targetKind?: SpatializedMotionKind,
@@ -495,32 +507,38 @@ interface SpatializedMotionBindingInternal {
 ```
 
 - React 负责该对象的创建和挂载期接线
-- Core 负责其背后的 motion object identity、animating state 和 suppression state
+- Core 负责其背后的 queued command state、playback state projection 和 object-channel lifecycle
 - 应用将其视为 opaque，只通过 `xr-animation` 透传
 
 ### Core SDK 到 Native Runtime
 
-Core 层通过 bridge 发送 canonical motion commands：
+Core 层通过 JSB/WebMsg 发送 canonical animation object commands：
 
-- `AnimateSpatializedElementMotion`
+- `CreateSpatializedElementAnimation`
+- `ControlSpatializedElementAnimation`
+- `SpatialAnimationStateChanged` listener subscription
 - canonical `timeline` payload
 - `stop`、`reset`、`finish` 的 terminal commands
 
 #### 命令契约
 
 ```typescript
-interface AnimateSpatializedElementMotionCommand {
+interface CreateSpatializedElementAnimationCommand {
   animationId: string
-  type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish'
   targetKind: 'spatialized2d' | 'static3d' | 'dynamic3d'
-  elementId?: string
-  timeline?: SpatializedMotionTimeline
+  elementId: string
+  timeline: SpatializedMotionTimeline
+}
+
+interface ControlSpatializedElementAnimationCommand {
+  animationId: string
+  type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish' | 'destroy'
 }
 ```
 
-- 对目标态 `useAnimation` 路径，`play` 使用 `timeline` 作为 canonical execution document
-- `play` 通过 JSB 是 timeline-only 的；顶层时序控制字段不属于稳定 wire 契约
-- `targetKind` 由 Core 在 React 绑定时完成目标解析后填充
+- 对目标态 `useAnimation` 路径，`create` 使用 `timeline` 作为 canonical execution document
+- `play` 是针对已创建 object 的 control command，不携带新的 timeline
+- `targetKind` 由 Core 在 React 绑定时完成目标解析后、create 前填充
 - controller 级 `pause` 和 `resume` 只支持整体会话控制；未来如需局部 track/action 控制，必须另起一个新 change 设计独立 API
 
 #### Canonical timeline payload
@@ -543,8 +561,8 @@ interface SpatializedMotionTimeline {
 }
 ```
 
-- 这是目标态容器 motion 唯一稳定的跨层播放文档
-- segment 风格的 `from` 和 `to` authoring 必须在 native send 前编译为该形状
+- 这是目标态容器 motion 唯一稳定的跨层 create 文档
+- segment 风格的 `from` 和 `to` authoring 必须在 object creation 前编译为该形状
 - timeline 级别的 `delay`、`playbackRate`、`loop` 都位于该 payload 内部，而不是外层命令上
 - 对外文档应继续把 `timeline` 表述为单个 CSS `@keyframes` 风格对象，而不是串行动画数组或多 action 编排原语
 
@@ -560,20 +578,21 @@ Native 层返回：
 
 Core 再将这些值转发给 React-facing callbacks 和 style 更新。
 
-#### Play handle 契约
+#### State changed 契约
 
 ```typescript
-interface AnimateSpatializedElementMotionResult {
+interface SpatialAnimationStateChanged {
   animationId: string
-  finished: Promise<SpatializedVisualValues>
-  canceled: Promise<SpatializedVisualValues>
-  failed: Promise<SpatializedPlaybackError>
+  state: 'idle' | 'queued' | 'running' | 'paused' | 'finished' | 'destroyed' | 'error'
+  terminalReason?: 'complete' | 'stop' | 'reset' | 'finish'
+  values?: SpatializedVisualValues
+  error?: SpatializedPlaybackError
 }
 ```
 
-- `finished` 在自然完成时 resolve 为终值
-- `canceled` 在统一 manager 暴露的终止中断路径上 resolve 为采样值
-- `failed` resolve 为 async playback error payload
+- 自然完成时报告 `terminalReason: 'complete'` 和终值
+- `stop`、`reset`、`finish` 分别报告自己的 terminal reason 和 values
+- async failure 报告 `state: 'error'` 和 error payload
 
 #### Terminal value 契约
 
@@ -594,7 +613,7 @@ Core 消费这些值，并将其作为以下语义的来源：
 
 - 终态原生采样值仍然是回调参数与终态会话语义的来源
 - 如果绑定 React 节点上存在显式声明的 `style.opacity`，`opacity` 的视觉控制权 MAY 在终态控制权切换时回交给该值
-- 该控制权切换 MUST 避免在 suppression 释放后让 native 外层 `opacity` 与 inner DOM `opacity` 同时继续生效
+- 该控制权切换 MUST 避免在 animating mask 变化后让 native 外层 `opacity` 与 inner DOM `opacity` 同时继续生效
 
 #### Error 契约
 
@@ -647,22 +666,22 @@ stateDiagram-v2
 
 每条终止路径中，`onComplete`、`onStop`、`onReset` 恰好触发一个。
 
-### Suppression
+### Element animating mask
 
-Portal suppression 仍然是共享的跨层规则：
+Element animating mask 是共享的跨层规则：
 
-- `opacity` track 仅抑制 `opacity` 同步
-- 任意 `transform.*` track 抑制 transform 整体同步
-- 在 terminal state 或 unbind 时释放 suppression
+- `opacity` track 仅 mask `opacity` 同步
+- 任意 `transform.*` track 整体 mask transform 同步
+- mask 在 active playback、terminal state、recreate、destroy 和 unbind 时更新
 
-因此，对于 `spatialized2d` 的 `opacity`，suppression 的释放会与上面的终态
-控制权决策绑定在一起。释放 suppression 不代表允许双重控制权，而是系统重新
+因此，对于 `spatialized2d` 的 `opacity`，mask 的释放或更新会与上面的终态
+控制权决策绑定在一起。释放 mask 不代表允许双重控制权，而是系统重新
 指定 `opacity` 唯一视觉控制方的时刻。
 
-对于 `spatialized2d` 的终态 `opacity` 控制权切换，释放 suppression 表示释放 DOM 同步权限，不表示允许双重控制权：
+对于 `spatialized2d` 的终态 `opacity` 控制权切换，释放 mask 表示释放 DOM 同步权限，不表示允许双重控制权：
 
-- 如果存在显式声明的 `style.opacity`，释放 suppression 后恢复该值作为终态后的唯一视觉控制方
-- 如果不存在显式声明的 `style.opacity`，释放 suppression 后保持终态原生 `opacity` 的控制权作为终态后的视觉结果
+- 如果存在显式声明的 `style.opacity`，释放 mask 后恢复该值作为终态后的唯一视觉控制方
+- 如果不存在显式声明的 `style.opacity`，释放 mask 后保持终态原生 `opacity` 的控制权作为终态后的视觉结果
 
 ## 非目标
 
