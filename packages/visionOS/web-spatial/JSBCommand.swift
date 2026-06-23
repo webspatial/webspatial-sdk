@@ -179,15 +179,6 @@ struct DestroyCommand: CommandDataProtocol {
     var id: String
 }
 
-struct DestroyAttachmentsCommand: CommandDataProtocol {
-    static let commandType: String = "DestroyAttachments"
-    var ids: [String]
-}
-
-struct DestroyAllAttachmentsCommand: CommandDataProtocol {
-    static let commandType: String = "DestroyAllAttachments"
-}
-
 protocol SpatializedElementProperties: SpatialObjectCommand {
     var name: String? { get }
     var clientX: Double? { get }

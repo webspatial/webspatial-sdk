@@ -12,15 +12,10 @@ import { getSession } from '../../utils/getSession'
 import { ResourceRegistry } from '../utils'
 import { AttachmentRegistry } from '../context/AttachmentContext'
 import { SpatializedElementRef } from '../../spatialized-container/types'
-import {
-  SpatializedElement,
-  onRealityMounted,
-  onRealityUnmounted,
-  flushAttachmentDestroys,
-} from '@webspatial/core-sdk'
+import { SpatializedElement } from '@webspatial/core-sdk'
 import { EntityEventHandler } from '../type'
 import { useRealityEvents } from '../hooks'
-import { resetAttachmentCreationPromises } from './AttachmentEntity'
+import { markWebSpatialPrimitive } from '../../jsx/primitive-marker'
 
 export type RealityProps = Omit<
   React.ComponentPropsWithRef<'div'>,
@@ -55,21 +50,11 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     const [isReady, setIsReady] = useState(false)
 
     const cleanupReality = useCallback(() => {
-      const ctx = ctxRef.current
-      const teardown = onRealityUnmounted()
-      resetAttachmentCreationPromises()
-      ctx?.attachmentRegistry.destroy()
-      ctx?.resourceRegistry.destroy()
+      ctxRef.current?.attachmentRegistry.destroy()
+      ctxRef.current?.resourceRegistry.destroy()
+      ctxRef.current?.reality.destroy()
       ctxRef.current = null
       setIsReady(false)
-      if (!ctx) {
-        return
-      }
-      void (async () => {
-        await flushAttachmentDestroys()
-        await teardown
-        await ctx.reality.destroy()
-      })()
     }, [])
 
     useEffect(() => {
@@ -121,7 +106,6 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
           resourceRegistry,
           attachmentRegistry,
         }
-        onRealityMounted()
         setIsReady(true)
         return reality as SpatializedElement
       } catch (err) {
@@ -162,3 +146,6 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     )
   },
 )
+// Brand the real implementation too: the eager entry exports THIS `Reality`,
+// and the JSX runtime must short-circuit it rather than wrapping it.
+markWebSpatialPrimitive(Reality, 'Reality')

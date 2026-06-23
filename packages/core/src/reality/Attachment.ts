@@ -2,7 +2,6 @@ import { SpatialObject } from '../SpatialObject'
 import {
   UpdateAttachmentEntityCommand,
   InitializeAttachmentCommand,
-  DestroyCommand,
 } from '../JSBCommand'
 import { createNativeAttachment } from '../spatial-host'
 import {
@@ -10,14 +9,6 @@ import {
   AttachmentEntityUpdateOptions,
   Vec3,
 } from '../types/types'
-import {
-  AttachmentCreationCancelledError,
-  enqueueAttachmentCreation,
-} from './attachmentCreationQueue'
-import {
-  getAttachmentPageGeneration,
-  isAttachmentPageStale,
-} from './attachmentTeardown'
 
 /**
  * Entity-like attachment surface. Not a SpatialEntity: the native entity is
@@ -71,55 +62,11 @@ export class Attachment extends SpatialObject {
 export async function createAttachmentEntity(
   options: AttachmentEntityOptions,
 ): Promise<Attachment> {
-  return enqueueAttachmentCreation(() => createAttachmentEntityImpl(options))
-}
-
-async function createAttachmentEntityImpl(
-  options: AttachmentEntityOptions,
-): Promise<Attachment> {
-  const pageGen = getAttachmentPageGeneration()
-  const result = await openNativeAttachmentWithRetry(options)
-  if (isAttachmentPageStale(pageGen)) {
-    const orphanId = result.data?.id
-    if (orphanId) {
-      await new DestroyCommand(orphanId).execute()
-    }
-    throw new AttachmentCreationCancelledError()
-  }
+  const result = await createNativeAttachment(options)
   if (!result.success) {
     throw new Error('createAttachmentEntity failed: ' + result?.errorMessage)
   }
   const { id, windowProxy } = result.data!
-  if (!windowProxy || !id) {
-    throw new Error(
-      'createAttachmentEntity failed: window.open returned no WindowProxy (native child webview limit or concurrent create rejected)',
-    )
-  }
   await new InitializeAttachmentCommand(id, options).execute()
-  if (isAttachmentPageStale(pageGen)) {
-    await new DestroyCommand(id).execute()
-    throw new AttachmentCreationCancelledError()
-  }
   return new Attachment(id, windowProxy, options)
-}
-
-const OPEN_ATTACHMENT_MAX_ATTEMPTS = 12
-
-async function openNativeAttachmentWithRetry(options: AttachmentEntityOptions) {
-  for (let attempt = 1; attempt <= OPEN_ATTACHMENT_MAX_ATTEMPTS; attempt++) {
-    const result = await createNativeAttachment(options)
-    const windowProxy = result.data?.windowProxy
-    const id = result.data?.id
-    if (result.success && windowProxy && id) {
-      return result
-    }
-    await waitForNextFrame()
-  }
-  return createNativeAttachment(options)
-}
-
-function waitForNextFrame() {
-  return new Promise<void>(resolve => {
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-  })
 }

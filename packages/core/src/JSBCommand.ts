@@ -617,26 +617,6 @@ export class DestroyCommand extends JSBCommand {
   }
 }
 
-export class DestroyAttachmentsCommand extends JSBCommand {
-  commandType = 'DestroyAttachments'
-
-  constructor(readonly ids: string[]) {
-    super()
-  }
-
-  protected getParams() {
-    return { ids: this.ids }
-  }
-}
-
-export class DestroyAllAttachmentsCommand extends JSBCommand {
-  commandType = 'DestroyAllAttachments'
-
-  protected getParams() {
-    return {}
-  }
-}
-
 export class CheckWebViewCanCreateCommand extends JSBCommand {
   commandType = 'CheckWebViewCanCreate'
 

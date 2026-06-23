@@ -1,12 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {
-  Attachment,
-  Vec3,
-  AttachmentCreationCancelledError,
-  scheduleAttachmentDestroy,
-  getAttachmentPageGeneration,
-  isAttachmentPageStale,
-} from '@webspatial/core-sdk'
+import { Attachment, Vec3 } from '@webspatial/core-sdk'
 
 import { useRealityContext, useParentContext } from '../context'
 import { setOpenWindowStyle } from '../../utils/windowStyleSync'
@@ -29,38 +22,6 @@ export function claimAttachmentInstanceId(explicitId?: string): string {
   }
   activeInstanceIds.add(resolved)
   return resolved
-}
-
-// In-flight createAttachmentEntity calls keyed by instance placement, so React
-// StrictMode remounts reuse one native webview instead of opening a second window.
-const creationPromises = new Map<string, Promise<Attachment>>()
-
-export function resetAttachmentCreationPromises() {
-  creationPromises.clear()
-}
-
-function getCreationKey(
-  instanceId: string,
-  ownerViewId: string,
-  parentEntityId: string,
-) {
-  return `${instanceId}:${ownerViewId}:${parentEntityId}`
-}
-
-async function getOrCreateAttachment(
-  key: string,
-  create: () => Promise<Attachment>,
-): Promise<Attachment> {
-  let pending = creationPromises.get(key)
-  if (!pending) {
-    pending = create().finally(() => {
-      if (creationPromises.get(key) === pending) {
-        creationPromises.delete(key)
-      }
-    })
-    creationPromises.set(key, pending)
-  }
-  return pending
 }
 
 export type AttachmentEntityProps = {
@@ -109,15 +70,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   const assetIdRef = useRef(assetId)
   const [childWindow, setChildWindow] = useState<WindowProxy | null>(null)
 
-  // Keep the id claimed while mounted (re-claims after StrictMode remount)
-  useEffect(() => {
-    const claimed = instanceIdRef.current!
-    activeInstanceIds.add(claimed)
-    return () => {
-      activeInstanceIds.delete(claimed)
-    }
-  }, [])
-
   // Create the attachment when the parent entity is ready
   useEffect(() => {
     if (!ctx || !parent) return
@@ -128,7 +80,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     parentIdRef.current = parentId
 
     let cancelled = false
-    const pageGen = getAttachmentPageGeneration()
 
     const init = async () => {
       try {
@@ -137,33 +88,17 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
             '[AttachmentEntity] No width or height provided; the native default size will be used.',
           )
         }
-        const att = await getOrCreateAttachment(
-          getCreationKey(instanceIdRef.current!, ctx.reality.id, parentId),
-          () =>
-            ctx.session.createAttachmentEntity({
-              parentEntityId: parentId,
-              position,
-              rotation,
-              scale,
-              width,
-              height,
-              ownerViewId: ctx.reality.id,
-            }),
-        )
-        const instanceId = instanceIdRef.current!
-        if (isAttachmentPageStale(pageGen)) {
-          scheduleAttachmentDestroy(att.id)
-          att.isDestroyed = true
-          return
-        }
-        // StrictMode unmount shares one in-flight create via `getOrCreateAttachment`.
-        // A cancelled init must not destroy the attachment while a remount is still
-        // active — only tear down when this instance id is no longer mounted.
+        const att = await ctx.session.createAttachmentEntity({
+          parentEntityId: parentId,
+          position,
+          rotation,
+          scale,
+          width,
+          height,
+          ownerViewId: ctx.reality.id,
+        })
         if (cancelled) {
-          if (!activeInstanceIds.has(instanceId)) {
-            scheduleAttachmentDestroy(att.id)
-            att.isDestroyed = true
-          }
+          att.destroy()
           return
         }
         // Initial style sync for attachment window
@@ -202,9 +137,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
           att.getContainer(),
         )
       } catch (error) {
-        if (error instanceof AttachmentCreationCancelledError) {
-          return
-        }
         console.error('[AttachmentEntity] init error:', error)
       }
     }
@@ -214,18 +146,13 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     return () => {
       cancelled = true
       const instanceId = instanceIdRef.current!
+      activeInstanceIds.delete(instanceId)
       const att = attachmentRef.current
       if (att) {
         ctx.attachmentRegistry.removeContainer(assetIdRef.current, instanceId)
+        att.destroy()
         attachmentRef.current = null
         setChildWindow(null)
-        // Defer destroy so a StrictMode remount can reclaim the same attachment.
-        queueMicrotask(() => {
-          if (!activeInstanceIds.has(instanceId)) {
-            scheduleAttachmentDestroy(att.id)
-            att.isDestroyed = true
-          }
-        })
       }
     }
   }, [ctx, parent])
