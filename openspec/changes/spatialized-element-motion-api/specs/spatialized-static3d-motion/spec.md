@@ -2,30 +2,24 @@
 
 ## ADDED Requirements
 
-### Requirement: Static3D timeline animates model root transform only
+### Requirement: Static3D timeline drives model root transform
 
-The SDK MUST support `SpatializedStatic3DElement` timeline motion applying sampled values to `modelTransform` (translate/rotate/scale) without animating layout fields on the spatialized element shell.
+The SDK MUST support `SpatializedStatic3DElement.createAnimation(config)` applying locked timeline samples to `modelTransform`. Root `opacity` is not a shipped sink; opacity tracks MUST be rejected at validation or ignored on native.
 
-Static3D root `opacity` is NOT part of the shipped timeline sink in this change. Authors MAY still set ordinary `opacity` on the element itself, but `xr-animation` bound to `<Model>` MUST NOT claim support for opacity tracks until native behavior is proven and shipped.
-
-Implementation MUST use `SpatializedMotionController` with the `static3d` target, resolved when `animation` is bound to a `<Model>` component (native-only; no Web RAF).
-
-#### Scenario: Native play sends timeline
+#### Scenario: createAnimation on bind
 
 - **GIVEN** `supports('useAnimation', ['static3d'])` is true
-- **WHEN** `SpatializedStatic3DElement.animateMotion({ type: 'play', timeline })` runs
-- **THEN** native MUST sample the timeline and update `modelTransform` until completion or session termination
+- **WHEN** `<Model xr-animation={binding} />` finishes bind
+- **THEN** the SDK MUST `createAnimation` and update `modelTransform` on `play()`
 
-#### Scenario: Model xr-animation binding
+#### Scenario: play before bind queues
 
-- **WHEN** `<Model xr-animation={binding} />` receives `animation` from `useAnimation(config)`, resolving the target to `static3d`
-- **THEN** play before bind MAY queue; after bind native playback MUST drive transform without fighting React layout writes (suppression rules analogous to 2D)
+- **WHEN** `api.play()` runs before Model bind
+- **THEN** Proxy MUST queue and flush after create
 
-### Requirement: Clip playback stays separate
+### Requirement: clip playback stays separate
 
-USD embedded model playback (`ref.play()` / `pause()` on the model ref) MUST remain separate from transform timeline motion.
+#### Scenario: ref.play does not start AnimationObject
 
-#### Scenario: ref.play does not start timeline
-
-- **WHEN** application calls model ref `play()` for USD clip
-- **THEN** timeline `xr-animation` session MUST NOT be implied; separate APIs
+- **WHEN** model ref `play()` runs for USD clip
+- **THEN** `AnimationObject` timeline MUST NOT start implicitly

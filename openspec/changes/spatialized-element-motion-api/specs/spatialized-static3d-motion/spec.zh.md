@@ -2,28 +2,24 @@
 
 ## 新增需求
 
-### Requirement: Static3D timeline 仅驱动 model 根 transform
+### Requirement: Static3D timeline 驱动 model 根 transform
 
-SDK MUST 支持 `SpatializedStatic3DElement` timeline 动画，将采样值应用到 `modelTransform`（translate/rotate/scale），而不动画化空间化元素壳的布局字段。
+SDK MUST 支持 `SpatializedStatic3DElement.createAnimation(config)`，将锁定 timeline 的采样值应用到 `modelTransform`（translate/rotate/scale）。Static3D 根 `opacity` 不属于已交付 sink；opacity track MUST 在校验时被拒绝或 native 忽略。
 
-Static3D 根 `opacity` 不属于本次变更已交付的 timeline sink。开发者 MAY 继续设置元素自身的普通 `opacity`，但绑定到 `<Model>` 的 `xr-animation` 在 native 行为被证明并正式交付前，MUST NOT 宣称支持 opacity track。
-
-实现 MUST 使用 `SpatializedMotionController`，当 `animation` 绑定到 `<Model>` 组件时解析为 `static3d` 目标（仅 native；无 Web RAF）。
-
-#### Scenario: Native play 发送 timeline
+#### Scenario: bind 时 createAnimation
 
 - **GIVEN** `supports('useAnimation', ['static3d'])` 为 true
-- **WHEN** `SpatializedStatic3DElement.animateMotion({ type: 'play', timeline })` 执行
-- **THEN** native MUST 采样 timeline 并更新 `modelTransform` 直到完成或取消
+- **WHEN** `<Model xr-animation={binding} />` 完成 bind
+- **THEN** SDK MUST 调用 `createAnimation` 并在 `play()` 时更新 `modelTransform`
 
-#### Scenario: Model xr-animation binding
+#### Scenario: bind 前 play 排队
 
-- **WHEN** `<Model xr-animation={binding} />` 接收来自 `useAnimation(config)` 的 `animation`，目标解析为 `static3d`
-- **THEN** bind 前 play MAY 排队；bind 后 native 播放 MUST 驱动 transform 而不与 React 布局写入冲突（抑制规则与 2D 类似）
+- **WHEN** `api.play()` 在 Model bind 前调用
+- **THEN** Proxy MUST 排队，create 后 flush
 
 ### Requirement: Clip 播放保持独立
 
-#### Scenario: ref.play 不启动 timeline
+#### Scenario: ref.play 不启动 AnimationObject
 
 - **WHEN** 应用调用 model ref `play()` 播放 USD clip
-- **THEN** timeline `xr-animation` 会话 MUST NOT 被隐含启动；二者为独立 API
+- **THEN** `AnimationObject` timeline MUST NOT 被隐含启动

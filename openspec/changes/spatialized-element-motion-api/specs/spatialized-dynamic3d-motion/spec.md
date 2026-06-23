@@ -2,28 +2,21 @@
 
 ## ADDED Requirements
 
-### Requirement: Dynamic3D timeline animates container root transform and opacity
+### Requirement: Dynamic3D timeline drives container root transform and opacity
 
-The SDK MUST support `SpatializedDynamic3DElement` timeline motion applying sampled values to the **container** `element.transform` and `opacity`. Child `SpatialEntity` nodes MUST remain in local space (they move with the container).
+The SDK MUST support `SpatializedDynamic3DElement.createAnimation(config)` applying samples to container `element.transform` and `element.opacity`.
 
-Implementation MUST use `SpatializedMotionController` with the `dynamic3d` target, resolved when `animation` is bound to a `<Reality>` component (native-only; no Web RAF).
-
-#### Scenario: Native play sends timeline
+#### Scenario: createAnimation on bind
 
 - **GIVEN** `supports('useAnimation', ['dynamic3d'])` is true
-- **WHEN** `SpatializedDynamic3DElement.animateMotion({ type: 'play', timeline })` runs
-- **THEN** native MUST sample the timeline and update container transform / opacity until completion or session termination
+- **WHEN** `<Reality xr-animation={binding} />` finishes bind
+- **THEN** the SDK MUST `createAnimation` and update container transform / opacity on `play()`
 
-#### Scenario: Reality xr-animation binding
+#### Scenario: play before bind queues
 
-- **WHEN** `<Reality xr-animation={binding} />` receives `animation` from `useAnimation(config)`, resolving the target to `dynamic3d`
-- **THEN** play before bind MAY queue; after bind native playback MUST drive the Reality root without conflicting React transform writes (suppression analogous to 2D)
+- **WHEN** `api.play()` runs before Reality bind
+- **THEN** Proxy MUST queue and flush after create
 
-### Requirement: Entity motion stays separate
+### Requirement: container root only
 
-Child `SpatialEntity` animation MUST continue to use the separate entity stack and MUST NOT route through the container motion controller.
-
-#### Scenario: useEntityAnimation on Entity is not container motion
-
-- **WHEN** authors animate a child `Entity` with `useEntityAnimation`
-- **THEN** that MUST NOT use `SpatializedMotionController`; entity stack remains unchanged
+Timeline MUST animate only the Reality container root, not child node transforms.

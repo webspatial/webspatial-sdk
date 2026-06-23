@@ -1,28 +1,26 @@
 # 空间化元素动画 — 能力矩阵
 
-| 元素 kind | Core 类型 | React surface | 已交付 timeline | Web RAF 降级 | Native 后端 | 能力 token |
-|-----------|-----------|---------------|----------------|-------------|-------------|-----------|
-| **2D** | `Spatialized2DElement` | `useAnimation(config)` → `[animation, api, style]` | 是 | 是 | `SpatializedContainerMotionAnimationManager` | `supports('useAnimation', ['element'])` |
-| **Static3D** | `SpatializedStatic3DElement` | `<Model xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | 是 | **否** | `SpatializedContainerMotionAnimationManager` | `supports('useAnimation', ['static3d'])` |
-| **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | 是 | **否** | `SpatializedContainerMotionAnimationManager` | `supports('useAnimation', ['dynamic3d'])` |
+| 元素 kind | Core 类型 | React surface | Timeline | Web 支持 | Native 后端 | 能力 token |
+|-----------|-----------|---------------|----------|----------|-------------|-----------|
+| **2D** | `Spatialized2DElement` | `useAnimation` → `[animation, api, style]` + `xr-animation` | 是 | **否** | `AnimationObject` + `SpatializedElementMotionManager` | `supports('useAnimation', ['element'])` |
+| **Static3D** | `SpatializedStatic3DElement` | `<Model xr-animation>` + `useAnimation` | 是 | **否** | 同上 | `supports('useAnimation', ['static3d'])` |
+| **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality xr-animation>` + `useAnimation` | 是 | **否** | 同上 | `supports('useAnimation', ['dynamic3d'])` |
 
-**实现说明：** TypeScript 使用**单一** `SpatializedMotionController` 覆盖三种 kind；native 侧 2D/Static3D/Dynamic3D 统一走 `SpatializedContainerMotionAnimationManager`，并共享 `SpatializedMotionTransformSink`。
+**对象模型：** `SpatializedElement.createAnimation(config)` → native `AnimationObject : SpatialObject`（uuid 由 native 生成）。timeline 在 create 时锁定。控制走 `ControlSpatializedElementAnimation`。状态走 `SpatialAnimationStateChanged` WebMsg。
 
-**能力契约：** `supports('useAnimation')` 仅保留 family 级语义。具体运行时可用性 MUST 使用 `supports('useAnimation', [subtoken])`。
+**能力契约：** `supports('useAnimation', [subtoken])` 仅在 native spatial runtime 为 true。
 
-**不在本变更范围：** Reality 内部的 `SpatialEntity` transform timeline — 当前继续使用 `useEntityAnimation` / `AnimateTransform`。`supports('useAnimation', ['entity'])` 仍是该能力的真实 sub-token。
+## 属性白名单（v1）
 
-## 属性白名单（汇总）
-
-| Kind | 可动画路径（v1） |
-|------|----------------|
+| Kind | 可动画路径 |
+|------|-----------|
 | 2D | `opacity`、`transform.translate.*`、`transform.rotate.*`、`transform.scale.*` |
-| Static3D | `transform.translate.*`、`transform.rotate.*`、`transform.scale.*` 应用到 `modelTransform`；`opacity` 不属于已交付的 Static3D sink |
-| Dynamic3D | 同 2D（应用到容器 `element.transform` + opacity） |
+| Static3D | `transform.*` → `modelTransform`；无 opacity sink |
+| Dynamic3D | 同 2D，作用于容器 `element.transform` + opacity |
 
-## 独立 API（不合并）
+## 独立 API
 
 | API | 用途 |
 |-----|------|
-| Model `ref.play()` / `pause()` | USD 内嵌动画 clip |
-| `motion.play()` / timeline | 空间化容器上的声明式 transform / opacity timeline；Static3D 当前已交付的仅为 model 根 transform |
+| Model `ref.play()` / `pause()` | USD 内嵌 clip |
+| `AnimationObject.play()` | 容器声明式 timeline |
