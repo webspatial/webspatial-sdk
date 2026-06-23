@@ -590,6 +590,70 @@ describe('SpatializedElementCreator', () => {
     expect(windowProxy.document.head.innerHTML).toContain(document.baseURI)
   })
 
+  it('createSpatialized2DElement closes the window proxy when JSB destroy is unavailable', async () => {
+    const close = vi.fn()
+    const windowProxy: any = {
+      close,
+      document: { head: { innerHTML: '' } },
+    }
+    vi.doMock('./spatial-host', () => ({
+      createNativeSpatialDiv: vi.fn().mockResolvedValue({
+        success: true,
+        data: { id: 'w1', windowProxy },
+        errorCode: '',
+        errorMessage: '',
+      }),
+    }))
+
+    vi.doMock('./JSBCommand', () => {
+      class OkCommand {
+        execute() {
+          return Promise.resolve({
+            success: true,
+            data: undefined,
+            errorCode: '',
+            errorMessage: '',
+          })
+        }
+      }
+
+      class FailingDestroyCommand {
+        execute() {
+          return Promise.resolve({
+            success: false,
+            data: undefined,
+            errorCode: 'E_NO_BRIDGE',
+            errorMessage: 'bridge missing',
+          })
+        }
+      }
+
+      return {
+        InspectCommand: OkCommand,
+        DestroyCommand: FailingDestroyCommand,
+        UpdateSpatializedElementTransform: OkCommand,
+        UpdateSpatialized2DElementProperties: OkCommand,
+        AddSpatializedElementToSpatialized2DElement: OkCommand,
+        UpdateSpatializedStatic3DElementProperties: OkCommand,
+        UpdateSpatializedDynamic3DElementProperties: OkCommand,
+        SetParentForEntityCommand: OkCommand,
+        AddEntityToDynamic3DCommand: OkCommand,
+        createSpatialized2DElementCommand: vi.fn(),
+        CreateSpatializedStatic3DElementCommand: vi.fn(),
+        CreateSpatializedDynamic3DElementCommand: vi.fn(),
+      }
+    })
+
+    const { createSpatialized2DElement } = await import(
+      './SpatializedElementCreator'
+    )
+    const el = await createSpatialized2DElement()
+
+    await expect(el.destroy()).resolves.toBeUndefined()
+    expect(close).toHaveBeenCalledTimes(1)
+    expect(el.isDestroyed).toBe(true)
+  })
+
   it('createSpatialized2DElement throws when command fails', async () => {
     vi.doMock('./spatial-host', () => ({
       createNativeSpatialDiv: vi.fn().mockResolvedValue({

@@ -35,6 +35,12 @@ export function useSpatializedElement(
         portalInstanceObject.attachSpatializedElement(inSpatializedElement)
         setSpatializedElement(inSpatializedElement)
       },
+      error => {
+        if (cancelled) return
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[WebSpatial] createSpatializedElement failed', error)
+        }
+      },
     )
 
     // HMR / effect re-run: cancel in-flight work only; keep the live element

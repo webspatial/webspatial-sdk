@@ -6,9 +6,14 @@ import { Spatialized2DElement } from './Spatialized2DElement'
 import { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { createNativeSpatialDiv } from './spatial-host'
+import {
+  prepareSpatialRouteLifetime,
+  trackSpatialRouteObject,
+} from './spatial-route-cleanup'
 import { ModelLoadingMode, ModelSource } from './types/types'
 
 export async function createSpatialized2DElement(): Promise<Spatialized2DElement> {
+  const ownerHref = prepareSpatialRouteLifetime()
   const result = await createNativeSpatialDiv()
   if (!result.success) {
     throw new Error('createSpatialized2DElement failed')
@@ -17,7 +22,9 @@ export async function createSpatialized2DElement(): Promise<Spatialized2DElement
     // set base href to make sure the relative url is correct
     windowProxy.document.head.innerHTML = `<meta name="viewport" content="width=device-width, initial-scale=1">
       <base href="${document.baseURI}">`
-    return new Spatialized2DElement(id, windowProxy)
+    const element = new Spatialized2DElement(id, windowProxy)
+    trackSpatialRouteObject(element, ownerHref)
+    return element
   }
 }
 
@@ -26,6 +33,7 @@ export async function createSpatializedStatic3DElement(
   sources?: ModelSource[],
   loading: ModelLoadingMode = 'eager',
 ): Promise<SpatializedStatic3DElement> {
+  const ownerHref = prepareSpatialRouteLifetime()
   const result = await new CreateSpatializedStatic3DElementCommand(
     modelURL,
     sources,
@@ -35,16 +43,26 @@ export async function createSpatializedStatic3DElement(
     throw new Error('createSpatializedStatic3DElement failed')
   } else {
     const { id } = result.data
-    return new SpatializedStatic3DElement(id, modelURL, sources, loading)
+    const element = new SpatializedStatic3DElement(
+      id,
+      modelURL,
+      sources,
+      loading,
+    )
+    trackSpatialRouteObject(element, ownerHref)
+    return element
   }
 }
 
 export async function createSpatializedDynamic3DElement(): Promise<SpatializedDynamic3DElement> {
+  const ownerHref = prepareSpatialRouteLifetime()
   const result = await new CreateSpatializedDynamic3DElementCommand().execute()
   if (!result.success) {
     throw new Error('createSpatializedDynamic3DElement failed')
   } else {
     const { id } = result.data
-    return new SpatializedDynamic3DElement(id)
+    const element = new SpatializedDynamic3DElement(id)
+    trackSpatialRouteObject(element, ownerHref)
+    return element
   }
 }

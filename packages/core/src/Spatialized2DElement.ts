@@ -3,6 +3,10 @@ import {
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
 import { hijackWindowATag } from './scene-polyfill'
+import {
+  untrackSpatialRouteObject,
+  untrackSpatialRouteWindowProxy,
+} from './spatial-route-cleanup'
 import { SpatializedElement } from './SpatializedElement'
 import { Spatialized2DElementProperties } from './types/types'
 
@@ -47,5 +51,47 @@ export class Spatialized2DElement extends SpatializedElement {
       this,
       element,
     ).execute()
+  }
+
+  override async destroy() {
+    if (this.isDestroyed) {
+      return
+    }
+
+    try {
+      return await super.destroy()
+    } catch (error) {
+      if (!this.closeWindowProxy()) {
+        throw error
+      }
+
+      this.isDestroyed = true
+      untrackSpatialRouteObject(this)
+      untrackSpatialRouteWindowProxy(this.windowProxy)
+    }
+  }
+
+  override onDestroy() {
+    this.closeWindowProxy()
+    super.onDestroy()
+  }
+
+  private closeWindowProxy() {
+    const close = this.windowProxy?.close
+    if (typeof close !== 'function') {
+      return false
+    }
+
+    try {
+      // 2D SpatialDivs are created through window.open(webspatial://...). In
+      // WebAppTemplate the main page may not expose the JSB bridge, so closing
+      // the returned window proxy is the SDK-owned fallback for releasing the
+      // transferred child WebEngine.
+      close.call(this.windowProxy)
+      untrackSpatialRouteWindowProxy(this.windowProxy)
+      return true
+    } catch {
+      return false
+    }
   }
 }

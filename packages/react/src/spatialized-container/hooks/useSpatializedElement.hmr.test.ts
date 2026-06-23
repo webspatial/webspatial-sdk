@@ -51,4 +51,35 @@ describe('useSpatializedElement HMR-style effect re-run', () => {
     r.unmount()
     expect(second.destroy).toHaveBeenCalledTimes(1)
   })
+
+  it('ignores rejected creation promises after cleanup', async () => {
+    const attachSpatializedElement = vi.fn()
+    const portalInstanceObject = { attachSpatializedElement } as any
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    let reject: ((error: Error) => void) | undefined
+    const createSpatializedElement = vi.fn(
+      () =>
+        new Promise<any>((_resolve, rejectPromise) => {
+          reject = rejectPromise
+        }),
+    )
+
+    function Test() {
+      useSpatializedElement(createSpatializedElement, portalInstanceObject)
+      return null
+    }
+
+    const r = render(React.createElement(Test))
+    r.unmount()
+
+    await act(async () => {
+      reject?.(new Error('stale create failed'))
+      await Promise.resolve()
+    })
+
+    expect(attachSpatializedElement).not.toHaveBeenCalled()
+    expect(errorSpy).not.toHaveBeenCalled()
+    errorSpy.mockRestore()
+  })
 })

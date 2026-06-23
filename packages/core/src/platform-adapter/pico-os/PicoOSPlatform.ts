@@ -16,6 +16,10 @@ import {
   createSpatialRequestId,
   DEFAULT_SPATIAL_REQUEST_TIMEOUT_MS,
 } from '../spatialRequestMetadata'
+import {
+  prepareSpatialRouteLifetime,
+  trackSpatialRouteWindowProxy,
+} from '../../spatial-route-cleanup'
 
 interface JSBResponse {
   success: boolean
@@ -100,6 +104,7 @@ export class PicoOSPlatform implements PlatformAbility {
     command: string,
   ): Promise<WebSpatialProtocolResult> {
     return new Promise(resolve => {
+      const ownerHref = prepareSpatialRouteLifetime()
       const createdId = createSpatialRequestId()
       let settled = false
       let timeoutId: ReturnType<typeof setTimeout> | undefined
@@ -177,6 +182,7 @@ export class PicoOSPlatform implements PlatformAbility {
           command,
           buildSpatialRequestQuery(createdId),
         ).windowProxy
+        trackSpatialRouteWindowProxy(windowProxy, ownerHref)
       } catch (error: unknown) {
         const { code, message } = this.parseJSBError(error)
         settle(CommandResultFailure(code, message))

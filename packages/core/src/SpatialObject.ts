@@ -1,4 +1,5 @@
 import { DestroyCommand, InspectCommand } from './JSBCommand'
+import { untrackSpatialRouteObject } from './spatial-route-cleanup'
 
 /**
  * @hidden
@@ -32,6 +33,7 @@ export class SpatialObject {
     if (ret.success) {
       this.onDestroy()
       this.isDestroyed = true
+      untrackSpatialRouteObject(this)
       return ret.data
     } else if (this.isDestroyed) {
       // already destroyed
