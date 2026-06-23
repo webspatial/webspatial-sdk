@@ -220,10 +220,10 @@ export function normalizeMotionConfig(
     | SpatializedMotionTimelineConfig,
 ): SpatializedMotionConfig {
   if ('timeline' in config) {
-    return desugarTimelineConfig(config)
+    return desugarTimelineConfig(config as SpatializedMotionTimelineConfig)
   }
   if ('tracks' in config) {
-    return config
+    return config as SpatializedMotionConfig
   }
   return segmentConfigToMotionConfig(config)
 }

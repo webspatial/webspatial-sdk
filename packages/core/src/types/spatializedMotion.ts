@@ -44,6 +44,8 @@ export interface SpatializedMotionTrack {
 export interface SpatializedMotionSegmentConfig {
   to: SpatializedVisualValues
   from?: SpatializedVisualValues
+  tracks?: never
+  timeline?: never
   duration?: number
   timingFunction?: TimingFunction
   delay?: number
@@ -61,6 +63,9 @@ export interface SpatializedMotionSegmentConfig {
 export interface SpatializedMotionConfig {
   duration: number
   tracks: SpatializedMotionTrack[]
+  from?: never
+  to?: never
+  timeline?: never
   timingFunction?: TimingFunction
   delay?: number
   autoStart?: boolean
@@ -77,6 +82,9 @@ export interface SpatializedMotionConfig {
 export interface SpatializedMotionTimelineConfig {
   duration: number
   timeline: Record<string, SpatializedMotionKeyframeValues>
+  from?: never
+  to?: never
+  tracks?: never
   timingFunction?: TimingFunction
   delay?: number
   autoStart?: boolean
@@ -88,6 +96,11 @@ export interface SpatializedMotionTimelineConfig {
   onReset?: (values: SpatializedVisualValues) => void
   onError?: (error: SpatializedPlaybackError) => void
 }
+
+export type SpatializedMotionAuthorConfig =
+  | SpatializedMotionSegmentConfig
+  | SpatializedMotionConfig
+  | SpatializedMotionTimelineConfig
 
 /** Normalized timeline wire payload for native playback. */
 export interface SpatializedMotionTimeline {
