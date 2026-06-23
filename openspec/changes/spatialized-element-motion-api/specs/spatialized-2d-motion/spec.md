@@ -2,23 +2,24 @@
 
 ## Scope
 
-`Spatialized2DElement` (HTML SpatialDiv / `enable-xr`) is the **reference target** for the unified motion system. When `animation` from `useAnimation` is bound to an `enable-xr` node via `xr-animation` prop, the SDK resolves the target to `spatialized2d`. It is the only target that supports the **dual backend** (Web RAF + native).
+`Spatialized2DElement` (HTML SpatialDiv / `enable-xr`) is the **reference target** for the unified motion system. When `animation` from `useAnimation` is bound to an `enable-xr` node via `xr-animation` prop, the SDK resolves the target to `spatialized2d` and creates a native `AnimationObject`.
 
 ## ADDED Requirements
 
 ### Requirement: 2D is the reference kind for timeline motion
 
-The SDK MUST treat `Spatialized2DElement` motion as the 2D target, resolved when `xr-animation` is bound to an `enable-xr` node. Implementation uses the shared `SpatializedMotionController` with 2D policy (Web RAF + native `SpatializedContainerMotionAnimationManager`).
+The SDK MUST treat `Spatialized2DElement` motion as the 2D target, resolved when `xr-animation` is bound to an `enable-xr` node. Target-state execution uses `SpatializedElement.createAnimation(config)` and `AnimationObject : SpatialObject`.
 
 #### Scenario: Public React entry
 
 - **WHEN** authors call `useAnimation(config)` (with `from/to` or `tracks`) and bind `animation` to an `enable-xr` node
-- **THEN** the hook MUST return `[animation, api, style]` with Web RAF when native motion is unavailable
+- **THEN** the hook MUST return `[animation, api, style]`
+- **AND** runtime target availability MUST be reported through `supports('useAnimation', ['element'])`
 
-#### Scenario: Core controller parity
+#### Scenario: AnimationObject parity
 
-- **WHEN** authors create `new SpatializedMotionController(config)` and the binding flow resolves the target to `spatialized2d`
-- **THEN** playback behavior MUST be equivalent for the same timeline config
+- **WHEN** the binding flow resolves the target to `spatialized2d`
+- **THEN** playback behavior MUST be driven by the created `AnimationObject` for the same timeline config
 
 ---
 
@@ -69,23 +70,21 @@ Track `property` values MUST be limited to: `opacity`, `transform.translate.x`, 
 
 ---
 
-### Requirement: Dual backend — Web MUST animate
+### Requirement: Native-first target path with no Web RAF fallback
 
-When the native motion backend is not active, the SDK MUST use a **Web backend** that drives the same `style` outlet via keyframe evaluation (e.g. `requestAnimationFrame`). The Web backend MUST NOT treat `play()` as a silent no-op.
+For the target-state `useAnimation` path, the SDK MUST NOT use a Web RAF backend when native spatial animation is unavailable. Pure Web runtimes MUST report `supports('useAnimation', ['element']) === false`.
 
-#### Scenario: Plain browser play animates style
+#### Scenario: Plain browser reports unsupported
 
 - **GIVEN** `supports('useAnimation', ['element'])` is `false`
-- **WHEN** application binds `animation` to an `enable-xr` node with valid tracks and calls `api.play()`
-- **THEN** `style` MUST update over time until the timeline completes
-- **AND** `onComplete` MUST fire when a non-looping timeline finishes
+- **WHEN** application binds `animation` to an `enable-xr` node with valid tracks
+- **THEN** the SDK MUST NOT start Web RAF playback as a fallback
 
-#### Scenario: WebSpatial runtime uses native backend only
+#### Scenario: WebSpatial runtime uses AnimationObject only
 
 - **GIVEN** `supports('useAnimation', ['element'])` is `true`
 - **WHEN** `api.play()` is called on a valid timeline bound to an `enable-xr` node
-- **THEN** the SDK MUST use the native motion backend
-- **AND** the Web RAF backend MUST NOT run for playback on the same hook instance
+- **THEN** the SDK MUST control the native `AnimationObject`
 
 #### Scenario: play before bind does not fall back to Web RAF
 
@@ -96,25 +95,25 @@ When the native motion backend is not active, the SDK MUST use a **Web backend**
 
 ---
 
-### Requirement: Native play uses the canonical tracks path
+### Requirement: Native create uses the canonical tracks path
 
-For `useAnimation`, the bridge `play` command MUST carry the canonical tracks document for native execution. Native MUST evaluate that tracks document and MUST NOT fall back to legacy `from`/`to` segment interpolation for this API.
+For `useAnimation`, `CreateSpatializedElementAnimation` MUST carry the canonical tracks document for native execution. Native MUST evaluate that locked tracks document and MUST NOT fall back to legacy `from`/`to` segment interpolation for this API.
 
 #### Scenario: Wire shape matches the canonical tracks model
 
-- **WHEN** JS sends native `play` for `useAnimation`
+- **WHEN** JS sends `CreateSpatializedElementAnimation` for `useAnimation`
 - **THEN** the payload MUST include the canonical tracks document with `duration`, optional `delay`, optional `playbackRate`, optional `loop`, and non-empty `tracks`
 - **AND** each track MUST include `property`, `keyframes` with `at` in seconds, and `timingFunction`
 
 #### Scenario: from/to authoring shape compiles to tracks before native send
 
 - **WHEN** application code calls `useAnimation({ from, to, duration, ... })`
-- **THEN** the SDK MUST compile that authoring shape to canonical `tracks` before sending native `play`
+- **THEN** the SDK MUST compile that authoring shape to canonical `tracks` before native create
 
 #### Scenario: timeline authoring shape compiles to tracks before native send
 
 - **WHEN** application code calls `useAnimation({ duration, timeline, ... })`
-- **THEN** the SDK MUST compile that authoring shape to canonical `tracks` before sending native `play`
+- **THEN** the SDK MUST compile that authoring shape to canonical `tracks` before native create
 
 #### Scenario: tracks authoring shape stays on the same execution path
 
@@ -174,41 +173,41 @@ Native MUST sample each track independently at timeline time `t`, then assemble 
 
 ---
 
-### Requirement: Portal suppression during native playback
+### Requirement: Element animating mask during native playback
 
-While native playback is actively controlling the session, until the session reaches terminal state or unbinds, the SDK MUST suppress Portal DOM sync for animated fields.
+While native playback is actively controlling the session, until the session reaches terminal state or unbinds, the SDK MUST use the element animating mask to prevent ordinary DOM sync from overwriting animated fields.
 
-#### Scenario: Suppression field set from tracks
+#### Scenario: Animating mask field set from tracks
 
-- **GIVEN** a timeline with any `transform.*` track → `transform` in suppressed set
-- **GIVEN** a timeline with `opacity` track → `opacity` in suppressed set
+- **GIVEN** a timeline with any `transform.*` track → `transform` in the animating mask
+- **GIVEN** a timeline with `opacity` track → `opacity` in the animating mask
 
-#### Scenario: Suppression cleared on terminal state
+#### Scenario: Animating mask updates on terminal state
 
 - **WHEN** session reaches terminal state, `stop`, `reset`, `finish`, or `unbind`
-- **THEN** suppression MUST clear
+- **THEN** the animating mask MUST update according to terminal ownership
 
 ---
 
 ### Requirement: Terminal opacity handoff distinguishes explicit React authored opacity
 
-For `spatialized2d`, terminal release of `opacity` suppression MUST distinguish between explicit React authored opacity and all other CSS sources. Explicit authored opacity means only `style.opacity` provided directly in React props on the bound node. Values that appear only through `className`, stylesheet rules, inherited visual dimming, or `getComputedStyle()` output MUST NOT be treated as explicit authored opacity.
+For `spatialized2d`, terminal release or update of the `opacity` animating mask MUST distinguish between explicit React authored opacity and all other CSS sources. Explicit authored opacity means only `style.opacity` provided directly in React props on the bound node. Values that appear only through `className`, stylesheet rules, inherited visual dimming, or `getComputedStyle()` output MUST NOT be treated as explicit authored opacity.
 
-#### Scenario: stop restores explicit authored opacity after suppression release
+#### Scenario: stop restores explicit authored opacity after mask release
 
 - **GIVEN** an `opacity` motion is bound to an `enable-xr` node whose React props explicitly include `style.opacity`
 - **WHEN** `api.stop()` completes
 - **THEN** the post-terminal visual owner for `opacity` MUST become that explicit authored `style.opacity`
 - **AND** the native/current sampled stop value MUST still be used for `onStop`
 
-#### Scenario: finish restores explicit authored opacity after suppression release
+#### Scenario: finish restores explicit authored opacity after mask release
 
 - **GIVEN** an `opacity` motion is bound to an `enable-xr` node whose React props explicitly include `style.opacity`
 - **WHEN** `api.finish()` completes
 - **THEN** the post-terminal visual owner for `opacity` MUST become that explicit authored `style.opacity`
 - **AND** the native/final sampled finish value MUST still be used for `onComplete`
 
-#### Scenario: reset restores explicit authored opacity after suppression release
+#### Scenario: reset restores explicit authored opacity after mask release
 
 - **GIVEN** an `opacity` motion is bound to an `enable-xr` node whose React props explicitly include `style.opacity`
 - **WHEN** `api.reset()` completes
@@ -231,7 +230,7 @@ For `spatialized2d`, terminal release of `opacity` suppression MUST distinguish 
 
 ### Requirement: Motion binding for native sessions
 
-Native sessions MUST use `xr-animation` prop / `SpatializedMotionBinding`, not the legacy `animation` prop.
+Native sessions MUST use the `xr-animation` prop / `AnimationProxy`, not the legacy `animation` prop.
 
 #### Scenario: Unbind cancels session
 

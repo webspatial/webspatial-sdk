@@ -11,6 +11,49 @@ The platform MUST document and implement declarative timeline motion for these t
 - **WHEN** a product owner reviews motion support
 - **THEN** [CAPABILITY_MATRIX.md](../../CAPABILITY_MATRIX.md) MUST list each kind with shipped vs planned status
 
+### Requirement: Native-first AnimationObject architecture
+
+Spatialized element motion MUST use a native-first `AnimationObject` target architecture. Each bound `SpatializedElement` MUST expose `createAnimation(config)`, which creates an `AnimationObject : SpatialObject` associated with exactly one spatialized element target. Creation MUST send `CreateSpatializedElementAnimation` with the normalized timeline payload, target kind, element identity, and animation identity. Runtime control MUST use `ControlSpatializedElementAnimation` commands (`play`, `pause`, `resume`, `stop`, `reset`, `finish`, `destroy`). Native runtime state changes MUST be observed through `SpatialAnimationStateChanged`.
+
+The target-state architecture MUST NOT depend on Web RAF playback, `SpatializedMotionController`, `NativePlaybackBackend`, Portal suppression, or `AnimateSpatializedElementMotion` as normative execution primitives. Existing authoring and playback semantics remain normative, but the execution owner is the native `AnimationObject`.
+
+#### Scenario: SpatializedElement.createAnimation creates an AnimationObject
+
+- **WHEN** an `animation` binding resolves to a concrete spatialized element target
+- **THEN** the SDK MUST call `SpatializedElement.createAnimation(config)` for that target
+- **AND** the returned handle MUST represent an `AnimationObject : SpatialObject`
+
+#### Scenario: Create locks timeline config
+
+- **WHEN** `CreateSpatializedElementAnimation` succeeds
+- **THEN** the created `AnimationObject` MUST lock the normalized timeline config used for creation
+- **AND** subsequent terminal commands for that object MUST use the locked timeline until the object is destroyed and recreated
+
+#### Scenario: Config changes destroy and recreate
+
+- **GIVEN** an `AnimationObject` has already been created for a binding
+- **WHEN** the authoring config changes in a way that changes the normalized timeline or target validation result
+- **THEN** the SDK MUST destroy the existing `AnimationObject`
+- **AND** the SDK MUST create a new `AnimationObject` instead of mutating the previous object's locked timeline in place
+
+#### Scenario: Control commands use the animation object channel
+
+- **WHEN** authors call `api.play()`, `api.pause()`, `api.resume()`, `api.stop()`, `api.reset()`, or `api.finish()`
+- **THEN** the SDK MUST send the matching `ControlSpatializedElementAnimation` command to the current `AnimationObject`
+- **AND** playback state MUST be reconciled from `SpatialAnimationStateChanged`
+
+#### Scenario: Element animating mask owns animated sync fields
+
+- **WHEN** an `AnimationObject` is active or holds a terminal visual value
+- **THEN** the target element MUST expose an animating mask for the animated fields
+- **AND** ordinary element sync MUST NOT overwrite fields that are masked as animation-owned
+
+#### Scenario: Pure Web runtime does not run a RAF fallback
+
+- **WHEN** runtime capability for the resolved target is unavailable, including a pure Web runtime
+- **THEN** `supports('useAnimation', [targetToken])` MUST return `false`
+- **AND** the SDK MUST NOT start Web RAF playback as a fallback for the target-state `useAnimation` path
+
 ### Requirement: Shared playback API shape
 
 All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (`play`, `pause`, `resume`, `stop`, `reset`, `finish`, `playState`, `isAnimating`, `isPaused`, `finished`). Controller-level `pause()` and `resume()` MUST be whole-session operations with no `keys` parameter. Selective per-track / per-action control is intentionally out of scope for this change and, if needed in the future, MUST be designed as a separate track/action-level API (for example `pauseTrack(trackId)`), not by extending controller `pause()` / `resume()`.
@@ -85,15 +128,16 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 - **THEN** the SDK MUST restore the initial values from the stopped session started with `configA`
 - **AND** the SDK MUST NOT use the initial values from `configB`
 
-#### Scenario: Style value source is backend-symmetric
+#### Scenario: Terminal values come from the AnimationObject
 
 - **WHEN** a termination method (`stop`, `reset`, `finish`) is invoked
-- **THEN** on Web backend the style values MUST be computed by the JS timeline evaluator; on native backend the style values MUST be provided by the native runtime (with JS evaluator as fallback if native does not return values)
+- **THEN** terminal style values MUST be provided by the native `AnimationObject`
+- **AND** JS timeline evaluation MAY be used only for config validation, test fixtures, or explicit non-runtime tooling, not as the target-state playback backend
 
 #### Scenario: Explicit authored style.opacity wins terminal 2D handoff
 
 - **GIVEN** a `spatialized2d` motion bound to a React node with an explicit `style.opacity`
-- **WHEN** `stop()`, `reset()`, or `finish()` completes and suppression clears
+- **WHEN** `stop()`, `reset()`, or `finish()` completes and the element animating mask releases or updates `opacity`
 - **THEN** the post-terminal visual owner of `opacity` MUST become that explicit authored `style.opacity`
 - **AND** terminal sampled/native values MUST still remain the source for callback payloads and terminal session semantics
 
@@ -107,7 +151,7 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 #### Scenario: Explicit authored style.transform wins terminal host-transform handoff
 
 - **GIVEN** a host-transform target (`spatialized2d` or `dynamic3d`) is bound to a React node with an explicit `style.transform`
-- **WHEN** `stop()`, `reset()`, or `finish()` completes and transform suppression clears
+- **WHEN** `stop()`, `reset()`, or `finish()` completes and the element animating mask releases or updates host `transform`
 - **THEN** the post-terminal visual owner of host `transform` MUST become that explicit authored `style.transform`
 - **AND** terminal sampled/native transform values MUST still remain the source for callback payloads and terminal session semantics
 
@@ -173,21 +217,21 @@ The terminal methods MUST remain independent commands: `stop()` terminates an ac
 #### Scenario: Terminal opacity handoff does not allow simultaneous ownership
 
 - **GIVEN** a `spatialized2d` motion animates `opacity`
-- **WHEN** suppression clears after `stop()`, `reset()`, or `finish()`
+- **WHEN** the element animating mask releases or updates `opacity` after `stop()`, `reset()`, or `finish()`
 - **THEN** the SDK MUST avoid a post-terminal state where native outer opacity and inner DOM opacity both continue to own the same visual `opacity`
 
 #### Scenario: Terminal host-transform handoff does not allow simultaneous ownership
 
 - **GIVEN** a host-transform target (`spatialized2d` or `dynamic3d`) animates host `transform`
-- **WHEN** suppression clears after `stop()`, `reset()`, or `finish()`
-- **THEN** the SDK MUST avoid a post-terminal state where native host transform and DOM or Portal host transform both continue to own the same visual `transform`
+- **WHEN** the element animating mask releases or updates host `transform` after `stop()`, `reset()`, or `finish()`
+- **THEN** the SDK MUST avoid a post-terminal state where native host transform and DOM host transform both continue to own the same visual `transform`
 
 #### Scenario: A new play session clears terminal host-transform ownership
 
 - **GIVEN** a host-transform target previously entered a terminal host-transform ownership state through `stop()`, `reset()`, or `finish()`
 - **WHEN** application code starts a new session with `api.play()` from `idle` or `finished`
 - **THEN** the SDK MUST clear the prior terminal host-transform ownership decision
-- **AND** the new active session MUST re-enter transform suppression according to the target kind
+- **AND** the new active session MUST update the element animating mask according to the target kind
 
 ### Requirement: V1 public authoring centers on from/to and timeline, with tracks retained as the canonical internal model
 
@@ -334,14 +378,14 @@ This cascade applies uniformly to all three config shapes (segment, tracks, time
 
 ---
 
-### Requirement: Single Core controller implementation
+### Requirement: React API binds to one AnimationObject per binding
 
-The SDK MUST implement container motion with one `SpatializedMotionController` class parameterized by the binding target (resolved when `animation` is mounted on a component). Per-target controller class aliases MUST NOT be part of the public API.
+The SDK MUST implement container motion through one opaque React `animation` binding backed by at most one native `AnimationObject` at a time. Per-target controller class aliases MUST NOT be part of the public API.
 
-#### Scenario: React single hook with bind-time resolution
+#### Scenario: React single hook with bind-time AnimationObject creation
 
 - **WHEN** authors call `useAnimation(config)` and pass `animation` to a component via `xr-animation` prop
-- **THEN** the SDK MUST resolve the target from the component type and route to the same controller implementation with the matching target policy
+- **THEN** the SDK MUST resolve the target from the component type and create an `AnimationObject` for that target
 
 ### Requirement: Separate clip playback on Model
 
@@ -365,17 +409,17 @@ The public hook `useAnimation(config)` MUST NOT require a `kind` field in config
 #### Scenario: Binding to enable-xr resolves 2D
 
 - **WHEN** `animation` from `useAnimation(config)` is passed as `xr-animation` to `<div enable-xr>`
-- **THEN** the SDK MUST resolve target to `spatialized2d` and activate the 2D policy (Web RAF + native)
+- **THEN** the SDK MUST resolve target to `spatialized2d` and create an element `AnimationObject`
 
 #### Scenario: Binding to Model resolves static3d
 
 - **WHEN** `animation` is passed as `xr-animation` to `<Model>`
-- **THEN** the SDK MUST resolve target to `static3d` and activate native-only policy
+- **THEN** the SDK MUST resolve target to `static3d` and create an element `AnimationObject`
 
 #### Scenario: Binding to Reality resolves dynamic3d
 
 - **WHEN** `animation` is passed as `xr-animation` to `<Reality>`
-- **THEN** the SDK MUST resolve target to `dynamic3d` and activate native-only policy
+- **THEN** the SDK MUST resolve target to `dynamic3d` and create an element `AnimationObject`
 
 #### Scenario: Single binding constraint
 
@@ -386,3 +430,18 @@ The public hook `useAnimation(config)` MUST NOT require a `kind` field in config
 
 - **WHEN** `api.play()` is called before `animation` is bound to any component
 - **THEN** the play command MUST be queued and executed once the target is resolved
+
+#### Scenario: autoStart false does not swallow explicit pre-bind play
+
+- **GIVEN** `useAnimation({ ..., autoStart: false })` returns an unbound `animation`
+- **WHEN** application code explicitly calls `api.play()` before binding
+- **AND** the `animation` later binds to a supported target
+- **THEN** the SDK MUST execute the queued explicit play
+- **AND** `autoStart: false` MUST only prevent implicit play-on-bind
+
+#### Scenario: Static3D opacity is rejected during validation
+
+- **GIVEN** an animation binding resolves to `static3d`
+- **WHEN** the normalized config contains an `opacity` track
+- **THEN** `validateSpatializedMotionConfig` MUST reject the config before `CreateSpatializedElementAnimation`
+- **AND** the SDK MUST NOT silently ignore the `opacity` track

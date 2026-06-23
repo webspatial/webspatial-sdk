@@ -15,7 +15,7 @@ All three share the same authoring model and the same canonical `tracks` executi
 Plan A established the primitives that remain normative here:
 
 - Session lifecycle and playback state
-- Portal suppression during native-controlled playback
+- Animation-owned field masking during native-controlled playback
 - Native per-frame sampling semantics
 - Lifecycle callback mutual exclusion
 - Single-segment `from` and `to` authoring as a convenience shape
@@ -25,17 +25,18 @@ Plan A established the primitives that remain normative here:
 Plan B introduced the general-purpose timeline model:
 
 - Canonical per-property `tracks`
-- Web RAF for 2D when native motion is unavailable
 - `style` as the single React merge outlet
 - Bind-time target resolution through `xr-animation`
+
+The target state deliberately does not keep the Web RAF backend as a playback path. Pure Web runtimes are capability-negative for `useAnimation` spatialized targets.
 
 ### Unified target state
 
 This design merges those ideas into a single three-layer architecture:
 
-- `React SDK` defines authoring and binding
-- `Core SDK` defines config normalization, playback semantics, and bridge payloads
-- `Native Runtime` defines target-specific playback and write paths
+- `React SDK` defines authoring, binding, and the React `AnimationProxy`
+- `Core SDK` defines config normalization, playback semantics, and object-channel payloads
+- `Native Runtime` defines `AnimationObject : SpatialObject`, target-specific playback, and write paths
 
 ## Goals
 
@@ -49,12 +50,16 @@ This design merges those ideas into a single three-layer architecture:
 
 ```mermaid
 flowchart TD
-  React[React SDK]
-  Core[Core SDK]
-  Native[Native Runtime]
+  React[React SDK useAnimation]
+  Proxy[React AnimationProxy]
+  Core[Core SDK validation and command model]
+  Element[SpatializedElement.createAnimation]
+  Native[Native AnimationObject]
 
-  React --> Core
-  Core --> Native
+  React --> Proxy
+  Proxy --> Core
+  Core --> Element
+  Element --> Native
 ```
 
 ## Core SDK
@@ -63,12 +68,12 @@ flowchart TD
 
 | Module | Responsibility |
 |--------|----------------|
-| `SpatializedMotionController` | Canonical playback controller for container motion. Owns play state, backend selection, terminal command semantics, and suppression state. |
+| `AnimationProxyCore` | Core state holder behind React `AnimationProxy`. Owns queued commands, public playback state projection, terminal command semantics, and the current `AnimationObject` identity. |
 | `evaluateMotionTimeline` | Samples canonical `tracks` at timeline time `t`, applies `timingFunction`, and assembles visual values. |
 | `validateSpatializedMotionConfig` | Validates authoring config before playback or native send. |
-| `motionConfigToNativeTimeline` | Compiles normalized motion config into the canonical native wire payload. |
-| `motionElementBridge` | Sends `play`, `pause`, `resume`, `stop`, `reset`, and `finish` commands from Core to spatialized native elements and cleans up listeners. |
-| `MOTION_KIND_POLICIES` | Encodes per-kind policy for Web RAF availability and suppression rules. |
+| `motionConfigToAnimationTimeline` | Compiles normalized motion config into the canonical `CreateSpatializedElementAnimation` payload. |
+| `animationObjectChannel` | Sends create, control, destroy, and state-listener requests to spatialized native elements. |
+| `ELEMENT_ANIMATING_MASK_POLICIES` | Encodes per-kind animation-owned field mask behavior and terminal handoff rules. |
 
 ### Interfaces
 
@@ -125,7 +130,7 @@ All non-track shapes normalize to canonical `tracks` before execution. Native pl
 
 #### Playback semantics
 
-`SpatializedMotionController` owns the normative playback behavior:
+`AnimationProxyCore` and the native `AnimationObject` jointly own the normative playback behavior:
 
 - `play()` starts playback or resumes from paused progress
 - `play()` while already running is a no-op
@@ -142,17 +147,16 @@ All non-track shapes normalize to canonical `tracks` before execution. Native pl
 - controller state is whole-session only; no partially-paused aggregate state or pause-reason stacking is modeled
 - paused `play()` is semantically equivalent to `resume()`
 
-#### Backend policy
+#### AnimationObject lifecycle
 
-Per-kind backend policy is chosen by `MOTION_KIND_POLICIES`:
+Each resolved binding owns at most one native `AnimationObject` at a time:
 
-- `spatialized2d`
-  - Web RAF allowed
-  - Native allowed when capability is available
-- `static3d`
-  - Native only
-- `dynamic3d`
-  - Native only
+- bind creates it through `SpatializedElement.createAnimation(config)`
+- create locks the normalized timeline config
+- config changes destroy the previous object and create a new object
+- unbind destroys the current object
+- explicit pre-bind `play()` queues on the proxy and is delivered to the object after bind
+- `autoStart: false` only disables implicit play-on-bind; it does not remove queued explicit commands
 
 ### Boundaries
 
@@ -170,11 +174,10 @@ The Core layer does not define:
 | Module | Responsibility |
 |--------|----------------|
 | `useAnimation` | Public authoring hook. Returns `[animation, api, style]` and remains target-agnostic until bind time. |
-| `useMotionController` | Connects React lifecycle to the Core controller. |
-| `createMotionBinding` | Produces the opaque `xr-animation` binding object that carries deferred target state. |
-| `createPlaybackApi` | Exposes a stable React-facing playback surface backed by the controller. |
-| `useBindSpatializedMotion` | Internal binding hook that centralizes attach, unbind, cleanup, and optional 2D suppression synchronization. |
-| `PortalSpatializedContainer` | Binds 2D `xr-animation` to `Spatialized2DElement` and coordinates suppression with Portal sync. |
+| `createAnimationProxy` | Produces the opaque `xr-animation` binding object that carries deferred target state and current `AnimationObject` identity. |
+| `createPlaybackApi` | Exposes a stable React-facing playback surface backed by the proxy. |
+| `useBindSpatializedAnimation` | Internal binding hook that centralizes attach, unbind, cleanup, and element animating mask synchronization. |
+| `Spatialized2DElement binding layer` | Binds 2D `xr-animation` to `Spatialized2DElement` and coordinates the element animating mask with ordinary element sync. |
 | `Model` | React integration point that resolves binding target to `static3d`. |
 | `Reality` | React integration point that resolves binding target to `dynamic3d`. |
 
@@ -188,9 +191,9 @@ The Core layer does not define:
 - `api`
 - `style`
 
-The recommended end-user React SDK entry stays `useAnimation`. `SpatializedMotionController`
-and `SpatializedMotionHandle` remain Core-level imperative utility / internal seam types and
-are no longer presented as public exports from the React SDK root entry or motion sub-entry.
+The recommended end-user React SDK entry stays `useAnimation`. Legacy controller and backend
+classes are not target-state execution primitives and are not presented as public exports from
+the React SDK root entry or motion sub-entry.
 
 #### Binding
 
@@ -204,17 +207,16 @@ The React layer defines the `xr-animation` prop as the target binding channel:
 
 `style` is the only author-facing visual merge outlet:
 
-- For `spatialized2d`, `style` carries active animated values and serves as the Web fallback / non-native visual outlet
+- For `spatialized2d`, `style` carries terminal and authored visual handoff values; it is not a Web RAF playback backend
 - For `static3d` and `dynamic3d`, `style` is always an empty object that is safe to spread; native playback is driven entirely through `xr-animation`
 
 The `style` fallback decision remains a React concern, but it is defined as a
 pure mapping from sampled values plus binding state:
 
 - `static3d` and `dynamic3d` always return an empty object
-- `spatialized2d` with active native playback masks suppressed fields such as
+- `spatialized2d` with active native playback masks animation-owned fields such as
   `opacity` and `transform`
-- Web fallback returns `valuesToMotionStyle(values)` without React re-implementing
-  timeline evaluation rules
+- Pure Web runtimes do not run a target-state Web RAF fallback; capability checks return false
 
 For `spatialized2d`, terminal handling of `opacity` adds one more ownership rule:
 
@@ -228,20 +230,20 @@ For `spatialized2d`, terminal handling of `opacity` adds one more ownership rule
 
 #### Bind-time target resolution
 
-The React layer resolves the controller target only when `animation` is bound:
+The React layer resolves the target only when `animation` is bound:
 
 - `enable-xr` node → `spatialized2d`
 - `Model` → `static3d`
 - `Reality` → `dynamic3d`
 
 If `api.play()` is called before a bind exists, the command queues and begins once the target resolves.
-This means the controller is allowed to be constructed without `kind`, but the binding flow
-must resolve and write the target `kind` before the backend actually executes playback.
+This means the proxy is allowed to be constructed without `kind`, but the binding flow
+must resolve and write the target `kind` before `SpatializedElement.createAnimation(config)` executes.
 
-The React hook MUST NOT call `controller.play()` from a mount effect just to
+The React hook MUST NOT call `api.play()` from a mount effect just to
 implement `autoStart`. `autoStart` is handled only by Core when the target
 resolves and `attachElement()` completes. React may still expose pre-bind
-`api.play()` queue semantics through the controller.
+`api.play()` queue semantics through the proxy.
 
 #### Single-bind constraint
 
@@ -251,8 +253,8 @@ One binding instance may control only one mounted target at a time. If the same 
 
 For `spatialized2d`:
 
-- Web RAF directly drives the `style` outlet when native motion is unavailable
-- During native-controlled playback, `style` remains the React merge outlet, but intermediate native-owned fields are suppression-controlled
+- During native-controlled playback, `style` remains the React merge outlet, but intermediate native-owned fields are controlled by the element animating mask
+- When native spatial animation capability is unavailable, the spatialized target is unsupported instead of falling back to Web RAF
 
 For `static3d` and `dynamic3d`:
 
@@ -295,10 +297,10 @@ The practical rule is:
 Module responsibilities are split deliberately:
 
 - `Spatialized2DElementContainer` captures whether the bound React node explicitly authored `style.opacity`
-- `useAnimation` coordinates terminal ownership using sampled values, suppression state, and authored-opacity metadata
+- `useAnimation` coordinates terminal ownership using sampled values, animating mask state, and authored-opacity metadata
 - `resolveMotionStyle` decides whether inner DOM `opacity` is omitted or restored to the explicit authored value
-- `PortalInstanceContext` coordinates outer native sync so terminal handoff does not leave both outer native opacity and inner DOM opacity active
-- `NativePlaybackBackend` continues to provide terminal sampled values and does not infer authored ownership
+- the element sync layer coordinates ordinary element sync so terminal handoff does not leave both outer native opacity and inner DOM opacity active
+- `AnimationObject` continues to provide terminal sampled values and does not infer authored ownership
 
 This keeps terminal callbacks unchanged:
 
@@ -313,10 +315,10 @@ controlling the same visual result at the same time.
 #### Host transform terminal ownership design
 
 Host-transform targets (`spatialized2d` and `dynamic3d`) have the same class of
-post-terminal ownership problem as `opacity`: active playback suppresses outer
-transform sync correctly, but `stop()`, `reset()`, and `finish()` currently
-clear suppression without defining who continues to own the visual host
-transform. The result is a terminal snap-back where Portal / DOM sync
+post-terminal ownership problem as `opacity`: active playback masks animation-owned
+outer transform sync correctly, but `stop()`, `reset()`, and `finish()` currently
+change the mask without defining who continues to own the visual host
+transform. The result is a terminal snap-back where DOM sync
 immediately re-applies the static host transform and overwrites the sampled
 native terminal pose.
 
@@ -324,7 +326,7 @@ This design reuses the same ownership model as `opacity`, but with
 target-specific host-transform sinks:
 
 - single-writer principle: visual host `transform` has exactly one effective owner at a time
-- explicit state modeling: suppression release is a transform ownership decision point, not implicit permission for DOM sync to resume
+- explicit state modeling: animating mask release is a transform ownership decision point, not implicit permission for DOM sync to resume
 - strategy-based terminal selection: the terminal owner is chosen from explicit React `style.transform` vs the native sampled terminal host transform
 - target-scoped sinks: `spatialized2d` and `dynamic3d` both participate in host-transform ownership, while `static3d` remains out of scope because its motion sink is primarily `modelTransform`
 
@@ -351,16 +353,16 @@ The practical rule is:
 Target-specific consequences are deliberate:
 
 - `spatialized2d`: the style outlet remains the active merge outlet, but post-terminal ownership must not silently fall back to the initial DOM transform when no explicit authored `style.transform` exists
-- `dynamic3d`: Portal host transform sync must not re-apply the static DOM transform while native terminal transform ownership remains active
+- `dynamic3d`: host transform sync must not re-apply the static DOM transform while native terminal transform ownership remains active
 - `static3d`: this design does not change `modelTransform` ownership; any future `static3d` host-transform semantics must be specified separately
 
 Module responsibilities are split deliberately:
 
 - the React binding layer captures whether the bound host explicitly authored `style.transform`
-- `useAnimation` and binding metadata coordinate post-terminal transform ownership using sampled values, suppression state, and authored-transform metadata
-- target-specific style / Portal adapters decide whether DOM-side transform should be omitted or restored after suppression clears
-- `PortalInstanceContext` coordinates outer native transform sync so terminal handoff does not leave both native host transform and DOM host transform active at the same time
-- `NativePlaybackBackend` continues to provide terminal sampled values and does not infer authored transform ownership
+- `useAnimation` and binding metadata coordinate post-terminal transform ownership using sampled values, animating mask state, and authored-transform metadata
+- target-specific style / sync adapters decide whether DOM-side transform should be omitted or restored after mask ownership changes
+- the element sync layer coordinates outer native transform sync so terminal handoff does not leave both native host transform and DOM host transform active at the same time
+- `AnimationObject` continues to provide terminal sampled values and does not infer authored transform ownership
 
 This keeps terminal callbacks unchanged:
 
@@ -369,7 +371,7 @@ This keeps terminal callbacks unchanged:
 - `onComplete(values)` for `finish()` still receives the end values
 
 Only post-terminal visual ownership changes. The design goal is to prevent a
-post-terminal state where native host transform and DOM / Portal host transform
+post-terminal state where native host transform and DOM host transform
 continue controlling the same visual result at the same time.
 
 ### Boundaries
@@ -387,10 +389,13 @@ The React layer does not define:
 
 | Module | Responsibility |
 |--------|----------------|
-| `SpatializedElementMotionManager` | Unified native manager for spatialized element motion across 2D, Static3D, and Dynamic3D. |
-| `SpatializedElementMotionTimelineSampler` | Native sampler for canonical tracks playback. |
-| `SpatializedElementMotionTransformAdapter` | Abstracts target-specific writes for `element.transform` and `modelTransform`. |
-| `AnimateSpatializedElementMotion` listener | Native JSB entrypoint for motion commands and timeline payloads. |
+| `AnimationObject` | Native `SpatialObject` that owns a locked timeline, playback state, terminal values, and target-specific writes for one spatialized element. |
+| `SpatializedElement.createAnimation(config)` | Element method that creates an `AnimationObject` and returns its identity to JS. |
+| `SpatializedElementAnimationSampler` | Native sampler for canonical tracks playback. |
+| `SpatializedElementAnimationTransformAdapter` | Abstracts target-specific writes for `element.transform` and `modelTransform`. |
+| `CreateSpatializedElementAnimation` | JSB/WebMsg entrypoint for creating and locking the native animation object. |
+| `ControlSpatializedElementAnimation` | JSB/WebMsg entrypoint for play, pause, resume, stop, reset, finish, and destroy commands. |
+| `SpatialAnimationStateChanged` | JSB/WebMsg event for state changes, terminal values, and async errors. |
 
 ### Interfaces
 
@@ -398,25 +403,32 @@ The React layer does not define:
 
 The Native layer accepts the canonical command family:
 
+- `create`
 - `play`
 - `pause`
 - `resume`
 - `stop`
 - `reset`
 - `finish`
+- `destroy`
 
-#### Play payload
+#### Create and control payloads
 
-The `play` payload carries:
+The create payload carries:
 
 - `animationId`
 - `targetKind`
 - `elementId`
 - `timeline`
 
-`timeline` is the canonical tracks document sent by Core. It also carries
+`timeline` is the canonical tracks document sent by Core during create. It also carries
 `duration`, per-track and per-keyframe `timingFunction`, plus timeline-level
 `delay`, `playbackRate`, and `loop`.
+
+The control payload carries:
+
+- `animationId`
+- command type
 
 ### Behavior
 
@@ -425,12 +437,12 @@ The `play` payload carries:
 Native applies sampled values to different sinks per kind:
 
 - `spatialized2d` → `element.transform` and `opacity`
-- `static3d` → `modelTransform` and `opacity`
+- `static3d` → `modelTransform`; `opacity` is rejected before create
 - `dynamic3d` → `element.transform` and `opacity`
 
 #### Canonical tracks execution
 
-The Native layer must evaluate the canonical tracks payload directly. For this API, native playback must not replace tracks execution with a legacy `from` and `to` interpolation path.
+The Native layer must evaluate the locked canonical tracks payload directly. For this API, native playback must not replace tracks execution with a legacy `from` and `to` interpolation path.
 
 #### Terminal command behavior
 
@@ -466,16 +478,16 @@ The Native layer does not define:
 The React layer passes authoring config and lifecycle to Core through:
 
 - `useAnimation(config)`
-- `createMotionBinding`
+- `createAnimationProxy`
 - `createPlaybackApi`
 
-Core remains the owner of normalized config, play state, and terminal command semantics.
+Core remains the owner of normalized config, queued commands, play state projection, and terminal command semantics. Native `AnimationObject` remains the execution owner.
 
 #### Hook tuple contract
 
 ```typescript
 type UseAnimationResult = readonly [
-  animation: SpatializedMotionBindingInternal,
+  animation: SpatializedAnimationProxyInternal,
   api: SpatializedPlaybackApi,
   style: CSSProperties,
 ]
@@ -488,12 +500,12 @@ type UseAnimationResult = readonly [
 #### Binding contract
 
 ```typescript
-interface SpatializedMotionBindingInternal {
-  readonly __kind: 'spatializedMotion'
+interface SpatializedAnimationProxyInternal {
+  readonly __kind: 'spatializedAnimation'
   readonly __propName: 'xr-animation'
-  readonly __motionObjectId: string
+  readonly __animationObjectId: string | null
   get __animating(): boolean
-  __getSuppressedFields(): Set<string> | null
+  __getAnimatingMask(): Set<string> | null
   __setElement?: (
     element: HTMLElement | Spatialized2DElement | SpatializedStatic3DElement | SpatializedDynamic3DElement | null,
     targetKind?: SpatializedMotionKind,
@@ -503,32 +515,38 @@ interface SpatializedMotionBindingInternal {
 ```
 
 - React owns creation and mount-time wiring of this object
-- Core owns the motion object identity, animating state, and suppression state behind it
+- Core owns queued command state, playback state projection, and object-channel lifecycle behind it
 - Applications treat it as opaque and only pass it through `xr-animation`
 
 ### Core SDK to Native Runtime
 
-The Core layer sends canonical motion commands through the bridge:
+The Core layer sends canonical animation object commands through JSB/WebMsg:
 
-- `AnimateSpatializedElementMotion`
+- `CreateSpatializedElementAnimation`
+- `ControlSpatializedElementAnimation`
+- listener subscription for `SpatialAnimationStateChanged`
 - canonical `timeline` payload
 - terminal commands for `stop`, `reset`, and `finish`
 
 #### Command contract
 
 ```typescript
-interface AnimateSpatializedElementMotionCommand {
+interface CreateSpatializedElementAnimationCommand {
   animationId: string
-  type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish'
   targetKind: 'spatialized2d' | 'static3d' | 'dynamic3d'
-  elementId?: string
-  timeline?: SpatializedMotionTimeline
+  elementId: string
+  timeline: SpatializedMotionTimeline
+}
+
+interface ControlSpatializedElementAnimationCommand {
+  animationId: string
+  type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish' | 'destroy'
 }
 ```
 
-- For the target-state `useAnimation` path, `play` uses `timeline` as the canonical execution document
-- `play` is timeline-only across JSB; top-level timing control fields are not part of the stable wire contract
-- `targetKind` is filled in by Core after React bind-time target resolution
+- For the target-state `useAnimation` path, `create` uses `timeline` as the canonical execution document
+- `play` is a control command against an already-created object and does not carry a new timeline
+- `targetKind` is filled in by Core after React bind-time target resolution and before create
 - controller-level pause and resume are whole-session operations only; any future local track/action control must be designed as a separate API in a new change
 
 #### Canonical timeline payload
@@ -551,8 +569,8 @@ interface SpatializedMotionTimeline {
 }
 ```
 
-- This is the only stable cross-layer play document for target-state container motion
-- Segment-style `from` and `to` authoring must be compiled to this shape before native send
+- This is the only stable cross-layer create document for target-state container motion
+- Segment-style `from` and `to` authoring must be compiled to this shape before object creation
 - Timeline-level `delay`, `playbackRate`, and `loop` live inside this payload rather than on the outer command
 - Public docs should continue to present `timeline` as a single CSS `@keyframes`-style object, not as a sequential choreography array or multi-action primitive
 
@@ -571,17 +589,18 @@ Core forwards those values to React-facing callbacks and style updates.
 #### Play handle contract
 
 ```typescript
-interface AnimateSpatializedElementMotionResult {
+interface SpatialAnimationStateChanged {
   animationId: string
-  finished: Promise<SpatializedVisualValues>
-  canceled: Promise<SpatializedVisualValues>
-  failed: Promise<SpatializedPlaybackError>
+  state: 'idle' | 'queued' | 'running' | 'paused' | 'finished' | 'destroyed' | 'error'
+  terminalReason?: 'complete' | 'stop' | 'reset' | 'finish'
+  values?: SpatializedVisualValues
+  error?: SpatializedPlaybackError
 }
 ```
 
-- `finished` resolves with end values on natural completion
-- `canceled` resolves with sampled values for terminal interruption paths surfaced through the unified manager
-- `failed` resolves with the async playback error payload
+- natural completion reports `terminalReason: 'complete'` with end values
+- `stop`, `reset`, and `finish` report their own terminal reason and values
+- async failures report `state: 'error'` with the error payload
 
 #### Terminal value contract
 
@@ -603,7 +622,7 @@ into two concerns:
 
 - terminal sampled/native values remain the source for callbacks and terminal session semantics
 - `opacity` visual ownership may hand off to explicit authored `style.opacity` when one exists on the bound React node
-- the handoff MUST avoid leaving native outer opacity and inner DOM opacity active at the same time after suppression clears
+- the handoff MUST avoid leaving native outer opacity and inner DOM opacity active at the same time after the animating mask changes
 
 #### Error contract
 
@@ -656,24 +675,24 @@ The callback contract is shared across all kinds:
 
 Exactly one of `onComplete`, `onStop`, or `onReset` fires per termination path.
 
-### Suppression
+### Element animating mask
 
-Portal suppression remains a shared cross-layer rule:
+The element animating mask is the shared cross-layer rule:
 
-- `opacity` tracks suppress only `opacity` sync
-- any `transform.*` track suppresses transform sync as a whole
-- suppression clears on terminal state or unbind
+- `opacity` tracks mask only `opacity` sync
+- any `transform.*` track masks transform sync as a whole
+- the mask updates on active playback, terminal state, recreate, destroy, and unbind
 
-For `spatialized2d` opacity, suppression release is therefore paired with the
-terminal ownership decision above. Releasing suppression is not permission for
+For `spatialized2d` opacity, mask release or update is therefore paired with the
+terminal ownership decision above. Releasing the mask is not permission for
 dual ownership; it is the point where the system reassigns the single visual
 owner of `opacity`.
 
-For `spatialized2d` terminal `opacity` handoff, clearing suppression is a
+For `spatialized2d` terminal `opacity` handoff, clearing the mask is a
 release of DOM sync authority, not permission for simultaneous ownership:
 
-- if explicit authored `style.opacity` exists, suppression release restores that authored opacity as the only post-terminal visual owner
-- if explicit authored `style.opacity` does not exist, suppression release preserves terminal native opacity ownership for the post-terminal visual result
+- if explicit authored `style.opacity` exists, mask release restores that authored opacity as the only post-terminal visual owner
+- if explicit authored `style.opacity` does not exist, mask release preserves terminal native opacity ownership for the post-terminal visual result
 
 ## Non-goals
 
