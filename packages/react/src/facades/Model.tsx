@@ -6,18 +6,17 @@ import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { markWebSpatialPrimitive } from '../jsx/primitive-marker'
 import { warnBootForgotten } from './shared/warnBootForgotten'
+import { renderModelFallbackElement } from '../modelFallback'
 
 export type { ModelProps, ModelRef }
 
 /**
- * Default-entry facade for `Model`. Renders the spec-pinned degraded
- * native `<model>` element when the spatial chunk is not ready, and
- * delegates to the real `Model` implementation once `bootSpatial()`
- * resolves in a WebSpatial runtime.
+ * Default-entry facade for `Model`. Renders the degraded Model fallback when
+ * the spatial chunk is not ready, and delegates to the real `Model`
+ * implementation once `bootSpatial()` resolves in a WebSpatial runtime.
  *
- * Per spatial-lazy-load spec "Component facades" + "Model fallback
- * renders degraded `<model>` tag" Scenarios. Not wrapped in
- * `React.memo` (per facade conventions).
+ * Per spatial-lazy-load spec "Component facades". Not wrapped in `React.memo`
+ * (per facade conventions).
  */
 function ModelFacadeImpl(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const ready = useSpatialReady()
@@ -39,21 +38,5 @@ function renderModelFallback(
   props: ModelProps,
   ref: ForwardedRef<ModelRef>,
 ): JSX.Element {
-  // Strip spatial-only event props + spatialEventOptions before reaching the
-  // native <model> element (per spec "Model fallback renders degraded
-  // <model> tag" Scenario).
-  const {
-    onSpatialTap: _onSpatialTap,
-    onSpatialDragStart: _onSpatialDragStart,
-    onSpatialDrag: _onSpatialDrag,
-    onSpatialDragEnd: _onSpatialDragEnd,
-    onSpatialRotate: _onSpatialRotate,
-    onSpatialRotateEnd: _onSpatialRotateEnd,
-    onSpatialMagnify: _onSpatialMagnify,
-    onSpatialMagnifyEnd: _onSpatialMagnifyEnd,
-    spatialEventOptions: _spatialEventOptions,
-    'enable-xr': _enableXR,
-    ...modelProps
-  } = props
-  return <model ref={ref} {...modelProps} />
+  return renderModelFallbackElement(props, ref)
 }

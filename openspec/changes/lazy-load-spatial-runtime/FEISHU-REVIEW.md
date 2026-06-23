@@ -32,7 +32,7 @@
 ### 2.1 默认入口 = web-first + 单一激活路径
 
 - Plain browser / SSR：**不** `import()` spatial；`bootSpatial()` 立即 resolve。
-- WebSpatial runtime：**必须**在首屏 spatial UI 前 `await bootSpatial()`，否则 `Model` 等走 fallback（如 `<model>`、`Reality` 占位 div），**不 throw**。
+- WebSpatial runtime：**必须**在首屏 spatial UI 前 `await bootSpatial()`，否则 `Model` 等走 fallback（如 `<webspatial-model-fallback>`、`Reality` 占位 div），**不 throw**。
 - 与旧架构差异：去掉 vite-plugin；bundler 需支持 ESM + `exports` + dynamic import code-splitting。
 
 ### 2.2 5 KB 是 lazy default 的产品契约，eager 无单独上限

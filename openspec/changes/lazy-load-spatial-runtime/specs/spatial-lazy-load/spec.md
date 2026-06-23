@@ -59,7 +59,7 @@ The default entry MUST also contain the **complete** web-mode rendering for ever
 #### Scenario: Default entry contains complete fallback rendering for every facade
 
 - **WHEN** the published `dist/index.js` is loaded
-- **THEN** it MUST contain the rendering logic for every public facade's documented default fallback (Model degraded `<model>` tag, Reality placeholder `<div aria-hidden>`, entity / material / asset `null` rendering, internal HOC pass-through wrappers used by the JSX runtime, and any other per-component default fallback listed in "Component facades")
+- **THEN** it MUST contain the rendering logic for every public facade's documented default fallback (Model degraded `<webspatial-model-fallback>` host, Reality placeholder `<div aria-hidden>`, entity / material / asset `null` rendering, internal HOC pass-through wrappers used by the JSX runtime, and any other per-component default fallback listed in "Component facades")
 - **AND** rendering any facade in a non-WebSpatial browser MUST NOT require any additional module to be loaded over the network
 
 ---
@@ -297,7 +297,7 @@ Additional file-level constraints on facade modules (the `'use client'` directiv
 
 | Public name | Default fallback rendering in the default entry |
 | --- | --- |
-| `Model` | Strip spatial-only event props (`onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`) and the `spatialEventOptions` prop, then render `<model ref={ref} {...remainingProps} />`, preserving today's degraded behavior in plain browsers |
+| `Model` | Strip spatial-only event props (`onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`) and the `spatialEventOptions` prop, then render `<webspatial-model-fallback ref={ref} {...remainingProps} />`, preserving layout and asset props in degraded mode without triggering React unknown-tag warnings |
 | `Reality` | A single `<div aria-hidden="true" ref={ref}>` placeholder that preserves the layout box (className, style, and other layout-affecting props apply to the host); the React children subtree MUST NOT mount |
 | `Entity` (the base Entity component / empty transform group), `BoxEntity` / `Box`, `SphereEntity` / `Sphere`, `ConeEntity` / `Cone`, `CylinderEntity` / `Cylinder`, `PlaneEntity` / `Plane`, `ModelEntity`, `AttachmentEntity` | `null` |
 | `UnlitMaterial`, `Material`, `Texture`, `ModelAsset`, `AttachmentAsset` | `null` |
@@ -335,13 +335,13 @@ Additional file-level constraints on facade modules (the `'use client'` directiv
 - **THEN** the facade MUST re-render and mount the real implementation on the next React commit, without requiring an explicit parent re-render or a `key` change
 - **AND** any DOM identity preserved by the React reconciler (e.g. `ref` continuity) MUST be respected by the facade's switch logic
 
-#### Scenario: Model fallback renders degraded `<model>` tag
+#### Scenario: Model fallback renders degraded custom host
 
 - **WHEN** the `Model` facade renders in fallback mode
-- **THEN** it MUST render a native `<model>` element with the layout-affecting and asset-related props passed through (e.g. `src`, `style`, `className`)
-- **AND** spatial-only event handler props (`onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`) MUST be stripped before reaching the `<model>` element
+- **THEN** it MUST render a React-safe `<webspatial-model-fallback>` host with the layout-affecting and asset-related props passed through (e.g. `src`, `style`, `className`)
+- **AND** spatial-only event handler props (`onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`) MUST be stripped before reaching the fallback host
 - **AND** the `spatialEventOptions` prop MUST be stripped
-- **AND** the forwarded `ref` MUST be attached to the `<model>` element
+- **AND** the forwarded `ref` MUST be attached to the fallback host
 
 #### Scenario: Reality fallback preserves layout
 

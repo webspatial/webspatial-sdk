@@ -79,7 +79,7 @@ For APIs documented as runtime-gated, unsupported calls/reads MUST follow docume
 #### Scenario: `Model` exception fallback
 
 - **WHEN** `supports('Model')` is `false`
-- **THEN** fallback MUST render native `<model>` with props passthrough
+- **THEN** fallback MUST render a React-safe `<webspatial-model-fallback>` host with props passthrough
 
 #### Scenario: Unsupported model JS members
 

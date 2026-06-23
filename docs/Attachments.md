@@ -76,7 +76,7 @@ The following components detect when they are rendered inside an `<AttachmentAss
 |-----------|---------------------------|
 | `<Reality>` | Returns `null` with a console warning.  |
 | `<SpatialDiv>` / `SpatializedContainer` | Renders as plain HTML (strips spatial props). Layout and Tailwind still work. |
-| `<Model>` | Renders as a plain `<model>` tag without spatialization. |
+| `<Model>` | Renders as a React-safe `<webspatial-model-fallback>` host without spatialization. |
 
 
 

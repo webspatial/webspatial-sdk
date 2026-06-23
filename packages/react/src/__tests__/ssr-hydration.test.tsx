@@ -29,6 +29,7 @@ import { Reality } from '../facades/Reality'
 import { BoxEntity } from '../facades/entities'
 import { useMetrics } from '../hooks-web/useMetrics'
 import { useSpatialReady } from '../runtime/useSpatialReady'
+import { MODEL_FALLBACK_TAG } from '../modelFallback'
 
 function setUserAgent(userAgent: string): void {
   Object.defineProperty(window.navigator, 'userAgent', {
@@ -115,7 +116,7 @@ describe('SSR via renderToString (spec tasks.md §13.2 + "Server render does not
         <BoxEntity />
       </>,
     )
-    expect(html).toContain('<model')
+    expect(html).toContain(`<${MODEL_FALLBACK_TAG}`)
     expect(html).toContain('src="x.usdz"')
     expect(html).toContain('aria-hidden="true"')
     expect(html).toContain('class="reality-host"')
@@ -209,7 +210,7 @@ describe('Streaming SSR via renderToPipeableStream (spec tasks.md §13.3 + "Stre
         },
       })
     })
-    expect(html).toContain('<model')
+    expect(html).toContain(`<${MODEL_FALLBACK_TAG}`)
     expect(html).toContain('src="y.usdz"')
     expect(html).toContain('aria-hidden="true"')
     // Streaming MUST NOT introduce its own Suspense boundary on the SDK
@@ -299,9 +300,9 @@ describe('Hydration round-trip — boot AFTER hydrate (spec tasks.md §13.5 + "F
     )
     expect(hydrationMismatch).toBeUndefined()
     // The pre-hydration server markup contained the documented Model
-    // fallback (`<model>`), and the first client render observed the
-    // same fallback (matched), so the model element is still present.
-    expect(container.querySelector('model')).not.toBeNull()
+    // fallback, and the first client render observed the same fallback
+    // (matched), so the fallback element is still present.
+    expect(container.querySelector(MODEL_FALLBACK_TAG)).not.toBeNull()
     expect(container.querySelector('[data-sentinel="Model"]')).toBeNull()
 
     // Now boot — the bridge resolves and the next render commits real impls.
@@ -344,7 +345,7 @@ describe('Hydration round-trip — boot BEFORE hydrate (spec tasks.md §13.6 + "
     // so the SSR HTML still uses fallback. This is the contract.
     await bootSpatial()
     const html = renderToString(tree)
-    expect(html).toContain('<model')
+    expect(html).toContain(`<${MODEL_FALLBACK_TAG}`)
     expect(html).not.toContain('data-sentinel="Model"')
 
     const container = document.createElement('div')

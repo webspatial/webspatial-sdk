@@ -7,7 +7,7 @@ This **OpenSpec change** replaces the SDK's "dual-build (`dist/web` vs `dist/def
 - One small default bundle for everyone — **≤ 5KB gzipped marginal delta** added to a typical consumer app (e.g. `import { Model, bootSpatial }`), with `dist/index.js` ≤ 5KB as the SDK-side proxy
 - Spatial implementation lives in a separate `@webspatial/react-sdk/spatial` chunk, loaded dynamically via `await bootSpatial()` only inside a WebSpatial runtime
 - Spatial-only consumers can opt into `@webspatial/react-sdk/eager`, a single-request entry that statically links the spatial implementation and exposes no-op boot compatibility stubs
-- Plain web users see documented per-component fallbacks (e.g. `Model` → degraded `<model>` tag) without any extra network requests
+- Plain web users see documented per-component fallbacks (e.g. `Model` → degraded `<webspatial-model-fallback>` host) without any extra network requests
 - `@webspatial/vite-plugin` becomes redundant — the SDK works against any bundler that supports ESM + `exports` + dynamic-import code-splitting
 
 This guide originally accompanied the spec-only proposal. The active branch now includes implementation commits as well; use `tasks.md` as the source of truth for which implementation slices are complete and which follow-ups remain.
@@ -121,7 +121,7 @@ The two paths are physically separate code (boot bundle vs spatial chunk) and **
 
 | API | Path 1 fallback (Scenario 1) | Path 1 pinned by | Path 2 fallback (Scenario 2) | Path 2 pinned by | Status |
 | --- | --- | --- | --- | --- | --- |
-| `Model` | `<model ref {...rest}/>` (spatial event props stripped) | `spatial-lazy-load` "Model fallback renders degraded `<model>` tag" | Same — native `<model>` with props passthrough | `runtime-capabilities` "`Model` exception fallback" | ✅ Aligned |
+| `Model` | `<webspatial-model-fallback ref {...rest}/>` (spatial event props stripped) | `spatial-lazy-load` "Model fallback renders degraded custom host" | Same — React-safe custom host with props passthrough | `runtime-capabilities` "`Model` exception fallback" | ✅ Aligned |
 | `Reality` | `<div aria-hidden="true" ref>`, children NOT mounted | `spatial-lazy-load` "Reality fallback preserves layout" | Same — `<div aria-hidden>` placeholder, layout preserved, no child mount | `runtime-capabilities` "`Reality` unsupported fallback" | ✅ Aligned |
 | `Entity` / `*Entity` family | `null` | `spatial-lazy-load` "Component facades" + facade table | "MUST NOT render corresponding DOM/entity node" — implies `null` | `runtime-capabilities` "Unsupported HTML component rendering" | ✅ Aligned |
 | `UnlitMaterial` / `Material` / `Texture` / `*Asset` | `null` | facade table | Same (entity-rendering contract above) | `runtime-capabilities` "Unsupported HTML component rendering" | ✅ Aligned |

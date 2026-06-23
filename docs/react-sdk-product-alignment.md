@@ -100,7 +100,7 @@ normal browser (Chrome, Safari, Firefox) without a WebSpatial runtime.
 
 | What integrators use | Plain-web behavior |
 | -------------------- | ------------------ |
-| `Model` | Degraded native `<model>` (spatial event props stripped); layout preserved |
+| `Model` | Degraded `<webspatial-model-fallback>` host (spatial event props stripped); layout preserved |
 | `Reality` | Single `<div aria-hidden="true">` preserving the layout box; **children do not mount** |
 | `enable-xr` / `enable-xr-monitor` hosts | Ordinary `<div>` (marker stripped); no spatial slab |
 | `Entity` / `*Entity` / `Material` / `*Asset` | **No DOM** (`null` fallback) — expected, not a bug |

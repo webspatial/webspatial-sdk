@@ -6,6 +6,7 @@ import {
 } from './spatialized-container'
 import { useInsideAttachment } from './reality/context/InsideAttachmentContext'
 import { markWebSpatialPrimitive } from './jsx/primitive-marker'
+import { renderModelFallbackElement } from './modelFallback'
 
 import { Spatial } from '@webspatial/core-sdk'
 
@@ -20,25 +21,11 @@ const spatial = new Spatial()
 function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const insideAttachment = useInsideAttachment()
   const { 'enable-xr': enableXR, ...restProps } = props
-  // Model must handle insideAttachment itself because
-  // SpatializedStatic3DElementContainer passes component="div" to the base,
-  // but the correct degraded element for a Model is a <model> tag, not a <div>.
+  // Model handles degraded rendering itself because
+  // SpatializedStatic3DElementContainer always uses a div host for real
+  // spatialized content.
   if (!enableXR || !spatial.runInSpatialWeb() || insideAttachment) {
-    const {
-      onSpatialTap,
-      onSpatialDragStart,
-      onSpatialDrag,
-      onSpatialDragEnd,
-      onSpatialRotate,
-      onSpatialRotateEnd,
-      onSpatialMagnify,
-      onSpatialMagnifyEnd,
-      spatialEventOptions: _spatialEventOptions,
-      ...modelProps
-    } = restProps
-    // map to VisionOS26 model tag outside attachments
-    // @ts-ignore
-    return <model ref={ref} {...modelProps} />
+    return renderModelFallbackElement(restProps, ref)
   }
 
   // In orbit mode the native layer drives the model's transform, so the

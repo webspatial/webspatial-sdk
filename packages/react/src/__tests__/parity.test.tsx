@@ -86,21 +86,21 @@ describe('Model parity (spec tasks.md §15.3 + REVIEW.md "Two-scenario behavior 
       className: 'parity-host',
     }
     // Path 1 — facade renders fallback because the bridge is not ready in
-    // plain web; the facade strips spatial-only event props and emits a
-    // native <model> element.
+    // plain web; the facade strips spatial-only event props and emits the
+    // shared React-safe Model fallback element.
     const path1 = renderClientMarkup(<ModelFacade {...props} />)
 
     // Path 2 — real Model with `enable-xr={false}` (or under non-WebSpatial
-    // UA). Both gating paths short-circuit to the same degraded `<model>`
-    // tag rendering branch. Use client render to match how the real `Model` is
-    // mounted in practice — a fresh post-hydration client mount via the facade
-    // delegate (see `helpers/parity.renderClientMarkup`).
+    // UA). Both gating paths short-circuit to the same degraded Model fallback
+    // branch. Use client render to match how the real `Model` is mounted in
+    // practice — a fresh post-hydration client mount via the facade delegate
+    // (see `helpers/parity.renderClientMarkup`).
     const path2 = renderClientMarkup(<ModelReal {...props} />)
 
     expect(normalizeHtml(path1)).toBe(normalizeHtml(path2))
   })
 
-  it('Path 1 and Path 2 strip the same set of spatial-only event props before reaching the host <model>', () => {
+  it('Path 1 and Path 2 strip the same set of spatial-only event props before reaching the fallback host', () => {
     const handler = () => {}
     const props: Record<string, unknown> = {
       src: 'y.usdz',
@@ -186,8 +186,7 @@ describe('Console-warning policy differential (spec tasks.md §15.5)', () => {
         <ModelFacade src="x.usdz" />
       </>,
     )
-    // Filter out unrelated React warnings (unknown HTML tag for <model>);
-    // we only care that the SDK does NOT log boot-was-forgotten / capability
+    // We only care that the SDK does NOT log boot-was-forgotten / capability
     // diagnostics in plain-web mode.
     const sdkWarnings = warnSpy.mock.calls
       .map(c => String(c[0] ?? ''))

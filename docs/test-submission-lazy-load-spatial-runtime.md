@@ -132,7 +132,7 @@ Web、未 boot、SSR 下有可预期 fallback。本节建议用自动化覆盖 i
 
 | API | Web / 未 boot 预期 |
 | --- | --- |
-| `Model` | 渲染降级 `<model>`，并剥离 spatial-only event props |
+| `Model` | 渲染降级 `<webspatial-model-fallback>`，并剥离 spatial-only event props |
 | `Reality` | 渲染单个 `aria-hidden="true"` 的 `div` host，保持布局，不挂载 children |
 | `Entity` / `BoxEntity` / `SphereEntity` / `ConeEntity` / `CylinderEntity` / `PlaneEntity` / `ModelEntity` / `AttachmentEntity` | 返回 `null`，不挂载 children，不抛错 |
 | `Box` / `Sphere` / `Cone` / `Cylinder` / `Plane` | 与对应 `*Entity` fallback 一致 |

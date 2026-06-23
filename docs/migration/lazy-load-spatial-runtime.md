@@ -82,7 +82,7 @@ If you call `bootSpatial()` without `<SpatialBoot>`, facades and hook placeholde
 
 ### Imperative refs during a late boot
 
-If a facade mounts before `bootSpatial()` resolves, refs point at the fallback output for that first commit. For `Model`, that means a forwarded ref can initially point at the degraded native `<model>` fallback, not a spatial `ModelRef`. Do not use `modelRef.current.ready`, `entityTransform`, or other `ModelRef` APIs as a boot readiness signal from that fallback.
+If a facade mounts before `bootSpatial()` resolves, refs point at the fallback output for that first commit. For `Model`, that means a forwarded ref can initially point at the degraded `<webspatial-model-fallback>` host, not a spatial `ModelRef`. Do not use `modelRef.current.ready`, `entityTransform`, or other `ModelRef` APIs as a boot readiness signal from that fallback.
 
 Those APIs are safe only after the component mounts with the real spatial implementation:
 

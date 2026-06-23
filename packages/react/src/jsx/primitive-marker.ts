@@ -22,6 +22,15 @@ export const WEBSPATIAL_PRIMITIVE_MARKER = '__webspatialPrimitive__'
 
 export type WebSpatialPrimitiveName = 'Model' | 'Reality'
 
+function inferPrimitiveNameFromDisplayName(
+  displayName: unknown,
+): WebSpatialPrimitiveName | undefined {
+  if (typeof displayName !== 'string') return undefined
+  const match = /(?:^|[(])(Model|Reality)(?:[)]|$)/.exec(displayName)
+  const name = match?.[1]
+  return name === 'Model' || name === 'Reality' ? name : undefined
+}
+
 /**
  * Brand a component (facade or real implementation) as a WebSpatial primitive
  * so the JSX runtime can identify it without relying on object-reference
@@ -60,5 +69,19 @@ export function getWebSpatialPrimitiveName(
     return undefined
   }
   const value = (type as Record<string, unknown>)[WEBSPATIAL_PRIMITIVE_MARKER]
-  return value === 'Model' || value === 'Reality' ? value : undefined
+  if (value === 'Model' || value === 'Reality') {
+    return value
+  }
+
+  const record = type as Record<string, unknown>
+  return (
+    inferPrimitiveNameFromDisplayName(record.displayName) ??
+    inferPrimitiveNameFromDisplayName(
+      (record.render as Record<string, unknown> | undefined)?.displayName,
+    ) ??
+    inferPrimitiveNameFromDisplayName(record.name) ??
+    inferPrimitiveNameFromDisplayName(
+      (record.render as Record<string, unknown> | undefined)?.name,
+    )
+  )
 }

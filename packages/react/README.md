@@ -60,7 +60,7 @@ Every facade in the default entry has a documented fallback rendered in plain we
 
 | Public name                                                                    | Fallback rendering in non-WebSpatial browsers                               |
 | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| `Model`                                                                        | Native `<model>` element (with spatial-only event props stripped)           |
+| `Model`                                                                        | `<webspatial-model-fallback>` host (with spatial-only event props stripped) |
 | `Reality`                                                                      | Single `<div aria-hidden="true">` placeholder preserving the layout box     |
 | `Entity` / `Box` / `Sphere` / `Cone` / `Cylinder` / `Plane` / `*Entity` family | `null` (children NOT mounted)                                               |
 | `Material` / `Texture` / `ModelAsset` / `AttachmentAsset` / `UnlitMaterial`    | `null`                                                                      |

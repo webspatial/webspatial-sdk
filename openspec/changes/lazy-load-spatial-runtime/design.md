@@ -408,7 +408,7 @@ The two forms still share packaging hygiene: ESM-only publishing, required React
 
    For SSR / hydration, both options are hydration-safe (the spec requires `useSpatialReady` to render fallback during the hydration pass and only swap to real on the next commit). The SSR fallback-to-real swap is NOT avoidable by either timing — the difference is only that boot-before starts the spatial chunk fetch in parallel with HTML streaming, while boot-after defers the fetch until after the page is interactive.
 
-4. If you need a custom web rendering for a specific facade (e.g. an `<img>` poster instead of the default degraded `<model>` element), write a small wrapper that branches on `useSpatialReady()`:
+4. If you need a custom web rendering for a specific facade (e.g. an `<img>` poster instead of the default degraded `<webspatial-model-fallback>` host), write a small wrapper that branches on `useSpatialReady()`:
 
    ```tsx
    import { Model, useSpatialReady } from '@webspatial/react-sdk'

@@ -46,12 +46,6 @@ describe('jsx-shared: replaceToSpatialPrimitiveType + JSX call sites', () => {
     __resetWithSpatialMonitorCacheForTests()
     setPlainWebUserAgent()
     warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    // The native HTML <model> element is part of a future spec and not
-    // recognized by jsdom / React's intrinsic table; the Model facade
-    // bypass path keeps `type === Model` untouched, but a few SSR tests
-    // exercise renderToString through the Model facade fallback which can
-    // surface React's "unknown tag" warning. Suppress to keep test output
-    // clean — the DOM contract is still asserted explicitly.
     errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
@@ -411,6 +405,30 @@ describe('jsx-shared: replaceToSpatialPrimitiveType + JSX call sites', () => {
 
       expect(result).toBe(withSpatialized2DElementContainer(Plain))
       expect('enable-xr' in props).toBe(false)
+    })
+
+    it('recognizes react-spring style wrapper displayName Animated(Model) as a Model primitive', () => {
+      const AnimatedModelLike = React.forwardRef<HTMLElement>(() => null)
+      AnimatedModelLike.displayName = 'Animated(Model)'
+
+      expect(getWebSpatialPrimitiveName(AnimatedModelLike)).toBe('Model')
+
+      const props: Record<string, any> = { 'enable-xr': true }
+      const result = replaceToSpatialPrimitiveType(AnimatedModelLike, props)
+
+      expect(result).toBe(AnimatedModelLike)
+      expect(props).toHaveProperty('enable-xr', true)
+    })
+
+    it('recognizes wrapper render.displayName when top-level displayName is absent', () => {
+      const ForwardRefLike = {
+        $$typeof: Symbol.for('react.forward_ref'),
+        render: Object.assign(() => null, {
+          displayName: 'Animated(Reality)',
+        }),
+      }
+
+      expect(getWebSpatialPrimitiveName(ForwardRefLike)).toBe('Reality')
     })
   })
 })

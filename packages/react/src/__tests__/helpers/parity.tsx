@@ -60,9 +60,7 @@ export function renderClientMarkup(node: React.ReactElement): string {
     unmount()
   }
 }
-/** Render a tree to static markup, suppressing the unknown-tag warnings
- * React emits for native `<model>` (which jsdom + React's intrinsic table
- * do not yet recognize but which IS the spec-required degraded element). */
+/** Render a tree to static markup while isolating unrelated React console noise. */
 export function renderStatic(node: React.ReactElement): string {
   const errSpy = consoleSpy('error')
   try {

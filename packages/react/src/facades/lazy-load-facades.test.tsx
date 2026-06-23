@@ -33,6 +33,7 @@ import {
   UnlitMaterial,
 } from './resources'
 import { SceneGraph, World } from './SceneGraph'
+import { MODEL_FALLBACK_TAG } from '../modelFallback'
 import {
   __resetWithSpatialized2DElementContainerCacheForTests,
   withSpatialized2DElementContainer,
@@ -145,11 +146,6 @@ describe('lazy-load facades', () => {
     __resetWithSpatialMonitorCacheForTests()
     setPlainWebUserAgent()
     warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    // The native HTML <model> element is part of a future spec and not
-    // recognized by jsdom / React's intrinsic table; React logs an "unknown
-    // tag" error every time the Model facade renders fallback. The DOM
-    // output is correct and the warning is unavoidable without changing
-    // public Model behavior, so we suppress it for this suite.
     errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
@@ -165,18 +161,18 @@ describe('lazy-load facades', () => {
     __resetWithSpatialMonitorCacheForTests()
   })
 
-  describe('Model facade — plain web fallback (per "Model fallback renders degraded <model> tag" Scenario)', () => {
-    it('renders a native <model> element and forwards ref to it', () => {
+  describe('Model facade — plain web fallback', () => {
+    it('renders the shared React-safe Model fallback element and forwards ref to it', () => {
       const ref = createRef<HTMLElement>()
       const { container } = render(<Model ref={ref as any} src="x.usdz" />)
 
-      const modelEl = container.querySelector('model')
+      const modelEl = container.querySelector(MODEL_FALLBACK_TAG)
       expect(modelEl).not.toBeNull()
       expect(ref.current).toBe(modelEl)
       expect(modelEl?.getAttribute('src')).toBe('x.usdz')
     })
 
-    it('strips spatial-only event handlers + spatialEventOptions before reaching the <model> element', () => {
+    it('strips spatial-only event handlers + spatialEventOptions before reaching the fallback element', () => {
       const onSpatialTap = vi.fn()
       const onSpatialDrag = vi.fn()
       const { container } = render(
@@ -194,7 +190,7 @@ describe('lazy-load facades', () => {
         />,
       )
 
-      const modelEl = container.querySelector('model')!
+      const modelEl = container.querySelector(MODEL_FALLBACK_TAG)!
       for (const attr of [
         'onspatialtap',
         'onspatialdragstart',
@@ -465,14 +461,14 @@ describe('lazy-load facades', () => {
       __setSpatialImplLoaderForTests(() => Promise.resolve(sentinel))
 
       const { container, rerender } = render(<Model src="x" />)
-      expect(container.querySelector('model')).not.toBeNull()
+      expect(container.querySelector(MODEL_FALLBACK_TAG)).not.toBeNull()
 
       await act(async () => {
         await bootSpatial()
       })
       rerender(<Model src="x" />)
       expect(container.querySelector('[data-sentinel="Model"]')).not.toBeNull()
-      expect(container.querySelector('model')).toBeNull()
+      expect(container.querySelector(MODEL_FALLBACK_TAG)).toBeNull()
     })
 
     it('Reality mounts children only after the real implementation is in scope', async () => {
