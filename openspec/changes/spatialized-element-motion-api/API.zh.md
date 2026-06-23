@@ -57,7 +57,7 @@ const [animation, api, style] = useAnimation({
 | 绑定目标 | React 绑定 | Core 写回 |
 |----------|------------|-----------|
 | 2D | `xr-animation` on `enable-xr` div，`style` 合并 | native `element.transform` + opacity；浏览器可 Web RAF |
-| Static3D | `xr-animation` on `<Model>` | native `modelTransform` + opacity |
+| Static3D | `xr-animation` on `<Model>` | native `modelTransform` only；`opacity` 不属于已交付的 Static3D sink |
 | Dynamic3D | `xr-animation` on `<Reality>` | native 容器 `element.transform` + opacity |
 
 ## 4. Playback API
