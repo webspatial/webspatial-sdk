@@ -28,6 +28,26 @@ function readTranslateX(style: { transform?: unknown }): number {
 }
 
 describe('useAnimation tuple api', () => {
+  test('exposes the React-facing playback api shape', () => {
+    const { result } = renderHook(() => useAnimation(SIMPLE_ENTRANCE_CONFIG))
+    const api = result.current[1]
+
+    expect(api).toEqual(
+      expect.objectContaining({
+        play: expect.any(Function),
+        pause: expect.any(Function),
+        resume: expect.any(Function),
+        stop: expect.any(Function),
+        reset: expect.any(Function),
+        finish: expect.any(Function),
+      }),
+    )
+    expect(api.playState).toBe('idle')
+    expect(api.isAnimating).toBe(false)
+    expect(api.isPaused).toBe(false)
+    expect(api.finished).toBe(false)
+  })
+
   test('2D bind starts playback and updates style', async () => {
     const { result } = renderHook(() => useAnimation(SIMPLE_ENTRANCE_CONFIG))
 
@@ -66,10 +86,10 @@ describe('useAnimation tuple api', () => {
         autoStart: false,
         tracks: [
           {
-            property: 'opacity',
+            property: 'transform.translate.x',
             keyframes: [
               { at: 0, value: 0 },
-              { at: 1, value: 1 },
+              { at: 1, value: 100 },
             ],
           },
         ],
@@ -139,6 +159,71 @@ describe('useAnimation tuple api', () => {
 
     expect(result.current[1].playState).toBe('idle')
     expect(result.current[2].opacity).toBe(0)
+  })
+
+  test('pre-bind play still runs after bind when autoStart is false', async () => {
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 0.2,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 0.2, value: 1 },
+            ],
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[1].play()
+    })
+    expect(result.current[1].playState).toBe('queued')
+
+    await act(async () => {
+      result.current[0].__setElement?.(
+        createMockElement() as any,
+        'spatialized2d',
+      )
+    })
+
+    await waitFor(() => {
+      expect(result.current[1].playState).not.toBe('idle')
+    })
+  })
+
+  test('one animation binding only attaches to one component', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const first = createMockElement('motion-element-1')
+    const second = createMockElement('motion-element-2')
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'transform.translate.x',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 10 },
+            ],
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(first as any, 'spatialized2d')
+      result.current[0].__setElement?.(second as any, 'spatialized2d')
+    })
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('already attached to another component'),
+    )
+    warnSpy.mockRestore()
   })
 
   test('web pause syncs style to timeline sample at elapsed progress', async () => {

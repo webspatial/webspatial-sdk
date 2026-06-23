@@ -9,6 +9,7 @@ function makeConfig(
     onReset: () => void
     onComplete: (values: SpatializedVisualValues) => void
     onStop: (values: SpatializedVisualValues) => void
+    onError: (error: unknown) => void
   }> = {},
 ) {
   return {
@@ -27,6 +28,7 @@ function makeConfig(
     onReset: overrides.onReset,
     onComplete: overrides.onComplete,
     onStop: overrides.onStop,
+    onError: overrides.onError,
   }
 }
 
@@ -324,9 +326,96 @@ describe('SpatializedMotionController terminal semantics (Web)', () => {
     expect(controller.finished).toBe(false)
     expect(onReset).toHaveBeenCalledWith({ opacity: 0.2 })
   })
+
+  test('stop, reset, finish, and natural completion callbacks are mutually exclusive', async () => {
+    const resetCallbacks = {
+      onStop: vi.fn(),
+      onReset: vi.fn(),
+      onComplete: vi.fn(),
+    }
+    const resetController = new SpatializedMotionController(
+      makeConfig(resetCallbacks),
+    )
+    resetController.reset()
+    expect(resetCallbacks.onReset).toHaveBeenCalledWith({ opacity: 0 })
+    expect(resetCallbacks.onStop).not.toHaveBeenCalled()
+    expect(resetCallbacks.onComplete).not.toHaveBeenCalled()
+
+    const finishCallbacks = {
+      onStop: vi.fn(),
+      onReset: vi.fn(),
+      onComplete: vi.fn(),
+    }
+    const finishController = new SpatializedMotionController(
+      makeConfig(finishCallbacks),
+    )
+    finishController.finish()
+    expect(finishCallbacks.onComplete).toHaveBeenCalledWith({ opacity: 1 })
+    expect(finishCallbacks.onStop).not.toHaveBeenCalled()
+    expect(finishCallbacks.onReset).not.toHaveBeenCalled()
+
+    const stopCallbacks = {
+      onStop: vi.fn(),
+      onReset: vi.fn(),
+      onComplete: vi.fn(),
+    }
+    const stopController = new SpatializedMotionController(
+      makeConfig(stopCallbacks),
+    )
+    vi.stubGlobal('requestAnimationFrame', () => 1)
+    vi.stubGlobal('cancelAnimationFrame', () => {})
+    stopController.attachElement(null, 'spatialized2d')
+    stopController.play()
+    stopController.stop()
+    expect(stopCallbacks.onStop.mock.calls[0]?.[0]?.opacity).toBeCloseTo(0, 3)
+    expect(stopCallbacks.onReset).not.toHaveBeenCalled()
+    expect(stopCallbacks.onComplete).not.toHaveBeenCalled()
+
+    vi.useFakeTimers()
+    vi.stubGlobal(
+      'requestAnimationFrame',
+      (cb: FrameRequestCallback): number =>
+        setTimeout(() => cb(performance.now()), 16) as unknown as number,
+    )
+    vi.stubGlobal('cancelAnimationFrame', (id: number) => {
+      clearTimeout(id)
+    })
+    const completeCallbacks = {
+      onStop: vi.fn(),
+      onReset: vi.fn(),
+      onComplete: vi.fn(),
+    }
+    const completeController = new SpatializedMotionController(
+      makeConfig(completeCallbacks),
+    )
+    completeController.attachElement(null, 'spatialized2d')
+    completeController.play()
+    await vi.advanceTimersByTimeAsync(1200)
+    expect(completeCallbacks.onComplete).toHaveBeenCalledWith({ opacity: 1 })
+    expect(completeCallbacks.onStop).not.toHaveBeenCalled()
+    expect(completeCallbacks.onReset).not.toHaveBeenCalled()
+  })
 })
 
 describe('SpatializedMotionController terminal semantics (Native)', () => {
+  test('static3d opacity tracks are rejected before native playback is created', () => {
+    const animateMotion = vi.fn()
+    const controller = new SpatializedMotionController(
+      makeConfig({ autoStart: false }),
+      {
+        forceNativePlayback: true,
+      },
+    )
+
+    expect(() =>
+      controller.attachElement(
+        { id: 'static3d-element', animateMotion },
+        'static3d',
+      ),
+    ).toThrow(/static3d targets do not support opacity/)
+    expect(animateMotion).not.toHaveBeenCalled()
+  })
+
   test('play followed by reset in the same tick cancels pending native startup', async () => {
     const values: SpatializedVisualValues[] = []
     const onReset = vi.fn()
@@ -801,6 +890,61 @@ describe('SpatializedMotionController terminal semantics (Native)', () => {
     }
   })
 
+  test('native onError is independent from terminal callbacks', async () => {
+    let failNative!: (error: unknown) => void
+    const onStop = vi.fn()
+    const onReset = vi.fn()
+    const onComplete = vi.fn()
+    const onError = vi.fn()
+    const animateMotion = vi.fn(async (command: { type: string }) => {
+      if (command.type === 'play') {
+        return {
+          animationId: 'native-error',
+          finished: new Promise<SpatializedVisualValues>(() => {}),
+          canceled: new Promise<SpatializedVisualValues>(() => {}),
+          failed: new Promise(resolve => {
+            failNative = resolve
+          }),
+        }
+      }
+      return undefined
+    })
+    const controller = new SpatializedMotionController(
+      makeConfig({ autoStart: false, onStop, onReset, onComplete, onError }),
+      {
+        forceNativePlayback: true,
+      },
+    )
+    controller.attachElement(null, 'spatialized2d')
+    controller.attachElement({ id: 'native-element', animateMotion } as any)
+
+    controller.play()
+    await vi.waitFor(() => {
+      expect(animateMotion).toHaveBeenCalledWith(
+        expect.objectContaining({ targetKind: 'spatialized2d', type: 'play' }),
+      )
+    })
+
+    failNative({
+      animationId: 'native-error',
+      command: 'play',
+      reason: 'native failure',
+    })
+    await vi.waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          animationId: 'native-error',
+          reason: 'native failure',
+        }),
+      )
+    })
+
+    expect(controller.playState).toBe('idle')
+    expect(onStop).not.toHaveBeenCalled()
+    expect(onReset).not.toHaveBeenCalled()
+    expect(onComplete).not.toHaveBeenCalled()
+  })
+
   test('native finish -> updateConfig -> reset keeps using the finished session config', async () => {
     const values: SpatializedVisualValues[] = []
     const onReset = vi.fn()
@@ -966,7 +1110,7 @@ describe('SpatializedMotionController portal suppression timing', () => {
       expect(controller.playState).toBe('running')
     })
 
-    controller.updateConfig(makeOpacityConfig(0, 1))
+    controller.updateConfig(makeTransformConfig())
 
     expect(controller.getSuppressedFields()).toEqual(new Set(['transform']))
   })
@@ -1000,7 +1144,7 @@ describe('SpatializedMotionController portal suppression timing', () => {
       expect(controller.playState).toBe('running')
     })
 
-    controller.updateConfig(makeOpacityConfig(0, 1))
+    controller.updateConfig(makeTransformConfig())
 
     expect(controller.getSuppressedFields()).toEqual(
       new Set(['entityTransform']),
@@ -1209,7 +1353,7 @@ describe('SpatializedMotionController portal suppression timing', () => {
     expect(web2dController.getSuppressedFields()).toBeNull()
 
     const static3dController = new SpatializedMotionController(
-      makeConfig({ autoStart: false }),
+      makeTransformConfig(),
       { forceNativePlayback: true },
     )
     static3dController.attachElement(null, 'static3d')
@@ -1226,9 +1370,12 @@ describe('SpatializedMotionController unbind and rebind', () => {
   test.each(['spatialized2d', 'static3d', 'dynamic3d'] as const)(
     'recreates the native backend after %s unbind without reusing the destroyed backend',
     async kind => {
-      const controller = new SpatializedMotionController(makeConfig(), {
-        forceNativePlayback: true,
-      })
+      const controller = new SpatializedMotionController(
+        kind === 'static3d' ? makeTransformConfig() : makeConfig(),
+        {
+          forceNativePlayback: true,
+        },
+      )
       const firstElement = createNativeElement(`first-${kind}`)
       const secondElement = createNativeElement(`second-${kind}`)
 

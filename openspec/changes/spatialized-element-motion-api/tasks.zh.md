@@ -45,19 +45,19 @@
 
 ## Phase 5 — Compatibility preservation tests
 
-- [ ] 测试：保留 React-facing `api` 上的 `play` / `pause` / `resume` / `stop` / `reset` / `finish` API shape
-- [ ] 测试：验证 `pause()` 与 `resume()` 不接受 keys 或 partial selectors
-- [ ] 测试：验证 `stop()` 冻结当前值、设置 `playState=idle`、设置 `finished=false`，并触发 `onStop(values)`
-- [ ] 测试：验证 `reset()` emit `from` 值、设置 `playState=idle`、设置 `finished=false`，并触发 `onReset(values)`
-- [ ] 测试：验证 `finish()` emit `to` 值、设置 `playState=finished`、设置 `finished=true`，并触发 `onComplete(values)`
-- [ ] 测试：验证自然结束触发 `onComplete(values)`
-- [ ] 测试：验证 `idle.reset()` 不是 no-op，仍 emit `from` 值
-- [ ] 测试：验证 `idle.finish()` 不是 no-op，仍 emit `to` 值并进入 `finished`
-- [ ] 测试：验证每次终止中 `onComplete`、`onStop`、`onReset` 互斥，同时 `onError` 保持独立
-- [ ] 测试：验证 `autoStart: false` 时，绑定前显式 `api.play()` 仍会在绑定后执行
-- [ ] 测试：验证一个 `animation` binding 同一时刻只能绑定一个组件
-- [ ] 校验测试：create 前拒绝 Static3D `opacity` tracks；不得静默忽略
-- [ ] Capability 测试：验证 `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])` target tokens 和纯 Web `false` 行为
+- [x] 测试：保留 React-facing `api` 上的 `play` / `pause` / `resume` / `stop` / `reset` / `finish` API shape
+- [x] 测试：验证 `pause()` 与 `resume()` 不接受 keys 或 partial selectors
+- [x] 测试：验证 `stop()` 冻结当前值、设置 `playState=idle`、设置 `finished=false`，并触发 `onStop(values)`
+- [x] 测试：验证 `reset()` emit `from` 值、设置 `playState=idle`、设置 `finished=false`，并触发 `onReset(values)`
+- [x] 测试：验证 `finish()` emit `to` 值、设置 `playState=finished`、设置 `finished=true`，并触发 `onComplete(values)`
+- [x] 测试：验证自然结束触发 `onComplete(values)`
+- [x] 测试：验证 `idle.reset()` 不是 no-op，仍 emit `from` 值
+- [x] 测试：验证 `idle.finish()` 不是 no-op，仍 emit `to` 值并进入 `finished`
+- [x] 测试：验证每次终止中 `onComplete`、`onStop`、`onReset` 互斥，同时 `onError` 保持独立
+- [x] 测试：验证 `autoStart: false` 时，绑定前显式 `api.play()` 仍会在绑定后执行
+- [x] 测试：验证一个 `animation` binding 同一时刻只能绑定一个组件
+- [x] 校验测试：create 前拒绝 Static3D `opacity` tracks；不得静默忽略
+- [x] Capability 测试：验证 `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])` target tokens 和纯 Web `false` 行为
 
 ## Phase 6 — Implementation follow-up
 

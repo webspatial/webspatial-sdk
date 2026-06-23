@@ -45,19 +45,19 @@ This task list describes the target-state OpenSpec work for native-first spatial
 
 ## Phase 5 — Compatibility preservation tests
 
-- [ ] Tests: preserve `play` / `pause` / `resume` / `stop` / `reset` / `finish` API shape on the React-facing `api`
-- [ ] Tests: verify `pause()` and `resume()` do not accept keys or partial selectors
-- [ ] Tests: verify `stop()` freezes current values, sets `playState=idle`, sets `finished=false`, and invokes `onStop(values)`
-- [ ] Tests: verify `reset()` emits `from` values, sets `playState=idle`, sets `finished=false`, and invokes `onReset(values)`
-- [ ] Tests: verify `finish()` emits `to` values, sets `playState=finished`, sets `finished=true`, and invokes `onComplete(values)`
-- [ ] Tests: verify natural completion invokes `onComplete(values)`
-- [ ] Tests: verify `idle.reset()` is not a no-op and still emits `from` values
-- [ ] Tests: verify `idle.finish()` is not a no-op and still emits `to` values while entering `finished`
-- [ ] Tests: verify `onComplete`, `onStop`, and `onReset` are mutually exclusive for each termination, while `onError` remains independent
-- [ ] Tests: verify explicit `api.play()` before bind still runs after bind when `autoStart: false`
-- [ ] Tests: verify one `animation` binding can bind only one component at a time
-- [ ] Validation tests: reject Static3D `opacity` tracks before create; do not silently ignore them
-- [ ] Capability tests: verify `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])` target tokens and pure Web `false` behavior
+- [x] Tests: preserve `play` / `pause` / `resume` / `stop` / `reset` / `finish` API shape on the React-facing `api`
+- [x] Tests: verify `pause()` and `resume()` do not accept keys or partial selectors
+- [x] Tests: verify `stop()` freezes current values, sets `playState=idle`, sets `finished=false`, and invokes `onStop(values)`
+- [x] Tests: verify `reset()` emits `from` values, sets `playState=idle`, sets `finished=false`, and invokes `onReset(values)`
+- [x] Tests: verify `finish()` emits `to` values, sets `playState=finished`, sets `finished=true`, and invokes `onComplete(values)`
+- [x] Tests: verify natural completion invokes `onComplete(values)`
+- [x] Tests: verify `idle.reset()` is not a no-op and still emits `from` values
+- [x] Tests: verify `idle.finish()` is not a no-op and still emits `to` values while entering `finished`
+- [x] Tests: verify `onComplete`, `onStop`, and `onReset` are mutually exclusive for each termination, while `onError` remains independent
+- [x] Tests: verify explicit `api.play()` before bind still runs after bind when `autoStart: false`
+- [x] Tests: verify one `animation` binding can bind only one component at a time
+- [x] Validation tests: reject Static3D `opacity` tracks before create; do not silently ignore them
+- [x] Capability tests: verify `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])` target tokens and pure Web `false` behavior
 
 ## Phase 6 — Implementation follow-up
 

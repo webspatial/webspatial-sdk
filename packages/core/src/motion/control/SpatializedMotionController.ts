@@ -153,7 +153,9 @@ export class SpatializedMotionController implements SpatializedPlaybackApi {
   }
 
   updateConfig(config: SpatializedMotionConfig): void {
-    validateSpatializedMotionConfig(config)
+    validateSpatializedMotionConfig(config, {
+      targetKind: this.kind ?? undefined,
+    })
     this._config = config
   }
 
@@ -171,6 +173,7 @@ export class SpatializedMotionController implements SpatializedPlaybackApi {
         )
         return
       }
+      validateSpatializedMotionConfig(this._config, { targetKind })
       if (!this.kind) {
         this.kind = targetKind
       }

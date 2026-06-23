@@ -178,6 +178,50 @@ describe('supports("useAnimation", ["element"])', () => {
   })
 })
 
+describe('supports("useAnimation", target tokens)', () => {
+  beforeEach(() => {
+    vi.resetModules()
+  })
+
+  test('plain browser returns false for element, static3d, and dynamic3d', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useAnimation', ['element'])).toBe(false)
+    expect(supports('useAnimation', ['static3d'])).toBe(false)
+    expect(supports('useAnimation', ['dynamic3d'])).toBe(false)
+  })
+
+  test('visionOS WSAppShell/1.8.0 enables element, static3d, and dynamic3d independently', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 (KHTML, like Gecko) WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useAnimation')).toBe(true)
+    expect(supports('useAnimation', ['element'])).toBe(true)
+    expect(supports('useAnimation', ['static3d'])).toBe(true)
+    expect(supports('useAnimation', ['dynamic3d'])).toBe(true)
+  })
+
+  test('visionOS WSAppShell/1.7.0 keeps target tokens false even when base useAnimation is true', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 (KHTML, like Gecko) WSAppShell/1.7.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useAnimation')).toBe(true)
+    expect(supports('useAnimation', ['element'])).toBe(false)
+    expect(supports('useAnimation', ['static3d'])).toBe(false)
+    expect(supports('useAnimation', ['dynamic3d'])).toBe(false)
+  })
+})
+
 describe('useAnimation sub-tokens: unknown tokens', () => {
   beforeEach(() => {
     vi.resetModules()
