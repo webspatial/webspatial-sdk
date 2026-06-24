@@ -38,7 +38,9 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Describe React `AnimationBinding`: created by `useAnimation(config)`, queues pre-bind commands, and creates Core `AnimationObject` after bind
 - [x] Describe Core `AnimationObject extends SpatialObject`: exposes playback methods directly, inherits `destroy()`, and subscribes to NativeWebMsg directly
 - [x] Describe `SpatialAnimationStateChanged` as a NativeWebMsg payload, not a separate Core architecture object
-- [x] Describe visionOS `SpatializedElementAnimationManager`: native animation registry, create/control lookup, element destroy cascading, mask coordination, and WebMsg emission
+- [x] Describe visionOS `SpatializedElementAnimationManager`: native animation lifecycle, create/control lookup, element destroy cascading, mask coordination, and WebMsg emission
+- [x] Describe `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` as the visionOS JSB command entry point
+- [x] Describe `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` as the native object store, without adding a standalone `SpatialObjectRegistry`
 - [x] Describe element animating mask and terminal ownership handoff for `opacity` and host `transform`
 - [x] Keep terminal callback semantics unchanged: `onComplete`, `onStop`, `onReset` mutually exclusive; `onError` independent
 - [x] Keep bilingual `design.md` / `design.zh.md` aligned
@@ -70,14 +72,14 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Add `spatialized-animation-object-invariants` spec requiring visionOS runtime to manage native `AnimationObject` lifecycle through `SpatializedElementAnimationManager`
 - [x] Add `spatialized-animation-object-invariants` spec requiring pure Web runtime to have no Core RAF fallback
 
-## Phase 7 — Architecture reference docs
+## Phase 7 — Design architecture details
 
-- [x] Add `references/animation-object-architecture.zh.md`
-- [x] Add `references/animation-object-architecture.md`
-- [x] Reference: document React / Core / visionOS package responsibilities
-- [x] Reference: document combined class diagram across packages
-- [x] Reference: document create, pre-bind explicit play, frame sampling, mask conflict, and config change sequences
-- [x] Reference: document direct reuse, refactor reuse, and removed pieces from the current visionOS motion implementation
+- [x] Design: document React / Core / visionOS package responsibilities
+- [x] Design: document combined class diagram across packages
+- [x] Design: document create, pre-bind explicit play, frame sampling, mask conflict, and config change / destroy sequences
+- [x] Design: document visionOS reuse of existing `SpatialScene.setupJSBListeners()` as the JSB entry point
+- [x] Design: document visionOS reuse of existing `SpatialScene.spatialObjects` as the native object store
+- [x] Design: document direct reuse, refactor reuse, and removed pieces from the current visionOS motion implementation
 
 ## Phase 8 — Core SDK AnimationObject
 
@@ -118,6 +120,8 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [ ] visionOS: manager handles `ControlSpatializedElementAnimation`
 - [ ] visionOS: manager handles `destroyAnimation(animationId)`
 - [ ] visionOS: manager handles `destroyAnimationsForElement(elementId)`
+- [ ] visionOS: register create/control animation commands through `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)`
+- [ ] visionOS: register and look up native `AnimationObject` through existing `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject`
 - [ ] visionOS: Native `AnimationObject` extends `SpatialObject`
 - [ ] visionOS: Native `AnimationObject` owns locked `TimelineSampler`
 - [ ] visionOS: Native `AnimationObject` owns playback state and per-frame `tick`
@@ -140,6 +144,8 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [ ] Test: React `PlaybackApi` updates after Core `AnimationObject` state changes
 - [ ] Test: core `AnimationObject.destroy()` uses common spatial object destroy path
 - [ ] Test: no public `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` architecture object is required
+- [ ] Test: no standalone `SpatialObjectRegistry` is added; native object lookup reuses `SpatialScene.spatialObjects`
+- [ ] Test: no standalone `JSBCommandHandler` is added; command listeners reuse `SpatialScene.setupJSBListeners()`
 - [ ] Test: visionOS manager destroys related animations when the target element is destroyed
 - [ ] Test: stop freezes current value and emits `onStop(values)`
 - [ ] Test: reset emits from value and emits `onReset(values)`
