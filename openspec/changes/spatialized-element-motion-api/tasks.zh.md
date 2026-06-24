@@ -38,7 +38,9 @@
 - [x] 描述 React `AnimationBinding`：`useAnimation(config)` 时创建，负责 bind 前命令排队和 bind 后创建 Core `AnimationObject`
 - [x] 描述 Core `AnimationObject extends SpatialObject`：直接暴露播放方法、继承 `destroy()`、直接订阅 NativeWebMsg
 - [x] 描述 `SpatialAnimationStateChanged` 是 NativeWebMsg payload，而不是独立 Core 架构对象
-- [x] 描述 visionOS `SpatializedElementAnimationManager`：负责 native animation registry、create/control lookup、element destroy 级联清理、mask 协调和 WebMsg 广播
+- [x] 描述 visionOS `SpatializedElementAnimationManager`：负责 native animation lifecycle、create/control lookup、element destroy 级联清理、mask 协调和 WebMsg 广播
+- [x] 描述 `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` 是 visionOS JSB command 入口
+- [x] 描述 `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` 是 native object store，不新增独立 `SpatialObjectRegistry`
 - [x] 描述 element animating mask，以及 `opacity` 和 host `transform` 的 terminal ownership handoff
 - [x] 保持 terminal callback 语义不变：`onComplete`、`onStop`、`onReset` 互斥；`onError` 独立
 - [x] 保持双语 `design.md` / `design.zh.md` 对齐
@@ -70,14 +72,14 @@
 - [x] 新增 `spatialized-animation-object-invariants` spec，明确 visionOS runtime 通过 `SpatializedElementAnimationManager` 管理 native `AnimationObject` 生命周期
 - [x] 新增 `spatialized-animation-object-invariants` spec，明确纯 Web runtime 不提供 Core RAF fallback
 
-## Phase 7 — Architecture reference docs
+## Phase 7 — Design architecture details
 
-- [x] 新增 `references/animation-object-architecture.zh.md`
-- [x] 新增 `references/animation-object-architecture.md`
-- [x] Reference：记录 React / Core / visionOS 三包职责
-- [x] Reference：记录三包合并类图
-- [x] Reference：记录 create、bind 前显式 play、frame sampling、mask conflict、config change 时序
-- [x] Reference：记录现有 visionOS motion 实现的直接复用、改造复用和废弃项
+- [x] Design：记录 React / Core / visionOS 三包职责
+- [x] Design：记录三包合并类图
+- [x] Design：记录 create、bind 前显式 play、frame sampling、mask conflict、config change / destroy 时序
+- [x] Design：记录 visionOS 复用现有 `SpatialScene.setupJSBListeners()` 作为 JSB 入口
+- [x] Design：记录 visionOS 复用现有 `SpatialScene.spatialObjects` 作为 native object store
+- [x] Design：记录现有 visionOS motion 实现的直接复用、改造复用和废弃项
 
 ## Phase 8 — Core SDK AnimationObject
 
@@ -118,6 +120,8 @@
 - [ ] visionOS：manager 处理 `ControlSpatializedElementAnimation`
 - [ ] visionOS：manager 处理 `destroyAnimation(animationId)`
 - [ ] visionOS：manager 处理 `destroyAnimationsForElement(elementId)`
+- [ ] visionOS：在 `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` 中注册 create/control animation command
+- [ ] visionOS：通过现有 `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` 注册和查找 native `AnimationObject`
 - [ ] visionOS：Native `AnimationObject` 继承 `SpatialObject`
 - [ ] visionOS：Native `AnimationObject` 持有 locked `TimelineSampler`
 - [ ] visionOS：Native `AnimationObject` 持有 playback state 和 per-frame `tick`
@@ -140,6 +144,8 @@
 - [ ] Test：React `PlaybackApi` 在 Core `AnimationObject` 状态变化后更新
 - [ ] Test：Core `AnimationObject.destroy()` 使用通用 spatial object destroy path
 - [ ] Test：不需要公开 `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` 架构对象
+- [ ] Test：不新增独立 `SpatialObjectRegistry`，native object lookup 复用 `SpatialScene.spatialObjects`
+- [ ] Test：不新增独立 `JSBCommandHandler`，command listener 复用 `SpatialScene.setupJSBListeners()`
 - [ ] Test：visionOS manager 在 target element destroy 时销毁关联 animations
 - [ ] Test：stop 冻结当前值并触发 `onStop(values)`
 - [ ] Test：reset 发出 from 值并触发 `onReset(values)`
