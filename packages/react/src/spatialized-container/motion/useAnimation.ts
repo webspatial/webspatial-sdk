@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useReducer, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import type {
   SpatializedMotionAuthorConfig as CoreSpatializedMotionAuthorConfig,
@@ -6,21 +6,16 @@ import type {
   SpatializedPlaybackApi,
   SpatializedVisualValues,
 } from '@webspatial/core-sdk'
-import {
-  evaluateMotionTimeline,
-  normalizeMotionConfig,
-  supports,
-} from '@webspatial/core-sdk'
+import { supports } from '@webspatial/core-sdk'
 import { createMotionBinding } from './createMotionBinding'
 import { getMotionConfigSignature } from './motionConfigSignature'
 import type {
-  MotionFieldMetadata,
   MotionFieldMetadataMap,
   SpatializedMotionBindingInternal,
 } from './motionBindingTypes'
 import { resolveMotionStyle } from './resolveMotionStyle'
-import { useMotionController } from './useMotionController'
 import type { MotionOwnershipField } from './plugins/types'
+import type { AnimationBinding } from './AnimationBinding'
 
 /**
  * React-facing motion config accepted by `useAnimation()`.
@@ -50,167 +45,123 @@ export function useAnimation(
   config: SpatializedMotionConfig,
 ): UseAnimationResult {
   const dataSignature = getMotionConfigSignature(config)
+  const [, forceRender] = useReducer((n: number) => n + 1, 0)
+  const bindingRef = useRef<AnimationBinding | null>(null)
+  const destroyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Keep timeline normalization stable across callback-only renders.
-  const normalizedTimelineConfig = useMemo(
-    () => normalizeMotionConfig(config),
-    [dataSignature],
-  )
-  const controllerConfig = useMemo(
-    () => ({
-      ...normalizedTimelineConfig,
-      onStart: config.onStart,
-      onComplete: config.onComplete,
-      onStop: config.onStop,
-      onReset: config.onReset,
-      onError: config.onError,
-    }),
-    [
-      normalizedTimelineConfig,
-      config.onStart,
-      config.onComplete,
-      config.onStop,
-      config.onReset,
-      config.onError,
-    ],
-  )
-
-  const [values, setValues] = useState<SpatializedVisualValues>(() =>
-    evaluateMotionTimeline(normalizedTimelineConfig, 0),
-  )
-  /** React-only field metadata mirrored from the opaque motion binding. */
-  const [fieldMetadata, setFieldMetadata] = useState<MotionFieldMetadataMap>({})
-  const controller = useMotionController(controllerConfig, setValues)
-
-  useEffect(() => {
-    // Only idle bindings should adopt a new config immediately. Active sessions
-    // keep their original snapshot until the next play().
-    if (controller.playState !== 'idle') return
-    setValues(evaluateMotionTimeline(normalizedTimelineConfig, 0))
-  }, [controller, normalizedTimelineConfig])
-
-  /**
-   * Mirrors binding metadata into React state while avoiding no-op updates.
-   *
-   * @param field - The field whose metadata changed.
-   * @param metadata - The latest metadata snapshot for the field.
-   */
-  const handleMotionFieldMetadataChange = (
-    field: MotionOwnershipField,
-    metadata: MotionFieldMetadata,
-  ) => {
-    setFieldMetadata(prev => {
-      const current = prev[field]
-      if (
-        current?.authoredValue === metadata.authoredValue &&
-        current?.terminalOwner === metadata.terminalOwner
-      ) {
-        return prev
-      }
-      return {
-        ...prev,
-        [field]: metadata,
-      }
+  if (!bindingRef.current) {
+    bindingRef.current = createMotionBinding(config, {
+      onValuesChange: () => forceRender(),
+      onStateChange: () => forceRender(),
+      onMotionFieldMetadataChange: () => forceRender(),
+      onExplicitStyleOpacityChange: () => forceRender(),
+      onTerminalOpacityOwnerChange: () => forceRender(),
+      onExplicitStyleTransformChange: () => forceRender(),
+      onTerminalTransformOwnerChange: () => forceRender(),
     })
   }
 
-  const animation = useMemo(
-    () =>
-      createMotionBinding(controller, {
-        onMotionFieldMetadataChange: handleMotionFieldMetadataChange,
-      }),
-    [controller],
-  )
-  /**
-   * Resolves the current terminal owner for an ownership-managed field from the
-   * binding plugin runtime without changing Core playback semantics.
-   *
-   * @param field - The field whose post-terminal owner should be resolved.
-   * @returns The terminal owner decision for the field.
-   */
+  const binding = bindingRef.current
+
+  useEffect(() => {
+    binding.updateConfig(config)
+  }, [binding, config, dataSignature])
+
+  useEffect(() => {
+    if (destroyTimerRef.current) {
+      clearTimeout(destroyTimerRef.current)
+      destroyTimerRef.current = null
+    }
+    return () => {
+      const bindingToDestroy = binding
+      destroyTimerRef.current = setTimeout(() => {
+        if (bindingRef.current === bindingToDestroy) {
+          bindingToDestroy.destroy()
+          bindingRef.current = null
+        }
+        destroyTimerRef.current = null
+      }, 0)
+    }
+  }, [binding])
+
+  const fieldMetadata: MotionFieldMetadataMap = {}
+  for (const field of binding.__getSupportedMotionOwnershipFields?.() ?? []) {
+    fieldMetadata[field] = binding.__getMotionFieldMetadata?.(field)
+  }
+
   const resolveTerminalOwner = (field: MotionOwnershipField) => {
-    if (!controller.getSuppressedFields()?.has(field)) {
+    if (!binding.__getSuppressedFields?.()?.has(field)) {
       return null
     }
-    const plugin = animation.__getMotionFieldPlugin?.(field)
+    const plugin = binding.__getMotionFieldPlugin?.(field)
     if (!plugin) {
-      return animation.__getAuthoredFieldValue?.(field) !== undefined
+      return binding.__getAuthoredFieldValue?.(field) !== undefined
         ? 'authored'
         : 'native'
     }
     return plugin.resolveTerminalOwner({
-      authoredValue: animation.__getAuthoredFieldValue?.(field),
+      authoredValue: binding.__getAuthoredFieldValue?.(field),
     })
   }
+
   const api = useMemo(
     () => ({
       play: () => {
-        // A new play session clears any previous terminal owner choice.
-        for (const field of animation.__getSupportedMotionOwnershipFields?.() ??
+        for (const field of binding.__getSupportedMotionOwnershipFields?.() ??
           []) {
-          animation.__setTerminalFieldOwner?.(field, null)
+          binding.__setTerminalFieldOwner?.(field, null)
         }
-        controller.play()
+        binding.play()
       },
-      pause: () => controller.pause(),
-      resume: () => controller.resume(),
+      pause: () => binding.pause(),
+      resume: () => binding.resume(),
       stop: () => {
-        // stop/reset/finish keep Core terminal semantics but also decide who
-        // should own visual fields after native suppression is released.
-        for (const field of animation.__getSupportedMotionOwnershipFields?.() ??
+        for (const field of binding.__getSupportedMotionOwnershipFields?.() ??
           []) {
-          animation.__setTerminalFieldOwner?.(
-            field,
-            resolveTerminalOwner(field),
-          )
+          binding.__setTerminalFieldOwner?.(field, resolveTerminalOwner(field))
         }
-        controller.stop()
+        binding.stop()
       },
       reset: () => {
-        for (const field of animation.__getSupportedMotionOwnershipFields?.() ??
+        for (const field of binding.__getSupportedMotionOwnershipFields?.() ??
           []) {
-          animation.__setTerminalFieldOwner?.(
-            field,
-            resolveTerminalOwner(field),
-          )
+          binding.__setTerminalFieldOwner?.(field, resolveTerminalOwner(field))
         }
-        controller.reset()
+        binding.reset()
       },
       finish: () => {
-        for (const field of animation.__getSupportedMotionOwnershipFields?.() ??
+        for (const field of binding.__getSupportedMotionOwnershipFields?.() ??
           []) {
-          animation.__setTerminalFieldOwner?.(
-            field,
-            resolveTerminalOwner(field),
-          )
+          binding.__setTerminalFieldOwner?.(field, resolveTerminalOwner(field))
         }
-        controller.finish()
+        binding.finish()
       },
       get isAnimating() {
-        return controller.isAnimating
+        return binding.isAnimating
       },
       get isPaused() {
-        return controller.isPaused
+        return binding.isPaused
       },
       get finished() {
-        return controller.finished
+        return binding.finished
       },
       get playState() {
-        return controller.playState
+        return binding.playState
       },
     }),
-    [animation, controller],
+    [binding],
   )
 
+  const values: SpatializedVisualValues = binding.currentValues
   const style = resolveMotionStyle({
     values,
-    targetKind: controller.targetKind,
-    suppressedFields: controller.getSuppressedFields(),
+    targetKind: binding.targetKind,
+    suppressedFields: binding.__getSuppressedFields?.(),
     nativeElementSupported: supports('useAnimation', ['element']),
     fieldMetadata,
   })
 
-  return [animation, api, style]
+  return [binding, api, style]
 }
 
 export type { SpatializedPlaybackApi as SpatializedPlaybackApi }

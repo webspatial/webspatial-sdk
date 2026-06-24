@@ -7,6 +7,8 @@ import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
 } from './types/spatializedElementMotion'
+import type { AnimationObject } from './AnimationObject'
+import type { SpatializedMotionAuthorConfig } from './types/spatializedMotion'
 import type { SpatializedVisualValues } from './types/spatializedVisual'
 import { SpatialEntity } from './reality'
 import { SpatializedElement } from './SpatializedElement'
@@ -50,6 +52,12 @@ export class SpatializedDynamic3DElement extends SpatializedElement {
       this,
       properties,
     ).execute()
+  }
+
+  override createAnimation(
+    config: SpatializedMotionAuthorConfig,
+  ): Promise<AnimationObject> {
+    return super.createAnimation(config, 'dynamic3d')
   }
 
   // ---- Dynamic3D container motion (native timeline on element.transform) ----

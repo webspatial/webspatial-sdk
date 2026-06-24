@@ -3,18 +3,6 @@ import { act, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { resetRuntimeCacheForTests } from '@webspatial/core-sdk'
 
-function installFakeRaf() {
-  vi.useFakeTimers()
-  vi.stubGlobal(
-    'requestAnimationFrame',
-    (cb: FrameRequestCallback): number =>
-      setTimeout(() => cb(performance.now()), 16) as unknown as number,
-  )
-  vi.stubGlobal('cancelAnimationFrame', (id: number) => {
-    clearTimeout(id)
-  })
-}
-
 describe('SpatializedContainer degraded xr-animation binding', () => {
   beforeEach(() => {
     vi.resetModules()
@@ -26,8 +14,7 @@ describe('SpatializedContainer degraded xr-animation binding', () => {
     vi.useRealTimers()
   })
 
-  test('binds xr-animation to the degraded host so web playback can advance', async () => {
-    installFakeRaf()
+  test('binds xr-animation to the degraded host without advancing without native support', async () => {
     const { Spatialized2DElementContainer } = await import(
       './Spatialized2DElementContainer'
     )
@@ -75,23 +62,8 @@ describe('SpatializedContainer degraded xr-animation binding', () => {
     await act(async () => {
       await Promise.resolve()
     })
-    expect(screen.getByTestId('play-state').textContent).toBe('running')
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(20)
-    })
-
-    expect(Number(host.style.opacity)).toBeGreaterThan(0)
-    expect(Number(host.style.opacity)).toBeLessThan(1)
-    expect(host.style.transform).not.toContain('40px')
-    expect(host.style.transform).not.toContain('0px, 0px, 0px')
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(100)
-    })
-
-    expect(screen.getByTestId('play-state').textContent).toBe('finished')
-    expect(host.style.opacity).toBe('1')
-    expect(host.style.transform).toContain('0px')
+    expect(screen.getByTestId('play-state').textContent).toBe('idle')
+    expect(host.style.opacity).toBe('0')
+    expect(host.style.transform).toContain('40px')
   })
 })

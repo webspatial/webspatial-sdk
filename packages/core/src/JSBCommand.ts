@@ -30,6 +30,10 @@ import {
 import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
 import type { AnimateSpatializedElementMotionCommand } from './types/spatializedElementMotion'
+import type {
+  ControlSpatializedElementAnimationCommand,
+  CreateSpatializedElementAnimationCommand,
+} from './types/spatializedElementMotion'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -718,5 +722,38 @@ export class AnimateSpatializedElementMotionJSBCommand extends JSBCommand {
       params.timeline = this.command.timeline
 
     return params
+  }
+}
+
+export class CreateSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'CreateSpatializedElementAnimation'
+
+  constructor(private command: CreateSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    const { elementId, targetKind, timeline } = this.command
+    return {
+      elementId,
+      targetKind,
+      timeline,
+    }
+  }
+}
+
+export class ControlSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'ControlSpatializedElementAnimation'
+
+  constructor(private command: ControlSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    const { animationId, type } = this.command
+    return {
+      animationId,
+      type,
+    }
   }
 }

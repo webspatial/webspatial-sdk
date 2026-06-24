@@ -5,6 +5,8 @@ import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
 } from './types/spatializedElementMotion'
+import type { AnimationObject } from './AnimationObject'
+import type { SpatializedMotionAuthorConfig } from './types/spatializedMotion'
 import type { SpatializedVisualValues } from './types/spatializedVisual'
 import {
   ModelLoadingMode,
@@ -153,6 +155,12 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       this,
       properties,
     ).execute()
+  }
+
+  override createAnimation(
+    config: SpatializedMotionAuthorConfig,
+  ): Promise<AnimationObject> {
+    return super.createAnimation(config, 'static3d')
   }
 
   /**
