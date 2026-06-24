@@ -35,10 +35,10 @@ This task list describes the target-state OpenSpec work for native-first spatial
 
 ## Phase 4 — Design alignment
 
-- [x] Describe React `AnimationProxy`
-- [x] Describe Core normalization, queued commands, playback state projection, and object-channel lifecycle
-- [x] Describe JSB/WebMsg split between create, control, and state-changed events
-- [x] Describe native `AnimationObject` ownership of locked timeline, playback state, terminal values, and target-specific writes
+- [x] Describe React `AnimationBinding`: created by `useAnimation(config)`, queues pre-bind commands, and creates Core `AnimationObject` after bind
+- [x] Describe Core `AnimationObject extends SpatialObject`: exposes playback methods directly, inherits `destroy()`, and subscribes to NativeWebMsg directly
+- [x] Describe `SpatialAnimationStateChanged` as a NativeWebMsg payload, not a separate Core architecture object
+- [x] Describe visionOS `SpatializedElementAnimationManager`: native animation registry, create/control lookup, element destroy cascading, mask coordination, and WebMsg emission
 - [x] Describe element animating mask and terminal ownership handoff for `opacity` and host `transform`
 - [x] Keep terminal callback semantics unchanged: `onComplete`, `onStop`, `onReset` mutually exclusive; `onError` independent
 - [x] Keep bilingual `design.md` / `design.zh.md` aligned
@@ -62,54 +62,73 @@ This task list describes the target-state OpenSpec work for native-first spatial
 ## Phase 6 — Implementation invariants spec
 
 - [x] Add `spatialized-animation-object-invariants` spec requiring native uuid as the only authoritative `AnimationObject` identity
-- [x] Add `spatialized-animation-object-invariants` spec requiring `AnimationObject.destroy()` to use the common `SpatialObject` destroy lifecycle
-- [x] Add `spatialized-animation-object-invariants` spec requiring Core SDK to expose the imperative `AnimationObject` handle returned by `SpatializedElement.createAnimation(config)`
-- [x] Add `spatialized-animation-object-invariants` spec requiring native `AnimationObject` playback state to be authoritative and Core SDK state to be projected from `SpatialAnimationStateChanged`
+- [x] Add `spatialized-animation-object-invariants` spec requiring `AnimationObject.destroy()` to use the destroy lifecycle inherited from `SpatialObject`
+- [x] Add `spatialized-animation-object-invariants` spec requiring Core SDK to expose the first-class `AnimationObject` returned by `SpatializedElement.createAnimation(config)`
+- [x] Add `spatialized-animation-object-invariants` spec requiring Core `AnimationObject` to subscribe to NativeWebMsg directly and filter `SpatialAnimationStateChanged` by uuid
 - [x] Add `spatialized-animation-object-invariants` spec requiring element animating mask to be owned by native `SpatializedElement` runtime or write adapter, not `PortalInstanceObject`
-- [x] Add `spatialized-animation-object-invariants` spec requiring React SDK to create native `AnimationObject` only after `xr-animation` binding resolves a concrete target
+- [x] Add `spatialized-animation-object-invariants` spec requiring React SDK to create native-backed `AnimationObject` only after `xr-animation` binding resolves a concrete target
+- [x] Add `spatialized-animation-object-invariants` spec requiring visionOS runtime to manage native `AnimationObject` lifecycle through `SpatializedElementAnimationManager`
 - [x] Add `spatialized-animation-object-invariants` spec requiring pure Web runtime to have no Core RAF fallback
 
-## Phase 7 — Native AnimationObject implementation
+## Phase 7 — Architecture reference docs
 
-- [ ] Native: add `AnimationObject : SpatialObject`
-- [ ] Native: generate `AnimationObject.uuid` in the native create path
-- [ ] Native: register `AnimationObject` in the common spatial object registry
-- [ ] Native: implement `AnimationObject.destroy()` through the common `SpatialObject` destroy lifecycle
-- [ ] Native: destroy cleanup stops frame driving, clears animating mask, unregisters listeners, and removes object from registry
-- [ ] Native: implement locked `TimelineSampler` owned by `AnimationObject`
-- [ ] Native: implement target-specific write adapters for `spatialized2d`, `static3d`, and `dynamic3d`
-- [ ] Native: implement `SpatialAnimationStateChanged` WebMsg with `animationId`, `action`, `playState`, optional `values`, optional `error`
+- [x] Add `references/animation-object-architecture.zh.md`
+- [x] Add `references/animation-object-architecture.md`
+- [x] Reference: document React / Core / visionOS package responsibilities
+- [x] Reference: document combined class diagram across packages
+- [x] Reference: document create, pre-bind explicit play, frame sampling, mask conflict, and config change sequences
+- [x] Reference: document direct reuse, refactor reuse, and removed pieces from the current visionOS motion implementation
 
-## Phase 8 — Core SDK object channel
+## Phase 8 — Core SDK AnimationObject
 
 - [ ] Core: add `SpatializedElement.createAnimation(config)`
 - [ ] Core: send `CreateSpatializedElementAnimation` and wrap the native returned uuid as `AnimationObject`
+- [ ] Core: implement `AnimationObject extends SpatialObject`
 - [ ] Core: expose `AnimationObject.uuid`
-- [ ] Core: expose `AnimationObject.play/pause/resume/stop/reset/finish/destroy`
-- [ ] Core: route `play/pause/resume/stop/reset/finish` through `ControlSpatializedElementAnimation`
-- [ ] Core: route `AnimationObject.destroy()` through the common `SpatialObject.destroy()` path
-- [ ] Core: project `playState`, `isAnimating`, `isPaused`, and `finished` from `SpatialAnimationStateChanged`
+- [ ] Core: implement `play/pause/resume/stop/reset/finish` directly on `AnimationObject`
+- [ ] Core: ensure `AnimationObject.destroy()` uses the lifecycle inherited from `SpatialObject`
+- [ ] Core: make `AnimationObject` subscribe to NativeWebMsg directly
+- [ ] Core: make `AnimationObject` filter `SpatialAnimationStateChanged` by uuid
+- [ ] Core: make `AnimationObject` update `playState/isAnimating/isPaused/finished` from native events
+- [ ] Core: make `AnimationObject` state changes notify React subscribers
+- [ ] Core: avoid adding public `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` architecture objects
 - [ ] Core: remove `WebPlaybackBackend` and RAF sampling from the spatialized element animation path
 - [ ] Core: remove target-state runtime dependency on `SpatializedMotionController`, `NativePlaybackBackend`, and `AnimateSpatializedElementMotion`
 
-## Phase 9 — React SDK AnimationProxy
+## Phase 9 — React SDK AnimationBinding
 
-- [ ] React: create native `AnimationObject` only after `xr-animation` binding resolves target
+- [ ] React: create `AnimationBinding` during `useAnimation(config)`
 - [ ] React: preserve `[animation, api, style]` public API
-- [ ] React: proxy pre-bind `api.play/pause/resume/stop/reset/finish` explicit commands
+- [ ] React: store config and normalized config signature in `AnimationBinding`
+- [ ] React: queue pre-bind `api.play/pause/resume/stop/reset/finish` explicit commands in `AnimationBinding`
+- [ ] React: create Core `AnimationObject` only after `xr-animation` binding resolves target
+- [ ] React: flush queued explicit commands after Core `AnimationObject` is created
+- [ ] React: `PlaybackApi` subscribes to Core `AnimationObject` state and syncs `playState/isAnimating/isPaused/finished`
 - [ ] React: ensure `autoStart: false` only disables implicit play-on-bind and does not drop explicit queued commands
 - [ ] React: destroy the current `AnimationObject` on unmount / unbind
 - [ ] React: destroy and recreate `AnimationObject` when normalized config signature changes
 - [ ] React: keep Static3D / Dynamic3D `style` as `{}`
 - [ ] React: do not implement Web RAF fallback for pure Web runtime
 
-## Phase 10 — Element animating mask
+## Phase 10 — visionOS AnimationObject manager and mask
 
-- [ ] Native: store animation-owned field mask on `SpatializedElement` runtime or target write adapter
-- [ ] Native: ignore or defer regular transform JSB updates while transform is animation-owned
-- [ ] Native: ignore or defer regular opacity JSB updates while opacity is animation-owned
-- [ ] Native: ensure mask logic does not depend on `PortalInstanceObject`
-- [ ] Native: clear or update mask on stop/reset/finish/natural complete/destroy according to terminal handoff rules
+- [ ] visionOS: add `SpatializedElementAnimationManager`
+- [ ] visionOS: manager owns `animationId -> NativeAnimationObject` lookup
+- [ ] visionOS: manager handles `CreateSpatializedElementAnimation`
+- [ ] visionOS: manager handles `ControlSpatializedElementAnimation`
+- [ ] visionOS: manager handles `destroyAnimation(animationId)`
+- [ ] visionOS: manager handles `destroyAnimationsForElement(elementId)`
+- [ ] visionOS: Native `AnimationObject` extends `SpatialObject`
+- [ ] visionOS: Native `AnimationObject` owns locked `TimelineSampler`
+- [ ] visionOS: Native `AnimationObject` owns playback state and per-frame `tick`
+- [ ] visionOS: reuse `SpatializedElementMotionTimelineSampler` / `SpatializedMotionTimingFunction` / `SpatializedMotionTransformComponents`
+- [ ] visionOS: refactor `SpatializedElementMotionTransformAdapter` into target write adapter
+- [ ] visionOS: move `SpatializedElementMotionSession` timing fields and state algorithm into Native `AnimationObject`
+- [ ] visionOS: refactor `SpatializedElementMotionManager` into object manager, reusing shared frame driver and terminal value construction logic
+- [ ] visionOS: replace `AnimateSpatializedElementMotion` with `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation`
+- [ ] visionOS: replace old `${animationId}_completed/canceled/failed` WebMsg with unified `SpatialAnimationStateChanged`
+- [ ] visionOS: animating mask lives on `SpatializedElement` runtime or target write adapter
+- [ ] visionOS: mask logic does not depend on `PortalInstanceObject`
 - [ ] Tests: verify regular transform update does not override active animation transform
 - [ ] Tests: verify regular opacity update does not override active animation opacity
 
@@ -117,14 +136,18 @@ This task list describes the target-state OpenSpec work for native-first spatial
 
 - [ ] JSB test: `CreateSpatializedElementAnimation` returns native-generated uuid
 - [ ] JSB test: `ControlSpatializedElementAnimation` supports play/pause/resume/stop/reset/finish
-- [ ] WebMsg test: `SpatialAnimationStateChanged` updates matching Core SDK `AnimationObject`
+- [ ] WebMsg test: `SpatialAnimationStateChanged` can be received directly by the matching Core `AnimationObject` and filtered by uuid
+- [ ] Test: React `PlaybackApi` updates after Core `AnimationObject` state changes
 - [ ] Test: core `AnimationObject.destroy()` uses common spatial object destroy path
+- [ ] Test: no public `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` architecture object is required
+- [ ] Test: visionOS manager destroys related animations when the target element is destroyed
 - [ ] Test: stop freezes current value and emits `onStop(values)`
 - [ ] Test: reset emits from value and emits `onReset(values)`
 - [ ] Test: finish emits to value and emits `onComplete(values)`
-- [ ] Test: native state is authoritative over Core SDK state projection
+- [ ] Test: native state is authoritative over Core SDK state
 - [ ] Test: Static3D opacity tracks are rejected before native create
 - [ ] Test: pure Web runtime returns false for `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])`
+- [ ] Test: target-state runtime no longer uses the old `AnimateSpatializedElementMotion` path
 
 ## Phase 12 — Docs and demos follow-up
 
