@@ -226,16 +226,49 @@ describe('AnimationObject', () => {
     expect(spies.controlCommandSpy).not.toHaveBeenCalled()
   })
 
-  it('rolls back started when play control fails so retry fires onStart again', async () => {
+  it('fires onStart only after the native start event arrives', async () => {
+    const animation = await createAnimation()
+    const onStart = vi.fn()
+    animation.setCallbacks({ onStart })
+    const receiver = SpatialWebEvent.eventReceiver[animation.uuid]
+
+    await animation.play()
+    expect(onStart).not.toHaveBeenCalled()
+
+    receiver?.({
+      detail: {
+        animationId: animation.uuid,
+        action: 'play',
+        playState: 'running',
+        finished: false,
+        values: { transform: { translate: { x: 1 } } },
+      },
+    })
+    expect(onStart).not.toHaveBeenCalled()
+
+    receiver?.({
+      detail: {
+        animationId: animation.uuid,
+        action: 'start',
+        playState: 'running',
+        finished: false,
+        values: { transform: { translate: { x: 1 } } },
+      },
+    })
+    expect(onStart).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not fire onStart when play control fails and retries only start after native start', async () => {
     const animation = await createAnimation()
     const onStart = vi.fn()
     const onError = vi.fn()
     animation.setCallbacks({ onStart, onError })
+    const receiver = SpatialWebEvent.eventReceiver[animation.uuid]
 
     spies.failNextControlType = 'play'
 
     await expect(animation.play()).rejects.toThrow('play failed')
-    expect(onStart).toHaveBeenCalledTimes(1)
+    expect(onStart).not.toHaveBeenCalled()
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({
         animationId: animation.uuid,
@@ -245,7 +278,18 @@ describe('AnimationObject', () => {
     )
 
     await animation.play()
-    expect(onStart).toHaveBeenCalledTimes(2)
+    expect(onStart).not.toHaveBeenCalled()
+
+    receiver?.({
+      detail: {
+        animationId: animation.uuid,
+        action: 'start',
+        playState: 'running',
+        finished: false,
+        values: { transform: { translate: { x: 2 } } },
+      },
+    })
+    expect(onStart).toHaveBeenCalledTimes(1)
   })
 
   it('sends all playback controls to the same native animation id without recreating', async () => {

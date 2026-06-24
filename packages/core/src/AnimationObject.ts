@@ -95,16 +95,7 @@ export class AnimationObject extends SpatialObject {
 
   async play(): Promise<void> {
     if (this.isDestroyed) return
-    if (!this.started) {
-      this.started = true
-      this.callbacks.onStart?.()
-    }
-    try {
-      await this.control('play')
-    } catch (error) {
-      this.started = false
-      throw error
-    }
+    await this.control('play')
   }
 
   async pause(): Promise<void> {
@@ -168,11 +159,21 @@ export class AnimationObject extends SpatialObject {
     if (detail.values) {
       this.callbacks.onValuesChange?.(detail.values)
     }
-    this.callbacks.onStateChange?.()
+    if (detail.action !== 'start') {
+      this.callbacks.onStateChange?.()
+    }
 
     if (detail.error) {
       this.started = false
       this.callbacks.onError?.(detail.error)
+      return
+    }
+
+    if (detail.action === 'start') {
+      if (!this.started) {
+        this.started = true
+        this.callbacks.onStart?.()
+      }
       return
     }
 
