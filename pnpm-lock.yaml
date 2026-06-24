@@ -110,6 +110,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.4.1(vite@6.4.2(@types/node@22.15.2)(jiti@2.6.1)(lightningcss@1.32.0)(sass-embedded@1.87.0)(sass@1.87.0)(terser@5.39.0)(tsx@4.19.3)(yaml@2.8.4))
+      '@webspatial/core-sdk':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@webspatial/react-sdk':
         specifier: workspace:*
         version: link:../../packages/react
