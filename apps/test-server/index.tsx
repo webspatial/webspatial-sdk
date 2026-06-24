@@ -60,6 +60,7 @@ import SpatialCorner from './src/pages/spatialCorner/index'
 import GeometryVerify from './src/pages/geometry-verify/index'
 import TransformVerify from './src/pages/transform-verify/index'
 import Static3DModel from './src/pages/static-3d-model/index'
+import NestedStatic3DModelReady from './src/pages/static-3d-model/nested-ready'
 import VisibleTest from './src/pages/visibleTest/index'
 import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
 import HeadStyleSyncPage from './src/pages/head-style-sync/index'
@@ -337,6 +338,10 @@ function App() {
                 <Route path="/geometry-verify" element={<GeometryVerify />} />
                 <Route path="/transform-verify" element={<TransformVerify />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
+                <Route
+                  path="/static-3d-model/nested-ready"
+                  element={<NestedStatic3DModelReady />}
+                />
                 <Route path="/visible-test" element={<VisibleTest />} />
                 <Route
                   path="/head-style-sync"

@@ -32,6 +32,9 @@ const spatializedElement: SpatializedElementStub = {
 const portalInstanceValue = {
   dom: document.createElement('div'),
 } as { dom?: HTMLElement }
+let lastExtraRefProps:
+  | ((domProxy: unknown) => Record<string, unknown>)
+  | undefined
 
 vi.mock('@webspatial/core-sdk', () => ({
   SpatializedStatic3DElement: class {},
@@ -44,6 +47,7 @@ vi.mock('./SpatializedContainer', () => ({
   }: {
     spatializedContent: React.ComponentType<Record<string, unknown>>
   } & Record<string, unknown>) => {
+    lastExtraRefProps = props.extraRefProps as typeof lastExtraRefProps
     return (
       <PortalInstanceContext.Provider
         value={portalInstanceValue as unknown as PortalInstanceObject}
@@ -80,6 +84,7 @@ function lastObserver() {
 describe('SpatializedStatic3DElementContainer lazy/eager loading behavior', () => {
   beforeEach(() => {
     updateProperties.mockClear()
+    lastExtraRefProps = undefined
     IntersectionObserverMock.instances = []
     portalInstanceValue.dom = document.createElement('div')
     globalThis.IntersectionObserver =
@@ -235,5 +240,24 @@ describe('SpatializedStatic3DElementContainer lazy/eager loading behavior', () =
     expect(updateProperties).toHaveBeenLastCalledWith(
       expect.objectContaining({ loading: 'eager' }),
     )
+  })
+
+  it('resolves ready from the DOM-linked spatialized element when a nested standard branch did not create one', async () => {
+    const readyTarget = {
+      ready: Promise.resolve(true),
+    }
+
+    render(<SpatializedStatic3DElementContainer src="/model.usdz" />)
+
+    const domProxy = Object.assign(document.createElement('div'), {
+      __innerSpatializedElement: () => readyTarget,
+    })
+    const extra = lastExtraRefProps!(domProxy)
+
+    await expect(
+      Promise.resolve().then(() => extra.ready),
+    ).resolves.toMatchObject({
+      type: 'modelloaded',
+    })
   })
 })
