@@ -88,6 +88,11 @@ final class SpatializedElementAnimationObject: SpatialObject {
             return
         }
 
+        // Preserve session semantics: play() while already running is a no-op.
+        guard playState != .running else {
+            return
+        }
+
         startFreshPlayback(at: timestamp)
     }
 
