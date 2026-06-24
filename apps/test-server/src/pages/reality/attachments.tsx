@@ -20,6 +20,9 @@ const attachmentDivStyle = {
   '--xr-back': 66,
 }
 
+/** Legacy demo sizes were in points; AttachmentEntity width/height are meters. */
+const attSizeM = (pt: number) => pt / 1000
+
 function TestCase({
   title,
   children,
@@ -64,8 +67,9 @@ function TestBasicAttachment() {
             />
             <AttachmentEntity
               attachment="basic-attachment"
-              position={[0, 0.1, 0]}
-              size={{ width: 200, height: 100 }}
+              position={{ x: 0, y: 0.1, z: 0 }}
+              width={attSizeM(200)}
+              height={attSizeM(100)}
             />
           </Entity>
         </SceneGraph>
@@ -114,8 +118,9 @@ function TestNestedRealityInSpatialDiv() {
               />
               <AttachmentEntity
                 attachment="nested-spatialdiv-attachment"
-                position={[0, 0.1, 0]}
-                size={{ width: 220, height: 100 }}
+                position={{ x: 0, y: 0.1, z: 0 }}
+                width={attSizeM(220)}
+                height={attSizeM(100)}
               />
             </Entity>
           </SceneGraph>
@@ -167,8 +172,9 @@ function TestModelFallback() {
           <Entity position={{ x: 0, y: 0, z: 0 }}>
             <AttachmentEntity
               attachment="model-fallback-attachment"
-              position={[0, 0, 0]}
-              size={{ width: 300, height: 250 }}
+              position={{ x: 0, y: 0, z: 0 }}
+              width={attSizeM(300)}
+              height={attSizeM(250)}
             />
           </Entity>
         </SceneGraph>
@@ -213,8 +219,9 @@ function TestRealityFallback() {
           <Entity position={{ x: 0, y: 0, z: 0 }}>
             <AttachmentEntity
               attachment="reality-fallback-attachment"
-              position={[0, 0, 0]}
-              size={{ width: 250, height: 200 }}
+              position={{ x: 0, y: 0, z: 0 }}
+              width={attSizeM(250)}
+              height={attSizeM(200)}
             />
           </Entity>
         </SceneGraph>
@@ -262,8 +269,9 @@ function TestSpatialDivFallback() {
           <Entity position={{ x: 0, y: 0, z: 0.1 }}>
             <AttachmentEntity
               attachment="spatialdiv-fallback-attachment"
-              position={[0, 0, 0]}
-              size={{ width: 250, height: 200 }}
+              position={{ x: 0, y: 0, z: 0 }}
+              width={attSizeM(250)}
+              height={attSizeM(200)}
             />
           </Entity>
         </SceneGraph>
@@ -330,8 +338,9 @@ function TestSharedAttachmentState() {
             />
             <AttachmentEntity
               attachment="shared-counter"
-              position={[0, 0.15, 0]}
-              size={{ width: 160, height: 80 }}
+              position={{ x: 0, y: 0.15, z: 0 }}
+              width={attSizeM(160)}
+              height={attSizeM(80)}
             />
           </Entity>
 
@@ -345,8 +354,9 @@ function TestSharedAttachmentState() {
             />
             <AttachmentEntity
               attachment="shared-counter"
-              position={[0, 0.15, 0]}
-              size={{ width: 160, height: 80 }}
+              position={{ x: 0, y: 0.15, z: 0 }}
+              width={attSizeM(160)}
+              height={attSizeM(80)}
             />
           </Entity>
         </SceneGraph>
@@ -405,8 +415,9 @@ function TestAttachmentAnimation() {
             />
             <AttachmentEntity
               attachment="anim-attachment"
-              position={[0, 0.12, 0]}
-              size={{ width: 180, height: 60 }}
+              position={{ x: 0, y: 0.12, z: 0 }}
+              width={attSizeM(180)}
+              height={attSizeM(60)}
             />
           </Entity>
         </SceneGraph>
@@ -471,8 +482,9 @@ function TestNestedAttachmentSwap() {
             />
             <AttachmentEntity
               attachment={parentAttachment}
-              position={[0, 0.2, 0]}
-              size={{ width: 150, height: 50 }}
+              position={{ x: 0, y: 0.2, z: 0 }}
+              width={attSizeM(150)}
+              height={attSizeM(50)}
             />
 
             {/* Nested Child Box */}
@@ -485,8 +497,9 @@ function TestNestedAttachmentSwap() {
               />
               <AttachmentEntity
                 attachment={childAttachment}
-                position={[0, 0.15, 0]}
-                size={{ width: 150, height: 50 }}
+                position={{ x: 0, y: 0.15, z: 0 }}
+                width={attSizeM(150)}
+                height={attSizeM(50)}
               />
             </Entity>
           </Entity>
@@ -569,8 +582,9 @@ function TestGSAPSingleAttachment() {
             />
             <AttachmentEntity
               attachment="gsap-single-pulse"
-              position={[0, 0.12, 0]}
-              size={{ width: 220, height: 120 }}
+              position={{ x: 0, y: 0.12, z: 0 }}
+              width={attSizeM(220)}
+              height={attSizeM(120)}
             />
           </Entity>
         </SceneGraph>
@@ -605,8 +619,9 @@ function TestGSAPSharedAttachmentAsset() {
             />
             <AttachmentEntity
               attachment="gsap-shared-pulse"
-              position={[0, 0.15, 0]}
-              size={{ width: 200, height: 130 }}
+              position={{ x: 0, y: 0.15, z: 0 }}
+              width={attSizeM(200)}
+              height={attSizeM(130)}
             />
           </Entity>
           <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
@@ -618,8 +633,9 @@ function TestGSAPSharedAttachmentAsset() {
             />
             <AttachmentEntity
               attachment="gsap-shared-pulse"
-              position={[0, 0.15, 0]}
-              size={{ width: 200, height: 130 }}
+              position={{ x: 0, y: 0.15, z: 0 }}
+              width={attSizeM(200)}
+              height={attSizeM(130)}
             />
           </Entity>
         </SceneGraph>
@@ -669,17 +685,16 @@ function TestAttachmentPositionSizeSliders() {
   const [posX, setPosX] = React.useState(0)
   const [posY, setPosY] = React.useState(0.12)
   const [posZ, setPosZ] = React.useState(0)
-  const [sizeW, setSizeW] = React.useState(220)
-  const [sizeH, setSizeH] = React.useState(120)
+  const [widthM, setWidthM] = React.useState(attSizeM(220))
+  const [heightM, setHeightM] = React.useState(attSizeM(120))
 
-  const position: [number, number, number] = [posX, posY, posZ]
-  const size = { width: sizeW, height: sizeH }
+  const position = { x: posX, y: posY, z: posZ }
 
   return (
     <TestCase title="12. Dynamic position & size (sliders)">
       <p className="text-sm text-gray-600 mb-3">
         Drag sliders to update <code className="text-xs">AttachmentEntity</code>{' '}
-        position (meters, relative to parent) and size (pixels). The native
+        position and width/height (meters, relative to parent). The native
         attachment should follow without remounting.
       </p>
       <div className="mb-4 max-w-md space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
@@ -712,21 +727,21 @@ function TestAttachmentPositionSizeSliders() {
         />
         <SliderRow
           label="Width"
-          value={sizeW}
-          min={100}
-          max={400}
-          step={10}
-          onChange={setSizeW}
-          unit=" px"
+          value={widthM}
+          min={attSizeM(100)}
+          max={attSizeM(400)}
+          step={0.01}
+          onChange={setWidthM}
+          unit=" m"
         />
         <SliderRow
           label="Height"
-          value={sizeH}
-          min={60}
-          max={280}
-          step={10}
-          onChange={setSizeH}
-          unit=" px"
+          value={heightM}
+          min={attSizeM(60)}
+          max={attSizeM(280)}
+          step={0.01}
+          onChange={setHeightM}
+          unit=" m"
         />
       </div>
       <Reality
@@ -746,8 +761,8 @@ function TestAttachmentPositionSizeSliders() {
           >
             <p style={{ margin: 0, fontWeight: 600 }}>Resizable panel</p>
             <p style={{ margin: '8px 0 0', fontSize: 12, opacity: 0.85 }}>
-              {sizeW}×{sizeH}px · offset ({posX.toFixed(2)}, {posY.toFixed(2)},{' '}
-              {posZ.toFixed(2)}) m
+              {widthM.toFixed(2)}×{heightM.toFixed(2)} m · offset (
+              {posX.toFixed(2)}, {posY.toFixed(2)}, {posZ.toFixed(2)}) m
             </p>
           </div>
         </AttachmentAsset>
@@ -762,7 +777,8 @@ function TestAttachmentPositionSizeSliders() {
             <AttachmentEntity
               attachment="slider-dynamic-attachment"
               position={position}
-              size={size}
+              width={widthM}
+              height={heightM}
             />
           </Entity>
         </SceneGraph>
@@ -820,8 +836,9 @@ function TestLastDefinitionWins() {
             />
             <AttachmentEntity
               attachment="dup-asset"
-              position={[0, 0.15, 0]}
-              size={{ width: 160, height: 80 }}
+              position={{ x: 0, y: 0.15, z: 0 }}
+              width={attSizeM(160)}
+              height={attSizeM(80)}
             />
           </Entity>
           <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
@@ -833,8 +850,9 @@ function TestLastDefinitionWins() {
             />
             <AttachmentEntity
               attachment="dup-asset"
-              position={[0, 0.15, 0]}
-              size={{ width: 160, height: 80 }}
+              position={{ x: 0, y: 0.15, z: 0 }}
+              width={attSizeM(160)}
+              height={attSizeM(80)}
             />
           </Entity>
         </SceneGraph>
