@@ -18,7 +18,7 @@
 
 - React SDK 持有 `AnimationBinding`，由 `useAnimation(config)` 创建。它负责保存 config、bind 前命令排队，并且只在 `xr-animation` 解析到具体 `SpatializedElement` target 后创建 Core `AnimationObject`。
 - Core SDK 持有 `AnimationObject extends SpatialObject`。它直接暴露 `play/pause/resume/stop/reset/finish`，继承 `destroy()`，订阅 `NativeWebMsg`，按 native uuid 过滤 `SpatialAnimationStateChanged`，并更新自身可观察状态。
-- visionOS 持有 native `AnimationObject extends SpatialObject` 和 `SpatializedElementAnimationManager`。`SpatialScene` 继续作为 JSB listener 注册入口和 native spatial object store owner；manager 只负责 animation 业务生命周期、create/control lookup、frame loop 调度、element destroy 级联清理、animating mask 协调，以及 `SpatialAnimationStateChanged` 发送。
+- visionOS 持有 native `AnimationObject extends SpatialObject` 和 `SpatializedElementAnimationManager`。`SpatialScene` 继续作为 JSB listener 注册入口和 native spatial object store owner；manager 只负责 animation 业务生命周期、create/control lookup、frame loop 调度、element destroy 级联清理、animating mask 协调，以及构造 `SpatialAnimationStateChanged` 并通过现有 WebMsg 路径发送。
 
 ## 非目标
 
@@ -26,6 +26,7 @@
 - 不新增独立 `SpatialObjectRegistry`；目标态复用现有 `SpatialScene.spatialObjects`、`addSpatialObject`、`findSpatialObject` 和 destroy path。
 - 不新增独立 `JSBCommandHandler`；目标态复用现有 `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` 入口。
 - 不把 frame driver 设计成独立 public module；它是 `SpatializedElementAnimationManager` 的内部调度能力。
+- 不新增独立 `NativeWebMsgEmitter`；目标态复用现有 `SpatialScene` / `spatialWebViewModel` WebMsg 发送路径。
 - 不保留 Core/Web RAF playback fallback。
 - 不以 `AnimateSpatializedElementMotion` 作为目标态 runtime command。
 - 不把 mask ownership 建在 `PortalInstanceObject` 或 React Portal suppression 上。
@@ -40,11 +41,13 @@
 | `PlaybackApi` | 暴露 React-facing `play/pause/resume/stop/reset/finish`，并订阅 Core `AnimationObject` 状态。 |
 | `xr-animation` binding adapter | 解析 concrete target kind，触发 `AnimationBinding.bind()` / `unbind()`。 |
 
+`style` outlet 只是 React 合并出口，不是 native-backed animation 的运行时 playback source。Static3D / Dynamic3D 目标态 `style` 保持 `{}`。
+
 ## Core SDK 模块边界
 
 | 模块 | 职责 |
 |------|------|
-| `SpatializedElement.createAnimation(config)` | 绑定 target 后创建 native-backed `AnimationObject`，负责 validation、normalization 和 create JSB。 |
+| `SpatializedElement.createAnimation(config)` | 绑定 target 后创建 native-backed `AnimationObject`，负责 validation、normalization 和 create JSB；native response 以 `{ id }` 返回 native `AnimationObject` uuid。 |
 | `AnimationObject` | Core 一等对象，继承 `SpatialObject`，直接实现播放控制，继承 `destroy()`，直接订阅 NativeWebMsg 并维护自身状态。 |
 | `validateSpatializedMotionConfig` | 在 native create 前校验 authoring config，例如 Static3D `opacity` tracks 必须 reject。 |
 | `motionConfigToAnimationTimeline` | 将归一化后的 motion config 编译为 canonical `CreateSpatializedElementAnimation` payload。 |
@@ -54,14 +57,24 @@
 | 模块 | 职责 |
 |------|------|
 | `SpatialScene JSB listeners` | 复用现有 `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` 机制注册 animation create/control command，并委托给 `SpatializedElementAnimationManager`。 |
-| `SpatializedElementAnimationManager` | 管理 native `AnimationObject` 业务生命周期、`animationId -> NativeAnimationObject` lookup、create/control、frame loop 启停、`destroyAnimationsForElement`、mask 协调和 `SpatialAnimationStateChanged` 广播。 |
-| `Native AnimationObject` | 继承 `SpatialObject`，持有 native uuid、locked `TimelineSampler`、playback state，并实现 `play/pause/resume/stop/reset/finish/tick/destroy`。 |
+| `SpatializedElementAnimationManager` | 管理 native `AnimationObject` 业务生命周期、`animationId -> NativeAnimationObject` lookup、create/control、frame loop 启停、`destroyAnimationsForElement`、mask 协调，并构造 `SpatialAnimationStateChanged` payload。 |
+| `Native AnimationObject` | 继承 `SpatialObject`，持有 native uuid、locked `TimelineSampler`、playback state，并实现 `play/pause/resume/stop/reset/finish/tick/destroy`；`reset/finish` 在同一个对象上操作，不重建。 |
 | `SpatialScene.spatialObjects` | 复用现有 `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` / destroy path 注册、查找和销毁 native spatial objects，包括 `AnimationObject`。 |
 | `TimelineSampler` | 复用现有 timeline sampler，按 locked canonical timeline 采样。 |
 | `Frame driver / CADisplayLink` | `SpatializedElementAnimationManager` 的内部调度能力；manager 在存在 running animation 时启动它，由它每帧回调 `manager.tickAll(timestamp)`，driver 本身不持有 animation 语义。 |
-| `ElementAnimationWriteAdapter` | 按 target kind 写入 `transform`、`opacity` 或 `modelTransform`。 |
+| `ElementAnimationWriteAdapter` | 由 `Native AnimationObject.tick()` 调用，根据 target kind 写入 `transform`、`opacity` 或 `modelTransform`；manager 不执行逐属性写入。 |
 | `AnimatingMask` | 记录 animation-owned fields，防止普通 element sync 覆盖 active animation。 |
-| `NativeWebMsgEmitter` | 发送统一 `SpatialAnimationStateChanged`。 |
+| `SpatialScene WebMsg send path` | 复用现有 `SpatialScene` / `spatialWebViewModel` WebMsg 发送机制发送统一 `SpatialAnimationStateChanged`。 |
+
+## target kind 字段映射
+
+| target kind | writable fields | mask fields |
+|-------------|-----------------|-------------|
+| `spatialized2d` | `transform`, `opacity` | `transform`, `opacity` |
+| `dynamic3d` | `transform`, `opacity` | `transform`, `opacity` |
+| `static3d` | `modelTransform` | `modelTransform` |
+
+Static3D `opacity` tracks 必须在 native create 前 reject。Static3D animation 只写模型根 `modelTransform`，不得把 host element `transform` 当成替代路径。
 
 ## 跨层对象关系
 
@@ -164,6 +177,7 @@ classDiagram
       +setupJSBListeners()
       +addSpatialObject(object)
       +findSpatialObject(id)
+      +sendWebMsg(type, payload)
       +onCreateSpatializedElementAnimation(command)
       +onControlSpatializedElementAnimation(command)
       +onDestroySpatialObjectCommand(command)
@@ -219,6 +233,10 @@ classDiagram
       +onFrame(timestamp)
     }
 
+    class ElementAnimationWriteAdapter {
+      +apply(sample, target, kind)
+    }
+
     class TimelineSampler {
       +sample(time): SpatializedVisualValues
       +duration: TimeInterval
@@ -227,6 +245,7 @@ classDiagram
     class AnimatingMask {
       +transform: Bool
       +opacity: Bool
+      +modelTransform: Bool
       +clear()
     }
   }
@@ -241,7 +260,7 @@ classDiagram
   SpatialObject <|-- SpatializedElement
   SpatialObject <|-- CoreAnimationObject
   SpatializedElement --> CreateSpatializedElementAnimation : sends JSB
-  SpatializedElement --> CoreAnimationObject : returns native uuid handle
+  SpatializedElement --> CoreAnimationObject : wraps response id
   CoreAnimationObject --> ControlSpatializedElementAnimation : sends JSB
   CoreAnimationObject --> SpatialAnimationStateChanged : filters by uuid
 
@@ -253,11 +272,13 @@ classDiagram
   SpatialScene --> ControlSpatializedElementAnimation : registers JSB listener
   SpatializedElementAnimationManager --> FrameDriver : owns internal scheduler
   FrameDriver --> SpatializedElementAnimationManager : tickAll(timestamp)
-  SpatializedElementAnimationManager --> NativeAnimationObject : manages
+  SpatializedElementAnimationManager --> NativeAnimationObject : manages lifecycle/control
+  SpatializedElementAnimationManager --> SpatialScene : sends WebMsg through existing path
   SpatializedElementAnimationManager --> NativeSpatializedElement : lookup target via SpatialScene.findSpatialObject
   NativeSpatializedElement --> AnimatingMask : owns
   NativeAnimationObject --> TimelineSampler : owns locked timeline
-  NativeAnimationObject --> NativeSpatializedElement : writes sampled values
+  NativeAnimationObject --> ElementAnimationWriteAdapter : applies sampled values
+  ElementAnimationWriteAdapter --> NativeSpatializedElement : writes transform / opacity / modelTransform
   NativeAnimationObject --> AnimatingMask : marks animation-owned fields
 ```
 
@@ -288,15 +309,21 @@ sequenceDiagram
   Manager->>Scene: findSpatialObject(targetElementId)
   Manager->>NativeObj: new AnimationObject(native uuid, locked timeline)
   Manager->>Scene: addSpatialObject(animationObject)
-  Manager-->>Scene: native uuid
-  Scene-->>Element: native uuid
-  Element->>CoreObj: new AnimationObject(uuid)
+  Manager-->>Scene: { id: native uuid }
+  Scene-->>Element: { id }
+  Element->>CoreObj: new AnimationObject(id)
   CoreObj->>CoreObj: subscribe NativeWebMsg SpatialAnimationStateChanged
   Element-->>Binding: Core AnimationObject
   Binding->>Binding: flush queued commands
 ```
 
 `CreateSpatializedElementAnimation` 只创建 native animation object 并锁定 timeline。除非后续有 implicit play-on-bind 或 bind 前显式 `play` 被 flush，create 本身不启动 frame sampling。
+
+## 播放控制与对象生命周期
+
+`play`、`pause`、`resume`、`stop`、`reset` 和 `finish` 都作用于同一个已经创建的 `AnimationObject`。这些 playback controls 不重建 native object，也不改变 object id。
+
+只有 config signature 变化、target 重新绑定、显式 `destroy()` 后重新创建，或 element destroy 级联清理，才进入 destroy + recreate 生命周期。`reset()` 写入 from value，`finish()` 写入 to value，二者都复用当前 native `AnimationObject`。
 
 ## Bind 前显式 play 时序
 
@@ -327,7 +354,8 @@ sequenceDiagram
   Manager->>NativeObj: play()
   Manager->>Driver: start if any animation is running
   Driver->>Manager: tickAll(timestamp)
-  NativeObj->>WebMsg: SpatialAnimationStateChanged(running)
+  NativeObj->>Manager: state changed running
+  Manager->>Scene: sendWebMsg(SpatialAnimationStateChanged)
   WebMsg->>CoreObj: event
   CoreObj->>CoreObj: filter by uuid and update state
   CoreObj->>API: notify subscribers
@@ -349,22 +377,24 @@ sequenceDiagram
   participant Manager as visionOS AnimationManager
   participant Obj as visionOS AnimationObject
   participant Sampler as TimelineSampler
+  participant Adapter as ElementAnimationWriteAdapter
   participant Element as Native SpatializedElement
   participant Mask as AnimatingMask
-  participant WebMsg as NativeWebMsg
+  participant Scene as SpatialScene WebMsg path
 
   Driver->>Manager: tickAll(timestamp)
   Manager->>Obj: tick(timestamp)
   Obj->>Sampler: sample(time)
   Sampler-->>Obj: SpatializedVisualValues
-  Obj->>Mask: mark transform/opacity animation-owned
-  Obj->>Element: write transform / opacity / modelTransform
+  Obj->>Mask: mark target-kind mask fields
+  Obj->>Adapter: apply(sample, target, kind)
+  Adapter->>Element: write transform / opacity / modelTransform
 
   alt reaches terminal
     Obj->>Obj: playState = finished
     Obj->>Mask: clear or update by terminal handoff rules
     Obj->>Manager: report terminal
-    Manager->>WebMsg: SpatialAnimationStateChanged(finished, values)
+    Manager->>Scene: sendWebMsg(SpatialAnimationStateChanged, values)
     Manager->>Driver: stop if no animation is running
   end
 ```
@@ -393,7 +423,18 @@ sequenceDiagram
 
 Mask 位于 native `SpatializedElement` runtime 或 target write adapter，不依赖 `PortalInstanceObject`。
 
-## Config 变化和销毁
+## Terminal mask handoff
+
+| action | value write | mask handoff |
+|--------|-------------|--------------|
+| `pause` | 保留当前 sampled value | 保留 mask，因为 animation 仍拥有该视觉字段 |
+| `stop` | 写入当前 sampled value | 释放本 animation 拥有的 mask fields |
+| `reset` | 写入 from value | 释放本 animation 拥有的 mask fields |
+| `finish` | 写入 to value | 释放本 animation 拥有的 mask fields |
+| natural completion | 写入 to value | 释放本 animation 拥有的 mask fields |
+| `destroy` | 不额外强制写入终态；清理 animation | 释放本 animation 拥有的 mask fields |
+
+## Config 变化、销毁和级联清理
 
 ```mermaid
 sequenceDiagram
@@ -416,12 +457,14 @@ sequenceDiagram
   React->>Element: createAnimation(newConfig)
   Element->>Scene: CreateSpatializedElementAnimation(new timeline)
   Scene->>Manager: createAnimation(command)
-  Manager-->>Scene: new uuid
-  Scene-->>Element: new uuid
+  Manager-->>Scene: { id: new uuid }
+  Scene-->>Element: { id }
   Element-->>React: New Core AnimationObject
 ```
 
 Config 变化不做 hot update；目标态使用 destroy + recreate。`AnimationObject.destroy()` 进入现有 `SpatialObject` destroy 生命周期。
+
+当 target `SpatializedElement` 销毁时，native runtime 必须通过 `SpatializedElementAnimationManager.destroyAnimationsForElement(elementId)` 销毁所有关联 `AnimationObject`。该流程必须进入每个 animation object 的 destroy lifecycle，不得只从 manager lookup 中删除对象。
 
 ## 现有 visionOS 实现复用策略
 
@@ -429,10 +472,11 @@ Config 变化不做 hot update；目标态使用 destroy + recreate。`Animation
 |----------|----------|
 | `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` | 直接复用为 animation create/control command 的注册入口。 |
 | `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` | 直接复用为 native `AnimationObject` 的通用对象存储与查找机制。 |
+| `SpatialScene` / `spatialWebViewModel` WebMsg 发送路径 | 直接复用为 `SpatialAnimationStateChanged` 的发送路径，不新增独立 emitter。 |
 | `SpatializedElementMotionTimelineSampler.swift` | 直接复用为 native `AnimationObject` 的 locked sampler。 |
 | `SpatializedElementMotionTiming.swift` | 直接复用 timing function / loop config。 |
 | `SpatializedElementMotionTransformTypes.swift` | 直接复用 transform components。 |
-| `SpatializedElementMotionTransformAdapter.swift` | 改造为 target write adapter；Static3D opacity 仍必须在 create 前 reject。 |
+| `SpatializedElementMotionTransformAdapter.swift` | 改造为 target write adapter，由 `Native AnimationObject.tick()` 调用；Static3D opacity 仍必须在 create 前 reject。 |
 | `SpatializedElementMotionManager.swift` | 重构为 `SpatializedElementAnimationManager`，保留 shared frame driver、查找、terminal values、compose/decompose 思路。 |
 | `SpatializedElementMotionSession.swift` | 不保留类；迁移 timing 字段和状态算法到 native `AnimationObject`。 |
 | `AnimateSpatializedElementMotionCommand` | 废弃；替换为 `CreateSpatializedElementAnimation` 和 `ControlSpatializedElementAnimation`。 |
