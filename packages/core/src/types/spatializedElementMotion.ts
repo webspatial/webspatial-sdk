@@ -51,6 +51,7 @@ export interface SpatialAnimationStateChangedDetail {
   action:
     | SpatializedElementAnimationControlType
     | 'created'
+    | 'start'
     | 'complete'
     | 'completed'
     | 'failed'

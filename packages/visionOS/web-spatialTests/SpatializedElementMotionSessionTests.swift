@@ -234,15 +234,101 @@ final class SpatializedElementMotionSessionTests: XCTestCase {
 
         animation.play(at: 0)
         animation.tick(at: 1)
-        animation.tick(at: 2)
         let runningOpacity = element.opacity
         let playEventCountBefore = events.filter { $0.action == "play" }.count
 
-        animation.play(at: 2.1)
+        animation.play(at: 1.1)
 
         XCTAssertEqual(animation.playState, .running)
         XCTAssertEqual(element.opacity, runningOpacity, accuracy: 0.0001)
         XCTAssertEqual(events.filter { $0.action == "play" }.count, playEventCountBefore)
+    }
+
+    func test_playEmitsStartImmediatelyWhenDelayIsZero() throws {
+        let element = Spatialized2DElement()
+        var events: [SpatialAnimationStateChanged] = []
+        let manager = SpatializedElementAnimationManager(sendWebMsg: { _, msg in
+            if let event = msg as? SpatialAnimationStateChanged {
+                events.append(event)
+            }
+        })
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 2,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "opacity",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 2, value: 0.25, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                targetKind: "spatialized2d",
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+
+        XCTAssertEqual(events.map(\.action), ["play", "start"])
+        XCTAssertEqual(events.last?.playState, .running)
+        XCTAssertEqual(events.last?.finished, false)
+    }
+
+    func test_delayDefersStartEventUntilFirstPlaybackFrame() throws {
+        let element = Spatialized2DElement()
+        var events: [SpatialAnimationStateChanged] = []
+        let manager = SpatializedElementAnimationManager(sendWebMsg: { _, msg in
+            if let event = msg as? SpatialAnimationStateChanged {
+                events.append(event)
+            }
+        })
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 2,
+            delay: 1,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "opacity",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 2, value: 0.25, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                targetKind: "spatialized2d",
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+        XCTAssertEqual(events.map(\.action), ["play"])
+
+        animation.tick(at: 0.5)
+        XCTAssertEqual(events.map(\.action), ["play"])
+
+        animation.tick(at: 1)
+        XCTAssertEqual(events.map(\.action), ["play", "start"])
+        XCTAssertEqual(events.last?.playState, .running)
+        XCTAssertEqual(events.last?.finished, false)
     }
 
     func test_stopResetAndFinishReleaseMask() throws {

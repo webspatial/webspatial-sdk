@@ -32,6 +32,8 @@ final class SpatializedElementAnimationObject: SpatialObject {
     private var pauseStartTime: CFTimeInterval = 0
     private var delayCompleted = false
     private var createdTime: CFTimeInterval = 0
+    /// Tracks whether the current playback session has emitted its first-frame lifecycle event.
+    private var hasEmittedStartEvent = false
 
     var isAnimating: Bool {
         playState == .running
@@ -154,6 +156,21 @@ final class SpatializedElementAnimationObject: SpatialObject {
             return
         }
 
+        if !hasEmittedStartEvent {
+            let values = currentValues(at: timestamp)
+            applySample(values)
+            emitStartEventIfNeeded(values: values)
+            if isIterationComplete(at: timestamp) {
+                let completedValues = sampleValues(at: duration)
+                applySample(completedValues)
+                playState = .finished
+                finished = true
+                releaseMask()
+                emitStateChanged(action: "complete", playState: .finished, values: completedValues)
+            }
+            return
+        }
+
         if isIterationComplete(at: timestamp) {
             switch loopConfig {
             case .none:
@@ -188,13 +205,18 @@ final class SpatializedElementAnimationObject: SpatialObject {
         startTime = timestamp
         pausedDuration = 0
         pauseStartTime = 0
-        delayCompleted = false
+        delayCompleted = delay <= 0
         isReversed = false
         finished = false
+        hasEmittedStartEvent = false
         playState = .running
         lockMask()
-        applySample(sampleValues(at: 0))
-        emitStateChanged(action: "play", playState: .running, values: currentValues(at: timestamp))
+        let startValues = sampleValues(at: 0)
+        applySample(startValues)
+        emitStateChanged(action: "play", playState: .running, values: startValues)
+        if delay <= 0 {
+            emitStartEventIfNeeded(values: startValues)
+        }
     }
 
     private func lockMask() {
@@ -309,6 +331,15 @@ final class SpatializedElementAnimationObject: SpatialObject {
             return true
         }
         return false
+    }
+
+    /// Emits a one-time start lifecycle event when playback reaches its first sampled frame.
+    private func emitStartEventIfNeeded(values: SpatializedMotionValuesPayload) {
+        guard !hasEmittedStartEvent else {
+            return
+        }
+        hasEmittedStartEvent = true
+        emitStateChanged(action: "start", playState: .running, values: values)
     }
 
     private func currentProgress(at timestamp: CFTimeInterval) -> Double {
