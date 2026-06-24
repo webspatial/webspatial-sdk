@@ -94,6 +94,9 @@ const NestedFixPosition = React.lazy(
   () => import('./src/pages/nestedfixposition/index'),
 )
 const NestedScroll = React.lazy(() => import('./src/pages/nestedscroll/index'))
+const NestedSpatialOverflow = React.lazy(
+  () => import('./src/pages/nested-spatial-overflow/index'),
+)
 const SpatialConverter = React.lazy(
   () => import('./src/pages/spatial-converter/index'),
 )
@@ -108,6 +111,9 @@ const TransformVerify = React.lazy(
 )
 const Static3DModel = React.lazy(
   () => import('./src/pages/static-3d-model/index'),
+)
+const NestedStatic3DModelReady = React.lazy(
+  () => import('./src/pages/static-3d-model/nested-ready'),
 )
 const VisibleTest = React.lazy(() => import('./src/pages/visibleTest/index'))
 const CleanupSpa = React.lazy(() =>
@@ -424,6 +430,10 @@ function App() {
                 />
                 <Route path="/nested-scroll" element={<NestedScroll />} />
                 <Route
+                  path="/nested-spatial-overflow"
+                  element={<NestedSpatialOverflow />}
+                />
+                <Route
                   path="/spatial-converter"
                   element={<SpatialConverter />}
                 />
@@ -448,6 +458,10 @@ function App() {
                 <Route path="/geometry-verify" element={<GeometryVerify />} />
                 <Route path="/transform-verify" element={<TransformVerify />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
+                <Route
+                  path="/static-3d-model/nested-ready"
+                  element={<NestedStatic3DModelReady />}
+                />
                 <Route path="/visible-test" element={<VisibleTest />} />
                 <Route
                   path="/head-style-sync"

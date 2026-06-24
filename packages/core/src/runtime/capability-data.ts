@@ -78,11 +78,14 @@ function matrixVision_1_7_0_Flags(): Record<string, boolean> {
   const flags = matrixVision_1_6_0_Flags()
   flags['useAnimation'] = true
   flags['useAnimation:entity'] = true
+  flags['Model:currentTime'] = true
+  flags['Model:loading'] = true
+  flags['Model:poster'] = true
   return flags
 }
 
 /**
- * picoOS **PicoWebApp/0.1.1** — alpha2.0 baseline (product matrix).
+ * picoOS **PicoWebApp/0.1.1** — alpha2.1 baseline (product matrix).
  * WindowScene / VolumeScene / Material subtokens Y; Model sub-tokens per matrix; **`xrInnerDepth` / `xrOuterDepth` N**.
  */
 function matrixPico_0_1_1_Flags(): Record<string, boolean> {
@@ -93,13 +96,15 @@ function matrixPico_0_1_1_Flags(): Record<string, boolean> {
 }
 
 /**
- * picoOS **PicoWebApp/0.1.2** — alpha2.1 playback expansion (product matrix).
+ * picoOS **PicoWebApp/0.1.2** — beta2.0 playback expansion (product matrix).
  * **`xrInnerDepth` / `xrOuterDepth` N** (same as 0.1.1).
  */
 function matrixPico_0_1_2_Flags(): Record<string, boolean> {
   const flags = matrixVision_1_6_0_Flags()
   flags.xrInnerDepth = false
   flags.xrOuterDepth = false
+  flags['Model:currentTime'] = true
+  flags['Model:poster'] = true
   return flags
 }
 
@@ -111,6 +116,15 @@ function matrixPico_0_2_2_Flags(): Record<string, boolean> {
   const flags = matrixPico_0_1_2_Flags()
   flags['useAnimation'] = true
   flags['useAnimation:entity'] = true
+  return flags
+}
+
+/**
+ * picoOS **PicoWebApp/0.3.1** — beta2.1
+ */
+function matrixPico_0_3_1_Flags(): Record<string, boolean> {
+  const flags = matrixPico_0_2_2_Flags()
+  flags['Model:loading'] = true
   return flags
 }
 
@@ -126,10 +140,12 @@ function visionOsRow_1_7_0(): CapabilityVersionRow {
   return { version: '1.7.0', flags: matrixVision_1_7_0_Flags() }
 }
 
+// Pico OS 6.0 Alpha 2.1
 function picoOsRow_0_1_1(): CapabilityVersionRow {
   return { version: '0.1.1', flags: matrixPico_0_1_1_Flags() }
 }
 
+// Pico OS 6.0 Beta 2.0
 function picoOsRow_0_1_2(): CapabilityVersionRow {
   return { version: '0.1.2', flags: matrixPico_0_1_2_Flags() }
 }
@@ -138,10 +154,20 @@ function picoOsRow_0_2_2(): CapabilityVersionRow {
   return { version: '0.2.2', flags: matrixPico_0_2_2_Flags() }
 }
 
+// Pico OS 6.0 Beta 2.1
+function picoOsRow_0_3_1(): CapabilityVersionRow {
+  return { version: '0.3.1', flags: matrixPico_0_3_1_Flags() }
+}
+
 export const CAPABILITY_TABLE: {
   visionos: CapabilityVersionRow[]
   picoos: CapabilityVersionRow[]
 } = {
   visionos: [visionOsRow_1_5_0(), visionOsRow_1_6_0(), visionOsRow_1_7_0()],
-  picoos: [picoOsRow_0_1_1(), picoOsRow_0_1_2(), picoOsRow_0_2_2()],
+  picoos: [
+    picoOsRow_0_1_1(),
+    picoOsRow_0_1_2(),
+    picoOsRow_0_2_2(),
+    picoOsRow_0_3_1(),
+  ],
 }
