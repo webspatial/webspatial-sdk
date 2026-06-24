@@ -110,6 +110,30 @@ describe('spatial route cleanup', () => {
     expect(windowProxy.close).not.toHaveBeenCalled()
   })
 
+  it('closes all tracked window proxies when the page context is hidden', async () => {
+    prepareSpatialRouteLifetime()
+    const currentWindowProxy = makeWindowProxy()
+
+    trackSpatialRouteWindowProxy(currentWindowProxy)
+
+    window.dispatchEvent(new PageTransitionEvent('pagehide'))
+    await Promise.resolve()
+
+    expect(currentWindowProxy.close).toHaveBeenCalledTimes(1)
+  })
+
+  it('destroys all tracked spatial objects before the page context unloads', async () => {
+    prepareSpatialRouteLifetime()
+    const object = makeSpatialObject('beforeunload')
+
+    trackSpatialRouteObject(object as any)
+
+    window.dispatchEvent(new Event('beforeunload'))
+    await Promise.resolve()
+
+    expect(object.destroy).toHaveBeenCalledTimes(1)
+  })
+
   it('does not mutate native-owned pageEpoch', async () => {
     window.__webspatialsdk__ = { pageEpoch: 42 }
     prepareSpatialRouteLifetime()

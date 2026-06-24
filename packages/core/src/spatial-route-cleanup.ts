@@ -40,6 +40,23 @@ function cleanupTrackedSpatialObjects(currentHref = getCurrentHref()) {
   }
 }
 
+function cleanupAllTrackedSpatialObjects() {
+  const objects = [...trackedObjects.keys()].reverse()
+  const windowProxies = [...trackedWindowProxies.keys()].reverse()
+  trackedObjects.clear()
+  trackedWindowProxies.clear()
+  stopRoutePollIfIdle()
+
+  for (const windowProxy of windowProxies) {
+    closeWindowProxy(windowProxy)
+  }
+
+  for (const object of objects) {
+    if (object.isDestroyed) continue
+    object.destroy().catch(() => {})
+  }
+}
+
 function closeWindowProxy(windowProxy: WindowProxy) {
   try {
     windowProxy.close()
@@ -80,6 +97,8 @@ function installRouteCleanup() {
   observedHref = getCurrentHref()
   window.addEventListener('hashchange', onRouteChange)
   window.addEventListener('popstate', onRouteChange)
+  window.addEventListener('pagehide', cleanupAllTrackedSpatialObjects)
+  window.addEventListener('beforeunload', cleanupAllTrackedSpatialObjects)
 }
 
 export function prepareSpatialRouteLifetime(): string {
@@ -137,6 +156,8 @@ export function __resetSpatialRouteCleanupForTests() {
   if (installed && typeof window !== 'undefined') {
     window.removeEventListener('hashchange', onRouteChange)
     window.removeEventListener('popstate', onRouteChange)
+    window.removeEventListener('pagehide', cleanupAllTrackedSpatialObjects)
+    window.removeEventListener('beforeunload', cleanupAllTrackedSpatialObjects)
   }
   installed = false
   observedHref = ''
