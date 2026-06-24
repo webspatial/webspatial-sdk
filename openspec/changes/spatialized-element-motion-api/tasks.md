@@ -59,12 +59,74 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Validation tests: reject Static3D `opacity` tracks before create; do not silently ignore them
 - [x] Capability tests: verify `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])` target tokens and pure Web `false` behavior
 
-## Phase 6 — Implementation follow-up
+## Phase 6 — Implementation invariants spec
 
-- [ ] Implement `SpatializedElement.createAnimation(config)` for supported spatialized element targets
-- [ ] Implement native `AnimationObject : SpatialObject`
-- [ ] Implement `CreateSpatializedElementAnimation`, `ControlSpatializedElementAnimation`, and `SpatialAnimationStateChanged`
-- [ ] Implement element animating mask ownership in ordinary element sync
-- [ ] Implement destroy + recreate on normalized config changes
-- [ ] Remove target-state runtime dependencies on legacy controller/backend/Web RAF/old motion command execution paths
+- [x] Add `spatialized-animation-object-invariants` spec requiring native uuid as the only authoritative `AnimationObject` identity
+- [x] Add `spatialized-animation-object-invariants` spec requiring `AnimationObject.destroy()` to use the common `SpatialObject` destroy lifecycle
+- [x] Add `spatialized-animation-object-invariants` spec requiring Core SDK to expose the imperative `AnimationObject` handle returned by `SpatializedElement.createAnimation(config)`
+- [x] Add `spatialized-animation-object-invariants` spec requiring native `AnimationObject` playback state to be authoritative and Core SDK state to be projected from `SpatialAnimationStateChanged`
+- [x] Add `spatialized-animation-object-invariants` spec requiring element animating mask to be owned by native `SpatializedElement` runtime or write adapter, not `PortalInstanceObject`
+- [x] Add `spatialized-animation-object-invariants` spec requiring React SDK to create native `AnimationObject` only after `xr-animation` binding resolves a concrete target
+- [x] Add `spatialized-animation-object-invariants` spec requiring pure Web runtime to have no Core RAF fallback
+
+## Phase 7 — Native AnimationObject implementation
+
+- [ ] Native: add `AnimationObject : SpatialObject`
+- [ ] Native: generate `AnimationObject.uuid` in the native create path
+- [ ] Native: register `AnimationObject` in the common spatial object registry
+- [ ] Native: implement `AnimationObject.destroy()` through the common `SpatialObject` destroy lifecycle
+- [ ] Native: destroy cleanup stops frame driving, clears animating mask, unregisters listeners, and removes object from registry
+- [ ] Native: implement locked `TimelineSampler` owned by `AnimationObject`
+- [ ] Native: implement target-specific write adapters for `spatialized2d`, `static3d`, and `dynamic3d`
+- [ ] Native: implement `SpatialAnimationStateChanged` WebMsg with `animationId`, `action`, `playState`, optional `values`, optional `error`
+
+## Phase 8 — Core SDK object channel
+
+- [ ] Core: add `SpatializedElement.createAnimation(config)`
+- [ ] Core: send `CreateSpatializedElementAnimation` and wrap the native returned uuid as `AnimationObject`
+- [ ] Core: expose `AnimationObject.uuid`
+- [ ] Core: expose `AnimationObject.play/pause/resume/stop/reset/finish/destroy`
+- [ ] Core: route `play/pause/resume/stop/reset/finish` through `ControlSpatializedElementAnimation`
+- [ ] Core: route `AnimationObject.destroy()` through the common `SpatialObject.destroy()` path
+- [ ] Core: project `playState`, `isAnimating`, `isPaused`, and `finished` from `SpatialAnimationStateChanged`
+- [ ] Core: remove `WebPlaybackBackend` and RAF sampling from the spatialized element animation path
+- [ ] Core: remove target-state runtime dependency on `SpatializedMotionController`, `NativePlaybackBackend`, and `AnimateSpatializedElementMotion`
+
+## Phase 9 — React SDK AnimationProxy
+
+- [ ] React: create native `AnimationObject` only after `xr-animation` binding resolves target
+- [ ] React: preserve `[animation, api, style]` public API
+- [ ] React: proxy pre-bind `api.play/pause/resume/stop/reset/finish` explicit commands
+- [ ] React: ensure `autoStart: false` only disables implicit play-on-bind and does not drop explicit queued commands
+- [ ] React: destroy the current `AnimationObject` on unmount / unbind
+- [ ] React: destroy and recreate `AnimationObject` when normalized config signature changes
+- [ ] React: keep Static3D / Dynamic3D `style` as `{}`
+- [ ] React: do not implement Web RAF fallback for pure Web runtime
+
+## Phase 10 — Element animating mask
+
+- [ ] Native: store animation-owned field mask on `SpatializedElement` runtime or target write adapter
+- [ ] Native: ignore or defer regular transform JSB updates while transform is animation-owned
+- [ ] Native: ignore or defer regular opacity JSB updates while opacity is animation-owned
+- [ ] Native: ensure mask logic does not depend on `PortalInstanceObject`
+- [ ] Native: clear or update mask on stop/reset/finish/natural complete/destroy according to terminal handoff rules
+- [ ] Tests: verify regular transform update does not override active animation transform
+- [ ] Tests: verify regular opacity update does not override active animation opacity
+
+## Phase 11 — Protocol and compatibility tests
+
+- [ ] JSB test: `CreateSpatializedElementAnimation` returns native-generated uuid
+- [ ] JSB test: `ControlSpatializedElementAnimation` supports play/pause/resume/stop/reset/finish
+- [ ] WebMsg test: `SpatialAnimationStateChanged` updates matching Core SDK `AnimationObject`
+- [ ] Test: core `AnimationObject.destroy()` uses common spatial object destroy path
+- [ ] Test: stop freezes current value and emits `onStop(values)`
+- [ ] Test: reset emits from value and emits `onReset(values)`
+- [ ] Test: finish emits to value and emits `onComplete(values)`
+- [ ] Test: native state is authoritative over Core SDK state projection
+- [ ] Test: Static3D opacity tracks are rejected before native create
+- [ ] Test: pure Web runtime returns false for `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])`
+
+## Phase 12 — Docs and demos follow-up
+
 - [ ] Update demos and public docs after implementation lands
+- [ ] Update PR description after implementation lands so it no longer presents the old Controller/Web RAF path as target-state implementation
