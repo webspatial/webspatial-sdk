@@ -33,7 +33,7 @@ This **umbrella change** merges both into a single normative surface:
 
 ```
 // Unified spatialized animation API — hook is target-agnostic; target resolved at bind time
-// 2D style carries Web fallback / non-native animated values
+// 2D style remains a merge/snapshot outlet; pure-Web runtime does not start playback
 <div enable-xr style={{ width: 300, height: 200, ...style }} xr-animation={animation}>
   <h2>Hello Spatial</h2>
 </div>
@@ -69,7 +69,7 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 
 | Component | Resolved target | `style` behavior |
 |-----------|-----------------|------------------|
-| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` | Active CSSProperties (Web RAF driven) |
+| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` | Merge/snapshot outlet for tuple consistency; playback requires native capability |
 | `<Model>` | `static3d` | Empty `{}` (native-only, safe to spread) |
 | `<Reality>` | `dynamic3d` | Empty `{}` (native-only, safe to spread) |
 
@@ -81,13 +81,13 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 
 - **Unified public API**: v1 user-facing examples and guidance center on `useAnimation(config)` with `from/to` (recommended) or `timeline` (CSS `@keyframes` style). Internally both normalize into the canonical tracks model.
 - **Timeline data model**: per-property tracks with absolute-time keyframes and per-track timingFunction remain the canonical internal config model. The current implementation and types still accept `tracks` input as a compatibility / advanced escape hatch.
-- **Dual backend for 2D**: Web RAF when native unavailable; native uses the canonical tracks path when in WebSpatial runtime.
-- **Timeline-only play payload**: `AnimateSpatializedElementMotion` `play` sends only the canonical `timeline` document across JSB; timing controls such as `duration`, `timingFunction`, `delay`, `loop`, and `playbackRate` live inside the compiled timeline payload rather than as top-level JSB fields.
-- **Native-only for 3D**: Static3D and Dynamic3D use native `animateMotion` exclusively (no Web RAF fallback).
+- **Native-first runtime path**: all spatialized container kinds create a native `AnimationObject` through `SpatializedElement.createAnimation(config)`; pure Web runtime is capability-negative and does not start a RAF playback fallback.
+- **Create-time timeline payload**: Core sends the compiled canonical `timeline` document through `CreateSpatializedElementAnimation`; timing controls such as `duration`, `timingFunction`, `delay`, `loop`, and `playbackRate` live inside that compiled payload rather than as top-level JSB fields.
+- **2D style behavior**: 2D keeps a `style` outlet only as a merge/snapshot outlet for tuple consistency; it is not a pure-Web playback backend.
 - **3D style behavior**: Static3D and Dynamic3D always return `style = {}`; playback is driven by the bound `xr-animation` handle, and the empty object is kept only for tuple consistency and safe spreading.
-- **One Core controller**: `SpatializedMotionController` with `MOTION_KIND_POLICIES` per kind.
+- **One Core object path**: React `AnimationBinding` binds to at most one target and creates one Core `AnimationObject`; per-target controller aliases are not part of the target-state API.
 - **Entity-specific API**: entity transform animation is named `useEntityAnimation(config)` and remains on the separate `AnimateTransform` stack.
-- **Portal suppression**: animated fields suppressed during native playback (property-level for opacity, transform-wide for transform).
+- **Animating mask ownership**: native `SpatializedElement` runtime / write adapter owns animated fields during playback (property-level for opacity, transform-wide for transform), not React Portal suppression.
 - **Session semantics**: state machine, lifecycle callbacks, error handling unified across all paths.
 - **Controller surface**: `pause()` / `resume()` are whole-session operations only; selective pause/resume is intentionally out of scope for this change. If local control is needed later, it must be designed as a separate track/action-level API in a new proposal.
 - **Legacy removal target**: the old `animation` prop path, legacy SpatialDiv session hook path, and the visionOS-specific legacy 2D backend path are removed from the target state; only the unified `xr-animation` motion path remains.
@@ -110,8 +110,8 @@ boundaries:
 - `useAnimation` remains the default container-motion hook for SpatialDiv, Model, and Reality.
 - `useEntityAnimation` remains entity-only.
 - `useSpatializedMotion` is no longer treated as a primary concept or public routing name.
-- React stays responsible for lifecycle wiring, binding, style fallback, and container adaptation only.
-- Core remains responsible for config normalization, validation, timeline evaluation, playback state, backend choice, and bind-time auto-start behavior.
+- React stays responsible for lifecycle wiring, target binding, tuple-shape-consistent `style` outlet, and container adaptation only.
+- Core remains responsible for config normalization, validation, canonical timeline compilation, `AnimationObject` lifecycle, and bind-time auto-start behavior.
 
 ## Two-Phase Naming Migration
 
@@ -124,7 +124,7 @@ boundaries:
 ### New
 
 - `spatialized-element-motion` — umbrella requirements and per-kind matrix.
-- `spatialized-2d-motion` — 2D timeline + dual backend (reference implementation).
+- `spatialized-2d-motion` — 2D timeline + native-first `AnimationObject` path.
 - `spatialized-static3d-motion` — Model root transform timeline (native-only).
 - `spatialized-dynamic3d-motion` — Reality container transform timeline (native-only).
 
@@ -134,7 +134,7 @@ boundaries:
 
 ### Deferred
 
-- `spatialized-entity-motion` — Entity transform timeline via `useEntityAnimation` (separate stack, not `SpatializedMotionController`).
+- `spatialized-entity-motion` — Entity transform timeline via `useEntityAnimation` (separate stack, outside the container `AnimationObject` path).
 
 ## Non-Goals
 

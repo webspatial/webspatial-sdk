@@ -78,7 +78,8 @@ function DegradedContainer<T extends SpatializedElementRef>({
   useLayoutEffect(() => {
     if (!xrAnimation || !hostEl || !hostEl.isConnected) return () => {}
 
-    // Bind the real DOM host so web RAF playback can start in degraded mode.
+    // Bind the DOM host so the tuple stays shape-consistent even though
+    // degraded pure-Web runtime does not start playback.
     xrAnimation.__setElement?.(hostEl, 'spatialized2d')
 
     return () => {

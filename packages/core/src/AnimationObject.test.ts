@@ -5,7 +5,6 @@ const spies = vi.hoisted(() => ({
   createCommandSpy: vi.fn(),
   controlCommandSpy: vi.fn(),
   destroyCommandSpy: vi.fn(),
-  oldAnimateCommandSpy: vi.fn(),
   failNextControlType: undefined as string | undefined,
 }))
 
@@ -54,19 +53,11 @@ vi.mock('./JSBCommand', () => {
     execute = vi.fn().mockResolvedValue(ok({ inspected: true }))
   }
 
-  class AnimateSpatializedElementMotionJSBCommand {
-    constructor(public command: any) {
-      spies.oldAnimateCommandSpy(command)
-    }
-    execute = vi.fn().mockResolvedValue(ok())
-  }
-
   return {
     CreateSpatializedElementAnimationJSBCommand,
     ControlSpatializedElementAnimationJSBCommand,
     DestroyCommand,
     InspectCommand,
-    AnimateSpatializedElementMotionJSBCommand,
   }
 })
 
@@ -75,7 +66,6 @@ describe('AnimationObject', () => {
     spies.createCommandSpy.mockClear()
     spies.controlCommandSpy.mockClear()
     spies.destroyCommandSpy.mockClear()
-    spies.oldAnimateCommandSpy.mockClear()
     spies.failNextControlType = undefined
     SpatialWebEvent.eventReceiver = {}
   })
@@ -122,7 +112,6 @@ describe('AnimationObject', () => {
         targetKind: 'static3d',
       }),
     )
-    expect(spies.oldAnimateCommandSpy).not.toHaveBeenCalled()
 
     const receiver = SpatialWebEvent.eventReceiver[animation.uuid]
     expect(receiver).toEqual(expect.any(Function))
@@ -323,5 +312,17 @@ describe('Core exports', () => {
     expect((mod as any).AnimationObjectChannel).toBeUndefined()
     expect((mod as any).AnimationObjectBridge).toBeUndefined()
     expect((mod as any).SpatialObjectBridge).toBeUndefined()
+  })
+
+  it('removes legacy animateMotion entry points from spatialized elements', async () => {
+    const mod = await import('./index')
+
+    expect('animateMotion' in mod.Spatialized2DElement.prototype).toBe(false)
+    expect('animateMotion' in mod.SpatializedStatic3DElement.prototype).toBe(
+      false,
+    )
+    expect('animateMotion' in mod.SpatializedDynamic3DElement.prototype).toBe(
+      false,
+    )
   })
 })

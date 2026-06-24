@@ -181,5 +181,6 @@
 
 ## Phase 12 — Docs and demos follow-up
 
+- [x] 更新仓库内 proposal / API 文档，确保目标态文案不再描述已移除的 Controller / Web RAF / `AnimateSpatializedElementMotion` 路径
 - [ ] 实现落地后更新 demos 和公开文档
 - [ ] 实现落地后更新 PR 描述，避免继续宣称旧 Controller/Web RAF 路径是目标态实现

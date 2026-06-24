@@ -50,13 +50,13 @@ const [animation, api, style] = useAnimation({
 <Reality xr-animation={animation}><Entity /></Reality>             // → Dynamic3D 容器
 
 // style 行为：
-// 2D：承载 Web fallback / 非 native 场景下的动画样式，可安全合并到 style
+// 2D：仅作为合并/快照出口；纯 Web runtime 不启动 playback，可安全合并到 style
 // 3D：恒为 {}；动画由 xr-animation 绑定交给 native 驱动，返回空对象仅为保持 tuple 形态一致
 ```
 
 | 绑定目标 | React 绑定 | Core 写回 |
 |----------|------------|-----------|
-| 2D | `xr-animation` on `enable-xr` div，`style` 合并 | native `element.transform` + opacity；浏览器可 Web RAF |
+| 2D | `xr-animation` on `enable-xr` div，`style` 合并 | native `element.transform` + opacity；纯 Web runtime 仅保持 tuple consistency / snapshot，不启动 Web RAF playback |
 | Static3D | `xr-animation` on `<Model>` | native `modelTransform` only；`opacity` 不属于已交付的 Static3D sink |
 | Dynamic3D | `xr-animation` on `<Reality>` | native 容器 `element.transform` + opacity |
 
@@ -85,10 +85,10 @@ type SpatializedMotionPlayState = 'idle' | 'queued' | 'running' | 'paused' | 'fi
 
 | 方法 | 调用范围 | Style 输出 | playState | finished | 触发回调 | 后端行为 |
 |------|----------|-----------|-----------|----------|---------|---------|
-| `stop()` | 仅 active session | 当前帧值 | `idle` | `false` | `onStop` | Web: JS 计算当前 t；Native: native 回传当前值 |
-| `reset()` | 无条件 | from 值 | `idle` | `false` | `onReset` | Web: JS 计算 t=0；Native: native 回传/JS fallback |
-| `finish()` | 无条件 | to 值 | `finished` | `true` | `onComplete` | Web: JS 计算 t=duration；Native: native 回传/JS fallback |
-| 自然结束 | active 播放自然结束 | to 值 | `finished` | `true` | `onComplete` | 最后一帧自然到达 |
+| `stop()` | 仅 active session | 当前帧值 | `idle` | `false` | `onStop` | Native `AnimationObject` 回传当前值；纯 Web 目标态路径不提供 playback fallback |
+| `reset()` | 无条件 | from 值 | `idle` | `false` | `onReset` | Native `AnimationObject` 回传起点值；纯 Web 目标态路径不提供 playback fallback |
+| `finish()` | 无条件 | to 值 | `finished` | `true` | `onComplete` | Native `AnimationObject` 回传终点值；纯 Web 目标态路径不提供 playback fallback |
+| 自然结束 | active 播放自然结束 | to 值 | `finished` | `true` | `onComplete` | Native `AnimationObject` 到达最后一帧并发出终态 |
 
 补充语义：
 - `stop()` 后 `finished = false`
@@ -135,8 +135,9 @@ interface SpatializedMotionSegmentConfig {
 
 | 对外 | 说明 |
 |------|------|
-| **`SpatializedMotionController`** | Core 层统一控制器实现；通过绑定流程解析目标 kind，并暴露 `config` / `updateConfig` |
-| **`SpatializedMotionHandle`** | Core 层 imperative 接口（`play` / `pause` / `resume` / `stop` / `reset` / `finish` / …） |
+| **`AnimationBinding`** | React 侧在 `useAnimation(config)` 时创建的绑定对象；负责 bind 前命令排队，并在目标解析后创建 Core `AnimationObject` |
+| **`SpatializedElement.createAnimation(config)`** | Core 层统一 native 创建入口；负责 validation、normalization、canonical timeline 编译，以及发送 `CreateSpatializedElementAnimation` |
+| **`AnimationObject`** | Core 层一等对象；继承 `SpatialObject`，直接暴露 `play` / `pause` / `resume` / `stop` / `reset` / `finish` / `destroy` |
 | `supports('useAnimation')` | 仅 family 级 probe；不能据此判断具体目标是否可用 |
 | `supports('useAnimation', ['element'])` | 2D 容器能力探测 |
 | `supports('useAnimation', ['static3d'])` | Static3D 容器能力探测 |
@@ -146,11 +147,10 @@ interface SpatializedMotionSegmentConfig {
 补充约束：
 
 - React SDK 面向业务的推荐公开入口仍为 `useAnimation`
-- `SpatializedMotionController` 与 `SpatializedMotionHandle` 不再作为 React SDK 根入口或 motion 子入口公开导出
-- `supportsMotionKind` 与 `forceNativePlayback` 继续保留在 controller options 中，定位为注入 seam / 覆盖开关，而不是 React SDK 推荐公开 API
-- controller 继续使用单一 options 容器；`kind` 不进入 options，而是在绑定阶段解析
-- controller 允许在构造阶段没有 `kind`，但 backend 真正执行前必须已经通过绑定流程拿到目标 `kind`
-- `attachElement(...)`、`autoStart`、`pendingPlay` 本轮维持现状，不在这次收敛中调整语义
+- `AnimationBinding` 只作为 React 内部 binding 协议存在；公开播放 surface 仍为 `[animation, api, style]`
+- `kind` 不进入 `useAnimation` 配置；由 `xr-animation` 绑定阶段自动解析
+- `element` / `static3d` / `dynamic3d` 在纯 Web runtime 下返回 `false`，且目标态路径不启动 playback fallback
+- `useEntityAnimation` 保持独立，不进入本次容器 `AnimationObject` 路径
 
 ## 7. 与模型内嵌动画区分
 
@@ -171,7 +171,9 @@ interface SpatializedMotionSegmentConfig {
 | 异步失败 | `SpatializedPlaybackError` |
 | 容器 kind | `SpatializedMotionKind` |
 | Portal `animation` 绑定 | `SpatializedMotionBinding`（`__kind: 'spatializedMotion'`） |
-| JSB payload（无 targetKind） | `ElementMotionCommand` |
+| JSB create payload | `CreateSpatializedElementAnimationCommand` |
+| JSB control payload | `ControlSpatializedElementAnimationCommand` |
+| Native 状态事件 | `SpatialAnimationStateChangedDetail`, `SpatialAnimationStateChangedMsg` |
 | 百分比关键帧值 | `SpatializedMotionKeyframeValues`（`SpatializedVisualValues` + 可选 `timingFunction`） |
 | Timeline 配置 | `SpatializedMotionTimelineConfig` |
 | 缓动函数 | `TimingFunction`（`'linear' \| 'easeIn' \| 'easeOut' \| 'easeInOut'`） |

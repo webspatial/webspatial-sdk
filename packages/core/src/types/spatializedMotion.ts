@@ -122,7 +122,7 @@ export type SpatializedMotionPlayState =
   | 'paused'
   | 'finished'
 
-/** Imperative playback surface (`SpatializedMotionController`, hooks). */
+/** Imperative playback surface shared by `AnimationBinding` and `AnimationObject`. */
 export interface SpatializedPlaybackApi {
   play(): void
   pause(): void

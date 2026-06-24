@@ -29,7 +29,6 @@ import {
 } from './types/types'
 import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
-import type { AnimateSpatializedElementMotionCommand } from './types/spatializedElementMotion'
 import type {
   ControlSpatializedElementAnimationCommand,
   CreateSpatializedElementAnimationCommand,
@@ -702,26 +701,6 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
       id: this.attachmentId,
       ...this.options,
     }
-  }
-}
-
-export class AnimateSpatializedElementMotionJSBCommand extends JSBCommand {
-  commandType = 'AnimateSpatializedElementMotion'
-
-  constructor(private command: AnimateSpatializedElementMotionCommand) {
-    super()
-  }
-
-  protected getParams(): Record<string, any> | undefined {
-    const { type, animationId, elementId, targetKind } = this.command
-    const params: Record<string, any> = { type, animationId, targetKind }
-
-    if (elementId !== undefined) params.elementId = elementId
-
-    if (this.command.timeline !== undefined)
-      params.timeline = this.command.timeline
-
-    return params
   }
 }
 

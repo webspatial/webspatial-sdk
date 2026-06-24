@@ -266,7 +266,7 @@ final class SpatializedElementAnimationObject: SpatialObject {
                 scaleY: transform.scale?.y ?? 1,
                 scaleZ: transform.scale?.z ?? 1
             )
-            writeAdapter.applyAffine(SpatializedElementMotionManager.composeTransform(components), to: element)
+            writeAdapter.applyAffine(SpatializedElementAnimationManager.composeTransform(components), to: element)
         }
 
         if let opacity = values.opacity,

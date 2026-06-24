@@ -2,60 +2,7 @@ import Spatial
 @testable import WebSpatial
 import XCTest
 
-final class SpatializedElementMotionSessionTests: XCTestCase {
-    private func makeSession(
-        duration: Double = 2,
-        delay: Double = 0
-    ) -> SpatializedElementMotionSession {
-        let timeline = SpatializedMotionTimelinePayload(
-            duration: duration,
-            delay: delay,
-            playbackRate: nil,
-            loop: nil,
-            tracks: [
-                SpatializedMotionTrackPayload(
-                    property: "opacity",
-                    keyframes: [
-                        SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
-                        SpatializedMotionKeyframePayload(at: duration, value: 0.2, timingFunction: nil),
-                    ],
-                    timingFunction: "linear"
-                ),
-            ]
-        )
-        let sampler = SpatializedElementMotionTimelineSampler(
-            timeline: timeline,
-            baselineTransform: .identity,
-            baselineOpacity: 1
-        )
-        return SpatializedElementMotionSession(
-            animationId: "anim-1",
-            elementId: "element-1",
-            timelineSampler: sampler,
-            duration: duration,
-            timingFunction: "linear",
-            delay: delay
-        )
-    }
-
-    func test_pausedProgressRemainsFrozenUntilResume() {
-        let session = makeSession()
-        session.delayCompleted = true
-        session.startTime = 10
-
-        XCTAssertEqual(session.currentProgress(at: 11), 0.5, accuracy: 0.0001)
-
-        session.markPaused(at: 11)
-
-        XCTAssertEqual(session.currentProgress(at: 12.5), 0.5, accuracy: 0.0001)
-        XCTAssertEqual(session.rawProgress(at: 12.5), 0.5, accuracy: 0.0001)
-
-        session.markResumed(at: 13)
-
-        XCTAssertEqual(session.currentProgress(at: 13), 0.5, accuracy: 0.0001)
-        XCTAssertEqual(session.currentProgress(at: 13.5), 0.75, accuracy: 0.0001)
-    }
-
+final class SpatializedElementAnimationManagerTests: XCTestCase {
     func test_createAnimationReturnsNativeUuidAndRegistersObject() throws {
         let element = Spatialized2DElement()
         let manager = SpatializedElementAnimationManager()
@@ -710,41 +657,5 @@ final class SpatializedElementMotionSessionTests: XCTestCase {
         XCTAssertFalse(manager.hasActiveFrameDriver)
         XCTAssertEqual(events.last?.action, "destroy")
         XCTAssertEqual(events.last?.finished, false)
-    }
-
-    func test_legacyAnimateSpatializedElementMotionCommandIsExplicitlyUnsupported() throws {
-        let element = Spatialized2DElement()
-        let manager = SpatializedElementAnimationManager()
-        let timeline = SpatializedMotionTimelinePayload(
-            duration: 1,
-            delay: nil,
-            playbackRate: nil,
-            loop: nil,
-            tracks: [
-                SpatializedMotionTrackPayload(
-                    property: "opacity",
-                    keyframes: [
-                        SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
-                        SpatializedMotionKeyframePayload(at: 1, value: 0.5, timingFunction: nil),
-                    ],
-                    timingFunction: "linear"
-                ),
-            ]
-        )
-
-        XCTAssertThrowsError(
-            try manager.controlLegacyAnimation(AnimateSpatializedElementMotionCommand(
-                animationId: "legacy-animation",
-                type: "play",
-                targetKind: "spatialized2d",
-                elementId: element.id,
-                timeline: timeline
-            ))
-        ) { error in
-            guard case let SpatializedElementAnimationManagerError.invalidTarget(reason) = error else {
-                return XCTFail("Expected invalidTarget for legacy AnimateSpatializedElementMotion")
-            }
-            XCTAssertTrue(reason.contains("no longer supported"))
-        }
     }
 }
