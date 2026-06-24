@@ -1,4 +1,4 @@
-## Context
+## Context and goals
 
 This change defines declarative motion for three spatialized container kinds:
 
@@ -6,47 +6,13 @@ This change defines declarative motion for three spatialized container kinds:
 - `static3d` via `SpatializedStatic3DElement`
 - `dynamic3d` via `SpatializedDynamic3DElement`
 
-All three share the same authoring model and the same canonical `tracks` execution model, but they differ in React integration points and native write paths. Entity animation remains a separate stack and is not part of this target-state design.
+All three share the same authoring model and canonical `tracks` execution model, but they differ in React binding entry points and native write paths. Entity animation remains a separate stack and is out of scope for this design.
 
-## Design Evolution
+The target state preserves playback lifecycle, native frame sampling, animation-owned masks, terminal callback semantics, and `from` / `to` authoring from earlier motion designs. It also adopts canonical `tracks` timeline, `xr-animation` bind-time target resolution, and the React `style` outlet.
 
-### Plan A foundations
+The target state does not keep the Web RAF backend. Pure Web runtimes are capability-negative for `useAnimation` spatialized targets.
 
-Plan A established the primitives that remain normative here:
-
-- Session lifecycle and playback state
-- Animation-owned field masking during native-controlled playback
-- Native per-frame sampling semantics
-- Lifecycle callback mutual exclusion
-- Single-segment `from` and `to` authoring as a convenience shape
-
-### Plan B generalization
-
-Plan B introduced the general-purpose timeline model:
-
-- Canonical per-property `tracks`
-- `style` as the single React merge outlet
-- Bind-time target resolution through `xr-animation`
-
-The target state deliberately does not keep the Web RAF backend as a playback path. Pure Web runtimes are capability-negative for `useAnimation` spatialized targets.
-
-### Unified target state
-
-This design merges those ideas into a single three-layer architecture:
-
-- `React SDK` defines authoring, binding, and React `AnimationBinding`
-- `Core SDK` defines `SpatializedElement.createAnimation(config)`, `AnimationObject : SpatialObject`, config validation / normalization, and direct NativeWebMsg state subscription
-- `Native Runtime` defines native `AnimationObject : SpatialObject`, `SpatializedElementAnimationManager`, target-specific playback, and write paths
-
-## Goals
-
-- One authoring API for 2D, Static3D, and Dynamic3D container motion
-- One canonical timeline model for all execution paths
-- One shared playback API and callback contract across all kinds
-- Clear separation between React binding, Core AnimationObject, and Native playback
-- Explicit cross-layer contracts so module responsibilities are easy to reason about
-
-## AnimationObject implementation architecture
+## Target-state architecture
 
 The target implementation is split across React SDK, Core SDK, and native runtime:
 
@@ -56,15 +22,41 @@ The target implementation is split across React SDK, Core SDK, and native runtim
 
 See `references/animation-object-architecture.md` for class diagrams, sequence diagrams, and migration notes from the current visionOS motion implementation.
 
+## React SDK module boundaries
+
+| Module | Responsibility |
+|--------|----------------|
+| `useAnimation(config)` | Creates `AnimationBinding`, `PlaybackApi`, and the `style` outlet. |
+| `AnimationBinding` | Stores config, tracks normalized config signature, queues pre-bind explicit commands, and creates Core `AnimationObject` after bind. |
+| `PlaybackApi` | Exposes React-facing `play/pause/resume/stop/reset/finish` and subscribes to Core `AnimationObject` state. |
+| `xr-animation` binding adapter | Resolves concrete target kind and triggers `AnimationBinding.bind()` / `unbind()`. |
+
 ## Core SDK module boundaries
 
 | Module | Responsibility |
 |--------|----------------|
 | `SpatializedElement.createAnimation(config)` | Creates a native-backed `AnimationObject` after target binding, and owns validation, normalization, and create JSB send. |
-| `AnimationObject` | First-class Core object extending `SpatialObject`; implements playback controls directly, subscribes to NativeWebMsg directly, and owns its state. |
+| `AnimationObject` | First-class Core object extending `SpatialObject`; implements playback controls directly, inherits `destroy()`, subscribes to NativeWebMsg directly, and owns its state. |
 | `validateSpatializedMotionConfig` | Validates authoring config before native create, such as rejecting Static3D `opacity` tracks. |
 | `motionConfigToAnimationTimeline` | Compiles normalized motion config into the canonical `CreateSpatializedElementAnimation` payload. |
-| `evaluateMotionTimeline` | Used only for validation, test fixtures, or explicit non-runtime tools; target-state playback does not depend on a Core/Web RAF sampler. |
-| `ELEMENT_ANIMATING_MASK_POLICIES` | Encodes per-kind animation-owned field mask behavior and terminal handoff rules. |
 
-The target state does not introduce public `AnimationObjectChannel`, `AnimationObjectBridge`, or `SpatialObjectBridge` architecture objects. Low-level JSB/WebMsg capabilities should remain implementation details of `SpatialObject` / `AnimationObject`.
+## Native Runtime / visionOS module boundaries
+
+| Module | Responsibility |
+|--------|----------------|
+| `SpatializedElementAnimationManager` | Manages native `AnimationObject` registry, create/control lookup, `destroyAnimationsForElement`, mask coordination, and `SpatialAnimationStateChanged` emission. |
+| `Native AnimationObject` | Extends `SpatialObject`; owns native uuid, locked `TimelineSampler`, playback state, and implements `play/pause/resume/stop/reset/finish/tick/destroy`. |
+| `SpatialObjectRegistry` | Registers, looks up, and destroys native spatial objects, including `AnimationObject`. |
+| `TimelineSampler` | Reuses the existing timeline sampler and samples the locked canonical timeline. |
+| `AnimationFrameDriver` | Drives per-frame tick for active animations. |
+| `ElementAnimationWriteAdapter` | Writes `transform`, `opacity`, or `modelTransform` according to target kind. |
+| `AnimatingMask` | Records animation-owned fields and prevents regular element sync from overriding active animation. |
+| `NativeWebMsgEmitter` | Emits unified `SpatialAnimationStateChanged`. |
+
+## Non-goals
+
+- Do not introduce public `AnimationObjectChannel`, `AnimationObjectBridge`, or `SpatialObjectBridge` architecture objects.
+- Do not keep Core/Web RAF playback fallback.
+- Do not use `AnimateSpatializedElementMotion` as the target-state runtime command.
+- Do not base mask ownership on `PortalInstanceObject` or React Portal suppression.
+- Do not support Static3D root opacity animation; Static3D `opacity` tracks must be rejected before native create.
