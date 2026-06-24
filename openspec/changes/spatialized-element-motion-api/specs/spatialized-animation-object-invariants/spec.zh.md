@@ -17,7 +17,7 @@ Core SDK MAY 使用临时 request id 匹配异步 create response，但 MUST NOT
 
 ### Requirement: AnimationObject 销毁走通用 SpatialObject 生命周期
 
-`AnimationObject.destroy()` MUST 使用继承自 `SpatialObject` 的通用 destroy 生命周期。Runtime 清理 MUST 停止帧驱动、清除目标元素 animating mask、注销 listener，并从 native spatial object registry 中移除该对象。
+`AnimationObject.destroy()` MUST 使用继承自 `SpatialObject` 的通用 destroy 生命周期。Runtime 清理 MUST 停止帧驱动、清除目标元素 animating mask、注销 listener，并从 `SpatialScene.spatialObjects` 等现有 native spatial object store 中移除该对象。
 
 `ControlSpatializedElementAnimation` MUST NOT 成为唯一规范销毁路径。如果为了兼容保留 control-level `destroy` action，它 MUST 委托到通用 `SpatialObject.destroy()` 行为。
 
@@ -93,6 +93,26 @@ Native `AnimationObject` MUST 继承 `SpatialObject`，MUST 持有 locked timeli
 - **WHEN** 一个 `SpatializedElement` 被 destroy
 - **THEN** visionOS runtime MUST 通过 `SpatializedElementAnimationManager.destroyAnimationsForElement(elementId)` 销毁关联的 native `AnimationObject`
 - **AND** 每个被销毁 animation MUST 清理 frame driver、animating mask、listener 和 registry entry
+
+### Requirement: Native frame loop 生命周期由 manager 持有
+
+native runtime MUST 将 frame loop 视为 `SpatializedElementAnimationManager` 的内部调度能力，可由 `CADisplayLink` 等平台 frame callback 实现。Frame driver MUST NOT 持有 animation 语义、target element 语义或 WebMsg 发送职责。
+
+`SpatializedElementAnimationManager` MUST 在至少一个 native `AnimationObject` 进入 `running` 时启动 frame loop，包括 `play` 和 `resume`。`CreateSpatializedElementAnimation` 只创建 native `AnimationObject` 并锁定 timeline；除非随后发生 implicit play-on-bind 或 flush bind 前显式 `play`，create 本身 MUST NOT 启动 frame sampling。
+
+`SpatializedElementAnimationManager` MUST 在 `pause`、`stop`、`reset`、`finish`、`destroy`、自然完成、`destroyAnimationsForElement`、scene/page cleanup 后检查是否可以停止 frame loop。当不存在 running native `AnimationObject` 时，frame loop MUST 停止。
+
+#### Scenario: play 启动 frame loop
+
+- **WHEN** `SpatializedElementAnimationManager` 处理 `ControlSpatializedElementAnimation(play)`
+- **AND** 对应 native `AnimationObject` 进入 `running`
+- **THEN** manager MUST 启动 frame loop
+- **AND** 每帧 MUST 由 frame callback 回调 `manager.tickAll(timestamp)`
+
+#### Scenario: 无 running animation 时停止 frame loop
+
+- **WHEN** `pause`、`stop`、`reset`、`finish`、`destroy` 或自然完成后没有 native `AnimationObject` 仍处于 `running`
+- **THEN** manager MUST 停止 frame loop
 
 ### Requirement: 纯 Web runtime 不提供 Core RAF fallback
 
