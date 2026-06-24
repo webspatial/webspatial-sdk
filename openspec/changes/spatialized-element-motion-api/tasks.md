@@ -181,5 +181,6 @@ This task list describes the target-state OpenSpec work for native-first spatial
 
 ## Phase 12 — Docs and demos follow-up
 
+- [x] Update in-repo proposal/API docs so target-state copy no longer describes the removed Controller / Web RAF / `AnimateSpatializedElementMotion` paths
 - [ ] Update demos and public docs after implementation lands
 - [ ] Update PR description after implementation lands so it no longer presents the old Controller/Web RAF path as target-state implementation

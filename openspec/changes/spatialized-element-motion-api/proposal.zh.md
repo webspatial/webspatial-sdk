@@ -33,7 +33,7 @@
 
 ```tsx
 // 统一的空间动画 API — hook 与目标无关；目标在绑定时自动解析
-// 2D 的 style 承载 Web fallback / 非 native 场景下的动画样式
+// 2D 的 style 仅保留合并/快照出口；纯 Web runtime 不启动 playback
 <div enable-xr style={{ width: 300, height: 200, ...style }} xr-animation={animation}>
   <h2>Hello Spatial</h2>
 </div>
@@ -69,7 +69,7 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 
 | 组件 | 解析目标 | `style` 行为 |
 |------|---------|------------------|
-| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` | 活跃 CSSProperties（Web RAF 驱动） |
+| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` | 用于保持 tuple consistency 的合并/快照出口；播放依赖 native capability |
 | `<Model>` | `static3d` | 空对象 `{}`（仅 native，可安全展开） |
 | `<Reality>` | `dynamic3d` | 空对象 `{}`（仅 native，可安全展开） |
 
@@ -81,13 +81,13 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 
 - **统一公共 API**：v1 用户主路径使用 `useAnimation(config)` 的 `from/to`（推荐）与 `timeline`（CSS `@keyframes` 风格）两种写法，二者内部统一归一化为 canonical tracks 执行。
 - **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe + 每轨 timingFunction 继续作为内部 canonical 配置模型；当前实现 / 类型仍保留 `tracks` 输入作为兼容 / 高级 escape hatch。
-- **2D 双后端**：native 不可用时走 Web RAF；WebSpatial 运行时 native 侧统一走 canonical tracks 路径。
-- **Timeline-only play payload**：`AnimateSpatializedElementMotion` 的 `play` 通过 JSB 仅发送 canonical `timeline` 文档；`duration`、`timingFunction`、`delay`、`loop`、`playbackRate` 等时序控制信息都内嵌在编译后的 timeline payload 中，不再作为 JSB 顶层字段存在。
-- **3D 仅 native**：Static3D 和 Dynamic3D 仅使用 native `animateMotion`（无 Web RAF 降级）。
+- **native-first 运行时路径**：所有 spatialized container kind 都通过 `SpatializedElement.createAnimation(config)` 创建 native `AnimationObject`；纯 Web runtime 对该能力返回 false，且不会启动 RAF playback fallback。
+- **create-time timeline payload**：Core 通过 `CreateSpatializedElementAnimation` 发送编译后的 canonical `timeline` 文档；`duration`、`timingFunction`、`delay`、`loop`、`playbackRate` 等时序控制信息都内嵌在该 payload 中，不再作为 JSB 顶层字段存在。
+- **2D style 语义**：2D 保留 `style` outlet，仅用于合并/快照出口与 tuple consistency；它不是 pure Web playback backend。
 - **3D style 语义**：Static3D 与 Dynamic3D 下 `style` 恒为 `{}`；动画通过 `xr-animation` 绑定交给 native 驱动，返回空对象仅用于保持 tuple 形态一致、调用方可安全展开。
-- **单一 Core 控制器**：`SpatializedMotionController`，通过 `MOTION_KIND_POLICIES` 按 kind 分派。
+- **单一路径 Core 对象**：React `AnimationBinding` 最多绑定一个目标，并创建一个 Core `AnimationObject`；per-target controller alias 不属于目标态 API。
 - **Entity 专用 API**：Entity transform animation 命名为 `useEntityAnimation(config)`，并继续保留在独立的 `AnimateTransform` 栈上。
-- **Portal 抑制**：native 播放期间抑制被动画控制的字段（opacity 属性级、transform 整体级）。
+- **Animating mask 所有权**：播放期间由 native `SpatializedElement` runtime / write adapter 持有被动画控制的字段（opacity 属性级、transform 整体级），而不是依赖 React Portal suppression。
 - **会话语义**：状态机、生命周期回调、错误处理在所有路径上统一。
 - **Controller surface**：`pause()` / `resume()` 只表示整体会话控制；选择性 pause/resume 本次变更明确不做。如果未来需要局部控制，必须在新的 proposal 中设计独立的 track/action 级 API。
 - **legacy 删除目标**：旧的 `animation` prop 路径、legacy SpatialDiv session hook 路径，以及 visionOS 专用的旧 2D backend path 已从目标态中移除；目标态仅保留统一的 `xr-animation` motion 路径。
@@ -108,8 +108,8 @@ PR 1236 在 `useAnimation` 重命名落地后暴露出一批 React motion surfac
 - `useAnimation` 继续作为 SpatialDiv、Model、Reality 的默认容器动画 hook。
 - `useEntityAnimation` 继续保持 entity 专用。
 - `useSpatializedMotion` 不再作为主概念或公开路由名使用。
-- React 只负责生命周期接线、binding、style fallback 和容器适配。
-- Core 继续负责 config 归一化、校验、timeline 求值、播放状态、backend 选择，以及 bind-time auto-start 行为。
+- React 只负责生命周期接线、target binding、保持 tuple 形态一致的 `style` outlet 和容器适配。
+- Core 继续负责 config 归一化、校验、canonical timeline 编译、`AnimationObject` 生命周期，以及 bind-time auto-start 行为。
 
 ## 两阶段命名迁移
 
@@ -122,7 +122,7 @@ PR 1236 在 `useAnimation` 重命名落地后暴露出一批 React motion surfac
 ### 新增
 
 - `spatialized-element-motion` — 伞式需求与按 kind 矩阵。
-- `spatialized-2d-motion` — 2D timeline + 双后端（参考实现）。
+- `spatialized-2d-motion` — 2D timeline + native-first `AnimationObject` 路径。
 - `spatialized-static3d-motion` — Model 根 transform timeline（仅 native）。
 - `spatialized-dynamic3d-motion` — Reality 容器 transform timeline（仅 native）。
 
@@ -132,7 +132,7 @@ PR 1236 在 `useAnimation` 重命名落地后暴露出一批 React motion surfac
 
 ### 推迟
 
-- `spatialized-entity-motion` — Entity transform timeline 通过 `useEntityAnimation`（独立栈，不走 `SpatializedMotionController`）。
+- `spatialized-entity-motion` — Entity transform timeline 通过 `useEntityAnimation`（独立栈，不属于容器 `AnimationObject` 路径）。
 
 ## 非目标
 

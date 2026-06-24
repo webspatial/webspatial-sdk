@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { SpatializedMotionTimeline } from './types/spatializedMotion'
 
 class DOMMatrixPolyfill {
   private tx = 0
@@ -126,6 +125,14 @@ describe('JSBCommand', () => {
     )
   })
 
+  it('does not expose the removed AnimateSpatializedElementMotion bridge command', async () => {
+    const mod = await import('./JSBCommand')
+
+    expect(
+      (mod as any).AnimateSpatializedElementMotionJSBCommand,
+    ).toBeUndefined()
+  })
+
   it('builds element commands payloads', async () => {
     const mod = await import('./JSBCommand')
     const {
@@ -190,132 +197,6 @@ describe('JSBCommand', () => {
     expect(platformSpy.callJSB).toHaveBeenCalledWith(
       'UpdateUnlitMaterialProperties',
       JSON.stringify({ id: 'so-1', color: '#fff' }),
-    )
-  })
-
-  it('serializes SpatialDiv timeline keyframes for native playback', async () => {
-    const { AnimateSpatializedElementMotionJSBCommand } = await import(
-      './JSBCommand'
-    )
-
-    await new AnimateSpatializedElementMotionJSBCommand({
-      animationId: 'anim-1',
-      type: 'play',
-      targetKind: 'spatialized2d',
-      elementId: 'element-1',
-      timeline: {
-        duration: 5,
-        delay: 0.25,
-        playbackRate: 1.5,
-        loop: { reverse: true },
-        tracks: [
-          {
-            property: 'transform.translate.x',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 5, value: 100 },
-            ],
-            timingFunction: 'linear',
-          },
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 3, value: 0 },
-              { at: 5, value: 1 },
-            ],
-            timingFunction: 'easeOut',
-          },
-        ],
-      },
-    }).execute()
-
-    expect(platformSpy.callJSB).toHaveBeenCalledWith(
-      'AnimateSpatializedElementMotion',
-      JSON.stringify({
-        type: 'play',
-        animationId: 'anim-1',
-        targetKind: 'spatialized2d',
-        elementId: 'element-1',
-        timeline: {
-          duration: 5,
-          delay: 0.25,
-          playbackRate: 1.5,
-          loop: { reverse: true },
-          tracks: [
-            {
-              property: 'transform.translate.x',
-              keyframes: [
-                { at: 0, value: 0 },
-                { at: 5, value: 100 },
-              ],
-              timingFunction: 'linear',
-            },
-            {
-              property: 'opacity',
-              keyframes: [
-                { at: 3, value: 0 },
-                { at: 5, value: 1 },
-              ],
-              timingFunction: 'easeOut',
-            },
-          ],
-        },
-      }),
-    )
-  })
-
-  it('serializes terminal motion timeline payloads for one-shot native seek', async () => {
-    const { AnimateSpatializedElementMotionJSBCommand } = await import(
-      './JSBCommand'
-    )
-    const timeline: SpatializedMotionTimeline = {
-      duration: 1,
-      tracks: [
-        {
-          property: 'transform.translate.x',
-          keyframes: [
-            { at: 0, value: 0 },
-            { at: 1, value: 10 },
-          ],
-          timingFunction: 'linear',
-        },
-      ],
-    }
-
-    await new AnimateSpatializedElementMotionJSBCommand({
-      animationId: 'terminal-reset',
-      type: 'reset',
-      targetKind: 'static3d',
-      elementId: 'model-1',
-      timeline,
-    }).execute()
-    await new AnimateSpatializedElementMotionJSBCommand({
-      animationId: 'terminal-finish',
-      type: 'finish',
-      targetKind: 'static3d',
-      elementId: 'model-1',
-      timeline,
-    }).execute()
-
-    expect(platformSpy.callJSB).toHaveBeenCalledWith(
-      'AnimateSpatializedElementMotion',
-      JSON.stringify({
-        type: 'reset',
-        animationId: 'terminal-reset',
-        targetKind: 'static3d',
-        elementId: 'model-1',
-        timeline,
-      }),
-    )
-    expect(platformSpy.callJSB).toHaveBeenCalledWith(
-      'AnimateSpatializedElementMotion',
-      JSON.stringify({
-        type: 'finish',
-        animationId: 'terminal-finish',
-        targetKind: 'static3d',
-        elementId: 'model-1',
-        timeline,
-      }),
     )
   })
 })

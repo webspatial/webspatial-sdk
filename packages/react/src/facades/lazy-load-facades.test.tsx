@@ -397,7 +397,7 @@ describe('lazy-load facades', () => {
       expect(ref.current).toBe(section)
     })
 
-    it('withSpatialized2DElementContainer fallback binds xr-animation to the raw host for web playback', async () => {
+    it('withSpatialized2DElementContainer fallback keeps tuple shape but does not start pure-web playback', async () => {
       installFakeRaf()
       const { useAnimation } = await import(
         '../spatialized-container/motion/useAnimation'
@@ -441,13 +441,13 @@ describe('lazy-load facades', () => {
         getByRole('button', { name: 'Play' }).click()
       })
 
-      expect(getByTestId('fallback-motion-state').textContent).toBe('running')
+      expect(getByTestId('fallback-motion-state').textContent).toBe('queued')
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(20)
       })
 
-      expect(Number((host as HTMLElement).style.opacity)).toBeGreaterThan(0)
+      expect(Number((host as HTMLElement).style.opacity)).toBe(0)
     })
 
     it('withSpatialMonitor fallback renders the raw El transparently', () => {

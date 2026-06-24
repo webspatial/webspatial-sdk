@@ -2,14 +2,8 @@ import {
   AddSpatializedElementToSpatialized2DElement,
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
-import { executeAnimateSpatializedElementMotion } from './motion/native/executeAnimateSpatializedElementMotion'
-import type {
-  AnimateSpatializedElementMotionCommand,
-  AnimateSpatializedElementMotionResult,
-} from './types/spatializedElementMotion'
 import type { AnimationObject } from './AnimationObject'
 import type { SpatializedMotionAuthorConfig } from './types/spatializedMotion'
-import type { SpatializedVisualValues } from './types/spatializedVisual'
 import { hijackWindowATag } from './scene-polyfill'
 import { SpatializedElement } from './SpatializedElement'
 import { Spatialized2DElementProperties } from './types/types'
@@ -61,23 +55,5 @@ export class Spatialized2DElement extends SpatializedElement {
     config: SpatializedMotionAuthorConfig,
   ): Promise<AnimationObject> {
     return super.createAnimation(config, 'spatialized2d')
-  }
-
-  // ---- Spatialized element motion (unified JSB) ----
-
-  animateMotion(
-    command: AnimateSpatializedElementMotionCommand & { type: 'play' },
-  ): Promise<AnimateSpatializedElementMotionResult>
-  animateMotion(
-    command: AnimateSpatializedElementMotionCommand & { type: 'pause' },
-  ): Promise<SpatializedVisualValues>
-  animateMotion(command: AnimateSpatializedElementMotionCommand): Promise<void>
-  async animateMotion(
-    command: AnimateSpatializedElementMotionCommand,
-  ): Promise<
-    AnimateSpatializedElementMotionResult | SpatializedVisualValues | void
-  > {
-    const { targetKind, ...rest } = command
-    return executeAnimateSpatializedElementMotion(this.id, targetKind, rest)
   }
 }

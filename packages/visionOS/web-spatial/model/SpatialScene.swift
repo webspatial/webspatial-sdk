@@ -345,7 +345,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addJSBListener(CreateSpatializedElementAnimationCommand.self, onCreateSpatializedElementAnimation)
         spatialWebViewModel.addJSBListener(ControlSpatializedElementAnimationCommand.self, onControlSpatializedElementAnimation)
-        spatialWebViewModel.addJSBListener(AnimateSpatializedElementMotionCommand.self, onAnimateSpatializedElementMotion)
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
         spatialWebViewModel
@@ -1443,13 +1442,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         } catch {
             resolve(.failure(JsbError(code: .CommandError, message: error.localizedDescription)))
         }
-    }
-
-    private func onAnimateSpatializedElementMotion(command: AnimateSpatializedElementMotionCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        resolve(.failure(JsbError(
-            code: .CommandError,
-            message: "\(AnimateSpatializedElementMotionCommand.commandType) is no longer supported; use \(CreateSpatializedElementAnimationCommand.commandType) and \(ControlSpatializedElementAnimationCommand.commandType)"
-        )))
     }
 
     private func onUpdateUnlitMaterialProperties(command: UpdateUnlitMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {

@@ -1,5 +1,3 @@
-// Hooks
-export { useMotionController } from './useMotionController'
 export { useAnimation } from './useAnimation'
 
 // Types
