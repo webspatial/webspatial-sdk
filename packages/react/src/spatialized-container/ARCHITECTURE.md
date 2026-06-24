@@ -322,18 +322,6 @@ The probe lives under `cssParserDivContainer` in `<body>`, **not** under the use
 
 End-user summary: [`docs/webspatial-quirks.md`](../../../../docs/webspatial-quirks.md) — *SpatialDiv / `enable-xr` and CSS*.
 
-### Nested SpatialDiv parent bounds (test-server `#/nested-spatial-overflow`)
-
-Nested child `SpatialDiv` instances are separate native webview layers composited as siblings in the parent's `ZStack` (`Spatialized2DElementView`), not as content inside the parent webview surface. Therefore:
-
-- Parent `overflow` maps to `scrollPageEnabled`, not child clipping.
-- Child size/position come from the child's DOM rect (offset from parent for non-`fixed` children).
-- Parent `materialWithBorderCorner` `clipShape` applies to the parent webview only.
-
-**Workaround:** constrain child CSS size, or use one `SpatialDiv` with plain HTML for overflow clipping inside the portal.
-
-End-user summary: [`docs/webspatial-quirks.md`](../../../../docs/webspatial-quirks.md) — *Nested SpatialDiv / parent overflow*.
-
 ## Test coverage map
 
 Each invariant has at least one regression test pinned in this directory:
