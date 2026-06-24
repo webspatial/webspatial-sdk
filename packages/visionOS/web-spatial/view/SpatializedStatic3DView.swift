@@ -20,6 +20,23 @@ struct SpatializedStatic3DView: View {
         spatialScene.sendWebMsg(spatializedStatic3DElement.id, ModelLoadFailure())
     }
 
+    /// Emits the latest `entityTransform` (already updated by `OrbitModifier`)
+    /// to the web layer as a 16-element column-major matrix.
+    private func onOrbit(_ newTransform: AffineTransform3D) {
+        let m = newTransform.matrix
+        let c0 = m.columns.0, c1 = m.columns.1, c2 = m.columns.2, c3 = m.columns.3
+        let array: [Double] = [
+            c0.x, c0.y, c0.z, 0,
+            c1.x, c1.y, c1.z, 0,
+            c2.x, c2.y, c2.z, 0,
+            c3.x, c3.y, c3.z, 1,
+        ]
+        spatialScene.sendWebMsg(
+            spatializedStatic3DElement.id,
+            EntityTransformChangeEvent(detail: EntityTransformChangeDetail(transform: array))
+        )
+    }
+
     var body: some View {
         let depth = spatializedStatic3DElement.depth
         let transform = spatializedStatic3DElement.entityTransform
@@ -58,6 +75,14 @@ struct SpatializedStatic3DView: View {
             )
             .rotation3DEffect(
                 rotation
+            )
+            .orbit(
+                enabled: spatializedStatic3DElement.stagemode == .orbit,
+                entityTransform: Binding(
+                    get: { spatializedStatic3DElement.entityTransform },
+                    set: { spatializedStatic3DElement.entityTransform = $0 }
+                ),
+                onChange: onOrbit
             )
             .offset(x: x, y: y)
             .offset(z: z)

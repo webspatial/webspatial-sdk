@@ -279,6 +279,20 @@ This feature provides a built-in, intuitive way for users to inspect a 3D model 
 
 - **Gesture Conflict Resolution**: `onSpatial*` will be disabled when stagemode is set to orbit. This restriction can be loosened in the future based if there are no gesture conflicts.
 
+#### 5.4 Prompt
+
+Implement the stagemode="orbit" property in Swift code. The web and Swift plubming have already been implemented and the remaining changes are focused in SpatializedStatic3DView.swift.
+
+- Create a new Orbit modifier in a new file that takes enabled boolean and onOrbit callback.
+- If stagemode is "orbit" the Orbit modifier is enabled
+- A horizontal drag (event.translation.width) will be mapped to a rotation around the model's Y-axis.
+- A vertical drag (event.translation.height) will be mapped to a rotation around the model's X-axis (pitch). Vertical drag will be clamped to max 100 degrees so that the model doesn't turn upside down.
+- Implement elastic dragging so that the user can drag vertically up to see the top or drag down to see bottom of the model but once they release the model returns to its original position.
+- Native emits a new event to update entityTransform (e.g. EntityTransformChangeEvent) that reflects the current rotation carrying the updated matrix.
+- Make sure the feature works when stagemode="orbit" is turned on and off
+
+Use modern and elegant SwiftUI code with the latest visionOS APIs. Make as few code changes as necessary.
+
 ## Risks
 
 - **Safari Alignment**: Since the `<model>` element is still an evolving standard, our implementation is a best-effort interpretation. We must be prepared to adapt as the standard solidifies.
