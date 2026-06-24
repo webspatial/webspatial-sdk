@@ -27,6 +27,3 @@ Recommended practice: initialize imperative renderers from each container's own 
 
 Spatial transforms are sampled from an off-screen **probe** DOM node, not from the visible portal surface. Tag/class selectors, probe vs. host split, and workarounds are documented in [WebSpatial Quirks — SpatialDiv / `enable-xr` and CSS](../../docs/webspatial-quirks.md). Maintainer architecture notes live in [`src/spatialized-container/ARCHITECTURE.md`](src/spatialized-container/ARCHITECTURE.md).
 
-## Nested SpatialDiv overflow
-
-Nested child `SpatialDiv` panels are independent native webview layers. Parent `overflow: hidden` does **not** clip a child `SpatialDiv`; a child larger than its parent will render at full size and can extend past the parent bounds. See [WebSpatial Quirks — Nested SpatialDiv / parent overflow](../../docs/webspatial-quirks.md). Manual check: test-server `#/nested-spatial-overflow`.
