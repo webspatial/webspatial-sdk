@@ -1,36 +1,13 @@
 'use client'
 
-import { createElement, Fragment, useState } from 'react'
-import type { ComponentType, ReactNode } from 'react'
+import { useState } from 'react'
 
 import { getSpatialImpl, isSpatialReady } from '../runtime/bridge'
+import { useSpatialOverlayWeb } from './spatialOverlayWeb'
 import type {
-  SpatialOverlayPortalOption,
   UseSpatialOverlayOptions,
   UseSpatialOverlayResult,
-} from '../spatialized-container/SpatialOverlay'
-
-const OverlayTargetPlaceholder: ComponentType<{
-  measurementContent?: ReactNode
-  children?: ReactNode
-}> = ({ measurementContent, children }) =>
-  createElement(Fragment, null, measurementContent ?? children)
-
-OverlayTargetPlaceholder.displayName = 'WebSpatialOverlayTargetPlaceholder'
-
-const portalMenuOptionPlaceholder: SpatialOverlayPortalOption = (
-  content,
-  measurementContent = content,
-) => measurementContent
-
-function useSpatialOverlayPinnedPlaceholder(
-  _options: UseSpatialOverlayOptions,
-): UseSpatialOverlayResult {
-  return {
-    OverlayTarget: OverlayTargetPlaceholder,
-    portalMenuOption: portalMenuOptionPlaceholder,
-  }
-}
+} from '../spatialized-container/SpatialOverlay.types'
 
 type UseSpatialOverlayImpl = (
   options: UseSpatialOverlayOptions,
@@ -39,16 +16,24 @@ type UseSpatialOverlayImpl = (
 /**
  * Public `useSpatialOverlay` hook (default entry).
  *
- * Placeholder vs real hook is pinned once per mount (same contract as
- * `useMetrics` / `useSpatialPortalContainer`).
+ * Plain web uses the lightweight `useSpatialOverlayWeb` implementation in this
+ * package. After `bootSpatial()` resolves, newly mounted instances can pick up
+ * the spatial chunk implementation with measurement/portal split (same pin
+ * contract as `useMetrics` / `useSpatialPortalContainer`).
  */
 export function useSpatialOverlay(
   options: UseSpatialOverlayOptions,
 ): UseSpatialOverlayResult {
   const [impl] = useState<UseSpatialOverlayImpl>(() => {
-    if (!isSpatialReady()) return useSpatialOverlayPinnedPlaceholder
+    if (!isSpatialReady()) return useSpatialOverlayWeb
     const real = getSpatialImpl()?.useSpatialOverlay
-    return (real ?? useSpatialOverlayPinnedPlaceholder) as UseSpatialOverlayImpl
+    return (real ?? useSpatialOverlayWeb) as UseSpatialOverlayImpl
   })
   return impl(options)
 }
+
+export type {
+  SpatialOverlayPortalOption,
+  UseSpatialOverlayOptions,
+  UseSpatialOverlayResult,
+} from '../spatialized-container/SpatialOverlay.types'

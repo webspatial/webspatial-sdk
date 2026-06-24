@@ -99,7 +99,9 @@ describe('SpatialOverlay', () => {
 
       return (
         <>
-          <OverlayTarget />
+          <SpatialOverlayRenderTargetContext.Provider value="measurement">
+            <OverlayTarget />
+          </SpatialOverlayRenderTargetContext.Provider>
           <SpatialWindowContext.Provider value={win}>
             <OverlayTarget />
           </SpatialWindowContext.Provider>
@@ -140,7 +142,9 @@ describe('SpatialOverlay', () => {
           {portalMenuOption(<div data-testid="late-item">Late item</div>)}
           {visible ? (
             <>
-              <OverlayTarget />
+              <SpatialOverlayRenderTargetContext.Provider value="measurement">
+                <OverlayTarget />
+              </SpatialOverlayRenderTargetContext.Provider>
               <SpatialWindowContext.Provider value={win}>
                 <OverlayTarget />
               </SpatialWindowContext.Provider>

@@ -228,7 +228,7 @@ export type {
   SpatialOverlayProps,
   UseSpatialOverlayOptions,
   UseSpatialOverlayResult,
-} from './spatialized-container/SpatialOverlay'
+} from './spatialized-container/SpatialOverlay.types'
 
 // --- Public type surface (no runtime values) --------------------------------
 // Spatial event + ref types — referenced by facade prop / ref typing.

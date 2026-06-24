@@ -4,7 +4,7 @@ import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { warnBootForgotten } from './shared/warnBootForgotten'
 
-import type { SpatialOverlayProps } from '../spatialized-container/SpatialOverlay'
+import type { SpatialOverlayProps } from '../spatialized-container/SpatialOverlay.types'
 
 /**
  * Default-entry facade for `SpatialOverlay`. Renders a minimal inert shell

@@ -9,32 +9,19 @@ import React, {
 import { createPortal } from 'react-dom'
 import { useSpatialOverlayRenderTarget } from './context/SpatialOverlayRenderTargetContext'
 import { useSpatialPortalContainer } from './context/SpatialWindowContext'
+import type {
+  SpatialOverlayPortalOption,
+  SpatialOverlayProps,
+  UseSpatialOverlayOptions,
+  UseSpatialOverlayResult,
+} from './SpatialOverlay.types'
 
-export type SpatialOverlayPortalOption = (
-  content: React.ReactNode,
-  measurementContent?: React.ReactNode,
-) => React.ReactNode
-
-export type SpatialOverlayProps = {
-  overlayId?: string
-  measurementContent?: React.ReactNode
-  portalTargetName: string
-  onPortalTargetChange?: (node: HTMLDivElement | null) => void
-  children?: React.ReactNode
-}
-
-export type UseSpatialOverlayOptions = {
-  overlayId?: string
-  portalTargetName: string
-}
-
-export type UseSpatialOverlayResult = {
-  OverlayTarget: ComponentType<{
-    measurementContent?: React.ReactNode
-    children?: React.ReactNode
-  }>
-  portalMenuOption: SpatialOverlayPortalOption
-}
+export type {
+  SpatialOverlayPortalOption,
+  SpatialOverlayProps,
+  UseSpatialOverlayOptions,
+  UseSpatialOverlayResult,
+} from './SpatialOverlay.types'
 
 type SpatialOverlayEntry = {
   measurementTarget: HTMLDivElement | null
