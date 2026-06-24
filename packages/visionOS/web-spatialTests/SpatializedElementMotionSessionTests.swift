@@ -198,6 +198,53 @@ final class SpatializedElementMotionSessionTests: XCTestCase {
         XCTAssertEqual(element.opacity, frozenOpacity, accuracy: 0.0001)
     }
 
+    func test_playWhileRunningIsNoOp() throws {
+        let element = Spatialized2DElement()
+        var events: [SpatialAnimationStateChanged] = []
+        let manager = SpatializedElementAnimationManager(sendWebMsg: { _, msg in
+            if let event = msg as? SpatialAnimationStateChanged {
+                events.append(event)
+            }
+        })
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 2,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "opacity",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 2, value: 0.25, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                targetKind: "spatialized2d",
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+        animation.tick(at: 1)
+        animation.tick(at: 2)
+        let runningOpacity = element.opacity
+        let playEventCountBefore = events.filter { $0.action == "play" }.count
+
+        animation.play(at: 2.1)
+
+        XCTAssertEqual(animation.playState, .running)
+        XCTAssertEqual(element.opacity, runningOpacity, accuracy: 0.0001)
+        XCTAssertEqual(events.filter { $0.action == "play" }.count, playEventCountBefore)
+    }
+
     func test_stopResetAndFinishReleaseMask() throws {
         let element = Spatialized2DElement()
         let manager = SpatializedElementAnimationManager()
