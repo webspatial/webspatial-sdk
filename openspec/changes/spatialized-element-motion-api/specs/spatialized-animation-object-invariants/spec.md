@@ -8,11 +8,14 @@
 
 Core SDK MAY use a temporary request id to match the async create response, but it MUST NOT treat a JavaScript-generated id as the final `AnimationObject.uuid`.
 
+The `CreateSpatializedElementAnimation` response MUST return the native `AnimationObject` uuid in an `id` field. Core SDK MUST use that `id` as the Core `AnimationObject.uuid`.
+
 #### Scenario: Native returns animation uuid
 
 - **WHEN** Core SDK calls `SpatializedElement.createAnimation(config)`
 - **THEN** native MUST create an `AnimationObject : SpatialObject`
 - **AND** native MUST generate the object uuid
+- **AND** native create response MUST return `{ id }`
 - **AND** Core SDK MUST expose that uuid on the returned `AnimationObject` handle
 
 ### Requirement: AnimationObject destruction uses SpatialObject lifecycle
@@ -42,6 +45,28 @@ React SDK MAY continue to expose `[animation, api, style]`; that React-facing `a
 - **AND** it MUST expose playback controls equivalent to the React-facing playback API
 - **AND** it MUST participate in destruction through inherited `SpatialObject.destroy()`
 
+### Requirement: Playback controls reuse the same AnimationObject
+
+`play`, `pause`, `resume`, `stop`, `reset`, and `finish` MUST operate on the existing native `AnimationObject`. These playback controls MUST NOT recreate the native `AnimationObject` and MUST NOT change that object's native `id` / `uuid`.
+
+Native object recreation MUST be reserved for config signature changes, target rebinding, recreation after explicit destroy, or other destroy/recreate lifecycle paths. `reset()` and `finish()` are playback controls on the same `AnimationObject`; they are not destroy + recreate operations.
+
+#### Scenario: Reset reuses the same AnimationObject
+
+- **GIVEN** Core SDK holds an `AnimationObject` handle
+- **WHEN** the user calls `animation.reset()`
+- **THEN** Core SDK MUST send `ControlSpatializedElementAnimation(id, reset)`
+- **AND** native MUST write the from value on the same native `AnimationObject`
+- **AND** `AnimationObject.uuid` MUST remain unchanged
+
+#### Scenario: Finish reuses the same AnimationObject
+
+- **GIVEN** Core SDK holds an `AnimationObject` handle
+- **WHEN** the user calls `animation.finish()`
+- **THEN** Core SDK MUST send `ControlSpatializedElementAnimation(id, finish)`
+- **AND** native MUST write the to value on the same native `AnimationObject`
+- **AND** `AnimationObject.uuid` MUST remain unchanged
+
 ### Requirement: NativeWebMsg directly drives Core AnimationObject state
 
 `SpatialAnimationStateChanged` MUST be modeled as a NativeWebMsg event payload, not as a separate Core SDK architecture object. Core SDK `AnimationObject` MUST subscribe to NativeWebMsg directly, filter `SpatialAnimationStateChanged` events by its native uuid, and update its own `playState`, `isAnimating`, `isPaused`, and `finished`.
@@ -68,6 +93,54 @@ While a field is marked animation-owned, regular JSB updates such as `UpdateSpat
 - **THEN** native MUST ignore or defer the conflicting transform field according to the animating mask
 - **AND** this decision MUST NOT require consulting `PortalInstanceObject`
 
+### Requirement: Target kind determines writable fields and mask fields
+
+The native runtime MUST limit animation writable fields and mask fields by target kind:
+
+| target kind | writable fields | mask fields |
+|-------------|-----------------|-------------|
+| `spatialized2d` | `transform`, `opacity` | `transform`, `opacity` |
+| `dynamic3d` | `transform`, `opacity` | `transform`, `opacity` |
+| `static3d` | `modelTransform` | `modelTransform` |
+
+Static3D `opacity` tracks MUST be rejected before native create. Static3D animation MUST NOT write host element `transform` as a substitute path for `modelTransform`.
+
+#### Scenario: Static3D writes only modelTransform
+
+- **GIVEN** target kind is `static3d`
+- **WHEN** native `AnimationObject.tick(timestamp)` produces a sample
+- **THEN** native MUST write only model root `modelTransform`
+- **AND** MUST NOT write host element transform or opacity
+
+### Requirement: Terminal mask handoff is explicit
+
+The native runtime MUST handle animation-owned masks by playback action:
+
+| action | value write | mask handoff |
+|--------|-------------|--------------|
+| `pause` | preserve current sampled value | keep mask because the animation still owns the visual field |
+| `stop` | write current sampled value | release mask fields owned by this animation |
+| `reset` | write from value | release mask fields owned by this animation |
+| `finish` | write to value | release mask fields owned by this animation |
+| natural completion | write to value | release mask fields owned by this animation |
+| `destroy` | do not force an additional terminal write; clean up the animation | release mask fields owned by this animation |
+
+If multiple animations compete for the same field, runtime MAY maintain an owner token or last-writer policy, but regular element sync MUST NOT override fields still owned by an active animation.
+
+#### Scenario: Pause keeps the mask
+
+- **GIVEN** an animation owns the target transform mask
+- **WHEN** the user calls `pause()`
+- **THEN** native MUST keep that animation's transform ownership
+- **AND** regular transform updates MUST NOT override the paused animation's current visual value
+
+#### Scenario: Reset releases the mask
+
+- **GIVEN** an animation owns the target transform mask
+- **WHEN** the user calls `reset()`
+- **THEN** native MUST write the from value
+- **AND** native MUST release the transform mask owned by that animation
+
 ### Requirement: React AnimationBinding creates native-backed AnimationObject
 
 React SDK MUST create `AnimationBinding` when `useAnimation(config)` is called, but it MUST NOT create a native-backed `AnimationObject` at that time. Native object creation MUST happen only after the `xr-animation` binding resolves a concrete `SpatializedElement` target.
@@ -88,11 +161,14 @@ visionOS runtime MUST manage native `AnimationObject` instances through `Spatial
 
 Native `AnimationObject` MUST extend `SpatialObject`, MUST own the locked timeline sampler and playback state, and MUST implement the per-animation play/pause/resume/stop/reset/finish/tick behavior.
 
+When the target `SpatializedElement` is destroyed, the native runtime MUST destroy all native `AnimationObject` instances targeting that element before or during element cleanup. `destroyAnimationsForElement(elementId)` MUST enter each animation object's destroy lifecycle and MUST NOT only remove objects from the manager lookup.
+
 #### Scenario: Element destroy cascades to related animations
 
 - **WHEN** a `SpatializedElement` is destroyed
 - **THEN** visionOS runtime MUST destroy related native `AnimationObject` instances through `SpatializedElementAnimationManager.destroyAnimationsForElement(elementId)`
 - **AND** each destroyed animation MUST clean up frame driving, animating mask, listeners, and registry entry
+- **AND** each destroyed animation MUST be removed from native spatial object store such as `SpatialScene.spatialObjects`
 
 ### Requirement: Native frame loop lifecycle is manager-owned
 
