@@ -1,8 +1,12 @@
+import { AnimationObject } from './AnimationObject'
 import { UpdateSpatializedElementTransform } from './JSBCommand'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialObject } from './SpatialObject'
 import { SpatialWebEvent } from './SpatialWebEvent'
 import { createSpatialEvent } from './SpatialWebEventCreator'
+import { motionConfigToNativeTimeline } from './motion/native/serializeMotionTimeline'
+import { normalizeMotionConfig } from './motion/compute/normalize'
+import { validateSpatializedMotionConfig } from './motion/compute/validate'
 import {
   CubeInfo,
   SpatialDragEndEvent,
@@ -27,6 +31,10 @@ import {
   SpatialTapMsg,
   SpatialWebMsgType,
 } from './WebMsgCommand'
+import type {
+  SpatializedMotionAuthorConfig,
+  SpatializedMotionKind,
+} from './types/spatializedMotion'
 
 /**
  * Abstract base class for all spatialized elements in the WebSpatial environment.
@@ -54,6 +62,22 @@ export abstract class SpatializedElement extends SpatialObject {
   abstract updateProperties(
     properties: Partial<SpatializedElementProperties>,
   ): Promise<WebSpatialProtocolResult>
+
+  /**
+   * Creates a native-first AnimationObject bound to this spatialized element.
+   */
+  async createAnimation(
+    config: SpatializedMotionAuthorConfig,
+    targetKind: SpatializedMotionKind,
+  ): Promise<AnimationObject> {
+    const normalized = normalizeMotionConfig(config)
+    validateSpatializedMotionConfig(normalized, { targetKind })
+    return AnimationObject.create({
+      elementId: this.id,
+      targetKind,
+      timeline: motionConfigToNativeTimeline(normalized),
+    })
+  }
 
   /**
    * Updates the transformation matrix of this element in 3D space.

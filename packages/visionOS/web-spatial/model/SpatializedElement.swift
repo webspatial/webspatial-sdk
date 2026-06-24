@@ -5,6 +5,54 @@ import SwiftUI
 /// zIndex() have some bug, so use zOrderBias to simulate zIndex effect
 let zOrderBias = 0.001
 
+struct SpatializedElementAnimatingMask {
+    var transformAnimationId: String?
+    var opacityAnimationId: String?
+    var modelTransformAnimationId: String?
+
+    mutating func acquire(transform animationId: String?) {
+        transformAnimationId = animationId
+    }
+
+    mutating func acquire(opacity animationId: String?) {
+        opacityAnimationId = animationId
+    }
+
+    mutating func acquire(modelTransform animationId: String?) {
+        modelTransformAnimationId = animationId
+    }
+
+    mutating func release(animationId: String) {
+        if transformAnimationId == animationId {
+            transformAnimationId = nil
+        }
+        if opacityAnimationId == animationId {
+            opacityAnimationId = nil
+        }
+        if modelTransformAnimationId == animationId {
+            modelTransformAnimationId = nil
+        }
+    }
+
+    mutating func clear() {
+        transformAnimationId = nil
+        opacityAnimationId = nil
+        modelTransformAnimationId = nil
+    }
+
+    var locksTransform: Bool {
+        transformAnimationId != nil
+    }
+
+    var locksOpacity: Bool {
+        opacityAnimationId != nil
+    }
+
+    var locksModelTransform: Bool {
+        modelTransformAnimationId != nil
+    }
+}
+
 enum SpatializedElementType: String, Codable {
     case Spatialized2DElement
     case SpatializedStatic3DElement
@@ -25,6 +73,7 @@ class SpatializedElement: SpatialObject {
     var visible = true
     var scrollWithParent = true
     var zIndex: Double = 0
+    var animatingMask = SpatializedElementAnimatingMask()
 
     var enableDragStartGesture: Bool = false
     var enableDragGesture: Bool = false

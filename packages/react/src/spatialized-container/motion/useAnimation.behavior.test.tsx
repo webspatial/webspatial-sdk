@@ -1,6 +1,15 @@
 import { describe, expect, test, vi } from 'vitest'
 import React, { StrictMode } from 'react'
 import { act, renderHook, waitFor } from '@testing-library/react'
+
+vi.mock('@webspatial/core-sdk', async () => {
+  const actual = await vi.importActual('@webspatial/core-sdk')
+  return {
+    ...actual,
+    supports: () => false,
+  }
+})
+
 import { useAnimation } from './useAnimation'
 
 const SIMPLE_ENTRANCE_CONFIG = {
@@ -48,7 +57,7 @@ describe('useAnimation tuple api', () => {
     expect(api.finished).toBe(false)
   })
 
-  test('2D bind starts playback and updates style', async () => {
+  test('2D bind keeps the initial style when native support is unavailable', async () => {
     const { result } = renderHook(() => useAnimation(SIMPLE_ENTRANCE_CONFIG))
 
     expect(result.current[0].__propName).toBe('xr-animation')
@@ -62,21 +71,9 @@ describe('useAnimation tuple api', () => {
       )
     })
 
-    await waitFor(
-      () => {
-        expect(result.current[2].opacity).toBeGreaterThan(0)
-        expect(result.current[2].opacity).toBeLessThan(1)
-      },
-      { timeout: 300 },
-    )
-
-    await waitFor(
-      () => {
-        expect(result.current[2].opacity).toBe(1)
-        expect(result.current[1].playState).toBe('finished')
-      },
-      { timeout: 800 },
-    )
+    expect(result.current[1].playState).toBe('idle')
+    expect(result.current[2].opacity).toBe(0)
+    expect(String(result.current[2].transform)).toContain('40px')
   })
 
   test('static3d binding resolves target and keeps style empty', async () => {
@@ -105,7 +102,7 @@ describe('useAnimation tuple api', () => {
     })
   })
 
-  test('default autoStart begins playback after bind', async () => {
+  test('default autoStart remains idle without native support', async () => {
     const { result } = renderHook(() =>
       useAnimation({
         duration: 0.2,
@@ -128,9 +125,8 @@ describe('useAnimation tuple api', () => {
       )
     })
 
-    await waitFor(() => {
-      expect(result.current[1].playState).not.toBe('idle')
-    })
+    expect(result.current[1].playState).toBe('idle')
+    expect(result.current[2].opacity).toBe(0)
   })
 
   test('autoStart false does not play when only binding resolves', async () => {
@@ -226,8 +222,9 @@ describe('useAnimation tuple api', () => {
     warnSpy.mockRestore()
   })
 
-  test('web pause syncs style to timeline sample at elapsed progress', async () => {
+  test('queued play/pause does not advance without native support', async () => {
     vi.useFakeTimers()
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame')
     const { result } = renderHook(() =>
       useAnimation({
         duration: 5,
@@ -260,12 +257,13 @@ describe('useAnimation tuple api', () => {
       result.current[1].pause()
     })
 
-    expect(String(result.current[2].transform)).toContain('translate3d(30px')
-    expect(result.current[1].playState).toBe('paused')
+    expect(String(result.current[2].transform)).toContain('translate3d(0px')
+    expect(result.current[1].playState).toBe('queued')
+    expect(rafSpy).not.toHaveBeenCalled()
     vi.useRealTimers()
   })
 
-  test('runtime config update does not affect an in-flight web animation until next play', async () => {
+  test('runtime config update keeps the current style frozen without native support', async () => {
     vi.useFakeTimers()
     const { result, rerender } = renderHook(
       ({ distance }) =>
@@ -295,26 +293,14 @@ describe('useAnimation tuple api', () => {
       )
       result.current[1].play()
     })
-    await act(async () => {
-      vi.advanceTimersByTime(1000)
-      await Promise.resolve()
-    })
-
-    expect(readTranslateX(result.current[2])).toBeCloseTo(20, 0)
+    expect(readTranslateX(result.current[2])).toBeCloseTo(0, 0)
 
     rerender({ distance: 200 })
-    expect(readTranslateX(result.current[2])).toBeCloseTo(20, 0)
-
-    await act(async () => {
-      vi.advanceTimersByTime(500)
-      await Promise.resolve()
-    })
-
-    expect(readTranslateX(result.current[2])).toBeCloseTo(30, 0)
+    expect(readTranslateX(result.current[2])).toBeCloseTo(0, 0)
     vi.useRealTimers()
   })
 
-  test('updated web config applies on the next play after the current session ends', async () => {
+  test('updated config remains queued for the next play after stop/reset', async () => {
     vi.useFakeTimers()
     const { result, rerender } = renderHook(
       ({ distance }) =>
@@ -344,12 +330,6 @@ describe('useAnimation tuple api', () => {
       )
       result.current[1].play()
     })
-    await act(async () => {
-      vi.advanceTimersByTime(1000)
-      await Promise.resolve()
-    })
-    expect(readTranslateX(result.current[2])).toBeCloseTo(20, 0)
-
     rerender({ distance: 200 })
 
     await act(async () => {
@@ -357,12 +337,7 @@ describe('useAnimation tuple api', () => {
       result.current[1].reset()
       result.current[1].play()
     })
-    await act(async () => {
-      vi.advanceTimersByTime(1000)
-      await Promise.resolve()
-    })
-
-    expect(readTranslateX(result.current[2])).toBeCloseTo(40, 0)
+    expect(readTranslateX(result.current[2])).toBeCloseTo(0, 0)
     vi.useRealTimers()
   })
 
@@ -399,12 +374,10 @@ describe('useAnimation tuple api', () => {
       result.current[1].play()
     })
 
-    await waitFor(() => {
-      expect(result.current[1].playState).toBe('running')
-    })
+    expect(result.current[1].playState).toBe('queued')
   })
 
-  test('autoStart works under React StrictMode (dev remount)', async () => {
+  test('autoStart remains idle under React StrictMode without native support', async () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <StrictMode>{children}</StrictMode>
     )
@@ -420,12 +393,8 @@ describe('useAnimation tuple api', () => {
       )
     })
 
-    await waitFor(
-      () => {
-        expect(result.current[2].opacity).toBe(1)
-        expect(result.current[1].playState).toBe('finished')
-      },
-      { timeout: 1200 },
-    )
+    expect(result.current[2].opacity).toBe(0)
+    expect(String(result.current[2].transform)).toContain('40px')
+    expect(result.current[1].playState).toBe('idle')
   })
 })

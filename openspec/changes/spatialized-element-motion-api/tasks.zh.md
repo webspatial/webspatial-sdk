@@ -95,89 +95,89 @@
 
 ## Phase 8 — Core SDK AnimationObject
 
-- [ ] Core：新增 `SpatializedElement.createAnimation(config)`
-- [ ] Core：发送 `CreateSpatializedElementAnimation`，并把 native 返回的 `{ id }` 包装成 `AnimationObject`
-- [ ] Core：实现 `AnimationObject extends SpatialObject`
-- [ ] Core：暴露 `AnimationObject.uuid`
-- [ ] Core：直接在同一个 `AnimationObject` 上实现 `play/pause/resume/stop/reset/finish`
-- [ ] Core：确保 `reset/finish` 不重建 native `AnimationObject`
-- [ ] Core：确保 `AnimationObject.destroy()` 使用继承自 `SpatialObject` 的 destroy 生命周期
-- [ ] Core：让 `AnimationObject` 直接订阅 NativeWebMsg
-- [ ] Core：让 `AnimationObject` 按 uuid 过滤 `SpatialAnimationStateChanged`
-- [ ] Core：让 `AnimationObject` 从 native event 更新 `playState/isAnimating/isPaused/finished`
-- [ ] Core：让 `AnimationObject` 状态变化通知 React subscribers
-- [ ] Core：避免新增公开 `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` 架构对象
-- [ ] Core：从 spatialized element animation 路径移除 `WebPlaybackBackend` 和 RAF sampling
-- [ ] Core：移除目标态对 `SpatializedMotionController`、`NativePlaybackBackend`、`AnimateSpatializedElementMotion` 的运行时依赖
+- [x] Core：新增 `SpatializedElement.createAnimation(config)`
+- [x] Core：发送 `CreateSpatializedElementAnimation`，并把 native 返回的 `{ id }` 包装成 `AnimationObject`
+- [x] Core：实现 `AnimationObject extends SpatialObject`
+- [x] Core：暴露 `AnimationObject.uuid`
+- [x] Core：直接在同一个 `AnimationObject` 上实现 `play/pause/resume/stop/reset/finish`
+- [x] Core：确保 `reset/finish` 不重建 native `AnimationObject`
+- [x] Core：确保 `AnimationObject.destroy()` 使用继承自 `SpatialObject` 的 destroy 生命周期
+- [x] Core：让 `AnimationObject` 直接订阅 NativeWebMsg
+- [x] Core：让 `AnimationObject` 按 uuid 过滤 `SpatialAnimationStateChanged`
+- [x] Core：让 `AnimationObject` 从 native event 更新 `playState/isAnimating/isPaused/finished`
+- [x] Core：让 `AnimationObject` 状态变化通知 React subscribers
+- [x] Core：避免新增公开 `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` 架构对象
+- [x] Core：从 spatialized element animation 路径移除 `WebPlaybackBackend` 和 RAF sampling
+- [x] Core：移除目标态对 `SpatializedMotionController`、`NativePlaybackBackend`、`AnimateSpatializedElementMotion` 的运行时依赖
 
 ## Phase 9 — React SDK AnimationBinding
 
-- [ ] React：在 `useAnimation(config)` 时创建 `AnimationBinding`
-- [ ] React：保留 `[animation, api, style]` 公开 API
-- [ ] React：在 `AnimationBinding` 中保存 config 和 normalized config signature
-- [ ] React：在 `AnimationBinding` 中排队 bind 前 `api.play/pause/resume/stop/reset/finish` 显式命令
-- [ ] React：仅在 `xr-animation` binding 解析 target 后创建 Core `AnimationObject`
-- [ ] React：Core `AnimationObject` 创建后 flush 已排队显式命令
-- [ ] React：`PlaybackApi` 订阅 Core `AnimationObject` 状态并同步 `playState/isAnimating/isPaused/finished`
-- [ ] React：确保 `autoStart: false` 只禁止 implicit play-on-bind，不丢弃显式排队命令
-- [ ] React：在 unmount / unbind 时 destroy 当前 `AnimationObject`
-- [ ] React：normalized config signature 变化时 destroy 并 recreate `AnimationObject`
-- [ ] React：保持 Static3D / Dynamic3D 的 `style` 为 `{}`
-- [ ] React：确保 `style` outlet 不作为 native-backed animation 的 playback source
-- [ ] React：纯 Web runtime 不实现 Web RAF fallback
+- [x] React：在 `useAnimation(config)` 时创建 `AnimationBinding`
+- [x] React：保留 `[animation, api, style]` 公开 API
+- [x] React：在 `AnimationBinding` 中保存 config 和 normalized config signature
+- [x] React：在 `AnimationBinding` 中排队 bind 前 `api.play/pause/resume/stop/reset/finish` 显式命令
+- [x] React：仅在 `xr-animation` binding 解析 target 后创建 Core `AnimationObject`
+- [x] React：Core `AnimationObject` 创建后 flush 已排队显式命令
+- [x] React：`PlaybackApi` 订阅 Core `AnimationObject` 状态并同步 `playState/isAnimating/isPaused/finished`
+- [x] React：确保 `autoStart: false` 只禁止 implicit play-on-bind，不丢弃显式排队命令
+- [x] React：在 unmount / unbind 时 destroy 当前 `AnimationObject`
+- [x] React：normalized config signature 变化时 destroy 并 recreate `AnimationObject`
+- [x] React：保持 Static3D / Dynamic3D 的 `style` 为 `{}`
+- [x] React：确保 `style` outlet 不作为 native-backed animation 的 playback source
+- [x] React：纯 Web runtime 不实现 Web RAF fallback
 
 ## Phase 10 — visionOS AnimationObject manager and mask
 
-- [ ] visionOS：新增 `SpatializedElementAnimationManager`
-- [ ] visionOS：manager 持有 `animationId -> NativeAnimationObject` lookup
-- [ ] visionOS：manager 处理 `CreateSpatializedElementAnimation` 并返回 `{ id }`
-- [ ] visionOS：manager 处理 `ControlSpatializedElementAnimation`
-- [ ] visionOS：manager 处理 `destroyAnimation(animationId)`
-- [ ] visionOS：manager 处理 `destroyAnimationsForElement(elementId)`，并进入每个 animation object 的 destroy lifecycle
-- [ ] visionOS：在 `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` 中注册 create/control animation command
-- [ ] visionOS：通过现有 `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` 注册和查找 native `AnimationObject`
-- [ ] visionOS：Native `AnimationObject` 继承 `SpatialObject`
-- [ ] visionOS：Native `AnimationObject` 持有 locked `TimelineSampler`
-- [ ] visionOS：Native `AnimationObject` 持有 playback state 和 per-frame `tick`
-- [ ] visionOS：Native `AnimationObject` 的 `reset/finish` 复用同一个对象，不重建
-- [ ] visionOS：Native `AnimationObject.tick()` 调用 target write adapter 写入 sample
-- [ ] visionOS：target write adapter 按 target kind 限制 writable fields 和 mask fields
-- [ ] visionOS：Static3D 只写 `modelTransform`，不写 host transform / opacity
-- [ ] visionOS：实现 terminal mask handoff：pause 保留 mask；stop/reset/finish/natural complete/destroy 释放 mask
-- [ ] visionOS：通过现有 `SpatialScene` / `spatialWebViewModel` WebMsg 路径发送 `SpatialAnimationStateChanged`
-- [ ] visionOS：复用 `SpatializedElementMotionTimelineSampler` / `SpatializedMotionTimingFunction` / `SpatializedMotionTransformComponents`
-- [ ] visionOS：将 `SpatializedElementMotionTransformAdapter` 重构为 target write adapter
-- [ ] visionOS：将 `SpatializedElementMotionSession` 的 timing 字段和状态算法迁移到 Native `AnimationObject`
-- [ ] visionOS：将 `SpatializedElementMotionManager` 重构为 object manager，复用 shared frame driver 和 terminal value 构造逻辑
-- [ ] visionOS：用 `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` 替换 `AnimateSpatializedElementMotion`
-- [ ] visionOS：用统一 `SpatialAnimationStateChanged` 替换旧 `${animationId}_completed/canceled/failed` WebMsg
-- [ ] visionOS：animating mask 位于 `SpatializedElement` runtime 或 target write adapter
-- [ ] visionOS：mask 判断不依赖 `PortalInstanceObject`
-- [ ] Tests：验证普通 transform update 不会覆盖 active animation transform
-- [ ] Tests：验证普通 opacity update 不会覆盖 active animation opacity
+- [x] visionOS：新增 `SpatializedElementAnimationManager`
+- [x] visionOS：manager 持有 `animationId -> NativeAnimationObject` lookup
+- [x] visionOS：manager 处理 `CreateSpatializedElementAnimation` 并返回 `{ id }`
+- [x] visionOS：manager 处理 `ControlSpatializedElementAnimation`
+- [x] visionOS：manager 处理 `destroyAnimation(animationId)`
+- [x] visionOS：manager 处理 `destroyAnimationsForElement(elementId)`，并进入每个 animation object 的 destroy lifecycle
+- [x] visionOS：在 `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` 中注册 create/control animation command
+- [x] visionOS：通过现有 `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` 注册和查找 native `AnimationObject`
+- [x] visionOS：Native `AnimationObject` 继承 `SpatialObject`
+- [x] visionOS：Native `AnimationObject` 持有 locked `TimelineSampler`
+- [x] visionOS：Native `AnimationObject` 持有 playback state 和 per-frame `tick`
+- [x] visionOS：Native `AnimationObject` 的 `reset/finish` 复用同一个对象，不重建
+- [x] visionOS：Native `AnimationObject.tick()` 调用 target write adapter 写入 sample
+- [x] visionOS：target write adapter 按 target kind 限制 writable fields 和 mask fields
+- [x] visionOS：Static3D 只写 `modelTransform`，不写 host transform / opacity
+- [x] visionOS：实现 terminal mask handoff：pause 保留 mask；stop/reset/finish/natural complete/destroy 释放 mask
+- [x] visionOS：通过现有 `SpatialScene` / `spatialWebViewModel` WebMsg 路径发送 `SpatialAnimationStateChanged`
+- [x] visionOS：复用 `SpatializedElementMotionTimelineSampler` / `SpatializedMotionTimingFunction` / `SpatializedMotionTransformComponents`
+- [x] visionOS：将 `SpatializedElementMotionTransformAdapter` 重构为 target write adapter
+- [x] visionOS：将 `SpatializedElementMotionSession` 的 timing 字段和状态算法迁移到 Native `AnimationObject`
+- [x] visionOS：将 `SpatializedElementMotionManager` 重构为 object manager，复用 shared frame driver 和 terminal value 构造逻辑
+- [x] visionOS：用 `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` 替换 `AnimateSpatializedElementMotion`
+- [x] visionOS：用统一 `SpatialAnimationStateChanged` 替换旧 `${animationId}_completed/canceled/failed` WebMsg
+- [x] visionOS：animating mask 位于 `SpatializedElement` runtime 或 target write adapter
+- [x] visionOS：mask 判断不依赖 `PortalInstanceObject`
+- [x] Tests：验证普通 transform update 不会覆盖 active animation transform
+- [x] Tests：验证普通 opacity update 不会覆盖 active animation opacity
 
 ## Phase 11 — Protocol and compatibility tests
 
-- [ ] JSB test：`CreateSpatializedElementAnimation` 返回 native 生成的 uuid，字段名为 `id`
-- [ ] JSB test：`ControlSpatializedElementAnimation` 支持 play/pause/resume/stop/reset/finish
-- [ ] JSB test：`reset/finish` 不重建 native `AnimationObject`，object id 保持不变
-- [ ] WebMsg test：`SpatialAnimationStateChanged` 能被匹配的 Core `AnimationObject` 直接接收并按 uuid 过滤
-- [ ] Test：React `PlaybackApi` 在 Core `AnimationObject` 状态变化后更新
-- [ ] Test：Core `AnimationObject.destroy()` 使用通用 spatial object destroy path
-- [ ] Test：不需要公开 `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` 架构对象
-- [ ] Test：不新增独立 `SpatialObjectRegistry`，native object lookup 复用 `SpatialScene.spatialObjects`
-- [ ] Test：不新增独立 `JSBCommandHandler`，command listener 复用 `SpatialScene.setupJSBListeners()`
-- [ ] Test：不新增独立 `NativeWebMsgEmitter`，WebMsg 发送复用现有 SpatialScene 路径
-- [ ] Test：visionOS manager 在 target element destroy 时销毁关联 animations
-- [ ] Test：stop 冻结当前值并触发 `onStop(values)`，随后释放 mask
-- [ ] Test：reset 发出 from 值并触发 `onReset(values)`，随后释放 mask
-- [ ] Test：finish 发出 to 值并触发 `onComplete(values)`，随后释放 mask
-- [ ] Test：pause 保留当前值并保留 mask
-- [ ] Test：native state 对 Core SDK state 具有权威性
-- [ ] Test：Static3D opacity tracks 在 native create 前被拒绝
-- [ ] Test：Static3D animation 只写 `modelTransform`
-- [ ] Test：纯 Web runtime 对 `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])` 返回 false
-- [ ] Test：目标态 runtime 不再使用旧 `AnimateSpatializedElementMotion` 路径
+- [x] JSB test：`CreateSpatializedElementAnimation` 返回 native 生成的 uuid，字段名为 `id`
+- [x] JSB test：`ControlSpatializedElementAnimation` 支持 play/pause/resume/stop/reset/finish
+- [x] JSB test：`reset/finish` 不重建 native `AnimationObject`，object id 保持不变
+- [x] WebMsg test：`SpatialAnimationStateChanged` 能被匹配的 Core `AnimationObject` 直接接收并按 uuid 过滤
+- [x] Test：React `PlaybackApi` 在 Core `AnimationObject` 状态变化后更新
+- [x] Test：Core `AnimationObject.destroy()` 使用通用 spatial object destroy path
+- [x] Test：不需要公开 `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` 架构对象
+- [x] Test：不新增独立 `SpatialObjectRegistry`，native object lookup 复用 `SpatialScene.spatialObjects`
+- [x] Test：不新增独立 `JSBCommandHandler`，command listener 复用 `SpatialScene.setupJSBListeners()`
+- [x] Test：不新增独立 `NativeWebMsgEmitter`，WebMsg 发送复用现有 SpatialScene 路径
+- [x] Test：visionOS manager 在 target element destroy 时销毁关联 animations
+- [x] Test：stop 冻结当前值并触发 `onStop(values)`，随后释放 mask
+- [x] Test：reset 发出 from 值并触发 `onReset(values)`，随后释放 mask
+- [x] Test：finish 发出 to 值并触发 `onComplete(values)`，随后释放 mask
+- [x] Test：pause 保留当前值并保留 mask
+- [x] Test：native state 对 Core SDK state 具有权威性
+- [x] Test：Static3D opacity tracks 在 native create 前被拒绝
+- [x] Test：Static3D animation 只写 `modelTransform`
+- [x] Test：纯 Web runtime 对 `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])` 返回 false
+- [x] Test：目标态 runtime 不再使用旧 `AnimateSpatializedElementMotion` 路径
 
 ## Phase 12 — Docs and demos follow-up
 

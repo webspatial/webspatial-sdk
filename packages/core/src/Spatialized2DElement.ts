@@ -7,6 +7,8 @@ import type {
   AnimateSpatializedElementMotionCommand,
   AnimateSpatializedElementMotionResult,
 } from './types/spatializedElementMotion'
+import type { AnimationObject } from './AnimationObject'
+import type { SpatializedMotionAuthorConfig } from './types/spatializedMotion'
 import type { SpatializedVisualValues } from './types/spatializedVisual'
 import { hijackWindowATag } from './scene-polyfill'
 import { SpatializedElement } from './SpatializedElement'
@@ -53,6 +55,12 @@ export class Spatialized2DElement extends SpatializedElement {
       this,
       element,
     ).execute()
+  }
+
+  override createAnimation(
+    config: SpatializedMotionAuthorConfig,
+  ): Promise<AnimationObject> {
+    return super.createAnimation(config, 'spatialized2d')
   }
 
   // ---- Spatialized element motion (unified JSB) ----
