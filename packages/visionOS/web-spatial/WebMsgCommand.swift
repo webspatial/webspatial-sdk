@@ -138,6 +138,19 @@ struct EntityTransformChangeDetail: Encodable {
 struct EntityTransformChangeEvent: Encodable {
     let type: SpatialWebMsgType = .entitytransformchange
     let detail: EntityTransformChangeDetail
+
+    /// Emits the transform to the web layer as a 16-element column-major matrix.
+    init(_ transform: AffineTransform3D) {
+        let m = transform.matrix
+        let c0 = m.columns.0, c1 = m.columns.1, c2 = m.columns.2, c3 = m.columns.3
+        let array: [Double] = [
+            c0.x, c0.y, c0.z, 0,
+            c1.x, c1.y, c1.z, 0,
+            c2.x, c2.y, c2.z, 0,
+            c3.x, c3.y, c3.z, 1,
+        ]
+        detail = EntityTransformChangeDetail(transform: array)
+    }
 }
 
 struct SpatialObjectDestroiedEvent: Encodable {
