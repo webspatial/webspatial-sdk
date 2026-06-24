@@ -2,7 +2,7 @@ import RealityKit
 import SwiftUI
 
 struct SpatializedStatic3DView: View {
-    let spatializedStatic3DElement: SpatializedStatic3DElement
+    @Bindable var spatializedStatic3DElement: SpatializedStatic3DElement
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
 
     @State private var loadState: LoadState = .idle
@@ -78,10 +78,7 @@ struct SpatializedStatic3DView: View {
             )
             .orbit(
                 enabled: spatializedStatic3DElement.stagemode == .orbit,
-                entityTransform: Binding(
-                    get: { spatializedStatic3DElement.entityTransform },
-                    set: { spatializedStatic3DElement.entityTransform = $0 }
-                ),
+                entityTransform: $spatializedStatic3DElement.entityTransform,
                 onChange: onOrbit
             )
             .offset(x: x, y: y)
