@@ -18,13 +18,14 @@
 
 - React SDK 持有 `AnimationBinding`，由 `useAnimation(config)` 创建。它负责保存 config、bind 前命令排队，并且只在 `xr-animation` 解析到具体 `SpatializedElement` target 后创建 Core `AnimationObject`。
 - Core SDK 持有 `AnimationObject extends SpatialObject`。它直接暴露 `play/pause/resume/stop/reset/finish`，继承 `destroy()`，订阅 `NativeWebMsg`，按 native uuid 过滤 `SpatialAnimationStateChanged`，并更新自身可观察状态。
-- visionOS 持有 native `AnimationObject extends SpatialObject` 和 `SpatializedElementAnimationManager`。`SpatialScene` 继续作为 JSB listener 注册入口和 native spatial object store owner；manager 只负责 animation 业务生命周期、create/control lookup、element destroy 级联清理、animating mask 协调，以及 `SpatialAnimationStateChanged` 发送。
+- visionOS 持有 native `AnimationObject extends SpatialObject` 和 `SpatializedElementAnimationManager`。`SpatialScene` 继续作为 JSB listener 注册入口和 native spatial object store owner；manager 只负责 animation 业务生命周期、create/control lookup、frame loop 调度、element destroy 级联清理、animating mask 协调，以及 `SpatialAnimationStateChanged` 发送。
 
 ## 非目标
 
 - 不引入公开的 `AnimationObjectChannel`、`AnimationObjectBridge` 或 `SpatialObjectBridge` 架构对象。
 - 不新增独立 `SpatialObjectRegistry`；目标态复用现有 `SpatialScene.spatialObjects`、`addSpatialObject`、`findSpatialObject` 和 destroy path。
 - 不新增独立 `JSBCommandHandler`；目标态复用现有 `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` 入口。
+- 不把 frame driver 设计成独立 public module；它是 `SpatializedElementAnimationManager` 的内部调度能力。
 - 不保留 Core/Web RAF playback fallback。
 - 不以 `AnimateSpatializedElementMotion` 作为目标态 runtime command。
 - 不把 mask ownership 建在 `PortalInstanceObject` 或 React Portal suppression 上。
@@ -53,11 +54,11 @@
 | 模块 | 职责 |
 |------|------|
 | `SpatialScene JSB listeners` | 复用现有 `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` 机制注册 animation create/control command，并委托给 `SpatializedElementAnimationManager`。 |
-| `SpatializedElementAnimationManager` | 管理 native `AnimationObject` 业务生命周期、`animationId -> NativeAnimationObject` lookup、create/control、`destroyAnimationsForElement`、mask 协调和 `SpatialAnimationStateChanged` 广播。 |
+| `SpatializedElementAnimationManager` | 管理 native `AnimationObject` 业务生命周期、`animationId -> NativeAnimationObject` lookup、create/control、frame loop 启停、`destroyAnimationsForElement`、mask 协调和 `SpatialAnimationStateChanged` 广播。 |
 | `Native AnimationObject` | 继承 `SpatialObject`，持有 native uuid、locked `TimelineSampler`、playback state，并实现 `play/pause/resume/stop/reset/finish/tick/destroy`。 |
 | `SpatialScene.spatialObjects` | 复用现有 `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` / destroy path 注册、查找和销毁 native spatial objects，包括 `AnimationObject`。 |
 | `TimelineSampler` | 复用现有 timeline sampler，按 locked canonical timeline 采样。 |
-| `AnimationFrameDriver` | 驱动 active animations 的 per-frame tick。 |
+| `Frame driver / CADisplayLink` | `SpatializedElementAnimationManager` 的内部调度能力；manager 在存在 running animation 时启动它，由它每帧回调 `manager.tickAll(timestamp)`，driver 本身不持有 animation 语义。 |
 | `ElementAnimationWriteAdapter` | 按 target kind 写入 `transform`、`opacity` 或 `modelTransform`。 |
 | `AnimatingMask` | 记录 animation-owned fields，防止普通 element sync 覆盖 active animation。 |
 | `NativeWebMsgEmitter` | 发送统一 `SpatialAnimationStateChanged`。 |
@@ -211,6 +212,13 @@ classDiagram
       +emitStateChanged(animation, action, values?)
     }
 
+    class FrameDriver {
+      <<internal>>
+      +start()
+      +stop()
+      +onFrame(timestamp)
+    }
+
     class TimelineSampler {
       +sample(time): SpatializedVisualValues
       +duration: TimeInterval
@@ -243,6 +251,8 @@ classDiagram
   SpatialScene --> NativeSpatialObject : stores in spatialObjects
   SpatialScene --> CreateSpatializedElementAnimation : registers JSB listener
   SpatialScene --> ControlSpatializedElementAnimation : registers JSB listener
+  SpatializedElementAnimationManager --> FrameDriver : owns internal scheduler
+  FrameDriver --> SpatializedElementAnimationManager : tickAll(timestamp)
   SpatializedElementAnimationManager --> NativeAnimationObject : manages
   SpatializedElementAnimationManager --> NativeSpatializedElement : lookup target via SpatialScene.findSpatialObject
   NativeSpatializedElement --> AnimatingMask : owns
@@ -286,6 +296,8 @@ sequenceDiagram
   Binding->>Binding: flush queued commands
 ```
 
+`CreateSpatializedElementAnimation` 只创建 native animation object 并锁定 timeline。除非后续有 implicit play-on-bind 或 bind 前显式 `play` 被 flush，create 本身不启动 frame sampling。
+
 ## Bind 前显式 play 时序
 
 ```mermaid
@@ -297,6 +309,7 @@ sequenceDiagram
   participant CoreObj as Core AnimationObject
   participant Scene as visionOS SpatialScene
   participant Manager as visionOS AnimationManager
+  participant Driver as Frame driver / CADisplayLink
   participant NativeObj as visionOS AnimationObject
   participant WebMsg as NativeWebMsg
 
@@ -312,6 +325,8 @@ sequenceDiagram
   CoreObj->>Scene: ControlSpatializedElementAnimation(play)
   Scene->>Manager: controlAnimation(animationId, play)
   Manager->>NativeObj: play()
+  Manager->>Driver: start if any animation is running
+  Driver->>Manager: tickAll(timestamp)
   NativeObj->>WebMsg: SpatialAnimationStateChanged(running)
   WebMsg->>CoreObj: event
   CoreObj->>CoreObj: filter by uuid and update state
@@ -320,11 +335,17 @@ sequenceDiagram
 
 `autoStart: false` 只禁止 implicit play-on-bind，不得丢弃 bind 前显式 `api.play()`。
 
+## Frame loop 生命周期
+
+`Frame driver / CADisplayLink` 是 `SpatializedElementAnimationManager` 的内部调度能力，底层可由 `CADisplayLink` 等平台 frame callback 实现。driver 只负责向 manager 提供每帧 timestamp，不持有 animationId、target element、timeline、playback state 或 WebMsg 发送职责。
+
+当 control command 使至少一个 `Native AnimationObject` 进入 `running` 时，manager 启动 frame loop，包括 `play` 和 `resume`。在 `pause`、`stop`、`reset`、`finish`、`destroy`、自然完成、`destroyAnimationsForElement`、scene/page cleanup 之后，manager 必须检查 frame loop 是否可以停止。当不存在 running native animation object 时，frame loop 必须停止。
+
 ## 每帧采样与写入
 
 ```mermaid
 sequenceDiagram
-  participant Driver as AnimationFrameDriver
+  participant Driver as Frame driver / CADisplayLink
   participant Manager as visionOS AnimationManager
   participant Obj as visionOS AnimationObject
   participant Sampler as TimelineSampler
@@ -344,6 +365,7 @@ sequenceDiagram
     Obj->>Mask: clear or update by terminal handoff rules
     Obj->>Manager: report terminal
     Manager->>WebMsg: SpatialAnimationStateChanged(finished, values)
+    Manager->>Driver: stop if no animation is running
   end
 ```
 
@@ -380,13 +402,15 @@ sequenceDiagram
   participant Element as Core SpatializedElement
   participant Scene as visionOS SpatialScene
   participant Manager as visionOS AnimationManager
+  participant Driver as Frame driver / CADisplayLink
 
   React->>React: normalized config signature changed
   React->>OldObj: destroy()
   OldObj->>Scene: DestroySpatialObject(animationId)
   Scene->>Scene: findSpatialObject(animationId)
   Scene->>Manager: destroyAnimation(animationId)
-  Manager->>Manager: clear mask, stop frame, remove animation lookup
+  Manager->>Manager: clear mask, remove animation lookup
+  Manager->>Driver: stop if no animation is running
   Scene->>Scene: spatialObjects remove via SpatialObject destroy lifecycle
 
   React->>Element: createAnimation(newConfig)
