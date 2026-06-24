@@ -55,6 +55,7 @@ import DisplayTest from './src/pages/displayTest/index'
 import MemoryStats from './src/pages/memoryStats/index'
 import NestedFixPosition from './src/pages/nestedfixposition/index'
 import NestedScroll from './src/pages/nestedscroll/index'
+import NestedSpatialOverflow from './src/pages/nested-spatial-overflow/index'
 import SpatialConverter from './src/pages/spatial-converter/index'
 import SpatialCorner from './src/pages/spatialCorner/index'
 import GeometryVerify from './src/pages/geometry-verify/index'
@@ -321,6 +322,10 @@ function App() {
                   element={<NestedFixPosition />}
                 />
                 <Route path="/nested-scroll" element={<NestedScroll />} />
+                <Route
+                  path="/nested-spatial-overflow"
+                  element={<NestedSpatialOverflow />}
+                />
                 <Route
                   path="/spatial-converter"
                   element={<SpatialConverter />}
