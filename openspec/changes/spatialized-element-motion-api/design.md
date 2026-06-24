@@ -18,7 +18,7 @@ The target implementation is split across React SDK, Core SDK, and native runtim
 
 - React SDK owns `AnimationBinding`, created by `useAnimation(config)`. It stores config, queues pre-bind commands, and creates the Core `AnimationObject` only after `xr-animation` resolves a concrete `SpatializedElement` target.
 - Core SDK owns `AnimationObject extends SpatialObject`. It exposes `play/pause/resume/stop/reset/finish` directly, inherits `destroy()`, subscribes to `NativeWebMsg`, filters `SpatialAnimationStateChanged` by native uuid, and updates its own observable state.
-- visionOS owns native `AnimationObject extends SpatialObject` and `SpatializedElementAnimationManager`. `SpatialScene` remains the JSB listener registration entry point and native spatial object store owner; the manager only owns animation business lifecycle, create/control lookup, frame loop scheduling, element destroy cascading, animating mask coordination, and `SpatialAnimationStateChanged` emission.
+- visionOS owns native `AnimationObject extends SpatialObject` and `SpatializedElementAnimationManager`. `SpatialScene` remains the JSB listener registration entry point and native spatial object store owner; the manager only owns animation business lifecycle, create/control lookup, frame loop scheduling, element destroy cascading, animating mask coordination, and construction of `SpatialAnimationStateChanged` payloads sent through the existing WebMsg path.
 
 ## Non-goals
 
@@ -26,6 +26,7 @@ The target implementation is split across React SDK, Core SDK, and native runtim
 - Do not add a standalone `SpatialObjectRegistry`; target state reuses existing `SpatialScene.spatialObjects`, `addSpatialObject`, `findSpatialObject`, and destroy path.
 - Do not add a standalone `JSBCommandHandler`; target state reuses existing `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` entry points.
 - Do not design the frame driver as a standalone public module; it is an internal scheduling capability of `SpatializedElementAnimationManager`.
+- Do not add a standalone `NativeWebMsgEmitter`; target state reuses the existing `SpatialScene` / `spatialWebViewModel` WebMsg send path.
 - Do not keep Core/Web RAF playback fallback.
 - Do not use `AnimateSpatializedElementMotion` as the target-state runtime command.
 - Do not base mask ownership on `PortalInstanceObject` or React Portal suppression.
@@ -40,11 +41,13 @@ The target implementation is split across React SDK, Core SDK, and native runtim
 | `PlaybackApi` | Exposes React-facing `play/pause/resume/stop/reset/finish` and subscribes to Core `AnimationObject` state. |
 | `xr-animation` binding adapter | Resolves concrete target kind and triggers `AnimationBinding.bind()` / `unbind()`. |
 
+The `style` outlet is only a React merge outlet and is not the runtime playback source for native-backed animation. Static3D / Dynamic3D target-state `style` remains `{}`.
+
 ## Core SDK module boundaries
 
 | Module | Responsibility |
 |--------|----------------|
-| `SpatializedElement.createAnimation(config)` | Creates a native-backed `AnimationObject` after target binding, and owns validation, normalization, and create JSB send. |
+| `SpatializedElement.createAnimation(config)` | Creates a native-backed `AnimationObject` after target binding, and owns validation, normalization, and create JSB send; native response returns the native `AnimationObject` uuid as `{ id }`. |
 | `AnimationObject` | First-class Core object extending `SpatialObject`; implements playback controls directly, inherits `destroy()`, subscribes to NativeWebMsg directly, and owns its state. |
 | `validateSpatializedMotionConfig` | Validates authoring config before native create, such as rejecting Static3D `opacity` tracks. |
 | `motionConfigToAnimationTimeline` | Compiles normalized motion config into the canonical `CreateSpatializedElementAnimation` payload. |
@@ -54,14 +57,24 @@ The target implementation is split across React SDK, Core SDK, and native runtim
 | Module | Responsibility |
 |--------|----------------|
 | `SpatialScene JSB listeners` | Reuse the existing `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` mechanism to register animation create/control commands and delegate them to `SpatializedElementAnimationManager`. |
-| `SpatializedElementAnimationManager` | Manages native `AnimationObject` business lifecycle, `animationId -> NativeAnimationObject` lookup, create/control, frame loop start/stop, `destroyAnimationsForElement`, mask coordination, and `SpatialAnimationStateChanged` emission. |
-| `Native AnimationObject` | Extends `SpatialObject`; owns native uuid, locked `TimelineSampler`, playback state, and implements `play/pause/resume/stop/reset/finish/tick/destroy`. |
+| `SpatializedElementAnimationManager` | Manages native `AnimationObject` business lifecycle, `animationId -> NativeAnimationObject` lookup, create/control, frame loop start/stop, `destroyAnimationsForElement`, mask coordination, and construction of `SpatialAnimationStateChanged` payloads. |
+| `Native AnimationObject` | Extends `SpatialObject`; owns native uuid, locked `TimelineSampler`, playback state, and implements `play/pause/resume/stop/reset/finish/tick/destroy`; `reset/finish` operate on the same object and do not recreate it. |
 | `SpatialScene.spatialObjects` | Reuse existing `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` / destroy path to register, look up, and destroy native spatial objects, including `AnimationObject`. |
 | `TimelineSampler` | Reuses the existing timeline sampler and samples the locked canonical timeline. |
 | `Frame driver / CADisplayLink` | Internal scheduling capability of `SpatializedElementAnimationManager`; the manager starts it while any animation is running, it calls `manager.tickAll(timestamp)` every frame, and the driver itself owns no animation semantics. |
-| `ElementAnimationWriteAdapter` | Writes `transform`, `opacity`, or `modelTransform` according to target kind. |
+| `ElementAnimationWriteAdapter` | Called by `Native AnimationObject.tick()` to write `transform`, `opacity`, or `modelTransform` according to target kind; the manager does not perform per-property writes. |
 | `AnimatingMask` | Records animation-owned fields and prevents regular element sync from overriding active animation. |
-| `NativeWebMsgEmitter` | Emits unified `SpatialAnimationStateChanged`. |
+| `SpatialScene WebMsg send path` | Reuse the existing `SpatialScene` / `spatialWebViewModel` WebMsg send mechanism to emit unified `SpatialAnimationStateChanged`. |
+
+## Target kind field mapping
+
+| target kind | writable fields | mask fields |
+|-------------|-----------------|-------------|
+| `spatialized2d` | `transform`, `opacity` | `transform`, `opacity` |
+| `dynamic3d` | `transform`, `opacity` | `transform`, `opacity` |
+| `static3d` | `modelTransform` | `modelTransform` |
+
+Static3D `opacity` tracks must be rejected before native create. Static3D animation writes only model root `modelTransform` and must not use host element `transform` as a substitute path.
 
 ## Cross-layer object relationships
 
@@ -164,6 +177,7 @@ classDiagram
       +setupJSBListeners()
       +addSpatialObject(object)
       +findSpatialObject(id)
+      +sendWebMsg(type, payload)
       +onCreateSpatializedElementAnimation(command)
       +onControlSpatializedElementAnimation(command)
       +onDestroySpatialObjectCommand(command)
@@ -219,6 +233,10 @@ classDiagram
       +onFrame(timestamp)
     }
 
+    class ElementAnimationWriteAdapter {
+      +apply(sample, target, kind)
+    }
+
     class TimelineSampler {
       +sample(time): SpatializedVisualValues
       +duration: TimeInterval
@@ -227,6 +245,7 @@ classDiagram
     class AnimatingMask {
       +transform: Bool
       +opacity: Bool
+      +modelTransform: Bool
       +clear()
     }
   }
@@ -241,7 +260,7 @@ classDiagram
   SpatialObject <|-- SpatializedElement
   SpatialObject <|-- CoreAnimationObject
   SpatializedElement --> CreateSpatializedElementAnimation : sends JSB
-  SpatializedElement --> CoreAnimationObject : returns native uuid handle
+  SpatializedElement --> CoreAnimationObject : wraps response id
   CoreAnimationObject --> ControlSpatializedElementAnimation : sends JSB
   CoreAnimationObject --> SpatialAnimationStateChanged : filters by uuid
 
@@ -253,11 +272,13 @@ classDiagram
   SpatialScene --> ControlSpatializedElementAnimation : registers JSB listener
   SpatializedElementAnimationManager --> FrameDriver : owns internal scheduler
   FrameDriver --> SpatializedElementAnimationManager : tickAll(timestamp)
-  SpatializedElementAnimationManager --> NativeAnimationObject : manages
+  SpatializedElementAnimationManager --> NativeAnimationObject : manages lifecycle/control
+  SpatializedElementAnimationManager --> SpatialScene : sends WebMsg through existing path
   SpatializedElementAnimationManager --> NativeSpatializedElement : lookup target via SpatialScene.findSpatialObject
   NativeSpatializedElement --> AnimatingMask : owns
   NativeAnimationObject --> TimelineSampler : owns locked timeline
-  NativeAnimationObject --> NativeSpatializedElement : writes sampled values
+  NativeAnimationObject --> ElementAnimationWriteAdapter : applies sampled values
+  ElementAnimationWriteAdapter --> NativeSpatializedElement : writes transform / opacity / modelTransform
   NativeAnimationObject --> AnimatingMask : marks animation-owned fields
 ```
 
@@ -288,15 +309,21 @@ sequenceDiagram
   Manager->>Scene: findSpatialObject(targetElementId)
   Manager->>NativeObj: new AnimationObject(native uuid, locked timeline)
   Manager->>Scene: addSpatialObject(animationObject)
-  Manager-->>Scene: native uuid
-  Scene-->>Element: native uuid
-  Element->>CoreObj: new AnimationObject(uuid)
+  Manager-->>Scene: { id: native uuid }
+  Scene-->>Element: { id }
+  Element->>CoreObj: new AnimationObject(id)
   CoreObj->>CoreObj: subscribe NativeWebMsg SpatialAnimationStateChanged
   Element-->>Binding: Core AnimationObject
   Binding->>Binding: flush queued commands
 ```
 
 `CreateSpatializedElementAnimation` only creates a native animation object and locks its timeline. Create itself does not start frame sampling unless followed by implicit play-on-bind or a queued explicit `play` flush.
+
+## Playback controls and object lifecycle
+
+`play`, `pause`, `resume`, `stop`, `reset`, and `finish` all operate on the same already-created `AnimationObject`. These playback controls do not recreate the native object and do not change the object id.
+
+Only config signature changes, target rebinding, recreation after explicit `destroy()`, or element destroy cascading enter the destroy + recreate lifecycle. `reset()` writes the from value and `finish()` writes the to value; both reuse the current native `AnimationObject`.
 
 ## Pre-bind explicit play sequence
 
@@ -327,7 +354,8 @@ sequenceDiagram
   Manager->>NativeObj: play()
   Manager->>Driver: start if any animation is running
   Driver->>Manager: tickAll(timestamp)
-  NativeObj->>WebMsg: SpatialAnimationStateChanged(running)
+  NativeObj->>Manager: state changed running
+  Manager->>Scene: sendWebMsg(SpatialAnimationStateChanged)
   WebMsg->>CoreObj: event
   CoreObj->>CoreObj: filter by uuid and update state
   CoreObj->>API: notify subscribers
@@ -349,22 +377,24 @@ sequenceDiagram
   participant Manager as visionOS AnimationManager
   participant Obj as visionOS AnimationObject
   participant Sampler as TimelineSampler
+  participant Adapter as ElementAnimationWriteAdapter
   participant Element as Native SpatializedElement
   participant Mask as AnimatingMask
-  participant WebMsg as NativeWebMsg
+  participant Scene as SpatialScene WebMsg path
 
   Driver->>Manager: tickAll(timestamp)
   Manager->>Obj: tick(timestamp)
   Obj->>Sampler: sample(time)
   Sampler-->>Obj: SpatializedVisualValues
-  Obj->>Mask: mark transform/opacity animation-owned
-  Obj->>Element: write transform / opacity / modelTransform
+  Obj->>Mask: mark target-kind mask fields
+  Obj->>Adapter: apply(sample, target, kind)
+  Adapter->>Element: write transform / opacity / modelTransform
 
   alt reaches terminal
     Obj->>Obj: playState = finished
     Obj->>Mask: clear or update by terminal handoff rules
     Obj->>Manager: report terminal
-    Manager->>WebMsg: SpatialAnimationStateChanged(finished, values)
+    Manager->>Scene: sendWebMsg(SpatialAnimationStateChanged, values)
     Manager->>Driver: stop if no animation is running
   end
 ```
@@ -393,7 +423,18 @@ sequenceDiagram
 
 The mask lives on native `SpatializedElement` runtime or target write adapter and does not depend on `PortalInstanceObject`.
 
-## Config changes and destruction
+## Terminal mask handoff
+
+| action | value write | mask handoff |
+|--------|-------------|--------------|
+| `pause` | preserve current sampled value | keep mask because the animation still owns the visual field |
+| `stop` | write current sampled value | release mask fields owned by this animation |
+| `reset` | write from value | release mask fields owned by this animation |
+| `finish` | write to value | release mask fields owned by this animation |
+| natural completion | write to value | release mask fields owned by this animation |
+| `destroy` | do not force an additional terminal write; clean up the animation | release mask fields owned by this animation |
+
+## Config changes, destruction, and cascading cleanup
 
 ```mermaid
 sequenceDiagram
@@ -416,12 +457,14 @@ sequenceDiagram
   React->>Element: createAnimation(newConfig)
   Element->>Scene: CreateSpatializedElementAnimation(new timeline)
   Scene->>Manager: createAnimation(command)
-  Manager-->>Scene: new uuid
-  Scene-->>Element: new uuid
+  Manager-->>Scene: { id: new uuid }
+  Scene-->>Element: { id }
   Element-->>React: New Core AnimationObject
 ```
 
 Config changes do not hot-update an existing object. The target state uses destroy + recreate. `AnimationObject.destroy()` enters the existing `SpatialObject` destroy lifecycle.
+
+When the target `SpatializedElement` is destroyed, the native runtime must destroy all related `AnimationObject` instances through `SpatializedElementAnimationManager.destroyAnimationsForElement(elementId)`. This flow must enter each animation object's destroy lifecycle and must not only remove objects from the manager lookup.
 
 ## Current visionOS implementation reuse strategy
 
@@ -429,10 +472,11 @@ Config changes do not hot-update an existing object. The target state uses destr
 |--------------------|----------------|
 | `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` | Reuse directly as the registration entry point for animation create/control commands. |
 | `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` | Reuse directly as the common object store and lookup mechanism for native `AnimationObject`. |
+| `SpatialScene` / `spatialWebViewModel` WebMsg send path | Reuse directly as the send path for `SpatialAnimationStateChanged`; do not add a standalone emitter. |
 | `SpatializedElementMotionTimelineSampler.swift` | Reuse directly as the locked sampler owned by native `AnimationObject`. |
 | `SpatializedElementMotionTiming.swift` | Reuse timing function / loop config directly. |
 | `SpatializedElementMotionTransformTypes.swift` | Reuse transform components directly. |
-| `SpatializedElementMotionTransformAdapter.swift` | Refactor into target write adapter; Static3D opacity must still be rejected before create. |
+| `SpatializedElementMotionTransformAdapter.swift` | Refactor into target write adapter called by `Native AnimationObject.tick()`; Static3D opacity must still be rejected before create. |
 | `SpatializedElementMotionManager.swift` | Refactor into `SpatializedElementAnimationManager`, preserving shared frame driver, lookup, terminal values, and compose/decompose ideas. |
 | `SpatializedElementMotionSession.swift` | Do not keep the class; migrate timing fields and state algorithm into native `AnimationObject`. |
 | `AnimateSpatializedElementMotionCommand` | Remove; replace with `CreateSpatializedElementAnimation` and `ControlSpatializedElementAnimation`. |
