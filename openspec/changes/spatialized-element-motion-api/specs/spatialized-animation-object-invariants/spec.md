@@ -17,7 +17,7 @@ Core SDK MAY use a temporary request id to match the async create response, but 
 
 ### Requirement: AnimationObject destruction uses SpatialObject lifecycle
 
-`AnimationObject.destroy()` MUST use the common destroy lifecycle inherited from `SpatialObject`. Runtime cleanup MUST stop frame driving, clear target animating mask, unregister listeners, and remove the object from the native spatial object registry.
+`AnimationObject.destroy()` MUST use the common destroy lifecycle inherited from `SpatialObject`. Runtime cleanup MUST stop frame driving, clear target animating mask, unregister listeners, and remove the object from the existing native spatial object store such as `SpatialScene.spatialObjects`.
 
 `ControlSpatializedElementAnimation` MUST NOT be the only normative destruction path. If a control-level `destroy` action exists for compatibility, it MUST delegate to the common `SpatialObject.destroy()` behavior.
 
@@ -93,6 +93,26 @@ Native `AnimationObject` MUST extend `SpatialObject`, MUST own the locked timeli
 - **WHEN** a `SpatializedElement` is destroyed
 - **THEN** visionOS runtime MUST destroy related native `AnimationObject` instances through `SpatializedElementAnimationManager.destroyAnimationsForElement(elementId)`
 - **AND** each destroyed animation MUST clean up frame driving, animating mask, listeners, and registry entry
+
+### Requirement: Native frame loop lifecycle is manager-owned
+
+The native runtime MUST treat the frame loop as an internal scheduling capability of `SpatializedElementAnimationManager`, backed by a platform frame callback such as `CADisplayLink`. The frame driver MUST NOT own animation semantics, target element semantics, or WebMsg emission responsibilities.
+
+`SpatializedElementAnimationManager` MUST start the frame loop when at least one native `AnimationObject` enters `running`, including `play` and `resume`. `CreateSpatializedElementAnimation` only creates a native `AnimationObject` and locks its timeline; create itself MUST NOT start frame sampling unless followed by implicit play-on-bind or a queued explicit `play` flush.
+
+`SpatializedElementAnimationManager` MUST check whether the frame loop can stop after `pause`, `stop`, `reset`, `finish`, `destroy`, natural completion, `destroyAnimationsForElement`, and scene/page cleanup. The frame loop MUST stop when no native `AnimationObject` remains in `running`.
+
+#### Scenario: Play starts the frame loop
+
+- **WHEN** `SpatializedElementAnimationManager` handles `ControlSpatializedElementAnimation(play)`
+- **AND** the corresponding native `AnimationObject` enters `running`
+- **THEN** the manager MUST start the frame loop
+- **AND** each frame callback MUST call `manager.tickAll(timestamp)`
+
+#### Scenario: Stop the frame loop when no animation is running
+
+- **WHEN** `pause`, `stop`, `reset`, `finish`, `destroy`, or natural completion leaves no native `AnimationObject` in `running`
+- **THEN** the manager MUST stop the frame loop
 
 ### Requirement: Pure Web runtime has no Core RAF fallback
 
