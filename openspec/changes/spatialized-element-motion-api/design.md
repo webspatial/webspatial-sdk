@@ -18,13 +18,14 @@ The target implementation is split across React SDK, Core SDK, and native runtim
 
 - React SDK owns `AnimationBinding`, created by `useAnimation(config)`. It stores config, queues pre-bind commands, and creates the Core `AnimationObject` only after `xr-animation` resolves a concrete `SpatializedElement` target.
 - Core SDK owns `AnimationObject extends SpatialObject`. It exposes `play/pause/resume/stop/reset/finish` directly, inherits `destroy()`, subscribes to `NativeWebMsg`, filters `SpatialAnimationStateChanged` by native uuid, and updates its own observable state.
-- visionOS owns native `AnimationObject extends SpatialObject` and `SpatializedElementAnimationManager`. `SpatialScene` remains the JSB listener registration entry point and native spatial object store owner; the manager only owns animation business lifecycle, create/control lookup, element destroy cascading, animating mask coordination, and `SpatialAnimationStateChanged` emission.
+- visionOS owns native `AnimationObject extends SpatialObject` and `SpatializedElementAnimationManager`. `SpatialScene` remains the JSB listener registration entry point and native spatial object store owner; the manager only owns animation business lifecycle, create/control lookup, frame loop scheduling, element destroy cascading, animating mask coordination, and `SpatialAnimationStateChanged` emission.
 
 ## Non-goals
 
 - Do not introduce public `AnimationObjectChannel`, `AnimationObjectBridge`, or `SpatialObjectBridge` architecture objects.
 - Do not add a standalone `SpatialObjectRegistry`; target state reuses existing `SpatialScene.spatialObjects`, `addSpatialObject`, `findSpatialObject`, and destroy path.
 - Do not add a standalone `JSBCommandHandler`; target state reuses existing `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` entry points.
+- Do not design the frame driver as a standalone public module; it is an internal scheduling capability of `SpatializedElementAnimationManager`.
 - Do not keep Core/Web RAF playback fallback.
 - Do not use `AnimateSpatializedElementMotion` as the target-state runtime command.
 - Do not base mask ownership on `PortalInstanceObject` or React Portal suppression.
@@ -53,11 +54,11 @@ The target implementation is split across React SDK, Core SDK, and native runtim
 | Module | Responsibility |
 |--------|----------------|
 | `SpatialScene JSB listeners` | Reuse the existing `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` mechanism to register animation create/control commands and delegate them to `SpatializedElementAnimationManager`. |
-| `SpatializedElementAnimationManager` | Manages native `AnimationObject` business lifecycle, `animationId -> NativeAnimationObject` lookup, create/control, `destroyAnimationsForElement`, mask coordination, and `SpatialAnimationStateChanged` emission. |
+| `SpatializedElementAnimationManager` | Manages native `AnimationObject` business lifecycle, `animationId -> NativeAnimationObject` lookup, create/control, frame loop start/stop, `destroyAnimationsForElement`, mask coordination, and `SpatialAnimationStateChanged` emission. |
 | `Native AnimationObject` | Extends `SpatialObject`; owns native uuid, locked `TimelineSampler`, playback state, and implements `play/pause/resume/stop/reset/finish/tick/destroy`. |
 | `SpatialScene.spatialObjects` | Reuse existing `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` / destroy path to register, look up, and destroy native spatial objects, including `AnimationObject`. |
 | `TimelineSampler` | Reuses the existing timeline sampler and samples the locked canonical timeline. |
-| `AnimationFrameDriver` | Drives per-frame tick for active animations. |
+| `Frame driver / CADisplayLink` | Internal scheduling capability of `SpatializedElementAnimationManager`; the manager starts it while any animation is running, it calls `manager.tickAll(timestamp)` every frame, and the driver itself owns no animation semantics. |
 | `ElementAnimationWriteAdapter` | Writes `transform`, `opacity`, or `modelTransform` according to target kind. |
 | `AnimatingMask` | Records animation-owned fields and prevents regular element sync from overriding active animation. |
 | `NativeWebMsgEmitter` | Emits unified `SpatialAnimationStateChanged`. |
@@ -211,6 +212,13 @@ classDiagram
       +emitStateChanged(animation, action, values?)
     }
 
+    class FrameDriver {
+      <<internal>>
+      +start()
+      +stop()
+      +onFrame(timestamp)
+    }
+
     class TimelineSampler {
       +sample(time): SpatializedVisualValues
       +duration: TimeInterval
@@ -243,6 +251,8 @@ classDiagram
   SpatialScene --> NativeSpatialObject : stores in spatialObjects
   SpatialScene --> CreateSpatializedElementAnimation : registers JSB listener
   SpatialScene --> ControlSpatializedElementAnimation : registers JSB listener
+  SpatializedElementAnimationManager --> FrameDriver : owns internal scheduler
+  FrameDriver --> SpatializedElementAnimationManager : tickAll(timestamp)
   SpatializedElementAnimationManager --> NativeAnimationObject : manages
   SpatializedElementAnimationManager --> NativeSpatializedElement : lookup target via SpatialScene.findSpatialObject
   NativeSpatializedElement --> AnimatingMask : owns
@@ -286,6 +296,8 @@ sequenceDiagram
   Binding->>Binding: flush queued commands
 ```
 
+`CreateSpatializedElementAnimation` only creates a native animation object and locks its timeline. Create itself does not start frame sampling unless followed by implicit play-on-bind or a queued explicit `play` flush.
+
 ## Pre-bind explicit play sequence
 
 ```mermaid
@@ -297,6 +309,7 @@ sequenceDiagram
   participant CoreObj as Core AnimationObject
   participant Scene as visionOS SpatialScene
   participant Manager as visionOS AnimationManager
+  participant Driver as Frame driver / CADisplayLink
   participant NativeObj as visionOS AnimationObject
   participant WebMsg as NativeWebMsg
 
@@ -312,6 +325,8 @@ sequenceDiagram
   CoreObj->>Scene: ControlSpatializedElementAnimation(play)
   Scene->>Manager: controlAnimation(animationId, play)
   Manager->>NativeObj: play()
+  Manager->>Driver: start if any animation is running
+  Driver->>Manager: tickAll(timestamp)
   NativeObj->>WebMsg: SpatialAnimationStateChanged(running)
   WebMsg->>CoreObj: event
   CoreObj->>CoreObj: filter by uuid and update state
@@ -320,11 +335,17 @@ sequenceDiagram
 
 `autoStart: false` only disables implicit play-on-bind and MUST NOT drop explicit pre-bind `api.play()`.
 
+## Frame loop lifecycle
+
+`Frame driver / CADisplayLink` is an internal scheduling capability of `SpatializedElementAnimationManager`, backed by a platform frame callback such as `CADisplayLink`. The driver only provides per-frame timestamps to the manager and does not own animationId, target element, timeline, playback state, or WebMsg emission responsibilities.
+
+When a control command makes at least one `Native AnimationObject` enter `running`, the manager starts the frame loop, including `play` and `resume`. After `pause`, `stop`, `reset`, `finish`, `destroy`, natural completion, `destroyAnimationsForElement`, and scene/page cleanup, the manager must check whether the frame loop can stop. The frame loop must stop when there are no running native animation objects.
+
 ## Frame sampling and writes
 
 ```mermaid
 sequenceDiagram
-  participant Driver as AnimationFrameDriver
+  participant Driver as Frame driver / CADisplayLink
   participant Manager as visionOS AnimationManager
   participant Obj as visionOS AnimationObject
   participant Sampler as TimelineSampler
@@ -344,6 +365,7 @@ sequenceDiagram
     Obj->>Mask: clear or update by terminal handoff rules
     Obj->>Manager: report terminal
     Manager->>WebMsg: SpatialAnimationStateChanged(finished, values)
+    Manager->>Driver: stop if no animation is running
   end
 ```
 
@@ -380,13 +402,15 @@ sequenceDiagram
   participant Element as Core SpatializedElement
   participant Scene as visionOS SpatialScene
   participant Manager as visionOS AnimationManager
+  participant Driver as Frame driver / CADisplayLink
 
   React->>React: normalized config signature changed
   React->>OldObj: destroy()
   OldObj->>Scene: DestroySpatialObject(animationId)
   Scene->>Scene: findSpatialObject(animationId)
   Scene->>Manager: destroyAnimation(animationId)
-  Manager->>Manager: clear mask, stop frame, remove animation lookup
+  Manager->>Manager: clear mask, remove animation lookup
+  Manager->>Driver: stop if no animation is running
   Scene->>Scene: spatialObjects remove via SpatialObject destroy lifecycle
 
   React->>Element: createAnimation(newConfig)
