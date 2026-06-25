@@ -31,7 +31,7 @@ enum SpatializedElementAnimationWriteAdapter {
             guard let static3d = element as? SpatializedStatic3DElement else {
                 return element.transform
             }
-            return static3d.modelTransform
+            return static3d.entityTransform
         }
     }
 
@@ -41,7 +41,7 @@ enum SpatializedElementAnimationWriteAdapter {
             element.transform = affine
         case .modelTransform:
             if let static3d = element as? SpatializedStatic3DElement {
-                static3d.modelTransform = affine
+                static3d.entityTransform = affine
             } else {
                 element.transform = affine
             }

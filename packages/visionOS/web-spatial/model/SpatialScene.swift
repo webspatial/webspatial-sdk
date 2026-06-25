@@ -667,7 +667,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             let column3 = simd_double4(array[12], array[13], array[14], array[15])
             let simd_double4x4 = simd_double4x4(columns: (column0, column1, column2, column3))
             let affineTransform3D = AffineTransform3D(truncating: simd_double4x4)
-            if !spatializedElement.animatingMask.locksModelTransform {
+            if !spatializedElement.animatingMask.locksTransform {
                 spatializedElement.entityTransform = affineTransform3D
             }
         }
