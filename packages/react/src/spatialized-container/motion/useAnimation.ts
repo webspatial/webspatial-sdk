@@ -9,8 +9,8 @@ import type {
 import { createMotionBinding } from './createMotionBinding'
 import { getMotionConfigSignature } from './motionConfigSignature'
 import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
-import { resolveMotionStyle } from './resolveMotionStyle'
 import type { AnimationBinding } from './AnimationBinding'
+import { valuesToMotionStyle } from './style'
 
 /**
  * React-facing motion config accepted by `useAnimation()`.
@@ -99,9 +99,7 @@ export function useAnimation(
   )
 
   const values: SpatializedVisualValues = binding.currentValues
-  const style = resolveMotionStyle({
-    values,
-  })
+  const style = valuesToMotionStyle(values)
 
   return [binding, api, style]
 }

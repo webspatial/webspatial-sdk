@@ -42,11 +42,6 @@ import { useBindSpatializedMotion } from './useBindSpatializedMotion'
 function createBinding() {
   return {
     __kind: 'spatializedMotion' as const,
-    __propName: 'xr-animation' as const,
-    __motionObjectId: 'motion-1',
-    get __animating() {
-      return false
-    },
     __setElement: vi.fn(),
     __onUnbind: vi.fn(),
   }

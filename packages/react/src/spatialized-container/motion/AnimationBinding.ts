@@ -61,8 +61,8 @@ function supportsTargetKind(kind: SpatializedMotionKind): boolean {
  */
 export class AnimationBinding implements SpatializedPlaybackApi {
   readonly __kind = 'spatializedMotion' as const
-  readonly __propName = 'xr-animation' as const
-  readonly __motionObjectId: string
+  /** Stable fallback id used when a native animation object is not available. */
+  private readonly motionObjectId: string
 
   private animationObject: AnimationObject | null = null
   private element:
@@ -91,7 +91,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     options: AnimationBindingOptions = {},
   ) {
     validateSpatializedMotionConfig(config)
-    this.__motionObjectId = allocateBindingId()
+    this.motionObjectId = allocateBindingId()
     this.options = options
     this.config = config
     this.configSignature = getMotionConfigSignature(config)
@@ -113,10 +113,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
 
   get targetKind(): SpatializedMotionKind | null {
     return this.kind
-  }
-
-  get __animating(): boolean {
-    return this.isAnimating
   }
 
   get playState(): SpatializedMotionPlayState {
@@ -321,7 +317,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
         if (token !== this.createToken) return
         this.creating = false
         this.config.onError?.({
-          animationId: this.__motionObjectId,
+          animationId: this.motionObjectId,
           command: 'play',
           reason: error instanceof Error ? error.message : 'Create failed',
         })
@@ -378,7 +374,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     }
     this.animationObject[command.type]().catch(error => {
       this.config.onError?.({
-        animationId: this.animationObject?.uuid ?? this.__motionObjectId,
+        animationId: this.animationObject?.uuid ?? this.motionObjectId,
         command: command.type,
         reason: error instanceof Error ? error.message : 'Command failed',
       })
@@ -419,7 +415,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     for (const command of commands) {
       this.animationObject[command.type]().catch(error => {
         this.config.onError?.({
-          animationId: this.animationObject?.uuid ?? this.__motionObjectId,
+          animationId: this.animationObject?.uuid ?? this.motionObjectId,
           command: command.type,
           reason: error instanceof Error ? error.message : 'Command failed',
         })
@@ -434,18 +430,11 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     if (this.config.autoStart === false) return
     this.animationObject.play().catch(error => {
       this.config.onError?.({
-        animationId: this.animationObject?.uuid ?? this.__motionObjectId,
+        animationId: this.animationObject?.uuid ?? this.motionObjectId,
         command: 'play',
         reason: error instanceof Error ? error.message : 'Play failed',
       })
     })
     this.syncStateFromAnimationObject()
   }
-}
-
-export function createMotionBinding(
-  config: SpatializedMotionConfig,
-  options?: AnimationBindingOptions,
-): AnimationBinding {
-  return new AnimationBinding(config, options)
 }

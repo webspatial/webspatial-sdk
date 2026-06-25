@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { Reality } from './Reality'
 
 const spatializedContainerPropsMock = vi.fn()
-const portalInstanceObject = {}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -26,12 +25,14 @@ vi.mock('../../spatialized-container/SpatializedContainer', () => ({
 
     return (
       <div data-testid="spatialized-container">
-        {SpatializedContent ? (
-          <SpatializedContent
-            spatializedElement={{}}
-            portalInstanceObject={portalInstanceObject as Record<string, never>}
-          />
-        ) : null}
+        <div data-testid="spatialized-content">
+          {SpatializedContent ? (
+            <SpatializedContent
+              spatializedElement={{}}
+              portalInstanceObject={{}}
+            />
+          ) : null}
+        </div>
         {children}
       </div>
     )
@@ -47,17 +48,18 @@ vi.mock('../hooks', () => ({
 }))
 
 describe('Reality', () => {
-  test('forwards xr-animation to SpatializedContainer without portal suppression callbacks', async () => {
+  test('forwards xr-animation to SpatializedContainer and keeps portal content empty', async () => {
     const xrAnimation = { __kind: 'spatializedMotion' }
 
-    render(<Reality xr-animation={xrAnimation as any} />)
+    const { getByTestId } = render(
+      <Reality xr-animation={xrAnimation as any} />,
+    )
 
     const containerCall = spatializedContainerPropsMock.mock.calls.at(
       -1,
     )?.[0] as Record<string, unknown> | undefined
 
     expect(containerCall?.['xr-animation']).toBe(xrAnimation)
-    expect(containerCall).not.toHaveProperty('onSuppressedFieldsChange')
-    expect(containerCall).not.toHaveProperty('onMotionFieldMetadataChange')
+    expect(getByTestId('spatialized-content').innerHTML).toBe('')
   })
 })
