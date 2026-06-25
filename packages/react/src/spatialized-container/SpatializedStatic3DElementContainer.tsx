@@ -20,7 +20,6 @@ import {
 } from './types'
 import { ModelSource, SpatializedStatic3DElement } from '@webspatial/core-sdk'
 import { PortalInstanceContext } from './context/PortalInstanceContext'
-import { useBindSpatializedMotion } from './motion/useBindSpatializedMotion'
 
 function getAbsoluteURL(url: string): string
 function getAbsoluteURL(url: undefined): undefined
@@ -109,7 +108,6 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     loop,
     loading = 'eager',
     stagemode = 'none',
-    'xr-animation': xrAnimation,
   } = props
   const portalInstanceObject = useContext(PortalInstanceContext)
   const wasVisible = useRef(false)
@@ -188,12 +186,6 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     }
   }, [onError, portalInstanceObject?.dom])
 
-  useBindSpatializedMotion({
-    binding: xrAnimation,
-    element: spatializedElement,
-    kind: 'static3d',
-  })
-
   return <></>
 }
 
@@ -201,15 +193,6 @@ function SpatializedStatic3DElementContainerBase(
   props: SpatializedStatic3DContainerProps,
   ref: ForwardedRef<SpatializedStatic3DElementRef>,
 ) {
-  const { 'xr-animation': xrAnimation, ...containerProps } = props
-  const spatializedContent = useMemo(() => {
-    function ContentWithXrAnimation(
-      contentProps: SpatializedStatic3DContentProps,
-    ) {
-      return <SpatializedContent {...contentProps} xr-animation={xrAnimation} />
-    }
-    return ContentWithXrAnimation
-  }, [xrAnimation])
   const promiseRef = useRef<Promise<SpatializedStatic3DElement> | null>(null)
 
   const createSpatializedElement = useCallback(() => {
@@ -290,7 +273,7 @@ function SpatializedStatic3DElementContainerBase(
         },
       }
     },
-    [xrAnimation],
+    [],
   )
 
   return (
@@ -298,9 +281,9 @@ function SpatializedStatic3DElementContainerBase(
       ref={ref}
       component="div"
       createSpatializedElement={createSpatializedElement}
-      spatializedContent={spatializedContent}
+      spatializedContent={SpatializedContent}
       extraRefProps={extraRefProps}
-      {...containerProps}
+      {...props}
     />
   )
 }

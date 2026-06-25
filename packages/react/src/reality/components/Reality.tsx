@@ -7,7 +7,6 @@ import React, {
 } from 'react'
 import type { PortalInstanceObject } from '../../spatialized-container/context/PortalInstanceContext'
 import { SpatializedContainer } from '../../spatialized-container/SpatializedContainer'
-import { useBindSpatializedMotion } from '../../spatialized-container/motion/useBindSpatializedMotion'
 import { RealityContext, RealityContextValue } from '../context'
 import { useInsideAttachment } from '../context/InsideAttachmentContext'
 import { getSession } from '../../utils/getSession'
@@ -86,8 +85,9 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     const creationId = useRef(0)
 
     const [isReady, setIsReady] = useState(false)
-    const [portalInstanceObject, setPortalInstanceObject] =
-      useState<PortalInstanceObject | null>(null)
+    const [, setPortalInstanceObject] = useState<PortalInstanceObject | null>(
+      null,
+    )
 
     const cleanupReality = useCallback(() => {
       ctxRef.current?.attachmentRegistry.destroy()
@@ -183,17 +183,12 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       onSpatialMagnifyEnd,
     })
 
-    useBindSpatializedMotion({
-      binding: xrAnimation,
-      element: isReady ? (ctxRef.current?.reality ?? null) : null,
-      kind: 'dynamic3d',
-    })
-
     return (
       <RealityContext.Provider value={ctxRef.current}>
         <SpatializedContainer<SpatializedElementRef>
           component="div"
           ref={ref}
+          xr-animation={xrAnimation}
           // @ts-ignore
           createSpatializedElement={createReality}
           spatializedContent={content}
