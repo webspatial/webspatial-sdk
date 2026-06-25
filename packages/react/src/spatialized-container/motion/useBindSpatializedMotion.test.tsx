@@ -1,5 +1,42 @@
+/* @vitest-environment jsdom */
+
 import { renderHook } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
+
+vi.mock('@webspatial/core-sdk', () => ({
+  Spatialized2DElement: class Spatialized2DElement {
+    /**
+     * Creates a mock runtime 2D element instance for motion binding tests.
+     *
+     * @param id - Stable identifier used by the test.
+     */
+    constructor(readonly id: string) {}
+  },
+  SpatializedStatic3DElement: class SpatializedStatic3DElement {
+    /**
+     * Creates a mock runtime static 3D element instance for motion binding
+     * tests.
+     *
+     * @param id - Stable identifier used by the test.
+     */
+    constructor(readonly id: string) {}
+  },
+  SpatializedDynamic3DElement: class SpatializedDynamic3DElement {
+    /**
+     * Creates a mock runtime dynamic 3D element instance for motion binding
+     * tests.
+     *
+     * @param id - Stable identifier used by the test.
+     */
+    constructor(readonly id: string) {}
+  },
+}))
+
+import {
+  Spatialized2DElement,
+  SpatializedDynamic3DElement,
+  SpatializedStatic3DElement,
+} from '@webspatial/core-sdk'
 import { useBindSpatializedMotion } from './useBindSpatializedMotion'
 
 function createBinding() {
@@ -16,15 +53,17 @@ function createBinding() {
 }
 
 describe('useBindSpatializedMotion', () => {
-  test('binds the resolved element once and unbinds through __onUnbind', () => {
+  test('resolves Spatialized2DElement to spatialized2d and unbinds on unmount', () => {
     const binding = createBinding()
-    const element = { id: 'portal-1' }
+    const element = new Spatialized2DElement(
+      'portal-1',
+      window as unknown as WindowProxy,
+    )
 
     const { unmount } = renderHook(() =>
       useBindSpatializedMotion({
         binding,
-        element: element as any,
-        kind: 'spatialized2d',
+        element,
       }),
     )
 
@@ -37,26 +76,87 @@ describe('useBindSpatializedMotion', () => {
     expect(binding.__setElement).toHaveBeenCalledTimes(1)
   })
 
+  test('resolves SpatializedStatic3DElement to static3d', () => {
+    const binding = createBinding()
+    const element = new SpatializedStatic3DElement('model-1')
+
+    renderHook(() =>
+      useBindSpatializedMotion({
+        binding,
+        element,
+      }),
+    )
+
+    expect(binding.__setElement).toHaveBeenCalledTimes(1)
+    expect(binding.__setElement).toHaveBeenCalledWith(element, 'static3d')
+  })
+
+  test('resolves SpatializedDynamic3DElement to dynamic3d', () => {
+    const binding = createBinding()
+    const element = new SpatializedDynamic3DElement('reality-1')
+
+    renderHook(() =>
+      useBindSpatializedMotion({
+        binding,
+        element,
+      }),
+    )
+
+    expect(binding.__setElement).toHaveBeenCalledTimes(1)
+    expect(binding.__setElement).toHaveBeenCalledWith(element, 'dynamic3d')
+  })
+
+  test('falls back HTMLElement to spatialized2d', () => {
+    const binding = createBinding()
+    const element = document.createElement('div')
+
+    renderHook(() =>
+      useBindSpatializedMotion({
+        binding,
+        element,
+      }),
+    )
+
+    expect(binding.__setElement).toHaveBeenCalledTimes(1)
+    expect(binding.__setElement).toHaveBeenCalledWith(element, 'spatialized2d')
+  })
+
+  test('does not bind unrecognized objects', () => {
+    const binding = createBinding()
+    const element = { id: 'unknown-1' }
+
+    renderHook(() =>
+      useBindSpatializedMotion({
+        binding,
+        element: element as never,
+      }),
+    )
+
+    expect(binding.__setElement).not.toHaveBeenCalled()
+    expect(binding.__onUnbind).not.toHaveBeenCalled()
+  })
+
   test('does not rebind when unrelated render inputs change', () => {
     const binding = createBinding()
-    const element = { id: 'portal-2' }
+    const element = new SpatializedStatic3DElement('portal-2')
 
     const { rerender, unmount } = renderHook(
-      ({ active }) =>
+      ({ active, revision }) => {
+        void revision
         useBindSpatializedMotion({
           binding: active ? (binding as any) : undefined,
-          element: active ? (element as any) : null,
-          kind: 'static3d',
-        }),
+          element: active ? element : null,
+        })
+      },
       {
-        initialProps: { active: true },
+        initialProps: { active: true, revision: 1 },
       },
     )
 
     expect(binding.__setElement).toHaveBeenCalledTimes(1)
     expect(binding.__onUnbind).not.toHaveBeenCalled()
 
-    rerender({ active: true })
+    rerender({ active: true, revision: 2 })
 
     expect(binding.__setElement).toHaveBeenCalledTimes(1)
     expect(binding.__onUnbind).not.toHaveBeenCalled()

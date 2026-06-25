@@ -9,7 +9,12 @@ import {
   SpatialEventOptions,
   SpatializedElementRef,
 } from './types'
-import type { Spatialized2DElement, Vec3 } from '@webspatial/core-sdk'
+import type {
+  Spatialized2DElement,
+  SpatializedDynamic3DElement,
+  SpatializedStatic3DElement,
+  Vec3,
+} from '@webspatial/core-sdk'
 
 function constrainedAxisToVec3(
   input: SpatialEventOptions['constrainedToAxis'] | undefined,
@@ -137,8 +142,11 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
 
   useBindSpatializedMotion({
     binding: xrAnimation,
-    element: spatializedElement as Spatialized2DElement | null,
-    kind: 'spatialized2d',
+    element: (spatializedElement ?? null) as
+      | Spatialized2DElement
+      | SpatializedStatic3DElement
+      | SpatializedDynamic3DElement
+      | null,
   })
 
   const PlaceholderEl = renderPlaceholderInSubPortal(
