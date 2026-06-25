@@ -122,6 +122,11 @@ export default function SpatialElementMotionStaticModelContainerPage() {
           </div>
         </div>
 
+        <div className="mb-4 rounded-xl border border-gray-800 bg-black/30 p-3 font-mono text-xs text-gray-300">
+          style: opacity={String(style.opacity ?? '-')} transform=
+          {String(style.transform ?? '-')}
+        </div>
+
         <div className="mb-4 flex flex-wrap gap-2">
           <button
             type="button"
