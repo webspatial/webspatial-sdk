@@ -165,9 +165,10 @@ Native MUST sample each track independently at timeline time `t`, then assemble 
 - **WHEN** `api.reset()` is called
 - **THEN** the SDK MUST emit the `from` values, MUST keep `playState` at `idle`, and MUST keep `finished` as `false`
 
-#### Scenario: idle finish still emits end values
+#### Scenario: bound idle finish still emits end values
 
 - **GIVEN** the motion is already `idle`
+- **AND** a native-backed `AnimationObject` already exists
 - **WHEN** `api.finish()` is called
 - **THEN** the SDK MUST emit the `to` values, MUST move `playState` to `finished`, and MUST set `finished` to `true`
 

@@ -80,6 +80,7 @@ Spatialized element motion MUST 使用 native-first 的 `AnimationObject` 目标
 
 #### Scenario: finish() 跳到最终值
 
+- **GIVEN** controller 已经持有一个 native-backed `AnimationObject`
 - **WHEN** 调用 `api.finish()`
 - **THEN** style MUST 跳到 `to`（最终）值，`playState` MUST 变为 `finished`，`finished` MUST 变为 `true`，且 MUST 调用 `onComplete` 并传入最终值
 
@@ -89,11 +90,14 @@ Spatialized element motion MUST 使用 native-first 的 `AnimationObject` 目标
 - **WHEN** 调用 `api.reset()`
 - **THEN** SDK MUST 继续发出 `from` 值，并且 MUST 保持 `playState` 为 `idle`
 
-#### Scenario: idle.finish() 不得为 no-op
+#### Scenario: 绑定前的 finish() 会排队，直到 native 确认终态
 
-- **GIVEN** 动画已经处于 `idle`
+- **GIVEN** 动画处于 `idle`，且还不存在 native-backed `AnimationObject`
 - **WHEN** 调用 `api.finish()`
-- **THEN** SDK MUST 继续发出 `to` 值，并且 MUST 将 `playState` 切换为 `finished`
+- **THEN** SDK MUST 记录一条显式排队的 `finish` 命令
+- **AND** 在 native 确认前，API MUST NOT 自行报告 `playState=finished` 或 `finished=true`
+- **AND** native-backed `AnimationObject` 创建完成后，SDK MUST flush 这条排队的 `finish` 命令
+- **AND** 只有后续 native 终态确认才 MAY 将 API 切换为 `playState=finished` 且 `finished=true`
 
 #### Scenario: 只有从 idle 或 finished 启动的新 play 会话才会读取最新配置
 
@@ -185,7 +189,7 @@ Config MUST 支持以下生命周期回调：
 
 #### Scenario: finish() 触发 onComplete
 
-- **WHEN** 调用 `api.finish()`
+- **WHEN** 调用 `api.finish()` 且 native 确认终态
 - **THEN** MUST 调用 `onComplete` 并传入 `to` 值（与自然结束相同）
 
 #### Scenario: stop() 触发 onStop
@@ -205,7 +209,7 @@ Config MUST 支持以下生命周期回调：
 
 #### Scenario: finish() 会设置 finished 标记
 
-- **WHEN** 调用 `api.finish()`
+- **WHEN** 调用 `api.finish()` 且 native 确认终态
 - **THEN** `finished` 标记 MUST 为 `true`
 
 #### Scenario: Controller state 只表达整体会话
@@ -438,6 +442,14 @@ SDK MUST 通过一个 opaque React `animation` binding 实现容器动画，该 
 - **AND** `animation` 随后绑定到支持的目标
 - **THEN** SDK MUST 执行排队的显式 play
 - **AND** `autoStart: false` MUST 只禁止 implicit play-on-bind
+
+#### Scenario: 绑定前显式 finish 会在绑定后 flush
+
+- **GIVEN** `useAnimation({ ..., autoStart: false })` 返回了未绑定的 `animation`
+- **WHEN** 应用代码在绑定前显式调用 `api.finish()`
+- **AND** `animation` 随后绑定到支持的目标
+- **THEN** native-backed `AnimationObject` 创建完成后，SDK MUST flush 这条排队的显式 `finish` 命令
+- **AND** API MUST 继续以 native 状态确认作为唯一 finished 状态来源，而不是本地合成一个 `finished` 状态
 
 #### Scenario: Static3D opacity 在校验阶段被拒绝
 

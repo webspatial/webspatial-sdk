@@ -80,6 +80,7 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 
 #### Scenario: finish() jumps to final values
 
+- **GIVEN** a native-backed `AnimationObject` already exists for the controller
 - **WHEN** `api.finish()` is called
 - **THEN** the style MUST jump to the `to` (final) values, `playState` MUST become `finished`, `finished` MUST become `true`, and `onComplete` MUST be invoked with the final values
 
@@ -89,11 +90,14 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 - **WHEN** `api.reset()` is called
 - **THEN** the SDK MUST still emit the `from` values and MUST keep `playState` at `idle`
 
-#### Scenario: finish() is not a no-op while idle
+#### Scenario: pre-bind finish() is queued until native confirms the terminal state
 
-- **GIVEN** the motion is already `idle`
+- **GIVEN** the motion is `idle` and no native-backed `AnimationObject` exists yet
 - **WHEN** `api.finish()` is called
-- **THEN** the SDK MUST still emit the `to` values and MUST transition `playState` to `finished`
+- **THEN** the SDK MUST record an explicit queued `finish` command
+- **AND** before native confirmation, the API MUST NOT independently report `playState=finished` or `finished=true`
+- **AND** once the native-backed `AnimationObject` is created, the SDK MUST flush that queued `finish` command
+- **AND** only the subsequent native terminal state confirmation MAY transition the API to `playState=finished` and `finished=true`
 
 #### Scenario: Only a new play session from idle or finished loads the latest config
 
@@ -185,7 +189,7 @@ The terminal methods MUST remain independent commands: `stop()` terminates an ac
 
 #### Scenario: onComplete fires on finish()
 
-- **WHEN** `api.finish()` is called
+- **WHEN** `api.finish()` is called and native confirms the terminal state
 - **THEN** `onComplete` MUST be invoked with the `to` values (same as natural end)
 
 #### Scenario: onStop fires on stop()
@@ -205,7 +209,7 @@ The terminal methods MUST remain independent commands: `stop()` terminates an ac
 
 #### Scenario: finished flag becomes true on finish
 
-- **WHEN** `api.finish()` is called
+- **WHEN** `api.finish()` is called and native confirms the terminal state
 - **THEN** the `finished` flag MUST be `true`
 
 #### Scenario: Controller state is whole-session only
@@ -438,6 +442,14 @@ The public hook `useAnimation(config)` MUST NOT require a `kind` field in config
 - **AND** the `animation` later binds to a supported target
 - **THEN** the SDK MUST execute the queued explicit play
 - **AND** `autoStart: false` MUST only prevent implicit play-on-bind
+
+#### Scenario: explicit pre-bind finish flushes after binding
+
+- **GIVEN** `useAnimation({ ..., autoStart: false })` returns an unbound `animation`
+- **WHEN** application code explicitly calls `api.finish()` before binding
+- **AND** the `animation` later binds to a supported target
+- **THEN** the SDK MUST flush the queued explicit `finish` command after the native-backed `AnimationObject` is created
+- **AND** the API MUST remain driven by native state confirmation rather than a locally synthesized `finished` state
 
 #### Scenario: Static3D opacity is rejected during validation
 
