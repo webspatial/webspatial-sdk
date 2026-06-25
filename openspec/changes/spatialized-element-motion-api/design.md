@@ -363,6 +363,8 @@ sequenceDiagram
 
 `autoStart: false` only disables implicit play-on-bind and MUST NOT drop explicit pre-bind `api.play()`.
 
+`api.finish()` has split semantics: before bind it is an explicit queued intent, so the visible API stays `queued` with `finished=false`; after the native-backed `AnimationObject` exists, the queued command flushes and the terminal state only becomes `finished` when native confirms it.
+
 ## Frame loop lifecycle
 
 `Frame driver / CADisplayLink` is an internal scheduling capability of `SpatializedElementAnimationManager`, backed by a platform frame callback such as `CADisplayLink`. The driver only provides per-frame timestamps to the manager and does not own animationId, target element, timeline, playback state, or WebMsg emission responsibilities.

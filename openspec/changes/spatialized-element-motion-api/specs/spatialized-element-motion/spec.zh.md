@@ -95,7 +95,8 @@ Spatialized element motion MUST 使用 native-first 的 `AnimationObject` 目标
 - **GIVEN** 动画处于 `idle`，且还不存在 native-backed `AnimationObject`
 - **WHEN** 调用 `api.finish()`
 - **THEN** SDK MUST 记录一条显式排队的 `finish` 命令
-- **AND** 在 native 确认前，API MUST NOT 自行报告 `playState=finished` 或 `finished=true`
+- **AND** 在 native 确认前，公开可见的 `playState` MUST 保持为 `queued`
+- **AND** 在 native 确认前，公开可见的 `finished` MUST 保持为 `false`
 - **AND** native-backed `AnimationObject` 创建完成后，SDK MUST flush 这条排队的 `finish` 命令
 - **AND** 只有后续 native 终态确认才 MAY 将 API 切换为 `playState=finished` 且 `finished=true`
 
