@@ -69,12 +69,13 @@ describe('SpatialDiv probe mirrors host intrinsic tag (h1 CSS transform)', funct
     })
 
     await runner.waitForFunction(
-      () => !!document.querySelector(`[data-testid="${TEST_ID}"]`),
+      () =>
+        !!document.querySelector('[data-testid="basic-transform-spatial-h1"]'),
     )
 
     await runner.waitForFunction(() => {
       const el = document.querySelector(
-        `[data-testid="${TEST_ID}"]`,
+        '[data-testid="basic-transform-spatial-h1"]',
       ) as HTMLElement | null
       const fn = (window as any).getSpatialized2DElement
       return !!el && typeof fn === 'function' && !!fn(el)

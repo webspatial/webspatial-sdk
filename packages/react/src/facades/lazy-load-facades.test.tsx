@@ -9,6 +9,7 @@ import {
 } from '../runtime/bridge'
 import * as reality from '../reality'
 import { Model } from './Model'
+import { Ornament } from './Ornament'
 import { Reality } from './Reality'
 import {
   AttachmentEntity,
@@ -70,6 +71,9 @@ function makeSentinelSpatialImpl(): SpatialImplementation {
       {children}
     </div>
   ))
+  const SentinelOrnament = ({ children }: { children?: React.ReactNode }) => (
+    <div data-sentinel="Ornament">{children}</div>
+  )
   const makeSentinelEntity = (name: string) =>
     forwardRef<HTMLElement, { children?: React.ReactNode }>(
       ({ children }, _ref) => <div data-sentinel={name}>{children}</div>,
@@ -104,6 +108,7 @@ function makeSentinelSpatialImpl(): SpatialImplementation {
 
   return {
     Model: SentinelModel,
+    Ornament: SentinelOrnament,
     Reality: SentinelReality,
     Entity: makeSentinelEntity('Entity'),
     BoxEntity: makeSentinelEntity('BoxEntity'),
@@ -251,6 +256,18 @@ describe('lazy-load facades', () => {
 
     it('displayName is "Reality"', () => {
       expect(Reality.displayName).toBe('Reality')
+    })
+  })
+
+  describe('Ornament facade — unsupported fallback returns null', () => {
+    it('renders null in plain web and does not mount children', () => {
+      const { container, queryByTestId } = render(
+        <Ornament>
+          <span data-testid="ornament-child" />
+        </Ornament>,
+      )
+      expect(container.children.length).toBe(0)
+      expect(queryByTestId('ornament-child')).toBeNull()
     })
   })
 

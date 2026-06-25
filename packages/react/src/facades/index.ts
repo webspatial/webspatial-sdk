@@ -4,6 +4,9 @@ export type { ModelProps, ModelRef } from './Model'
 export { Reality } from './Reality'
 export type { RealityProps } from './Reality'
 
+export { Ornament } from './Ornament'
+export type { OrnamentProps } from './Ornament'
+
 export {
   AttachmentEntity,
   Box,

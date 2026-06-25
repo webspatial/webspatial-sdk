@@ -8,6 +8,7 @@
  */
 
 export const COMPONENT_KEYS = [
+  'Ornament',
   'Model',
   'Reality',
   'Entity',

@@ -7,10 +7,12 @@ import {
   UpdateSpatialSceneProperties,
   CreateSpatialScene,
   AddSpatializedElementToSpatialScene,
+  AddOrnamentToScene,
   InspectSpatialScene,
   CreateSpatialized2DElement,
   UpdateSpatialized2DElementProperties,
   UpdateSpatializedElementTransform,
+  UpdateOrnament,
   Inspect,
   DestroyCommand,
   AddSpatializedElementToSpatialized2DElement,
@@ -375,6 +377,30 @@ export class PuppeteerRunner {
       return sceneData
     })
 
+    await this.page.exposeFunction(
+      '__handleOrnamentWindowOpen',
+      async (data: any) => {
+        console.log('Handling createOrnament window.open:', data)
+        const ornamentId = data?.id
+        const spatialScene = webSpatial?.getCurrentScene()
+        if (!ornamentId || !spatialScene) {
+          return {
+            success: false,
+            error: 'invalid createOrnament window.open',
+          }
+        }
+
+        const ornament = spatialScene.createOrnament(ornamentId, data)
+        this.jsbManager?.addSpatialObject(ornamentId, {
+          id: ornamentId,
+          type: 'Ornament',
+          active: ornament.active,
+          properties: ornament.options,
+        })
+        return { success: true, data: ornament }
+      },
+    )
+
     // Set up iframe message listener
     await this.page.exposeFunction('onIframeLoaded', (data: any) => {
       this.handleIframeLoaded(data)
@@ -645,6 +671,63 @@ export class PuppeteerRunner {
       },
     )
 
+    this.jsbManager.registerWithData(AddOrnamentToScene, (data, callback) => {
+      console.log('Handling AddOrnamentToScene:', data)
+      const ornamentId = data.ornamentId
+      const spatialScene = this.webSpatial?.getCurrentScene()
+      if (!ornamentId || !spatialScene) {
+        callback({
+          success: false,
+          error: 'invalid AddOrnamentToScene command',
+        })
+        return
+      }
+
+      const ornament = spatialScene.addOrnament(ornamentId)
+      if (!ornament) {
+        callback({
+          success: false,
+          error: 'invalid AddOrnamentToScene ornament id not exist',
+        })
+        return
+      }
+
+      const jsbObject = this.jsbManager?.getSpatialObject(ornamentId) || {
+        id: ornamentId,
+        type: 'Ornament',
+      }
+      this.jsbManager?.addSpatialObject(ornamentId, {
+        ...jsbObject,
+        active: true,
+        properties: ornament.options,
+      })
+      callback({ success: true, data: baseReplyData })
+    })
+
+    this.jsbManager.registerWithData(UpdateOrnament, (data, callback) => {
+      console.log('Handling UpdateOrnament:', data)
+      const spatialScene = this.webSpatial?.getCurrentScene()
+      const ornament = spatialScene?.updateOrnament(data.id, data)
+      if (!ornament) {
+        callback({
+          success: false,
+          error: 'invalid UpdateOrnament ornament id not exist',
+        })
+        return
+      }
+
+      const jsbObject = this.jsbManager?.getSpatialObject(data.id) || {
+        id: data.id,
+        type: 'Ornament',
+      }
+      this.jsbManager?.addSpatialObject(data.id, {
+        ...jsbObject,
+        active: ornament.active,
+        properties: ornament.options,
+      })
+      callback({ success: true, data: baseReplyData })
+    })
+
     // Register UpdateSpatialized2DElementProperties command handler
     this.jsbManager.registerWithData(
       UpdateSpatialized2DElementProperties,
@@ -835,7 +918,11 @@ export class PuppeteerRunner {
         const spatialSceneObject =
           this.webSpatial?.getCurrentScene()?.spatialObjects[data.id]
         if (spatialSceneObject) {
-          spatialSceneObject.destroy()
+          if ((spatialSceneObject as any).type === 'Ornament') {
+            this.webSpatial?.getCurrentScene()?.removeOrnament(data.id)
+          } else {
+            spatialSceneObject.destroy()
+          }
         }
         callback({ success: true })
       } else {

@@ -152,6 +152,64 @@ describe('PicoOSPlatform SpatialDiv request correlation', () => {
     expect(SpatialWebEvent.eventReceiver[requestId!]).toBeUndefined()
   })
 
+  it('opens Ornament protocol with command, options, rid, and wsepoch', async () => {
+    window.__webspatialsdk__ = { pageEpoch: '5' }
+    const { SpatialWebEvent } = await import('../SpatialWebEvent')
+    SpatialWebEvent.init()
+    const open = vi.fn(
+      () =>
+        ({
+          document: {
+            readyState: 'complete',
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+          },
+        }) as unknown as Window,
+    )
+    vi.spyOn(window, 'open').mockImplementation(open)
+
+    const { PicoOSPlatform } = await import('./pico-os/PicoOSPlatform')
+    const platform = new PicoOSPlatform()
+    const pending = platform.createNativeOrnament({
+      attachmentAnchor: 'bottom',
+      contentAlignment: 'back',
+      visibility: 'visible',
+      width: 240,
+      height: 120,
+      cornerRadius:
+        '{"topLeading":8,"bottomLeading":10,"topTrailing":12,"bottomTrailing":14}',
+      backgroundMaterial: 'thin',
+    })
+
+    const openedUrl = (open.mock.calls[0] as unknown[])[0] as string
+    const url = new URL(openedUrl)
+    const requestId = url.searchParams.get('rid')
+    expect(url.protocol).toBe('webspatial:')
+    expect(url.host).toBe('createOrnament')
+    expect(url.searchParams.get('command')).toBe('createOrnament')
+    expect(url.searchParams.get('wsepoch')).toBe('5')
+    expect(url.searchParams.get('attachmentAnchor')).toBe('bottom')
+    expect(url.searchParams.get('contentAlignment')).toBe('back')
+    expect(url.searchParams.get('visibility')).toBe('visible')
+    expect(url.searchParams.get('width')).toBe('240')
+    expect(url.searchParams.get('height')).toBe('120')
+    expect(url.searchParams.get('cornerRadius')).toBe(
+      '{"topLeading":8,"bottomLeading":10,"topTrailing":12,"bottomTrailing":14}',
+    )
+    expect(url.searchParams.get('backgroundMaterial')).toBe('thin')
+
+    window.__SpatialWebEvent({
+      id: requestId!,
+      data: { spatialId: 'ornament-1' },
+    })
+
+    await expect(pending).resolves.toMatchObject({
+      success: true,
+      data: { id: 'ornament-1' },
+    })
+    expect(SpatialWebEvent.eventReceiver[requestId!]).toBeUndefined()
+  })
+
   it('times out pending SpatialDiv requests', async () => {
     vi.useFakeTimers()
     vi.spyOn(window, 'open').mockImplementation(() => null)

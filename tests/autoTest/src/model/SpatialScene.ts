@@ -29,6 +29,156 @@ export interface WebViewElementInfo {
   webViewModel: PuppeteerWebViewModel
 }
 
+type OrnamentVisibility = 'visible' | 'hidden'
+
+export interface OrnamentOptions {
+  attachmentAnchor?: string
+  contentAlignment?: string
+  visibility?: string
+  width?: number
+  height?: number
+  cornerRadius?: Partial<CornerRadius>
+  backgroundMaterial?: BackgroundMaterial
+}
+
+export interface OrnamentRecord {
+  id: string
+  type: 'Ornament'
+  options: {
+    attachmentAnchor: string
+    contentAlignment: string
+    visibility: OrnamentVisibility
+    width: number
+    height: number
+    cornerRadius: CornerRadius
+    backgroundMaterial: BackgroundMaterial
+  }
+  active: boolean
+  order: number
+}
+
+const ORNAMENT_POINTS = new Set([
+  'topLeadingFront',
+  'topLeading',
+  'topLeadingBack',
+  'topFront',
+  'top',
+  'topBack',
+  'topTrailingFront',
+  'topTrailing',
+  'topTrailingBack',
+  'leadingFront',
+  'leading',
+  'leadingBack',
+  'front',
+  'center',
+  'back',
+  'trailingFront',
+  'trailing',
+  'trailingBack',
+  'bottomLeadingFront',
+  'bottomLeading',
+  'bottomLeadingBack',
+  'bottomFront',
+  'bottom',
+  'bottomBack',
+  'bottomTrailingFront',
+  'bottomTrailing',
+  'bottomTrailingBack',
+])
+
+const INVALID_ATTACHMENT_ANCHORS = new Set(['topFront', 'top', 'topBack'])
+
+const DEFAULT_ORNAMENT_OPTIONS = {
+  attachmentAnchor: 'bottom',
+  contentAlignment: 'back',
+  visibility: 'visible' as OrnamentVisibility,
+  width: 200,
+  height: 150,
+  cornerRadius: {
+    topLeading: 0,
+    bottomLeading: 0,
+    topTrailing: 0,
+    bottomTrailing: 0,
+  },
+  backgroundMaterial: BackgroundMaterial.none,
+}
+
+function normalizeOrnamentOptions(options: OrnamentOptions = {}) {
+  const attachmentAnchor =
+    typeof options.attachmentAnchor === 'string' &&
+    ORNAMENT_POINTS.has(options.attachmentAnchor) &&
+    !INVALID_ATTACHMENT_ANCHORS.has(options.attachmentAnchor)
+      ? options.attachmentAnchor
+      : DEFAULT_ORNAMENT_OPTIONS.attachmentAnchor
+
+  const contentAlignment =
+    typeof options.contentAlignment === 'string' &&
+    ORNAMENT_POINTS.has(options.contentAlignment)
+      ? options.contentAlignment
+      : DEFAULT_ORNAMENT_OPTIONS.contentAlignment
+
+  const visibility =
+    options.visibility === 'hidden' || options.visibility === 'visible'
+      ? options.visibility
+      : DEFAULT_ORNAMENT_OPTIONS.visibility
+
+  const width =
+    typeof options.width === 'number' &&
+    Number.isFinite(options.width) &&
+    options.width > 0
+      ? options.width
+      : DEFAULT_ORNAMENT_OPTIONS.width
+
+  const height =
+    typeof options.height === 'number' &&
+    Number.isFinite(options.height) &&
+    options.height > 0
+      ? options.height
+      : DEFAULT_ORNAMENT_OPTIONS.height
+
+  const cornerRadius = {
+    topLeading: normalizeRadiusValue(
+      options.cornerRadius?.topLeading,
+      DEFAULT_ORNAMENT_OPTIONS.cornerRadius.topLeading,
+    ),
+    bottomLeading: normalizeRadiusValue(
+      options.cornerRadius?.bottomLeading,
+      DEFAULT_ORNAMENT_OPTIONS.cornerRadius.bottomLeading,
+    ),
+    topTrailing: normalizeRadiusValue(
+      options.cornerRadius?.topTrailing,
+      DEFAULT_ORNAMENT_OPTIONS.cornerRadius.topTrailing,
+    ),
+    bottomTrailing: normalizeRadiusValue(
+      options.cornerRadius?.bottomTrailing,
+      DEFAULT_ORNAMENT_OPTIONS.cornerRadius.bottomTrailing,
+    ),
+  }
+
+  const backgroundMaterial =
+    options.backgroundMaterial !== undefined &&
+    Object.values(BackgroundMaterial).includes(options.backgroundMaterial)
+      ? options.backgroundMaterial
+      : DEFAULT_ORNAMENT_OPTIONS.backgroundMaterial
+
+  return {
+    attachmentAnchor,
+    contentAlignment,
+    visibility,
+    width,
+    height,
+    cornerRadius,
+    backgroundMaterial,
+  }
+}
+
+function normalizeRadiusValue(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? value
+    : fallback
+}
+
 export class SpatialScene
   extends SpatialObject
   implements ISpatialScene, ScrollAbleSpatialElementContainer
@@ -47,6 +197,7 @@ export class SpatialScene
 
   private _spatialObjects: Record<string, any> = {}
   private _children: Record<string, SpatializedElement> = {}
+  private _ornaments: Record<string, OrnamentRecord> = {}
   // private _boundSpatialIframeCreatedHandler: EventListener;
 
   get cornerRadius(): CornerRadius {
@@ -103,6 +254,16 @@ export class SpatialScene
 
   get spatialObjects(): Record<string, SpatialObject> {
     return { ...this._spatialObjects }
+  }
+
+  get ornaments(): Record<string, OrnamentRecord> {
+    return { ...this._ornaments }
+  }
+
+  get activeOrnaments(): OrnamentRecord[] {
+    return Object.values(this._ornaments)
+      .filter(ornament => ornament.active)
+      .sort((a, b) => a.order - b.order)
   }
 
   constructor(
@@ -393,6 +554,69 @@ export class SpatialScene
     }
   }
 
+  createOrnament(id: string, options: OrnamentOptions = {}): OrnamentRecord {
+    const existing = this._ornaments[id]
+    const ornament: OrnamentRecord = {
+      id,
+      type: 'Ornament',
+      options: normalizeOrnamentOptions({
+        ...existing?.options,
+        ...options,
+      }),
+      active: existing?.active ?? false,
+      order: existing?.order ?? Object.keys(this._ornaments).length,
+    }
+
+    this._ornaments[id] = ornament
+    this._spatialObjects[id] = ornament
+    this.emit('ornamentCreated', { ornament })
+    return ornament
+  }
+
+  addOrnament(id: string): OrnamentRecord | null {
+    const ornament = this._ornaments[id]
+    if (!ornament) return null
+
+    ornament.active = true
+    this._ornaments[id] = ornament
+    this._spatialObjects[id] = ornament
+
+    this.emit('ornamentAdded', { ornament })
+    return ornament
+  }
+
+  updateOrnament(
+    id: string,
+    options: OrnamentOptions = {},
+  ): OrnamentRecord | null {
+    const ornament = this._ornaments[id]
+    if (!ornament) return null
+
+    ornament.options = normalizeOrnamentOptions({
+      ...ornament.options,
+      ...options,
+      cornerRadius:
+        options.cornerRadius === undefined
+          ? ornament.options.cornerRadius
+          : {
+              ...ornament.options.cornerRadius,
+              ...(options.cornerRadius ?? {}),
+            },
+    })
+    this._ornaments[id] = ornament
+    this._spatialObjects[id] = ornament
+    this.emit('ornamentUpdated', { ornament })
+    return ornament
+  }
+
+  removeOrnament(id: string): void {
+    if (!this._ornaments[id]) return
+
+    delete this._ornaments[id]
+    delete this._spatialObjects[id]
+    this.emit('ornamentRemoved', { id })
+  }
+
   /**
    * Send message to web page
    */
@@ -435,8 +659,8 @@ export class SpatialScene
     }
   }
 
-  findSpatialObject(id: string): SpatializedElement | null {
-    return (this._spatialObjects[id] as SpatializedElement) || null
+  findSpatialObject(id: string): any | null {
+    return this._spatialObjects[id] || null
   }
 
   updateSpatializedElementProperties(
@@ -704,6 +928,7 @@ export class SpatialScene
       }
     })
     this._spatialObjects = {}
+    this._ornaments = {}
     this.backgroundMaterial = BackgroundMaterial.none
   }
 
@@ -734,6 +959,7 @@ export class SpatialScene
       }
     })
     this._spatialObjects = {}
+    this._ornaments = {}
     // Destroy all child elements
     Object.values(this._children).forEach(child => {
       if (child && typeof child.destroy === 'function') {

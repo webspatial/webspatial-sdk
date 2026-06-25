@@ -21,6 +21,7 @@ import { SpatialID } from './SpatialID'
 import { TransformVisibilityTaskContainer } from './TransformVisibilityTaskContainer'
 import { useDomProxy } from './hooks/useDomProxy'
 import { useInsideAttachment } from '../reality/context/InsideAttachmentContext'
+import { useInsideOrnament } from '../ornament/InsideOrnamentContext'
 import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
@@ -82,11 +83,17 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
 ) {
   const isWebSpatialEnv = getSession() !== null
   const insideAttachment = useInsideAttachment()
+  const insideOrnament = useInsideOrnament()
 
-  if (!isWebSpatialEnv || insideAttachment) {
+  if (!isWebSpatialEnv || insideAttachment || insideOrnament) {
     if (insideAttachment) {
       console.warn(
         `[WebSpatial] ${inprops.component || 'Spatial element'} cannot be used inside AttachmentAsset. Rendering as plain HTML.`,
+      )
+    }
+    if (insideOrnament) {
+      console.warn(
+        `[WebSpatial] ${inprops.component || 'Spatial element'} cannot be used inside Ornament content. Rendering as plain HTML.`,
       )
     }
     return <DegradedContainer {...inprops} innerRef={ref} />
