@@ -363,6 +363,8 @@ sequenceDiagram
 
 `autoStart: false` 只禁止 implicit play-on-bind，不得丢弃 bind 前显式 `api.play()`。
 
+`api.finish()` 语义是分段的：bind 前它只表示显式排队意图，因此公开可见状态必须保持 `queued` 且 `finished=false`；native-backed `AnimationObject` 创建后会 flush 这条命令，随后只有 native 确认终态时才进入 `finished`。
+
 ## Frame loop 生命周期
 
 `Frame driver / CADisplayLink` 是 `SpatializedElementAnimationManager` 的内部调度能力，底层可由 `CADisplayLink` 等平台 frame callback 实现。driver 只负责向 manager 提供每帧 timestamp，不持有 animationId、target element、timeline、playback state 或 WebMsg 发送职责。

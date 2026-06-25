@@ -87,7 +87,7 @@ type SpatializedMotionPlayState = 'idle' | 'queued' | 'running' | 'paused' | 'fi
 |------|----------|-----------|-----------|----------|---------|---------|
 | `stop()` | 仅 active session | 当前帧值 | `idle` | `false` | `onStop` | Native `AnimationObject` 回传当前值；纯 Web 目标态路径不提供 playback fallback |
 | `reset()` | 无条件 | from 值 | `idle` | `false` | `onReset` | Native `AnimationObject` 回传起点值；纯 Web 目标态路径不提供 playback fallback |
-| `finish()` | 已有 native object 时立即生效；bind 前仅记录显式命令 | native 确认后输出 to 值 | native 确认后为 `finished`；确认前可保持 `queued` | native 确认后为 `true`；确认前为 `false` | `onComplete` | bind/create 前只记录 explicit finish intent；native `AnimationObject` 创建后 flush，并以 native 回传终态为准 |
+| `finish()` | 已有 native object 时立即生效；bind/create 前仅记录显式命令 | native 确认后输出 to 值 | bind/create 前保持 `queued`；native 确认后为 `finished` | bind/create 前保持 `false`；native 确认后为 `true` | `onComplete` | bind/create 前只记录 explicit finish intent；native `AnimationObject` 创建后 flush，并以 native 回传终态为准 |
 | 自然结束 | active 播放自然结束 | to 值 | `finished` | `true` | `onComplete` | Native `AnimationObject` 到达最后一帧并发出终态 |
 
 补充语义：
@@ -96,7 +96,7 @@ type SpatializedMotionPlayState = 'idle' | 'queued' | 'running' | 'paused' | 'fi
 - `finish()` 在 native 确认终态后 `finished = true`
 - `idle.reset()` 不是 no-op，仍需发出起点值
 - 已绑定且存在 native object 的 `idle.finish()` 不是 no-op，仍需发出终点值并进入 `finished`
-- bind/create 前的 `finish()` 只记录 explicit finish intent；在 native object 创建并确认终态前，API MAY 继续表现为 `queued` 且 `finished = false`
+- bind/create 前的 `finish()` 只记录 explicit finish intent；在 native object 创建并确认终态前，API MUST 继续表现为 `queued` 且 `finished = false`
 - `idle.stop()` 维持现状，不新增语义
 - `stop()`、`reset()`、`finish()` 互相独立，不会互相吞指令
 - paused 状态下调用 `play()` 等价于 `resume()`

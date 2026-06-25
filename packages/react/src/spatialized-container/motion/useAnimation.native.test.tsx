@@ -246,6 +246,7 @@ describe('useAnimation tuple api native backend', () => {
 
     expect(result.current[1].playState).toBe('queued')
     expect(result.current[1].finished).toBe(false)
+    expect(element.animation.finish).not.toHaveBeenCalled()
 
     await act(async () => {
       result.current[0].__setElement?.(element as any, 'spatialized2d')

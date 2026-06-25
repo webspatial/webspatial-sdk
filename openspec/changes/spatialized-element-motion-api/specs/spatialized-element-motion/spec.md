@@ -95,7 +95,8 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 - **GIVEN** the motion is `idle` and no native-backed `AnimationObject` exists yet
 - **WHEN** `api.finish()` is called
 - **THEN** the SDK MUST record an explicit queued `finish` command
-- **AND** before native confirmation, the API MUST NOT independently report `playState=finished` or `finished=true`
+- **AND** before native confirmation, the visible API `playState` MUST remain `queued`
+- **AND** before native confirmation, the visible API `finished` MUST remain `false`
 - **AND** once the native-backed `AnimationObject` is created, the SDK MUST flush that queued `finish` command
 - **AND** only the subsequent native terminal state confirmation MAY transition the API to `playState=finished` and `finished=true`
 
