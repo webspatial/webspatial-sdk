@@ -40,7 +40,7 @@ export default function SpatialElementMotionStaticModelContainerPage() {
   const { lines, log } = useLog()
   const static3dAnim = supports('useAnimation', ['static3d'])
 
-  const [motion, api] = useAnimation({
+  const [motion, api, style] = useAnimation({
     duration: DURATION,
     autoStart: true,
     timeline: TIMELINE_CONFIG,
@@ -71,7 +71,7 @@ export default function SpatialElementMotionStaticModelContainerPage() {
       }
     >
       <section
-        enable-xr-monitor
+        // enable-xr-monitor
         className="rounded-2xl border border-gray-800 bg-[#111] p-6 text-gray-200"
       >
         <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -101,6 +101,7 @@ export default function SpatialElementMotionStaticModelContainerPage() {
               xr-animation={motion as any}
               poster="/img/toy_drummer.png"
               style={{
+                ...style,
                 width: 320,
                 height: 320,
                 '--xr-depth': 120,
