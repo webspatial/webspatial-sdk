@@ -1,136 +1,208 @@
-# SpatialDiv Animation
+# Spatialized Motion
 
-The `useAnimation` hook provides native-driven animation for spatialized HTML elements (`SpatialDiv`). Animations run via `CADisplayLink` at 90Hz on visionOS, bypassing CSS transitions to deliver smooth frame-driven interpolation with property-level suppression that prevents DOM sync from interfering with animation mid-states.
+This document describes the current container-motion API shipped by
+`@webspatial/react-sdk`.
+
+The historical filename is retained, but the current public surface is the
+unified spatialized motion proposal:
+
+- Use `useAnimation(config)` for container motion
+- Bind with `xr-animation={animation}`
+- Read the tuple as `[animation, api, style]`
+- Use `play`, `pause`, `resume`, `stop`, `reset`, and `finish` for playback
+- Keep entity transform animation on `useEntityAnimation(config)`
 
 ## Quick Start
 
-```tsx
+```text
 import { useAnimation } from '@webspatial/react-sdk'
 
 function FadeInCard() {
-  const [animation, api] = useAnimation({
-    from: { opacity: 0, transform: { translate: { z: -50 } } },
-    to: { opacity: 1, transform: { translate: { z: 0 } } },
+  const [animation, api, style] = useAnimation({
+    from: {
+      opacity: 0,
+      transform: { translate: { y: 24, z: -50 } },
+    },
+    to: {
+      opacity: 1,
+      transform: { translate: { y: 0, z: 0 } },
+    },
     duration: 0.6,
     timingFunction: 'easeOut',
-    onComplete: (values) => console.log('Entrance complete', values),
+    onComplete: values => console.log('Entrance complete', values),
   })
 
   return (
-    <div enable-xr animation={animation}>
+    <div enable-xr style={{ ...style }} xr-animation={animation}>
+      <button onClick={() => api.finish()}>Finish</button>
       <h1>Hello Spatial World</h1>
     </div>
   )
 }
 ```
 
-## Visual Whitelist
+## Target Model
 
-Only visual fields that do **not** change the DOM layout box, native spatial panel size, depth, or spatial-position semantics are animatable:
+`useAnimation(config)` is target-agnostic. The SDK resolves the target when the
+returned binding is attached through `xr-animation`.
 
-| Field | Type | Units | Notes |
-|-------|------|-------|-------|
-| `transform.translate.x/y/z` | `number` | CSS pixels | — |
-| `transform.rotate.x/y/z` | `number` | degrees | Aligns with CSS `rotateX/Y/Z()` |
-| `transform.scale.x/y/z` | `number` | unitless | Aligns with CSS `scaleX/Y/Z()` |
-| `opacity` | `number` | — | Inclusive `[0, 1]` |
+| Binding target | Resolved kind | `style` behavior |
+|----------------|---------------|------------------|
+| `<div enable-xr>` | `spatialized2d` | Merge and snapshot outlet for current visual values |
+| `<Model>` | `static3d` | Always `{}`; playback is native-driven |
+| `<Reality>` | `dynamic3d` | Always `{}`; playback is native-driven |
 
-**Rejected fields** (will throw at validation): `width`, `height`, `back`, `backOffset`, `depth`, `backgroundMaterial`, `cornerRadius`, or any unknown field.
+Entity transform animation is not part of this container-motion path. Continue
+to use `useEntityAnimation(config)` for `Entity` animation inside `Reality`.
 
-Transform is composed in fixed order: **translate → rotate → scale**.
+## Recommended Config Shapes
+
+The recommended v1 authoring paths are `from` and `to`, or a percentage-based
+`timeline` object.
+
+```text
+const [animation, api, style] = useAnimation({
+  from: { opacity: 0, transform: { translate: { y: 24 } } },
+  to: { opacity: 1, transform: { translate: { y: 0 } } },
+  duration: 0.6,
+  timingFunction: 'easeOut',
+})
+
+const [timelineAnimation, timelineApi, timelineStyle] = useAnimation({
+  duration: 2,
+  timeline: {
+    '0%': {
+      opacity: 0,
+      transform: { translate: { y: 24 } },
+      timingFunction: 'easeOut',
+    },
+    '50%': { opacity: 1 },
+    '100%': {
+      opacity: 1,
+      transform: { translate: { y: 0 } },
+    },
+  },
+  timingFunction: 'easeInOut',
+})
+```
+
+Current implementation and types still accept `tracks` as a compatibility or
+advanced input, but `from` and `to` plus `timeline` remain the primary public
+authoring path.
+
+## Animatable Fields
+
+Only visual fields that do not change layout or container geometry are
+animatable.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `transform.translate.x/y/z` | `number` | CSS pixel units on 2D targets |
+| `transform.rotate.x/y/z` | `number` | Degrees |
+| `transform.scale.x/y/z` | `number` | Unitless |
+| `opacity` | `number` | Supported on `spatialized2d` and `dynamic3d` |
+
+Validation rejects layout-affecting or unsupported fields such as `width`,
+`height`, `back`, `backOffset`, `depth`, and unknown properties. Static3D does
+not currently ship `opacity` playback.
+
+Transform composition order is fixed: `translate`, then `rotate`, then `scale`.
 
 ## API Reference
 
-### `useAnimation(config: SpatialDivAnimationConfig)`
+### `useAnimation(config)`
 
-Returns `[SpatialDivAnimatedProps, SpatialDivAnimationApi]`.
+Returns `[animation, api, style]`.
 
-The hook auto-detects SpatialDiv mode based on the `to` key set. If `to` contains `transform` or `opacity`, the SpatialDiv path is selected. Entity keys (`position`, `rotation`, `scale`) select the entity path. Mixing both throws.
+- `animation` is the opaque binding passed to `xr-animation`
+- `api` is the playback controller
+- `style` is the style outlet for 2D merge and snapshot behavior
 
-### SpatialDivAnimationConfig
+### Config Surface
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `to` | `SpatialDivAnimatedValues` | — | **Required.** Target animation values (whitelist fields only). |
-| `from` | `SpatialDivAnimatedValues` | current native state | Start values. If omitted, snapshots current state at play time. |
-| `duration` | `number` | `0.3` | Duration in seconds. Must be `> 0` and finite. |
-| `timingFunction` | `TimingFunction` | `'easeInOut'` | `'linear'` \| `'easeIn'` \| `'easeOut'` \| `'easeInOut'` |
-| `delay` | `number` | `0` | Delay in seconds before visible motion begins. Must be `>= 0`. |
-| `loop` | `boolean \| { reverse?: boolean }` | `false` | `true` = reset loop; `{ reverse: true }` = ping-pong. |
-| `playbackRate` | `number` | `1` | Speed multiplier. Must be `> 0` and finite. |
-| `autoStart` | `boolean` | `true` | Start automatically when element is bound. |
-| `onStart` | `() => void` | — | Called once when the native session is established. |
-| `onComplete` | `(values: SpatialDivAnimatedValues) => void` | — | Called on natural completion with final values. |
-| `onCancel` | `(values: SpatialDivAnimatedValues) => void` | — | Called when `cancel()` is invoked; receives restored values. |
-| `onError` | `(error: AnimationError) => void` | — | Called on async native/bridge failures. |
+| Property | Type | Description |
+|----------|------|-------------|
+| `from` | `SpatializedVisualValues` | Start values for segment motion |
+| `to` | `SpatializedVisualValues` | End values for segment motion |
+| `timeline` | percentage keyframe object | CSS `@keyframes` style authoring path |
+| `duration` | `number` | Required total duration in seconds |
+| `timingFunction` | `TimingFunction` | Config-level default easing |
+| `delay` | `number` | Optional start delay in seconds |
+| `loop` | `boolean \| { reverse?: boolean }` | Loop or ping-pong playback |
+| `playbackRate` | `number` | Positive playback speed multiplier |
+| `autoStart` | `boolean` | Defaults to auto-play on bind |
+| `onStart` | `() => void` | Fires when playback begins |
+| `onComplete` | `(values) => void` | Fires on natural completion or native-confirmed `finish()` |
+| `onStop` | `(values) => void` | Fires when `stop()` terminates at current values |
+| `onReset` | `(values) => void` | Fires when `reset()` restores start values |
+| `onError` | `(error) => void` | Fires on asynchronous native failures |
 
-### SpatialDivAnimationApi
+### Playback API
 
-| Property/Method | Type | Description |
-|----------------|------|-------------|
-| `play()` | `void` | Start new session (from idle/finished), resume (from paused), or no-op (if running/queued). |
-| `pause()` | `void` | Pause the running animation. Can be called while queued (pauses on bind). |
-| `cancel()` | `void` | Cancel the session; native restores to `from` values. |
-| `isAnimating` | `boolean` | `true` while queued or running; `false` otherwise. |
-| `isPaused` | `boolean` | `true` when the session is paused. |
-| `playState` | `string` | `'idle'` \| `'queued'` \| `'running'` \| `'paused'` \| `'finished'` |
-| `finished` | `boolean` | `true` after natural completion; resets on next `play()` or `cancel()`. |
+| Method or field | Description |
+|-----------------|-------------|
+| `play()` | Starts a new session from `idle` or `finished` |
+| `pause()` | Pauses the current session |
+| `resume()` | Resumes a paused session |
+| `stop()` | Freezes current values, then moves to `idle` |
+| `reset()` | Seeks to `from` values, then moves to `idle` |
+| `finish()` | Seeks to final values through the native `AnimationObject` path |
+| `isAnimating` | `true` while queued or running |
+| `isPaused` | `true` while paused |
+| `playState` | `'idle' | 'queued' | 'running' | 'paused' | 'finished'` |
+| `finished` | `true` only after native confirms the finished terminal state |
+
+`pause()` and `resume()` are whole-session operations only. They do not accept
+track-level or key-level arguments.
 
 ## Playback Semantics
 
-### State Machine
-
-```
-idle → [play] → queued (if element not bound) → running → finished
-                                               ↕ pause/play
-                                              paused
-                       running/queued → [cancel] → idle
-```
-
-### Play Re-entry
+### `play()` Re-entry
 
 | Current state | `play()` behavior |
 |--------------|-------------------|
-| `idle` / `finished` | Start new session |
-| `paused` | Resume existing session (same `animationId`) |
-| `running` / `queued` | **No-op** (must `cancel()` first to restart) |
+| `idle` or `finished` | Starts a new session |
+| `paused` | Resumes the current session |
+| `running` or `queued` | No-op |
 
-### Lifecycle Callbacks
+### Terminal Commands
 
-- `onStart` fires once when the native session is established (not when queued).
-- `onComplete` and `onCancel` are **mutually exclusive** — exactly one fires per session.
-- `onError` fires independently on async bridge/native failures.
-- After unmount, **no callbacks fire** and Promises do not resolve.
+| Command | Result |
+|---------|--------|
+| `stop()` | Emits current values, sets `playState` to `idle`, keeps `finished=false`, fires `onStop(values)` |
+| `reset()` | Emits `from` values, sets `playState` to `idle`, keeps `finished=false`, fires `onReset(values)` |
+| `finish()` | Emits `to` values only after native confirmation, sets `playState` to `finished`, sets `finished=true`, fires `onComplete(values)` |
+
+### Pre-bind `finish()` Semantics
+
+When `api.finish()` is called before the binding has a concrete target or before
+the native `AnimationObject` exists, the command is queued instead of forcing a
+locally synthesized terminal state.
+
+1. Before bind and create, the explicit `finish` command is queued.
+2. The visible `api.playState` remains `queued`.
+3. The visible `api.finished` remains `false`.
+4. After bind and native object creation, the queued `finish` command is
+   flushed to native.
+5. Only after native confirms the terminal state does the API transition to
+   `playState='finished'`, `finished=true`, and invoke `onComplete(values)`.
+
+### Callback Semantics
+
+- `onComplete` fires on natural completion and on native-confirmed `finish()`
+- `onStop` fires on `stop()`
+- `onReset` fires on `reset()`
+- `onComplete`, `onStop`, and `onReset` are mutually exclusive for a given
+  session termination
+- `onError` remains independent
 
 ## Examples
 
-### Manual Rotation
+### 2D Container Motion
 
-```tsx
-function RotateBox() {
-  const [animation, api] = useAnimation({
-    from: { transform: { rotate: { y: 0 } } },
-    to: { transform: { rotate: { y: 180 } } },
-    duration: 2.0,
-    timingFunction: 'easeInOut',
-    autoStart: false,
-  })
-
-  return (
-    <div enable-xr animation={animation}>
-      <button onClick={() => api.play()}>Rotate</button>
-      <button onClick={() => api.pause()}>Pause</button>
-      <button onClick={() => api.cancel()}>Cancel</button>
-    </div>
-  )
-}
-```
-
-### Looping Float
-
-```tsx
+```text
 function FloatingCard() {
-  const [animation] = useAnimation({
+  const [animation, api, style] = useAnimation({
     from: { transform: { translate: { y: 0 } } },
     to: { transform: { translate: { y: -20 } } },
     duration: 1.5,
@@ -139,53 +211,77 @@ function FloatingCard() {
   })
 
   return (
-    <div enable-xr animation={animation}>
+    <div enable-xr style={{ ...style }} xr-animation={animation}>
+      <button onClick={() => api.pause()}>Pause</button>
+      <button onClick={() => api.resume()}>Resume</button>
       <p>I float forever</p>
     </div>
   )
 }
 ```
 
-### Entrance Fade + Scale
+### Static3D Container Motion
 
-```tsx
-function EntranceCard() {
+```text
+import { Model, useAnimation } from '@webspatial/react-sdk'
+
+function AnimatedModel() {
   const [animation] = useAnimation({
-    from: { opacity: 0, transform: { scale: { x: 0.8, y: 0.8, z: 0.8 } } },
-    to: { opacity: 1, transform: { scale: { x: 1, y: 1, z: 1 } } },
-    duration: 0.5,
+    from: { transform: { rotate: { y: 0 } } },
+    to: { transform: { rotate: { y: 180 } } },
+    duration: 1.2,
+    timingFunction: 'easeInOut',
+  })
+
+  return <Model src="robot.usdz" xr-animation={animation} />
+}
+```
+
+### Dynamic3D Container Motion
+
+```text
+import { Entity, Reality, useAnimation } from '@webspatial/react-sdk'
+
+function AnimatedRealityContainer() {
+  const [animation] = useAnimation({
+    from: { transform: { translate: { y: 20 } }, opacity: 0 },
+    to: { transform: { translate: { y: 0 } }, opacity: 1 },
+    duration: 0.8,
     timingFunction: 'easeOut',
-    onComplete: () => console.log('Card visible'),
   })
 
   return (
-    <div enable-xr animation={animation}>
-      <h2>Welcome</h2>
-    </div>
+    <Reality xr-animation={animation}>
+      <Entity />
+    </Reality>
   )
 }
 ```
 
 ## Capability Detection
 
-```tsx
+Use concrete sub-tokens instead of relying on the family-level probe.
+
+```text
 import { supports } from '@webspatial/core-sdk'
 
-if (supports('useAnimation', ['element'])) {
-  // SpatialDiv animation is available
-}
+const canAnimate2D = supports('useAnimation', ['element'])
+const canAnimateModel = supports('useAnimation', ['static3d'])
+const canAnimateReality = supports('useAnimation', ['dynamic3d'])
+const canAnimateEntity = supports('useAnimation', ['entity'])
 ```
 
-In unsupported runtimes:
-- `play()` is a no-op
-- A warning is emitted (once per hook instance)
-- No callbacks fire, `isAnimating` remains `false`
+For container motion, pure Web runtime does not start a playback fallback.
+Capability-negative targets remain unavailable until the runtime reports support
+for the matching sub-token.
 
-## Known Limitations
+## Known Limits
 
-1. **No layout-affecting animations** — `width`, `height`, `depth`, `backOffset` cannot be animated.
-2. **No arbitrary CSS transforms** — only structured SRT (translate/rotate/scale). No `skew`, `perspective`, or matrix interpolation.
-3. **Single binding** — one `animation` object can bind to only one element at a time. Reusing across elements throws.
-4. **Play re-entry is no-op** — calling `play()` while already running does nothing. Call `cancel()` first to restart.
-5. **Config updates don't affect alive sessions** — a running/paused session uses the config from its `play()` call. The next `play()` will use the latest config.
-6. **No negative playbackRate** — must be `> 0`.
+1. Layout-affecting properties are out of scope.
+2. Arbitrary CSS transform strings, matrices, skew, and perspective are out of
+   scope.
+3. A single `animation` binding can target only one component at a time.
+4. `timeline` is a single CSS `@keyframes` style object, not an orchestration
+   array.
+5. Static3D does not currently ship `opacity` playback.
+6. Entity transform animation remains on `useEntityAnimation(config)`.
