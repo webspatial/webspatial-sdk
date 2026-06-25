@@ -1208,7 +1208,6 @@ describe('PortalSpatializedContainer', () => {
         dom: HTMLElement | null
         attachSpatializedElement = vi.fn()
         notify2DFrameChange = vi.fn()
-        setSuppressedFields = vi.fn()
         init = vi.fn(() => initCalls.push(this.spatialId))
         destroy = vi.fn(() => destroyCalls.push(this.spatialId))
         constructor(

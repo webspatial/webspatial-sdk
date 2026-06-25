@@ -1,5 +1,4 @@
 import { useMemo, useContext, useEffect } from 'react'
-import type { CSSProperties } from 'react'
 import {
   PortalInstanceObject,
   PortalInstanceContext,
@@ -140,14 +139,6 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     binding: xrAnimation,
     element: spatializedElement as Spatialized2DElement | null,
     kind: 'spatialized2d',
-    style: (restProps as { style?: CSSProperties }).style,
-    authoredProps: restProps as Record<string, unknown>,
-    onSuppressedFieldsChange: suppressedFields => {
-      portalInstanceObject.setSuppressedFields(suppressedFields)
-    },
-    onMotionFieldMetadataChange: (field, metadata) => {
-      portalInstanceObject.setMotionFieldMetadata(field, metadata)
-    },
   })
 
   const PlaceholderEl = renderPlaceholderInSubPortal(

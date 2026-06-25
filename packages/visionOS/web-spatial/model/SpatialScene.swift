@@ -835,8 +835,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             spatializedElement.backOffset = backOffset
         }
 
-        if let opacity = command.opacity, !spatializedElement.animatingMask.locksOpacity {
-            spatializedElement.opacity = opacity
+        if let opacity = command.opacity {
+            if spatializedElement.animatingMask.locksOpacity {
+                spatializedElement.animatingMask.pendingOpacity = opacity
+            } else {
+                spatializedElement.opacity = opacity
+            }
         }
 
         if let scrollWithParent = command.scrollWithParent {
@@ -908,7 +912,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let column3 = simd_double4(array[12], array[13], array[14], array[15])
         let simd_double4x4 = simd_double4x4(columns: (column0, column1, column2, column3))
         let affineTransform3D = AffineTransform3D(truncating: simd_double4x4)
-        if !spatializedElement.animatingMask.locksTransform {
+        if spatializedElement.animatingMask.locksTransform {
+            spatializedElement.animatingMask.pendingTransform = affineTransform3D
+        } else {
             spatializedElement.transform = affineTransform3D
         }
 

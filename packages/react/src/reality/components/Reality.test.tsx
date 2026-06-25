@@ -1,15 +1,9 @@
 import React from 'react'
-import { render, waitFor } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { Reality } from './Reality'
 
 const useBindSpatializedMotionMock = vi.fn()
-const setSuppressedFieldsMock = vi.fn()
-const setMotionFieldMetadataMock = vi.fn()
-const portalInstanceObject = {
-  setSuppressedFields: setSuppressedFieldsMock,
-  setMotionFieldMetadata: setMotionFieldMetadataMock,
-}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -23,18 +17,12 @@ vi.mock('../../spatialized-container/SpatializedContainer', () => ({
     children?: React.ReactNode
     spatializedContent?: React.ComponentType<{
       spatializedElement: unknown
-      portalInstanceObject: {
-        setSuppressedFields: typeof setSuppressedFieldsMock
-        setMotionFieldMetadata: typeof setMotionFieldMetadataMock
-      }
+      portalInstanceObject: Record<string, never>
     }>
   }) => (
     <div data-testid="spatialized-container">
       {SpatializedContent ? (
-        <SpatializedContent
-          spatializedElement={{}}
-          portalInstanceObject={portalInstanceObject}
-        />
+        <SpatializedContent spatializedElement={{}} portalInstanceObject={{}} />
       ) : null}
       {children}
     </div>
@@ -55,55 +43,18 @@ vi.mock('../hooks', () => ({
 }))
 
 describe('Reality', () => {
-  test('bridges suppression updates to the current portal instance for dynamic3d root motion', async () => {
+  test('binds dynamic3d root motion without portal suppression callbacks', async () => {
     const xrAnimation = { __kind: 'spatializedMotion' }
 
     render(<Reality xr-animation={xrAnimation as any} />)
 
-    await waitFor(() => {
-      const bindCall = useBindSpatializedMotionMock.mock.calls.at(-1)?.[0] as
-        | {
-            onSuppressedFieldsChange?: (
-              suppressedFields: Set<string> | null,
-            ) => void
-          }
-        | undefined
+    const bindCall = useBindSpatializedMotionMock.mock.calls.at(-1)?.[0] as
+      | Record<string, unknown>
+      | undefined
 
-      expect(bindCall?.onSuppressedFieldsChange).toBeTypeOf('function')
-
-      bindCall?.onSuppressedFieldsChange?.(new Set(['transform']))
-    })
-
-    expect(setSuppressedFieldsMock).toHaveBeenCalledWith(new Set(['transform']))
-  })
-
-  test('bridges terminal transform ownership updates to the current portal instance for dynamic3d root motion', async () => {
-    const xrAnimation = { __kind: 'spatializedMotion' }
-
-    render(<Reality xr-animation={xrAnimation as any} />)
-
-    await waitFor(() => {
-      const bindCall = useBindSpatializedMotionMock.mock.calls.at(-1)?.[0] as
-        | {
-            onMotionFieldMetadataChange?: (
-              field: 'transform',
-              metadata: {
-                authoredValue?: unknown
-                terminalOwner: 'authored' | 'native' | null
-              },
-            ) => void
-          }
-        | undefined
-
-      expect(bindCall?.onMotionFieldMetadataChange).toBeTypeOf('function')
-
-      bindCall?.onMotionFieldMetadataChange?.('transform', {
-        terminalOwner: 'native',
-      })
-    })
-
-    expect(setMotionFieldMetadataMock).toHaveBeenCalledWith('transform', {
-      terminalOwner: 'native',
-    })
+    expect(bindCall?.binding).toBe(xrAnimation)
+    expect(bindCall?.kind).toBe('dynamic3d')
+    expect(bindCall).not.toHaveProperty('onSuppressedFieldsChange')
+    expect(bindCall).not.toHaveProperty('onMotionFieldMetadataChange')
   })
 })

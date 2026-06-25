@@ -4,12 +4,6 @@ import { SpatializedContainerObject } from './SpatializedContainerContext'
 import { parseTransformOrigin } from '../utils'
 import { SpatialCustomStyleVars, SpatialTransformVisibility } from '../types'
 import { getSession } from '../../utils'
-import type {
-  MotionFieldMetadata,
-  MotionFieldMetadataMap,
-} from '../motion/motionBindingTypes'
-import { getMotionFieldDescriptors } from '../motion/plugins/registry'
-import type { MotionOwnershipField } from '../motion/plugins/types'
 
 /** Cached viewport-relative DOM bounds. */
 type DomRect = {
@@ -43,7 +37,7 @@ type CachedTransformVisibilityInfo = {
 
 /**
  * Runtime portal instance that coordinates DOM measurements, spatial element
- * lifecycle, and motion suppression handoff for a single spatial node.
+ * lifecycle and DOM-to-native sync for a single spatial node.
  */
 export class PortalInstanceObject {
   /** Stable spatial id used to query DOM and container state. */
@@ -54,62 +48,6 @@ export class PortalInstanceObject {
   readonly parentPortalInstanceObject: PortalInstanceObject | null
   /** The attached spatial element once creation succeeds. */
   spatializedElement?: SpatializedElement
-
-  /**
-   * Set suppressed fields for SpatialDiv animation.
-   * Pass null to release suppression (resume normal sync).
-   */
-  setSuppressedFields(fields: Set<string> | null) {
-    const hadSuppression =
-      this.suppressedFields !== null && this.suppressedFields.size > 0
-    this.suppressedFields = fields
-    const shouldForceSync =
-      hadSuppression && (fields === null || fields.size === 0)
-    // When suppression is released, force a sync so DOM values override native animation end values
-    if (shouldForceSync) {
-      this.updateSpatializedElementProperties()
-    }
-  }
-
-  /**
-   * Stores unified motion field metadata mirrored from React bindings.
-   *
-   * @param field - The field whose metadata changed.
-   * @param metadata - The partial metadata payload that should be merged in.
-   */
-  setMotionFieldMetadata(
-    field: MotionOwnershipField,
-    metadata: Partial<MotionFieldMetadata>,
-  ) {
-    const current = this.getMotionFieldMetadata(field)
-    const next: MotionFieldMetadata = {
-      authoredValue:
-        'authoredValue' in metadata
-          ? metadata.authoredValue
-          : current.authoredValue,
-      terminalOwner:
-        'terminalOwner' in metadata
-          ? (metadata.terminalOwner ?? null)
-          : current.terminalOwner,
-    }
-    this.motionFieldMetadata = {
-      ...this.motionFieldMetadata,
-      [field]: next,
-    }
-  }
-
-  /**
-   * Check if a specific field is currently suppressed.
-   */
-  isFieldSuppressed(field: string): boolean {
-    return this.suppressedFields?.has(field) ?? false
-  }
-
-  /** Tracks the fields currently suppressed by the active animation binding. */
-  private suppressedFields: Set<string> | null = null
-
-  /** Caches motion metadata mirrored from the React animation binding. */
-  private motionFieldMetadata: MotionFieldMetadataMap = {}
 
   /** Caches DOM metadata refreshed from the current bound node. */
   private cachedDomInfo?: CachedDomInfo
@@ -360,10 +298,14 @@ export class PortalInstanceObject {
     const extraProperties =
       this.getExtraSpatializedElementProperties?.(computedStyle) || {}
 
-    // Build properties, skipping any fields suppressed by animation
     const properties: Record<string, any> = {
       clientX: x,
       clientY: y,
+      width,
+      height,
+      depth,
+      backOffset,
+      opacity: this.readOpacity(computedStyle),
       scrollWithParent,
       zIndex,
       visible,
@@ -371,24 +313,8 @@ export class PortalInstanceObject {
       ...extraProperties,
     }
 
-    // Only include fields that are not suppressed by active animation
-    if (!this.isFieldSuppressed('width')) properties.width = width
-    if (!this.isFieldSuppressed('height')) properties.height = height
-    if (!this.isFieldSuppressed('depth')) properties.depth = depth
-    if (!this.isFieldSuppressed('backOffset'))
-      properties.backOffset = backOffset
-
-    const motionSyncResult = this.buildMotionSyncResult({
-      computedStyle,
-      transformMatrix: this.transformMatrix!,
-    })
-    Object.assign(properties, motionSyncResult.properties)
-
     spatializedElement.updateProperties(properties)
-
-    if (motionSyncResult.nextTransform) {
-      spatializedElement.updateTransform(motionSyncResult.nextTransform)
-    }
+    spatializedElement.updateTransform(this.transformMatrix!)
 
     // assign spatializedElement to dom
     Object.assign(this.dom, {
@@ -396,55 +322,9 @@ export class PortalInstanceObject {
     })
   }
 
-  /**
-   * Resolves motion-driven native property and transform updates for the
-   * current DOM snapshot.
-   */
-  private buildMotionSyncResult(input: {
-    computedStyle: CSSStyleDeclaration
-    transformMatrix: DOMMatrix
-  }): {
-    properties: Record<string, any>
-    nextTransform: DOMMatrix | null
-  } {
-    const properties: Record<string, any> = {}
-    let nextTransform: DOMMatrix | null = null
-    for (const descriptor of getMotionFieldDescriptors()) {
-      if (this.isFieldSuppressed(descriptor.field)) {
-        continue
-      }
-      const metadata = this.getMotionFieldMetadata(descriptor.field)
-      const domValue = descriptor.readOuterDomValue(input)
-      const decision = descriptor.resolveOuterSync({
-        owner: metadata.terminalOwner,
-        authoredValue: metadata.authoredValue,
-        domValue,
-      })
-      if (decision.mode === 'omit') {
-        continue
-      }
-      const resolvedValue = decision.mode === 'set' ? decision.value : domValue
-      if (descriptor.nativeSink.kind === 'property') {
-        properties[descriptor.nativeSink.property] = resolvedValue
-        continue
-      }
-      nextTransform = resolvedValue as DOMMatrix
-    }
-    return {
-      properties,
-      nextTransform,
-    }
-  }
-
-  /** Returns the normalized metadata snapshot for a motion-managed field. */
-  private getMotionFieldMetadata(
-    field: MotionOwnershipField,
-  ): MotionFieldMetadata {
-    return (
-      this.motionFieldMetadata[field] ?? {
-        terminalOwner: null,
-      }
-    )
+  private readOpacity(computedStyle: CSSStyleDeclaration): number {
+    const parsed = Number.parseFloat(computedStyle.getPropertyValue('opacity'))
+    return Number.isFinite(parsed) ? parsed : 1
   }
 }
 

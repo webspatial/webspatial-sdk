@@ -12,23 +12,11 @@ import type {
 } from '@webspatial/core-sdk'
 import {
   evaluateMotionTimeline,
-  getMotionSuppressedFields,
   normalizeMotionConfig,
   supports,
   validateSpatializedMotionConfig,
 } from '@webspatial/core-sdk'
-import type { CSSProperties } from 'react'
 import { getMotionConfigSignature } from './motionConfigSignature'
-import type {
-  MotionFieldMetadata,
-  TerminalOpacityOwner,
-  TerminalTransformOwner,
-} from './motionBindingTypes'
-import {
-  getMotionFieldPlugin,
-  getMotionOwnershipFields,
-} from './plugins/registry'
-import type { MotionOwnershipField, MotionTerminalOwner } from './plugins/types'
 
 type AnimationCommandType =
   | 'play'
@@ -55,18 +43,6 @@ type AnimationTargetElement = (
 interface AnimationBindingOptions {
   onValuesChange?: (values: SpatializedVisualValues) => void
   onStateChange?: () => void
-  onMotionFieldMetadataChange?: (
-    field: MotionOwnershipField,
-    metadata: MotionFieldMetadata,
-  ) => void
-  onExplicitStyleOpacityChange?: (
-    opacity: CSSProperties['opacity'] | undefined,
-  ) => void
-  onTerminalOpacityOwnerChange?: (owner: TerminalOpacityOwner) => void
-  onExplicitStyleTransformChange?: (
-    transform: CSSProperties['transform'] | undefined,
-  ) => void
-  onTerminalTransformOwnerChange?: (owner: TerminalTransformOwner) => void
 }
 
 let nextBindingId = 0
@@ -82,10 +58,6 @@ function supportsTargetKind(kind: SpatializedMotionKind): boolean {
 
 /**
  * React-owned binding for spatialized motion.
- *
- * The binding stores config, queues explicit commands before target bind,
- * creates the Core AnimationObject only after a concrete target is resolved,
- * and mirrors runtime state back into React.
  */
 export class AnimationBinding implements SpatializedPlaybackApi {
   readonly __kind = 'spatializedMotion' as const
@@ -113,35 +85,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   private isPausedState = false
   private finishedState = false
   private readonly options: AnimationBindingOptions
-
-  /** Lists the ownership-managed fields enabled for this binding instance. */
-  private readonly supportedOwnershipFields = getMotionOwnershipFields()
-
-  /** Stores the plugin selected for each ownership-managed field. */
-  private readonly fieldPlugins = new Map(
-    this.supportedOwnershipFields.map(field => [
-      field,
-      getMotionFieldPlugin(field),
-    ]),
-  )
-
-  /** Caches authored values captured while native playback suppresses a field. */
-  private readonly authoredFieldValues = new Map<
-    MotionOwnershipField,
-    unknown
-  >()
-
-  /** Caches post-terminal ownership decisions by field. */
-  private readonly terminalFieldOwners = new Map<
-    MotionOwnershipField,
-    MotionTerminalOwner
-  >()
-
-  /** Caches whether a field was suppressed during the previous render pass. */
-  private readonly previousFieldSuppression = new Map<
-    MotionOwnershipField,
-    boolean
-  >()
 
   constructor(
     config: SpatializedMotionAuthorConfig,
@@ -195,122 +138,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   get finished(): boolean {
     if (this.animationObject) return this.animationObject.finished
     return this.finishedState
-  }
-
-  __getSuppressedFields(): Set<string> | null {
-    if (
-      this.kind !== 'spatialized2d' ||
-      (this.state !== 'running' && this.state !== 'paused')
-    ) {
-      return null
-    }
-    return getMotionSuppressedFields(this.normalizedConfig)
-  }
-
-  __getSupportedMotionOwnershipFields(): readonly MotionOwnershipField[] {
-    return this.supportedOwnershipFields
-  }
-
-  __getMotionFieldPlugin(field: MotionOwnershipField) {
-    return this.fieldPlugins.get(field) ?? null
-  }
-
-  __getMotionFieldMetadata(field: MotionOwnershipField): MotionFieldMetadata {
-    return {
-      authoredValue: this.authoredFieldValues.get(field),
-      terminalOwner: this.terminalFieldOwners.get(field) ?? null,
-    }
-  }
-
-  __setMotionFieldMetadata(
-    field: MotionOwnershipField,
-    metadata: Partial<MotionFieldMetadata>,
-  ): void {
-    if ('authoredValue' in metadata) {
-      this.authoredFieldValues.set(field, metadata.authoredValue)
-    }
-    if ('terminalOwner' in metadata) {
-      this.terminalFieldOwners.set(field, metadata.terminalOwner ?? null)
-    }
-    this.emitMotionFieldMetadataChange(field)
-  }
-
-  __getAuthoredFieldValue(field: MotionOwnershipField): unknown {
-    return this.__getMotionFieldMetadata(field)?.authoredValue
-  }
-
-  __setAuthoredFieldValue(field: MotionOwnershipField, value: unknown): void {
-    this.authoredFieldValues.set(field, value)
-    this.emitMotionFieldMetadataChange(field)
-  }
-
-  __getTerminalFieldOwner(field: MotionOwnershipField): MotionTerminalOwner {
-    return this.__getMotionFieldMetadata(field)?.terminalOwner ?? null
-  }
-
-  __setTerminalFieldOwner(
-    field: MotionOwnershipField,
-    owner: MotionTerminalOwner,
-  ): void {
-    this.terminalFieldOwners.set(field, owner)
-    this.emitMotionFieldMetadataChange(field)
-  }
-
-  __getPreviousFieldSuppression(field: MotionOwnershipField): boolean {
-    return this.previousFieldSuppression.get(field) ?? false
-  }
-
-  __setPreviousFieldSuppression(
-    field: MotionOwnershipField,
-    suppressed: boolean,
-  ): void {
-    this.previousFieldSuppression.set(field, suppressed)
-  }
-
-  __getExplicitStyleOpacity(): CSSProperties['opacity'] | undefined {
-    return this.__getMotionFieldMetadata('opacity')?.authoredValue as
-      | CSSProperties['opacity']
-      | undefined
-  }
-
-  __setExplicitStyleOpacity(
-    opacity: CSSProperties['opacity'] | undefined,
-  ): void {
-    this.authoredFieldValues.set('opacity', opacity)
-    this.emitMotionFieldMetadataChange('opacity')
-  }
-
-  __getTerminalOpacityOwner(): TerminalOpacityOwner {
-    return this.__getMotionFieldMetadata('opacity')
-      ?.terminalOwner as TerminalOpacityOwner
-  }
-
-  __setTerminalOpacityOwner(owner: TerminalOpacityOwner): void {
-    this.terminalFieldOwners.set('opacity', owner)
-    this.emitMotionFieldMetadataChange('opacity')
-  }
-
-  __getExplicitStyleTransform(): CSSProperties['transform'] | undefined {
-    return this.__getMotionFieldMetadata('transform')?.authoredValue as
-      | CSSProperties['transform']
-      | undefined
-  }
-
-  __setExplicitStyleTransform(
-    transform: CSSProperties['transform'] | undefined,
-  ): void {
-    this.authoredFieldValues.set('transform', transform)
-    this.emitMotionFieldMetadataChange('transform')
-  }
-
-  __getTerminalTransformOwner(): TerminalTransformOwner {
-    return this.__getMotionFieldMetadata('transform')
-      ?.terminalOwner as TerminalTransformOwner
-  }
-
-  __setTerminalTransformOwner(owner: TerminalTransformOwner): void {
-    this.terminalFieldOwners.set('transform', owner)
-    this.emitMotionFieldMetadataChange('transform')
   }
 
   __setElement(
@@ -422,7 +249,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   private detachAnimationObject(): void {
     const object = this.animationObject
     this.animationObject = null
-    this.createToken++
+    this.createToken += 1
     this.creating = false
     object?.destroy().catch(error => {
       this.config.onError?.({
@@ -576,11 +403,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
         break
       case 'stop':
       case 'reset':
-        this.state = 'queued'
-        this.isAnimatingState = false
-        this.isPausedState = false
-        this.finishedState = false
-        break
       case 'finish':
         this.state = 'queued'
         this.isAnimatingState = false
@@ -618,29 +440,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
       })
     })
     this.syncStateFromAnimationObject()
-  }
-
-  private emitMotionFieldMetadataChange(field: MotionOwnershipField): void {
-    const metadata = this.__getMotionFieldMetadata(field)
-    if (!metadata) return
-    this.options.onMotionFieldMetadataChange?.(field, metadata)
-    if (field === 'opacity') {
-      this.options.onExplicitStyleOpacityChange?.(
-        metadata.authoredValue as CSSProperties['opacity'] | undefined,
-      )
-      this.options.onTerminalOpacityOwnerChange?.(
-        metadata.terminalOwner as TerminalOpacityOwner,
-      )
-      return
-    }
-    if (field === 'transform') {
-      this.options.onExplicitStyleTransformChange?.(
-        metadata.authoredValue as CSSProperties['transform'] | undefined,
-      )
-      this.options.onTerminalTransformOwnerChange?.(
-        metadata.terminalOwner as TerminalTransformOwner,
-      )
-    }
   }
 }
 
