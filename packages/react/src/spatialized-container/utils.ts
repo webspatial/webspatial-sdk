@@ -95,6 +95,23 @@ export function getPortalInheritedStyleProps(
   return props
 }
 
+export function getSpatialCssVariableProps(
+  computedStyle: CSSStyleDeclaration,
+): CSSProperties {
+  const props = {} as CSSProperties & Record<string, string>
+  for (let index = 0; index < computedStyle.length; index += 1) {
+    const variableName = computedStyle.item(index)
+    if (!variableName.startsWith('--')) continue
+
+    const value = computedStyle.getPropertyValue(variableName)
+    if (value) {
+      props[variableName] = value
+    }
+  }
+
+  return props
+}
+
 export function parseTransformOrigin(computedStyle: CSSStyleDeclaration) {
   const transformOriginProperty =
     computedStyle.getPropertyValue('transform-origin')

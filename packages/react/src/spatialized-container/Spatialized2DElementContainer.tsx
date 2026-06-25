@@ -16,7 +16,11 @@ import {
   syncParentHeadToChild,
 } from '../utils/windowStyleSync'
 import { useSyncHeadStyles } from '../utils/useSyncHeadStyles'
-import { getPortalInheritedStyleProps, parseCornerRadius } from './utils'
+import {
+  getPortalInheritedStyleProps,
+  getSpatialCssVariableProps,
+  parseCornerRadius,
+} from './utils'
 import {
   SpatialCustomStyleVars,
   Spatialized2DElementContainerProps,
@@ -82,10 +86,14 @@ function getJSXPortalInstance<P extends ElementType>(
         isFloatingOverlay: portalInstanceObject.isFloatingOverlay,
       })
     : {}
+  const inheritedCssVariableStyle: CSSProperties = computedStyle
+    ? getSpatialCssVariableProps(computedStyle)
+    : {}
 
   const style = {
     ...inStyle,
     ...inheritedPortalStyle,
+    ...inheritedCssVariableStyle,
     ...extraStyle,
   }
 
