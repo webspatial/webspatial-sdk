@@ -165,9 +165,10 @@ Native MUST 在 timeline 时间 `t` 独立采样每条 track，然后按与 Web 
 - **WHEN** 调用 `api.reset()`
 - **THEN** SDK MUST 发出 `from` 值，MUST 保持 `playState` 为 `idle`，且 MUST 保持 `finished` 为 `false`
 
-#### Scenario: idle.finish() 仍然发出终点值
+#### Scenario: 已绑定的 idle.finish() 仍然发出终点值
 
 - **GIVEN** 动画已经处于 `idle`
+- **AND** 已经存在 native-backed `AnimationObject`
 - **WHEN** 调用 `api.finish()`
 - **THEN** SDK MUST 发出 `to` 值，MUST 将 `playState` 置为 `finished`，且 MUST 将 `finished` 置为 `true`
 

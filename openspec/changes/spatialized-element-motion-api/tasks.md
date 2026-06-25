@@ -56,10 +56,10 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Tests: verify `pause()` and `resume()` do not accept keys or partial selectors
 - [x] Tests: verify `stop()` freezes current values, sets `playState=idle`, sets `finished=false`, and invokes `onStop(values)`
 - [x] Tests: verify `reset()` emits `from` values, sets `playState=idle`, sets `finished=false`, and invokes `onReset(values)`
-- [x] Tests: verify `finish()` emits `to` values, sets `playState=finished`, sets `finished=true`, and invokes `onComplete(values)`
+- [x] Tests: verify `finish()` emits `to` values, sets `playState=finished`, sets `finished=true`, and invokes `onComplete(values)` after native terminal-state confirmation
 - [x] Tests: verify natural completion invokes `onComplete(values)`
 - [x] Tests: verify `idle.reset()` is not a no-op and still emits `from` values
-- [x] Tests: verify `idle.finish()` is not a no-op and still emits `to` values while entering `finished`
+- [x] Tests: verify explicit pre-bind `finish()` remains queued until the native-backed `AnimationObject` exists, then flushes and enters `finished`
 - [x] Tests: verify `onComplete`, `onStop`, and `onReset` are mutually exclusive for each termination, while `onError` remains independent
 - [x] Tests: verify explicit `api.play()` before bind still runs after bind when `autoStart: false`
 - [x] Tests: verify one `animation` binding can bind only one component at a time

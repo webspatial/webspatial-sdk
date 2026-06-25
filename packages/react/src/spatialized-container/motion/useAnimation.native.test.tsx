@@ -220,6 +220,44 @@ describe('useAnimation tuple api native backend', () => {
     expect(rafSpy).not.toHaveBeenCalled()
   })
 
+  test('pre-bind finish stays queued until native confirms the finished state', async () => {
+    const element = createMockElement('pre-bind-finish')
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 5,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'transform.translate.x',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 5, value: 100 },
+            ],
+            timingFunction: 'linear',
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[1].finish()
+    })
+
+    expect(result.current[1].playState).toBe('queued')
+    expect(result.current[1].finished).toBe(false)
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+    })
+
+    await waitFor(() => {
+      expect(element.animation.finish).toHaveBeenCalledTimes(1)
+    })
+    expect(result.current[1].playState).toBe('finished')
+    expect(result.current[1].finished).toBe(true)
+  })
+
   test('StrictMode bind creates one Core AnimationObject and plays once', async () => {
     const element = createMockElement('strict-native')
     const wrapper = ({ children }: { children: React.ReactNode }) => (
