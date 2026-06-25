@@ -71,6 +71,8 @@ function getJSXPortalInstance<P extends ElementType>(
     marginTop: '0px',
     marginBottom: '0px',
     borderRadius: '0px',
+    // Root opacity remains native-owned on the spatial host, not the portal DOM.
+    opacity: 1,
     // overflow: '',
     transform: 'none',
   }
