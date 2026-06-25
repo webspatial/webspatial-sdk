@@ -76,7 +76,7 @@ describe('useAnimation tuple api', () => {
     expect(String(result.current[2].transform)).toContain('40px')
   })
 
-  test('static3d binding resolves target and keeps style empty', async () => {
+  test('static3d binding resolves target and keeps the initial transform style', async () => {
     const { result } = renderHook(() =>
       useAnimation({
         duration: 1,
@@ -98,7 +98,9 @@ describe('useAnimation tuple api', () => {
     })
 
     await waitFor(() => {
-      expect(result.current[2]).toEqual({})
+      expect(String(result.current[2].transform)).toContain(
+        'translate3d(0px, 0px, 0px)',
+      )
     })
   })
 

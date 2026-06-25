@@ -335,7 +335,9 @@ describe('useAnimation tuple api native backend', () => {
       element.animation.emitValues({ transform: { translate: { x: 42 } } })
     })
 
-    expect(result.current[2].transform).toBeUndefined()
+    expect(String(result.current[2].transform)).toContain(
+      'translate3d(42px, 0px, 0px)',
+    )
     expect(result.current[1].playState).toBe('running')
   })
 
@@ -379,7 +381,7 @@ describe('useAnimation tuple api native backend', () => {
     expect(result.current[1].playState).toBe('finished')
   })
 
-  test('native-capable spatialized2d masks opacity and transform while Core playback is active', async () => {
+  test('native-capable spatialized2d exposes native-driven opacity and transform through style', async () => {
     const element = createMockElement()
 
     const { result } = renderHook(() =>
@@ -404,8 +406,17 @@ describe('useAnimation tuple api native backend', () => {
     })
     await waitFor(() => expect(element.animation.play).toHaveBeenCalled())
 
-    expect(result.current[2].opacity).toBeUndefined()
-    expect(result.current[2].transform).toBeUndefined()
+    await act(async () => {
+      element.animation.emitValues({
+        opacity: 0.6,
+        transform: { translate: { x: 18, y: 4, z: 2 } },
+      })
+    })
+
+    expect(result.current[2].opacity).toBe(0.6)
+    expect(String(result.current[2].transform)).toContain(
+      'translate3d(18px, 4px, 2px)',
+    )
   })
 
   test.each([
@@ -413,7 +424,7 @@ describe('useAnimation tuple api native backend', () => {
     ['reset', 'idle'],
     ['finish', 'finished'],
   ] as const)(
-    'native-backed spatialized2d keeps inner style empty after %s',
+    'native-backed spatialized2d keeps the latest native style after %s',
     async (command, expectedPlayState) => {
       const element = createMockElement(`native-empty-${command}`)
 
@@ -434,13 +445,66 @@ describe('useAnimation tuple api native backend', () => {
       await waitFor(() => expect(element.animation.play).toHaveBeenCalled())
 
       await act(async () => {
+        element.animation.emitValues({
+          opacity: 0.4,
+          transform: { translate: { x: 15 } },
+        })
+      })
+
+      await act(async () => {
         result.current[1][command]()
       })
       await flushPromises()
 
       expect(result.current[1].playState).toBe(expectedPlayState)
-      expect(result.current[2].opacity).toBeUndefined()
-      expect(result.current[2].transform).toBeUndefined()
+      expect(result.current[2].opacity).toBe(0.4)
+      expect(String(result.current[2].transform)).toContain(
+        'translate3d(15px, 0px, 0px)',
+      )
+    },
+  )
+
+  test.each([
+    ['static3d', 'static3d-values'],
+    ['dynamic3d', 'dynamic3d-values'],
+  ] as const)(
+    'native %s emits values that update the React style outlet',
+    async (targetKind, elementId) => {
+      const element = createMockElement(elementId)
+
+      const { result } = renderHook(() =>
+        useAnimation({
+          duration: 2,
+          autoStart: false,
+          tracks: [
+            {
+              property: 'transform.translate.x',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 2, value: 50 },
+              ],
+              timingFunction: 'linear',
+            },
+          ],
+        }),
+      )
+
+      await act(async () => {
+        result.current[0].__setElement?.(element as any, targetKind)
+      })
+      await waitFor(() => expect(element.createAnimation).toHaveBeenCalled())
+
+      await act(async () => {
+        element.animation.emitValues({
+          opacity: 0.75,
+          transform: { translate: { x: 24, y: 6, z: 3 } },
+        })
+      })
+
+      expect(result.current[2].opacity).toBe(0.75)
+      expect(String(result.current[2].transform)).toContain(
+        'translate3d(24px, 6px, 3px)',
+      )
     },
   )
 

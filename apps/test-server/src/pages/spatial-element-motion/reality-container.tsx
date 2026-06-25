@@ -50,7 +50,7 @@ export default function SpatialElementMotionRealityContainerPage() {
   const { lines, log } = useLog()
   const dynamic3dAnim = supports('useAnimation', ['dynamic3d'])
 
-  const [motion, api] = useAnimation({
+  const [motion, api, style] = useAnimation({
     duration: DURATION,
     autoStart: true,
     timeline: TIMELINE_CONFIG,
@@ -106,6 +106,7 @@ export default function SpatialElementMotionRealityContainerPage() {
           <Reality
             xr-animation={motion as any}
             style={{
+              ...style,
               width: '100%',
               height: 480,
               '--xr-depth': 150,

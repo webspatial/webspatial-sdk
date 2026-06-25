@@ -6,7 +6,6 @@ import type {
   SpatializedPlaybackApi,
   SpatializedVisualValues,
 } from '@webspatial/core-sdk'
-import { supports } from '@webspatial/core-sdk'
 import { createMotionBinding } from './createMotionBinding'
 import { getMotionConfigSignature } from './motionConfigSignature'
 import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
@@ -102,8 +101,6 @@ export function useAnimation(
   const values: SpatializedVisualValues = binding.currentValues
   const style = resolveMotionStyle({
     values,
-    targetKind: binding.targetKind,
-    nativeElementSupported: supports('useAnimation', ['element']),
   })
 
   return [binding, api, style]
