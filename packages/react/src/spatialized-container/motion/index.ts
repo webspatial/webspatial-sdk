@@ -15,7 +15,6 @@ export {
   segmentConfigToMotionConfig,
 } from '@webspatial/core-sdk'
 export { valuesToMotionStyle } from './style'
-export { resolveMotionStyle } from './resolveMotionStyle'
 
 // Internal binding types
 export type { SpatializedMotionBindingInternal } from './motionBindingTypes'

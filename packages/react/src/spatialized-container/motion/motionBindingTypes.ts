@@ -12,12 +12,6 @@ import type {
 export interface SpatializedMotionBindingInternal {
   /** Identifies the binding family for runtime guards. */
   readonly __kind: 'spatializedMotion'
-  /** Stores the JSX prop name used to attach the binding. */
-  readonly __propName: 'xr-animation'
-  /** Exposes the controller-backed motion object id. */
-  readonly __motionObjectId: string
-  /** Reflects whether the bound controller is currently animating. */
-  get __animating(): boolean
 
   /**
    * Attaches or detaches the resolved runtime element from the binding.
@@ -25,7 +19,7 @@ export interface SpatializedMotionBindingInternal {
    * @param element - The resolved runtime element or `null` when detaching.
    * @param targetKind - The resolved motion target kind, if available.
    */
-  __setElement?: (
+  __setElement: (
     element:
       | HTMLElement
       | Spatialized2DElement
