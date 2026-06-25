@@ -9,12 +9,8 @@ import type {
 import { supports } from '@webspatial/core-sdk'
 import { createMotionBinding } from './createMotionBinding'
 import { getMotionConfigSignature } from './motionConfigSignature'
-import type {
-  MotionFieldMetadataMap,
-  SpatializedMotionBindingInternal,
-} from './motionBindingTypes'
+import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
 import { resolveMotionStyle } from './resolveMotionStyle'
-import type { MotionOwnershipField } from './plugins/types'
 import type { AnimationBinding } from './AnimationBinding'
 
 /**
@@ -53,11 +49,6 @@ export function useAnimation(
     bindingRef.current = createMotionBinding(config, {
       onValuesChange: () => forceRender(),
       onStateChange: () => forceRender(),
-      onMotionFieldMetadataChange: () => forceRender(),
-      onExplicitStyleOpacityChange: () => forceRender(),
-      onTerminalOpacityOwnerChange: () => forceRender(),
-      onExplicitStyleTransformChange: () => forceRender(),
-      onTerminalTransformOwnerChange: () => forceRender(),
     })
   }
 
@@ -84,58 +75,14 @@ export function useAnimation(
     }
   }, [binding])
 
-  const fieldMetadata: MotionFieldMetadataMap = {}
-  for (const field of binding.__getSupportedMotionOwnershipFields?.() ?? []) {
-    fieldMetadata[field] = binding.__getMotionFieldMetadata?.(field)
-  }
-
-  const resolveTerminalOwner = (field: MotionOwnershipField) => {
-    if (!binding.__getSuppressedFields?.()?.has(field)) {
-      return null
-    }
-    const plugin = binding.__getMotionFieldPlugin?.(field)
-    if (!plugin) {
-      return binding.__getAuthoredFieldValue?.(field) !== undefined
-        ? 'authored'
-        : 'native'
-    }
-    return plugin.resolveTerminalOwner({
-      authoredValue: binding.__getAuthoredFieldValue?.(field),
-    })
-  }
-
   const api = useMemo(
     () => ({
-      play: () => {
-        for (const field of binding.__getSupportedMotionOwnershipFields?.() ??
-          []) {
-          binding.__setTerminalFieldOwner?.(field, null)
-        }
-        binding.play()
-      },
+      play: () => binding.play(),
       pause: () => binding.pause(),
       resume: () => binding.resume(),
-      stop: () => {
-        for (const field of binding.__getSupportedMotionOwnershipFields?.() ??
-          []) {
-          binding.__setTerminalFieldOwner?.(field, resolveTerminalOwner(field))
-        }
-        binding.stop()
-      },
-      reset: () => {
-        for (const field of binding.__getSupportedMotionOwnershipFields?.() ??
-          []) {
-          binding.__setTerminalFieldOwner?.(field, resolveTerminalOwner(field))
-        }
-        binding.reset()
-      },
-      finish: () => {
-        for (const field of binding.__getSupportedMotionOwnershipFields?.() ??
-          []) {
-          binding.__setTerminalFieldOwner?.(field, resolveTerminalOwner(field))
-        }
-        binding.finish()
-      },
+      stop: () => binding.stop(),
+      reset: () => binding.reset(),
+      finish: () => binding.finish(),
       get isAnimating() {
         return binding.isAnimating
       },
@@ -156,9 +103,7 @@ export function useAnimation(
   const style = resolveMotionStyle({
     values,
     targetKind: binding.targetKind,
-    suppressedFields: binding.__getSuppressedFields?.(),
     nativeElementSupported: supports('useAnimation', ['element']),
-    fieldMetadata,
   })
 
   return [binding, api, style]

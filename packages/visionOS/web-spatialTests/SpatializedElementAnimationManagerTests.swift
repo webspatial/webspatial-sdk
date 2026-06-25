@@ -332,6 +332,247 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertTrue(animation.finished)
     }
 
+    func test_opacityPendingWriteAppliesOnComplete() throws {
+        let element = Spatialized2DElement()
+        let manager = SpatializedElementAnimationManager()
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 1,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "opacity",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 1, value: 0.25, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                targetKind: "spatialized2d",
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+        XCTAssertEqual(element.animatingMask.opacityAnimationId, animation.uuid)
+
+        element.animatingMask.pendingOpacity = 0.8
+        animation.tick(at: 1.1)
+
+        XCTAssertNil(element.animatingMask.opacityAnimationId)
+        XCTAssertNil(element.animatingMask.pendingOpacity)
+        XCTAssertEqual(element.opacity, 0.8, accuracy: 0.0001)
+    }
+
+    func test_completeWithoutPendingPreservesAnimatedOpacityTerminalValue() throws {
+        let element = Spatialized2DElement()
+        let manager = SpatializedElementAnimationManager()
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 1,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "opacity",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 1, value: 0.25, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                targetKind: "spatialized2d",
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+        animation.tick(at: 1.1)
+
+        XCTAssertEqual(element.opacity, 0.25, accuracy: 0.0001)
+        XCTAssertNil(element.animatingMask.pendingOpacity)
+    }
+
+    func test_transformPendingWriteAppliesOnComplete() throws {
+        let element = Spatialized2DElement()
+        let manager = SpatializedElementAnimationManager()
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 1,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "transform.translate.x",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 1, value: 10, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                targetKind: "spatialized2d",
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+        element.animatingMask.pendingTransform = .init(translation: Vector3D(x: 42, y: 0, z: 0))
+        animation.tick(at: 1.1)
+
+        XCTAssertNil(element.animatingMask.transformAnimationId)
+        XCTAssertNil(element.animatingMask.pendingTransform)
+        XCTAssertEqual(element.transform.matrix.columns.3.x, 42, accuracy: 0.0001)
+    }
+
+    func test_static3DModelTransformPendingWriteAppliesOnComplete() throws {
+        let element = SpatializedStatic3DElement()
+        let manager = SpatializedElementAnimationManager()
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 1,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "transform.translate.x",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 1, value: 10, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                targetKind: "static3d",
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+        element.animatingMask.pendingTransform = .init(translation: Vector3D(x: 24, y: 0, z: 0))
+        animation.tick(at: 1.1)
+
+        XCTAssertNil(element.animatingMask.transformAnimationId)
+        XCTAssertNil(element.animatingMask.pendingTransform)
+        XCTAssertEqual(element.modelTransform.matrix.columns.3.x, 24, accuracy: 0.0001)
+        XCTAssertEqual(element.transform.matrix.columns.3.x, 0, accuracy: 0.0001)
+    }
+
+    func test_stopResetFinishAndCompleteApplyPendingWrites() throws {
+        let makeTimeline = {
+            SpatializedMotionTimelinePayload(
+                duration: 1,
+                delay: nil,
+                playbackRate: nil,
+                loop: nil,
+                tracks: [
+                    SpatializedMotionTrackPayload(
+                        property: "transform.translate.x",
+                        keyframes: [
+                            SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                            SpatializedMotionKeyframePayload(at: 1, value: 10, timingFunction: nil),
+                        ],
+                        timingFunction: "linear"
+                    ),
+                    SpatializedMotionTrackPayload(
+                        property: "opacity",
+                        keyframes: [
+                            SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
+                            SpatializedMotionKeyframePayload(at: 1, value: 0.25, timingFunction: nil),
+                        ],
+                        timingFunction: "linear"
+                    ),
+                ]
+            )
+        }
+
+        func makeAnimation() throws -> (Spatialized2DElement, SpatializedElementAnimationObject) {
+            let element = Spatialized2DElement()
+            let manager = SpatializedElementAnimationManager()
+            let animation = try manager.createAnimation(
+                command: CreateSpatializedElementAnimationCommand(
+                    elementId: element.id,
+                    targetKind: "spatialized2d",
+                    timeline: makeTimeline()
+                ),
+                target: element
+            )
+            animation.play(at: 0)
+            element.animatingMask.pendingTransform = .init(translation: Vector3D(x: 30, y: 0, z: 0))
+            element.animatingMask.pendingOpacity = 0.9
+            return (element, animation)
+        }
+
+        do {
+            let (element, animation) = try makeAnimation()
+            animation.stop(at: 0.5)
+            XCTAssertEqual(element.transform.matrix.columns.3.x, 30, accuracy: 0.0001)
+            XCTAssertEqual(element.opacity, 0.9, accuracy: 0.0001)
+        }
+
+        do {
+            let (element, animation) = try makeAnimation()
+            animation.reset(at: 0.5)
+            XCTAssertEqual(element.transform.matrix.columns.3.x, 30, accuracy: 0.0001)
+            XCTAssertEqual(element.opacity, 0.9, accuracy: 0.0001)
+        }
+
+        do {
+            let (element, animation) = try makeAnimation()
+            animation.finish(at: 0.5)
+            XCTAssertEqual(element.transform.matrix.columns.3.x, 30, accuracy: 0.0001)
+            XCTAssertEqual(element.opacity, 0.9, accuracy: 0.0001)
+        }
+
+        do {
+            let (element, animation) = try makeAnimation()
+            animation.tick(at: 1.1)
+            XCTAssertEqual(element.transform.matrix.columns.3.x, 30, accuracy: 0.0001)
+            XCTAssertEqual(element.opacity, 0.9, accuracy: 0.0001)
+        }
+    }
+
+    func test_releaseMaskIgnoresMismatchedAnimationOwner() {
+        let element = SpatializedStatic3DElement()
+        let adapter = SpatializedElementAnimationWriteAdapter.modelTransform
+
+        element.animatingMask.acquire(transform: "owner-a")
+        element.animatingMask.pendingTransform = .init(translation: Vector3D(x: 55, y: 0, z: 0))
+
+        adapter.releaseMaskAndApplyPending(on: element, animationId: "owner-b")
+
+        XCTAssertEqual(element.animatingMask.transformAnimationId, "owner-a")
+        XCTAssertNotNil(element.animatingMask.pendingTransform)
+        XCTAssertEqual(element.modelTransform.matrix.columns.3.x, 0, accuracy: 0.0001)
+    }
+
     func test_destroyAnimationsForElementDestroysRelatedAnimation() throws {
         let element = Spatialized2DElement()
         let manager = SpatializedElementAnimationManager()

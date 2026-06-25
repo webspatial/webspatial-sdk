@@ -8,36 +8,46 @@ let zOrderBias = 0.001
 struct SpatializedElementAnimatingMask {
     var transformAnimationId: String?
     var opacityAnimationId: String?
-    var modelTransformAnimationId: String?
+    var pendingTransform: AffineTransform3D?
+    var pendingOpacity: Double?
+}
 
+struct SpatializedElementPendingAnimationWrites {
+    var transform: AffineTransform3D?
+    var opacity: Double?
+}
+
+extension SpatializedElementAnimatingMask {
     mutating func acquire(transform animationId: String?) {
         transformAnimationId = animationId
+        pendingTransform = nil
     }
 
     mutating func acquire(opacity animationId: String?) {
         opacityAnimationId = animationId
+        pendingOpacity = nil
     }
 
-    mutating func acquire(modelTransform animationId: String?) {
-        modelTransformAnimationId = animationId
-    }
-
-    mutating func release(animationId: String) {
+    mutating func release(animationId: String) -> SpatializedElementPendingAnimationWrites {
+        var pending = SpatializedElementPendingAnimationWrites()
         if transformAnimationId == animationId {
             transformAnimationId = nil
+            pending.transform = pendingTransform
+            pendingTransform = nil
         }
         if opacityAnimationId == animationId {
             opacityAnimationId = nil
+            pending.opacity = pendingOpacity
+            pendingOpacity = nil
         }
-        if modelTransformAnimationId == animationId {
-            modelTransformAnimationId = nil
-        }
+        return pending
     }
 
     mutating func clear() {
         transformAnimationId = nil
         opacityAnimationId = nil
-        modelTransformAnimationId = nil
+        pendingTransform = nil
+        pendingOpacity = nil
     }
 
     var locksTransform: Bool {
@@ -46,10 +56,6 @@ struct SpatializedElementAnimatingMask {
 
     var locksOpacity: Bool {
         opacityAnimationId != nil
-    }
-
-    var locksModelTransform: Bool {
-        modelTransformAnimationId != nil
     }
 }
 

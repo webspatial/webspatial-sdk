@@ -123,6 +123,7 @@ final class SpatializedElementAnimationObject: SpatialObject {
         let values = currentValues(at: timestamp)
         playState = .idle
         finished = false
+        applySample(values)
         releaseMask()
         emitStateChanged(action: "stop", playState: .idle, values: values)
     }
@@ -231,7 +232,7 @@ final class SpatializedElementAnimationObject: SpatialObject {
 
     private func releaseMask() {
         guard let element = targetElement else { return }
-        writeAdapter.releaseMask(on: element, animationId: uuid)
+        writeAdapter.releaseMaskAndApplyPending(on: element, animationId: uuid)
     }
 
     private func currentValues(at timestamp: CFTimeInterval) -> SpatializedMotionValuesPayload {

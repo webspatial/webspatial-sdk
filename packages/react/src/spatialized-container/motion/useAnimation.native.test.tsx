@@ -413,45 +413,9 @@ describe('useAnimation tuple api native backend', () => {
     ['reset', 'idle'],
     ['finish', 'finished'],
   ] as const)(
-    'explicit authored opacity wins terminal %s handoff on native spatialized2d',
+    'native-backed spatialized2d keeps inner style empty after %s',
     async (command, expectedPlayState) => {
-      const element = createMockElement(`authored-${command}`)
-
-      const { result } = renderHook(() =>
-        useAnimation({
-          duration: 2,
-          autoStart: false,
-          from: { opacity: 1 },
-          to: { opacity: 0.2 },
-          timingFunction: 'linear',
-        }),
-      )
-
-      await act(async () => {
-        ;(result.current[0] as any).__setExplicitStyleOpacity?.(0.8)
-        result.current[0].__setElement?.(element as any, 'spatialized2d')
-        result.current[1].play()
-      })
-      await waitFor(() => expect(element.animation.play).toHaveBeenCalled())
-
-      await act(async () => {
-        result.current[1][command]()
-      })
-      await flushPromises()
-
-      expect(result.current[1].playState).toBe(expectedPlayState)
-      expect(result.current[2].opacity).toBe(0.8)
-    },
-  )
-
-  test.each([
-    ['stop', 'idle'],
-    ['reset', 'idle'],
-    ['finish', 'finished'],
-  ] as const)(
-    'native terminal %s handoff omits inner DOM opacity when no explicit authored opacity exists',
-    async (command, expectedPlayState) => {
-      const element = createMockElement(`native-owned-${command}`)
+      const element = createMockElement(`native-empty-${command}`)
 
       const { result } = renderHook(() =>
         useAnimation({
@@ -476,6 +440,7 @@ describe('useAnimation tuple api native backend', () => {
 
       expect(result.current[1].playState).toBe(expectedPlayState)
       expect(result.current[2].opacity).toBeUndefined()
+      expect(result.current[2].transform).toBeUndefined()
     },
   )
 
