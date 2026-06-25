@@ -83,13 +83,7 @@ enum SpatializedElementAnimationWriteAdapter {
     }
 
     func releaseMaskAndApplyPending(on element: SpatializedElement, animationId: String) {
-        let pending = element.animatingMask.release(animationId: animationId)
-        if let transform = pending.transform {
-            applyAffine(transform, to: element)
-        }
-        if let opacity = pending.opacity {
-            applyOpacity(opacity, to: element)
-        }
+        element.animatingMask.release(animationId: animationId)
     }
 
     func shouldAllowTransformWrite(on element: SpatializedElement, animationId: String) -> Bool {

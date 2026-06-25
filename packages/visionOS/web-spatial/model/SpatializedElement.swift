@@ -8,46 +8,29 @@ let zOrderBias = 0.001
 struct SpatializedElementAnimatingMask {
     var transformAnimationId: String?
     var opacityAnimationId: String?
-    var pendingTransform: AffineTransform3D?
-    var pendingOpacity: Double?
-}
-
-struct SpatializedElementPendingAnimationWrites {
-    var transform: AffineTransform3D?
-    var opacity: Double?
 }
 
 extension SpatializedElementAnimatingMask {
     mutating func acquire(transform animationId: String?) {
         transformAnimationId = animationId
-        pendingTransform = nil
     }
 
     mutating func acquire(opacity animationId: String?) {
         opacityAnimationId = animationId
-        pendingOpacity = nil
     }
 
-    mutating func release(animationId: String) -> SpatializedElementPendingAnimationWrites {
-        var pending = SpatializedElementPendingAnimationWrites()
+    mutating func release(animationId: String) {
         if transformAnimationId == animationId {
             transformAnimationId = nil
-            pending.transform = pendingTransform
-            pendingTransform = nil
         }
         if opacityAnimationId == animationId {
             opacityAnimationId = nil
-            pending.opacity = pendingOpacity
-            pendingOpacity = nil
         }
-        return pending
     }
 
     mutating func clear() {
         transformAnimationId = nil
         opacityAnimationId = nil
-        pendingTransform = nil
-        pendingOpacity = nil
     }
 
     var locksTransform: Bool {
