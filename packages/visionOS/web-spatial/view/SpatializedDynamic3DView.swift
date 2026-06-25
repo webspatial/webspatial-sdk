@@ -2,15 +2,11 @@ import RealityKit
 import SwiftUI
 
 struct SpatializedDynamic3DView: View {
-    @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
+    let spatializedDynamic3DElement: SpatializedDynamic3DElement
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
     @State private var isDrag = false
     @State private var isRotate = false
     @State private var isScale = false
-
-    private var spatializedDynamic3DElement: SpatializedDynamic3DElement {
-        return spatializedElement as! SpatializedDynamic3DElement
-    }
 
     var spatialTapEvent: some Gesture {
         SpatialTapGesture(count: 1).targetedToAnyEntity()
@@ -63,7 +59,7 @@ struct SpatializedDynamic3DView: View {
     }
 
     private func makeRotateGesture3D() -> RotateGesture3D {
-        guard let raw = spatializedElement.rotateConstrainedToAxis else {
+        guard let raw = spatializedDynamic3DElement.rotateConstrainedToAxis else {
             return RotateGesture3D()
         }
         let dx = Double(raw.x)

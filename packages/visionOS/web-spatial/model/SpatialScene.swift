@@ -41,8 +41,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     var attachmentManager = AttachmentManager()
-    // NOTE: `@Observable` + `lazy` 在新版本 Swift 宏展开下会触发编译器报错（init accessor 访问 backing storage）。
-    // 这里不需要让动画管理器参与 Observation，避免生成 `@ObservationTracked` 相关访问器即可。
+    /// NOTE: `@Observable` + `lazy` 在新版本 Swift 宏展开下会触发编译器报错（init accessor 访问 backing storage）。
+    /// 这里不需要让动画管理器参与 Observation，避免生成 `@ObservationTracked` 相关访问器即可。
     @ObservationIgnored
     lazy var animationManager: EntityAnimationManager = .init(scene: self)
 
@@ -930,17 +930,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         children.removeValue(forKey: spatializedElement.id)
     }
 
-    func getChildrenOfType(_ type: SpatializedElementType) -> [String: SpatializedElement] {
-        return children.filter {
-            switch type {
-            case .Spatialized2DElement:
-                return $0.value is Spatialized2DElement
-            case .SpatializedStatic3DElement:
-                return $0.value is SpatializedStatic3DElement
-            case .SpatializedDynamic3DElement:
-                return $0.value is SpatializedDynamic3DElement
-            }
-        }
+    func getChildren<T: SpatializedElement>(ofType type: T.Type) -> [T] {
+        return children.values.compactMap { $0 as? T }
     }
 
     func getChildren() -> [String: SpatializedElement] {
