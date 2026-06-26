@@ -712,10 +712,9 @@ export class CreateSpatializedElementAnimationJSBCommand extends JSBCommand {
   }
 
   protected getParams(): Record<string, any> | undefined {
-    const { elementId, targetKind, timeline } = this.command
+    const { elementId, timeline } = this.command
     return {
       elementId,
-      targetKind,
       timeline,
     }
   }

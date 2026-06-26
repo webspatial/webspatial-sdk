@@ -26,7 +26,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -60,7 +59,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -125,7 +123,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -173,7 +170,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -219,7 +215,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -260,7 +255,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -301,7 +295,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -355,7 +348,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -393,7 +385,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -428,7 +419,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -464,7 +454,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "static3d",
                 timeline: timeline
             ),
             target: element
@@ -512,7 +501,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
             let animation = try manager.createAnimation(
                 command: CreateSpatializedElementAnimationCommand(
                     elementId: element.id,
-                    targetKind: "spatialized2d",
                     timeline: makeTimeline()
                 ),
                 target: element
@@ -585,7 +573,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -623,7 +610,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "static3d",
                 timeline: timeline
             ),
             target: element
@@ -668,7 +654,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -730,7 +715,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
             try manager.createAnimation(
                 command: CreateSpatializedElementAnimationCommand(
                     elementId: element.id,
-                    targetKind: "static3d",
                     timeline: timeline
                 ),
                 target: element
@@ -766,7 +750,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -809,7 +792,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element
@@ -867,7 +849,6 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         let animation = try manager.createAnimation(
             command: CreateSpatializedElementAnimationCommand(
                 elementId: element.id,
-                targetKind: "spatialized2d",
                 timeline: timeline
             ),
             target: element

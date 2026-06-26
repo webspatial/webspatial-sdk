@@ -136,6 +136,7 @@ describe('JSBCommand', () => {
   it('builds element commands payloads', async () => {
     const mod = await import('./JSBCommand')
     const {
+      CreateSpatializedElementAnimationJSBCommand,
       UpdateSpatializedElementTransform,
       UpdateSpatialized2DElementProperties,
       UpdateSpatializedDynamic3DElementProperties,
@@ -191,6 +192,19 @@ describe('JSBCommand', () => {
     expect(platformSpy.callJSB).toHaveBeenCalledWith(
       'AddSpatializedElementToSpatialized2DElement',
       JSON.stringify({ id: 'so-1', spatializedElementId: 'ele-1' }),
+    )
+
+    await new CreateSpatializedElementAnimationJSBCommand({
+      elementId: 'ele-1',
+      targetKind: 'static3d',
+      timeline: { duration: 1, tracks: [] },
+    } as any).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'CreateSpatializedElementAnimation',
+      JSON.stringify({
+        elementId: 'ele-1',
+        timeline: { duration: 1, tracks: [] },
+      }),
     )
 
     await new UpdateUnlitMaterialProperties(obj, { color: '#fff' }).execute()

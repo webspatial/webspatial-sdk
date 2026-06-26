@@ -2,11 +2,9 @@ import type { SpatializedMotionTimeline } from './spatializedMotion'
 import type { SpatializedMotionPlayState } from './spatializedMotion'
 import type { SpatializedPlaybackError } from './spatializedPlayback'
 import type { SpatializedVisualValues } from './spatializedVisual'
-import type { SpatializedMotionKind } from './spatializedMotion'
 
 export interface CreateSpatializedElementAnimationCommand {
   elementId: string
-  targetKind: SpatializedMotionKind
   timeline: SpatializedMotionTimeline
 }
 

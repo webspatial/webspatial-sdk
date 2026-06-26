@@ -51,9 +51,10 @@ export class AnimationObject extends SpatialObject {
   }
 
   static async create(options: AnimationObjectCreateOptions) {
-    const ret = await new CreateSpatializedElementAnimationJSBCommand(
-      options,
-    ).execute()
+    const ret = await new CreateSpatializedElementAnimationJSBCommand({
+      elementId: options.elementId,
+      timeline: options.timeline,
+    }).execute()
     if (!ret.success) {
       throw new Error(
         ret.errorMessage ?? 'CreateSpatializedElementAnimation command failed',

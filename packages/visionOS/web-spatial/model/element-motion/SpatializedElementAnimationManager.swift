@@ -32,9 +32,7 @@ final class SpatializedElementAnimationManager: NSObject {
         target: SpatializedElement,
         explicitAnimationId: String? = nil
     ) throws -> SpatializedElementAnimationObject {
-        guard let targetKind = SpatializedElementAnimationTargetKind(rawValue: command.targetKind) else {
-            throw SpatializedElementAnimationManagerError.invalidTarget("unknown target kind \(command.targetKind)")
-        }
+        let targetKind = try Self.resolveTargetKind(for: target)
         let writeAdapter = SpatializedElementAnimationWriteAdapter.adapter(for: targetKind)
         let sampler = SpatializedElementMotionTimelineSampler(
             timeline: command.timeline,
@@ -60,6 +58,20 @@ final class SpatializedElementAnimationManager: NSObject {
         )
         register(animation)
         return animation
+    }
+
+    /// Resolves the native animation target kind from the concrete element subtype.
+    private static func resolveTargetKind(for target: SpatializedElement) throws -> SpatializedElementAnimationTargetKind {
+        if target is SpatializedStatic3DElement {
+            return .static3d
+        }
+        if target is SpatializedDynamic3DElement {
+            return .dynamic3d
+        }
+        if target is Spatialized2DElement {
+            return .spatialized2d
+        }
+        throw SpatializedElementAnimationManagerError.invalidTarget("unsupported element type \(String(describing: type(of: target)))")
     }
 
     func controlAnimation(_ command: ControlSpatializedElementAnimationCommand) throws {

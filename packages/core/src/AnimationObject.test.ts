@@ -109,7 +109,7 @@ describe('AnimationObject', () => {
     expect(spies.createCommandSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         elementId: 'element-1',
-        targetKind: 'static3d',
+        timeline: expect.any(Object),
       }),
     )
 

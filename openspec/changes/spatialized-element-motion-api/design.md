@@ -149,7 +149,6 @@ classDiagram
     class CreateSpatializedElementAnimation {
       <<JSB command>>
       +targetElementId: string
-      +targetKind: string
       +timeline: CanonicalMotionTimeline
     }
 
@@ -304,9 +303,10 @@ sequenceDiagram
   Target->>Binding: bind(element, static3d)
   Binding->>Element: createAnimation(config)
   Element->>Element: validate + normalize
-  Element->>Scene: CreateSpatializedElementAnimation(target, kind, timeline)
+  Element->>Scene: CreateSpatializedElementAnimation(target, timeline)
   Scene->>Manager: createAnimation(command)
   Manager->>Scene: findSpatialObject(targetElementId)
+  Manager->>Manager: resolve target kind from native element type
   Manager->>NativeObj: new AnimationObject(native uuid, locked timeline)
   Manager->>Scene: addSpatialObject(animationObject)
   Manager-->>Scene: { id: native uuid }
