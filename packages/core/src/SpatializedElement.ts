@@ -43,6 +43,11 @@ import type {
  */
 export abstract class SpatializedElement extends SpatialObject {
   /**
+   * Identifies the motion target kind supported by this spatialized element.
+   */
+  abstract readonly kind: SpatializedMotionKind
+
+  /**
    * Creates a new spatialized element with the specified ID.
    * Registers the element to receive spatial events.
    * @param id Unique identifier for this element
@@ -68,9 +73,9 @@ export abstract class SpatializedElement extends SpatialObject {
    */
   async createAnimation(
     config: SpatializedMotionAuthorConfig,
-    targetKind: SpatializedMotionKind,
   ): Promise<AnimationObject> {
     const normalized = normalizeMotionConfig(config)
+    const targetKind = this.kind
     validateSpatializedMotionConfig(normalized, { targetKind })
     return AnimationObject.create({
       elementId: this.id,
