@@ -85,7 +85,6 @@
 				"element-motion/SpatializedElementMotionBridgeTypes.swift",
 				"element-motion/SpatializedElementMotionTimelineSampler.swift",
 				"element-motion/SpatializedElementMotionTiming.swift",
-				"element-motion/SpatializedElementMotionTransformAdapter.swift",
 				"element-motion/SpatializedElementMotionTransformTypes.swift",
 				MaterialSceneRefresh.swift,
 				SpatialApp.swift,
