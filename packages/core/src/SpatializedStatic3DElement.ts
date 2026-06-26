@@ -1,7 +1,5 @@
 import { UpdateSpatializedStatic3DElementProperties } from './JSBCommand'
 import { ReceiveEventData, SpatializedElement } from './SpatializedElement'
-import type { AnimationObject } from './AnimationObject'
-import type { SpatializedMotionAuthorConfig } from './types/spatializedMotion'
 import {
   ModelLoadingMode,
   ModelSource,
@@ -23,6 +21,11 @@ import {
  * and provides events for load success and failure.
  */
 export class SpatializedStatic3DElement extends SpatializedElement {
+  /**
+   * Identifies the motion target kind supported by this element.
+   */
+  override readonly kind = 'static3d' as const
+
   /**
    * Creates a new spatialized static 3D element with the specified ID and URL.
    * Registers the element to receive spatial events.
@@ -149,12 +152,6 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       this,
       properties,
     ).execute()
-  }
-
-  override createAnimation(
-    config: SpatializedMotionAuthorConfig,
-  ): Promise<AnimationObject> {
-    return super.createAnimation(config, 'static3d')
   }
 
   /**

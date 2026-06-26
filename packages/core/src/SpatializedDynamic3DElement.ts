@@ -2,8 +2,6 @@ import {
   SetParentForEntityCommand,
   UpdateSpatializedDynamic3DElementProperties,
 } from './JSBCommand'
-import type { AnimationObject } from './AnimationObject'
-import type { SpatializedMotionAuthorConfig } from './types/spatializedMotion'
 import { SpatialEntity } from './reality'
 import { SpatializedElement } from './SpatializedElement'
 import {
@@ -13,6 +11,11 @@ import {
 } from './types/types'
 
 export class SpatializedDynamic3DElement extends SpatializedElement {
+  /**
+   * Identifies the motion target kind supported by this element.
+   */
+  override readonly kind = 'dynamic3d' as const
+
   children: SpatialEntityOrReality[] = []
   events: Record<string, (data: any) => void> = {}
 
@@ -46,11 +49,5 @@ export class SpatializedDynamic3DElement extends SpatializedElement {
       this,
       properties,
     ).execute()
-  }
-
-  override createAnimation(
-    config: SpatializedMotionAuthorConfig,
-  ): Promise<AnimationObject> {
-    return super.createAnimation(config, 'dynamic3d')
   }
 }

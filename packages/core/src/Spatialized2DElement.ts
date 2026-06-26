@@ -2,8 +2,6 @@ import {
   AddSpatializedElementToSpatialized2DElement,
   UpdateSpatialized2DElementProperties,
 } from './JSBCommand'
-import type { AnimationObject } from './AnimationObject'
-import type { SpatializedMotionAuthorConfig } from './types/spatializedMotion'
 import { hijackWindowATag } from './scene-polyfill'
 import { SpatializedElement } from './SpatializedElement'
 import { Spatialized2DElementProperties } from './types/types'
@@ -14,6 +12,11 @@ import { Spatialized2DElementProperties } from './types/types'
  * allowing HTML elements to be positioned and interacted with in spatial applications.
  */
 export class Spatialized2DElement extends SpatializedElement {
+  /**
+   * Identifies the motion target kind supported by this element.
+   */
+  override readonly kind = 'spatialized2d' as const
+
   /**
    * Creates a new spatialized 2D element.
    * @param id Unique identifier for this element
@@ -49,11 +52,5 @@ export class Spatialized2DElement extends SpatializedElement {
       this,
       element,
     ).execute()
-  }
-
-  override createAnimation(
-    config: SpatializedMotionAuthorConfig,
-  ): Promise<AnimationObject> {
-    return super.createAnimation(config, 'spatialized2d')
   }
 }

@@ -434,6 +434,9 @@ describe('SpatializedElement', () => {
     SpatialWebEvent.init()
 
     class TestElement extends SpatializedElement {
+      /** Identifies the supported motion target kind for this test element. */
+      readonly kind = 'spatialized2d' as const
+
       updateProperties = vi.fn().mockResolvedValue({
         success: true,
         data: undefined,
@@ -464,6 +467,9 @@ describe('SpatializedElement', () => {
     SpatialWebEvent.init()
 
     class TestElement extends SpatializedElement {
+      /** Identifies the supported motion target kind for this test element. */
+      readonly kind = 'spatialized2d' as const
+
       updateProperties = vi.fn().mockResolvedValue({
         success: true,
         data: undefined,

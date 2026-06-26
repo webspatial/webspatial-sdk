@@ -74,6 +74,9 @@ describe('AnimationObject', () => {
     const { SpatializedElement } = await import('./SpatializedElement')
 
     class TestSpatializedElement extends SpatializedElement {
+      /** Identifies the supported motion target kind for this test element. */
+      readonly kind = 'static3d' as const
+
       async updateProperties() {
         return {
           success: true,
@@ -85,18 +88,15 @@ describe('AnimationObject', () => {
     }
 
     const element = new TestSpatializedElement('element-1')
-    return element.createAnimation(
-      {
-        duration: 1,
-        from: {
-          transform: { translate: { x: 0 } },
-        },
-        to: {
-          transform: { translate: { x: 10 } },
-        },
+    return element.createAnimation({
+      duration: 1,
+      from: {
+        transform: { translate: { x: 0 } },
       },
-      'static3d',
-    )
+      to: {
+        transform: { translate: { x: 10 } },
+      },
+    })
   }
 
   it('creates from the native create command and tracks native state directly', async () => {
@@ -106,6 +106,7 @@ describe('AnimationObject', () => {
 
     expect(animation).toBeInstanceOf(AnimationObject)
     expect(animation.uuid).toBe('native-anim-1')
+    expect(animation.targetKind).toBe('static3d')
     expect(spies.createCommandSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         elementId: 'element-1',
