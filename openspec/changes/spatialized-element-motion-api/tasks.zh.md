@@ -147,7 +147,7 @@
 - [x] visionOS：通过现有 `SpatialScene` / `spatialWebViewModel` WebMsg 路径发送 `SpatialAnimationStateChanged`
 - [x] visionOS：复用 `SpatializedElementMotionTimelineSampler` / `SpatializedMotionTimingFunction` / `SpatializedMotionTransformComponents`
 - [x] visionOS：将 `SpatializedElementMotionTransformAdapter` 重构为 target write adapter
-- [x] visionOS：将 `SpatializedElementMotionSession` 的 timing 字段和状态算法迁移到 Native `AnimationObject`
+- [x] visionOS：将 timing 字段和状态算法迁移到 Native `AnimationObject`
 - [x] visionOS：将 `SpatializedElementMotionManager` 重构为 object manager，复用 shared frame driver 和 terminal value 构造逻辑
 - [x] visionOS：用 `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` 替换 `AnimateSpatializedElementMotion`
 - [x] visionOS：用统一 `SpatialAnimationStateChanged` 替换旧 `${animationId}_completed/canceled/failed` WebMsg

@@ -480,6 +480,5 @@ When the target `SpatializedElement` is destroyed, the native runtime must destr
 | `SpatializedElementMotionTransformTypes.swift` | Reuse transform components directly. |
 | `SpatializedElementMotionTransformAdapter.swift` | Refactor into target write adapter called by `Native AnimationObject.tick()`; Static3D opacity must still be rejected before create. |
 | `SpatializedElementMotionManager.swift` | Refactor into `SpatializedElementAnimationManager`, preserving shared frame driver, lookup, terminal values, and compose/decompose ideas. |
-| `SpatializedElementMotionSession.swift` | Do not keep the class; migrate timing fields and state algorithm into native `AnimationObject`. |
 | `AnimateSpatializedElementMotionCommand` | Remove; replace with `CreateSpatializedElementAnimation` and `ControlSpatializedElementAnimation`. |
 | `${animationId}_completed/canceled/failed` WebMsg | Remove; replace with unified `SpatialAnimationStateChanged`. |

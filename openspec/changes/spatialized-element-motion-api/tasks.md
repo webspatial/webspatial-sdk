@@ -147,7 +147,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] visionOS: emit `SpatialAnimationStateChanged` through existing `SpatialScene` / `spatialWebViewModel` WebMsg path
 - [x] visionOS: reuse `SpatializedElementMotionTimelineSampler` / `SpatializedMotionTimingFunction` / `SpatializedMotionTransformComponents`
 - [x] visionOS: refactor `SpatializedElementMotionTransformAdapter` into target write adapter
-- [x] visionOS: move `SpatializedElementMotionSession` timing fields and state algorithm into Native `AnimationObject`
+- [x] visionOS: move timing fields and state algorithm into Native `AnimationObject`
 - [x] visionOS: refactor `SpatializedElementMotionManager` into object manager, reusing shared frame driver and terminal value construction logic
 - [x] visionOS: replace `AnimateSpatializedElementMotion` with `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation`
 - [x] visionOS: replace old `${animationId}_completed/canceled/failed` WebMsg with unified `SpatialAnimationStateChanged`
