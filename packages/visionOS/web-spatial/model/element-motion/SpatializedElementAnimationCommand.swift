@@ -4,7 +4,6 @@ struct CreateSpatializedElementAnimationCommand: CommandDataProtocol {
     static let commandType: String = "CreateSpatializedElementAnimation"
 
     let elementId: String
-    let targetKind: String
     let timeline: SpatializedMotionTimelinePayload
 }
 

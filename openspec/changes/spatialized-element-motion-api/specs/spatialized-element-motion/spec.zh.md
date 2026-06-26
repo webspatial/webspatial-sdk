@@ -13,7 +13,7 @@
 
 ### Requirement: Native-first AnimationObject 架构
 
-Spatialized element motion MUST 使用 native-first 的 `AnimationObject` 目标态架构。每个已绑定的 `SpatializedElement` MUST 暴露 `createAnimation(config)`，创建一个与单个 spatialized element target 关联的 `AnimationObject : SpatialObject`。创建时 MUST 发送 `CreateSpatializedElementAnimation`，其中包含归一化 timeline payload、目标 kind、元素 identity 和 animation identity。运行时控制 MUST 使用 `ControlSpatializedElementAnimation` 命令（`play`、`pause`、`resume`、`stop`、`reset`、`finish`、`destroy`）。Native runtime state change MUST 通过 `SpatialAnimationStateChanged` 观察。
+Spatialized element motion MUST 使用 native-first 的 `AnimationObject` 目标态架构。每个已绑定的 `SpatializedElement` MUST 暴露 `createAnimation(config)`，创建一个与单个 spatialized element target 关联的 `AnimationObject : SpatialObject`。创建时 MUST 发送 `CreateSpatializedElementAnimation`，其中包含归一化 timeline payload 和元素 identity。Core SDK MUST 仍在创建前解析 target kind 以执行目标特化校验，而 native runtime MUST 从具体 native element 类型解析最终生效的 target kind。运行时控制 MUST 使用 `ControlSpatializedElementAnimation` 命令（`play`、`pause`、`resume`、`stop`、`reset`、`finish`、`destroy`）。Native runtime state change MUST 通过 `SpatialAnimationStateChanged` 观察。
 
 目标态架构 MUST NOT 依赖 Web RAF playback、`SpatializedMotionController`、`NativePlaybackBackend`、Portal suppression 或 `AnimateSpatializedElementMotion` 作为规范性执行原语。既有 authoring 与 playback 语义继续保持规范性，但执行所有者是 native `AnimationObject`。
 
