@@ -2,7 +2,7 @@ import RealityKit
 import SwiftUI
 
 struct SpatializedStatic3DView: View {
-    let spatializedStatic3DElement: SpatializedStatic3DElement
+    @Bindable var spatializedStatic3DElement: SpatializedStatic3DElement
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
 
     @State private var loadState: LoadState = .idle
@@ -18,6 +18,10 @@ struct SpatializedStatic3DView: View {
 
     func onLoadFailure() {
         spatialScene.sendWebMsg(spatializedStatic3DElement.id, ModelLoadFailure())
+    }
+
+    private func onOrbit(_ transform: AffineTransform3D) {
+        spatialScene.sendWebMsg(spatializedStatic3DElement.id, EntityTransformChangeEvent(transform))
     }
 
     var body: some View {
@@ -40,10 +44,7 @@ struct SpatializedStatic3DView: View {
                     Model3D(asset: asset) { resolvedModel3D in
                         resolvedModel3D
                             .resizable(true)
-                            .aspectRatio(
-                                nil,
-                                contentMode: .fit
-                            )
+                            .aspectRatio(nil, contentMode: .fit)
                             .if(!depth.isZero) { view in view.scaledToFit3D() }
                             .if(enableGesture) { view in view.hoverEffect() }
                     }
@@ -51,13 +52,12 @@ struct SpatializedStatic3DView: View {
                     posterView {}
                 }
             }
-            .scaleEffect(
-                x: scale.width,
-                y: scale.height,
-                z: scale.depth
-            )
-            .rotation3DEffect(
-                rotation
+            .scaleEffect(scale)
+            .rotation3DEffect(rotation)
+            .orbit(
+                enabled: spatializedStatic3DElement.stagemode == .orbit,
+                entityTransform: $spatializedStatic3DElement.entityTransform,
+                onChange: onOrbit
             )
             .offset(x: x, y: y)
             .offset(z: z)
