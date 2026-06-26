@@ -480,6 +480,5 @@ Config 变化不做 hot update；目标态使用 destroy + recreate。`Animation
 | `SpatializedElementMotionTransformTypes.swift` | 直接复用 transform components。 |
 | `SpatializedElementMotionTransformAdapter.swift` | 改造为 target write adapter，由 `Native AnimationObject.tick()` 调用；Static3D opacity 仍必须在 create 前 reject。 |
 | `SpatializedElementMotionManager.swift` | 重构为 `SpatializedElementAnimationManager`，保留 shared frame driver、查找、terminal values、compose/decompose 思路。 |
-| `SpatializedElementMotionSession.swift` | 不保留类；迁移 timing 字段和状态算法到 native `AnimationObject`。 |
 | `AnimateSpatializedElementMotionCommand` | 废弃；替换为 `CreateSpatializedElementAnimation` 和 `ControlSpatializedElementAnimation`。 |
 | `${animationId}_completed/canceled/failed` WebMsg | 废弃；替换为统一 `SpatialAnimationStateChanged`。 |
