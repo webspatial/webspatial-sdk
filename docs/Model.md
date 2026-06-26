@@ -210,19 +210,19 @@ function LongScrollPage() {
 
 ### HTML
 
-| Property   | visionOS           | Pico OS                         | WebSpatial SDK |
-| ---------- | ------------------ | ------------------------------- | -------------- |
-| model      | ✓<br>26            | ❌                              | ✓<br>1.1       |
-| enable-xr  | ✓<br>26            | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
-| src        | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.0 | ✓<br>1.1       |
-| onLoad     | ✓<br>26            | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
-| onError    | ✓<br>26            | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
-| autoPlay   | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
-| loop       | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
-| `<source>` | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.1 | ✓<br>1.6       |
-| poster     | ✓<br>26            | ✓<br>6 β2.0                     | ✓<br>1.7       |
-| loading    | ✓<br>26            | ✓<br>6 β2.1                     | ✓<br>1.7       |
-| stagemode  | 26                 | 6.1                             | July           |
+| Property   | visionOS       | Pico OS                | WebSpatial SDK |
+| ---------- | -------------- | ---------------------- | -------------- |
+| model      | ✓<br>26        | ❌                     | ✓<br>1.1       |
+| enable-xr  | ✓<br>26        | ✓<br>6 ⍺2.0            | ✓<br>1.1       |
+| src        | ✓ (USDZ)<br>26 | ✓ (USDZ/GLB)<br>6 ⍺2.0 | ✓<br>1.1       |
+| onLoad     | ✓<br>26        | ✓<br>6 ⍺2.0            | ✓<br>1.1       |
+| onError    | ✓<br>26        | ✓<br>6 ⍺2.0            | ✓<br>1.1       |
+| autoPlay   | ✓<br>26        | ✓<br>6 ⍺2.1            | ✓<br>1.6       |
+| loop       | ✓<br>26        | ✓<br>6 ⍺2.1            | ✓<br>1.6       |
+| `<source>` | ✓ (USDZ)<br>26 | ✓ (USDZ/GLB)<br>6 ⍺2.1 | ✓<br>1.6       |
+| poster     | ✓<br>26        | ✓<br>6 β2.0            | ✓<br>1.7       |
+| loading    | ✓<br>26        | ✓<br>6 β2.1            | ✓<br>1.7       |
+| stagemode  | 26             | 6.1                    | July           |
 
 ### CSS
 
