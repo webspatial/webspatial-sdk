@@ -1,7 +1,7 @@
 import type {
   SpatializedMotionConfig,
   SpatializedMotionTimeline,
-} from '../../types/spatializedMotion'
+} from '../../types/motion/spatializedMotion'
 
 /** Full timeline payload for native Phase 2b. */
 export function motionConfigToNativeTimeline(

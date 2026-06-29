@@ -1,4 +1,4 @@
-import type { TimingFunction } from './animation'
+import type { TimingFunction } from '../animation'
 import type { SpatializedPlaybackError } from './spatializedPlayback'
 import type { SpatializedVisualValues } from './spatializedVisual'
 

@@ -32,7 +32,7 @@ import { composeSRT } from './utils'
 import type {
   ControlSpatializedElementAnimationCommand,
   CreateSpatializedElementAnimationCommand,
-} from './types/spatializedElementMotion'
+} from './types/motion/spatializedElementMotion'
 
 abstract class JSBCommand {
   commandType: string = ''

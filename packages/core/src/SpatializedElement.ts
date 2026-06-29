@@ -34,7 +34,7 @@ import {
 import type {
   SpatializedMotionAuthorConfig,
   SpatializedMotionKind,
-} from './types/spatializedMotion'
+} from './types/motion/spatializedMotion'
 
 /**
  * Abstract base class for all spatialized elements in the WebSpatial environment.

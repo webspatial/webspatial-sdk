@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import type { SpatializedMotionProperty } from '../../types/spatializedMotion'
+import type { SpatializedMotionProperty } from '../../types/motion/spatializedMotion'
 import { setMotionPropertyValue } from './motionPropertyValues'
 
 describe('setMotionPropertyValue', () => {

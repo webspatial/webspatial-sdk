@@ -1,5 +1,5 @@
-import type { SpatializedVisualValues } from '../../types/spatializedVisual'
-import type { SpatializedMotionProperty } from '../../types/spatializedMotion'
+import type { SpatializedVisualValues } from '../../types/motion/spatializedVisual'
+import type { SpatializedMotionProperty } from '../../types/motion/spatializedMotion'
 
 function getTranslate(
   visualValues: SpatializedVisualValues,

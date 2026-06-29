@@ -1,8 +1,8 @@
-import type { SpatializedVisualValues } from '../../types/spatializedVisual'
+import type { SpatializedVisualValues } from '../../types/motion/spatializedVisual'
 import type {
   SpatializedMotionConfig,
   SpatializedMotionTrack,
-} from '../../types/spatializedMotion'
+} from '../../types/motion/spatializedMotion'
 import { applyTimingFunction } from './timing'
 import { setMotionPropertyValue } from './motionPropertyValues'
 

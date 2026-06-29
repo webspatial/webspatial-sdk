@@ -1,4 +1,4 @@
-import { SPATIALIZED_MOTION_PROPERTIES } from '../../types/spatializedMotion'
+import { SPATIALIZED_MOTION_PROPERTIES } from '../../types/motion/spatializedMotion'
 import type {
   SpatializedMotionKind,
   SpatializedMotionProperty,
@@ -6,7 +6,7 @@ import type {
   SpatializedMotionSegmentConfig,
   SpatializedMotionTimelineConfig,
   SpatializedMotionTrack,
-} from '../../types/spatializedMotion'
+} from '../../types/motion/spatializedMotion'
 import { normalizeMotionConfig } from './normalize'
 const ALLOWED_PROPERTIES = new Set<SpatializedMotionProperty>(
   SPATIALIZED_MOTION_PROPERTIES,

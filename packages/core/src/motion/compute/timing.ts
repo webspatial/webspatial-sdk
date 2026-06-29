@@ -22,7 +22,7 @@ export function applyTimingFunction(
   }
 }
 
-import type { SpatializedMotionConfig } from '../../types/spatializedMotion'
+import type { SpatializedMotionConfig } from '../../types/motion/spatializedMotion'
 
 /** Wall-clock elapsed (ms) → timeline time (sec), honoring delay and playbackRate. */
 export function motionTimeSec(
