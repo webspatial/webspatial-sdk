@@ -6,6 +6,7 @@ import type {
   SpatializedMotionKind,
   SpatializedMotionPlayState,
   SpatializedPlaybackApi,
+  SpatializedPlaybackError,
   SpatializedVisualValues,
 } from '@webspatial/core-sdk'
 import {
@@ -294,16 +295,33 @@ export class AnimationBinding implements SpatializedPlaybackApi {
 
   private createAnimationObjectCallbacks() {
     return {
-      onStart: this.config.onStart,
-      onComplete: this.config.onComplete,
-      onStop: this.config.onStop,
-      onReset: this.config.onReset,
-      onError: this.config.onError,
+      onStart: () => {
+        if (this.destroyed) return
+        this.config.onStart?.()
+      },
+      onComplete: (values: SpatializedVisualValues) => {
+        if (this.destroyed) return
+        this.config.onComplete?.(values)
+      },
+      onStop: (values: SpatializedVisualValues) => {
+        if (this.destroyed) return
+        this.config.onStop?.(values)
+      },
+      onReset: (values: SpatializedVisualValues) => {
+        if (this.destroyed) return
+        this.config.onReset?.(values)
+      },
+      onError: (error: SpatializedPlaybackError) => {
+        if (this.destroyed) return
+        this.config.onError?.(error)
+      },
       onValuesChange: (values: SpatializedVisualValues) => {
+        if (this.destroyed) return
         this.values = values
         this.options.onValuesChange?.(values)
       },
       onStateChange: () => {
+        if (this.destroyed) return
         this.syncStateFromAnimationObject()
         this.options.onStateChange?.()
       },

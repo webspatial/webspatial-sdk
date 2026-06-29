@@ -658,6 +658,44 @@ describe('useAnimation tuple api native backend', () => {
     })
   })
 
+  test('ignores late Core AnimationObject callbacks after hook unmount', async () => {
+    const element = createMockElement('late-callback')
+    const onComplete = vi.fn()
+
+    const { result, unmount } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+        onComplete,
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+    })
+    await waitFor(() => expect(element.createAnimation).toHaveBeenCalled())
+
+    unmount()
+    await waitFor(() => {
+      expect(element.animation.destroy).toHaveBeenCalledTimes(1)
+    })
+
+    act(() => {
+      element.animation.emitComplete({ opacity: 1 })
+    })
+
+    expect(onComplete).not.toHaveBeenCalled()
+  })
+
   test('static3d opacity is rejected before Core AnimationObject creation', () => {
     const element = createMockElement('static-opacity')
 
