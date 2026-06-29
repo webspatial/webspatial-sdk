@@ -1,5 +1,5 @@
-import { AnimationObject } from './AnimationObject'
 import { UpdateSpatializedElementTransform } from './JSBCommand'
+import { AnimationObject } from './motion/AnimationObject'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialObject } from './SpatialObject'
 import { SpatialWebEvent } from './SpatialWebEvent'

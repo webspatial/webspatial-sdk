@@ -1,21 +1,21 @@
 import {
   ControlSpatializedElementAnimationJSBCommand,
   CreateSpatializedElementAnimationJSBCommand,
-} from './JSBCommand'
-import { SpatialObject } from './SpatialObject'
-import { SpatialWebEvent } from './SpatialWebEvent'
+} from '../JSBCommand'
+import { SpatialObject } from '../SpatialObject'
+import { SpatialWebEvent } from '../SpatialWebEvent'
 import type {
   ControlSpatializedElementAnimationCommand,
   SpatialAnimationStateChangedDetail,
   SpatialAnimationStateChangedMsg,
-} from './types/motion/spatializedElementMotion'
-import type { SpatializedPlaybackError } from './types/motion/spatializedPlayback'
-import type { SpatializedVisualValues } from './types/motion/spatializedVisual'
+} from '../types/motion/spatializedElementMotion'
+import type { SpatializedPlaybackError } from '../types/motion/spatializedPlayback'
+import type { SpatializedVisualValues } from '../types/motion/spatializedVisual'
 import type {
   SpatializedMotionTimeline,
   SpatializedPlaybackApi,
   SpatializedMotionPlayState,
-} from './types/motion/spatializedMotion'
+} from '../types/motion/spatializedMotion'
 
 export interface AnimationObjectCreateOptions {
   elementId: string

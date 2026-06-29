@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { SpatialWebEvent } from './SpatialWebEvent'
+import { SpatialWebEvent } from '../SpatialWebEvent'
 
 const spies = vi.hoisted(() => ({
   createCommandSpy: vi.fn(),
@@ -8,7 +8,7 @@ const spies = vi.hoisted(() => ({
   failNextControlType: undefined as string | undefined,
 }))
 
-vi.mock('./JSBCommand', () => {
+vi.mock('../JSBCommand', () => {
   const ok = (data: any = {}) => ({
     success: true,
     data,
@@ -71,7 +71,7 @@ describe('AnimationObject', () => {
   })
 
   async function createAnimation() {
-    const { SpatializedElement } = await import('./SpatializedElement')
+    const { SpatializedElement } = await import('../SpatializedElement')
 
     class TestSpatializedElement extends SpatializedElement {
       /** Identifies the supported motion target kind for this test element. */
@@ -362,7 +362,7 @@ describe('AnimationObject', () => {
 
 describe('Core exports', () => {
   it('does not require bridge architecture objects in the public Core export surface', async () => {
-    const mod = await import('./index')
+    const mod = await import('../index')
 
     expect(mod.AnimationObject).toBeDefined()
     expect((mod as any).AnimationObjectChannel).toBeUndefined()
@@ -370,8 +370,21 @@ describe('Core exports', () => {
     expect((mod as any).SpatialObjectBridge).toBeUndefined()
   })
 
-  it('removes legacy animateMotion entry points from spatialized elements', async () => {
+  it('exports AnimationObject from the motion entrypoint', async () => {
     const mod = await import('./index')
+
+    expect(mod.AnimationObject).toBeDefined()
+  })
+
+  it('keeps the top-level AnimationObject export aligned with the motion entrypoint', async () => {
+    const root = await import('../index')
+    const motion = await import('./index')
+
+    expect(root.AnimationObject).toBe(motion.AnimationObject)
+  })
+
+  it('removes legacy animateMotion entry points from spatialized elements', async () => {
+    const mod = await import('../index')
 
     expect('animateMotion' in mod.Spatialized2DElement.prototype).toBe(false)
     expect('animateMotion' in mod.SpatializedStatic3DElement.prototype).toBe(
