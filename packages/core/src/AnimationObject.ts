@@ -105,17 +105,14 @@ export class AnimationObject
   }
 
   stop(): Promise<void> {
-    this.started = false
     return this.control('stop')
   }
 
   reset(): Promise<void> {
-    this.started = false
     return this.control('reset')
   }
 
   finish(): Promise<void> {
-    this.started = false
     return this.control('finish')
   }
 
