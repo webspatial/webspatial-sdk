@@ -881,15 +881,18 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return resolve(.failure(JsbError(code: .InvalidMatrix, message: "invalid UpdateSpatializedElementTransform matrix should have length 16!")))
         }
 
+        if spatializedElement.animatingMask.locksTransform {
+            resolve(.success(baseReplyData))
+            return
+        }
+
         let column0 = simd_double4(array[0], array[1], array[2], array[3])
         let column1 = simd_double4(array[4], array[5], array[6], array[7])
         let column2 = simd_double4(array[8], array[9], array[10], array[11])
         let column3 = simd_double4(array[12], array[13], array[14], array[15])
         let simd_double4x4 = simd_double4x4(columns: (column0, column1, column2, column3))
         let affineTransform3D = AffineTransform3D(truncating: simd_double4x4)
-        if !spatializedElement.animatingMask.locksTransform {
-            spatializedElement.transform = affineTransform3D
-        }
+        spatializedElement.transform = affineTransform3D
 
         resolve(.success(baseReplyData))
     }
