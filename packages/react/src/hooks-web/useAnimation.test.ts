@@ -49,13 +49,17 @@ describe('useAnimation default-entry facade', () => {
     __resetSpatialBridgeForTests()
   })
 
-  it('returns a web fallback tuple before bootSpatial readiness without scheduling the spatial chunk', () => {
+  it('keeps animation ready-gated before bootSpatial readiness', () => {
     const useAnimation = useAnimationFromDefault()
 
-    const { result } = renderHook(() => useAnimation(spatializedConfig))
-
-    expect(Array.isArray(result.current)).toBe(true)
-    expect(result.current).toHaveLength(3)
+    try {
+      renderHook(() => useAnimation(spatializedConfig))
+    } catch (error) {
+      expect(error).toBeInstanceOf(WebSpatialRuntimeError)
+      expect((error as WebSpatialRuntimeError).capability).toBe('useAnimation')
+      expect(String((error as Error).message)).toMatch(/SpatialBoot/)
+      expect(String((error as Error).message)).toMatch(/bootSpatial\(\)/)
+    }
     expect(__getSpatialLoadAttemptForTests()).toBe(0)
   })
 
@@ -82,10 +86,14 @@ describe('useAnimation default-entry facade', () => {
     expect(useAnimationSource).not.toMatch(/from\s+['"][^'"]*runtime\/boot['"]/)
     expect(useAnimationSource).not.toMatch(/\bloadSpatialImpl\b/)
     expect(useAnimationSource).not.toMatch(/\bimport\s*\(/)
+    expect(useAnimationSource).not.toMatch(
+      /from\s+['"][^'"]*spatialized-container\/motion\/useAnimation['"]/,
+    )
   })
 
   it('keeps entity animation in a dedicated facade file', () => {
     expect(useAnimationSource).not.toMatch(/\buseEntityAnimation\b/)
+    expect(useAnimationSource).toMatch(/\bgetSpatialImpl\b/)
     expect(useEntityAnimationSource).toMatch(/\buseEntityAnimation\b/)
     expect(useEntityAnimationSource).toMatch(/\bgetSpatialImpl\b/)
   })

@@ -1,20 +1,36 @@
 'use client'
 
+import { WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
 import type {
   SpatializedMotionConfig,
   UseAnimationResult,
 } from '../spatialized-container/motion'
-import { useAnimation as useSpatializedElementAnimation } from '../spatialized-container/motion/useAnimation'
+import { getSpatialImpl } from '../runtime/bridge'
 
 /**
- * Default-entry spatialized element motion hook.
+ * Throws the default-entry readiness error for capabilities that require the
+ * spatial implementation to be loaded first.
  *
- * Spatialized element motion has a meaningful web fallback, so it must be
- * callable before bootSpatial() resolves. Native playback is selected inside
- * the shared motion controller when the runtime reports support.
+ * @param capability - The capability name to include in the runtime error.
+ * @returns This function never returns.
+ */
+function throwAnimationUnavailable(capability: string): never {
+  throw new WebSpatialRuntimeError(
+    capability,
+    `${capability} is not available until bootSpatial() has resolved. Wrap the animated subtree in <SpatialBoot> or await bootSpatial() before mounting the component.`,
+  )
+}
+
+/**
+ * Ready-gated default-entry facade for the real spatial useAnimation hook.
+ *
+ * @param config - The spatialized motion author config.
+ * @returns The animation tuple backed by the spatial implementation.
  */
 export function useAnimation(
   config: SpatializedMotionConfig,
 ): UseAnimationResult {
-  return useSpatializedElementAnimation(config)
+  const real = getSpatialImpl()?.useAnimation
+  if (!real) return throwAnimationUnavailable('useAnimation')
+  return real(config)
 }
