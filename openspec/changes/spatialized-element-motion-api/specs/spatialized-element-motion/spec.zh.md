@@ -51,7 +51,7 @@ Spatialized element motion MUST 使用 native-first 的 `AnimationObject` 目标
 #### Scenario: 纯 Web runtime 不运行 RAF fallback
 
 - **WHEN** 已解析目标的 runtime capability 不可用，包括纯 Web runtime
-- **THEN** `supports('useAnimation', [targetToken])` MUST 返回 `false`
+- **THEN** `supports('useAnimation')` MUST 返回 `false`
 - **AND** SDK MUST NOT 为目标态 `useAnimation` 路径启动 Web RAF playback 作为 fallback
 
 ### Requirement: 共享的播放 API 形状

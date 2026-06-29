@@ -38,7 +38,7 @@ const TIMELINE_CONFIG = {
 
 export default function SpatialElementMotionStaticModelContainerPage() {
   const { lines, log } = useLog()
-  const static3dAnim = supports('useAnimation', ['static3d'])
+  const static3dAnim = supports('useAnimation')
 
   const [motion, api, style] = useAnimation({
     duration: DURATION,

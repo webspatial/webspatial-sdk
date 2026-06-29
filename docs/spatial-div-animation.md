@@ -260,20 +260,17 @@ function AnimatedRealityContainer() {
 
 ## Capability Detection
 
-Use concrete sub-tokens instead of relying on the family-level probe.
+Use the single released motion capability gate before relying on the motion API.
 
 ```text
 import { supports } from '@webspatial/core-sdk'
 
-const canAnimate2D = supports('useAnimation', ['element'])
-const canAnimateModel = supports('useAnimation', ['static3d'])
-const canAnimateReality = supports('useAnimation', ['dynamic3d'])
-const canAnimateEntity = supports('useAnimation', ['entity'])
+const canAnimate = supports('useAnimation')
 ```
 
 For container motion, pure Web runtime does not start a playback fallback.
-Capability-negative targets remain unavailable until the runtime reports support
-for the matching sub-token.
+Capability-negative runtimes remain unavailable until the runtime reports
+`supports('useAnimation')`.
 
 ## Known Limits
 

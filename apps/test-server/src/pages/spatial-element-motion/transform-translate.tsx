@@ -18,8 +18,7 @@ export default function TransformTranslatePage() {
   const [borderHue, setBorderHue] = useState(0)
   // Capability probe helps verify whether this runtime can use native
   // element playback or is falling back to the web timeline path.
-  const supportsElementPlayback = supports('useAnimation', ['element'])
-  const supportsStatic3DPlayback = supports('useAnimation', ['static3d'])
+  const supportsElementPlayback = supports('useAnimation')
   const suppressionTimerRef = useRef<ReturnType<typeof setInterval> | null>(
     null,
   )
@@ -176,12 +175,7 @@ export default function TransformTranslatePage() {
             Runtime Capability Probe
           </h4>
           <div className="font-mono">
-            supports(useAnimation, ['element'])=
-            {String(supportsElementPlayback)}
-          </div>
-          <div className="font-mono">
-            supports(useAnimation, ['static3d'])=
-            {String(supportsStatic3DPlayback)}
+            supports(useAnimation)={String(supportsElementPlayback)}
           </div>
           <div className="mt-2 text-sky-50/90">
             {supportsElementPlayback

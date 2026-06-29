@@ -14,7 +14,7 @@ export function SpatialDivMotionMultiTrackPage() {
   const [lines, setLines] = useState<string[]>([])
   const [hint, setHint] = useState('Press Play or wait for auto-start')
 
-  const elementAnim = supports('useAnimation', ['element'])
+  const elementAnim = supports('useAnimation')
 
   const [motion, api, style] = useAnimation({
     duration: DURATION,

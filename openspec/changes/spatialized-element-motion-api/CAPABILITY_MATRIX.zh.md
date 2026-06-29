@@ -2,15 +2,15 @@
 
 | 元素 kind | Core 类型 | React surface | 目标态 timeline | Web RAF 降级 | Native object 路径 | 能力 token |
 |-----------|-----------|---------------|----------------|-------------|------------------|-----------|
-| **2D** | `Spatialized2DElement` | `useAnimation(config)` → `[animation, api, style]` | 目标态 | **否** | 通过 `SpatializedElement.createAnimation(config)` 创建 `AnimationObject` | `supports('useAnimation', ['element'])` |
-| **Static3D** | `SpatializedStatic3DElement` | `<Model xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | 目标态 | **否** | 通过 `SpatializedElement.createAnimation(config)` 创建 `AnimationObject` | `supports('useAnimation', ['static3d'])` |
-| **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | 目标态 | **否** | 通过 `SpatializedElement.createAnimation(config)` 创建 `AnimationObject` | `supports('useAnimation', ['dynamic3d'])` |
+| **2D** | `Spatialized2DElement` | `useAnimation(config)` → `[animation, api, style]` | 目标态 | **否** | 通过 `SpatializedElement.createAnimation(config)` 创建 `AnimationObject` | `supports('useAnimation')` |
+| **Static3D** | `SpatializedStatic3DElement` | `<Model xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | 目标态 | **否** | 通过 `SpatializedElement.createAnimation(config)` 创建 `AnimationObject` | `supports('useAnimation')` |
+| **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | 目标态 | **否** | 通过 `SpatializedElement.createAnimation(config)` 创建 `AnimationObject` | `supports('useAnimation')` |
 
 **目标态说明：** React 使用单一 opaque `AnimationProxy`；native playback 使用通过 `SpatializedElement.createAnimation(config)` 创建的 `AnimationObject : SpatialObject`。
 
-**能力契约：** `supports('useAnimation')` 仅保留 family 级语义。具体运行时可用性 MUST 使用 `supports('useAnimation', [subtoken])`。
+**能力契约：** `supports('useAnimation')` 是发布后的容器 motion 能力 gate。`useAnimation` 不再暴露按目标拆分的 `element`、`static3d`、`dynamic3d` sub-token；legacy `entity` sub-token 继续保留给 `useEntityAnimation`。
 
-**不在本变更范围：** Reality 内部的 `SpatialEntity` transform timeline — 当前继续使用 `useEntityAnimation` / `AnimateTransform`。`supports('useAnimation', ['entity'])` 仍是该能力的真实 sub-token。
+**不在本变更范围：** Reality 内部的 `SpatialEntity` transform timeline — 当前继续使用 `useEntityAnimation` / `AnimateTransform`。该路径同样使用 `supports('useAnimation')` gate。
 
 ## 属性白名单（汇总）
 

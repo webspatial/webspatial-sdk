@@ -52,8 +52,8 @@ function allocateBindingId(): string {
   return `motion-binding_${nextBindingId}_${Date.now()}`
 }
 
-function supportsTargetKind(kind: SpatializedMotionKind): boolean {
-  return supports('useAnimation', [kind === 'spatialized2d' ? 'element' : kind])
+function supportsAnimation(): boolean {
+  return supports('useAnimation')
 }
 
 /**
@@ -264,7 +264,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     const element = this.element
     const kind = this.kind
     this.detachAnimationObject()
-    if (element && kind && supportsTargetKind(kind)) {
+    if (element && kind && supportsAnimation()) {
       this.ensureAnimationObject()
       return
     }
@@ -283,7 +283,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     ) {
       return
     }
-    if (!supportsTargetKind(this.kind)) {
+    if (!supportsAnimation()) {
       return
     }
     const hadPendingCommands = this.pendingCommands.length > 0

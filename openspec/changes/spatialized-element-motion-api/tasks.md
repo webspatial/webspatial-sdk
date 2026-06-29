@@ -17,11 +17,11 @@ This task list describes the target-state OpenSpec work for native-first spatial
 
 ## Phase 2 — Runtime capability delta
 
-- [x] Add `runtime-capabilities` delta for `supports('useAnimation', ['element'])`
-- [x] Add `runtime-capabilities` delta for `supports('useAnimation', ['static3d'])`
-- [x] Add `runtime-capabilities` delta for `supports('useAnimation', ['dynamic3d'])`
+- [x] Add `runtime-capabilities` delta for `supports('useAnimation')`
+- [x] Document `spatialized2d` target resolution under the single `useAnimation` capability gate
+- [x] Document `static3d` / `dynamic3d` target resolution under the single `useAnimation` capability gate
 - [x] Document that pure Web runtime returns `false` for all spatialized element animation target tokens
-- [x] Document that concrete target checks MUST use target sub-tokens; `supports('useAnimation')` remains family-level only
+- [x] Document that `supports('useAnimation')` is the single released motion API capability gate
 
 ## Phase 3 — Target-specific spec alignment
 
@@ -64,7 +64,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Tests: verify explicit `api.play()` before bind still runs after bind when `autoStart: false`
 - [x] Tests: verify one `animation` binding can bind only one component at a time
 - [x] Validation tests: reject Static3D `opacity` tracks before create; do not silently ignore them
-- [x] Capability tests: verify `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])` target tokens and pure Web `false` behavior
+- [x] Capability tests: verify `supports('useAnimation')` support and pure Web `false` behavior
 
 ## Phase 6 — Implementation invariants spec
 
@@ -176,11 +176,11 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Test: native state is authoritative over Core SDK state
 - [x] Test: Static3D opacity tracks are rejected before native create
 - [x] Test: Static3D animation writes only `modelTransform`
-- [x] Test: pure Web runtime returns false for `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])`
+- [x] Test: pure Web runtime returns false for `supports('useAnimation')`
 - [x] Test: target-state runtime no longer uses the old `AnimateSpatializedElementMotion` path
 
 ## Phase 12 — Docs and demos follow-up
 
 - [x] Update in-repo proposal/API docs so target-state copy no longer describes the removed Controller / Web RAF / `AnimateSpatializedElementMotion` paths
-- [ ] Update demos and public docs after implementation lands
+- [x] Update demos and public docs after implementation lands
 - [ ] Update PR description after implementation lands so it no longer presents the old Controller/Web RAF path as target-state implementation

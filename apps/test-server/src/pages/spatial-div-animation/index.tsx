@@ -18,12 +18,11 @@ export default function SpatialDivAnimationPage() {
             <code className="text-cyan-300">/spatial-div-motion</code>.
           </p>
           <p className="mt-4 leading-6 text-gray-400">
-            Capability probes remain family-level:
+            Capability probes use the single released motion key:
             <code className="ml-1 text-cyan-300">
-              supports(&apos;useAnimation&apos;, [&apos;element&apos;])
+              supports(&apos;useAnimation&apos;)
             </code>
-            . Concrete availability checks should always use the relevant
-            sub-token.
+            .
           </p>
         </section>
 

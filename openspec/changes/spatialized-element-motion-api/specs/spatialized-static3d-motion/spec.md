@@ -12,7 +12,7 @@ Target-state execution MUST create an `AnimationObject` through `SpatializedElem
 
 #### Scenario: Native create sends timeline
 
-- **GIVEN** `supports('useAnimation', ['static3d'])` is true
+- **GIVEN** `supports('useAnimation')` is true
 - **WHEN** `CreateSpatializedElementAnimation` runs for a `SpatializedStatic3DElement`
 - **THEN** native MUST sample the timeline and update `modelTransform` until completion or session termination
 

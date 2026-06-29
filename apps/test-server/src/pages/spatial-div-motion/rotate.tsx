@@ -14,7 +14,7 @@ export function SpatialDivMotionRotatePage() {
     'Auto-start: rotate.y 0→90° (0–4s), rotate.z 0→180° (1–4s)',
   )
 
-  const elementAnim = supports('useAnimation', ['element'])
+  const elementAnim = supports('useAnimation')
 
   const [motion, api, style] = useAnimation({
     duration: DURATION,
