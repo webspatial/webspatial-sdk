@@ -25,7 +25,7 @@ import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
-import type { SpatializedMotionBindingInternal } from './motion/motionBindingTypes'
+import type { SpatializedMotionBinding } from './motion/motionBindingTypes'
 
 /**
  * Degraded fallback: strips spatial-only props and renders plain HTML.
@@ -41,7 +41,7 @@ function DegradedContainer<T extends SpatializedElementRef>({
   type DegradedProps = SpatializedContainerProps<T> & {
     'enable-xr'?: unknown
     sizingMode?: unknown
-    'xr-animation'?: SpatializedMotionBindingInternal
+    'xr-animation'?: SpatializedMotionBinding
   }
   const {
     component: Component,

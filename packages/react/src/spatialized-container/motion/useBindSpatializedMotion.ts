@@ -3,7 +3,7 @@ import type {
   SpatializedMotionKind,
 } from '@webspatial/core-sdk'
 import { useEffect } from 'react'
-import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
+import type { SpatializedMotionBinding } from './motionBindingTypes'
 
 /**
  * Options for binding a resolved runtime element to a spatialized motion
@@ -11,7 +11,7 @@ import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
  */
 interface UseBindSpatializedMotionOptions {
   /** The opaque motion binding returned by `useAnimation()`. */
-  binding?: SpatializedMotionBindingInternal
+  binding?: SpatializedMotionBinding
 
   /** The resolved runtime element that should be attached to the binding. */
   element?: SpatializedElement | null
