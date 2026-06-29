@@ -41,9 +41,9 @@ export function validateSpatializedMotionConfig(
  *
  * @param config Canonical motion config to validate.
  */
-function validateNormalizedMotionConfig(
+export function validateNormalizedMotionConfig(
   config: SpatializedMotionConfig,
-  options: { targetKind?: SpatializedMotionKind },
+  options: { targetKind?: SpatializedMotionKind } = {},
 ): void {
   const { duration, tracks } = config
 

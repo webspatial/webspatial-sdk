@@ -6,7 +6,7 @@ import { SpatialWebEvent } from './SpatialWebEvent'
 import { createSpatialEvent } from './SpatialWebEventCreator'
 import { motionConfigToNativeTimeline } from './motion/native/serializeMotionTimeline'
 import { normalizeMotionConfig } from './motion/compute/normalize'
-import { validateSpatializedMotionConfig } from './motion/compute/validate'
+import { validateNormalizedMotionConfig } from './motion/compute/validate'
 import {
   CubeInfo,
   SpatialDragEndEvent,
@@ -76,7 +76,7 @@ export abstract class SpatializedElement extends SpatialObject {
   ): Promise<AnimationObject> {
     const normalized = normalizeMotionConfig(config)
     const targetKind = this.kind
-    validateSpatializedMotionConfig(normalized, { targetKind })
+    validateNormalizedMotionConfig(normalized, { targetKind })
     return AnimationObject.create({
       elementId: this.id,
       targetKind,
