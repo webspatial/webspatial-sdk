@@ -17,6 +17,10 @@ const useAnimationSource = readFileSync(
   resolve(__dirname, 'useAnimation.ts'),
   'utf8',
 )
+const useEntityAnimationSource = readFileSync(
+  resolve(__dirname, 'useEntityAnimation.ts'),
+  'utf8',
+)
 
 const spatializedConfig: SpatializedMotionConfig = {
   from: { opacity: 0 },
@@ -78,5 +82,11 @@ describe('useAnimation default-entry facade', () => {
     expect(useAnimationSource).not.toMatch(/from\s+['"][^'"]*runtime\/boot['"]/)
     expect(useAnimationSource).not.toMatch(/\bloadSpatialImpl\b/)
     expect(useAnimationSource).not.toMatch(/\bimport\s*\(/)
+  })
+
+  it('keeps entity animation in a dedicated facade file', () => {
+    expect(useAnimationSource).not.toMatch(/\buseEntityAnimation\b/)
+    expect(useEntityAnimationSource).toMatch(/\buseEntityAnimation\b/)
+    expect(useEntityAnimationSource).toMatch(/\bgetSpatialImpl\b/)
   })
 })

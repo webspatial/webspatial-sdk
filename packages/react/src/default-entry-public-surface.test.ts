@@ -254,5 +254,12 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
         facadeMod.useAnimation,
       )
     })
+
+    it('the default-entry `useEntityAnimation` comes from the dedicated facade file', async () => {
+      const facadeMod = await import('./hooks-web/useEntityAnimation')
+      expect((sdk as Record<string, unknown>).useEntityAnimation).toBe(
+        facadeMod.useEntityAnimation,
+      )
+    })
   })
 })
