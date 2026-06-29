@@ -63,4 +63,15 @@ describe('root export compatibility', () => {
     expect(typeof mod.useEntityAnimation).toBe('function')
     expect('useSpatializedMotion' in mod).toBe(false)
   })
+
+  test('exports useAnimation from spatialized-container', async () => {
+    const mod = await import('./spatialized-container')
+    expect(typeof mod.useAnimation).toBe('function')
+  })
+
+  test('does not export useAnimation from useAnimation module', async () => {
+    const mod = await import('./useAnimation')
+    expect('useAnimation' in mod).toBe(false)
+    expect(typeof mod.useEntityAnimation).toBe('function')
+  })
 })
