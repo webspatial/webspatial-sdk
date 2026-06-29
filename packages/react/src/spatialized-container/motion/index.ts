@@ -10,7 +10,6 @@ export type {
 
 // Utilities
 export {
-  evaluateMotionTimeline,
   validateSpatializedMotionConfig,
   segmentConfigToMotionConfig,
 } from '@webspatial/core-sdk'

@@ -10,7 +10,6 @@ import type {
   SpatializedVisualValues,
 } from '@webspatial/core-sdk'
 import {
-  evaluateMotionTimeline,
   normalizeMotionConfig,
   supports,
   validateSpatializedMotionConfig,
@@ -80,7 +79,8 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.config = config
     this.configSignature = getMotionConfigSignature(config)
     this.normalizedConfig = normalizeMotionConfig(config)
-    this.values = evaluateMotionTimeline(this.normalizedConfig, 0)
+    // Keep the fallback snapshot empty after removing timeline sampling utilities.
+    this.values = {}
   }
 
   get configSnapshot(): SpatializedMotionAuthorConfig {
@@ -242,7 +242,8 @@ export class AnimationBinding implements SpatializedPlaybackApi {
       this.ensureAnimationObject()
       return
     }
-    this.values = evaluateMotionTimeline(this.normalizedConfig, 0)
+    // Keep the fallback snapshot empty after removing timeline sampling utilities.
+    this.values = {}
     this.options.onValuesChange?.(this.values)
     this.options.onStateChange?.()
   }
