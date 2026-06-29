@@ -282,6 +282,61 @@ describe('AnimationObject', () => {
     expect(onStart).toHaveBeenCalledTimes(1)
   })
 
+  it.each(['stop', 'reset', 'finish'] as const)(
+    'does not re-fire onStart after %s until native terminal event arrives',
+    async controlType => {
+      const animation = await createAnimation()
+      const onStart = vi.fn()
+      animation.setCallbacks({ onStart })
+      const receiver = SpatialWebEvent.eventReceiver[animation.id]
+
+      receiver?.({
+        detail: {
+          animationId: animation.id,
+          action: 'start',
+          playState: 'running',
+          finished: false,
+          values: { transform: { translate: { x: 1 } } },
+        },
+      })
+      expect(onStart).toHaveBeenCalledTimes(1)
+
+      await animation[controlType]()
+
+      receiver?.({
+        detail: {
+          animationId: animation.id,
+          action: 'start',
+          playState: 'running',
+          finished: false,
+          values: { transform: { translate: { x: 2 } } },
+        },
+      })
+      expect(onStart).toHaveBeenCalledTimes(1)
+
+      receiver?.({
+        detail: {
+          animationId: animation.id,
+          action: controlType,
+          playState: controlType === 'finish' ? 'finished' : 'idle',
+          finished: controlType === 'finish',
+          values: { transform: { translate: { x: 3 } } },
+        },
+      })
+
+      receiver?.({
+        detail: {
+          animationId: animation.id,
+          action: 'start',
+          playState: 'running',
+          finished: false,
+          values: { transform: { translate: { x: 4 } } },
+        },
+      })
+      expect(onStart).toHaveBeenCalledTimes(2)
+    },
+  )
+
   it('sends all playback controls to the same native animation id without recreating', async () => {
     const animation = await createAnimation()
     spies.createCommandSpy.mockClear()
