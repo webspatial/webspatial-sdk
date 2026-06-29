@@ -1,6 +1,4 @@
-export { applyTimingFunction, motionTimeSec } from './timing'
 export { setMotionPropertyValue } from './motionPropertyValues'
-export { evaluateMotionTimeline } from './sample'
 export {
   validateNormalizedMotionConfig,
   validateSpatializedMotionConfig,
