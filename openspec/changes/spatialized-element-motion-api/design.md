@@ -17,7 +17,7 @@ The target state does not keep the Web RAF backend. Pure Web runtimes are capabi
 The target implementation is split across React SDK, Core SDK, and native runtime:
 
 - React SDK owns `AnimationBinding`, created by `useAnimation(config)`. It stores config, queues pre-bind commands, and creates the Core `AnimationObject` only after `xr-animation` resolves a concrete `SpatializedElement` target.
-- Core SDK owns `AnimationObject extends SpatialObject`. It exposes `play/pause/resume/stop/reset/finish` directly, inherits `destroy()`, subscribes to `NativeWebMsg`, filters `SpatialAnimationStateChanged` by native uuid, and updates its own observable state.
+- Core SDK owns `AnimationObject extends SpatialObject`. It exposes `play/pause/resume/stop/reset/finish` directly, inherits `destroy()`, subscribes to `NativeWebMsg`, filters `SpatialAnimationStateChanged` by matching animation identity, and updates its own observable state.
 - visionOS owns native `AnimationObject extends SpatialObject` and `SpatializedElementAnimationManager`. `SpatialScene` remains the JSB listener registration entry point and native spatial object store owner; the manager only owns animation business lifecycle, create/control lookup, frame loop scheduling, element destroy cascading, animating mask coordination, and construction of `SpatialAnimationStateChanged` payloads sent through the existing WebMsg path.
 
 ## Non-goals
@@ -47,7 +47,7 @@ The `style` outlet is only a React merge outlet and is not the runtime playback 
 
 | Module | Responsibility |
 |--------|----------------|
-| `SpatializedElement.createAnimation(config)` | Creates a native-backed `AnimationObject` after target binding, and owns validation, normalization, and create JSB send; native response returns the native `AnimationObject` uuid as `{ id }`. |
+| `SpatializedElement.createAnimation(config)` | Creates a native-backed `AnimationObject` after target binding, and owns validation, normalization, and create JSB send; native response returns the created object identity as `{ id }`. |
 | `AnimationObject` | First-class Core object extending `SpatialObject`; implements playback controls directly, inherits `destroy()`, subscribes to NativeWebMsg directly, and owns its state. |
 | `validateSpatializedMotionConfig` | Validates authoring config before native create, such as rejecting Static3D `opacity` tracks. |
 | `motionConfigToAnimationTimeline` | Compiles normalized motion config into the canonical `CreateSpatializedElementAnimation` payload. |
@@ -58,7 +58,7 @@ The `style` outlet is only a React merge outlet and is not the runtime playback 
 |--------|----------------|
 | `SpatialScene JSB listeners` | Reuse the existing `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` mechanism to register animation create/control commands and delegate them to `SpatializedElementAnimationManager`. |
 | `SpatializedElementAnimationManager` | Manages native `AnimationObject` business lifecycle, `animationId -> NativeAnimationObject` lookup, create/control, frame loop start/stop, `destroyAnimationsForElement`, mask coordination, and construction of `SpatialAnimationStateChanged` payloads. |
-| `Native AnimationObject` | Extends `SpatialObject`; owns native uuid, locked `TimelineSampler`, playback state, and implements `play/pause/resume/stop/reset/finish/tick/destroy`; `reset/finish` operate on the same object and do not recreate it. |
+| `Native AnimationObject` | Extends `SpatialObject`; owns object identity, locked `TimelineSampler`, playback state, and implements `play/pause/resume/stop/reset/finish/tick/destroy`; `reset/finish` operate on the same object and do not recreate it. |
 | `SpatialScene.spatialObjects` | Reuse existing `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` / destroy path to register, look up, and destroy native spatial objects, including `AnimationObject`. |
 | `TimelineSampler` | Reuses the existing timeline sampler and samples the locked canonical timeline. |
 | `Frame driver / CADisplayLink` | Internal scheduling capability of `SpatializedElementAnimationManager`; the manager starts it while any animation is running, it calls `manager.tickAll(timestamp)` every frame, and the driver itself owns no animation semantics. |
@@ -119,18 +119,18 @@ classDiagram
   namespace CoreSDK {
     class SpatialObject {
       <<abstract>>
-      +uuid: string
+      +id: string
       +destroy(): Promise<void>
     }
 
     class SpatializedElement {
       <<abstract>>
-      +uuid: string
+      +id: string
       +createAnimation(config): Promise~AnimationObject~
     }
 
     class CoreAnimationObject {
-      +uuid: string
+      +id: string
       +playState: PlayState
       +isAnimating: boolean
       +isPaused: boolean
@@ -184,13 +184,13 @@ classDiagram
 
     class NativeSpatialObject {
       <<abstract>>
-      +uuid: UUID
+      +id: UUID
       +destroy()
     }
 
     class NativeSpatializedElement {
       <<abstract>>
-      +uuid: UUID
+      +id: UUID
       +animatingMask: AnimatingMask
       +applyTransformUpdate(update)
       +applyOpacityUpdate(update)
@@ -198,7 +198,7 @@ classDiagram
     }
 
     class NativeAnimationObject {
-      +uuid: UUID
+      +id: UUID
       +targetElementId: UUID
       +targetKind: AnimationTargetKind
       +playState: AnimationPlayState
@@ -261,7 +261,7 @@ classDiagram
   SpatializedElement --> CreateSpatializedElementAnimation : sends JSB
   SpatializedElement --> CoreAnimationObject : wraps response id
   CoreAnimationObject --> ControlSpatializedElementAnimation : sends JSB
-  CoreAnimationObject --> SpatialAnimationStateChanged : filters by uuid
+  CoreAnimationObject --> SpatialAnimationStateChanged : filters by animation id
 
   NativeSpatialObject <|-- NativeSpatializedElement
   NativeSpatialObject <|-- NativeAnimationObject
@@ -307,9 +307,9 @@ sequenceDiagram
   Scene->>Manager: createAnimation(command)
   Manager->>Scene: findSpatialObject(targetElementId)
   Manager->>Manager: resolve target kind from native element type
-  Manager->>NativeObj: new AnimationObject(native uuid, locked timeline)
+  Manager->>NativeObj: new AnimationObject(object id, locked timeline)
   Manager->>Scene: addSpatialObject(animationObject)
-  Manager-->>Scene: { id: native uuid }
+  Manager-->>Scene: { id: object identity }
   Scene-->>Element: { id }
   Element->>CoreObj: new AnimationObject(id)
   CoreObj->>CoreObj: subscribe NativeWebMsg SpatialAnimationStateChanged
@@ -346,7 +346,7 @@ sequenceDiagram
 
   App->>Binding: bind(target element, kind)
   Binding->>Element: createAnimation(config)
-  Element-->>Binding: Core AnimationObject(uuid)
+  Element-->>Binding: Core AnimationObject
 
   Binding->>CoreObj: flush queued play()
   CoreObj->>Scene: ControlSpatializedElementAnimation(play)
@@ -357,7 +357,7 @@ sequenceDiagram
   NativeObj->>Manager: state changed running
   Manager->>Scene: sendWebMsg(SpatialAnimationStateChanged)
   WebMsg->>CoreObj: event
-  CoreObj->>CoreObj: filter by uuid and update state
+  CoreObj->>CoreObj: filter by animation id and update state
   CoreObj->>API: notify subscribers
 ```
 
@@ -459,7 +459,7 @@ sequenceDiagram
   React->>Element: createAnimation(newConfig)
   Element->>Scene: CreateSpatializedElementAnimation(new timeline)
   Scene->>Manager: createAnimation(command)
-  Manager-->>Scene: { id: new uuid }
+  Manager-->>Scene: { id: new object identity }
   Scene-->>Element: { id }
   Element-->>React: New Core AnimationObject
 ```

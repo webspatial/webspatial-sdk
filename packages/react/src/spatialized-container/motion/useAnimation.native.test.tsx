@@ -39,7 +39,7 @@ function createMockAnimationObject(id = 'animation-object-1') {
     callbacks.onStateChange?.({ ...state })
   }
   const object = {
-    uuid: id,
+    id,
     setCallbacks: vi.fn((nextCallbacks: AnimationCallbacks) => {
       callbacks = nextCallbacks
     }),

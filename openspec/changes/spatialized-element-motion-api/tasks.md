@@ -68,12 +68,12 @@ This task list describes the target-state OpenSpec work for native-first spatial
 
 ## Phase 6 — Implementation invariants spec
 
-- [x] Add `spatialized-animation-object-invariants` spec requiring native uuid as the only authoritative `AnimationObject` identity
-- [x] Add `spatialized-animation-object-invariants` spec requiring `CreateSpatializedElementAnimation` response to return the native `AnimationObject` uuid as `{ id }`
+- [x] Add `spatialized-animation-object-invariants` spec requiring native-owned `AnimationObject` identity
+- [x] Add `spatialized-animation-object-invariants` spec requiring `CreateSpatializedElementAnimation` response to return the created object identity as `{ id }`
 - [x] Add `spatialized-animation-object-invariants` spec requiring playback controls to reuse the same native `AnimationObject`
 - [x] Add `spatialized-animation-object-invariants` spec requiring `AnimationObject.destroy()` to use the destroy lifecycle inherited from `SpatialObject`
 - [x] Add `spatialized-animation-object-invariants` spec requiring Core SDK to expose the first-class `AnimationObject` returned by `SpatializedElement.createAnimation(config)`
-- [x] Add `spatialized-animation-object-invariants` spec requiring Core `AnimationObject` to subscribe to NativeWebMsg directly and filter `SpatialAnimationStateChanged` by uuid
+- [x] Add `spatialized-animation-object-invariants` spec requiring Core `AnimationObject` to subscribe to NativeWebMsg directly and filter `SpatialAnimationStateChanged` by matching animation id
 - [x] Add `spatialized-animation-object-invariants` spec requiring element animating mask to be owned by native `SpatializedElement` runtime or write adapter, not `PortalInstanceObject`
 - [x] Add `spatialized-animation-object-invariants` spec requiring target kind to writable fields / mask fields mapping
 - [x] Add `spatialized-animation-object-invariants` spec requiring terminal mask handoff rules
@@ -98,12 +98,12 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Core: add `SpatializedElement.createAnimation(config)`
 - [x] Core: send `CreateSpatializedElementAnimation` and wrap the native returned `{ id }` as `AnimationObject`
 - [x] Core: implement `AnimationObject extends SpatialObject`
-- [x] Core: expose `AnimationObject.uuid`
+- [x] Core: keep `AnimationObject` on the inherited `SpatialObject` identity path
 - [x] Core: implement `play/pause/resume/stop/reset/finish` directly on the same `AnimationObject`
 - [x] Core: ensure `reset/finish` do not recreate the native `AnimationObject`
 - [x] Core: ensure `AnimationObject.destroy()` uses the lifecycle inherited from `SpatialObject`
 - [x] Core: make `AnimationObject` subscribe to NativeWebMsg directly
-- [x] Core: make `AnimationObject` filter `SpatialAnimationStateChanged` by uuid
+- [x] Core: make `AnimationObject` filter `SpatialAnimationStateChanged` by matching animation id
 - [x] Core: make `AnimationObject` update `playState/isAnimating/isPaused/finished` from native events
 - [x] Core: make `AnimationObject` state changes notify React subscribers
 - [x] Core: avoid adding public `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` architecture objects
@@ -158,10 +158,10 @@ This task list describes the target-state OpenSpec work for native-first spatial
 
 ## Phase 11 — Protocol and compatibility tests
 
-- [x] JSB test: `CreateSpatializedElementAnimation` returns native-generated uuid as `id`
+- [x] JSB test: `CreateSpatializedElementAnimation` returns the created object identity as `id`
 - [x] JSB test: `ControlSpatializedElementAnimation` supports play/pause/resume/stop/reset/finish
 - [x] JSB test: `reset/finish` do not recreate native `AnimationObject`; object id remains unchanged
-- [x] WebMsg test: `SpatialAnimationStateChanged` can be received directly by the matching Core `AnimationObject` and filtered by uuid
+- [x] WebMsg test: `SpatialAnimationStateChanged` can be received directly by the matching Core `AnimationObject` and filtered by animation id
 - [x] Test: React `PlaybackApi` updates after Core `AnimationObject` state changes
 - [x] Test: core `AnimationObject.destroy()` uses common spatial object destroy path
 - [x] Test: no public `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` architecture object is required

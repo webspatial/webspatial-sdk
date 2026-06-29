@@ -4,19 +4,19 @@
 
 ### Requirement: AnimationObject identity is native-owned
 
-`SpatializedElement.createAnimation(config)` MUST create the native `AnimationObject` first and then return a Core SDK `AnimationObject` handle whose `uuid` is the native-generated object identity.
+`SpatializedElement.createAnimation(config)` MUST create the native `AnimationObject` first and then return a Core SDK `AnimationObject` handle for that same native object identity.
 
-Core SDK MAY use a temporary request id to match the async create response, but it MUST NOT treat a JavaScript-generated id as the final `AnimationObject.uuid`.
+Core SDK MAY use a temporary request id to match the async create response, but it MUST NOT treat a JavaScript-generated id as the final object identity.
 
-The `CreateSpatializedElementAnimation` response MUST return the native `AnimationObject` uuid in an `id` field. Core SDK MUST use that `id` as the Core `AnimationObject.uuid`.
+The `CreateSpatializedElementAnimation` response MUST return the native object identity in an `id` field. Core SDK MUST use that returned identity for the created `AnimationObject`.
 
-#### Scenario: Native returns animation uuid
+#### Scenario: Native returns animation identity
 
 - **WHEN** Core SDK calls `SpatializedElement.createAnimation(config)`
 - **THEN** native MUST create an `AnimationObject : SpatialObject`
-- **AND** native MUST generate the object uuid
+- **AND** native MUST generate the object identity
 - **AND** native create response MUST return `{ id }`
-- **AND** Core SDK MUST expose that uuid on the returned `AnimationObject` handle
+- **AND** Core SDK MUST return an `AnimationObject` handle for that same object
 
 ### Requirement: AnimationObject destruction uses SpatialObject lifecycle
 
@@ -27,12 +27,12 @@ The `CreateSpatializedElementAnimation` response MUST return the native `Animati
 #### Scenario: Destroy animation through common object lifecycle
 
 - **WHEN** Core SDK calls `animationObject.destroy()`
-- **THEN** SDK MUST dispatch the common spatial object destroy path for the animation uuid
+- **THEN** SDK MUST dispatch the common spatial object destroy path for that animation object
 - **AND** native MUST clean up the `AnimationObject` through the same lifecycle used by other `SpatialObject` instances
 
 ### Requirement: Core SDK exposes first-class AnimationObject
 
-Core SDK MUST expose an imperative `AnimationObject` handle returned by `SpatializedElement.createAnimation(config)`. The handle MUST include the native uuid and MUST directly provide `play`, `pause`, `resume`, `stop`, `reset`, and `finish`; `destroy` MUST be inherited from `SpatialObject`.
+Core SDK MUST expose an imperative `AnimationObject` handle returned by `SpatializedElement.createAnimation(config)`. The handle MUST directly provide `play`, `pause`, `resume`, `stop`, `reset`, and `finish`; `destroy` MUST be inherited from `SpatialObject`.
 
 The target state MUST NOT require public `AnimationObjectChannel`, `AnimationObjectBridge`, or `SpatialObjectBridge` architecture objects. Low-level JSB/WebMsg capabilities MAY exist as implementation details of `SpatialObject` / `AnimationObject`.
 
@@ -41,13 +41,13 @@ React SDK MAY continue to expose `[animation, api, style]`; that React-facing `a
 #### Scenario: Core imperative animation object
 
 - **WHEN** a Core SDK consumer calls `element.createAnimation(config)`
-- **THEN** the returned object MUST expose `uuid`
+- **THEN** the returned object MUST be a first-class `AnimationObject`
 - **AND** it MUST expose playback controls equivalent to the React-facing playback API
 - **AND** it MUST participate in destruction through inherited `SpatialObject.destroy()`
 
 ### Requirement: Playback controls reuse the same AnimationObject
 
-`play`, `pause`, `resume`, `stop`, `reset`, and `finish` MUST operate on the existing native `AnimationObject`. These playback controls MUST NOT recreate the native `AnimationObject` and MUST NOT change that object's native `id` / `uuid`.
+`play`, `pause`, `resume`, `stop`, `reset`, and `finish` MUST operate on the existing native `AnimationObject`. These playback controls MUST NOT recreate the native `AnimationObject` and MUST NOT change that object's identity.
 
 Native object recreation MUST be reserved for config signature changes, target rebinding, recreation after explicit destroy, or other destroy/recreate lifecycle paths. `reset()` and `finish()` are playback controls on the same `AnimationObject`; they are not destroy + recreate operations.
 
@@ -57,7 +57,7 @@ Native object recreation MUST be reserved for config signature changes, target r
 - **WHEN** the user calls `animation.reset()`
 - **THEN** Core SDK MUST send `ControlSpatializedElementAnimation(id, reset)`
 - **AND** native MUST write the from value on the same native `AnimationObject`
-- **AND** `AnimationObject.uuid` MUST remain unchanged
+- **AND** the same `AnimationObject` identity MUST remain unchanged
 
 #### Scenario: Finish reuses the same AnimationObject
 
@@ -65,18 +65,18 @@ Native object recreation MUST be reserved for config signature changes, target r
 - **WHEN** the user calls `animation.finish()`
 - **THEN** Core SDK MUST send `ControlSpatializedElementAnimation(id, finish)`
 - **AND** native MUST write the to value on the same native `AnimationObject`
-- **AND** `AnimationObject.uuid` MUST remain unchanged
+- **AND** the same `AnimationObject` identity MUST remain unchanged
 
 ### Requirement: NativeWebMsg directly drives Core AnimationObject state
 
-`SpatialAnimationStateChanged` MUST be modeled as a NativeWebMsg event payload, not as a separate Core SDK architecture object. Core SDK `AnimationObject` MUST subscribe to NativeWebMsg directly, filter `SpatialAnimationStateChanged` events by its native uuid, and update its own `playState`, `isAnimating`, `isPaused`, and `finished`.
+`SpatialAnimationStateChanged` MUST be modeled as a NativeWebMsg event payload, not as a separate Core SDK architecture object. Core SDK `AnimationObject` MUST subscribe to NativeWebMsg directly, filter `SpatialAnimationStateChanged` events by its own object identity, and update its own `playState`, `isAnimating`, `isPaused`, and `finished`.
 
 Native `AnimationObject` MUST own playback state. Core SDK MAY keep pending command state before native acknowledgement, but it MUST reconcile to native state after receiving `SpatialAnimationStateChanged`. Core SDK MUST NOT independently complete, pause, finish, or reset a native-backed animation without native state confirmation.
 
 #### Scenario: Core AnimationObject receives NativeWebMsg directly
 
 - **WHEN** native sends `SpatialAnimationStateChanged(animationId, action, playState, values?)`
-- **THEN** Core SDK `AnimationObject` MUST filter the event by its own `uuid`
+- **THEN** Core SDK `AnimationObject` MUST filter the event by its own object identity
 - **AND** when matched, it MUST update that `AnimationObject` state
 - **AND** React-facing `api` state MUST update by subscribing to that `AnimationObject` state
 
@@ -153,7 +153,7 @@ If the user calls `api.play()`, `api.pause()`, `api.resume()`, `api.stop()`, `ap
 - **AND** the application called `api.play()` before target bind
 - **WHEN** `animation` is bound to a concrete `SpatializedElement` through `xr-animation`
 - **THEN** React SDK MUST call `SpatializedElement.createAnimation(config)`
-- **AND** after native returns `AnimationObject.uuid`, SDK MUST flush the queued explicit `play` command
+- **AND** after native returns the created animation identity, SDK MUST flush the queued explicit `play` command
 
 ### Requirement: visionOS runtime manages native AnimationObject lifecycle
 

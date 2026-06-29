@@ -72,10 +72,6 @@ export class AnimationObject
     return new AnimationObject(id, options)
   }
 
-  get uuid(): string {
-    return this.id
-  }
-
   setCallbacks(callbacks: AnimationObjectCallbacks): void {
     this.callbacks = callbacks
   }
