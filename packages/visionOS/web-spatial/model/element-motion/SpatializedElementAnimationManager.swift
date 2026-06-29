@@ -125,7 +125,8 @@ final class SpatializedElementAnimationManager: NSObject {
     }
 
     func tickAll(timestamp: CFTimeInterval) {
-        for animation in animations.values {
+        let current = Array(animations.values)
+        for animation in current {
             animation.tick(at: timestamp)
         }
         refreshDisplayLink()

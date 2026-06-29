@@ -869,4 +869,63 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertEqual(events.last?.action, "destroy")
         XCTAssertEqual(events.last?.finished, false)
     }
+
+    func test_tickAllAllowsAnimationRemovalFromStateCallback() throws {
+        let firstElement = Spatialized2DElement()
+        let secondElement = Spatialized2DElement()
+        var manager: SpatializedElementAnimationManager!
+        var triggeringAnimationId: String?
+        var animationToDestroyId: String?
+
+        manager = SpatializedElementAnimationManager(sendWebMsg: { _, msg in
+            guard let event = msg as? SpatialAnimationStateChanged,
+                  event.action == "start",
+                  event.animationId == triggeringAnimationId,
+                  let animationToDestroyId
+            else {
+                return
+            }
+            manager.destroyAnimation(animationToDestroyId)
+        })
+
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 2,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "opacity",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 2, value: 0, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let firstAnimation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: firstElement.id,
+                timeline: timeline
+            ),
+            target: firstElement
+        )
+        let secondAnimation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: secondElement.id,
+                timeline: timeline
+            ),
+            target: secondElement
+        )
+        triggeringAnimationId = firstAnimation.uuid
+        animationToDestroyId = secondAnimation.uuid
+
+        firstAnimation.play(at: 0)
+        secondAnimation.play(at: 0)
+        manager.tickAll(timestamp: 1)
+
+        XCTAssertNil(manager.getAnimation(secondAnimation.uuid))
+    }
 }
