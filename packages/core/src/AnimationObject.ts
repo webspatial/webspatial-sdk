@@ -14,6 +14,7 @@ import type { SpatializedVisualValues } from './types/motion/spatializedVisual'
 import type {
   SpatializedMotionTimeline,
   SpatializedPlaybackApi,
+  SpatializedMotionPlayState,
 } from './types/motion/spatializedMotion'
 
 export interface AnimationObjectCreateOptions {
@@ -39,8 +40,7 @@ export class AnimationObject
   readonly timeline: SpatializedMotionTimeline
 
   private callbacks: AnimationObjectCallbacks = {}
-  private _playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished' =
-    'idle'
+  private _playState: SpatializedMotionPlayState = 'idle'
   private _finished = false
   private started = false
 
