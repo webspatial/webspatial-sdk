@@ -4,9 +4,11 @@ import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialObject } from './SpatialObject'
 import { SpatialWebEvent } from './SpatialWebEvent'
 import { createSpatialEvent } from './SpatialWebEventCreator'
+import {
+  normalizeMotionConfig,
+  validateNormalizedMotionConfig,
+} from './motion/compute'
 import { motionConfigToNativeTimeline } from './motion/native/serializeMotionTimeline'
-import { normalizeMotionConfig } from './motion/compute/normalize'
-import { validateNormalizedMotionConfig } from './motion/compute/validate'
 import {
   CubeInfo,
   SpatialDragEndEvent,
