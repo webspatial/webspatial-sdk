@@ -928,4 +928,37 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
 
         XCTAssertNil(manager.getAnimation(secondAnimation.uuid))
     }
+
+    func test_createAnimationRejectsInvalidPlaybackRate() {
+        let invalidRates: [Double] = [0, -1, .infinity]
+
+        for playbackRate in invalidRates {
+            let element = Spatialized2DElement()
+            let manager = SpatializedElementAnimationManager()
+            let timeline = SpatializedMotionTimelinePayload(
+                duration: 1,
+                delay: nil,
+                playbackRate: playbackRate,
+                loop: nil,
+                tracks: [
+                    SpatializedMotionTrackPayload(
+                        property: "opacity",
+                        keyframes: [
+                            SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
+                            SpatializedMotionKeyframePayload(at: 1, value: 0, timingFunction: nil),
+                        ],
+                        timingFunction: "linear"
+                    ),
+                ]
+            )
+
+            XCTAssertThrowsError(try manager.createAnimation(
+                command: CreateSpatializedElementAnimationCommand(
+                    elementId: element.id,
+                    timeline: timeline
+                ),
+                target: element
+            ))
+        }
+    }
 }
