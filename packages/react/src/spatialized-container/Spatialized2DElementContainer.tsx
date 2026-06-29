@@ -27,6 +27,7 @@ import {
 import { SpatializedContainer } from './SpatializedContainer'
 import type { PortalInstanceObject } from './context/PortalInstanceContext'
 import { getSession } from '../utils'
+import { detectSpatialRuntime } from '../runtime/detect'
 import { useSpatialContentReady } from './hooks/useSpatialContentReady'
 
 function mergeRefs<T>(
@@ -60,6 +61,7 @@ function getJSXPortalInstance<P extends ElementType>(
   } = inProps as React.ComponentPropsWithRef<P> & {
     component: P
   }
+  const isVisionOSRuntime = detectSpatialRuntime() === 'visionos'
   const extraStyle: CSSProperties = {
     visibility: 'visible',
     position: 'relative',
@@ -71,8 +73,12 @@ function getJSXPortalInstance<P extends ElementType>(
     marginTop: '0px',
     marginBottom: '0px',
     borderRadius: '0px',
-    // Root opacity remains native-owned on the spatial host, not the portal DOM.
-    opacity: 1,
+    ...(isVisionOSRuntime
+      ? {
+          // Root opacity remains native-owned on the spatial host, not the portal DOM.
+          opacity: 1,
+        }
+      : {}),
     // overflow: '',
     transform: 'none',
   }
