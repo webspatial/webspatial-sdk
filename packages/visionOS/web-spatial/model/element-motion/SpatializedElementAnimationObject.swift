@@ -210,8 +210,19 @@ final class SpatializedElementAnimationObject: SpatialObject {
         isReversed = false
         finished = false
         hasEmittedStartEvent = false
+        guard lockMask() else {
+            emitStateChanged(
+                action: "error",
+                playState: .idle,
+                values: currentValues(at: timestamp),
+                error: SpatializedElementAnimationErrorPayload(
+                    code: "mask-conflict",
+                    message: "Another animation is already writing this target"
+                )
+            )
+            return
+        }
         playState = .running
-        lockMask()
         let startValues = sampleValues(at: 0)
         applySample(startValues)
         emitStateChanged(action: "play", playState: .running, values: startValues)
@@ -220,9 +231,9 @@ final class SpatializedElementAnimationObject: SpatialObject {
         }
     }
 
-    private func lockMask() {
-        guard let element = targetElement else { return }
-        writeAdapter.acquireMask(
+    private func lockMask() -> Bool {
+        guard let element = targetElement else { return false }
+        return writeAdapter.acquireMask(
             on: element,
             animationId: uuid,
             animatesTransform: animatesTransform,

@@ -66,7 +66,11 @@ enum SpatializedElementAnimationWriteAdapter {
         }
     }
 
-    func acquireMask(on element: SpatializedElement, animationId: String, animatesTransform: Bool, animatesOpacity: Bool) {
+    func acquireMask(on element: SpatializedElement, animationId: String, animatesTransform: Bool, animatesOpacity: Bool) -> Bool {
+        guard canAcquireMask(on: element, animationId: animationId, animatesTransform: animatesTransform, animatesOpacity: animatesOpacity) else {
+            return false
+        }
+
         switch self {
         case .elementTransform:
             if animatesTransform {
@@ -80,6 +84,27 @@ enum SpatializedElementAnimationWriteAdapter {
                 element.animatingMask.acquire(transform: animationId)
             }
         }
+        return true
+    }
+
+    /// Checks whether all requested animated fields are free or already owned by this animation.
+    private func canAcquireMask(on element: SpatializedElement, animationId: String, animatesTransform: Bool, animatesOpacity: Bool) -> Bool {
+        if animatesTransform,
+           let owner = element.animatingMask.transformAnimationId,
+           owner != animationId
+        {
+            return false
+        }
+
+        if animatesOpacity,
+           targetKind == .spatialized2d,
+           let owner = element.animatingMask.opacityAnimationId,
+           owner != animationId
+        {
+            return false
+        }
+
+        return true
     }
 
     func releaseMaskAndApplyPending(on element: SpatializedElement, animationId: String) {
