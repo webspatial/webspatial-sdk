@@ -277,7 +277,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
         this.creating = false
         animationObject.setCallbacks(this.createAnimationObjectCallbacks())
         this.syncStateFromAnimationObject()
-        this.flushPendingCommands()
+        void this.flushPendingCommands()
         this.maybeAutoPlay(!hadPendingCommands)
         this.options.onStateChange?.()
       })
@@ -385,18 +385,29 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     }
   }
 
-  private flushPendingCommands(): void {
+  private async flushPendingCommands(): Promise<void> {
     if (!this.animationObject || !this.element || !this.kind) return
+    const animationObject = this.animationObject
     const commands = this.pendingCommands
     this.pendingCommands = []
     for (const command of commands) {
-      this.animationObject[command.type]().catch(error => {
+      try {
+        await animationObject[command.type]()
+      } catch (error) {
         this.config.onError?.({
-          animationId: this.animationObject?.id ?? this.motionObjectId,
+          animationId: animationObject.id ?? this.motionObjectId,
           command: command.type,
           reason: error instanceof Error ? error.message : 'Command failed',
         })
-      })
+      }
+      if (
+        this.destroyed ||
+        this.animationObject !== animationObject ||
+        !this.element ||
+        !this.kind
+      ) {
+        return
+      }
     }
     this.syncStateFromAnimationObject()
   }

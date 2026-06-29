@@ -736,6 +736,57 @@ describe('useAnimation tuple api native backend', () => {
     expect(result.current[1].isAnimating).toBe(false)
   })
 
+  test('flushes pending commands sequentially after Core AnimationObject creation', async () => {
+    let resolvePlay: (() => void) | undefined
+    const animation = createMockAnimationObject('sequential-animation')
+    animation.play.mockImplementation(
+      () =>
+        new Promise<void>(resolve => {
+          resolvePlay = resolve
+        }),
+    )
+    const element = {
+      id: 'sequential-element',
+      animation,
+      createAnimation: vi.fn(async () => animation),
+    }
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+      }),
+    )
+
+    act(() => {
+      result.current[1].play()
+      result.current[1].stop()
+    })
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+    })
+
+    await waitFor(() => expect(animation.play).toHaveBeenCalledTimes(1))
+    expect(animation.stop).not.toHaveBeenCalled()
+
+    await act(async () => {
+      resolvePlay?.()
+      await Promise.resolve()
+    })
+
+    await waitFor(() => expect(animation.stop).toHaveBeenCalledTimes(1))
+  })
+
   test('static3d opacity is rejected before Core AnimationObject creation', () => {
     const element = createMockElement('static-opacity')
 
