@@ -92,32 +92,31 @@ export class AnimationObject
     return this._finished
   }
 
-  async play(): Promise<void> {
-    if (this.isDestroyed) return
-    await this.control('play')
+  play(): Promise<void> {
+    return this.control('play')
   }
 
-  async pause(): Promise<void> {
-    await this.control('pause')
+  pause(): Promise<void> {
+    return this.control('pause')
   }
 
-  async resume(): Promise<void> {
-    await this.control('resume')
+  resume(): Promise<void> {
+    return this.control('resume')
   }
 
-  async stop(): Promise<void> {
+  stop(): Promise<void> {
     this.started = false
-    await this.control('stop')
+    return this.control('stop')
   }
 
-  async reset(): Promise<void> {
+  reset(): Promise<void> {
     this.started = false
-    await this.control('reset')
+    return this.control('reset')
   }
 
-  async finish(): Promise<void> {
+  finish(): Promise<void> {
     this.started = false
-    await this.control('finish')
+    return this.control('finish')
   }
 
   protected override onDestroy(): void {
