@@ -8,11 +8,6 @@ export type {
   SpatializedPlaybackApi,
 } from './useAnimation'
 
-// Utilities
-export {
-  validateSpatializedMotionConfig,
-  segmentConfigToMotionConfig,
-} from '@webspatial/core-sdk'
 export { valuesToMotionStyle } from './style'
 
 // Internal binding types
