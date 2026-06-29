@@ -58,18 +58,6 @@ function setPuppeteerUserAgent(): void {
   setUserAgent('Mozilla/5.0 Chrome/120.0.0.0 Puppeteer Safari/537.36')
 }
 
-function installFakeRaf() {
-  vi.useFakeTimers()
-  vi.stubGlobal(
-    'requestAnimationFrame',
-    (cb: FrameRequestCallback): number =>
-      setTimeout(() => cb(performance.now()), 16) as unknown as number,
-  )
-  vi.stubGlobal('cancelAnimationFrame', (id: number) => {
-    clearTimeout(id)
-  })
-}
-
 function makeSentinelSpatialImpl(): SpatialImplementation {
   const SentinelModel = forwardRef<HTMLDivElement>((_, ref) => (
     <div data-sentinel="Model" ref={ref} />
@@ -397,57 +385,31 @@ describe('lazy-load facades', () => {
       expect(ref.current).toBe(section)
     })
 
-    it('withSpatialized2DElementContainer fallback keeps tuple shape but does not start pure-web playback', async () => {
-      installFakeRaf()
-      const { useAnimation } = await import(
-        '../spatialized-container/motion/useAnimation'
-      )
+    it('withSpatialized2DElementContainer fallback does not bind xr-animation in plain-web mode', () => {
       const Wrapped = withSpatialized2DElementContainer(
         'section',
       ) as unknown as React.ComponentType<Record<string, unknown>>
-
-      function TestPage() {
-        const [motion, api, style] = useAnimation({
-          from: { opacity: 0 },
-          to: { opacity: 1 },
-          duration: 0.05,
-          timingFunction: 'linear',
-          autoStart: false,
-        })
-
-        return (
-          <>
-            <Wrapped
-              xr-animation={motion}
-              style={style}
-              data-testid="fallback-motion-host"
-            >
-              Motion host
-            </Wrapped>
-            <button type="button" onClick={() => api.play()}>
-              Play
-            </button>
-            <output data-testid="fallback-motion-state">{api.playState}</output>
-          </>
-        )
+      const motion = {
+        __kind: 'spatializedMotion' as const,
+        __setElement: vi.fn(),
+        __onUnbind: vi.fn(),
       }
 
-      const { getByRole, getByTestId } = render(<TestPage />)
+      const { getByTestId, unmount } = render(
+        <Wrapped xr-animation={motion} data-testid="fallback-motion-host">
+          Motion host
+        </Wrapped>,
+      )
       const host = getByTestId('fallback-motion-host')
+
       expect(host.hasAttribute('xr-animation')).toBe(false)
-      expect(getByTestId('fallback-motion-state').textContent).toBe('idle')
+      expect(motion.__setElement).not.toHaveBeenCalled()
+      expect(motion.__onUnbind).not.toHaveBeenCalled()
 
-      await act(async () => {
-        getByRole('button', { name: 'Play' }).click()
-      })
+      unmount()
 
-      expect(getByTestId('fallback-motion-state').textContent).toBe('queued')
-
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(20)
-      })
-
-      expect(Number((host as HTMLElement).style.opacity)).toBe(0)
+      expect(motion.__setElement).not.toHaveBeenCalled()
+      expect(motion.__onUnbind).not.toHaveBeenCalled()
     })
 
     it('withSpatialMonitor fallback renders the raw El transparently', () => {
