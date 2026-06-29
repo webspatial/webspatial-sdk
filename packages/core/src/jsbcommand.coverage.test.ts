@@ -196,7 +196,6 @@ describe('JSBCommand', () => {
 
     await new CreateSpatializedElementAnimationJSBCommand({
       elementId: 'ele-1',
-      targetKind: 'static3d',
       timeline: { duration: 1, tracks: [] },
     } as any).execute()
     expect(platformSpy.callJSB).toHaveBeenCalledWith(

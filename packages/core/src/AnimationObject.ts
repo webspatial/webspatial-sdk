@@ -9,14 +9,12 @@ import type {
   SpatialAnimationStateChangedDetail,
   SpatialAnimationStateChangedMsg,
 } from './types/motion/spatializedElementMotion'
-import type { SpatializedMotionKind } from './types/motion/spatializedMotion'
 import type { SpatializedPlaybackError } from './types/motion/spatializedPlayback'
 import type { SpatializedVisualValues } from './types/motion/spatializedVisual'
 import type { SpatializedMotionTimeline } from './types/motion/spatializedMotion'
 
 export interface AnimationObjectCreateOptions {
   elementId: string
-  targetKind: SpatializedMotionKind
   timeline: SpatializedMotionTimeline
 }
 
@@ -32,7 +30,6 @@ export interface AnimationObjectCallbacks {
 
 export class AnimationObject extends SpatialObject {
   readonly elementId: string
-  readonly targetKind: SpatializedMotionKind
   readonly timeline: SpatializedMotionTimeline
 
   private callbacks: AnimationObjectCallbacks = {}
@@ -44,7 +41,6 @@ export class AnimationObject extends SpatialObject {
   constructor(id: string, options: AnimationObjectCreateOptions) {
     super(id)
     this.elementId = options.elementId
-    this.targetKind = options.targetKind
     this.timeline = options.timeline
 
     SpatialWebEvent.addEventReceiver(id, data => this.onReceiveEvent(data))

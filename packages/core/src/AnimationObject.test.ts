@@ -106,7 +106,6 @@ describe('AnimationObject', () => {
 
     expect(animation).toBeInstanceOf(AnimationObject)
     expect(animation.uuid).toBe('native-anim-1')
-    expect(animation.targetKind).toBe('static3d')
     expect(spies.createCommandSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         elementId: 'element-1',
