@@ -711,7 +711,7 @@ export class CreateSpatializedElementAnimationJSBCommand extends JSBCommand {
     super()
   }
 
-  protected getParams(): Record<string, any> | undefined {
+  protected getParams() {
     const { elementId, timeline } = this.command
     return {
       elementId,
@@ -727,7 +727,7 @@ export class ControlSpatializedElementAnimationJSBCommand extends JSBCommand {
     super()
   }
 
-  protected getParams(): Record<string, any> | undefined {
+  protected getParams() {
     const { animationId, type } = this.command
     return {
       animationId,
