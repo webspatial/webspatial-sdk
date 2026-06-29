@@ -463,7 +463,7 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         animation.tick(at: 1.1)
 
         XCTAssertNil(element.animatingMask.transformAnimationId)
-        XCTAssertEqual(element.modelTransform.matrix.columns.3.x, 10, accuracy: 0.0001)
+        XCTAssertEqual(element.entityTransform.matrix.columns.3.x, 10, accuracy: 0.0001)
         XCTAssertEqual(element.transform.matrix.columns.3.x, 0, accuracy: 0.0001)
     }
 
@@ -547,7 +547,7 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         adapter.releaseMaskAndApplyPending(on: element, animationId: "owner-b")
 
         XCTAssertEqual(element.animatingMask.transformAnimationId, "owner-a")
-        XCTAssertEqual(element.modelTransform.matrix.columns.3.x, 0, accuracy: 0.0001)
+        XCTAssertEqual(element.entityTransform.matrix.columns.3.x, 0, accuracy: 0.0001)
     }
 
     func test_destroyAnimationsForElementDestroysRelatedAnimation() throws {
@@ -618,7 +618,7 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         animation.play(at: 0)
         animation.tick(at: 1)
 
-        XCTAssertEqual(element.modelTransform.matrix.columns.3.x, 6, accuracy: 0.5)
+        XCTAssertEqual(element.entityTransform.matrix.columns.3.x, 6, accuracy: 0.5)
         XCTAssertEqual(element.transform.matrix.columns.3.x, 0, accuracy: 0.0001)
         XCTAssertEqual(element.opacity, 1.0)
     }
