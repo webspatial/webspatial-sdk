@@ -17,7 +17,7 @@
 目标实现分为 React SDK、Core SDK 和 native runtime 三层：
 
 - React SDK 持有 `AnimationBinding`，由 `useAnimation(config)` 创建。它负责保存 config、bind 前命令排队，并且只在 `xr-animation` 解析到具体 `SpatializedElement` target 后创建 Core `AnimationObject`。
-- Core SDK 持有 `AnimationObject extends SpatialObject`。它直接暴露 `play/pause/resume/stop/reset/finish`，继承 `destroy()`，订阅 `NativeWebMsg`，按 native uuid 过滤 `SpatialAnimationStateChanged`，并更新自身可观察状态。
+- Core SDK 持有 `AnimationObject extends SpatialObject`。它直接暴露 `play/pause/resume/stop/reset/finish`，继承 `destroy()`，订阅 `NativeWebMsg`，按匹配的 animation identity 过滤 `SpatialAnimationStateChanged`，并更新自身可观察状态。
 - visionOS 持有 native `AnimationObject extends SpatialObject` 和 `SpatializedElementAnimationManager`。`SpatialScene` 继续作为 JSB listener 注册入口和 native spatial object store owner；manager 只负责 animation 业务生命周期、create/control lookup、frame loop 调度、element destroy 级联清理、animating mask 协调，以及构造 `SpatialAnimationStateChanged` 并通过现有 WebMsg 路径发送。
 
 ## 非目标
@@ -47,7 +47,7 @@
 
 | 模块 | 职责 |
 |------|------|
-| `SpatializedElement.createAnimation(config)` | 绑定 target 后创建 native-backed `AnimationObject`，负责 validation、normalization 和 create JSB；native response 以 `{ id }` 返回 native `AnimationObject` uuid。 |
+| `SpatializedElement.createAnimation(config)` | 绑定 target 后创建 native-backed `AnimationObject`，负责 validation、normalization 和 create JSB；native response 以 `{ id }` 返回新建对象的 identity。 |
 | `AnimationObject` | Core 一等对象，继承 `SpatialObject`，直接实现播放控制，继承 `destroy()`，直接订阅 NativeWebMsg 并维护自身状态。 |
 | `validateSpatializedMotionConfig` | 在 native create 前校验 authoring config，例如 Static3D `opacity` tracks 必须 reject。 |
 | `motionConfigToAnimationTimeline` | 将归一化后的 motion config 编译为 canonical `CreateSpatializedElementAnimation` payload。 |
@@ -58,7 +58,7 @@
 |------|------|
 | `SpatialScene JSB listeners` | 复用现有 `SpatialScene.setupJSBListeners()` / `spatialWebViewModel.addJSBListener(...)` 机制注册 animation create/control command，并委托给 `SpatializedElementAnimationManager`。 |
 | `SpatializedElementAnimationManager` | 管理 native `AnimationObject` 业务生命周期、`animationId -> NativeAnimationObject` lookup、create/control、frame loop 启停、`destroyAnimationsForElement`、mask 协调，并构造 `SpatialAnimationStateChanged` payload。 |
-| `Native AnimationObject` | 继承 `SpatialObject`，持有 native uuid、locked `TimelineSampler`、playback state，并实现 `play/pause/resume/stop/reset/finish/tick/destroy`；`reset/finish` 在同一个对象上操作，不重建。 |
+| `Native AnimationObject` | 继承 `SpatialObject`，持有 object identity、locked `TimelineSampler`、playback state，并实现 `play/pause/resume/stop/reset/finish/tick/destroy`；`reset/finish` 在同一个对象上操作，不重建。 |
 | `SpatialScene.spatialObjects` | 复用现有 `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` / destroy path 注册、查找和销毁 native spatial objects，包括 `AnimationObject`。 |
 | `TimelineSampler` | 复用现有 timeline sampler，按 locked canonical timeline 采样。 |
 | `Frame driver / CADisplayLink` | `SpatializedElementAnimationManager` 的内部调度能力；manager 在存在 running animation 时启动它，由它每帧回调 `manager.tickAll(timestamp)`，driver 本身不持有 animation 语义。 |
@@ -119,18 +119,18 @@ classDiagram
   namespace CoreSDK {
     class SpatialObject {
       <<abstract>>
-      +uuid: string
+      +id: string
       +destroy(): Promise<void>
     }
 
     class SpatializedElement {
       <<abstract>>
-      +uuid: string
+      +id: string
       +createAnimation(config): Promise~AnimationObject~
     }
 
     class CoreAnimationObject {
-      +uuid: string
+      +id: string
       +playState: PlayState
       +isAnimating: boolean
       +isPaused: boolean
@@ -184,13 +184,13 @@ classDiagram
 
     class NativeSpatialObject {
       <<abstract>>
-      +uuid: UUID
+      +id: UUID
       +destroy()
     }
 
     class NativeSpatializedElement {
       <<abstract>>
-      +uuid: UUID
+      +id: UUID
       +animatingMask: AnimatingMask
       +applyTransformUpdate(update)
       +applyOpacityUpdate(update)
@@ -198,7 +198,7 @@ classDiagram
     }
 
     class NativeAnimationObject {
-      +uuid: UUID
+      +id: UUID
       +targetElementId: UUID
       +targetKind: AnimationTargetKind
       +playState: AnimationPlayState
@@ -261,7 +261,7 @@ classDiagram
   SpatializedElement --> CreateSpatializedElementAnimation : sends JSB
   SpatializedElement --> CoreAnimationObject : wraps response id
   CoreAnimationObject --> ControlSpatializedElementAnimation : sends JSB
-  CoreAnimationObject --> SpatialAnimationStateChanged : filters by uuid
+  CoreAnimationObject --> SpatialAnimationStateChanged : filters by animation id
 
   NativeSpatialObject <|-- NativeSpatializedElement
   NativeSpatialObject <|-- NativeAnimationObject
@@ -307,9 +307,9 @@ sequenceDiagram
   Scene->>Manager: createAnimation(command)
   Manager->>Scene: findSpatialObject(targetElementId)
   Manager->>Manager: resolve target kind from native element type
-  Manager->>NativeObj: new AnimationObject(native uuid, locked timeline)
+  Manager->>NativeObj: new AnimationObject(object id, locked timeline)
   Manager->>Scene: addSpatialObject(animationObject)
-  Manager-->>Scene: { id: native uuid }
+  Manager-->>Scene: { id: object identity }
   Scene-->>Element: { id }
   Element->>CoreObj: new AnimationObject(id)
   CoreObj->>CoreObj: subscribe NativeWebMsg SpatialAnimationStateChanged
@@ -346,7 +346,7 @@ sequenceDiagram
 
   App->>Binding: bind(target element, kind)
   Binding->>Element: createAnimation(config)
-  Element-->>Binding: Core AnimationObject(uuid)
+  Element-->>Binding: Core AnimationObject
 
   Binding->>CoreObj: flush queued play()
   CoreObj->>Scene: ControlSpatializedElementAnimation(play)
@@ -357,7 +357,7 @@ sequenceDiagram
   NativeObj->>Manager: state changed running
   Manager->>Scene: sendWebMsg(SpatialAnimationStateChanged)
   WebMsg->>CoreObj: event
-  CoreObj->>CoreObj: filter by uuid and update state
+  CoreObj->>CoreObj: filter by animation id and update state
   CoreObj->>API: notify subscribers
 ```
 
@@ -459,7 +459,7 @@ sequenceDiagram
   React->>Element: createAnimation(newConfig)
   Element->>Scene: CreateSpatializedElementAnimation(new timeline)
   Scene->>Manager: createAnimation(command)
-  Manager-->>Scene: { id: new uuid }
+  Manager-->>Scene: { id: new object identity }
   Scene-->>Element: { id }
   Element-->>React: New Core AnimationObject
 ```

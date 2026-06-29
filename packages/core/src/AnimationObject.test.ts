@@ -105,7 +105,8 @@ describe('AnimationObject', () => {
     const animation = await createAnimation()
 
     expect(animation).toBeInstanceOf(AnimationObject)
-    expect(animation.uuid).toBe('native-anim-1')
+    expect(animation.id).toBe('native-anim-1')
+    expect('uuid' in animation).toBe(false)
     expect(spies.createCommandSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         elementId: 'element-1',
@@ -113,7 +114,7 @@ describe('AnimationObject', () => {
       }),
     )
 
-    const receiver = SpatialWebEvent.eventReceiver[animation.uuid]
+    const receiver = SpatialWebEvent.eventReceiver[animation.id]
     expect(receiver).toEqual(expect.any(Function))
 
     const onValuesChange = vi.fn()
@@ -141,7 +142,7 @@ describe('AnimationObject', () => {
 
     receiver?.({
       detail: {
-        animationId: animation.uuid,
+        animationId: animation.id,
         action: 'play',
         playState: 'running',
         finished: false,
@@ -160,7 +161,7 @@ describe('AnimationObject', () => {
 
     receiver?.({
       detail: {
-        animationId: animation.uuid,
+        animationId: animation.id,
         action: 'complete',
         playState: 'finished',
         finished: true,
@@ -179,29 +180,29 @@ describe('AnimationObject', () => {
   it('uses the inherited destroy path and unregisters its native WebMsg receiver', async () => {
     const animation = await createAnimation()
 
-    expect(SpatialWebEvent.eventReceiver[animation.uuid]).toEqual(
+    expect(SpatialWebEvent.eventReceiver[animation.id]).toEqual(
       expect.any(Function),
     )
 
     await animation.destroy()
 
-    expect(spies.destroyCommandSpy).toHaveBeenCalledWith(animation.uuid)
+    expect(spies.destroyCommandSpy).toHaveBeenCalledWith(animation.id)
     expect(spies.controlCommandSpy).not.toHaveBeenCalledWith(
       expect.objectContaining({ type: 'destroy' }),
     )
     expect(animation.isDestroyed).toBe(true)
-    expect(SpatialWebEvent.eventReceiver[animation.uuid]).toBeUndefined()
+    expect(SpatialWebEvent.eventReceiver[animation.id]).toBeUndefined()
   })
 
   it('cleans up local lifecycle when native reports destroy', async () => {
     const animation = await createAnimation()
-    const receiver = SpatialWebEvent.eventReceiver[animation.uuid]
+    const receiver = SpatialWebEvent.eventReceiver[animation.id]
 
     expect(receiver).toEqual(expect.any(Function))
 
     receiver?.({
       detail: {
-        animationId: animation.uuid,
+        animationId: animation.id,
         action: 'destroy',
         playState: 'idle',
         finished: false,
@@ -209,7 +210,7 @@ describe('AnimationObject', () => {
     })
 
     expect(animation.isDestroyed).toBe(true)
-    expect(SpatialWebEvent.eventReceiver[animation.uuid]).toBeUndefined()
+    expect(SpatialWebEvent.eventReceiver[animation.id]).toBeUndefined()
 
     await animation.play()
     expect(spies.controlCommandSpy).not.toHaveBeenCalled()
@@ -219,14 +220,14 @@ describe('AnimationObject', () => {
     const animation = await createAnimation()
     const onStart = vi.fn()
     animation.setCallbacks({ onStart })
-    const receiver = SpatialWebEvent.eventReceiver[animation.uuid]
+    const receiver = SpatialWebEvent.eventReceiver[animation.id]
 
     await animation.play()
     expect(onStart).not.toHaveBeenCalled()
 
     receiver?.({
       detail: {
-        animationId: animation.uuid,
+        animationId: animation.id,
         action: 'play',
         playState: 'running',
         finished: false,
@@ -237,7 +238,7 @@ describe('AnimationObject', () => {
 
     receiver?.({
       detail: {
-        animationId: animation.uuid,
+        animationId: animation.id,
         action: 'start',
         playState: 'running',
         finished: false,
@@ -252,7 +253,7 @@ describe('AnimationObject', () => {
     const onStart = vi.fn()
     const onError = vi.fn()
     animation.setCallbacks({ onStart, onError })
-    const receiver = SpatialWebEvent.eventReceiver[animation.uuid]
+    const receiver = SpatialWebEvent.eventReceiver[animation.id]
 
     spies.failNextControlType = 'play'
 
@@ -260,7 +261,7 @@ describe('AnimationObject', () => {
     expect(onStart).not.toHaveBeenCalled()
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({
-        animationId: animation.uuid,
+        animationId: animation.id,
         command: 'play',
         reason: 'play failed',
       }),
@@ -271,7 +272,7 @@ describe('AnimationObject', () => {
 
     receiver?.({
       detail: {
-        animationId: animation.uuid,
+        animationId: animation.id,
         action: 'start',
         playState: 'running',
         finished: false,
@@ -294,12 +295,12 @@ describe('AnimationObject', () => {
 
     expect(spies.createCommandSpy).not.toHaveBeenCalled()
     expect(spies.controlCommandSpy.mock.calls.map(call => call[0])).toEqual([
-      { animationId: animation.uuid, type: 'play' },
-      { animationId: animation.uuid, type: 'pause' },
-      { animationId: animation.uuid, type: 'resume' },
-      { animationId: animation.uuid, type: 'stop' },
-      { animationId: animation.uuid, type: 'reset' },
-      { animationId: animation.uuid, type: 'finish' },
+      { animationId: animation.id, type: 'play' },
+      { animationId: animation.id, type: 'pause' },
+      { animationId: animation.id, type: 'resume' },
+      { animationId: animation.id, type: 'stop' },
+      { animationId: animation.id, type: 'reset' },
+      { animationId: animation.id, type: 'finish' },
     ])
   })
 })

@@ -249,7 +249,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.creating = false
     object?.destroy().catch(error => {
       this.config.onError?.({
-        animationId: object.uuid,
+        animationId: object.id,
         command: 'stop',
         reason: error instanceof Error ? error.message : 'Destroy failed',
       })
@@ -374,7 +374,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     }
     this.animationObject[command.type]().catch(error => {
       this.config.onError?.({
-        animationId: this.animationObject?.uuid ?? this.motionObjectId,
+        animationId: this.animationObject?.id ?? this.motionObjectId,
         command: command.type,
         reason: error instanceof Error ? error.message : 'Command failed',
       })
@@ -415,7 +415,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     for (const command of commands) {
       this.animationObject[command.type]().catch(error => {
         this.config.onError?.({
-          animationId: this.animationObject?.uuid ?? this.motionObjectId,
+          animationId: this.animationObject?.id ?? this.motionObjectId,
           command: command.type,
           reason: error instanceof Error ? error.message : 'Command failed',
         })
@@ -430,7 +430,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     if (this.config.autoStart === false) return
     this.animationObject.play().catch(error => {
       this.config.onError?.({
-        animationId: this.animationObject?.uuid ?? this.motionObjectId,
+        animationId: this.animationObject?.id ?? this.motionObjectId,
         command: 'play',
         reason: error instanceof Error ? error.message : 'Play failed',
       })

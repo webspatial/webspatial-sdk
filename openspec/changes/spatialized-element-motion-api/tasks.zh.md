@@ -68,12 +68,12 @@
 
 ## Phase 6 — Implementation invariants spec
 
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 native uuid 是 `AnimationObject` identity 的唯一权威来源
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 `CreateSpatializedElementAnimation` response 以 `{ id }` 返回 native `AnimationObject` uuid
+- [x] 新增 `spatialized-animation-object-invariants` spec，明确 `AnimationObject` identity 由 native 持有
+- [x] 新增 `spatialized-animation-object-invariants` spec，明确 `CreateSpatializedElementAnimation` response 以 `{ id }` 返回创建出的对象 identity
 - [x] 新增 `spatialized-animation-object-invariants` spec，明确 playback controls 复用同一个 native `AnimationObject`
 - [x] 新增 `spatialized-animation-object-invariants` spec，明确 `AnimationObject.destroy()` MUST 使用继承自 `SpatialObject` 的 destroy 生命周期
 - [x] 新增 `spatialized-animation-object-invariants` spec，明确 Core SDK MUST 暴露 `SpatializedElement.createAnimation(config)` 返回的一等 `AnimationObject`
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 Core `AnimationObject` MUST 直接订阅 NativeWebMsg 并按 uuid 过滤 `SpatialAnimationStateChanged`
+- [x] 新增 `spatialized-animation-object-invariants` spec，明确 Core `AnimationObject` MUST 直接订阅 NativeWebMsg 并按匹配的 animation id 过滤 `SpatialAnimationStateChanged`
 - [x] 新增 `spatialized-animation-object-invariants` spec，明确 element animating mask 由 native `SpatializedElement` runtime 或 write adapter 持有，MUST NOT 依赖 `PortalInstanceObject`
 - [x] 新增 `spatialized-animation-object-invariants` spec，明确 target kind 到 writable fields / mask fields 的映射
 - [x] 新增 `spatialized-animation-object-invariants` spec，明确 terminal mask handoff 规则
@@ -98,12 +98,12 @@
 - [x] Core：新增 `SpatializedElement.createAnimation(config)`
 - [x] Core：发送 `CreateSpatializedElementAnimation`，并把 native 返回的 `{ id }` 包装成 `AnimationObject`
 - [x] Core：实现 `AnimationObject extends SpatialObject`
-- [x] Core：暴露 `AnimationObject.uuid`
+- [x] Core：让 `AnimationObject` 走继承自 `SpatialObject` 的 identity 路径
 - [x] Core：直接在同一个 `AnimationObject` 上实现 `play/pause/resume/stop/reset/finish`
 - [x] Core：确保 `reset/finish` 不重建 native `AnimationObject`
 - [x] Core：确保 `AnimationObject.destroy()` 使用继承自 `SpatialObject` 的 destroy 生命周期
 - [x] Core：让 `AnimationObject` 直接订阅 NativeWebMsg
-- [x] Core：让 `AnimationObject` 按 uuid 过滤 `SpatialAnimationStateChanged`
+- [x] Core：让 `AnimationObject` 按匹配的 animation id 过滤 `SpatialAnimationStateChanged`
 - [x] Core：让 `AnimationObject` 从 native event 更新 `playState/isAnimating/isPaused/finished`
 - [x] Core：让 `AnimationObject` 状态变化通知 React subscribers
 - [x] Core：避免新增公开 `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` 架构对象
@@ -158,10 +158,10 @@
 
 ## Phase 11 — Protocol and compatibility tests
 
-- [x] JSB test：`CreateSpatializedElementAnimation` 返回 native 生成的 uuid，字段名为 `id`
+- [x] JSB test：`CreateSpatializedElementAnimation` 返回创建出的对象 identity，字段名为 `id`
 - [x] JSB test：`ControlSpatializedElementAnimation` 支持 play/pause/resume/stop/reset/finish
 - [x] JSB test：`reset/finish` 不重建 native `AnimationObject`，object id 保持不变
-- [x] WebMsg test：`SpatialAnimationStateChanged` 能被匹配的 Core `AnimationObject` 直接接收并按 uuid 过滤
+- [x] WebMsg test：`SpatialAnimationStateChanged` 能被匹配的 Core `AnimationObject` 直接接收并按 animation id 过滤
 - [x] Test：React `PlaybackApi` 在 Core `AnimationObject` 状态变化后更新
 - [x] Test：Core `AnimationObject.destroy()` 使用通用 spatial object destroy path
 - [x] Test：不需要公开 `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` 架构对象
