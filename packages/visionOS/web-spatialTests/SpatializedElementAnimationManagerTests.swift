@@ -961,4 +961,53 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
             ))
         }
     }
+
+    func test_playDoesNotStealActiveAnimationMask() throws {
+        let element = Spatialized2DElement()
+        var events: [SpatialAnimationStateChanged] = []
+        let manager = SpatializedElementAnimationManager(sendWebMsg: { _, msg in
+            if let event = msg as? SpatialAnimationStateChanged {
+                events.append(event)
+            }
+        })
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 2,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "transform.translate.x",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 2, value: 10, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+        let firstAnimation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
+        )
+        let secondAnimation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        firstAnimation.play(at: 0)
+        secondAnimation.play(at: 0)
+
+        XCTAssertEqual(element.animatingMask.transformAnimationId, firstAnimation.uuid)
+        XCTAssertTrue(firstAnimation.isAnimating)
+        XCTAssertFalse(secondAnimation.isAnimating)
+        XCTAssertEqual(events.last?.animationId, secondAnimation.uuid)
+        XCTAssertNotNil(events.last?.error)
+    }
 }
