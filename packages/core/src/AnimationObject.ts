@@ -11,7 +11,10 @@ import type {
 } from './types/motion/spatializedElementMotion'
 import type { SpatializedPlaybackError } from './types/motion/spatializedPlayback'
 import type { SpatializedVisualValues } from './types/motion/spatializedVisual'
-import type { SpatializedMotionTimeline } from './types/motion/spatializedMotion'
+import type {
+  SpatializedMotionTimeline,
+  SpatializedPlaybackApi,
+} from './types/motion/spatializedMotion'
 
 export interface AnimationObjectCreateOptions {
   elementId: string
@@ -28,7 +31,10 @@ export interface AnimationObjectCallbacks {
   onStateChange?: () => void
 }
 
-export class AnimationObject extends SpatialObject {
+export class AnimationObject
+  extends SpatialObject
+  implements SpatializedPlaybackApi
+{
   readonly elementId: string
   readonly timeline: SpatializedMotionTimeline
 
