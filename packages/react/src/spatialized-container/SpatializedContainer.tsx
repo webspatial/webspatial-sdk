@@ -4,7 +4,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useState,
 } from 'react'
@@ -73,35 +72,8 @@ function DegradedContainer<T extends SpatializedElementRef>({
     ...restProps
   } = inprops as DegradedProps
 
-  const [hostEl, setHostEl] = useState<HTMLElement | null>(null)
-
-  useLayoutEffect(() => {
-    if (!xrAnimation || !hostEl || !hostEl.isConnected) return () => {}
-
-    // Bind the DOM host so the tuple stays shape-consistent even though
-    // degraded pure-Web runtime does not start playback.
-    xrAnimation.__setElement?.(hostEl, 'spatialized2d')
-
-    return () => {
-      xrAnimation.__onUnbind?.()
-      xrAnimation.__setElement?.(null, 'spatialized2d')
-    }
-  }, [hostEl, xrAnimation])
-
-  const setHostRef = useCallback(
-    (node: SpatializedElementRef<T> | null) => {
-      if (typeof innerRef === 'function') {
-        innerRef(node)
-      } else if (innerRef != null) {
-        innerRef.current = node
-      }
-      setHostEl(node as HTMLElement | null)
-    },
-    [innerRef],
-  )
-
   return (
-    <Component ref={setHostRef} {...restProps}>
+    <Component ref={innerRef} {...restProps}>
       {children}
     </Component>
   )
