@@ -696,6 +696,46 @@ describe('useAnimation tuple api native backend', () => {
     expect(onComplete).not.toHaveBeenCalled()
   })
 
+  test('resets queued state when Core AnimationObject creation fails', async () => {
+    const onError = vi.fn()
+    const element = {
+      id: 'create-fail',
+      createAnimation: vi.fn(async () => {
+        throw new Error('create failed')
+      }),
+    }
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+        onError,
+      }),
+    )
+
+    act(() => {
+      result.current[1].play()
+    })
+    expect(result.current[1].playState).toBe('queued')
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+    })
+
+    await waitFor(() => expect(onError).toHaveBeenCalled())
+    expect(result.current[1].playState).toBe('idle')
+    expect(result.current[1].isAnimating).toBe(false)
+  })
+
   test('static3d opacity is rejected before Core AnimationObject creation', () => {
     const element = createMockElement('static-opacity')
 

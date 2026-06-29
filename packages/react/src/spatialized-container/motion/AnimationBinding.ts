@@ -284,6 +284,11 @@ export class AnimationBinding implements SpatializedPlaybackApi {
       .catch(error => {
         if (token !== this.createToken) return
         this.creating = false
+        this.pendingCommands = []
+        this.state = 'idle'
+        this.isAnimatingState = false
+        this.isPausedState = false
+        this.finishedState = false
         this.config.onError?.({
           animationId: this.motionObjectId,
           command: 'play',
