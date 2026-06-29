@@ -91,7 +91,7 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 - **Session semantics**: state machine, lifecycle callbacks, error handling unified across all paths.
 - **Controller surface**: `pause()` / `resume()` are whole-session operations only; selective pause/resume is intentionally out of scope for this change. If local control is needed later, it must be designed as a separate track/action-level API in a new proposal.
 - **Legacy removal target**: the old `animation` prop path, legacy SpatialDiv session hook path, and the visionOS-specific legacy 2D backend path are removed from the target state; only the unified `xr-animation` motion path remains.
-- **Capability detection**: runtime capability probes continue to use the `useAnimation` family key with sub-tokens (`entity`, `element`, `static3d`, `dynamic3d`). Concrete feature checks MUST use sub-tokens. This family-level naming is retained because the long-term roadmap is to converge `useEntityAnimation` back into the `useAnimation` family.
+- **Capability detection**: runtime capability probes use the single `supports('useAnimation')` key for the released motion API. Target names such as `spatialized2d`, `static3d`, and `dynamic3d` remain internal binding-resolution kinds, not capability sub-tokens.
 - **Timeline naming**: `timeline` is a single CSS `@keyframes`-style percentage-key object. It is not a sequential choreography primitive; v1 does not support `timeline: []`, multiple actions, or multi-stage orchestration semantics.
 
 ## PR 1236 Follow-up
@@ -130,7 +130,7 @@ boundaries:
 
 ### Modified
 
-- `runtime-capabilities` — document sub-tokens for motion backends per element kind.
+- `runtime-capabilities` — document `supports('useAnimation')` as the single motion API capability gate.
 
 ### Deferred
 
@@ -149,5 +149,5 @@ boundaries:
 - **Packages**: `@webspatial/react-sdk`, `@webspatial/core-sdk`, visionOS native bridge/runtime.
 - **Public API**: `useAnimation` for spatialized motion, `useEntityAnimation` for entity transforms, `SpatializedMotionConfig`, `SpatializedPlaybackApi`, and the `xr-animation` binding prop on `<Model>` and `<Reality>`.
 - **Migration shape**: the rename lands in two phases so entity demos move first and spatialized motion demos move second; the legacy `animation` prop path is removed rather than preserved as a compatibility layer.
-- **Capability contract**: `supports('useAnimation')` remains a family-level probe only. Callers MUST use `supports('useAnimation', [subtoken])` to determine whether `entity`, `element`, `static3d`, or `dynamic3d` is available in the current runtime.
+- **Capability contract**: `supports('useAnimation')` is the public capability gate for released container motion. `useAnimation` does not expose `element`, `static3d`, or `dynamic3d` target sub-tokens; the legacy `entity` sub-token remains reserved for `useEntityAnimation`.
 - **Breaking changes**: yes; the current public `useAnimation` name moves to `useEntityAnimation`, and the current spatialized motion hook name moves to `useAnimation`.

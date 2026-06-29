@@ -14,7 +14,7 @@ SDK MUST 将 `Spatialized2DElement` 动画视为 `xr-animation` 绑定到 `enabl
 
 - **WHEN** 开发者调用 `useAnimation(config)`（`from/to` 或 `tracks` 配置）并将 `animation` 绑定到 `enable-xr` 节点
 - **THEN** hook MUST 返回 `[animation, api, style]`
-- **AND** runtime target availability MUST 通过 `supports('useAnimation', ['element'])` 报告
+- **AND** runtime motion availability MUST 通过 `supports('useAnimation')` 报告
 
 #### Scenario: AnimationObject 行为对齐
 
@@ -72,23 +72,23 @@ Track `property` MUST 限于：`opacity`、`transform.translate.x/y/z`、`transf
 
 ### Requirement: Native-first target path 且无 Web RAF fallback
 
-对于目标态 `useAnimation` 路径，当 native spatial animation 不可用时，SDK MUST NOT 使用 Web RAF backend。纯 Web runtime MUST 报告 `supports('useAnimation', ['element']) === false`。
+对于目标态 `useAnimation` 路径，当 native spatial animation 不可用时，SDK MUST NOT 使用 Web RAF backend。纯 Web runtime MUST 报告 `supports('useAnimation') === false`。
 
 #### Scenario: 普通浏览器报告 unsupported
 
-- **GIVEN** `supports('useAnimation', ['element'])` 为 `false`
+- **GIVEN** `supports('useAnimation')` 为 `false`
 - **WHEN** 应用将 `animation` 绑定到 `enable-xr` 节点并传入有效 tracks
 - **THEN** SDK MUST NOT 启动 Web RAF playback 作为 fallback
 
 #### Scenario: WebSpatial runtime 只使用 AnimationObject
 
-- **GIVEN** `supports('useAnimation', ['element'])` 为 `true`
+- **GIVEN** `supports('useAnimation')` 为 `true`
 - **WHEN** `api.play()` 被调用
 - **THEN** SDK MUST 控制 native `AnimationObject`
 
 #### Scenario: bind 前 play 不降级到 Web RAF
 
-- **GIVEN** `supports('useAnimation', ['element'])` 为 `true`
+- **GIVEN** `supports('useAnimation')` 为 `true`
 - **AND** `api.play()` 在 `xr-animation` binding 绑定元素前执行
 - **THEN** SDK MUST NOT 启动 Web RAF 作为降级
 - **AND** native 播放 MUST 在元素绑定后开始

@@ -48,7 +48,7 @@ const TIMELINE_CONFIG = {
 
 export default function SpatialElementMotionRealityContainerPage() {
   const { lines, log } = useLog()
-  const dynamic3dAnim = supports('useAnimation', ['dynamic3d'])
+  const dynamic3dAnim = supports('useAnimation')
 
   const [motion, api, style] = useAnimation({
     duration: DURATION,

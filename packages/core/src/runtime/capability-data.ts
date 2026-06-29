@@ -53,9 +53,6 @@ function matrixVision_1_5_0_Flags(): Record<string, boolean> {
   // useAnimation not supported until WSAppShell/1.7.0
   flags['useAnimation'] = false
   flags['useAnimation:entity'] = false
-  flags['useAnimation:element'] = false
-  flags['useAnimation:static3d'] = false
-  flags['useAnimation:dynamic3d'] = false
   return flags
 }
 
@@ -72,9 +69,6 @@ function matrixVision_1_6_0_Flags(): Record<string, boolean> {
   // useAnimation not supported until WSAppShell/1.7.0
   flags['useAnimation'] = false
   flags['useAnimation:entity'] = false
-  flags['useAnimation:element'] = false
-  flags['useAnimation:static3d'] = false
-  flags['useAnimation:dynamic3d'] = false
   return flags
 }
 
@@ -89,21 +83,14 @@ function matrixVision_1_7_0_Flags(): Record<string, boolean> {
   flags['Model:currentTime'] = true
   flags['Model:loading'] = true
   flags['Model:poster'] = true
-  flags['useAnimation:element'] = false
-  flags['useAnimation:static3d'] = false
-  flags['useAnimation:dynamic3d'] = false
   return flags
 }
 
 /**
- * visionOS **WSAppShell/1.8.0** — element animation support.
- * Inherits from 1.7.0 and enables `useAnimation:element`.
+ * visionOS **WSAppShell/1.8.0**.
  */
 function matrixVision_1_8_0_Flags(): Record<string, boolean> {
   const flags = matrixVision_1_7_0_Flags()
-  flags['useAnimation:element'] = true
-  flags['useAnimation:static3d'] = true
-  flags['useAnimation:dynamic3d'] = true
   return flags
 }
 
@@ -139,9 +126,6 @@ function matrixPico_0_2_2_Flags(): Record<string, boolean> {
   const flags = matrixPico_0_1_2_Flags()
   flags['useAnimation'] = true
   flags['useAnimation:entity'] = true
-  flags['useAnimation:element'] = true
-  flags['useAnimation:static3d'] = true
-  flags['useAnimation:dynamic3d'] = true
   return flags
 }
 

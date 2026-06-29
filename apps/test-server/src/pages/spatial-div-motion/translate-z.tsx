@@ -10,7 +10,7 @@ export function SpatialDivMotionTranslateZPage() {
   const [lines, setLines] = useState<string[]>([])
   const [hint, setHint] = useState('Auto-start: translate.z 0 → -120px over 4s')
 
-  const elementAnim = supports('useAnimation', ['element'])
+  const elementAnim = supports('useAnimation')
 
   const [motion, api, style] = useAnimation({
     duration: DURATION,

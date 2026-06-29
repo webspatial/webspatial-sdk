@@ -51,7 +51,7 @@ The target-state architecture MUST NOT depend on Web RAF playback, `SpatializedM
 #### Scenario: Pure Web runtime does not run a RAF fallback
 
 - **WHEN** runtime capability for the resolved target is unavailable, including a pure Web runtime
-- **THEN** `supports('useAnimation', [targetToken])` MUST return `false`
+- **THEN** `supports('useAnimation')` MUST return `false`
 - **AND** the SDK MUST NOT start Web RAF playback as a fallback for the target-state `useAnimation` path
 
 ### Requirement: Shared playback API shape

@@ -192,7 +192,7 @@ The native runtime MUST treat the frame loop as an internal scheduling capabilit
 
 ### Requirement: Pure Web runtime has no Core RAF fallback
 
-Core SDK target-state spatialized element animation MUST NOT include Web RAF playback fallback. If the runtime lacks native `AnimationObject` support for a target token, `supports('useAnimation', [targetToken])` MUST return `false` and SDK MUST NOT run a JS RAF sampler for that target.
+Core SDK target-state spatialized element animation MUST NOT include Web RAF playback fallback. If the runtime lacks native `AnimationObject` support, `supports('useAnimation')` MUST return `false` and SDK MUST NOT run a JS RAF sampler.
 
 #### Scenario: Native animation object unavailable
 

@@ -6,11 +6,7 @@ vi.mock('@webspatial/core-sdk', async () => {
   const actual = await vi.importActual('@webspatial/core-sdk')
   return {
     ...actual,
-    supports: (name: string, tokens?: readonly string[]) =>
-      name === 'useAnimation' &&
-      !!tokens?.some(token =>
-        ['element', 'static3d', 'dynamic3d'].includes(token),
-      ),
+    supports: (name: string) => name === 'useAnimation',
   }
 })
 

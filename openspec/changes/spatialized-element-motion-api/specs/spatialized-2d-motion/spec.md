@@ -14,7 +14,7 @@ The SDK MUST treat `Spatialized2DElement` motion as the 2D target, resolved when
 
 - **WHEN** authors call `useAnimation(config)` (with `from/to` or `tracks`) and bind `animation` to an `enable-xr` node
 - **THEN** the hook MUST return `[animation, api, style]`
-- **AND** runtime target availability MUST be reported through `supports('useAnimation', ['element'])`
+- **AND** runtime motion availability MUST be reported through `supports('useAnimation')`
 
 #### Scenario: AnimationObject parity
 
@@ -72,23 +72,23 @@ Track `property` values MUST be limited to: `opacity`, `transform.translate.x`, 
 
 ### Requirement: Native-first target path with no Web RAF fallback
 
-For the target-state `useAnimation` path, the SDK MUST NOT use a Web RAF backend when native spatial animation is unavailable. Pure Web runtimes MUST report `supports('useAnimation', ['element']) === false`.
+For the target-state `useAnimation` path, the SDK MUST NOT use a Web RAF backend when native spatial animation is unavailable. Pure Web runtimes MUST report `supports('useAnimation') === false`.
 
 #### Scenario: Plain browser reports unsupported
 
-- **GIVEN** `supports('useAnimation', ['element'])` is `false`
+- **GIVEN** `supports('useAnimation')` is `false`
 - **WHEN** application binds `animation` to an `enable-xr` node with valid tracks
 - **THEN** the SDK MUST NOT start Web RAF playback as a fallback
 
 #### Scenario: WebSpatial runtime uses AnimationObject only
 
-- **GIVEN** `supports('useAnimation', ['element'])` is `true`
+- **GIVEN** `supports('useAnimation')` is `true`
 - **WHEN** `api.play()` is called on a valid timeline bound to an `enable-xr` node
 - **THEN** the SDK MUST control the native `AnimationObject`
 
 #### Scenario: play before bind does not fall back to Web RAF
 
-- **GIVEN** `supports('useAnimation', ['element'])` is `true`
+- **GIVEN** `supports('useAnimation')` is `true`
 - **AND** `api.play()` runs before the `xr-animation` binding has attached an element
 - **THEN** the SDK MUST NOT start Web RAF playback as a fallback
 - **AND** native playback MUST begin once the element is bound

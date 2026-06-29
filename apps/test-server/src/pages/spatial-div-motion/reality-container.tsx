@@ -20,7 +20,7 @@ export function SpatializedMotionRealityContainerPage() {
   const [lines, setLines] = useState<string[]>([])
   const [hint, setHint] = useState('Press Play or wait for auto-start')
 
-  const dynamic3dAnim = supports('useAnimation', ['dynamic3d'])
+  const dynamic3dAnim = supports('useAnimation')
 
   const [motion, api] = useAnimation({
     duration: DURATION,

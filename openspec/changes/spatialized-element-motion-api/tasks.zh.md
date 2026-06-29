@@ -17,11 +17,11 @@
 
 ## Phase 2 — Runtime capability delta
 
-- [x] 新增 `runtime-capabilities` delta：`supports('useAnimation', ['element'])`
-- [x] 新增 `runtime-capabilities` delta：`supports('useAnimation', ['static3d'])`
-- [x] 新增 `runtime-capabilities` delta：`supports('useAnimation', ['dynamic3d'])`
+- [x] 新增 `runtime-capabilities` delta：`supports('useAnimation')`
+- [x] 文档化 `spatialized2d` target resolution 归属于单一 `useAnimation` 能力 gate
+- [x] 文档化 `static3d` / `dynamic3d` target resolution 归属于单一 `useAnimation` 能力 gate
 - [x] 文档化纯 Web runtime 对所有 spatialized element animation target token 返回 `false`
-- [x] 文档化具体目标检查 MUST 使用 target sub-token；`supports('useAnimation')` 仅保留 family 级语义
+- [x] 文档化 `supports('useAnimation')` 是发布后 motion API 的唯一能力 gate
 
 ## Phase 3 — 目标特定 spec 对齐
 
@@ -64,7 +64,7 @@
 - [x] 测试：验证 `autoStart: false` 时，绑定前显式 `api.play()` 仍会在绑定后执行
 - [x] 测试：验证一个 `animation` binding 同一时刻只能绑定一个组件
 - [x] 校验测试：create 前拒绝 Static3D `opacity` tracks；不得静默忽略
-- [x] Capability 测试：验证 `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])` target tokens 和纯 Web `false` 行为
+- [x] Capability 测试：验证 `supports('useAnimation')` 支持状态和纯 Web `false` 行为
 
 ## Phase 6 — Implementation invariants spec
 
@@ -176,11 +176,11 @@
 - [x] Test：native state 对 Core SDK state 具有权威性
 - [x] Test：Static3D opacity tracks 在 native create 前被拒绝
 - [x] Test：Static3D animation 只写 `modelTransform`
-- [x] Test：纯 Web runtime 对 `supports('useAnimation', ['element' | 'static3d' | 'dynamic3d'])` 返回 false
+- [x] Test：纯 Web runtime 对 `supports('useAnimation')` 返回 false
 - [x] Test：目标态 runtime 不再使用旧 `AnimateSpatializedElementMotion` 路径
 
 ## Phase 12 — Docs and demos follow-up
 
 - [x] 更新仓库内 proposal / API 文档，确保目标态文案不再描述已移除的 Controller / Web RAF / `AnimateSpatializedElementMotion` 路径
-- [ ] 实现落地后更新 demos 和公开文档
+- [x] 实现落地后更新 demos 和公开文档
 - [ ] 实现落地后更新 PR 描述，避免继续宣称旧 Controller/Web RAF 路径是目标态实现

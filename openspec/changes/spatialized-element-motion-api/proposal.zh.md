@@ -91,7 +91,7 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 - **会话语义**：状态机、生命周期回调、错误处理在所有路径上统一。
 - **Controller surface**：`pause()` / `resume()` 只表示整体会话控制；选择性 pause/resume 本次变更明确不做。如果未来需要局部控制，必须在新的 proposal 中设计独立的 track/action 级 API。
 - **legacy 删除目标**：旧的 `animation` prop 路径、legacy SpatialDiv session hook 路径，以及 visionOS 专用的旧 2D backend path 已从目标态中移除；目标态仅保留统一的 `xr-animation` motion 路径。
-- **能力探测**：运行时能力探测继续使用 `useAnimation` family key 和其 subtoken（`entity`、`element`、`static3d`、`dynamic3d`）。判断具体能力时 MUST 使用 subtoken。之所以保留 family 级命名，是因为长期路线仍计划把 `useEntityAnimation` 再整合回 `useAnimation` family。
+- **能力探测**：运行时能力探测使用单一 `supports('useAnimation')` key 表达发布后的 motion API 是否可用。`spatialized2d`、`static3d`、`dynamic3d` 等目标名仍是内部绑定解析 kind，不再是 capability sub-token。
 - **timeline 命名**：`timeline` 指单个 CSS `@keyframes` 风格的百分比关键帧对象，不是串行动画编排器。v1 不支持 `timeline: []`、多个 action 或多段编排语义。
 
 ## PR 1236 后续修复
@@ -128,7 +128,7 @@ PR 1236 在 `useAnimation` 重命名落地后暴露出一批 React motion surfac
 
 ### 修改
 
-- `runtime-capabilities` — 文档化每种 kind 的 motion 后端 sub-token。
+- `runtime-capabilities` — 文档化 `supports('useAnimation')` 是 motion API 的唯一能力 gate。
 
 ### 推迟
 
@@ -147,5 +147,5 @@ PR 1236 在 `useAnimation` 重命名落地后暴露出一批 React motion surfac
 - **包**：`@webspatial/react-sdk`、`@webspatial/core-sdk`、visionOS native bridge/runtime。
 - **公共 API**：空间动画使用 `useAnimation`，Entity transform 使用 `useEntityAnimation`，其余包括 `SpatializedMotionConfig`、`SpatializedPlaybackApi` 以及 `<Model>` 和 `<Reality>` 上的 `xr-animation` binding prop。
 - **迁移形态**：命名调整分两阶段落地，先迁移 Entity demo，再迁移空间动画 demo；legacy `animation` prop 路径已移除，不再保留兼容层。
-- **能力契约**：`supports('useAnimation')` 仅保留 family 级探测语义。调用方 MUST 使用 `supports('useAnimation', [subtoken])` 判断 `entity`、`element`、`static3d` 或 `dynamic3d` 是否在当前运行时可用。
+- **能力契约**：`supports('useAnimation')` 是发布后的容器 motion 公开能力 gate。`useAnimation` 不再暴露 `element`、`static3d` 或 `dynamic3d` target sub-token；legacy `entity` sub-token 继续保留给 `useEntityAnimation`。
 - **破坏性变更**：有；当前公共 `useAnimation` 会迁移为 `useEntityAnimation`，当前空间动画 hook 会迁移为 `useAnimation`。
