@@ -8,11 +8,11 @@ import type {
   ControlSpatializedElementAnimationCommand,
   SpatialAnimationStateChangedDetail,
   SpatialAnimationStateChangedMsg,
-} from './types/spatializedElementMotion'
-import type { SpatializedMotionKind } from './types/spatializedMotion'
-import type { SpatializedPlaybackError } from './types/spatializedPlayback'
-import type { SpatializedVisualValues } from './types/spatializedVisual'
-import type { SpatializedMotionTimeline } from './types/spatializedMotion'
+} from './types/motion/spatializedElementMotion'
+import type { SpatializedMotionKind } from './types/motion/spatializedMotion'
+import type { SpatializedPlaybackError } from './types/motion/spatializedPlayback'
+import type { SpatializedVisualValues } from './types/motion/spatializedVisual'
+import type { SpatializedMotionTimeline } from './types/motion/spatializedMotion'
 
 export interface AnimationObjectCreateOptions {
   elementId: string

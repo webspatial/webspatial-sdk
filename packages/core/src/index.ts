@@ -34,23 +34,7 @@ export * as PhysicalMetrics from './physicalMetrics'
 export * from './reality'
 export * from './types/types'
 export * from './types/animation'
-export * from './types/spatializedVisual'
-export * from './types/spatializedPlayback'
-export type {
-  SpatializedMotionKind,
-  SpatializedMotionProperty,
-  SpatializedMotionKeyframe,
-  SpatializedMotionKeyframeValues,
-  SpatializedMotionTrack,
-  SpatializedMotionSegmentConfig,
-  SpatializedMotionTimelineConfig,
-  SpatializedMotionConfig,
-  SpatializedMotionAuthorConfig,
-  SpatializedMotionTimeline,
-  SpatializedMotionPlayState,
-  SpatializedPlaybackApi,
-} from './types/spatializedMotion'
-export * from './types/spatializedElementMotion'
+export * from './types/motion'
 export * from './motion'
 export * from './runtime'
 

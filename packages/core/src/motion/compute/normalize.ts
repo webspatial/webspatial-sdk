@@ -1,4 +1,4 @@
-import type { SpatializedVisualValues } from '../../types/spatializedVisual'
+import type { SpatializedVisualValues } from '../../types/motion/spatializedVisual'
 import type { TimingFunction } from '../../types/animation'
 import type {
   SpatializedMotionConfig,
@@ -6,7 +6,7 @@ import type {
   SpatializedMotionSegmentConfig,
   SpatializedMotionTrack,
   SpatializedMotionTimelineConfig,
-} from '../../types/spatializedMotion'
+} from '../../types/motion/spatializedMotion'
 
 /**
  * Flattens visual values into motion-property/value pairs.
