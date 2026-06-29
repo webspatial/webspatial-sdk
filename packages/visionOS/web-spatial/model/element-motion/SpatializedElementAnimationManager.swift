@@ -6,6 +6,7 @@ import Spatial
 enum SpatializedElementAnimationManagerError: Error {
     case animationNotFound(String)
     case invalidTarget(String)
+    case invalidTimeline(String)
     case unsupportedStatic3DOpacity
 }
 
@@ -32,6 +33,7 @@ final class SpatializedElementAnimationManager: NSObject {
         target: SpatializedElement,
         explicitAnimationId: String? = nil
     ) throws -> SpatializedElementAnimationObject {
+        try Self.validateTimeline(command.timeline)
         let targetKind = try Self.resolveTargetKind(for: target)
         let writeAdapter = SpatializedElementAnimationWriteAdapter.adapter(for: targetKind)
         let sampler = SpatializedElementMotionTimelineSampler(
@@ -58,6 +60,15 @@ final class SpatializedElementAnimationManager: NSObject {
         )
         register(animation)
         return animation
+    }
+
+    /// Validates native timeline fields that affect frame-driver lifetime.
+    private static func validateTimeline(_ timeline: SpatializedMotionTimelinePayload) throws {
+        if let playbackRate = timeline.playbackRate,
+           !playbackRate.isFinite || playbackRate <= 0
+        {
+            throw SpatializedElementAnimationManagerError.invalidTimeline("playbackRate must be > 0 and finite")
+        }
     }
 
     /// Resolves the native animation target kind from the concrete element subtype.
