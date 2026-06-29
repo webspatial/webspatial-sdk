@@ -13,7 +13,7 @@ import { ResourceRegistry } from '../utils'
 import { AttachmentRegistry } from '../context/AttachmentContext'
 import { SpatializedElementRef } from '../../spatialized-container/types'
 import { SpatializedElement } from '@webspatial/core-sdk'
-import type { SpatializedMotionBindingInternal } from '../../spatialized-container/motion/motionBindingTypes'
+import type { SpatializedMotionBinding } from '../../spatialized-container/motion/motionBindingTypes'
 import { EntityEventHandler } from '../type'
 import { useRealityEvents } from '../hooks'
 import { markWebSpatialPrimitive } from '../../jsx/primitive-marker'
@@ -24,7 +24,7 @@ export type RealityProps = Omit<
 > &
   EntityEventHandler & {
     /** Native root-transform motion on the Reality container (`SpatializedDynamic3DElement`). */
-    'xr-animation'?: SpatializedMotionBindingInternal
+    'xr-animation'?: SpatializedMotionBinding
   }
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(

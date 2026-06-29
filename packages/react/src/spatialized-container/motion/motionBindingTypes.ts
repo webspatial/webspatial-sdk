@@ -7,7 +7,7 @@ import type {
  * Internal binding contract shared between React container wiring and the Core
  * motion controller for `xr-animation`.
  */
-export interface SpatializedMotionBindingInternal {
+export interface SpatializedMotionBinding {
   /** Identifies the binding family for runtime guards. */
   readonly __kind: 'spatializedMotion'
 

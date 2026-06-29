@@ -8,7 +8,7 @@ import type {
 } from '@webspatial/core-sdk'
 import { createMotionBinding } from './createMotionBinding'
 import { getMotionConfigSignature } from './motionConfigSignature'
-import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
+import type { SpatializedMotionBinding } from './motionBindingTypes'
 import type { AnimationBinding } from './AnimationBinding'
 import { valuesToMotionStyle } from './style'
 
@@ -24,7 +24,7 @@ export type SpatializedMotionSegmentConfig = CoreSpatializedMotionSegmentConfig
  * Tuple returned by `useAnimation()`.
  */
 export type UseAnimationResult = readonly [
-  animation: SpatializedMotionBindingInternal,
+  animation: SpatializedMotionBinding,
   api: SpatializedPlaybackApi,
   style: CSSProperties,
 ]

@@ -16,4 +16,4 @@ export {
 export { valuesToMotionStyle } from './style'
 
 // Internal binding types
-export type { SpatializedMotionBindingInternal } from './motionBindingTypes'
+export type { SpatializedMotionBinding } from './motionBindingTypes'
