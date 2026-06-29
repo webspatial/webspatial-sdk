@@ -5,6 +5,9 @@ import { describe, expect, test, vi } from 'vitest'
 
 vi.mock('@webspatial/core-sdk', () => ({
   Spatialized2DElement: class Spatialized2DElement {
+    /** Identifies the mock motion target kind for runtime binding resolution. */
+    readonly kind = 'spatialized2d' as const
+
     /**
      * Creates a mock runtime 2D element instance for motion binding tests.
      *
@@ -13,6 +16,9 @@ vi.mock('@webspatial/core-sdk', () => ({
     constructor(readonly id: string) {}
   },
   SpatializedStatic3DElement: class SpatializedStatic3DElement {
+    /** Identifies the mock motion target kind for runtime binding resolution. */
+    readonly kind = 'static3d' as const
+
     /**
      * Creates a mock runtime static 3D element instance for motion binding
      * tests.
@@ -22,6 +28,9 @@ vi.mock('@webspatial/core-sdk', () => ({
     constructor(readonly id: string) {}
   },
   SpatializedDynamic3DElement: class SpatializedDynamic3DElement {
+    /** Identifies the mock motion target kind for runtime binding resolution. */
+    readonly kind = 'dynamic3d' as const
+
     /**
      * Creates a mock runtime dynamic 3D element instance for motion binding
      * tests.
@@ -35,6 +44,7 @@ vi.mock('@webspatial/core-sdk', () => ({
 import {
   Spatialized2DElement,
   SpatializedDynamic3DElement,
+  type SpatializedElement,
   SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 import { useBindSpatializedMotion } from './useBindSpatializedMotion'
@@ -101,9 +111,14 @@ describe('useBindSpatializedMotion', () => {
     expect(binding.__setElement).toHaveBeenCalledWith(element, 'dynamic3d')
   })
 
-  test('falls back HTMLElement to spatialized2d', () => {
+  test('binds supported elements by kind without relying on instanceof', () => {
     const binding = createBinding()
-    const element = document.createElement('div')
+    const element: SpatializedElement = {
+      id: 'kind-only-1',
+      kind: 'spatialized2d' as const,
+      createAnimation: vi.fn(),
+      updateProperties: vi.fn(),
+    } as never
 
     renderHook(() =>
       useBindSpatializedMotion({
@@ -114,6 +129,21 @@ describe('useBindSpatializedMotion', () => {
 
     expect(binding.__setElement).toHaveBeenCalledTimes(1)
     expect(binding.__setElement).toHaveBeenCalledWith(element, 'spatialized2d')
+  })
+
+  test('does not bind HTMLElement targets', () => {
+    const binding = createBinding()
+    const element = document.createElement('div')
+
+    renderHook(() =>
+      useBindSpatializedMotion({
+        binding,
+        element: element as never,
+      }),
+    )
+
+    expect(binding.__setElement).not.toHaveBeenCalled()
+    expect(binding.__onUnbind).not.toHaveBeenCalled()
   })
 
   test('does not bind unrecognized objects', () => {

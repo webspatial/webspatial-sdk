@@ -1,13 +1,11 @@
 import type {
   AnimationObject,
-  Spatialized2DElement,
-  SpatializedDynamic3DElement,
+  SpatializedElement,
   SpatializedMotionAuthorConfig,
   SpatializedMotionConfig,
   SpatializedMotionKind,
   SpatializedMotionPlayState,
   SpatializedPlaybackApi,
-  SpatializedStatic3DElement,
   SpatializedVisualValues,
 } from '@webspatial/core-sdk'
 import {
@@ -28,16 +26,6 @@ type AnimationCommandType =
 
 type AnimationCommand = {
   type: AnimationCommandType
-}
-
-type AnimationTargetElement = (
-  | Spatialized2DElement
-  | SpatializedStatic3DElement
-  | SpatializedDynamic3DElement
-) & {
-  createAnimation: (
-    config: SpatializedMotionAuthorConfig,
-  ) => Promise<AnimationObject>
 }
 
 interface AnimationBindingOptions {
@@ -65,12 +53,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   private readonly motionObjectId: string
 
   private animationObject: AnimationObject | null = null
-  private element:
-    | HTMLElement
-    | Spatialized2DElement
-    | SpatializedStatic3DElement
-    | SpatializedDynamic3DElement
-    | null = null
+  private element: SpatializedElement | null = null
   private kind: SpatializedMotionKind | null = null
   private destroyed = false
   private creating = false
@@ -137,12 +120,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   }
 
   __setElement(
-    element:
-      | HTMLElement
-      | Spatialized2DElement
-      | SpatializedStatic3DElement
-      | SpatializedDynamic3DElement
-      | null,
+    element: SpatializedElement | null,
     targetKind?: SpatializedMotionKind,
   ): void {
     this.bind(element, targetKind)
@@ -201,12 +179,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   }
 
   private bind(
-    element:
-      | HTMLElement
-      | Spatialized2DElement
-      | SpatializedStatic3DElement
-      | SpatializedDynamic3DElement
-      | null,
+    element: SpatializedElement | null,
     targetKind?: SpatializedMotionKind,
   ): void {
     if (this.destroyed) return
@@ -274,13 +247,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   }
 
   private ensureAnimationObject(): void {
-    if (
-      this.animationObject ||
-      this.creating ||
-      !this.kind ||
-      !this.element ||
-      !this.isAnimationElement(this.element)
-    ) {
+    if (this.animationObject || this.creating || !this.kind || !this.element) {
       return
     }
     if (!supportsAnimation()) {
@@ -323,19 +290,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
         })
         this.options.onStateChange?.()
       })
-  }
-
-  private isAnimationElement(
-    element:
-      | HTMLElement
-      | Spatialized2DElement
-      | SpatializedStatic3DElement
-      | SpatializedDynamic3DElement,
-  ): element is AnimationTargetElement {
-    return (
-      typeof (element as { createAnimation?: unknown }).createAnimation ===
-      'function'
-    )
   }
 
   private createAnimationObjectCallbacks() {

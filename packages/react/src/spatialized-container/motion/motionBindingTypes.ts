@@ -1,8 +1,6 @@
 import type {
-  Spatialized2DElement,
-  SpatializedDynamic3DElement,
+  SpatializedElement,
   SpatializedMotionKind,
-  SpatializedStatic3DElement,
 } from '@webspatial/core-sdk'
 
 /**
@@ -20,12 +18,7 @@ export interface SpatializedMotionBindingInternal {
    * @param targetKind - The resolved motion target kind, if available.
    */
   __setElement: (
-    element:
-      | HTMLElement
-      | Spatialized2DElement
-      | SpatializedStatic3DElement
-      | SpatializedDynamic3DElement
-      | null,
+    element: SpatializedElement | null,
     targetKind?: SpatializedMotionKind,
   ) => void
 

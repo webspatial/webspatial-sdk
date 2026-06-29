@@ -1,9 +1,7 @@
-import {
-  Spatialized2DElement,
-  SpatializedDynamic3DElement,
-  SpatializedStatic3DElement,
+import type {
+  SpatializedElement,
+  SpatializedMotionKind,
 } from '@webspatial/core-sdk'
-import type { SpatializedMotionKind } from '@webspatial/core-sdk'
 import { useEffect } from 'react'
 import type { SpatializedMotionBindingInternal } from './motionBindingTypes'
 
@@ -16,19 +14,8 @@ interface UseBindSpatializedMotionOptions {
   binding?: SpatializedMotionBindingInternal
 
   /** The resolved runtime element that should be attached to the binding. */
-  element?:
-    | HTMLElement
-    | Spatialized2DElement
-    | SpatializedStatic3DElement
-    | SpatializedDynamic3DElement
-    | null
+  element?: SpatializedElement | null
 }
-
-type ResolvedSpatializedMotionElement =
-  | HTMLElement
-  | Spatialized2DElement
-  | SpatializedStatic3DElement
-  | SpatializedDynamic3DElement
 
 /**
  * Resolves the runtime motion target kind from the resolved spatialized
@@ -39,15 +26,16 @@ type ResolvedSpatializedMotionElement =
  * supported motion target.
  */
 function resolveSpatializedMotionKind(
-  element: ResolvedSpatializedMotionElement,
+  element: SpatializedElement,
 ): SpatializedMotionKind | undefined {
-  if (element instanceof Spatialized2DElement) return 'spatialized2d'
-  if (element instanceof SpatializedStatic3DElement) return 'static3d'
-  if (element instanceof SpatializedDynamic3DElement) return 'dynamic3d'
-  if (typeof HTMLElement !== 'undefined' && element instanceof HTMLElement) {
-    return 'spatialized2d'
+  switch (element.kind) {
+    case 'spatialized2d':
+    case 'static3d':
+    case 'dynamic3d':
+      return element.kind
+    default:
+      return undefined
   }
-  return undefined
 }
 
 /**
