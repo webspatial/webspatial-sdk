@@ -5,8 +5,9 @@
 // a connected portal `dom`, and a connected `hostElement`. Any missing piece
 // (the plain-web / pre-boot case) MUST NOT fire.
 
+import React, { StrictMode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { renderHook } from '@testing-library/react'
+import { render, renderHook } from '@testing-library/react'
 import type { SpatializedElement } from '@webspatial/core-sdk'
 import { useSpatialContentReady } from './useSpatialContentReady'
 import type { PortalInstanceObject } from '../context/PortalInstanceContext'
@@ -18,6 +19,16 @@ function connectedDiv(): HTMLDivElement {
 }
 
 const fakeSpatialElement = {} as SpatializedElement
+
+function readyParams(host: HTMLElement, portalDom: HTMLElement) {
+  return {
+    spatializedElement: fakeSpatialElement,
+    portalInstanceObject: {
+      dom: portalDom,
+    } as unknown as PortalInstanceObject,
+    hostElement: host,
+  }
+}
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -111,5 +122,132 @@ describe('useSpatialContentReady — the only path that invokes onSpatialContent
 
     unmount()
     expect(cleanupFn).toHaveBeenCalledTimes(1)
+  })
+
+  it('does NOT invoke onSpatialContentReady synchronously during render', () => {
+    const host = connectedDiv()
+    const portalDom = connectedDiv()
+    const cb = vi.fn()
+
+    function Probe() {
+      useSpatialContentReady({
+        ...readyParams(host, portalDom),
+        onSpatialContentReady: cb,
+      })
+      expect(cb).not.toHaveBeenCalled()
+      return null
+    }
+
+    render(<Probe />)
+    expect(cb).toHaveBeenCalledTimes(1)
+  })
+
+  it('invokes prior cleanup before the next rising edge after isReady falls', () => {
+    const portalDom = connectedDiv()
+    const host1 = connectedDiv()
+    const cleanup = vi.fn()
+    const cb = vi.fn(() => cleanup)
+    const events: string[] = []
+    cb.mockImplementation(() => {
+      events.push('ready')
+      return () => {
+        cleanup()
+        events.push('cleanup')
+      }
+    })
+
+    const { rerender } = renderHook(
+      ({ host }: { host: HTMLElement | null }) =>
+        useSpatialContentReady({
+          spatializedElement: host ? fakeSpatialElement : undefined,
+          portalInstanceObject: {
+            dom: portalDom,
+          } as unknown as PortalInstanceObject,
+          hostElement: host,
+          onSpatialContentReady: cb,
+        }),
+      { initialProps: { host: null as HTMLElement | null } },
+    )
+
+    expect(cb).not.toHaveBeenCalled()
+
+    rerender({ host: host1 })
+    expect(cb).toHaveBeenCalledTimes(1)
+    expect(events).toEqual(['ready'])
+
+    rerender({ host: null })
+    expect(cleanup).toHaveBeenCalledTimes(1)
+    expect(events).toEqual(['ready', 'cleanup'])
+
+    const host2 = connectedDiv()
+    rerender({ host: host2 })
+    expect(cb).toHaveBeenCalledTimes(2)
+    expect(events).toEqual(['ready', 'cleanup', 'ready'])
+  })
+
+  it('runs first cleanup before second ready under React StrictMode remount', () => {
+    const host = connectedDiv()
+    const portalDom = connectedDiv()
+    const events: string[] = []
+    let readyCount = 0
+    const cb = vi.fn(() => {
+      events.push(`ready${++readyCount}`)
+      return () => {
+        events.push(`cleanup${readyCount}`)
+      }
+    })
+
+    renderHook(
+      () =>
+        useSpatialContentReady({
+          ...readyParams(host, portalDom),
+          onSpatialContentReady: cb,
+        }),
+      {
+        wrapper: ({ children }) => <StrictMode>{children}</StrictMode>,
+      },
+    )
+
+    expect(cb.mock.calls.length).toBeGreaterThanOrEqual(2)
+    expect(events.indexOf('cleanup1')).toBeLessThan(events.indexOf('ready2'))
+  })
+
+  it('invokes parent onSpatialContentReady before child when child portal host connects later', () => {
+    const order: string[] = []
+    const parentCb = vi.fn(() => {
+      order.push('parent')
+    })
+    const childCb = vi.fn(() => {
+      order.push('child')
+    })
+
+    function NestedPortalReadyTree() {
+      const [childHost, setChildHost] = React.useState<HTMLElement | null>(null)
+      const portalDom = React.useMemo(() => connectedDiv(), [])
+      const parentHost = React.useMemo(() => connectedDiv(), [])
+
+      React.useEffect(() => {
+        setChildHost(connectedDiv())
+      }, [])
+
+      useSpatialContentReady({
+        ...readyParams(parentHost, portalDom),
+        onSpatialContentReady: parentCb,
+      })
+
+      useSpatialContentReady({
+        spatializedElement: childHost ? fakeSpatialElement : undefined,
+        portalInstanceObject: {
+          dom: portalDom,
+        } as unknown as PortalInstanceObject,
+        hostElement: childHost,
+        onSpatialContentReady: childCb,
+      })
+
+      return null
+    }
+
+    render(<NestedPortalReadyTree />)
+    expect(order).toEqual(['parent', 'child'])
   })
 })
