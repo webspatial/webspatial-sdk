@@ -42,7 +42,7 @@ function TestBasicAttachment() {
         style={{ width: '400px', height: '400px', border: '1px solid black' }}
       >
         <UnlitMaterial id="matBasic" color="#ff0000" />
-        <AttachmentAsset name="basic-attachment">
+        <AttachmentAsset id="basic-attachment">
           <div
             style={{
               background: 'black',
@@ -92,7 +92,7 @@ function TestNestedRealityInSpatialDiv() {
       >
         <Reality style={{ width: '100%', height: '100%' }}>
           <UnlitMaterial id="matDiv" color="#0000ff" />
-          <AttachmentAsset name="nested-spatialdiv-attachment">
+          <AttachmentAsset id="nested-spatialdiv-attachment">
             <div
               style={{
                 background: 'rgba(0,0,100,0.8)',
@@ -141,7 +141,7 @@ function TestModelFallback() {
           src="/modelasset/cone.usdz"
           style={{ width: 100, height: 100, background: '#fff' }}
         /> */}
-        <AttachmentAsset name="model-fallback-attachment">
+        <AttachmentAsset id="model-fallback-attachment">
           <div
             style={{
               background: 'rgba(0,100,0,0.8)',
@@ -186,7 +186,7 @@ function TestRealityFallback() {
       <Reality
         style={{ width: '400px', height: '400px', border: '1px solid red' }}
       >
-        <AttachmentAsset name="reality-fallback-attachment">
+        <AttachmentAsset id="reality-fallback-attachment">
           <div
             style={{
               background: 'rgba(100,0,0,0.8)',
@@ -233,7 +233,7 @@ function TestSpatialDivFallback() {
       <Reality
         style={{ width: '400px', height: '400px', border: '1px solid purple' }}
       >
-        <AttachmentAsset name="spatialdiv-fallback-attachment">
+        <AttachmentAsset id="spatialdiv-fallback-attachment">
           <div
             style={{
               background: 'rgba(50,0,100,0.8)',
@@ -288,7 +288,7 @@ function TestSharedAttachmentState() {
         <UnlitMaterial id="matSharedA" color="#ff8800" />
         <UnlitMaterial id="matSharedB" color="#ffaa00" />
 
-        <AttachmentAsset name="shared-counter">
+        <AttachmentAsset id="shared-counter">
           <div
             style={{
               background: 'rgba(80,40,0,0.85)',
@@ -383,7 +383,7 @@ function TestAttachmentAnimation() {
         style={{ width: '400px', height: '400px', border: '1px solid teal' }}
       >
         <UnlitMaterial id="matAnim" color="#00aaaa" />
-        <AttachmentAsset name="anim-attachment">
+        <AttachmentAsset id="anim-attachment">
           <div
             style={{
               background: 'rgba(0,80,80,0.85)',
@@ -447,14 +447,14 @@ function TestNestedAttachmentSwap() {
         <UnlitMaterial id="matChild" color="#44ff44" />
 
         {/* Asset 1: HUD */}
-        <AttachmentAsset name="hud">
+        <AttachmentAsset id="hud">
           <div style={{ background: 'blue', color: 'white', padding: 10 }}>
             <strong>HUD ASSET</strong>
           </div>
         </AttachmentAsset>
 
         {/* Asset 2: HUD Child */}
-        <AttachmentAsset name="hudChild">
+        <AttachmentAsset id="hudChild">
           <div style={{ background: 'green', color: 'white', padding: 10 }}>
             <strong>HUD CHILD ASSET</strong>
           </div>
@@ -556,7 +556,7 @@ function TestGSAPSingleAttachment() {
         style={{ width: '400px', height: '400px', border: '1px solid #0a7' }}
       >
         <UnlitMaterial id="matGsapSingle" color="#008877" />
-        <AttachmentAsset name="gsap-single-pulse">
+        <AttachmentAsset id="gsap-single-pulse">
           <GsapPulseAttachmentContent />
         </AttachmentAsset>
         <SceneGraph>
@@ -592,7 +592,7 @@ function TestGSAPSharedAttachmentAsset() {
       >
         <UnlitMaterial id="matGsapSharedA" color="#006666" />
         <UnlitMaterial id="matGsapSharedB" color="#008888" />
-        <AttachmentAsset name="gsap-shared-pulse">
+        <AttachmentAsset id="gsap-shared-pulse">
           <GsapPulseAttachmentContent />
         </AttachmentAsset>
         <SceneGraph>
@@ -733,7 +733,7 @@ function TestAttachmentPositionSizeSliders() {
         style={{ width: '480px', height: '420px', border: '1px solid #6366f1' }}
       >
         <UnlitMaterial id="matSliderAtt" color="#6366f1" />
-        <AttachmentAsset name="slider-dynamic-attachment">
+        <AttachmentAsset id="slider-dynamic-attachment">
           <div
             style={{
               background: 'rgba(40,40,90,0.92)',
@@ -773,9 +773,9 @@ function TestAttachmentPositionSizeSliders() {
 
 function TestLastDefinitionWins() {
   return (
-    <TestCase title="9. Last Definition Wins — Duplicate AttachmentAsset name">
+    <TestCase title="9. Last Definition Wins — Duplicate AttachmentAsset id">
       <p className="text-sm text-gray-600 mb-2">
-        Only the second asset with the same name should render.
+        Only the second asset with the same id should render.
       </p>
       <Reality
         style={{ width: '500px', height: '400px', border: '1px solid #555' }}
@@ -783,7 +783,7 @@ function TestLastDefinitionWins() {
         <UnlitMaterial id="matLWLeft" color="#5555ff" />
         <UnlitMaterial id="matLWRight" color="#55ff55" />
 
-        <AttachmentAsset name="dup-asset">
+        <AttachmentAsset id="dup-asset">
           <div
             style={{
               background: 'rgba(180,0,0,0.85)',
@@ -796,7 +796,7 @@ function TestLastDefinitionWins() {
             FIRST
           </div>
         </AttachmentAsset>
-        <AttachmentAsset name="dup-asset">
+        <AttachmentAsset id="dup-asset">
           <div
             style={{
               background: 'rgba(0,150,0,0.85)',
