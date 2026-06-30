@@ -106,9 +106,20 @@ export class SpatializedContainerObject<
     delete this.spatialId2parentSpatialDom[spatialId]
   }
 
+  public registerSpatialDom(spatialId: string, dom: HTMLElement) {
+    this.spatialId2dom[spatialId] = dom
+  }
+
+  public unregisterSpatialDom(spatialId: string) {
+    delete this.spatialId2dom[spatialId]
+  }
+
   public querySpatialDomBySpatialId(spatialId: string) {
     if (this.domSpatialId === spatialId) {
       return this.dom
+    }
+    if (this.spatialId2dom[spatialId]) {
+      return this.spatialId2dom[spatialId]
     }
     if (!this.dom) {
       return null

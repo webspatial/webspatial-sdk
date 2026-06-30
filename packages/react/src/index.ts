@@ -218,6 +218,17 @@ export type {
 // --- Hooks (placeholder / ready-gated per spec "Hook placeholders") ---------
 export { useMetrics } from './hooks-web/useMetrics'
 export { useAnimation } from './hooks-web/useAnimation'
+export { useSpatialPortalContainer } from './hooks-web/useSpatialPortalContainer'
+export { useSpatialOverlay } from './hooks-web/useSpatialOverlay'
+
+// --- Spatial overlay (default-entry facades; real impl via spatial chunk) -----
+export { SpatialOverlay } from './facades/SpatialOverlay'
+export type {
+  SpatialOverlayPortalOption,
+  SpatialOverlayProps,
+  UseSpatialOverlayOptions,
+  UseSpatialOverlayResult,
+} from './spatialized-container/SpatialOverlay.types'
 
 // --- Public type surface (no runtime values) --------------------------------
 // Spatial event + ref types — referenced by facade prop / ref typing.

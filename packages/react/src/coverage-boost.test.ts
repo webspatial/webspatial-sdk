@@ -17,6 +17,8 @@ import {
 import {
   extractAndRemoveCustomProperties,
   getInheritedStyleProps,
+  getPortalInheritedStyleProps,
+  getSpatialCssVariableProps,
   joinToCSSText,
   parseCornerRadius,
   parseTransformOrigin,
@@ -109,6 +111,51 @@ describe('spatialized-container/utils', () => {
       }),
     )
     expect(getInheritedStyleProps(computedStyle)).not.toHaveProperty('height')
+  })
+
+  it('getPortalInheritedStyleProps drops zero overlay dimensions', () => {
+    const computedStyle = {
+      color: 'red',
+      width: '0px',
+      height: '0px',
+      position: 'fixed',
+      display: 'block',
+    } as unknown as CSSStyleDeclaration
+
+    expect(
+      getPortalInheritedStyleProps(computedStyle, { isFloatingOverlay: true }),
+    ).toEqual({
+      color: 'red',
+    })
+  })
+
+  it('getSpatialCssVariableProps copies all computed custom properties', () => {
+    const names = [
+      '--radix-popper-transform-origin',
+      '--radix-popper-available-width',
+      '--radix-popper-anchor-width',
+      '--skip-empty',
+      '--radix-menu-content-transform-origin',
+      'color',
+    ]
+    const computedStyle = {
+      length: names.length,
+      item: (index: number) => names[index],
+      getPropertyValue: (property: string) => {
+        if (property === '--radix-popper-transform-origin') return '0% 70px'
+        if (property === '--radix-popper-available-width') return '923px'
+        if (property === '--radix-popper-anchor-width') return '144px'
+        if (property === '--radix-menu-content-transform-origin') return 'top'
+        return ''
+      },
+    } as unknown as CSSStyleDeclaration
+
+    expect(getSpatialCssVariableProps(computedStyle)).toEqual({
+      '--radix-popper-transform-origin': '0% 70px',
+      '--radix-popper-available-width': '923px',
+      '--radix-popper-anchor-width': '144px',
+      '--radix-menu-content-transform-origin': 'top',
+    })
   })
 
   it('parseTransformOrigin returns normalized anchor', () => {
@@ -789,6 +836,7 @@ describe('StandardSpatializedContainer', () => {
     // Hidden-host rules are scoped to the spatial class so unrelated DOM
     // carrying `data-xr-host` is not affected.
     expect(css).toContain('.xr-spatial-default[data-xr-host]')
+    expect(css).toContain('animation: none !important')
     expect(css).toContain('translateZ(0)')
   })
 })
@@ -1362,6 +1410,47 @@ describe('SpatializedContainer', () => {
     expect(onSpatialContentReady).not.toHaveBeenCalled()
   })
 
+  it('provides host SpatialWindowContext in degraded mode for portal hooks', async () => {
+    vi.resetModules()
+    vi.doMock('./spatialized-container/context/PortalInstanceContext', () => {
+      return {
+        PortalInstanceContext: React.createContext(null),
+        PortalInstanceObject: class PortalInstanceObject {},
+      }
+    })
+    vi.doMock('./utils/getSession', () => {
+      return { getSession: () => null }
+    })
+
+    const { SpatializedContainer } = await import(
+      './spatialized-container/SpatializedContainer'
+    )
+    const { useSpatialPortalContainer } = await import(
+      './spatialized-container/context/SpatialWindowContext'
+    )
+
+    function PortalProbe() {
+      const container = useSpatialPortalContainer()
+      return React.createElement('span', {
+        'data-testid': 'portal-probe',
+        'data-is-body': String(container === document.body),
+      })
+    }
+
+    const r = render(
+      React.createElement(
+        SpatializedContainer,
+        { component: 'div', 'data-testid': 'degraded-host' } as any,
+        React.createElement(PortalProbe),
+      ),
+    )
+
+    expect(r.getByTestId('portal-probe').getAttribute('data-is-body')).toBe(
+      'true',
+    )
+    r.unmount()
+  })
+
   it('renders root container with standard/portal/task containers', async () => {
     vi.resetModules()
     vi.doMock('./spatialized-container/context/PortalInstanceContext', () => {
@@ -1744,7 +1833,19 @@ describe('Spatialized2DElementContainer', () => {
     )
     const portalInstanceObject = {
       computedStyle: {
-        getPropertyValue: vi.fn(() => ''),
+        length: 2,
+        item: vi.fn(
+          (index: number) =>
+            [
+              '--radix-popper-transform-origin',
+              '--radix-popper-available-width',
+            ][index],
+        ),
+        getPropertyValue: vi.fn((property: string) => {
+          if (property === '--radix-popper-transform-origin') return '0% 70px'
+          if (property === '--radix-popper-available-width') return '923px'
+          return ''
+        }),
       },
     } as any
 
@@ -1781,6 +1882,18 @@ describe('Spatialized2DElementContainer', () => {
 
     expect(updateProperties).toHaveBeenCalledWith({ name: 'hello' })
     expect(childDoc.title).toBe('hello')
+    const portalHost = childDoc.body.querySelector('[data-name="hello"]')
+    expect(portalHost).toBeTruthy()
+    expect(
+      (portalHost as HTMLElement).style.getPropertyValue(
+        '--radix-popper-transform-origin',
+      ),
+    ).toBe('0% 70px')
+    expect(
+      (portalHost as HTMLElement).style.getPropertyValue(
+        '--radix-popper-available-width',
+      ),
+    ).toBe('923px')
     expect(childDoc.head.querySelector('meta[name="viewport"]')).toBeTruthy()
     expect(childDoc.head.querySelector('link[rel="stylesheet"]')).toBeTruthy()
     expect(childDoc.documentElement.className).toBe('root')

@@ -4,7 +4,7 @@
   "version": "0.2.0",
   "type": "module",
   "scripts": {
-    "test": "tsc -p ./tsconfig.json",
+    "test": "tsc -p ./tsconfig.json && vitest run tests",
     "build": "node esbuild.mjs --build",
     "dev": "node esbuild.mjs",
     "dev:web": "node esbuild.mjs",
@@ -14,7 +14,9 @@
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
   },
   "dependencies": {
+    "@douyinfe/semi-ui": "^2.100.0",
     "@gsap/react": "^2.1.1",
+    "@radix-ui/react-dropdown-menu": "^2.1.2",
     "@react-spring/web": "^9.7.5",
     "@reduxjs/toolkit": "^2.2.4",
     "@tailwindcss/typography": "^0.5.15",

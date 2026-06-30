@@ -38,10 +38,47 @@ var liveReloadServerPort = process.env.LIVERELOAD_PORT
   ? Number(process.env.LIVERELOAD_PORT)
   : 35729
 
+function cleanDist() {
+  fs.rmSync(outdir, { recursive: true, force: true })
+  fs.mkdirSync(outdir, { recursive: true })
+}
+
+function fixDistPaths(html) {
+  return html
+    .replace(/src="\/dist\//g, 'src="/')
+    .replace(/href="\/dist\//g, 'href="/')
+    .replace(/dist\/src\//g, 'src/')
+    .replace(
+      /<script(?![^>]*\btype=)([^>]*\bsrc=["'][^"']+\.js["'][^>]*)><\/script>/g,
+      '<script type="module"$1></script>',
+    )
+}
+
+function injectLiveReload(html) {
+  const snippet = [
+    '<script>',
+    '  const liveReloadScript = document.createElement("script")',
+    `  liveReloadScript.src = 'http://' + (location.host || 'localhost').split(':')[0] + ':${liveReloadServerPort}/livereload.js?snipver=1'`,
+    '  document.head.append(liveReloadScript)',
+    '</script>',
+  ].join('\n')
+  return html.includes('</head>')
+    ? html.replace('</head>', `${snippet}\n</head>`)
+    : `${snippet}\n${html}`
+}
+
+function prepareHtml(html) {
+  const fixedHtml = fixDistPaths(html)
+  return isBuild ? fixedHtml : injectLiveReload(fixedHtml)
+}
+
 const buildOptions = {
   entryPoints: entryPoints,
   outdir,
   bundle: true,
+  splitting: true,
+  format: 'esm',
+  chunkNames: 'chunks/[name]-[hash]',
   minify: isBuild,
   sourcemap: !isBuild,
   plugins,
@@ -97,7 +134,7 @@ const buildOptions = {
 async function copyPublicFolder(src, dest) {
   if (!fs.existsSync(src)) return
   if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true })
-  
+
   const entries = fs.readdirSync(src, { withFileTypes: true })
   for (let entry of entries) {
     const srcPath = path.join(src, entry.name)
@@ -113,29 +150,25 @@ async function copyPublicFolder(src, dest) {
 async function prepareDist() {
   console.log('Preparing dist folder...')
   if (!fs.existsSync(outdir)) fs.mkdirSync(outdir, { recursive: true })
-  
+
   // Copy index.html and fix paths
   let html = fs.readFileSync('index.html', 'utf8')
   // Remove /dist prefix from paths because dist will be the root in production
-  html = html.replace(/src="\/dist\//g, 'src="/')
-  html = html.replace(/href="\/dist\//g, 'href="/')
+  html = prepareHtml(html)
   fs.writeFileSync(path.join(outdir, 'index.html'), html)
-  
+
   // Copy all src/*.html to dist and fix script/href paths
   const htmlFiles = await glob('./src/**/*.html')
   for (const file of htmlFiles) {
     const srcHtml = fs.readFileSync(file, 'utf8')
-    const fixedHtml = srcHtml
-      .replace(/src="\/dist\//g, 'src="/')
-      .replace(/href="\/dist\//g, 'href="/')
-      .replace(/dist\/src\//g, 'src/')
+    const fixedHtml = prepareHtml(srcHtml)
     const rel = file.replace(/^src\//, '')
     const dest = path.join(outdir, rel)
     const destDir = path.dirname(dest)
     if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true })
     fs.writeFileSync(dest, fixedHtml)
   }
-  
+
   // Copy public folder contents directly to dist root or to /public
   // Most SPAs serve public folder contents from the root
   await copyPublicFolder('public', outdir)
@@ -144,22 +177,14 @@ async function prepareDist() {
 
 if (isBuild) {
   console.log('Building for production...')
+  cleanDist()
   await esbuild.build(buildOptions)
   await prepareDist()
   console.log('Build complete!')
   process.exit(0)
 } else {
-  var ctx = await esbuild.context({
-    ...buildOptions,
-    // Get live reload to work. Bug with number of tabs https://github.com/evanw/esbuild/issues/802 in default esbuild live reload
-    banner: {
-      js: `
-        let liveReloadScript = document.createElement("script")
-        liveReloadScript.src = 'http://' + (location.host || 'localhost').split(':')[0] +':${liveReloadServerPort}/livereload.js?snipver=1'
-        document.head.append(liveReloadScript)
-       `,
-    },
-  })
+  cleanDist()
+  var ctx = await esbuild.context(buildOptions)
 
   ctx.watch()
   await prepareDist()

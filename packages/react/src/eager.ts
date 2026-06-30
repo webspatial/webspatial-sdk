@@ -110,6 +110,9 @@ export {
   World,
   useMetrics,
   useAnimation,
+  useSpatialPortalContainer,
+  useSpatialOverlay,
+  SpatialOverlay,
 } from './spatial'
 
 // --- Step 3: lazy-load runtime API as no-op compatibility stubs ------------
