@@ -15,6 +15,12 @@ import { PuppeteerWebViewModel } from '../webview/PuppeteerWebViewModel'
 import { ProtocolHandlerManager } from '../webview/ProtocolHandlerManager'
 import { Spatialized2DElement } from './Spatialized2DElement'
 import { SpatializedElement } from './SpatializedElement'
+import {
+  createOrnamentRecord,
+  updateOrnamentRecord,
+  type OrnamentOptions,
+  type OrnamentRecord,
+} from './Ornament'
 
 // Add missing Vec3 type definition
 export interface Vec3 {
@@ -27,156 +33,6 @@ export interface Vec3 {
 export interface WebViewElementInfo {
   id: string
   webViewModel: PuppeteerWebViewModel
-}
-
-type OrnamentVisibility = 'visible' | 'hidden'
-
-export interface OrnamentOptions {
-  attachmentAnchor?: string
-  contentAlignment?: string
-  visibility?: string
-  width?: number
-  height?: number
-  cornerRadius?: Partial<CornerRadius>
-  backgroundMaterial?: BackgroundMaterial
-}
-
-export interface OrnamentRecord {
-  id: string
-  type: 'Ornament'
-  options: {
-    attachmentAnchor: string
-    contentAlignment: string
-    visibility: OrnamentVisibility
-    width: number
-    height: number
-    cornerRadius: CornerRadius
-    backgroundMaterial: BackgroundMaterial
-  }
-  active: boolean
-  order: number
-}
-
-const ORNAMENT_POINTS = new Set([
-  'topLeadingFront',
-  'topLeading',
-  'topLeadingBack',
-  'topFront',
-  'top',
-  'topBack',
-  'topTrailingFront',
-  'topTrailing',
-  'topTrailingBack',
-  'leadingFront',
-  'leading',
-  'leadingBack',
-  'front',
-  'center',
-  'back',
-  'trailingFront',
-  'trailing',
-  'trailingBack',
-  'bottomLeadingFront',
-  'bottomLeading',
-  'bottomLeadingBack',
-  'bottomFront',
-  'bottom',
-  'bottomBack',
-  'bottomTrailingFront',
-  'bottomTrailing',
-  'bottomTrailingBack',
-])
-
-const INVALID_ATTACHMENT_ANCHORS = new Set(['topFront', 'top', 'topBack'])
-
-const DEFAULT_ORNAMENT_OPTIONS = {
-  attachmentAnchor: 'bottom',
-  contentAlignment: 'back',
-  visibility: 'visible' as OrnamentVisibility,
-  width: 200,
-  height: 150,
-  cornerRadius: {
-    topLeading: 0,
-    bottomLeading: 0,
-    topTrailing: 0,
-    bottomTrailing: 0,
-  },
-  backgroundMaterial: BackgroundMaterial.none,
-}
-
-function normalizeOrnamentOptions(options: OrnamentOptions = {}) {
-  const attachmentAnchor =
-    typeof options.attachmentAnchor === 'string' &&
-    ORNAMENT_POINTS.has(options.attachmentAnchor) &&
-    !INVALID_ATTACHMENT_ANCHORS.has(options.attachmentAnchor)
-      ? options.attachmentAnchor
-      : DEFAULT_ORNAMENT_OPTIONS.attachmentAnchor
-
-  const contentAlignment =
-    typeof options.contentAlignment === 'string' &&
-    ORNAMENT_POINTS.has(options.contentAlignment)
-      ? options.contentAlignment
-      : DEFAULT_ORNAMENT_OPTIONS.contentAlignment
-
-  const visibility =
-    options.visibility === 'hidden' || options.visibility === 'visible'
-      ? options.visibility
-      : DEFAULT_ORNAMENT_OPTIONS.visibility
-
-  const width =
-    typeof options.width === 'number' &&
-    Number.isFinite(options.width) &&
-    options.width > 0
-      ? options.width
-      : DEFAULT_ORNAMENT_OPTIONS.width
-
-  const height =
-    typeof options.height === 'number' &&
-    Number.isFinite(options.height) &&
-    options.height > 0
-      ? options.height
-      : DEFAULT_ORNAMENT_OPTIONS.height
-
-  const cornerRadius = {
-    topLeading: normalizeRadiusValue(
-      options.cornerRadius?.topLeading,
-      DEFAULT_ORNAMENT_OPTIONS.cornerRadius.topLeading,
-    ),
-    bottomLeading: normalizeRadiusValue(
-      options.cornerRadius?.bottomLeading,
-      DEFAULT_ORNAMENT_OPTIONS.cornerRadius.bottomLeading,
-    ),
-    topTrailing: normalizeRadiusValue(
-      options.cornerRadius?.topTrailing,
-      DEFAULT_ORNAMENT_OPTIONS.cornerRadius.topTrailing,
-    ),
-    bottomTrailing: normalizeRadiusValue(
-      options.cornerRadius?.bottomTrailing,
-      DEFAULT_ORNAMENT_OPTIONS.cornerRadius.bottomTrailing,
-    ),
-  }
-
-  const backgroundMaterial =
-    options.backgroundMaterial !== undefined &&
-    Object.values(BackgroundMaterial).includes(options.backgroundMaterial)
-      ? options.backgroundMaterial
-      : DEFAULT_ORNAMENT_OPTIONS.backgroundMaterial
-
-  return {
-    attachmentAnchor,
-    contentAlignment,
-    visibility,
-    width,
-    height,
-    cornerRadius,
-    backgroundMaterial,
-  }
-}
-
-function normalizeRadiusValue(value: unknown, fallback: number): number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0
-    ? value
-    : fallback
 }
 
 export class SpatialScene
@@ -556,16 +412,12 @@ export class SpatialScene
 
   createOrnament(id: string, options: OrnamentOptions = {}): OrnamentRecord {
     const existing = this._ornaments[id]
-    const ornament: OrnamentRecord = {
+    const ornament = createOrnamentRecord(
       id,
-      type: 'Ornament',
-      options: normalizeOrnamentOptions({
-        ...existing?.options,
-        ...options,
-      }),
-      active: existing?.active ?? false,
-      order: existing?.order ?? Object.keys(this._ornaments).length,
-    }
+      options,
+      existing,
+      Object.keys(this._ornaments).length,
+    )
 
     this._ornaments[id] = ornament
     this._spatialObjects[id] = ornament
@@ -592,21 +444,11 @@ export class SpatialScene
     const ornament = this._ornaments[id]
     if (!ornament) return null
 
-    ornament.options = normalizeOrnamentOptions({
-      ...ornament.options,
-      ...options,
-      cornerRadius:
-        options.cornerRadius === undefined
-          ? ornament.options.cornerRadius
-          : {
-              ...ornament.options.cornerRadius,
-              ...(options.cornerRadius ?? {}),
-            },
-    })
-    this._ornaments[id] = ornament
-    this._spatialObjects[id] = ornament
-    this.emit('ornamentUpdated', { ornament })
-    return ornament
+    const updatedOrnament = updateOrnamentRecord(ornament, options)
+    this._ornaments[id] = updatedOrnament
+    this._spatialObjects[id] = updatedOrnament
+    this.emit('ornamentUpdated', { ornament: updatedOrnament })
+    return updatedOrnament
   }
 
   removeOrnament(id: string): void {
