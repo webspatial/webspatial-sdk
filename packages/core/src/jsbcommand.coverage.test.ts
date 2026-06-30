@@ -436,6 +436,7 @@ describe('SpatializedElement', () => {
   it('removes event receiver on destroy', async () => {
     const { SpatialWebEvent } = await import('./SpatialWebEvent')
     const { SpatializedElement } = await import('./SpatializedElement')
+    const { SpatialWebMsgType } = await import('./WebMsgCommand')
 
     SpatialWebEvent.init()
 
@@ -449,9 +450,27 @@ describe('SpatializedElement', () => {
     }
 
     const e = new TestElement('el4')
-    expect(SpatialWebEvent.eventReceiver.el4).toBeDefined()
+    const onTap = vi.fn()
+    e.onSpatialTap = onTap
+
+    window.__SpatialWebEvent({
+      id: 'el4',
+      data: {
+        type: SpatialWebMsgType.spatialtap,
+        detail: { location3D: { x: 1, y: 2, z: 3 } },
+      },
+    })
+    expect(onTap).toHaveBeenCalledTimes(1)
+
     await e.destroy()
-    expect(SpatialWebEvent.eventReceiver.el4).toBeUndefined()
+    window.__SpatialWebEvent({
+      id: 'el4',
+      data: {
+        type: SpatialWebMsgType.spatialtap,
+        detail: { location3D: { x: 4, y: 5, z: 6 } },
+      },
+    })
+    expect(onTap).toHaveBeenCalledTimes(1)
   })
 })
 

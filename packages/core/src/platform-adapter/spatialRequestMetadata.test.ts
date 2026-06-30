@@ -87,6 +87,7 @@ describe('PicoOSPlatform SpatialDiv request correlation', () => {
         }) as unknown as Window,
     )
     vi.spyOn(window, 'open').mockImplementation(open)
+    const removeReceiverSpy = vi.spyOn(SpatialWebEvent, 'removeEventReceiver')
 
     const { PicoOSPlatform } = await import('./pico-os/PicoOSPlatform')
     const platform = new PicoOSPlatform()
@@ -109,7 +110,7 @@ describe('PicoOSPlatform SpatialDiv request correlation', () => {
       success: true,
       data: { id: 'spatial-1' },
     })
-    expect(SpatialWebEvent.eventReceiver[requestId!]).toBeUndefined()
+    expect(removeReceiverSpy).toHaveBeenCalledWith(requestId!)
   })
 
   it('opens attachment protocol with rid and wsepoch', async () => {
@@ -127,6 +128,7 @@ describe('PicoOSPlatform SpatialDiv request correlation', () => {
         }) as unknown as Window,
     )
     vi.spyOn(window, 'open').mockImplementation(open)
+    const removeReceiverSpy = vi.spyOn(SpatialWebEvent, 'removeEventReceiver')
 
     const { PicoOSPlatform } = await import('./pico-os/PicoOSPlatform')
     const platform = new PicoOSPlatform()
@@ -149,13 +151,15 @@ describe('PicoOSPlatform SpatialDiv request correlation', () => {
       success: true,
       data: { id: 'attachment-1' },
     })
-    expect(SpatialWebEvent.eventReceiver[requestId!]).toBeUndefined()
+    expect(removeReceiverSpy).toHaveBeenCalledWith(requestId!)
   })
 
   it('times out pending SpatialDiv requests', async () => {
     vi.useFakeTimers()
     vi.spyOn(window, 'open').mockImplementation(() => null)
     const { SpatialWebEvent } = await import('../SpatialWebEvent')
+    SpatialWebEvent.init()
+    const removeReceiverSpy = vi.spyOn(SpatialWebEvent, 'removeEventReceiver')
 
     const { PicoOSPlatform } = await import('./pico-os/PicoOSPlatform')
     const { DEFAULT_SPATIAL_REQUEST_TIMEOUT_MS } = await import(
@@ -170,6 +174,6 @@ describe('PicoOSPlatform SpatialDiv request correlation', () => {
       success: false,
       errorCode: 'E_SPATIAL_REQUEST_TIMEOUT',
     })
-    expect(Object.keys(SpatialWebEvent.eventReceiver)).toHaveLength(0)
+    expect(removeReceiverSpy).toHaveBeenCalledTimes(1)
   })
 })

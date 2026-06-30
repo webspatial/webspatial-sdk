@@ -151,6 +151,61 @@ describe('SpatialWebEvent', () => {
     window.__SpatialWebEvent({ id: 'id1', data: { ok: false } })
     expect(cb).toHaveBeenCalledTimes(1)
   })
+
+  it('fans out to all receivers and keeps duplicate registration idempotent', () => {
+    SpatialWebEvent.init()
+    const cb1 = vi.fn()
+    const cb2 = vi.fn()
+
+    SpatialWebEvent.addEventReceiver('shared', cb1)
+    SpatialWebEvent.addEventReceiver('shared', cb1)
+    SpatialWebEvent.addEventReceiver('shared', cb2)
+
+    window.__SpatialWebEvent({ id: 'shared', data: { ok: true } })
+
+    expect(cb1).toHaveBeenCalledTimes(1)
+    expect(cb2).toHaveBeenCalledTimes(1)
+  })
+
+  it('supports targeted removal and stops delivery once all receivers are removed', () => {
+    SpatialWebEvent.init()
+    const cb1 = vi.fn()
+    const cb2 = vi.fn()
+
+    SpatialWebEvent.addEventReceiver('shared-remove', cb1)
+    SpatialWebEvent.addEventReceiver('shared-remove', cb2)
+
+    SpatialWebEvent.removeEventReceiver('shared-remove', cb1)
+    window.__SpatialWebEvent({ id: 'shared-remove', data: { ok: true } })
+
+    expect(cb1).not.toHaveBeenCalled()
+    expect(cb2).toHaveBeenCalledTimes(1)
+
+    SpatialWebEvent.removeEventReceiver('shared-remove', cb2)
+    window.__SpatialWebEvent({ id: 'shared-remove', data: { ok: false } })
+    expect(cb1).not.toHaveBeenCalled()
+    expect(cb2).toHaveBeenCalledTimes(1)
+  })
+
+  it('isolates receiver failures so remaining receivers still run', () => {
+    SpatialWebEvent.init()
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const bad = vi.fn(() => {
+      throw new Error('boom')
+    })
+    const good = vi.fn()
+
+    SpatialWebEvent.addEventReceiver('shared-error', bad)
+    SpatialWebEvent.addEventReceiver('shared-error', good)
+
+    window.__SpatialWebEvent({ id: 'shared-error', data: { ok: true } })
+
+    expect(bad).toHaveBeenCalledTimes(1)
+    expect(good).toHaveBeenCalledTimes(1)
+    expect(errorSpy).toHaveBeenCalled()
+
+    errorSpy.mockRestore()
+  })
 })
 
 describe('SpatialWebEventCreator', () => {
@@ -327,9 +382,10 @@ describe('platform adapters', () => {
     const platform = new VisionOSPlatform()
     const r = await platform.createNativeSpatialDiv()
 
-    expect(r.success).toBe(true)
-    expect(r.data?.id).toBe(uuid)
-    expect(r.data?.windowProxy).toBe(windowProxy)
+    expect(r).toMatchObject({
+      success: true,
+      data: { id: uuid, windowProxy },
+    })
   })
 })
 
