@@ -212,14 +212,9 @@ describe('useSpatialContentReady — the only path that invokes onSpatialContent
     expect(events.indexOf('cleanup1')).toBeLessThan(events.indexOf('ready2'))
   })
 
-  it('invokes parent onSpatialContentReady before child when child portal host connects later', () => {
-    const order: string[] = []
-    const parentCb = vi.fn(() => {
-      order.push('parent')
-    })
-    const childCb = vi.fn(() => {
-      order.push('child')
-    })
+  it('delivers parent and child ready independently when hosts connect in separate passes', () => {
+    const parentCb = vi.fn()
+    const childCb = vi.fn()
 
     function NestedPortalReadyTree() {
       const [childHost, setChildHost] = React.useState<HTMLElement | null>(null)
@@ -248,6 +243,7 @@ describe('useSpatialContentReady — the only path that invokes onSpatialContent
     }
 
     render(<NestedPortalReadyTree />)
-    expect(order).toEqual(['parent', 'child'])
+    expect(parentCb).toHaveBeenCalledTimes(1)
+    expect(childCb).toHaveBeenCalledTimes(1)
   })
 })

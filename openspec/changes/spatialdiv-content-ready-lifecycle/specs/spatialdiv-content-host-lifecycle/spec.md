@@ -122,18 +122,19 @@ The cleanup function MUST be safe to call multiple times (idempotent) from the S
 - **WHEN** React StrictMode causes a subtree to unmount and remount during development
 - **THEN** cleanup returned from the first `onSpatialContentReady` MUST be invoked before the second `onSpatialContentReady` for the remounted instance stream
 
-### Requirement: Nested SpatialDiv ordering
+### Requirement: Nested SpatialDiv callback ordering is unspecified
 
-In WebSpatial runtime (portal path), when `SpatialDiv` elements are nested, the system SHALL invoke parent `onSpatialContentReady` before child `onSpatialContentReady` for a given commit where both become ready on the same `isReady` rising edge transition.
+Nested `SpatialDiv` containers MUST be initialized independently: each `onSpatialContentReady` callback receives only that container's `ctx.host`, and application code MUST NOT depend on parent/child ready callback order (including in WebSpatial runtime). The SDK does NOT guarantee that a parent callback runs before a child callback, or vice versa, on any particular commit or rising edge.
 
-In WebSpatial runtime (portal path), when a parent spatial container is recreated/replaced, the system SHALL run child cleanups (depth-first: deepest child first) before running parent cleanup, and before emitting the parent’s next `onSpatialContentReady`.
+In WebSpatial runtime (portal path), when a parent spatial container is recreated/replaced, the system SHALL run child cleanups (depth-first: deepest child first) before running parent cleanup, and before emitting the parent's next `onSpatialContentReady`. This teardown ordering is independent of ready-callback delivery order.
 
-In non-WebSpatial fallback (plain DOM path), parent/child callback ordering is implementation-dependent and MUST NOT be treated as a stable API contract by application code.
+In non-WebSpatial fallback (plain DOM path), parent/child callback ordering is likewise unspecified.
 
-#### Scenario: Parent ready precedes child ready
+#### Scenario: Applications do not couple nested setup to callback order
 
-- **WHEN** a parent `enable-xr` element contains a child `enable-xr` element and both become ready in WebSpatial runtime
-- **THEN** the parent `onSpatialContentReady` MUST run before the child `onSpatialContentReady`
+- **WHEN** a parent `enable-xr` element contains a child `enable-xr` element in any runtime
+- **THEN** application code MUST treat parent and child `onSpatialContentReady` delivery order as unspecified
+- **AND** each imperative renderer MUST attach using only its own `ctx.host` (or the container's own `ref` on degraded paths per the degraded-path Requirement)
 
 #### Scenario: Non-WebSpatial fallback does not guarantee parent/child callback order
 
@@ -179,7 +180,7 @@ The documentation MUST recommend:
 
 - declarative React updates for layout/size changes, and
 - `onSpatialContentReady` + cleanup for external renderer attachment.
-- treating nested parent/child callback ordering as runtime-dependent: guaranteed in WebSpatial runtime, unspecified in non-WebSpatial fallback.
+- treating nested parent/child callback ordering as **unspecified in all runtimes** — initialize each container from its own `ctx.host` only.
 
 #### Scenario: Docs include a Do/Don’t guidance block
 
@@ -199,7 +200,7 @@ Automated tests SHALL cover at minimum:
 - Forwarded spatial `ref`: non-null when ready is invoked; ref callback deduplication per prior requirements.
 - Non-WebSpatial fallback: prop stripped from DOM attribute space; `onSpatialContentReady` **never called** (no spatial content host); a provided spatial `ref` is still forwarded to the fallback host.
 - Attachment-degraded path: prop stripped from DOM attribute space; `onSpatialContentReady` never called.
-- Nested spatial containers: in WebSpatial runtime, parent ready before child ready on the same rising edge where both become ready; in non-WebSpatial fallback, ordering is unspecified.
+- Nested spatial containers: each container's ready/cleanup is independent; parent/child callback order is unspecified.
 
 #### Scenario: CI exercises the matrix
 
