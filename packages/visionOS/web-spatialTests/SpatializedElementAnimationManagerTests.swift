@@ -325,6 +325,44 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertTrue(animation.finished)
     }
 
+    func test_stopIsIdempotentAfterAnimationBecomesIdle() throws {
+        let element = Spatialized2DElement()
+        let manager = SpatializedElementAnimationManager()
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 2,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "transform.translate.x",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 2, value: 10, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+        animation.stop(at: 0.5)
+        let stoppedTransformX = element.transform.matrix.columns.3.x
+
+        animation.stop(at: 1.5)
+
+        XCTAssertEqual(animation.playState, .idle)
+        XCTAssertEqual(element.transform.matrix.columns.3.x, stoppedTransformX, accuracy: 0.0001)
+    }
+
     func test_opacityKeepsAnimatedTerminalValueOnComplete() throws {
         let element = Spatialized2DElement()
         let manager = SpatializedElementAnimationManager()
