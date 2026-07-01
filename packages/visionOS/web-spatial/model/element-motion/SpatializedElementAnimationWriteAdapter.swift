@@ -19,7 +19,7 @@ enum SpatializedElementAnimationWriteAdapter {
         case .spatialized2d, .dynamic3d:
             return .elementTransform
         case .static3d:
-            return .modelTransform
+            return .elementTransform
         }
     }
 
