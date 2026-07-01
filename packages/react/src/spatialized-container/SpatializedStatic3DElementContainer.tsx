@@ -82,6 +82,20 @@ function collectSources(children: React.ReactNode): ModelSource[] {
   return sources
 }
 
+type Static3DDomProxy = SpatializedStatic3DElementRef & {
+  __spatializedElement?: SpatializedStatic3DElement
+  __innerSpatializedElement?: () => SpatializedStatic3DElement | undefined
+}
+
+function getDomSpatializedStaticElement(
+  domProxy: SpatializedStatic3DElementRef,
+): SpatializedStatic3DElement | undefined {
+  const proxy = domProxy as Static3DDomProxy
+  // Nested standard branches expose the DOM/ref while the portal branch owns
+  // the actual static 3D element, so resolve through either DOM binding.
+  return proxy.__spatializedElement ?? proxy.__innerSpatializedElement?.()
+}
+
 function SpatializedContent(props: SpatializedStatic3DContentProps) {
   const {
     src,
@@ -193,81 +207,66 @@ function SpatializedStatic3DElementContainerBase(
     (domProxy: SpatializedStatic3DElementRef) => {
       return {
         get currentSrc(): string {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.currentSrc ?? ''
         },
         get ready(): Promise<ModelLoadEvent> {
-          return promiseRef
-            .current!.then(spatializedElement => spatializedElement.ready)
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
+          const readySource = spatializedElement
+            ? Promise.resolve(spatializedElement)
+            : promiseRef.current
+          if (!readySource) {
+            return Promise.reject(createLoadFailureEvent(() => domProxy))
+          }
+          return readySource
+            .then(element => element.ready)
             .then(success => {
               if (success) return createLoadSuccessEvent(() => domProxy)
               throw createLoadFailureEvent(() => domProxy)
             })
         },
         get entityTransform(): DOMMatrixReadOnly {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.entityTransform ?? new DOMMatrixReadOnly()
         },
         set entityTransform(value: DOMMatrixReadOnly) {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           if (spatializedElement) {
             spatializedElement.entityTransform = value
           }
         },
         async play(): Promise<void> {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           await spatializedElement?.play()
         },
         async pause(): Promise<void> {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           await spatializedElement?.pause()
         },
         get paused(): boolean {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.paused ?? true
         },
         get duration(): number {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.duration ?? 0
         },
         get playbackRate(): number {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.playbackRate ?? 1
         },
         set playbackRate(value: number) {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           if (spatializedElement) {
             spatializedElement.playbackRate = value
           }
         },
         get currentTime(): number {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.currentTime ?? 0
         },
         set currentTime(value: number) {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           if (spatializedElement) {
             spatializedElement.currentTime = value
           }

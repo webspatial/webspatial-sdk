@@ -55,11 +55,13 @@ import DisplayTest from './src/pages/displayTest/index'
 import MemoryStats from './src/pages/memoryStats/index'
 import NestedFixPosition from './src/pages/nestedfixposition/index'
 import NestedScroll from './src/pages/nestedscroll/index'
+import NestedSpatialOverflow from './src/pages/nested-spatial-overflow/index'
 import SpatialConverter from './src/pages/spatial-converter/index'
 import SpatialCorner from './src/pages/spatialCorner/index'
 import GeometryVerify from './src/pages/geometry-verify/index'
 import TransformVerify from './src/pages/transform-verify/index'
 import Static3DModel from './src/pages/static-3d-model/index'
+import NestedStatic3DModelReady from './src/pages/static-3d-model/nested-ready'
 import VisibleTest from './src/pages/visibleTest/index'
 import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
 import HeadStyleSyncPage from './src/pages/head-style-sync/index'
@@ -321,6 +323,10 @@ function App() {
                 />
                 <Route path="/nested-scroll" element={<NestedScroll />} />
                 <Route
+                  path="/nested-spatial-overflow"
+                  element={<NestedSpatialOverflow />}
+                />
+                <Route
                   path="/spatial-converter"
                   element={<SpatialConverter />}
                 />
@@ -337,6 +343,10 @@ function App() {
                 <Route path="/geometry-verify" element={<GeometryVerify />} />
                 <Route path="/transform-verify" element={<TransformVerify />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
+                <Route
+                  path="/static-3d-model/nested-ready"
+                  element={<NestedStatic3DModelReady />}
+                />
                 <Route path="/visible-test" element={<VisibleTest />} />
                 <Route
                   path="/head-style-sync"
