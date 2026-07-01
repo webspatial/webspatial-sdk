@@ -103,14 +103,15 @@ The native runtime MUST limit animation writable fields and mask fields by targe
 | `dynamic3d` | `transform`, `opacity` | `transform`, `opacity` |
 | `static3d` | `modelTransform` | `modelTransform` |
 
-Static3D `opacity` tracks MUST be rejected before native create. Static3D animation MUST NOT write host element `transform` as a substitute path for `modelTransform`.
+Static3D `opacity` tracks MUST be preserved through native create. Static3D animation MUST write host element `opacity` and model root `modelTransform`, and MUST NOT write host element `transform` as a substitute path for `modelTransform`.
 
-#### Scenario: Static3D writes only modelTransform
+#### Scenario: Static3D writes modelTransform and opacity
 
 - **GIVEN** target kind is `static3d`
 - **WHEN** native `AnimationObject.tick(timestamp)` produces a sample
-- **THEN** native MUST write only model root `modelTransform`
-- **AND** MUST NOT write host element transform or opacity
+- **THEN** native MUST write model root `modelTransform`
+- **AND** MUST write host element `opacity` when the timeline animates opacity
+- **AND** MUST NOT write host element `transform` as a substitute path
 
 ### Requirement: Terminal mask handoff is explicit
 

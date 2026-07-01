@@ -469,9 +469,9 @@ The public hook `useAnimation(config)` MUST NOT require a `kind` field in config
 - **THEN** the SDK MUST flush the queued explicit `finish` command after the native-backed `AnimationObject` is created
 - **AND** the API MUST remain driven by native state confirmation rather than a locally synthesized `finished` state
 
-#### Scenario: Static3D opacity is rejected during validation
+#### Scenario: Static3D opacity is accepted during validation
 
 - **GIVEN** an animation binding resolves to `static3d`
 - **WHEN** the normalized config contains an `opacity` track
-- **THEN** `validateSpatializedMotionConfig` MUST reject the config before `CreateSpatializedElementAnimation`
-- **AND** the SDK MUST NOT silently ignore the `opacity` track
+- **THEN** `validateSpatializedMotionConfig` MUST accept the config before `CreateSpatializedElementAnimation`
+- **AND** the SDK MUST preserve the `opacity` track through native create and playback

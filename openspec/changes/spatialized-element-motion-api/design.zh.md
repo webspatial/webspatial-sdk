@@ -30,7 +30,7 @@
 - 不保留 Core/Web RAF playback fallback。
 - 不以 `AnimateSpatializedElementMotion` 作为目标态 runtime command。
 - 不把 mask ownership 建在 `PortalInstanceObject` 或 React Portal suppression 上。
-- 不支持 Static3D root opacity animation；Static3D `opacity` tracks 必须在 native create 前 reject。
+- 支持 Static3D root opacity animation；Static3D `opacity` tracks 必须贯穿 native create、mask ownership 和 terminal handoff。
 
 ## React SDK 模块边界
 
@@ -49,7 +49,7 @@
 |------|------|
 | `SpatializedElement.createAnimation(config)` | 绑定 target 后创建 native-backed `AnimationObject`，负责 validation、normalization 和 create JSB；native response 以 `{ id }` 返回新建对象的 identity。 |
 | `AnimationObject` | Core 一等对象，继承 `SpatialObject`，直接实现播放控制，继承 `destroy()`，直接订阅 NativeWebMsg 并维护自身状态。 |
-| `validateSpatializedMotionConfig` | 在 native create 前校验 authoring config，例如 Static3D `opacity` tracks 必须 reject。 |
+| `validateSpatializedMotionConfig` | 在 native create 前校验 authoring config，包括允许 Static3D `opacity` tracks 进入 native playback。 |
 | `motionConfigToAnimationTimeline` | 将归一化后的 motion config 编译为 canonical `CreateSpatializedElementAnimation` payload。 |
 
 ## Native Runtime / visionOS 模块边界
@@ -72,9 +72,9 @@
 |-------------|-----------------|-------------|
 | `spatialized2d` | `transform`, `opacity` | `transform`, `opacity` |
 | `dynamic3d` | `transform`, `opacity` | `transform`, `opacity` |
-| `static3d` | `modelTransform` | `modelTransform` |
+| `static3d` | `modelTransform`, `opacity` | `modelTransform`, `opacity` |
 
-Static3D `opacity` tracks 必须在 native create 前 reject。Static3D animation 只写模型根 `modelTransform`，不得把 host element `transform` 当成替代路径。
+Static3D `opacity` tracks 必须在 native create 中被保留。Static3D animation 写模型根 `modelTransform` 和 host element `opacity`，不得把 host element `transform` 当成替代路径。
 
 ## 跨层对象关系
 
@@ -478,7 +478,7 @@ Config 变化不做 hot update；目标态使用 destroy + recreate。`Animation
 | `SpatializedElementMotionTimelineSampler.swift` | 直接复用为 native `AnimationObject` 的 locked sampler。 |
 | `SpatializedElementMotionTiming.swift` | 直接复用 timing function / loop config。 |
 | `SpatializedElementMotionTransformTypes.swift` | 直接复用 transform components。 |
-| `SpatializedElementMotionTransformAdapter.swift` | 改造为 target write adapter，由 `Native AnimationObject.tick()` 调用；Static3D opacity 仍必须在 create 前 reject。 |
+| `SpatializedElementMotionTransformAdapter.swift` | 改造为 target write adapter，由 `Native AnimationObject.tick()` 调用；Static3D opacity 必须沿同一套 target-specific sink 和 mask 规则写入。 |
 | `SpatializedElementMotionManager.swift` | 重构为 `SpatializedElementAnimationManager`，保留 shared frame driver、查找、terminal values、compose/decompose 思路。 |
 | `AnimateSpatializedElementMotionCommand` | 废弃；替换为 `CreateSpatializedElementAnimation` 和 `ControlSpatializedElementAnimation`。 |
 | `${animationId}_completed/canceled/failed` WebMsg | 废弃；替换为统一 `SpatialAnimationStateChanged`。 |

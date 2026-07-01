@@ -469,9 +469,9 @@ SDK MUST 通过一个 opaque React `animation` binding 实现容器动画，该 
 - **THEN** native-backed `AnimationObject` 创建完成后，SDK MUST flush 这条排队的显式 `finish` 命令
 - **AND** API MUST 继续以 native 状态确认作为唯一 finished 状态来源，而不是本地合成一个 `finished` 状态
 
-#### Scenario: Static3D opacity 在校验阶段被拒绝
+#### Scenario: Static3D opacity 在校验阶段被接受
 
 - **GIVEN** animation binding 解析为 `static3d`
 - **WHEN** 归一化 config 包含 `opacity` track
-- **THEN** `validateSpatializedMotionConfig` MUST 在 `CreateSpatializedElementAnimation` 前拒绝该 config
-- **AND** SDK MUST NOT 静默忽略该 `opacity` track
+- **THEN** `validateSpatializedMotionConfig` MUST 在 `CreateSpatializedElementAnimation` 前接受该 config
+- **AND** SDK MUST 在 native create 和 playback 中保留该 `opacity` track

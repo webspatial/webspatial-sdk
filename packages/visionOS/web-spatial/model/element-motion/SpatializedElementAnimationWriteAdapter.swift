@@ -53,7 +53,7 @@ enum SpatializedElementAnimationWriteAdapter {
         case .elementTransform:
             return element.opacity
         case .modelTransform:
-            return 1.0
+            return element.opacity
         }
     }
 
@@ -62,7 +62,7 @@ enum SpatializedElementAnimationWriteAdapter {
         case .elementTransform:
             element.opacity = opacity
         case .modelTransform:
-            break
+            element.opacity = opacity
         }
     }
 
@@ -83,6 +83,9 @@ enum SpatializedElementAnimationWriteAdapter {
             if animatesTransform {
                 element.animatingMask.acquire(transform: animationId)
             }
+            if animatesOpacity {
+                element.animatingMask.acquire(opacity: animationId)
+            }
         }
         return true
     }
@@ -96,12 +99,15 @@ enum SpatializedElementAnimationWriteAdapter {
             return false
         }
 
-        if animatesOpacity,
-           targetKind == .spatialized2d,
-           let owner = element.animatingMask.opacityAnimationId,
-           owner != animationId
-        {
-            return false
+        if animatesOpacity {
+            switch self {
+            case .elementTransform, .modelTransform:
+                if let owner = element.animatingMask.opacityAnimationId,
+                   owner != animationId
+                {
+                    return false
+                }
+            }
         }
 
         return true
@@ -120,7 +126,7 @@ enum SpatializedElementAnimationWriteAdapter {
         case .elementTransform:
             return element.animatingMask.opacityAnimationId == nil || element.animatingMask.opacityAnimationId == animationId
         case .modelTransform:
-            return false
+            return element.animatingMask.opacityAnimationId == nil || element.animatingMask.opacityAnimationId == animationId
         }
     }
 }
