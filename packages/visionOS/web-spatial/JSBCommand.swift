@@ -284,6 +284,7 @@ struct UpdateSpatializedStatic3DElementProperties: SpatializedElementProperties 
     let currentTime: Double?
     let posterURL: String?
     let loading: String?
+    let stagemode: String?
 }
 
 struct UpdateSpatializedDynamic3DElementProperties: SpatializedElementProperties {
