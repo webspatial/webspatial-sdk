@@ -3,67 +3,28 @@ import Spatial
 
 enum SpatializedElementAnimationWriteAdapter {
     case elementTransform
-    case modelTransform
-
-    var targetKind: SpatializedElementAnimationTargetKind {
-        switch self {
-        case .elementTransform:
-            return .spatialized2d
-        case .modelTransform:
-            return .static3d
-        }
-    }
 
     static func adapter(for targetKind: SpatializedElementAnimationTargetKind) -> SpatializedElementAnimationWriteAdapter {
         switch targetKind {
-        case .spatialized2d, .dynamic3d:
-            return .elementTransform
-        case .static3d:
+        case .spatialized2d, .dynamic3d, .static3d:
             return .elementTransform
         }
     }
 
     func currentAffineTransform(for element: SpatializedElement) -> AffineTransform3D {
-        switch self {
-        case .elementTransform:
-            return element.transform
-        case .modelTransform:
-            guard let static3d = element as? SpatializedStatic3DElement else {
-                return element.transform
-            }
-            return static3d.entityTransform
-        }
+        element.transform
     }
 
     func applyAffine(_ affine: AffineTransform3D, to element: SpatializedElement) {
-        switch self {
-        case .elementTransform:
-            element.transform = affine
-        case .modelTransform:
-            if let static3d = element as? SpatializedStatic3DElement {
-                static3d.entityTransform = affine
-            } else {
-                element.transform = affine
-            }
-        }
+        element.transform = affine
     }
 
     func baselineOpacity(for element: SpatializedElement) -> Double {
-        switch self {
-        case .elementTransform:
-            return element.opacity
-        case .modelTransform:
-            return element.opacity
-        }
+        element.opacity
     }
 
     func applyOpacity(_ opacity: Double, to element: SpatializedElement) {
-        switch self {
-        case .elementTransform:
-            element.opacity = opacity
-        case .modelTransform:
-            element.opacity = opacity
-        }
+        element.opacity = opacity
     }
 
     func acquireMask(on element: SpatializedElement, animationId: String, animatesTransform: Bool, animatesOpacity: Bool) -> Bool {
@@ -71,21 +32,11 @@ enum SpatializedElementAnimationWriteAdapter {
             return false
         }
 
-        switch self {
-        case .elementTransform:
-            if animatesTransform {
-                element.animatingMask.acquire(transform: animationId)
-            }
-            if animatesOpacity {
-                element.animatingMask.acquire(opacity: animationId)
-            }
-        case .modelTransform:
-            if animatesTransform {
-                element.animatingMask.acquire(transform: animationId)
-            }
-            if animatesOpacity {
-                element.animatingMask.acquire(opacity: animationId)
-            }
+        if animatesTransform {
+            element.animatingMask.acquire(transform: animationId)
+        }
+        if animatesOpacity {
+            element.animatingMask.acquire(opacity: animationId)
         }
         return true
     }
@@ -99,15 +50,11 @@ enum SpatializedElementAnimationWriteAdapter {
             return false
         }
 
-        if animatesOpacity {
-            switch self {
-            case .elementTransform, .modelTransform:
-                if let owner = element.animatingMask.opacityAnimationId,
-                   owner != animationId
-                {
-                    return false
-                }
-            }
+        if animatesOpacity,
+           let owner = element.animatingMask.opacityAnimationId,
+           owner != animationId
+        {
+            return false
         }
 
         return true
@@ -122,11 +69,6 @@ enum SpatializedElementAnimationWriteAdapter {
     }
 
     func shouldAllowOpacityWrite(on element: SpatializedElement, animationId: String) -> Bool {
-        switch self {
-        case .elementTransform:
-            return element.animatingMask.opacityAnimationId == nil || element.animatingMask.opacityAnimationId == animationId
-        case .modelTransform:
-            return element.animatingMask.opacityAnimationId == nil || element.animatingMask.opacityAnimationId == animationId
-        }
+        element.animatingMask.opacityAnimationId == nil || element.animatingMask.opacityAnimationId == animationId
     }
 }

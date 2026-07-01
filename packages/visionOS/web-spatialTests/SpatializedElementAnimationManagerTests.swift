@@ -576,16 +576,16 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         }
     }
 
-    func test_releaseMaskIgnoresMismatchedAnimationOwner() {
+    func test_releaseMaskIgnoresMismatchedAnimationOwnerForStatic3DRootTransformAdapter() {
         let element = SpatializedStatic3DElement()
-        let adapter = SpatializedElementAnimationWriteAdapter.modelTransform
+        let adapter = SpatializedElementAnimationWriteAdapter.adapter(for: .static3d)
 
         element.animatingMask.acquire(transform: "owner-a")
 
         adapter.releaseMaskAndApplyPending(on: element, animationId: "owner-b")
 
         XCTAssertEqual(element.animatingMask.transformAnimationId, "owner-a")
-        XCTAssertEqual(element.entityTransform.matrix.columns.3.x, 0, accuracy: 0.0001)
+        XCTAssertEqual(element.transform.matrix.columns.3.x, 0, accuracy: 0.0001)
     }
 
     func test_destroyAnimationsForElementDestroysRelatedAnimation() throws {
