@@ -36,6 +36,7 @@ import '@webspatial/core-sdk/install-polyfills'
 import { initPolyfill } from '../spatialized-container'
 
 export * from '../Model'
+export * from '../ornament'
 export * from '../reality'
 export { useMetrics } from '../useMetrics'
 export { withSpatialized2DElementContainer } from '../spatialized-container'

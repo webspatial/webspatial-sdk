@@ -25,6 +25,7 @@ import {
   ModelSource,
 } from './types/types'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
+import { createOrnament, Ornament, OrnamentOptions } from './Ornament'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
 import {
   createModelAsset,
@@ -216,5 +217,14 @@ export class SpatialSession {
     options: AttachmentEntityOptions,
   ): Promise<Attachment> {
     return createAttachmentEntity(options)
+  }
+
+  /**
+   * Creates a new window-level Ornament content container.
+   * @param options Ornament anchor, alignment, visibility, and size options
+   * @returns Promise resolving to a new Ornament runtime handle
+   */
+  createOrnament(options: OrnamentOptions = {}): Promise<Ornament> {
+    return createOrnament(options)
   }
 }

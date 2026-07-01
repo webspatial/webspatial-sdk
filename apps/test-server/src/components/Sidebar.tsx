@@ -65,6 +65,7 @@ export const routes = [
     ],
   },
   { path: '/runtime-capabilities', label: 'Runtime capabilities' },
+  { path: '/scene/ornament-test', label: 'Ornament Test' },
   { path: '/unit-convert', label: 'Unit Convert' },
   {
     path: '/scene',

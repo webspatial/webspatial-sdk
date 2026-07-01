@@ -58,6 +58,7 @@ const platformSpy = {
   openSpatialSceneSync: vi.fn(),
   createNativeSpatialDiv: vi.fn(),
   createNativeAttachment: vi.fn(),
+  createNativeOrnament: vi.fn(),
 }
 
 vi.mock('./platform-adapter', () => ({
@@ -80,12 +81,16 @@ describe('JSBCommand', () => {
     platformSpy.openSpatialSceneSync.mockReset()
     platformSpy.createNativeSpatialDiv.mockReset()
     platformSpy.createNativeAttachment.mockReset()
+    platformSpy.createNativeOrnament.mockReset()
     platformSpy.callJSB.mockImplementation(() => ok({ id: 'id-1' }))
     platformSpy.createNativeSpatialDiv.mockImplementation(() =>
       ok({ windowProxy: {}, id: 'spatial-1' }),
     )
     platformSpy.createNativeAttachment.mockImplementation(() =>
       ok({ windowProxy: {}, id: 'spatial-1' }),
+    )
+    platformSpy.createNativeOrnament.mockImplementation(() =>
+      ok({ windowProxy: {}, id: 'ornament-1' }),
     )
     platformSpy.openSpatialSceneSync.mockImplementation(() => ({
       success: true,

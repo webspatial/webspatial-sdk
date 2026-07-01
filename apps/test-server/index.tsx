@@ -74,6 +74,7 @@ import SpatialDivTest from './src/pages/spatialDivTest/index'
 import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
 import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
+import OrnamentTestPage from './src/pages/ornament-test/index'
 import EntityAnimationPage from './src/pages/entity-animation/index'
 import EntityAnimationEntrancePage from './src/pages/entity-animation/entrance'
 import EntityAnimationManualTriggerPage from './src/pages/entity-animation/manual-trigger'
@@ -196,6 +197,10 @@ function App() {
                 <Route
                   path="/runtime-capabilities"
                   element={<RuntimeCapabilitiesPage />}
+                />
+                <Route
+                  path="/scene/ornament-test"
+                  element={<OrnamentTestPage />}
                 />
                 <Route
                   path="/entity-animation"

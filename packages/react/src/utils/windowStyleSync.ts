@@ -11,9 +11,13 @@ export function asyncLoadStyleToChildWindow(
     link.href = `${href}${sep}uniqueURL=${Math.random()}`
 
     let finished = false
+    let timeoutId: number | undefined
     const finish = (ok: boolean) => {
       if (finished) return
       finished = true
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId)
+      }
       resolve(ok)
     }
 
@@ -38,6 +42,11 @@ export function asyncLoadStyleToChildWindow(
       }
       childWindow.document.head.appendChild(link)
     }, 50)
+
+    // Bound stylesheet loads so a missing load/error event cannot block portal mount.
+    timeoutId = window.setTimeout(() => {
+      finish(false)
+    }, 2000)
   })
 }
 

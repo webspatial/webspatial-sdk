@@ -63,6 +63,10 @@ struct SpatialSceneContentView: View {
             .opacity(spatialScene.opacity)
             .environment(spatialScene)
             .coordinateSpace(name: "SpatialScene")
+            .webSpatialOrnaments(
+                spatialScene.ornamentManager.activeOrnaments,
+                windowStyle: spatialScene.windowStyle
+            )
         }
     }
 }
