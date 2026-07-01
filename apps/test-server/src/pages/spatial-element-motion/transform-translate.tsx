@@ -106,7 +106,10 @@ export default function TransformTranslatePage() {
         </>
       }
     >
-      <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
+      <section
+        enable-xr-monitor
+        className="rounded-2xl border border-gray-800 bg-[#111] p-6"
+      >
         <div
           enable-xr
           xr-animation={motion}

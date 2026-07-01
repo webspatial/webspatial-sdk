@@ -113,20 +113,20 @@ export default function SpatialElementMotionRealityContainerPage() {
               '--xr-back': 100,
             }}
           >
-            <UnlitMaterial id="realityContainerRed" color="#ef4444" />
-            <UnlitMaterial id="realityContainerBlue" color="#3b82f6" />
+            <UnlitMaterial id="green" color="#f8f53aff" opacity={0.85} />
+            <UnlitMaterial id="blue" color="#3858f8ff" opacity={0.5} />
+            <UnlitMaterial id="yellow" color="#cff838ff" opacity={0.5} />
+            <UnlitMaterial id="red" color="#b41111ff" opacity={0.5} />
             <SceneGraph>
               <BoxEntity
-                width={0.1}
-                height={0.1}
-                depth={0.07}
-                materials={['realityContainerRed']}
-                position={{ x: -0.12, y: 0, z: 0 }}
-              />
-              <SphereEntity
-                radius={0.05}
-                materials={['realityContainerBlue']}
-                position={{ x: 0.12, y: 0, z: 0 }}
+                id="motionBox"
+                width={0.18}
+                height={0.18}
+                depth={0.18}
+                cornerRadius={0.03}
+                materials={['green', 'blue', 'yellow', 'red', 'green', 'blue']}
+                position={{ x: 0, y: 0, z: 0 }}
+                splitFaces={true}
               />
             </SceneGraph>
           </Reality>

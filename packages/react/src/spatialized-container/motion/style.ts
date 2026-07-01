@@ -23,9 +23,9 @@ export function valuesToMotionStyle(
     }
     const rot = t.rotate
     if (rot) {
-      if (rot.x !== undefined) parts.push(`rotateX(${rot.x}deg)`)
-      if (rot.y !== undefined) parts.push(`rotateY(${rot.y}deg)`)
       if (rot.z !== undefined) parts.push(`rotateZ(${rot.z}deg)`)
+      if (rot.y !== undefined) parts.push(`rotateY(${rot.y}deg)`)
+      if (rot.x !== undefined) parts.push(`rotateX(${rot.x}deg)`)
     }
     const sc = t.scale
     if (sc) {
