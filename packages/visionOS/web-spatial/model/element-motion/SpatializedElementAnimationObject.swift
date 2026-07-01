@@ -120,6 +120,10 @@ final class SpatializedElementAnimationObject: SpatialObject {
     }
 
     func stop(at timestamp: CFTimeInterval = CACurrentMediaTime()) {
+        guard playState == .running || playState == .paused else {
+            return
+        }
+
         let values = currentValues(at: timestamp)
         playState = .idle
         finished = false
