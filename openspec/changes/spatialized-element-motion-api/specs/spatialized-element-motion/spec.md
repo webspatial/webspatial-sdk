@@ -68,6 +68,23 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 - **WHEN** application code attempts to call `api.pause()` or `api.resume()` with an extra argument
 - **THEN** the controller API MUST reject the call at the type level and MUST not expose any public overload that accepts additional controller-control parameters
 
+### Requirement: Returned style outlet closes host visual state
+
+For any host-bound target, the returned `style` from `useAnimation(config)` MUST be treated as required API output and merged back onto the same host element or component that receives `xr-animation`. This merge closes animation-emitted values through later rerender, terminal commands, and host resync.
+
+#### Scenario: Merged style keeps terminal visual values stable across resync
+
+- **GIVEN** a host-bound target merges the returned `style` back onto the same host that receives `xr-animation`
+- **WHEN** `stop()`, `reset()`, `finish()`, or natural completion is followed by a later rerender or host resync
+- **THEN** the host-side visual state MUST continue to reflect the last terminal values emitted by the animation session
+
+#### Scenario: Omitting merged style leaves terminal persistence unspecified
+
+- **GIVEN** a host-bound target does not merge the returned `style` back onto the same host that receives `xr-animation`
+- **WHEN** playback still starts through the native animation path
+- **THEN** the SDK MAY still play the animation
+- **AND** the post-terminal visual persistence of `stop()`, `reset()`, `finish()`, or natural completion MUST be treated as unspecified
+
 #### Scenario: stop() freezes active session at current values
 
 - **WHEN** `api.stop()` is called while the animation is running or paused
@@ -162,7 +179,7 @@ All kinds that support declarative motion MUST expose `SpatializedPlaybackApi` (
 
 #### Scenario: Non-authored CSS transform does not qualify for terminal handoff
 
-- **GIVEN** host `transform` appears only through `className`, stylesheet rules, inherited layout effects, the `useAnimation()` style outlet, or `getComputedStyle()` output
+- **GIVEN** host `transform` appears only through `className`, stylesheet rules, inherited layout effects, or `getComputedStyle()` output
 - **WHEN** a host-transform target reaches `stop()`, `reset()`, or `finish()`
 - **THEN** the SDK MUST NOT treat that value as explicit authored transform for terminal handoff purposes
 - **AND** terminal host-transform ownership MUST stay with the sampled/native result when no explicit React `style.transform` exists
