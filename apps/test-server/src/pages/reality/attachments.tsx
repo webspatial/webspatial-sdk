@@ -78,6 +78,78 @@ function TestBasicAttachment() {
   )
 }
 
+function TestEntityLikeTransformApi() {
+  return (
+    <TestCase title="1b. Entity-like transform API (rotation & scale)">
+      <p className="text-sm text-gray-600 mb-2">
+        Canonical attachment placement: Vec3{' '}
+        <code className="text-xs">position</code>,{' '}
+        <code className="text-xs">rotation</code>, and{' '}
+        <code className="text-xs">scale</code> with meter{' '}
+        <code className="text-xs">width</code> /{' '}
+        <code className="text-xs">height</code>.
+      </p>
+      <Reality
+        style={{ width: '480px', height: '420px', border: '1px solid #0d9488' }}
+      >
+        <UnlitMaterial id="matTransformLeft" color="#0d9488" />
+        <UnlitMaterial id="matTransformRight" color="#7c3aed" />
+        <AttachmentAsset id="profile-card">
+          <div
+            style={{
+              background: 'rgba(15,23,42,0.92)',
+              color: 'white',
+              padding: 12,
+              borderRadius: 8,
+              minHeight: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: 600 }}>Profile card</p>
+            <p style={{ margin: '6px 0 0', fontSize: 12, opacity: 0.85 }}>
+              Shared asset, two placements
+            </p>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: -0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matTransformLeft']}
+            />
+            <AttachmentEntity
+              attachment="profile-card"
+              position={{ x: 0, y: 0.14, z: 0 }}
+              rotation={{ x: 0, y: 20, z: 0 }}
+              scale={{ x: 1, y: 1, z: 1 }}
+              width={0.35}
+              height={0.2}
+            />
+          </Entity>
+          <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matTransformRight']}
+            />
+            <AttachmentEntity
+              attachment="profile-card"
+              position={{ x: 0, y: 0.14, z: 0 }}
+              rotation={{ x: 0, y: -15, z: 0 }}
+              scale={{ x: 0.85, y: 0.85, z: 0.85 }}
+              width={0.28}
+              height={0.16}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
 function TestNestedRealityInSpatialDiv() {
   return (
     <TestCase title="2. Attachment inside SpatialDiv > Reality">
@@ -868,6 +940,7 @@ function App() {
 
       <div className="flex flex-wrap gap-8">
         <TestBasicAttachment />
+        <TestEntityLikeTransformApi />
         <TestNestedRealityInSpatialDiv />
         <TestModelFallback />
         <TestRealityFallback />
