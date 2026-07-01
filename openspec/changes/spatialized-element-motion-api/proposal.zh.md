@@ -33,16 +33,16 @@
 
 ```tsx
 // 统一的空间动画 API — hook 与目标无关；目标在绑定时自动解析
-// 2D 的 style 仅保留合并/快照出口；纯 Web runtime 不启动 playback
+// 返回的 style 是宿主状态闭环契约的一部分，必须合并回绑定宿主
 <div enable-xr style={{ width: 300, height: 200, ...style }} xr-animation={animation}>
   <h2>Hello Spatial</h2>
 </div>
 
 // Static3D — 绑定到 <Model> 时自动解析为 static3d
-<Model src="robot.usdz" xr-animation={animation} />
+<Model src="robot.usdz" style={{ ...style }} xr-animation={animation} />
 
 // Dynamic3D — 绑定到 <Reality> 时自动解析为 dynamic3d
-<Reality xr-animation={animation}>
+<Reality style={{ ...style }} xr-animation={animation}>
   <Entity position={{ x: 0, y: 1, z: -2 }} />
 </Reality>
 
@@ -69,13 +69,14 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 
 | 组件 | 解析目标 | `style` 行为 |
 |------|---------|------------------|
-| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` | 用于保持 tuple consistency 的合并/快照出口；播放依赖 native capability |
-| `<Model>` | `static3d` | 空对象 `{}`（仅 native，可安全展开） |
-| `<Reality>` | `dynamic3d` | 空对象 `{}`（仅 native，可安全展开） |
+| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` | 合并/快照出口；开发者 MUST 将其合并回绑定宿主 |
+| `<Model>` | `static3d` | 宿主状态闭环出口；开发者 MUST 将其合并回绑定宿主 |
+| `<Reality>` | `dynamic3d` | 宿主状态闭环出口；开发者 MUST 将其合并回绑定宿主 |
 
 **约束：**
 - 单个 `animation` binding MUST NOT 同时绑定到多个组件（1:1 绑定）。
 - bind 前调用 `api.play()` MAY 排队；绑定解析后播放开始。
+- 应用 MUST 将返回的 `style` 合并到接收 `xr-animation` 的同一个宿主元素或组件上。不合并该 `style` 时，播放 MAY 仍然开始，但 `stop()`、`reset()`、`finish()`、自然结束或后续 resync 之后的终态视觉持久性不受保证。
 
 ## 变更内容
 
@@ -83,8 +84,8 @@ Hook 与目标无关 — 不接受 `kind` 参数。返回的 `animation` binding
 - **Timeline 数据模型**：按属性的 track + 绝对时间 keyframe + 每轨 timingFunction 继续作为内部 canonical 配置模型；当前实现 / 类型仍保留 `tracks` 输入作为兼容 / 高级 escape hatch。
 - **native-first 运行时路径**：所有 spatialized container kind 都通过 `SpatializedElement.createAnimation(config)` 创建 native `AnimationObject`；纯 Web runtime 对该能力返回 false，且不会启动 RAF playback fallback。
 - **create-time timeline payload**：Core 通过 `CreateSpatializedElementAnimation` 发送编译后的 canonical `timeline` 文档；`duration`、`timingFunction`、`delay`、`loop`、`playbackRate` 等时序控制信息都内嵌在该 payload 中，不再作为 JSB 顶层字段存在。
-- **2D style 语义**：2D 保留 `style` outlet，仅用于合并/快照出口与 tuple consistency；它不是 pure Web playback backend。
-- **3D style 语义**：Static3D 与 Dynamic3D 下 `style` 恒为 `{}`；动画通过 `xr-animation` 绑定交给 native 驱动，返回空对象仅用于保持 tuple 形态一致、调用方可安全展开。
+- **2D style 语义**：2D 保留 `style` outlet 作为面向作者的合并/快照出口；应用 MUST 将其合并回绑定宿主，以便在 rerender 和 resync 后保持视觉状态闭环。它不是 pure Web playback backend。
+- **3D style 语义**：Static3D 与 Dynamic3D 也将返回的 `style` 视为宿主状态闭环契约的一部分。播放仍由绑定的 `xr-animation` handle 驱动，但应用 MUST 将 `style` 合并回绑定宿主，以便在后续 rerender 和 resync 后保持终态视觉状态。
 - **单一路径 Core 对象**：React `AnimationBinding` 最多绑定一个目标，并创建一个 Core `AnimationObject`；per-target controller alias 不属于目标态 API。
 - **Entity 专用 API**：Entity transform animation 命名为 `useEntityAnimation(config)`，并继续保留在独立的 `AnimateTransform` 栈上。
 - **Animating mask 所有权**：播放期间由 native `SpatializedElement` runtime / write adapter 持有被动画控制的字段（opacity 属性级、transform 整体级），而不是依赖 React Portal suppression。

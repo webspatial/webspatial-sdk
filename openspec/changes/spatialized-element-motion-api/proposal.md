@@ -33,16 +33,16 @@ This **umbrella change** merges both into a single normative surface:
 
 ```
 // Unified spatialized animation API — hook is target-agnostic; target resolved at bind time
-// 2D style remains a merge/snapshot outlet; pure-Web runtime does not start playback
+// Returned style is part of the host-state closure contract and must be merged back to the bound host
 <div enable-xr style={{ width: 300, height: 200, ...style }} xr-animation={animation}>
   <h2>Hello Spatial</h2>
 </div>
 
 // Static3D — target auto-resolved to static3d when bound to <Model>
-<Model src="robot.usdz" xr-animation={animation} />
+<Model src="robot.usdz" style={{ ...style }} xr-animation={animation} />
 
 // Dynamic3D — target auto-resolved to dynamic3d when bound to <Reality>
-<Reality xr-animation={animation}>
+<Reality style={{ ...style }} xr-animation={animation}>
   <Entity position={{ x: 0, y: 1, z: -2 }} />
 </Reality>
 
@@ -69,13 +69,14 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 
 | Component | Resolved target | `style` behavior |
 |-----------|-----------------|------------------|
-| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` | Merge/snapshot outlet for tuple consistency; playback requires native capability |
-| `<Model>` | `static3d` | Empty `{}` (native-only, safe to spread) |
-| `<Reality>` | `dynamic3d` | Empty `{}` (native-only, safe to spread) |
+| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` | Merge/snapshot outlet; authors MUST merge it back to the bound host |
+| `<Model>` | `static3d` | Host style-closure outlet; authors MUST merge it back to the bound host |
+| `<Reality>` | `dynamic3d` | Host style-closure outlet; authors MUST merge it back to the bound host |
 
 **Constraints:**
 - A single `animation` binding MUST NOT be shared across multiple components simultaneously (1:1 binding).
 - `api.play()` called before bind MAY queue; playback starts once the binding is resolved.
+- Applications MUST merge the returned `style` onto the same host element or component that receives `xr-animation`. Omitting that merge MAY still allow playback to start, but terminal visual persistence after `stop()`, `reset()`, `finish()`, natural completion, or later resync is not guaranteed.
 
 ## What Changes
 
@@ -83,8 +84,8 @@ The hook is **target-agnostic** — it does not accept a `kind` parameter. The r
 - **Timeline data model**: per-property tracks with absolute-time keyframes and per-track timingFunction remain the canonical internal config model. The current implementation and types still accept `tracks` input as a compatibility / advanced escape hatch.
 - **Native-first runtime path**: all spatialized container kinds create a native `AnimationObject` through `SpatializedElement.createAnimation(config)`; pure Web runtime is capability-negative and does not start a RAF playback fallback.
 - **Create-time timeline payload**: Core sends the compiled canonical `timeline` document through `CreateSpatializedElementAnimation`; timing controls such as `duration`, `timingFunction`, `delay`, `loop`, and `playbackRate` live inside that compiled payload rather than as top-level JSB fields.
-- **2D style behavior**: 2D keeps a `style` outlet only as a merge/snapshot outlet for tuple consistency; it is not a pure-Web playback backend.
-- **3D style behavior**: Static3D and Dynamic3D always return `style = {}`; playback is driven by the bound `xr-animation` handle, and the empty object is kept only for tuple consistency and safe spreading.
+- **2D style behavior**: 2D keeps a `style` outlet as the author-facing merge/snapshot outlet; applications MUST merge it back to the bound host to keep visual state closed across rerender and resync. It is not a pure-Web playback backend.
+- **3D style behavior**: Static3D and Dynamic3D also treat the returned `style` as part of the host-state closure contract. Playback is still driven by the bound `xr-animation` handle, but applications MUST merge `style` back to the bound host to preserve terminal visual state across later rerender and resync.
 - **One Core object path**: React `AnimationBinding` binds to at most one target and creates one Core `AnimationObject`; per-target controller aliases are not part of the target-state API.
 - **Entity-specific API**: entity transform animation is named `useEntityAnimation(config)` and remains on the separate `AnimateTransform` stack.
 - **Animating mask ownership**: native `SpatializedElement` runtime / write adapter owns animated fields during playback (property-level for opacity, transform-wide for transform), not React Portal suppression.

@@ -41,7 +41,7 @@ The target implementation is split across React SDK, Core SDK, and native runtim
 | `PlaybackApi` | Exposes React-facing `play/pause/resume/stop/reset/finish` and subscribes to Core `AnimationObject` state. |
 | `xr-animation` binding adapter | Resolves concrete target kind and triggers `AnimationBinding.bind()` / `unbind()`. |
 
-The `style` outlet is only a React merge outlet and is not the runtime playback source for native-backed animation. Static3D / Dynamic3D target-state `style` remains `{}`.
+The `style` outlet is the React-side visual-state closure output of `useAnimation(config)`. Authors MUST merge it onto the same host that receives `xr-animation` so later rerender or resync reads the same visual state that the animation session last emitted. The `style` outlet is not the runtime playback source for native-backed animation; playback still comes from the native `AnimationObject`.
 
 ## Core SDK module boundaries
 

@@ -41,7 +41,7 @@
 | `PlaybackApi` | 暴露 React-facing `play/pause/resume/stop/reset/finish`，并订阅 Core `AnimationObject` 状态。 |
 | `xr-animation` binding adapter | 解析 concrete target kind，触发 `AnimationBinding.bind()` / `unbind()`。 |
 
-`style` outlet 只是 React 合并出口，不是 native-backed animation 的运行时 playback source。Static3D / Dynamic3D 目标态 `style` 保持 `{}`。
+`style` outlet 是 `useAnimation(config)` 在 React 侧提供的视觉状态闭环输出。开发者 MUST 将其合并到接收 `xr-animation` 的同一个宿主上，以便后续 rerender 或 resync 读取到与动画会话最后一次发出的视觉状态一致的值。`style` outlet 不是 native-backed animation 的运行时 playback source；实际播放仍由 native `AnimationObject` 驱动。
 
 ## Core SDK 模块边界
 

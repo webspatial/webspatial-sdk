@@ -68,6 +68,23 @@ Spatialized element motion MUST 使用 native-first 的 `AnimationObject` 目标
 - **WHEN** 应用代码尝试以额外参数调用 `api.pause()` 或 `api.resume()`
 - **THEN** controller API MUST 在类型层面拒绝该调用，且公开 surface 上不得提供任何接收附加 controller-control 参数的重载
 
+### Requirement: 返回的 style outlet 负责闭合宿主视觉状态
+
+对于任何通过宿主节点绑定的目标，`useAnimation(config)` 返回的 `style` MUST 被视为必需的 API 输出，并合并回接收 `xr-animation` 的同一宿主元素或组件上。该合并负责将动画发出的值闭合到后续 rerender、终止命令和宿主 resync 链路中。
+
+#### Scenario: 合并 style 后终态视觉值在 resync 后保持稳定
+
+- **GIVEN** 一个宿主绑定目标将返回的 `style` 合并回接收 `xr-animation` 的同一宿主
+- **WHEN** `stop()`、`reset()`、`finish()` 或自然结束之后又发生 rerender 或宿主 resync
+- **THEN** 宿主侧视觉状态 MUST 继续反映该动画会话最后一次发出的终态值
+
+#### Scenario: 未合并 style 时终态持久性不受保证
+
+- **GIVEN** 一个宿主绑定目标没有将返回的 `style` 合并回接收 `xr-animation` 的同一宿主
+- **WHEN** 播放仍通过 native animation 路径开始
+- **THEN** SDK MAY 仍然播放该动画
+- **AND** `stop()`、`reset()`、`finish()` 或自然结束之后的终态视觉持久性 MUST 被视为未定义
+
 #### Scenario: stop() 将 active session 冻结在当前值
 
 - **WHEN** 动画正在运行或暂停时调用 `api.stop()`
@@ -162,7 +179,7 @@ Spatialized element motion MUST 使用 native-first 的 `AnimationObject` 目标
 
 #### Scenario: 非显式声明的 CSS `transform` 不参与终态控制权切换
 
-- **GIVEN** host `transform` 仅通过 `className`、样式表规则、继承布局副作用、`useAnimation()` 返回的 `style` outlet 或 `getComputedStyle()` 结果体现出来
+- **GIVEN** host `transform` 仅通过 `className`、样式表规则、继承布局副作用或 `getComputedStyle()` 结果体现出来
 - **WHEN** 一个 host transform 目标到达 `stop()`、`reset()` 或 `finish()`
 - **THEN** SDK MUST NOT 将该值视为用于终态控制权切换的显式声明 transform
 - **AND** 当不存在显式 React `style.transform` 时，终态 host transform 控制权 MUST 保持在原生采样结果一侧
