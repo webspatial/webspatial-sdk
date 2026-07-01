@@ -103,14 +103,15 @@ native runtime MUST 按 target kind 限制 animation 可写字段和 mask 字段
 | `dynamic3d` | `transform`, `opacity` | `transform`, `opacity` |
 | `static3d` | `modelTransform` | `modelTransform` |
 
-Static3D `opacity` tracks MUST 在 native create 前被拒绝。Static3D animation MUST NOT 写 host element `transform` 作为 `modelTransform` 的替代路径。
+Static3D `opacity` tracks MUST 在 native create 中被保留。Static3D animation MUST 写 host element `opacity` 和模型根 `modelTransform`，并且 MUST NOT 写 host element `transform` 作为 `modelTransform` 的替代路径。
 
-#### Scenario: Static3D 只写 modelTransform
+#### Scenario: Static3D 写 modelTransform 和 opacity
 
 - **GIVEN** target kind 是 `static3d`
 - **WHEN** native `AnimationObject.tick(timestamp)` 产生 sample
-- **THEN** native MUST 只写入 model root `modelTransform`
-- **AND** MUST NOT 写入 host element transform 或 opacity
+- **THEN** native MUST 写入 model root `modelTransform`
+- **AND** timeline 动画化 opacity 时，MUST 写入 host element `opacity`
+- **AND** MUST NOT 写 host element `transform` 作为替代路径
 
 ### Requirement: terminal mask handoff 规则明确
 

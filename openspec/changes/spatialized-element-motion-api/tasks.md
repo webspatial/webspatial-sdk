@@ -29,7 +29,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] 2D spec: require native create to carry canonical tracks
 - [x] 2D spec: replace legacy field-ownership wording with element animating mask wording
 - [x] Static3D spec: require model-root transform timeline through `AnimationObject`
-- [x] Static3D spec: reject `opacity` tracks during `validateSpatializedMotionConfig`; do not silently ignore them
+- [x] Static3D spec: support `opacity` tracks during `validateSpatializedMotionConfig`; do not silently drop them
 - [x] Dynamic3D spec: require container transform/opacity timeline through `AnimationObject`
 - [x] Entity spec boundary: keep entity animation separate from container `AnimationObject`
 
@@ -63,7 +63,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Tests: verify `onComplete`, `onStop`, and `onReset` are mutually exclusive for each termination, while `onError` remains independent
 - [x] Tests: verify explicit `api.play()` before bind still runs after bind when `autoStart: false`
 - [x] Tests: verify one `animation` binding can bind only one component at a time
-- [x] Validation tests: reject Static3D `opacity` tracks before create; do not silently ignore them
+- [x] Validation tests: accept Static3D `opacity` tracks before create; do not silently drop them
 - [x] Capability tests: verify `supports('useAnimation')` support and pure Web `false` behavior
 
 ## Phase 6 — Implementation invariants spec
@@ -109,6 +109,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Core: avoid adding public `AnimationObjectChannel` / `AnimationObjectBridge` / `SpatialObjectBridge` architecture objects
 - [x] Core: remove `WebPlaybackBackend` and RAF sampling from the spatialized element animation path
 - [x] Core: remove target-state runtime dependency on `SpatializedMotionController`, `NativePlaybackBackend`, and `AnimateSpatializedElementMotion`
+- [x] Core: remove the unused target-specific validation hook after Static3D `opacity` support no longer needs pre-create rejection
 
 ## Phase 9 — React SDK AnimationBinding
 
@@ -142,7 +143,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] visionOS: Native `AnimationObject` `reset/finish` reuse the same object and do not recreate it
 - [x] visionOS: Native `AnimationObject.tick()` calls target write adapter to write samples
 - [x] visionOS: target write adapter limits writable fields and mask fields by target kind
-- [x] visionOS: Static3D writes only `modelTransform`, not host transform / opacity
+- [x] visionOS: Static3D writes `modelTransform` and host `opacity`, not host transform
 - [x] visionOS: implement terminal mask handoff: pause keeps mask; stop/reset/finish/natural complete/destroy release mask
 - [x] visionOS: emit `SpatialAnimationStateChanged` through existing `SpatialScene` / `spatialWebViewModel` WebMsg path
 - [x] visionOS: reuse `SpatializedElementMotionTimelineSampler` / `SpatializedMotionTimingFunction` / `SpatializedMotionTransformComponents`
@@ -174,8 +175,8 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Test: finish emits to value, emits `onComplete(values)`, and then releases mask
 - [x] Test: pause keeps the current value and keeps mask ownership
 - [x] Test: native state is authoritative over Core SDK state
-- [x] Test: Static3D opacity tracks are rejected before native create
-- [x] Test: Static3D animation writes only `modelTransform`
+- [x] Test: Static3D opacity tracks are accepted before native create
+- [x] Test: Static3D animation writes `modelTransform` and host `opacity`
 - [x] Test: pure Web runtime returns false for `supports('useAnimation')`
 - [x] Test: target-state runtime no longer uses the old `AnimateSpatializedElementMotion` path
 

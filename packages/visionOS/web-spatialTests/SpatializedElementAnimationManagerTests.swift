@@ -729,11 +729,11 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertEqual(element.opacity, 0.9, accuracy: 0.0001)
     }
 
-    func test_static3DOpacityTracksAreRejectedBeforeCreate() {
+    func test_static3DOpacityTracksAnimateElementOpacity() throws {
         let element = SpatializedStatic3DElement()
         let manager = SpatializedElementAnimationManager()
         let timeline = SpatializedMotionTimelinePayload(
-            duration: 1,
+            duration: 2,
             delay: nil,
             playbackRate: nil,
             loop: nil,
@@ -742,22 +742,33 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
                     property: "opacity",
                     keyframes: [
                         SpatializedMotionKeyframePayload(at: 0, value: 1, timingFunction: "linear"),
-                        SpatializedMotionKeyframePayload(at: 1, value: 0.2, timingFunction: nil),
+                        SpatializedMotionKeyframePayload(at: 2, value: 0.2, timingFunction: nil),
                     ],
                     timingFunction: "linear"
                 ),
             ]
         )
 
-        XCTAssertThrowsError(
-            try manager.createAnimation(
-                command: CreateSpatializedElementAnimationCommand(
-                    elementId: element.id,
-                    timeline: timeline
-                ),
-                target: element
-            )
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
         )
+
+        animation.play(at: 0)
+        XCTAssertEqual(element.animatingMask.opacityAnimationId, animation.uuid)
+
+        animation.tick(at: 1)
+
+        XCTAssertEqual(element.opacity, 0.6, accuracy: 0.0001)
+        XCTAssertEqual(element.entityTransform.matrix.columns.3.x, 0, accuracy: 0.0001)
+
+        animation.finish(at: 1.5)
+
+        XCTAssertNil(element.animatingMask.opacityAnimationId)
+        XCTAssertEqual(element.opacity, 0.2, accuracy: 0.0001)
     }
 
     func test_animationStateChangedEmitsMatchingAnimationId() throws {

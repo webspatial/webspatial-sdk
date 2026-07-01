@@ -14,6 +14,7 @@ const DURATION = 4
 
 const TIMELINE_CONFIG = {
   '0%': {
+    opacity: 0.1,
     transform: {
       translate: { y: 12, z: 0 },
       rotate: { x: 30, z: -20 },
@@ -21,6 +22,7 @@ const TIMELINE_CONFIG = {
     },
   },
   '50%': {
+    opacity: 1,
     transform: {
       translate: { y: -8, z: 55 },
       rotate: { x: 10, z: 80 },
@@ -28,6 +30,7 @@ const TIMELINE_CONFIG = {
     },
   },
   '100%': {
+    opacity: 0.1,
     transform: {
       translate: { y: 0, z: 20 },
       rotate: { x: 20 },

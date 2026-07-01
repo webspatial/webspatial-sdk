@@ -2,11 +2,11 @@
 
 ## ADDED Requirements
 
-### Requirement: Static3D timeline animates model root transform only
+### Requirement: Static3D timeline animates model root transform and opacity
 
-The SDK MUST support `SpatializedStatic3DElement` timeline motion applying sampled values to `modelTransform` (translate/rotate/scale) without animating layout fields on the spatialized element shell.
+The SDK MUST support `SpatializedStatic3DElement` timeline motion applying sampled values to `modelTransform` (translate/rotate/scale) and root `opacity` without animating layout fields on the spatialized element shell.
 
-Static3D root `opacity` is NOT part of the shipped timeline sink in this change. Authors MAY still set ordinary `opacity` on the element itself, but `xr-animation` bound to `<Model>` MUST reject opacity tracks during `validateSpatializedMotionConfig`; it MUST NOT silently ignore them.
+Static3D root `opacity` is part of the shipped timeline sink in this change. Authors MAY still set ordinary `opacity` on the element itself, and `xr-animation` bound to `<Model>` MUST preserve that field through the element animating mask and terminal ownership handoff rules.
 
 Target-state execution MUST create an `AnimationObject` through `SpatializedElement.createAnimation(config)` when `animation` is bound to a `<Model>` component and resolves to `static3d`.
 
@@ -14,13 +14,13 @@ Target-state execution MUST create an `AnimationObject` through `SpatializedElem
 
 - **GIVEN** `supports('useAnimation')` is true
 - **WHEN** `CreateSpatializedElementAnimation` runs for a `SpatializedStatic3DElement`
-- **THEN** native MUST sample the timeline and update `modelTransform` until completion or session termination
+- **THEN** native MUST sample the timeline and update `modelTransform` and `opacity` until completion or session termination
 
-#### Scenario: Static3D opacity tracks are rejected
+#### Scenario: Static3D opacity tracks are accepted
 
 - **WHEN** an `xr-animation` binding resolves to `static3d` and the normalized timeline contains `opacity`
-- **THEN** `validateSpatializedMotionConfig` MUST reject the config before `CreateSpatializedElementAnimation`
-- **AND** native MUST NOT receive a timeline with ignored Static3D opacity tracks
+- **THEN** `validateSpatializedMotionConfig` MUST accept the config before `CreateSpatializedElementAnimation`
+- **AND** native MUST receive the `opacity` track instead of silently dropping it
 
 #### Scenario: Model xr-animation binding
 

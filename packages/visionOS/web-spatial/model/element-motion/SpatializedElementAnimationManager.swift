@@ -7,7 +7,6 @@ enum SpatializedElementAnimationManagerError: Error {
     case animationNotFound(String)
     case invalidTarget(String)
     case invalidTimeline(String)
-    case unsupportedStatic3DOpacity
 }
 
 final class SpatializedElementAnimationManager: NSObject {
@@ -41,10 +40,6 @@ final class SpatializedElementAnimationManager: NSObject {
             baselineTransform: Self.decomposeTransform(from: writeAdapter.currentAffineTransform(for: target)),
             baselineOpacity: writeAdapter.baselineOpacity(for: target)
         )
-
-        if targetKind == .static3d, sampler.animatesOpacity {
-            throw SpatializedElementAnimationManagerError.unsupportedStatic3DOpacity
-        }
 
         let animation = SpatializedElementAnimationObject(
             id: explicitAnimationId,

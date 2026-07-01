@@ -19,7 +19,7 @@ describe('validateNormalizedMotionConfig', () => {
     ).not.toThrow()
   })
 
-  test('rejects opacity tracks for static3d targets', () => {
+  test('accepts opacity tracks for static3d targets', () => {
     expect(() =>
       validateNormalizedMotionConfig(
         {
@@ -36,6 +36,6 @@ describe('validateNormalizedMotionConfig', () => {
         },
         { targetKind: 'static3d' },
       ),
-    ).toThrow(/static3d targets do not support opacity tracks/)
+    ).not.toThrow()
   })
 })

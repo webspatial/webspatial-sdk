@@ -30,7 +30,7 @@ The target implementation is split across React SDK, Core SDK, and native runtim
 - Do not keep Core/Web RAF playback fallback.
 - Do not use `AnimateSpatializedElementMotion` as the target-state runtime command.
 - Do not base mask ownership on `PortalInstanceObject` or React Portal suppression.
-- Do not support Static3D root opacity animation; Static3D `opacity` tracks must be rejected before native create.
+- Support Static3D root opacity animation; Static3D `opacity` tracks must flow through native create, mask ownership, and terminal handoff.
 
 ## React SDK module boundaries
 
@@ -49,7 +49,7 @@ The `style` outlet is the React-side visual-state closure output of `useAnimatio
 |--------|----------------|
 | `SpatializedElement.createAnimation(config)` | Creates a native-backed `AnimationObject` after target binding, and owns validation, normalization, and create JSB send; native response returns the created object identity as `{ id }`. |
 | `AnimationObject` | First-class Core object extending `SpatialObject`; implements playback controls directly, inherits `destroy()`, subscribes to NativeWebMsg directly, and owns its state. |
-| `validateSpatializedMotionConfig` | Validates authoring config before native create, such as rejecting Static3D `opacity` tracks. |
+| `validateSpatializedMotionConfig` | Validates authoring config before native create, including allowing Static3D `opacity` tracks to reach native playback. |
 | `motionConfigToAnimationTimeline` | Compiles normalized motion config into the canonical `CreateSpatializedElementAnimation` payload. |
 
 ## Native Runtime / visionOS module boundaries
@@ -72,9 +72,9 @@ The `style` outlet is the React-side visual-state closure output of `useAnimatio
 |-------------|-----------------|-------------|
 | `spatialized2d` | `transform`, `opacity` | `transform`, `opacity` |
 | `dynamic3d` | `transform`, `opacity` | `transform`, `opacity` |
-| `static3d` | `modelTransform` | `modelTransform` |
+| `static3d` | `modelTransform`, `opacity` | `modelTransform`, `opacity` |
 
-Static3D `opacity` tracks must be rejected before native create. Static3D animation writes only model root `modelTransform` and must not use host element `transform` as a substitute path.
+Static3D `opacity` tracks must be preserved through native create. Static3D animation writes model root `modelTransform` and host element `opacity`, and must not use host element `transform` as a substitute path.
 
 ## Cross-layer object relationships
 
@@ -478,7 +478,7 @@ When the target `SpatializedElement` is destroyed, the native runtime must destr
 | `SpatializedElementMotionTimelineSampler.swift` | Reuse directly as the locked sampler owned by native `AnimationObject`. |
 | `SpatializedElementMotionTiming.swift` | Reuse timing function / loop config directly. |
 | `SpatializedElementMotionTransformTypes.swift` | Reuse transform components directly. |
-| `SpatializedElementMotionTransformAdapter.swift` | Refactor into target write adapter called by `Native AnimationObject.tick()`; Static3D opacity must still be rejected before create. |
+| `SpatializedElementMotionTransformAdapter.swift` | Refactor into target write adapter called by `Native AnimationObject.tick()`; Static3D opacity must be written through the same target-specific sink and mask rules. |
 | `SpatializedElementMotionManager.swift` | Refactor into `SpatializedElementAnimationManager`, preserving shared frame driver, lookup, terminal values, and compose/decompose ideas. |
 | `AnimateSpatializedElementMotionCommand` | Remove; replace with `CreateSpatializedElementAnimation` and `ControlSpatializedElementAnimation`. |
 | `${animationId}_completed/canceled/failed` WebMsg | Remove; replace with unified `SpatialAnimationStateChanged`. |

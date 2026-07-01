@@ -787,7 +787,7 @@ describe('useAnimation tuple api native backend', () => {
     await waitFor(() => expect(animation.stop).toHaveBeenCalledTimes(1))
   })
 
-  test('static3d opacity is rejected before Core AnimationObject creation', () => {
+  test('static3d opacity creates a Core AnimationObject and forwards the track', () => {
     const element = createMockElement('static-opacity')
 
     const { result } = renderHook(() =>
@@ -806,9 +806,9 @@ describe('useAnimation tuple api native backend', () => {
       }),
     )
 
-    expect(() => {
+    act(() => {
       result.current[0].__setElement?.(element as any, 'static3d')
-    }).toThrow(/opacity/i)
-    expect(element.createAnimation).not.toHaveBeenCalled()
+    })
+    expect(element.createAnimation).toHaveBeenCalledTimes(1)
   })
 })

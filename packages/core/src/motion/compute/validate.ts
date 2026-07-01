@@ -45,6 +45,7 @@ export function validateNormalizedMotionConfig(
   config: SpatializedMotionConfig,
   options: { targetKind?: SpatializedMotionKind } = {},
 ): void {
+  void options
   const { duration, tracks } = config
 
   if (
@@ -61,7 +62,6 @@ export function validateNormalizedMotionConfig(
 
   const seen = new Set<string>()
   for (const track of tracks) {
-    validateTargetTrackSupport(track, options.targetKind)
     validateTrack(track, duration, seen)
   }
 
@@ -77,20 +77,6 @@ export function validateNormalizedMotionConfig(
     if (typeof r !== 'number' || !Number.isFinite(r) || r <= 0) {
       throw new Error('[SpatializedMotion] playbackRate must be > 0 and finite')
     }
-  }
-}
-
-/**
- * Validates target-specific sink support before native animation creation.
- */
-function validateTargetTrackSupport(
-  track: SpatializedMotionTrack,
-  targetKind?: SpatializedMotionKind,
-): void {
-  if (targetKind === 'static3d' && track.property === 'opacity') {
-    throw new Error(
-      '[SpatializedMotion] static3d targets do not support opacity tracks',
-    )
   }
 }
 

@@ -280,5 +280,5 @@ Capability-negative runtimes remain unavailable until the runtime reports
 3. A single `animation` binding can target only one component at a time.
 4. `timeline` is a single CSS `@keyframes` style object, not an orchestration
    array.
-5. Static3D does not currently ship `opacity` playback.
+5. Static3D ships root `opacity` playback alongside model-root transform playback.
 6. Entity transform animation remains on `useEntityAnimation(config)`.

@@ -1411,8 +1411,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             let animation = try elementAnimationManager.createAnimation(command: command, target: element)
             addSpatialObject(animation)
             resolve(.success(AddSpatializedElementReply(id: animation.id)))
-        } catch SpatializedElementAnimationManagerError.unsupportedStatic3DOpacity {
-            resolve(.failure(JsbError(code: .CommandError, message: "Static3D animation does not support opacity tracks")))
         } catch let SpatializedElementAnimationManagerError.invalidTarget(reason) {
             resolve(.failure(JsbError(code: .CommandError, message: reason)))
         } catch {
