@@ -141,14 +141,29 @@ export function Ornament({
 
       let ornament: CoreOrnament | null = null
       try {
-        ornament = await session.createOrnament(latestOptionsRef.current)
+        let appliedOptions = latestOptionsRef.current
+        ornament = await session.createOrnament(appliedOptions)
         if (disposed) {
           await ornament.destroy()
           return
         }
 
+        const applyPendingOptions = async () => {
+          const pendingOptions = latestOptionsRef.current
+          if (pendingOptions !== appliedOptions) {
+            await ornament!.update(pendingOptions)
+            appliedOptions = pendingOptions
+          }
+        }
+
         const childWindow = ornament.getWindowProxy()
         await prepareOrnamentWindow(childWindow)
+        if (disposed) {
+          await ornament.destroy()
+          return
+        }
+
+        await applyPendingOptions()
         if (disposed) {
           await ornament.destroy()
           return
@@ -161,6 +176,12 @@ export function Ornament({
         }
 
         ornamentRef.current = ornament
+        await applyPendingOptions()
+        if (disposed) {
+          await ornament.destroy()
+          return
+        }
+
         setWindowProxy(childWindow)
       } catch (error) {
         if (ornament) {

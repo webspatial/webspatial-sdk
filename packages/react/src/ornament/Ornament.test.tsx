@@ -54,6 +54,17 @@ function createChildWindow() {
   } as unknown as WindowProxy
 }
 
+function createDeferred<T = void>() {
+  let resolve!: (value?: T | PromiseLike<T>) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve as typeof resolve
+    reject = promiseReject
+  })
+
+  return { promise, resolve, reject }
+}
+
 describe('Ornament', () => {
   let childWindow: WindowProxy
   let destroy: ReturnType<typeof vi.fn>
@@ -160,6 +171,72 @@ describe('Ornament', () => {
 
     unmount()
     expect(destroy).toHaveBeenCalled()
+  })
+
+  it('applies pending prop updates before adding after async setup', async () => {
+    setUserAgent('Mozilla/5.0 Chrome/120.0.0.0 Puppeteer Safari/537.36')
+    const styleSync = createDeferred()
+    mocks.syncParentHeadToChild.mockReturnValueOnce(styleSync.promise)
+
+    const { rerender } = render(
+      <Ornament attachmentAnchor="bottom" width={240}>
+        <div data-testid="ornament-child">content</div>
+      </Ornament>,
+    )
+
+    await waitFor(() => {
+      expect(mocks.createOrnament).toHaveBeenCalledWith({
+        attachmentAnchor: 'bottom',
+        contentAlignment: 'back',
+        visibility: 'visible',
+        width: 240,
+        height: 150,
+        cornerRadius: {
+          topLeading: 0,
+          bottomLeading: 0,
+          topTrailing: 0,
+          bottomTrailing: 0,
+        },
+        backgroundMaterial: 'none',
+      })
+      expect(mocks.syncParentHeadToChild).toHaveBeenCalledWith(childWindow)
+    })
+
+    rerender(
+      <Ornament attachmentAnchor="bottom" visibility="hidden" width={320}>
+        <div data-testid="ornament-child">content</div>
+      </Ornament>,
+    )
+
+    expect(update).not.toHaveBeenCalled()
+    styleSync.resolve()
+
+    await waitFor(() => {
+      expect(update).toHaveBeenCalledWith({
+        attachmentAnchor: 'bottom',
+        contentAlignment: 'back',
+        visibility: 'hidden',
+        width: 320,
+        height: 150,
+        cornerRadius: {
+          topLeading: 0,
+          bottomLeading: 0,
+          topTrailing: 0,
+          bottomTrailing: 0,
+        },
+        backgroundMaterial: 'none',
+      })
+      expect(mocks.addOrnament).toHaveBeenCalledWith('ornament-1')
+      expect(
+        childWindow.document.body.querySelector(
+          '[data-testid="ornament-child"]',
+        ),
+      ).not.toBeNull()
+    })
+
+    expect(update.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.addOrnament.mock.invocationCallOrder[0],
+    )
   })
 
   it('allows multiple Ornament instances to coexist', async () => {
