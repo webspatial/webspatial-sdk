@@ -3,7 +3,6 @@ import {
   BoxEntity,
   Reality,
   SceneGraph,
-  SphereEntity,
   UnlitMaterial,
   useAnimation,
 } from '@webspatial/react-sdk'
