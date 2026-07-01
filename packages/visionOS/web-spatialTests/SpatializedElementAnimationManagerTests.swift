@@ -469,7 +469,7 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertEqual(element.transform.matrix.columns.3.x, 10, accuracy: 0.0001)
     }
 
-    func test_static3DModelTransformKeepsAnimatedTerminalValueOnComplete() throws {
+    func test_static3DRootTransformKeepsAnimatedTerminalValueOnComplete() throws {
         let element = SpatializedStatic3DElement()
         let manager = SpatializedElementAnimationManager()
         let timeline = SpatializedMotionTimelinePayload(
@@ -501,8 +501,8 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         animation.tick(at: 1.1)
 
         XCTAssertNil(element.animatingMask.transformAnimationId)
-        XCTAssertEqual(element.entityTransform.matrix.columns.3.x, 10, accuracy: 0.0001)
-        XCTAssertEqual(element.transform.matrix.columns.3.x, 0, accuracy: 0.0001)
+        XCTAssertEqual(element.transform.matrix.columns.3.x, 10, accuracy: 0.0001)
+        XCTAssertEqual(element.entityTransform.matrix.columns.3.x, 0, accuracy: 0.0001)
     }
 
     func test_stopResetFinishAndCompleteDoNotReplayIgnoredWrites() throws {
@@ -625,7 +625,7 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertTrue(animation.isDestroyed)
     }
 
-    func test_static3DAnimationWritesOnlyModelTransform() throws {
+    func test_static3DAnimationWritesRootTransformOnly() throws {
         let element = SpatializedStatic3DElement()
         let manager = SpatializedElementAnimationManager()
         let timeline = SpatializedMotionTimelinePayload(
@@ -635,10 +635,10 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
             loop: nil,
             tracks: [
                 SpatializedMotionTrackPayload(
-                    property: "transform.translate.x",
+                    property: "transform.scale.x",
                     keyframes: [
-                        SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
-                        SpatializedMotionKeyframePayload(at: 2, value: 12, timingFunction: nil),
+                        SpatializedMotionKeyframePayload(at: 0, value: 0.75, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 2, value: 2, timingFunction: nil),
                     ],
                     timingFunction: "linear"
                 ),
@@ -654,11 +654,55 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         )
 
         animation.play(at: 0)
-        animation.tick(at: 1)
+        animation.tick(at: 3)
 
-        XCTAssertEqual(element.entityTransform.matrix.columns.3.x, 6, accuracy: 0.5)
-        XCTAssertEqual(element.transform.matrix.columns.3.x, 0, accuracy: 0.0001)
+        XCTAssertEqual(element.transform.matrix.columns.0.x, 2, accuracy: 0.0001)
+        XCTAssertEqual(element.entityTransform.matrix.columns.0.x, 1, accuracy: 0.0001)
         XCTAssertEqual(element.opacity, 1.0)
+    }
+
+    func test_static3DAnimationResetAndReplayUseRootTransformBaseline() throws {
+        let element = SpatializedStatic3DElement()
+        let manager = SpatializedElementAnimationManager()
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 2,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "transform.scale.x",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 0.75, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 2, value: 2, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+        animation.tick(at: 3)
+        XCTAssertEqual(element.transform.matrix.columns.0.x, 2, accuracy: 0.0001)
+        XCTAssertEqual(element.entityTransform.matrix.columns.0.x, 1, accuracy: 0.0001)
+
+        animation.reset(at: 4)
+        XCTAssertEqual(element.transform.matrix.columns.0.x, 0.75, accuracy: 0.0001)
+        XCTAssertEqual(element.entityTransform.matrix.columns.0.x, 1, accuracy: 0.0001)
+
+        animation.play(at: 5)
+        XCTAssertEqual(element.transform.matrix.columns.0.x, 0.75, accuracy: 0.0001)
+        animation.tick(at: 8)
+        XCTAssertEqual(element.transform.matrix.columns.0.x, 2, accuracy: 0.0001)
+        XCTAssertEqual(element.entityTransform.matrix.columns.0.x, 1, accuracy: 0.0001)
     }
 
     func test_activeAnimationMaskBlocksRegularWritesFromOverridingCurrentValue() throws {
