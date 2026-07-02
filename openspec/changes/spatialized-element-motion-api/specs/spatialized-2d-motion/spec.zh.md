@@ -231,7 +231,7 @@ Native MUST 在 timeline 时间 `t` 独立采样每条 track，然后按与 Web 
 
 ### Requirement: Native 会话使用 xr-animation binding
 
-Native 会话 MUST 使用 `xr-animation` prop / `AnimationProxy`，而非旧版 `animation` prop。
+Native 会话 MUST 使用 `xr-animation` prop / `AnimationBinding`，而非旧版 `animation` prop。
 
 #### Scenario: 解绑取消会话
 

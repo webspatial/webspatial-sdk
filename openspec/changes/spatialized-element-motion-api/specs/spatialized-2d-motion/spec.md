@@ -231,7 +231,7 @@ For `spatialized2d`, terminal release or update of the `opacity` animating mask 
 
 ### Requirement: Motion binding for native sessions
 
-Native sessions MUST use the `xr-animation` prop / `AnimationProxy`, not the legacy `animation` prop.
+Native sessions MUST use the `xr-animation` prop / `AnimationBinding`, not the legacy `animation` prop.
 
 #### Scenario: Unbind cancels session
 

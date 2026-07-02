@@ -6,7 +6,7 @@
 | **Static3D** | `SpatializedStatic3DElement` | `<Model xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | Target | **No** | `AnimationObject` via `SpatializedElement.createAnimation(config)` | `supports('useAnimation')` |
 | **Dynamic3D** | `SpatializedDynamic3DElement` | `<Reality xr-animation={…}>` · `useAnimation(config)` → `[animation, api, style]` | Target | **No** | `AnimationObject` via `SpatializedElement.createAnimation(config)` | `supports('useAnimation')` |
 
-**Target-state note:** React uses a single opaque `AnimationProxy`; native playback uses `AnimationObject : SpatialObject` created through `SpatializedElement.createAnimation(config)`.
+**Target-state note:** React uses a single opaque `AnimationBinding`; native playback uses `AnimationObject : SpatialObject` created through `SpatializedElement.createAnimation(config)`.
 
 **Capability contract:** `supports('useAnimation')` is the released container-motion capability gate. `useAnimation` does not expose target-specific `element`, `static3d`, or `dynamic3d` sub-tokens; the legacy `entity` sub-token remains reserved for `useEntityAnimation`.
 
