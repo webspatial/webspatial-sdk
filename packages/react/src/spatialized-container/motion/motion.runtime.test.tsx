@@ -382,7 +382,42 @@ describe('motion runtime behavior', () => {
       unmount()
 
       expect(binding.__onUnbind).toHaveBeenCalledTimes(1)
+      expect(binding.__onUnbind).toHaveBeenCalledWith(element)
       expect(binding.__setElement).toHaveBeenCalledTimes(1)
+    })
+
+    test('unbind cleanup uses the element captured by that effect', async () => {
+      const { useBindSpatializedMotion } = await loadBindingModule()
+      const first = {
+        id: 'portal-first',
+        kind: 'spatialized2d' as const,
+      }
+      const second = {
+        id: 'portal-second',
+        kind: 'spatialized2d' as const,
+      }
+      const binding = {
+        __kind: 'spatializedMotion' as const,
+        __setElement: vi.fn(),
+        __onUnbind: vi.fn(),
+      }
+
+      const { rerender, unmount } = renderHook(
+        ({ element }) =>
+          useBindSpatializedMotion({
+            binding,
+            element: element as never,
+          }),
+        {
+          initialProps: { element: first },
+        },
+      )
+
+      rerender({ element: second })
+      unmount()
+
+      expect(binding.__onUnbind).toHaveBeenNthCalledWith(1, first)
+      expect(binding.__onUnbind).toHaveBeenNthCalledWith(2, second)
     })
 
     test('binds supported elements by kind without relying on instanceof', async () => {
@@ -468,6 +503,7 @@ describe('motion runtime behavior', () => {
       unmount()
 
       expect(binding.__onUnbind).toHaveBeenCalledTimes(1)
+      expect(binding.__onUnbind).toHaveBeenCalledWith(element)
     })
   })
 })

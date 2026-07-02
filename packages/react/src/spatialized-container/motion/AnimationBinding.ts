@@ -127,8 +127,8 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.bind(element, targetKind)
   }
 
-  __onUnbind(): void {
-    this.unbind()
+  __onUnbind(element: SpatializedElement): void {
+    this.unbind(element)
   }
 
   play(): void {
@@ -207,8 +207,9 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.options.onStateChange?.()
   }
 
-  private unbind(): void {
+  private unbind(element?: SpatializedElement): void {
     if (this.destroyed) return
+    if (element && this.element !== element) return
     this.detachAnimationObject()
     this.element = null
     this.options.onStateChange?.()
