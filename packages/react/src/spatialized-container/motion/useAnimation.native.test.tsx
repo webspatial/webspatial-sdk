@@ -991,4 +991,50 @@ describe('useAnimation tuple api native backend', () => {
     })
     expect(element.createAnimation).toHaveBeenCalledTimes(1)
   })
+
+  test('static3d opacity track updates the container-root opacity style outlet', async () => {
+    const element = createMockElement('static-root-opacity', 'static3d')
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any)
+    })
+
+    await waitFor(() =>
+      expect(element.createAnimation).toHaveBeenCalledTimes(1),
+    )
+    expect(element.createAnimation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tracks: [
+          expect.objectContaining({
+            property: 'opacity',
+          }),
+        ],
+      }),
+    )
+    expect(result.current[2].opacity).toBeUndefined()
+    expect(result.current[2].transform).toBeUndefined()
+
+    await act(async () => {
+      element.animation.emitValues({ opacity: 0.35 })
+    })
+
+    expect(result.current[2].opacity).toBe(0.35)
+    expect(result.current[2].transform).toBeUndefined()
+  })
 })
