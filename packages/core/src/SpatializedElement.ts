@@ -77,8 +77,7 @@ export abstract class SpatializedElement extends SpatialObject {
     config: SpatializedMotionAuthorConfig,
   ): Promise<AnimationObject> {
     const normalized = normalizeMotionConfig(config)
-    const targetKind = this.kind
-    validateNormalizedMotionConfig(normalized, { targetKind })
+    validateNormalizedMotionConfig(normalized)
     return AnimationObject.create({
       elementId: this.id,
       timeline: motionConfigToNativeTimeline(normalized),

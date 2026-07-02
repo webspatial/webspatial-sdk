@@ -1,6 +1,5 @@
 import { SPATIALIZED_MOTION_PROPERTIES } from '../../types/motion/spatializedMotion'
 import type {
-  SpatializedMotionKind,
   SpatializedMotionProperty,
   SpatializedMotionConfig,
   SpatializedMotionSegmentConfig,
@@ -30,10 +29,9 @@ export function validateSpatializedMotionConfig(
     | SpatializedMotionConfig
     | SpatializedMotionSegmentConfig
     | SpatializedMotionTimelineConfig,
-  options: { targetKind?: SpatializedMotionKind } = {},
 ): void {
   const normalized = normalizeMotionConfig(config)
-  validateNormalizedMotionConfig(normalized, options)
+  validateNormalizedMotionConfig(normalized)
 }
 
 /**
@@ -43,9 +41,7 @@ export function validateSpatializedMotionConfig(
  */
 export function validateNormalizedMotionConfig(
   config: SpatializedMotionConfig,
-  options: { targetKind?: SpatializedMotionKind } = {},
 ): void {
-  void options
   const { duration, tracks } = config
 
   if (
