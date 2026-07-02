@@ -19,9 +19,6 @@ final class SpatializedElementAnimationObject: SpatialObject {
     private(set) var animatesTransform: Bool
     private(set) var animatesOpacity: Bool
 
-    private var timelineStartTransform: SpatializedMotionTransformComponents = .identity
-    private var timelineStartOpacity: Double = 1.0
-
     private var isReversed = false
 
     private(set) var playState: SpatializedElementAnimationPlayState = .idle
@@ -63,7 +60,7 @@ final class SpatializedElementAnimationObject: SpatialObject {
         self.targetElement = targetElement
         self.targetKind = targetKind
         self.timelineSampler = timelineSampler
-        writeAdapter = .adapter(for: targetKind)
+        writeAdapter = SpatializedElementAnimationWriteAdapter()
         self.duration = duration
         self.delay = delay
         self.timingFunction = SpatializedMotionTimingFunction.from(name: timingFunction)
@@ -78,10 +75,6 @@ final class SpatializedElementAnimationObject: SpatialObject {
         } else {
             super.init()
         }
-
-        let start = timelineSampler.sampleTransformAndOpacity(at: 0)
-        timelineStartTransform = start.transform
-        timelineStartOpacity = start.opacity
     }
 
     func play(at timestamp: CFTimeInterval = CACurrentMediaTime()) {

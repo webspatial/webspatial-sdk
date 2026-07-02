@@ -626,7 +626,7 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
 
     func test_releaseMaskIgnoresMismatchedAnimationOwnerForStatic3DRootTransformAdapter() {
         let element = SpatializedStatic3DElement()
-        let adapter = SpatializedElementAnimationWriteAdapter.adapter(for: .static3d)
+        let adapter = SpatializedElementAnimationWriteAdapter()
 
         element.animatingMask.acquire(transform: "owner-a")
 
