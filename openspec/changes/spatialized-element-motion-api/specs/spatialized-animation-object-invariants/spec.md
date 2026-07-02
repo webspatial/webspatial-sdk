@@ -101,17 +101,17 @@ The native runtime MUST limit animation writable fields and mask fields by targe
 |-------------|-----------------|-------------|
 | `spatialized2d` | `transform`, `opacity` | `transform`, `opacity` |
 | `dynamic3d` | `transform`, `opacity` | `transform`, `opacity` |
-| `static3d` | `modelTransform` | `modelTransform` |
+| `static3d` | `transform`, `opacity` | `transform`, `opacity` |
 
-Static3D `opacity` tracks MUST be preserved through native create. Static3D animation MUST write host element `opacity` and model root `modelTransform`, and MUST NOT write host element `transform` as a substitute path for `modelTransform`.
+Static3D `transform` and `opacity` tracks MUST be preserved through native create. Static3D animation MUST write container-root `transform` and `opacity`, and MUST NOT write model-internal `entityTransform` / `modelTransform`.
 
-#### Scenario: Static3D writes modelTransform and opacity
+#### Scenario: Static3D writes container-root transform and opacity
 
 - **GIVEN** target kind is `static3d`
 - **WHEN** native `AnimationObject.tick(timestamp)` produces a sample
-- **THEN** native MUST write model root `modelTransform`
+- **THEN** native MUST write container-root `transform`
 - **AND** MUST write host element `opacity` when the timeline animates opacity
-- **AND** MUST NOT write host element `transform` as a substitute path
+- **AND** MUST NOT write model-internal `entityTransform` / `modelTransform`
 
 ### Requirement: Terminal mask handoff is explicit
 

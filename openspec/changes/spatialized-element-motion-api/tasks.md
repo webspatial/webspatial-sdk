@@ -28,7 +28,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] 2D spec: require native-first `AnimationObject` target path with no Web RAF fallback
 - [x] 2D spec: require native create to carry canonical tracks
 - [x] 2D spec: replace legacy field-ownership wording with element animating mask wording
-- [x] Static3D spec: require model-root transform timeline through `AnimationObject`
+- [x] Static3D spec: require container-root transform / opacity timeline through `AnimationObject`
 - [x] Static3D spec: support `opacity` tracks during `validateSpatializedMotionConfig`; do not silently drop them
 - [x] Dynamic3D spec: require container transform/opacity timeline through `AnimationObject`
 - [x] Entity spec boundary: keep entity animation separate from container `AnimationObject`
@@ -143,7 +143,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] visionOS: Native `AnimationObject` `reset/finish` reuse the same object and do not recreate it
 - [x] visionOS: Native `AnimationObject.tick()` calls target write adapter to write samples
 - [x] visionOS: target write adapter limits writable fields and mask fields by target kind
-- [x] visionOS: Static3D writes `modelTransform` and host `opacity`, not host transform
+- [x] visionOS: Static3D writes container-root `transform` and `opacity`, not model-internal `entityTransform` / `modelTransform`
 - [x] visionOS: implement terminal mask handoff: pause keeps mask; stop/reset/finish/natural complete/destroy release mask
 - [x] visionOS: emit `SpatialAnimationStateChanged` through existing `SpatialScene` / `spatialWebViewModel` WebMsg path
 - [x] visionOS: reuse `SpatializedElementMotionTimelineSampler` / `SpatializedMotionTimingFunction` / `SpatializedMotionTransformComponents`
@@ -176,7 +176,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Test: pause keeps the current value and keeps mask ownership
 - [x] Test: native state is authoritative over Core SDK state
 - [x] Test: Static3D opacity tracks are accepted before native create
-- [x] Test: Static3D animation writes `modelTransform` and host `opacity`
+- [x] Test: Static3D animation writes container-root `transform` / `opacity` and does not write `entityTransform`
 - [x] Test: pure Web runtime returns false for `supports('useAnimation')`
 - [x] Test: target-state runtime no longer uses the old `AnimateSpatializedElementMotion` path
 

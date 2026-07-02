@@ -62,7 +62,7 @@
 | `SpatialScene.spatialObjects` | 复用现有 `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` / destroy path 注册、查找和销毁 native spatial objects，包括 `AnimationObject`。 |
 | `TimelineSampler` | 复用现有 timeline sampler，按 locked canonical timeline 采样。 |
 | `Frame driver / CADisplayLink` | `SpatializedElementAnimationManager` 的内部调度能力；manager 在存在 running animation 时启动它，由它每帧回调 `manager.tickAll(timestamp)`，driver 本身不持有 animation 语义。 |
-| `ElementAnimationWriteAdapter` | 由 `Native AnimationObject.tick()` 调用，根据 target kind 写入 `transform`、`opacity` 或 `modelTransform`；manager 不执行逐属性写入。 |
+| `ElementAnimationWriteAdapter` | 由 `Native AnimationObject.tick()` 调用，根据 target kind 写入容器根 `transform` 和 `opacity`；manager 不执行逐属性写入。 |
 | `AnimatingMask` | 记录 animation-owned fields，防止普通 element sync 覆盖 active animation。 |
 | `SpatialScene WebMsg send path` | 复用现有 `SpatialScene` / `spatialWebViewModel` WebMsg 发送机制发送统一 `SpatialAnimationStateChanged`。 |
 
@@ -72,9 +72,9 @@
 |-------------|-----------------|-------------|
 | `spatialized2d` | `transform`, `opacity` | `transform`, `opacity` |
 | `dynamic3d` | `transform`, `opacity` | `transform`, `opacity` |
-| `static3d` | `modelTransform`, `opacity` | `modelTransform`, `opacity` |
+| `static3d` | `transform`, `opacity` | `transform`, `opacity` |
 
-Static3D `opacity` tracks 必须在 native create 中被保留。Static3D animation 写模型根 `modelTransform` 和 host element `opacity`，不得把 host element `transform` 当成替代路径。
+Static3D `transform` 和 `opacity` tracks 必须在 native create 中被保留。Static3D animation 写 `SpatializedStatic3DElement` 容器根 `transform` 和 `opacity`；不得写模型内部 `entityTransform` / `modelTransform` 字段，也不得影响 USD embedded clip playback。
 
 ## 跨层对象关系
 
@@ -244,7 +244,6 @@ classDiagram
     class AnimatingMask {
       +transform: Bool
       +opacity: Bool
-      +modelTransform: Bool
       +clear()
     }
   }
@@ -277,7 +276,7 @@ classDiagram
   NativeSpatializedElement --> AnimatingMask : owns
   NativeAnimationObject --> TimelineSampler : owns locked timeline
   NativeAnimationObject --> ElementAnimationWriteAdapter : applies sampled values
-  ElementAnimationWriteAdapter --> NativeSpatializedElement : writes transform / opacity / modelTransform
+  ElementAnimationWriteAdapter --> NativeSpatializedElement : writes transform / opacity
   NativeAnimationObject --> AnimatingMask : marks animation-owned fields
 ```
 
@@ -390,7 +389,7 @@ sequenceDiagram
   Sampler-->>Obj: SpatializedVisualValues
   Obj->>Mask: mark target-kind mask fields
   Obj->>Adapter: apply(sample, target, kind)
-  Adapter->>Element: write transform / opacity / modelTransform
+  Adapter->>Element: write transform / opacity
 
   alt reaches terminal
     Obj->>Obj: playState = finished
