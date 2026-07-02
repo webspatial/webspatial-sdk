@@ -100,11 +100,12 @@ animatable.
 | `transform.translate.x/y/z` | `number` | CSS pixel units on 2D targets |
 | `transform.rotate.x/y/z` | `number` | Degrees |
 | `transform.scale.x/y/z` | `number` | Unitless |
-| `opacity` | `number` | Supported on `spatialized2d` and `dynamic3d` |
+| `opacity` | `number` | Supported on `spatialized2d` on visionOS only, and on `static3d` and `dynamic3d` on both runtimes |
 
 Validation rejects layout-affecting or unsupported fields such as `width`,
-`height`, `back`, `backOffset`, `depth`, and unknown properties. Static3D does
-not currently ship `opacity` playback.
+`height`, `back`, `backOffset`, `depth`, and unknown properties. `opacity`
+playback is available on `spatialized2d` on visionOS only, and on `static3d`
+and `dynamic3d` on both runtimes.
 
 Transform composition order is fixed: `translate`, then `rotate`, then `scale`.
 
@@ -271,6 +272,10 @@ const canAnimate = supports('useAnimation')
 For container motion, pure Web runtime does not start a playback fallback.
 Capability-negative runtimes remain unavailable until the runtime reports
 `supports('useAnimation')`.
+
+`opacity` support also depends on the resolved target kind and runtime:
+`spatialized2d` supports `opacity` on visionOS only, while `static3d` and
+`dynamic3d` support `opacity` on both runtimes.
 
 ## Known Limits
 
