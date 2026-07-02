@@ -1,7 +1,4 @@
-import type {
-  SpatializedElement,
-  SpatializedMotionKind,
-} from '@webspatial/core-sdk'
+import type { SpatializedElement } from '@webspatial/core-sdk'
 import { useEffect } from 'react'
 import type { SpatializedMotionBinding } from './motionBindingTypes'
 
@@ -18,23 +15,21 @@ interface UseBindSpatializedMotionOptions {
 }
 
 /**
- * Resolves the runtime motion target kind from the resolved spatialized
- * element instance.
+ * Checks whether the resolved spatialized element can host motion.
  *
  * @param element - The resolved runtime element candidate.
- * @returns The inferred motion kind, or `undefined` when the element is not a
- * supported motion target.
+ * @returns Whether the element is a supported motion target.
  */
-function resolveSpatializedMotionKind(
+function isSupportedSpatializedMotionElement(
   element: SpatializedElement,
-): SpatializedMotionKind | undefined {
+): boolean {
   switch (element.kind) {
     case 'spatialized2d':
     case 'static3d':
     case 'dynamic3d':
-      return element.kind
+      return true
     default:
-      return undefined
+      return false
   }
 }
 
@@ -49,10 +44,9 @@ export function useBindSpatializedMotion({
 }: UseBindSpatializedMotionOptions): void {
   useEffect(() => {
     if (!binding || !element) return
-    const kind = resolveSpatializedMotionKind(element)
-    if (!kind) return
+    if (!isSupportedSpatializedMotionElement(element)) return
 
-    binding.__setElement?.(element, kind)
+    binding.__setElement?.(element)
 
     return () => {
       binding.__onUnbind?.(element)

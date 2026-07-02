@@ -1,7 +1,4 @@
-import type {
-  SpatializedElement,
-  SpatializedMotionKind,
-} from '@webspatial/core-sdk'
+import type { SpatializedElement } from '@webspatial/core-sdk'
 
 /**
  * Internal binding contract shared between React container wiring and the Core
@@ -15,12 +12,8 @@ export interface SpatializedMotionBinding {
    * Attaches or detaches the resolved runtime element from the binding.
    *
    * @param element - The resolved runtime element or `null` when detaching.
-   * @param targetKind - The resolved motion target kind, if available.
    */
-  __setElement: (
-    element: SpatializedElement | null,
-    targetKind?: SpatializedMotionKind,
-  ) => void
+  __setElement: (element: SpatializedElement | null) => void
 
   /**
    * Performs owner-aware unbind cleanup without forcing an extra

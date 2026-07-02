@@ -121,10 +121,14 @@ function createMockAnimationObject(id = 'animation-object-1') {
   return object
 }
 
-function createMockElement(id = 'motion-element-1') {
+function createMockElement(
+  id = 'motion-element-1',
+  kind: 'spatialized2d' | 'static3d' | 'dynamic3d' = 'spatialized2d',
+) {
   const animation = createMockAnimationObject(`${id}-animation`)
   return {
     id,
+    kind,
     animation,
     createAnimation: vi.fn(async () => animation),
   }
@@ -164,7 +168,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
 
     await waitFor(() => {
@@ -208,7 +212,7 @@ describe('useAnimation tuple api native backend', () => {
     expect(result.current[1].playState).toBe('queued')
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
 
     await waitFor(() => {
@@ -246,7 +250,7 @@ describe('useAnimation tuple api native backend', () => {
     expect(element.animation.finish).not.toHaveBeenCalled()
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
 
     await waitFor(() => {
@@ -280,7 +284,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
 
     await waitFor(() => {
@@ -309,7 +313,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
     await waitFor(() => expect(element.createAnimation).toHaveBeenCalled())
 
@@ -362,7 +366,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
       result.current[1].play()
     })
     await waitFor(() => expect(element.animation.play).toHaveBeenCalled())
@@ -400,7 +404,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
       result.current[1].play()
     })
     await waitFor(() => expect(element.animation.play).toHaveBeenCalled())
@@ -437,7 +441,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
       result.current[1].play()
     })
     await waitFor(() => expect(element.animation.play).toHaveBeenCalled())
@@ -475,7 +479,7 @@ describe('useAnimation tuple api native backend', () => {
       )
 
       await act(async () => {
-        result.current[0].__setElement?.(element as any, 'spatialized2d')
+        result.current[0].__setElement?.(element as any)
         result.current[1].play()
       })
       await waitFor(() => expect(element.animation.play).toHaveBeenCalled())
@@ -506,7 +510,7 @@ describe('useAnimation tuple api native backend', () => {
   ] as const)(
     'native %s emits values that update the React style outlet',
     async (targetKind, elementId) => {
-      const element = createMockElement(elementId)
+      const element = createMockElement(elementId, targetKind)
 
       const { result } = renderHook(() =>
         useAnimation({
@@ -526,7 +530,7 @@ describe('useAnimation tuple api native backend', () => {
       )
 
       await act(async () => {
-        result.current[0].__setElement?.(element as any, targetKind)
+        result.current[0].__setElement?.(element as any)
       })
       await waitFor(() => expect(element.createAnimation).toHaveBeenCalled())
 
@@ -549,6 +553,7 @@ describe('useAnimation tuple api native backend', () => {
     const secondAnimation = createMockAnimationObject('native-config-second')
     const element = {
       id: 'native-config-snapshot',
+      kind: 'spatialized2d' as const,
       createAnimation: vi
         .fn()
         .mockResolvedValueOnce(firstAnimation)
@@ -577,7 +582,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
     await waitFor(() =>
       expect(element.createAnimation).toHaveBeenCalledTimes(1),
@@ -615,7 +620,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
       result.current[1].play()
     })
     await waitFor(() => expect(element.animation.play).toHaveBeenCalled())
@@ -649,7 +654,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(currentElement as any, 'spatialized2d')
+      result.current[0].__setElement?.(currentElement as any)
       result.current[1].play()
     })
     await waitFor(() =>
@@ -684,7 +689,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
     await waitFor(() => expect(element.createAnimation).toHaveBeenCalled())
 
@@ -716,7 +721,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
     await waitFor(() => expect(element.createAnimation).toHaveBeenCalled())
 
@@ -820,7 +825,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
     await waitFor(() => expect(element.createAnimation).toHaveBeenCalled())
 
@@ -853,7 +858,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
     await waitFor(() => expect(element.createAnimation).toHaveBeenCalled())
 
@@ -873,6 +878,7 @@ describe('useAnimation tuple api native backend', () => {
     const onError = vi.fn()
     const element = {
       id: 'create-fail',
+      kind: 'spatialized2d' as const,
       createAnimation: vi.fn(async () => {
         throw new Error('create failed')
       }),
@@ -901,7 +907,7 @@ describe('useAnimation tuple api native backend', () => {
     expect(result.current[1].playState).toBe('queued')
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
 
     await waitFor(() => expect(onError).toHaveBeenCalled())
@@ -920,6 +926,7 @@ describe('useAnimation tuple api native backend', () => {
     )
     const element = {
       id: 'sequential-element',
+      kind: 'spatialized2d' as const,
       animation,
       createAnimation: vi.fn(async () => animation),
     }
@@ -946,7 +953,7 @@ describe('useAnimation tuple api native backend', () => {
     })
 
     await act(async () => {
-      result.current[0].__setElement?.(element as any, 'spatialized2d')
+      result.current[0].__setElement?.(element as any)
     })
 
     await waitFor(() => expect(animation.play).toHaveBeenCalledTimes(1))
@@ -961,7 +968,7 @@ describe('useAnimation tuple api native backend', () => {
   })
 
   test('static3d opacity creates a Core AnimationObject and forwards the track', () => {
-    const element = createMockElement('static-opacity')
+    const element = createMockElement('static-opacity', 'static3d')
 
     const { result } = renderHook(() =>
       useAnimation({
@@ -980,7 +987,7 @@ describe('useAnimation tuple api native backend', () => {
     )
 
     act(() => {
-      result.current[0].__setElement?.(element as any, 'static3d')
+      result.current[0].__setElement?.(element as any)
     })
     expect(element.createAnimation).toHaveBeenCalledTimes(1)
   })
