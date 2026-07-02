@@ -7,7 +7,7 @@ Attachments allow developers to render interactive 2D HTML/React content — but
 The API uses two components with a deliberate separation of concerns:
 
 - **`<AttachmentAsset>`** declares *what* to render (the React content template). Placed outside `<SceneGraph>`.
-- **`<AttachmentEntity>`** declares *where* to render it (position, size, parent entity). Placed inside `<SceneGraph>`.
+- **`<AttachmentEntity>`** declares *where* to render it (transform, dimensions, parent entity). Placed inside `<SceneGraph>`.
 
 This enables a 1→N pattern: one content template can be rendered into multiple 3D positions simultaneously, mirroring the existing asset-vs-entity pattern used by models and materials.
 
@@ -36,6 +36,25 @@ The React content to render inside the attachment. This can be any valid React J
 
 Creates a native attachment (a child WKWebView on visionOS) parented under a 3D entity, and registers its DOM container with the `AttachmentRegistry` so that `<AttachmentAsset>` can portal content into it.
 
+`<AttachmentEntity>` behaves like primitive entity surfaces such as `<Plane>`: it accepts entity-style transform props and meter-based sizing, but remains a 2D UI surface — not a full `SpatialEntity`.
+
+### Example
+
+```tsx
+<AttachmentAsset id="profile-card">
+  <ProfileCard />
+</AttachmentAsset>
+
+<AttachmentEntity
+  attachment="profile-card"
+  position={{ x: -0.4, y: 1.2, z: -0.8 }}
+  rotation={{ x: 0, y: 20, z: 0 }}
+  scale={{ x: 1, y: 1, z: 1 }}
+  width={0.35}
+  height={0.2}
+/>
+```
+
 ### Attributes
 
 `attachment`
@@ -44,18 +63,41 @@ Creates a native attachment (a child WKWebView on visionOS) parented under a 3D 
 
 `position`
 
-An optional `[x, y, z]` tuple specifying the attachment's local position relative to its parent entity, in meters. Defaults to `[0, 0, 0]`.
+Optional `{ x, y, z }` object specifying the attachment's local position relative to its parent entity, in meters. Defaults to `{ x: 0, y: 0, z: 0 }`.
 
-`size`
+`rotation`
 
-**Required.** An object `{ width: number, height: number }` specifying the attachment's frame dimensions in points. This controls the SwiftUI `.frame()` applied to the attachment's WKWebView on the native side.
+Optional `{ x, y, z }` object specifying Euler rotation in degrees, matching regular entity transform semantics. Defaults to `{ x: 0, y: 0, z: 0 }`.
+
+`scale`
+
+Optional `{ x, y, z }` object specifying local scale. Defaults to `{ x: 1, y: 1, z: 1 }`.
+
+`width`
+
+Optional width of the attachment frame in world-space meters. When omitted, the native layer falls back to an internal default frame size.
+
+`height`
+
+Optional height of the attachment frame in world-space meters. When omitted, the native layer falls back to an internal default frame size.
 
 ### Usage Notes
 
 - `<AttachmentEntity>` must be placed inside `<SceneGraph>`, as a descendant of an `<Entity>`. It inherits the parent entity's transform — when the entity moves, the attachment follows.
-- The `attachment` prop can change at runtime. The component will migrate its registry mapping from the old name to the new name, so the portal tracks correctly.
-- Position and size can change at runtime. Updates are sent to the native side via `UpdateAttachmentEntityCommand`.
+- The `attachment` prop can change at runtime. The component will migrate its registry mapping from the old id to the new id, so the portal tracks correctly.
+- Transform and dimensions can change at runtime. Updates are sent to the native side via `UpdateAttachmentEntityCommand`.
 - On unmount, the attachment is destroyed and its container is removed from the registry.
+- Attachments are 2D UI surfaces only. Components, child entities, model/material APIs, event bubbling, and `animateTransform` are not supported.
+
+## Migration
+
+| Before | After |
+| --- | --- |
+| `<AttachmentAsset name="hud">` | `<AttachmentAsset id="hud">` |
+| `position={[x, y, z]}` | `position={{ x, y, z }}` |
+| `size={{ width, height }}` (points) | `width={m}` / `height={m}` (meters) |
+
+Add `rotation` and `scale` as optional `{ x, y, z }` props when you need orientation or non-uniform scaling. Tuple position and the `size` object are no longer accepted.
 
 ## Style Sync
 
@@ -128,7 +170,7 @@ Attachment creation uses `window.open("webspatial://createAttachment?...")` inst
 | Operation | Protocol | Reason |
 |-----------|----------|--------|
 | Create | `WebSpatialProtocolCommand` (`window.open`) | Must return `WindowProxy` synchronously |
-| Update | `JSBCommand` (JSB message) | Only sends data (position, size) — no return value needed |
+| Update | `JSBCommand` (JSB message) | Only sends data (position, rotation, scale, width, height) — no return value needed |
 | Destroy | `DestroyCommand` (JSB message) | Standard spatial object destroy pipeline |
 
 ## Constraints
