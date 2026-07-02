@@ -54,7 +54,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
 
   private animationObject: AnimationObject | null = null
   private element: SpatializedElement | null = null
-  private kind: SpatializedMotionKind | null = null
   private destroyed = false
   private creating = false
   private createToken = 0
@@ -96,7 +95,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   }
 
   get targetKind(): SpatializedMotionKind | null {
-    return this.kind
+    return this.element?.kind ?? null
   }
 
   get playState(): SpatializedMotionPlayState {
@@ -170,7 +169,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.pendingCommands = []
     this.detachAnimationObject()
     this.element = null
-    this.kind = null
     this.options.onStateChange?.()
   }
 
@@ -186,14 +184,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
       )
       return
     }
-    if (this.kind && this.kind !== element.kind) {
-      console.warn(
-        `[AnimationBinding] motion binding already resolved to ${this.kind}; ignoring ${element.kind}.`,
-      )
-      return
-    }
     validateSpatializedMotionConfig(this.config)
-    this.kind = element.kind
     this.element = element
     this.ensureAnimationObject()
     this.options.onStateChange?.()
@@ -227,9 +218,8 @@ export class AnimationBinding implements SpatializedPlaybackApi {
 
   private recreateAnimationObject(): void {
     const element = this.element
-    const kind = this.kind
     this.detachAnimationObject()
-    if (element && kind && supportsAnimation()) {
+    if (element && supportsAnimation()) {
       this.ensureAnimationObject()
       return
     }
@@ -240,7 +230,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   }
 
   private ensureAnimationObject(): void {
-    if (this.animationObject || this.creating || !this.kind || !this.element) {
+    if (this.animationObject || this.creating || !this.element) {
       return
     }
     if (!supportsAnimation()) {
@@ -249,7 +239,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     const hadPendingCommands = this.pendingCommands.length > 0
     const token = ++this.createToken
     const element = this.element
-    const kind = this.kind
+    const kind = element.kind
 
     this.creating = true
     element
@@ -259,7 +249,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
           this.destroyed ||
           token !== this.createToken ||
           this.element !== element ||
-          this.kind !== kind
+          this.element.kind !== kind
         ) {
           animationObject.destroy().catch(() => {})
           return
@@ -335,7 +325,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
 
   private dispatchCommand(command: AnimationCommand): void {
     if (this.destroyed) return
-    if (!this.animationObject || !this.element || !this.kind) {
+    if (!this.animationObject || !this.element) {
       this.pendingCommands.push(command)
       this.applyQueuedState(command)
       this.options.onStateChange?.()
@@ -378,7 +368,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   }
 
   private async flushPendingCommands(): Promise<void> {
-    if (!this.animationObject || !this.element || !this.kind) return
+    if (!this.animationObject || !this.element) return
     const animationObject = this.animationObject
     const commands = this.pendingCommands
     this.pendingCommands = []
@@ -395,8 +385,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
       if (
         this.destroyed ||
         this.animationObject !== animationObject ||
-        !this.element ||
-        !this.kind
+        !this.element
       ) {
         return
       }
@@ -405,7 +394,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   }
 
   private maybeAutoPlay(allowImplicitPlay: boolean): void {
-    if (!this.animationObject || !this.element || !this.kind) return
+    if (!this.animationObject || !this.element) return
     if (!allowImplicitPlay) return
     if (this.config.autoStart === false) return
     this.animationObject.play().catch(error => {
