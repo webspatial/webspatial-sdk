@@ -344,6 +344,9 @@ final class SpatializedElementAnimationObject: SpatialObject {
         if elapsed >= delay {
             delayCompleted = true
             startTime = timestamp
+            // Delay-window pauses are already accounted for above; active playback starts with a fresh pause clock.
+            pausedDuration = 0
+            pauseStartTime = 0
             return true
         }
         return false
