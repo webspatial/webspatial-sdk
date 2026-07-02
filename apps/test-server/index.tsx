@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
-import { HashRouter as Router, Routes, Route } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { SpatialBoot, WebSpatialBootError } from '@webspatial/react-sdk'
 import Sidebar from './src/components/Sidebar'
 import Home from './src/pages/Home'
@@ -82,6 +82,32 @@ import EntityAnimationCancelSyncPage from './src/pages/entity-animation/cancel-s
 import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/capability-check'
 import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loop'
 import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
+import SpatialDivAnimationPage from './src/pages/spatial-div-animation/index'
+import SpatialElementMotionPage from './src/pages/spatial-element-motion/index'
+import SpatialElementMotionRealityContainerPage from './src/pages/spatial-element-motion/reality-container'
+import SpatialElementMotionStaticModelContainerPage from './src/pages/spatial-element-motion/static-model-container'
+import SpatialElementMotionFadeInEntrancePage from './src/pages/spatial-element-motion/fade-in-entrance'
+import { SpatialDivMotionTimelinePercentPage } from './src/pages/spatial-div-motion/timeline-percent'
+import SpatialElementMotionScaleExpandPage from './src/pages/spatial-element-motion/scale-expand'
+import SpatialElementMotionOpacityFadePage from './src/pages/spatial-element-motion/opacity-fade'
+import SpatialElementMotionCombinedDelayPage from './src/pages/spatial-element-motion/combined-delay'
+import { SpatialElementMotionDelayPauseReproPage } from './src/pages/spatial-element-motion/delay-pause-repro'
+import SpatialElementMotionPlaybackRatePage from './src/pages/spatial-element-motion/playback-rate'
+import SpatialElementMotionRotate3dPage from './src/pages/spatial-element-motion/rotate-3d'
+import SpatialElementMotionTransformTranslatePage from './src/pages/spatial-element-motion/transform-translate'
+import SpatialElementMotionReverseLoopPage from './src/pages/spatial-element-motion/reverse-loop'
+import SpatialElementMotionCapabilityCheckPage from './src/pages/spatial-element-motion/capability-check'
+import SpatialElementMotionPlayStatePage from './src/pages/spatial-element-motion/play-state'
+import SpatialElementMotionPerfComparisonPage from './src/pages/spatial-element-motion/perf-comparison'
+import SpatialElementMotionLoopAnimationPage from './src/pages/spatial-element-motion/loop-animation'
+import SpatialElementMotionNestedAnimationPage from './src/pages/spatial-element-motion/nested-animation'
+import SpatializedMotionHubPage from './src/pages/spatial-div-motion/index'
+import { SpatialDivMotionMultiTrackPage } from './src/pages/spatial-div-motion/multi-track'
+import { SpatialDivMotionSimpleEntrancePage } from './src/pages/spatial-div-motion/simple-entrance'
+import { SpatialDivMotionTranslateZPage } from './src/pages/spatial-div-motion/translate-z'
+import { SpatialDivMotionRotatePage } from './src/pages/spatial-div-motion/rotate'
+import { SpatializedMotionModelContainerPage } from './src/pages/spatial-div-motion/model-container'
+import { SpatializedMotionRealityContainerPage } from './src/pages/spatial-div-motion/reality-container'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -229,6 +255,120 @@ function App() {
                   path="/entity-animation/play-state"
                   element={<EntityAnimationPlayStatePage />}
                 />
+                <Route
+                  path="/spatial-div-animation"
+                  element={<SpatialDivAnimationPage />}
+                />
+                <Route
+                  path="/spatial-element-motion"
+                  element={<SpatialElementMotionPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/reality-container"
+                  element={<SpatialElementMotionRealityContainerPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/static-model-container"
+                  element={<SpatialElementMotionStaticModelContainerPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/fade-in-entrance"
+                  element={<SpatialElementMotionFadeInEntrancePage />}
+                />
+                <Route
+                  // Reuse the existing demo component under the element-motion hub.
+                  path="/spatial-element-motion/timeline-percent"
+                  element={<SpatialDivMotionTimelinePercentPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/scale-expand"
+                  element={<SpatialElementMotionScaleExpandPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/opacity-fade"
+                  element={<SpatialElementMotionOpacityFadePage />}
+                />
+                <Route
+                  path="/spatial-element-motion/combined-delay"
+                  element={<SpatialElementMotionCombinedDelayPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/delay-pause-repro"
+                  element={<SpatialElementMotionDelayPauseReproPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/playback-rate"
+                  element={<SpatialElementMotionPlaybackRatePage />}
+                />
+                <Route
+                  path="/spatial-element-motion/rotate-3d"
+                  element={<SpatialElementMotionRotate3dPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/transform-translate"
+                  element={<SpatialElementMotionTransformTranslatePage />}
+                />
+                <Route
+                  path="/spatial-element-motion/reverse-loop"
+                  element={<SpatialElementMotionReverseLoopPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/capability-check"
+                  element={<SpatialElementMotionCapabilityCheckPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/play-state"
+                  element={<SpatialElementMotionPlayStatePage />}
+                />
+                <Route
+                  path="/spatial-element-motion/perf-comparison"
+                  element={<SpatialElementMotionPerfComparisonPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/loop-animation"
+                  element={<SpatialElementMotionLoopAnimationPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/nested-animation"
+                  element={<SpatialElementMotionNestedAnimationPage />}
+                />
+                <Route
+                  path="/spatial-div-motion"
+                  element={<SpatializedMotionHubPage />}
+                />
+                <Route
+                  path="/spatial-div-motion/multi-track"
+                  element={<SpatialDivMotionMultiTrackPage />}
+                />
+                <Route
+                  path="/spatial-div-motion/simple-entrance"
+                  element={<SpatialDivMotionSimpleEntrancePage />}
+                />
+                <Route
+                  path="/spatial-div-motion/translate-z"
+                  element={<SpatialDivMotionTranslateZPage />}
+                />
+                <Route
+                  path="/spatial-div-motion/rotate"
+                  element={<SpatialDivMotionRotatePage />}
+                />
+                <Route
+                  path="/spatial-div-motion/model-container"
+                  element={<SpatializedMotionModelContainerPage />}
+                />
+                <Route
+                  path="/spatial-div-motion/reality-container"
+                  element={<SpatializedMotionRealityContainerPage />}
+                />
+                <Route
+                  path="/reality/dynamic3d-motion"
+                  element={
+                    <Navigate
+                      to="/spatial-div-motion/reality-container"
+                      replace
+                    />
+                  }
+                />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
                 <Route path="/scene/xrapp" element={<SceneXRApp />} />
@@ -365,7 +505,18 @@ function App() {
   )
 }
 
+/** HashRouter ignores pathname; deep links without `#` would otherwise show Home. */
+function syncHashFromPathname() {
+  const { pathname, search, hash } = window.location
+  if (hash || pathname === '/' || pathname === '/index.html') return
+  window.location.replace(
+    `${window.location.origin}${pathname}${search}#${pathname}${search}`,
+  )
+}
+
 const init = () => {
+  syncHashFromPathname()
+
   const rootElement = document.getElementById('root')
   if (!rootElement) {
     console.error('Root element not found')

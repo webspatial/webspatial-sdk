@@ -33,10 +33,13 @@ plugins.push(sassPlugin())
 // No code transforms: tests render standalone via top-level navigation
 
 var outdir = 'dist'
-var port = process.env.PORT ? Number(process.env.PORT) : 5173
+/** Default dev server port (override with PORT=...). Avoids 5173/5174 conflicts with other local apps. */
+const DEFAULT_DEV_PORT = 5173
+var port = process.env.PORT ? Number(process.env.PORT) : DEFAULT_DEV_PORT
+const DEFAULT_LIVERELOAD_PORT = 35739
 var liveReloadServerPort = process.env.LIVERELOAD_PORT
   ? Number(process.env.LIVERELOAD_PORT)
-  : 35729
+  : DEFAULT_LIVERELOAD_PORT
 
 const buildOptions = {
   entryPoints: entryPoints,
@@ -164,28 +167,74 @@ if (isBuild) {
   ctx.watch()
   await prepareDist()
 
+  // SPA fallback: deep links (e.g. /spatial-div-motion/multi-track) must serve index.html
+  const spaFallback = function (req, res) {
+    const raw = req.url || '/'
+    const qIndex = raw.indexOf('?')
+    const pathname = qIndex === -1 ? raw : raw.slice(0, qIndex)
+    const search = qIndex === -1 ? '' : raw.slice(qIndex)
+    const hasExtension = /\.[a-zA-Z0-9]+$/.test(pathname)
+    if (
+      req.method === 'GET' &&
+      pathname !== '/index.html' &&
+      !hasExtension &&
+      !pathname.startsWith('/public/')
+    ) {
+      req.url = '/index.html' + search
+    }
+    res.emit('next')
+  }
+
   // Use http-server instead of ctx serve to avoid overhead delay of ~500ms
   const staticServer = createServer({
     root: './dist', // Serve from dist now to be consistent with production
     cache: -1, // Disable caching
     port: port, // Define the port
+    before: [spaFallback],
+  })
+  staticServer.server.on('error', err => {
+    if (err?.code === 'EADDRINUSE') {
+      console.error(
+        `Port ${port} is already in use. Try: PORT=${port + 1} npm run dev:web`,
+      )
+    } else {
+      console.error('HTTP server error:', err)
+    }
+    process.exit(1)
   })
   staticServer.listen(port, () => {
     console.log('HTTP server is running on http://localhost:' + port)
   })
 
+  let liveReloadActive = false
   try {
     var server = livereload.createServer({
       port: liveReloadServerPort,
       extraExts: ['ts', 'tsx'],
       delay: 50,
     })
+    server.on('error', err => {
+      console.warn(
+        `LiveReload disabled (port ${liveReloadServerPort}):`,
+        err?.code || err?.message || err,
+      )
+      liveReloadActive = false
+    })
+    server.server?.on?.('listening', () => {
+      liveReloadActive = true
+    })
     var watchPaths = [path.resolve(outdir)]
     watchPaths = watchPaths.concat(await glob('./src/**/*.html'))
     watchPaths.push('index.html')
     server.watch(watchPaths)
+    liveReloadActive = true
   } catch (e) {
-    console.log('LiveReload disabled:', e?.code || e)
+    console.warn('LiveReload disabled:', e?.code || e)
+  }
+  if (!liveReloadActive) {
+    console.warn(
+      'Continuing without LiveReload — refresh the browser manually after edits.',
+    )
   }
   console.log('esbuild ready!')
 }

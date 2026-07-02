@@ -21,6 +21,7 @@
 export type {} from './types/global'
 
 export { SpatialObject } from './SpatialObject'
+export { AnimationObject } from './motion/AnimationObject'
 export { Spatial } from './Spatial'
 export { SpatialSession } from './SpatialSession'
 export { SpatialScene } from './SpatialScene'
@@ -33,6 +34,8 @@ export * as PhysicalMetrics from './physicalMetrics'
 export * from './reality'
 export * from './types/types'
 export * from './types/animation'
+export * from './types/motion'
+export * from './motion'
 export * from './runtime'
 
 export { composeSRT, decomposeSRT } from './utils'

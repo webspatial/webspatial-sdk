@@ -14,6 +14,8 @@
 		2B06AEE62E4C1AE8000327E9 /* JSBCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC02E4C1AE8000327E9 /* JSBCommand.swift */; };
 		2B06AEE92E4C1AE8000327E9 /* EventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEBF2E4C1AE8000327E9 /* EventEmitter.swift */; };
 		2B1008A22F0B000800000002 /* NavigationCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */; };
+		2B1008A52F0B000800000005 /* SpatializedElementMotionTimelineSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */; };
+		2B1008A72F0B000800000007 /* SpatializedElementAnimationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */; };
 		2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D702BEBFAAC006897EE /* Assets.xcassets */; };
 		2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */; };
 		2B89E38C2E699104004079AA /* WebMsgCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B89E38B2E699104004079AA /* WebMsgCommand.swift */; };
@@ -38,12 +40,14 @@
 		2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSpatialApp.swift; sourceTree = "<group>"; };
 		2B06AEC42E4C1AE8000327E9 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationCleanupTests.swift; sourceTree = "<group>"; };
+		2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatializedElementMotionTimelineSamplerTests.swift; sourceTree = "<group>"; };
+		2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatializedElementAnimationManagerTests.swift; sourceTree = "<group>"; };
 		2B2F1D632BEBFAAA006897EE /* WebSpatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebSpatial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
 		2B2F1D702BEBFAAC006897EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2B2F1D752BEBFAAC006897EE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2B2F1D7A2BEBFAAD006897EE /* WebSpatial.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WebSpatial.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B2F1D7A2BEBFAAD006897EE /* WebSpatial.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = WebSpatial.xctest; path = "web-spatialTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B89E38B2E699104004079AA /* WebMsgCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebMsgCommand.swift; sourceTree = "<group>"; };
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -63,8 +67,8 @@
 		2B06AF312E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				dynamic3d/EntityAnimationSession.swift,
 				dynamic3d/EntityAnimationManager.swift,
+				dynamic3d/EntityAnimationSession.swift,
 				dynamic3d/Geometry.swift,
 				dynamic3d/SpatialComponent.swift,
 				dynamic3d/SpatialEntity.swift,
@@ -73,6 +77,15 @@
 				dynamic3d/SpatialModelResource.swift,
 				dynamic3d/SpatialRootEntity.swift,
 				dynamic3d/SpatialTextureResource.swift,
+				"element-motion/SpatializedElementAnimationCommand.swift",
+				"element-motion/SpatializedElementAnimationManager.swift",
+				"element-motion/SpatializedElementAnimationObject.swift",
+				"element-motion/SpatializedElementAnimationTypes.swift",
+				"element-motion/SpatializedElementAnimationWriteAdapter.swift",
+				"element-motion/SpatializedElementMotionBridgeTypes.swift",
+				"element-motion/SpatializedElementMotionTimelineSampler.swift",
+				"element-motion/SpatializedElementMotionTiming.swift",
+				"element-motion/SpatializedElementMotionTransformTypes.swift",
 				MaterialSceneRefresh.swift,
 				SpatialApp.swift,
 				Spatialized2DElement.swift,
@@ -161,6 +174,8 @@
 			isa = PBXGroup;
 			children = (
 				2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */,
+				2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */,
+				2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */,
 			);
 			path = "web-spatialTests";
 			sourceTree = "<group>";
@@ -348,6 +363,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B1008A22F0B000800000002 /* NavigationCleanupTests.swift in Sources */,
+				2B1008A52F0B000800000005 /* SpatializedElementMotionTimelineSamplerTests.swift in Sources */,
+				2B1008A72F0B000800000007 /* SpatializedElementAnimationManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -544,13 +561,14 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.webspatial.test;
-				PRODUCT_NAME = WebSpatial;
+				PRODUCT_MODULE_NAME = WebSpatialTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/web-spatial.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/web-spatial";
-				XROS_DEPLOYMENT_TARGET = 1.1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WebSpatial.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WebSpatial";
+				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
 		};
@@ -563,13 +581,14 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.webspatial.test;
-				PRODUCT_NAME = WebSpatial;
+				PRODUCT_MODULE_NAME = WebSpatialTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/web-spatial.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/web-spatial";
-				XROS_DEPLOYMENT_TARGET = 1.1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WebSpatial.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WebSpatial";
+				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
 		};
@@ -604,7 +623,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = 2B2F1D5B2BEBFAAA006897EE /* Project object */;
 }

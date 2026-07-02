@@ -267,6 +267,45 @@ describe('SpatialObject', () => {
     await expect(obj.destroy()).resolves.toBeUndefined()
     expect(onDestroy).toHaveBeenCalledTimes(1)
   })
+
+  it('treats missing native spatial objects as already destroyed', async () => {
+    const onDestroy = vi.fn()
+    vi.doMock('./JSBCommand', () => {
+      return {
+        InspectCommand: vi.fn().mockImplementation(function () {
+          return {
+            execute: vi.fn().mockResolvedValue({
+              success: true,
+              data: undefined,
+              errorMessage: '',
+            }),
+          }
+        }),
+        DestroyCommand: vi.fn().mockImplementation(function () {
+          return {
+            execute: vi.fn().mockResolvedValue({
+              success: false,
+              data: undefined,
+              errorMessage:
+                'Failed to destroy SpatialObject: invalid inspect spatial object id obj-2 not exsit!',
+            }),
+          }
+        }),
+      }
+    })
+
+    const { SpatialObject } = await import('./SpatialObject')
+    class TestObject extends SpatialObject {
+      protected onDestroy() {
+        onDestroy()
+      }
+    }
+
+    const obj = new TestObject('obj-2')
+    await expect(obj.destroy()).resolves.toBeUndefined()
+    expect(obj.isDestroyed).toBe(true)
+    expect(onDestroy).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('platform adapters', () => {

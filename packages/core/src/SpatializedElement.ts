@@ -1,8 +1,14 @@
 import { UpdateSpatializedElementTransform } from './JSBCommand'
+import { AnimationObject } from './motion/AnimationObject'
 import { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { SpatialObject } from './SpatialObject'
 import { SpatialWebEvent } from './SpatialWebEvent'
 import { createSpatialEvent } from './SpatialWebEventCreator'
+import {
+  normalizeMotionConfig,
+  validateNormalizedMotionConfig,
+} from './motion/compute'
+import { motionConfigToNativeTimeline } from './motion/native/serializeMotionTimeline'
 import {
   CubeInfo,
   SpatialDragEndEvent,
@@ -27,6 +33,10 @@ import {
   SpatialTapMsg,
   SpatialWebMsgType,
 } from './WebMsgCommand'
+import type {
+  SpatializedMotionAuthorConfig,
+  SpatializedMotionKind,
+} from './types/motion/spatializedMotion'
 
 /**
  * Abstract base class for all spatialized elements in the WebSpatial environment.
@@ -34,6 +44,11 @@ import {
  * including transformation handling and gesture event processing.
  */
 export abstract class SpatializedElement extends SpatialObject {
+  /**
+   * Identifies the motion target kind supported by this spatialized element.
+   */
+  abstract readonly kind: SpatializedMotionKind
+
   /**
    * Creates a new spatialized element with the specified ID.
    * Registers the element to receive spatial events.
@@ -54,6 +69,20 @@ export abstract class SpatializedElement extends SpatialObject {
   abstract updateProperties(
     properties: Partial<SpatializedElementProperties>,
   ): Promise<WebSpatialProtocolResult>
+
+  /**
+   * Creates a native-first AnimationObject bound to this spatialized element.
+   */
+  async createAnimation(
+    config: SpatializedMotionAuthorConfig,
+  ): Promise<AnimationObject> {
+    const normalized = normalizeMotionConfig(config)
+    validateNormalizedMotionConfig(normalized)
+    return AnimationObject.create({
+      elementId: this.id,
+      timeline: motionConfigToNativeTimeline(normalized),
+    })
+  }
 
   /**
    * Updates the transformation matrix of this element in 3D space.

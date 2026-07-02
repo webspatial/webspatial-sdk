@@ -25,6 +25,7 @@ import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
+import type { SpatializedMotionBinding } from './motion/motionBindingTypes'
 
 /**
  * Degraded fallback: strips spatial-only props and renders plain HTML.
@@ -40,6 +41,7 @@ function DegradedContainer<T extends SpatializedElementRef>({
   type DegradedProps = SpatializedContainerProps<T> & {
     'enable-xr'?: unknown
     sizingMode?: unknown
+    'xr-animation'?: SpatializedMotionBinding
   }
   const {
     component: Component,
@@ -66,6 +68,7 @@ function DegradedContainer<T extends SpatializedElementRef>({
     // HTML host has no such host, so the callback MUST NOT be invoked here —
     // this covers both the non-WebSpatial and attachment-degraded paths.
     onSpatialContentReady: _onSpatialContentReady,
+    'xr-animation': xrAnimation,
     ...restProps
   } = inprops as DegradedProps
 
@@ -183,10 +186,12 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
         spatializedContent,
         createSpatializedElement,
         getExtraSpatializedElementProperties,
+        'xr-animation': _xrAnimation,
         spatialEventOptions: _nestedSpatialEventOptions,
         onSpatialContentReady: _nestedOnSpatialContentReady,
         ...restProps
       } = props
+      void _xrAnimation
       return (
         <SpatialLayerContext.Provider value={layer}>
           <StandardSpatializedContainer<T>
@@ -248,10 +253,12 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
       spatializedContent,
       createSpatializedElement,
       getExtraSpatializedElementProperties,
+      'xr-animation': _xrAnimation,
       spatialEventOptions: _rootSpatialEventOptions,
       onSpatialContentReady: _rootOnSpatialContentReady,
       ...restProps
     } = props
+    void _xrAnimation
 
     return (
       <SpatialLayerContext.Provider value={layer}>

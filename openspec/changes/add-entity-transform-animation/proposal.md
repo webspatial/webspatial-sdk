@@ -44,7 +44,7 @@ function AnimatedBox() {
 }
 ```
 
-The hook declares *what* to animate; playback runs natively at 90 fps. `api.play()`, `pause()`, and `cancel()` give imperative control when needed, with `play()` resuming the current session after a pause, while `onError` surfaces asynchronous bridge/native failures.
+The hook declares *what* to animate; playback runs natively at 90 fps. `api.play()`, `pause()`, and `cancel()` give imperative control when needed, with `play()` resuming the current session after a pause, while `onError` surfaces asynchronous bridge/native failures. Native-backed state changes are observed asynchronously, so a same-tick read of `api.playState` / `api.finished` after a command call may still return the previously committed state until the matching native event arrives.
 
 ## What Changes
 
@@ -59,6 +59,7 @@ The hook declares *what* to animate; playback runs natively at 90 fps. `api.play
     - `api.pause()` freezes the pending play request in `paused` state; after the entity binds, playback remains paused until the application calls `api.play()` again.
     - `api.cancel()` cancels the queued session, returns `playState` to `'idle'`, and fires `onCancel`.
     - `api.isAnimating` remains `true` while `playState` is `'queued'`; after a queued pause, `api.isAnimating` becomes `false` and `api.isPaused` becomes `true`.
+    - For already bound native sessions, `playState` / `finished` update on the corresponding native state event rather than synchronously at command return time; only the queued/unbound path updates local state immediately.
     - No lifecycle callbacks (`onStart`, `onComplete`, `onCancel`) fire while unbound; `onError` is not triggered either, since the absence of a bound entity is a valid waiting state, not an error.
     - On unmount, any queued session is silently cleaned up with no callbacks.
 - Extend runtime capability documentation so applications can query `supports("useAnimation", ["entity"])` before relying on the animation API.
