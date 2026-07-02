@@ -41,25 +41,3 @@ struct Vec3Payload: Encodable {
     let y: Double?
     let z: Double?
 }
-
-struct SpatializedMotionCompletedPayload: Encodable {
-    let type: String
-    let values: SpatializedMotionValuesPayload
-}
-
-struct SpatializedMotionCanceledPayload: Encodable {
-    let type: String
-    let values: SpatializedMotionValuesPayload
-}
-
-struct SpatializedMotionPausedPayload: Encodable {
-    let type: String
-    let values: SpatializedMotionValuesPayload
-}
-
-struct SpatializedMotionFailedPayload: Encodable {
-    let type: String
-    let animationId: String
-    let command: String
-    let reason: String
-}

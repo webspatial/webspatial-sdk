@@ -1,16 +1,7 @@
 import Foundation
 import Spatial
 
-enum SpatializedElementAnimationWriteAdapter {
-    case elementTransform
-
-    static func adapter(for targetKind: SpatializedElementAnimationTargetKind) -> SpatializedElementAnimationWriteAdapter {
-        switch targetKind {
-        case .spatialized2d, .dynamic3d, .static3d:
-            return .elementTransform
-        }
-    }
-
+struct SpatializedElementAnimationWriteAdapter {
     func currentAffineTransform(for element: SpatializedElement) -> AffineTransform3D {
         element.transform
     }

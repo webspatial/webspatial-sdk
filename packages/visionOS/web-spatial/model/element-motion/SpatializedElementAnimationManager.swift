@@ -34,7 +34,7 @@ final class SpatializedElementAnimationManager: NSObject {
     ) throws -> SpatializedElementAnimationObject {
         try Self.validateTimeline(command.timeline)
         let targetKind = try Self.resolveTargetKind(for: target)
-        let writeAdapter = SpatializedElementAnimationWriteAdapter.adapter(for: targetKind)
+        let writeAdapter = SpatializedElementAnimationWriteAdapter()
         let sampler = SpatializedElementMotionTimelineSampler(
             timeline: command.timeline,
             baselineTransform: Self.decomposeTransform(from: writeAdapter.currentAffineTransform(for: target)),
