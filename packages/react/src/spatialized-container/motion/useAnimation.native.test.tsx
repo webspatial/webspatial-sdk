@@ -11,6 +11,7 @@ vi.mock('@webspatial/core-sdk', async () => {
 })
 
 const { useAnimation } = await import('./useAnimation')
+const { useBindSpatializedMotion } = await import('./useBindSpatializedMotion')
 
 type AnimationCallbacks = {
   onComplete?: (values?: any) => void
@@ -620,11 +621,183 @@ describe('useAnimation tuple api native backend', () => {
     await waitFor(() => expect(element.animation.play).toHaveBeenCalled())
 
     await act(async () => {
-      result.current[0].__onUnbind?.()
+      result.current[0].__onUnbind?.(element as any)
     })
 
     expect(element.animation.destroy).toHaveBeenCalledTimes(1)
     expect(onReset).not.toHaveBeenCalled()
+  })
+
+  test('__onUnbind ignores stale owners without detaching the active Core AnimationObject', async () => {
+    const currentElement = createMockElement('current-owner')
+    const staleElement = createMockElement('stale-owner')
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(currentElement as any, 'spatialized2d')
+      result.current[1].play()
+    })
+    await waitFor(() =>
+      expect(currentElement.animation.play).toHaveBeenCalled(),
+    )
+
+    await act(async () => {
+      result.current[0].__onUnbind?.(staleElement as any)
+    })
+
+    expect(currentElement.animation.destroy).not.toHaveBeenCalled()
+    expect(result.current[1].playState).toBe('running')
+  })
+
+  test('__setElement(null) force-unbind still destroys the active Core AnimationObject', async () => {
+    const element = createMockElement('force-unbind-null')
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+    })
+    await waitFor(() => expect(element.createAnimation).toHaveBeenCalled())
+
+    await act(async () => {
+      result.current[0].__setElement?.(null)
+    })
+
+    expect(element.animation.destroy).toHaveBeenCalledTimes(1)
+    expect(result.current[1].playState).toBe('idle')
+  })
+
+  test('destroy force-unbind still destroys the active Core AnimationObject', async () => {
+    const element = createMockElement('force-unbind-destroy')
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        autoStart: false,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any, 'spatialized2d')
+    })
+    await waitFor(() => expect(element.createAnimation).toHaveBeenCalled())
+
+    await act(async () => {
+      const binding = result.current[0] as any
+      binding.destroy()
+    })
+
+    expect(element.animation.destroy).toHaveBeenCalledTimes(1)
+    expect(result.current[1].playState).toBe('idle')
+  })
+
+  test('switching xr-animation on the same host leaves the new binding active', async () => {
+    const animationA = createMockAnimationObject('animation-a-object')
+    const animationB = createMockAnimationObject('animation-b-object')
+    const host = {
+      id: 'same-host-switch',
+      kind: 'spatialized2d' as const,
+      createAnimation: vi
+        .fn()
+        .mockResolvedValueOnce(animationA)
+        .mockResolvedValueOnce(animationB),
+    }
+
+    const { result, rerender } = renderHook(
+      ({ active }: { active: 'a' | 'b' }) => {
+        const [bindingA, apiA] = useAnimation({
+          duration: 1,
+          autoStart: false,
+          tracks: [
+            {
+              property: 'opacity',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 1, value: 1 },
+              ],
+            },
+          ],
+        })
+        const [bindingB, apiB] = useAnimation({
+          duration: 2,
+          autoStart: false,
+          tracks: [
+            {
+              property: 'opacity',
+              keyframes: [
+                { at: 0, value: 1 },
+                { at: 2, value: 0 },
+              ],
+            },
+          ],
+        })
+
+        useBindSpatializedMotion({
+          binding: active === 'a' ? bindingA : bindingB,
+          element: host as any,
+        })
+
+        return { apiA, apiB }
+      },
+      {
+        initialProps: { active: 'a' as 'a' | 'b' },
+      },
+    )
+
+    await waitFor(() => expect(host.createAnimation).toHaveBeenCalledTimes(1))
+
+    rerender({ active: 'b' })
+
+    await waitFor(() => {
+      expect(animationA.destroy).toHaveBeenCalledTimes(1)
+      expect(host.createAnimation).toHaveBeenCalledTimes(2)
+    })
+
+    await act(async () => {
+      result.current.apiB.play()
+    })
+
+    await waitFor(() => expect(animationB.play).toHaveBeenCalledTimes(1))
+    expect(animationA.play).not.toHaveBeenCalled()
+    expect(animationB.destroy).not.toHaveBeenCalled()
   })
 
   test('hook unmount destroys the active Core AnimationObject', async () => {

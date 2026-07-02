@@ -55,7 +55,7 @@ export function useBindSpatializedMotion({
     binding.__setElement?.(element, kind)
 
     return () => {
-      binding.__onUnbind?.()
+      binding.__onUnbind?.(element)
     }
   }, [binding, element])
 }

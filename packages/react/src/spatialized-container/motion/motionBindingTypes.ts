@@ -22,6 +22,11 @@ export interface SpatializedMotionBinding {
     targetKind?: SpatializedMotionKind,
   ) => void
 
-  /** Performs unbind cleanup without forcing an extra `__setElement(null)` call. */
-  __onUnbind?: () => void
+  /**
+   * Performs owner-aware unbind cleanup without forcing an extra
+   * `__setElement(null)` call.
+   *
+   * @param element - The runtime element owned by the cleanup effect.
+   */
+  __onUnbind?: (element: SpatializedElement) => void
 }
