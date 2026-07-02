@@ -57,7 +57,7 @@ const [animation, api, style] = useAnimation({
 | 绑定目标 | React 绑定 | Core 写回 |
 |----------|------------|-----------|
 | 2D | `xr-animation` on `enable-xr` div，`style` 合并 | native `element.transform` + opacity；纯 Web runtime 仅保持 tuple consistency / snapshot，不启动 Web RAF playback |
-| Static3D | `xr-animation` on `<Model>` | native `modelTransform` + host `opacity` |
+| Static3D | `xr-animation` on `<Model>` | native 容器根 `element.transform` + `opacity` |
 | Dynamic3D | `xr-animation` on `<Reality>` | native 容器 `element.transform` + opacity |
 
 补充约束：
@@ -157,6 +157,8 @@ interface SpatializedMotionSegmentConfig {
 ## 7. 与模型内嵌动画区分
 
 `<Model ref.play()>` 播放 USD 片段；**不要**与 `motion.play()` timeline 混为同一 API。
+
+Static3D `<Model xr-animation={animation}>` 驱动 `SpatializedStatic3DElement` 容器根 `transform` / `opacity`，不驱动模型内部 `entityTransform` / `modelTransform`。
 
 ## 8. 类型命名（Core / React 导出）
 

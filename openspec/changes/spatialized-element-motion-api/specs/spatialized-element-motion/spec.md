@@ -170,19 +170,19 @@ For any host-bound target, the returned `style` from `useAnimation(config)` MUST
 - **THEN** the SDK MUST NOT treat that value as explicit authored opacity for terminal handoff purposes
 - **AND** terminal `opacity` ownership MUST stay with the sampled/native result when no explicit React `style.opacity` exists
 
-#### Scenario: Explicit authored style.transform wins terminal host-transform handoff
+#### Scenario: Explicit authored style.transform wins terminal container-root transform handoff
 
-- **GIVEN** a host-transform target (`spatialized2d` or `dynamic3d`) is bound to a React node with an explicit `style.transform`
-- **WHEN** `stop()`, `reset()`, or `finish()` completes and the element animating mask releases or updates host `transform`
-- **THEN** the post-terminal visual owner of host `transform` MUST become that explicit authored `style.transform`
+- **GIVEN** a container-root transform target (`spatialized2d`, `static3d`, or `dynamic3d`) is bound to a React node with an explicit `style.transform`
+- **WHEN** `stop()`, `reset()`, or `finish()` completes and the element animating mask releases or updates container-root `transform`
+- **THEN** the post-terminal visual owner of container-root `transform` MUST become that explicit authored `style.transform`
 - **AND** terminal sampled/native transform values MUST still remain the source for callback payloads and terminal session semantics
 
 #### Scenario: Non-authored CSS transform does not qualify for terminal handoff
 
-- **GIVEN** host `transform` appears only through `className`, stylesheet rules, inherited layout effects, or `getComputedStyle()` output
-- **WHEN** a host-transform target reaches `stop()`, `reset()`, or `finish()`
+- **GIVEN** container-root `transform` appears only through `className`, stylesheet rules, inherited layout effects, or `getComputedStyle()` output
+- **WHEN** a container-root transform target reaches `stop()`, `reset()`, or `finish()`
 - **THEN** the SDK MUST NOT treat that value as explicit authored transform for terminal handoff purposes
-- **AND** terminal host-transform ownership MUST stay with the sampled/native result when no explicit React `style.transform` exists
+- **AND** terminal container-root transform ownership MUST stay with the sampled/native result when no explicit React `style.transform` exists
 
 ### Requirement: Shared lifecycle callbacks
 
@@ -242,17 +242,17 @@ The terminal methods MUST remain independent commands: `stop()` terminates an ac
 - **WHEN** the element animating mask releases or updates `opacity` after `stop()`, `reset()`, or `finish()`
 - **THEN** the SDK MUST avoid a post-terminal state where native outer opacity and inner DOM opacity both continue to own the same visual `opacity`
 
-#### Scenario: Terminal host-transform handoff does not allow simultaneous ownership
+#### Scenario: Terminal container-root transform handoff does not allow simultaneous ownership
 
-- **GIVEN** a host-transform target (`spatialized2d` or `dynamic3d`) animates host `transform`
-- **WHEN** the element animating mask releases or updates host `transform` after `stop()`, `reset()`, or `finish()`
-- **THEN** the SDK MUST avoid a post-terminal state where native host transform and DOM host transform both continue to own the same visual `transform`
+- **GIVEN** a container-root transform target (`spatialized2d`, `static3d`, or `dynamic3d`) animates container-root `transform`
+- **WHEN** the element animating mask releases or updates container-root `transform` after `stop()`, `reset()`, or `finish()`
+- **THEN** the SDK MUST avoid a post-terminal state where native container-root transform and DOM container-root transform both continue to own the same visual `transform`
 
-#### Scenario: A new play session clears terminal host-transform ownership
+#### Scenario: A new play session clears terminal container-root transform ownership
 
-- **GIVEN** a host-transform target previously entered a terminal host-transform ownership state through `stop()`, `reset()`, or `finish()`
+- **GIVEN** a container-root transform target previously entered a terminal container-root transform ownership state through `stop()`, `reset()`, or `finish()`
 - **WHEN** application code starts a new session with `api.play()` from `idle` or `finished`
-- **THEN** the SDK MUST clear the prior terminal host-transform ownership decision
+- **THEN** the SDK MUST clear the prior terminal container-root transform ownership decision
 - **AND** the new active session MUST update the element animating mask according to the target kind
 
 ### Requirement: V1 public authoring centers on from/to and timeline, with tracks retained as the canonical internal model

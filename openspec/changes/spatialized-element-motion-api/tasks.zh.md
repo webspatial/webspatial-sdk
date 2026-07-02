@@ -28,7 +28,7 @@
 - [x] 2D spec：要求 native-first `AnimationObject` target path，且无 Web RAF fallback
 - [x] 2D spec：要求 native create 携带 canonical tracks
 - [x] 2D spec：用 element animating mask wording 替换旧字段所有权表述
-- [x] Static3D spec：要求 model-root transform timeline 通过 `AnimationObject` 执行
+- [x] Static3D spec：要求容器根 transform / opacity timeline 通过 `AnimationObject` 执行
 - [x] Static3D spec：在 `validateSpatializedMotionConfig` 阶段支持 `opacity` tracks，不得静默丢弃
 - [x] Dynamic3D spec：要求 container transform / opacity timeline 通过 `AnimationObject` 执行
 - [x] Entity spec 边界：entity animation 继续独立于 container `AnimationObject`
@@ -143,7 +143,7 @@
 - [x] visionOS：Native `AnimationObject` 的 `reset/finish` 复用同一个对象，不重建
 - [x] visionOS：Native `AnimationObject.tick()` 调用 target write adapter 写入 sample
 - [x] visionOS：target write adapter 按 target kind 限制 writable fields 和 mask fields
-- [x] visionOS：Static3D 写 `modelTransform` 和 host `opacity`，不写 host transform
+- [x] visionOS：Static3D 写容器根 `transform` 和 `opacity`，不写模型内部 `entityTransform` / `modelTransform`
 - [x] visionOS：实现 terminal mask handoff：pause 保留 mask；stop/reset/finish/natural complete/destroy 释放 mask
 - [x] visionOS：通过现有 `SpatialScene` / `spatialWebViewModel` WebMsg 路径发送 `SpatialAnimationStateChanged`
 - [x] visionOS：复用 `SpatializedElementMotionTimelineSampler` / `SpatializedMotionTimingFunction` / `SpatializedMotionTransformComponents`
@@ -176,7 +176,7 @@
 - [x] Test：pause 保留当前值并保留 mask
 - [x] Test：native state 对 Core SDK state 具有权威性
 - [x] Test：Static3D opacity tracks 在 native create 前被接受
-- [x] Test：Static3D animation 写 `modelTransform` 和 host `opacity`
+- [x] Test：Static3D animation 写容器根 `transform` / `opacity`，且不写 `entityTransform`
 - [x] Test：纯 Web runtime 对 `supports('useAnimation')` 返回 false
 - [x] Test：目标态 runtime 不再使用旧 `AnimateSpatializedElementMotion` 路径
 

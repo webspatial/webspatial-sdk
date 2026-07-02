@@ -62,7 +62,7 @@ The `style` outlet is the React-side visual-state closure output of `useAnimatio
 | `SpatialScene.spatialObjects` | Reuse existing `SpatialScene.spatialObjects` / `addSpatialObject` / `findSpatialObject` / destroy path to register, look up, and destroy native spatial objects, including `AnimationObject`. |
 | `TimelineSampler` | Reuses the existing timeline sampler and samples the locked canonical timeline. |
 | `Frame driver / CADisplayLink` | Internal scheduling capability of `SpatializedElementAnimationManager`; the manager starts it while any animation is running, it calls `manager.tickAll(timestamp)` every frame, and the driver itself owns no animation semantics. |
-| `ElementAnimationWriteAdapter` | Called by `Native AnimationObject.tick()` to write `transform`, `opacity`, or `modelTransform` according to target kind; the manager does not perform per-property writes. |
+| `ElementAnimationWriteAdapter` | Called by `Native AnimationObject.tick()` to write container-root `transform` and `opacity` according to target kind; the manager does not perform per-property writes. |
 | `AnimatingMask` | Records animation-owned fields and prevents regular element sync from overriding active animation. |
 | `SpatialScene WebMsg send path` | Reuse the existing `SpatialScene` / `spatialWebViewModel` WebMsg send mechanism to emit unified `SpatialAnimationStateChanged`. |
 
@@ -72,9 +72,9 @@ The `style` outlet is the React-side visual-state closure output of `useAnimatio
 |-------------|-----------------|-------------|
 | `spatialized2d` | `transform`, `opacity` | `transform`, `opacity` |
 | `dynamic3d` | `transform`, `opacity` | `transform`, `opacity` |
-| `static3d` | `modelTransform`, `opacity` | `modelTransform`, `opacity` |
+| `static3d` | `transform`, `opacity` | `transform`, `opacity` |
 
-Static3D `opacity` tracks must be preserved through native create. Static3D animation writes model root `modelTransform` and host element `opacity`, and must not use host element `transform` as a substitute path.
+Static3D `transform` and `opacity` tracks must be preserved through native create. Static3D animation writes the `SpatializedStatic3DElement` container-root `transform` and `opacity`; it must not write model-internal `entityTransform` / `modelTransform` fields or affect USD embedded clip playback.
 
 ## Cross-layer object relationships
 
@@ -244,7 +244,6 @@ classDiagram
     class AnimatingMask {
       +transform: Bool
       +opacity: Bool
-      +modelTransform: Bool
       +clear()
     }
   }
@@ -277,7 +276,7 @@ classDiagram
   NativeSpatializedElement --> AnimatingMask : owns
   NativeAnimationObject --> TimelineSampler : owns locked timeline
   NativeAnimationObject --> ElementAnimationWriteAdapter : applies sampled values
-  ElementAnimationWriteAdapter --> NativeSpatializedElement : writes transform / opacity / modelTransform
+  ElementAnimationWriteAdapter --> NativeSpatializedElement : writes transform / opacity
   NativeAnimationObject --> AnimatingMask : marks animation-owned fields
 ```
 
@@ -390,7 +389,7 @@ sequenceDiagram
   Sampler-->>Obj: SpatializedVisualValues
   Obj->>Mask: mark target-kind mask fields
   Obj->>Adapter: apply(sample, target, kind)
-  Adapter->>Element: write transform / opacity / modelTransform
+  Adapter->>Element: write transform / opacity
 
   alt reaches terminal
     Obj->>Obj: playState = finished

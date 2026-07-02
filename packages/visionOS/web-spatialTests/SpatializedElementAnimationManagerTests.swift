@@ -673,7 +673,7 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertTrue(animation.isDestroyed)
     }
 
-    func test_static3DAnimationWritesRootTransformOnly() throws {
+    func test_static3DAnimationWritesContainerRootTransformNotEntityTransform() throws {
         let element = SpatializedStatic3DElement()
         let manager = SpatializedElementAnimationManager()
         let timeline = SpatializedMotionTimelinePayload(

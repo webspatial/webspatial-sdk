@@ -170,19 +170,19 @@ Spatialized element motion MUST 使用 native-first 的 `AnimationObject` 目标
 - **THEN** SDK MUST NOT 将该值视为用于终态控制权切换的显式声明透明度
 - **AND** 当不存在显式 React `style.opacity` 时，终态 `opacity` 控制权 MUST 保持在原生采样结果一侧
 
-#### Scenario: 显式声明的 `style.transform` 在 host transform 终态控制权切换中优先
+#### Scenario: 显式声明的 `style.transform` 在容器根 transform 终态控制权切换中优先
 
-- **GIVEN** 一个 host transform 目标（`spatialized2d` 或 `dynamic3d`）绑定到了带有显式 `style.transform` 的 React 节点
-- **WHEN** `stop()`、`reset()` 或 `finish()` 完成，且 element animating mask 释放或更新 host `transform`
-- **THEN** host `transform` 的终态后视觉控制方 MUST 变成这个显式声明的 `style.transform`
+- **GIVEN** 一个容器根 transform 目标（`spatialized2d`、`static3d` 或 `dynamic3d`）绑定到了带有显式 `style.transform` 的 React 节点
+- **WHEN** `stop()`、`reset()` 或 `finish()` 完成，且 element animating mask 释放或更新容器根 `transform`
+- **THEN** 容器根 `transform` 的终态后视觉控制方 MUST 变成这个显式声明的 `style.transform`
 - **AND** 终态原生采样 transform 值仍然 MUST 作为回调参数与终态会话语义的来源
 
 #### Scenario: 非显式声明的 CSS `transform` 不参与终态控制权切换
 
-- **GIVEN** host `transform` 仅通过 `className`、样式表规则、继承布局副作用或 `getComputedStyle()` 结果体现出来
-- **WHEN** 一个 host transform 目标到达 `stop()`、`reset()` 或 `finish()`
+- **GIVEN** 容器根 `transform` 仅通过 `className`、样式表规则、继承布局副作用或 `getComputedStyle()` 结果体现出来
+- **WHEN** 一个容器根 transform 目标到达 `stop()`、`reset()` 或 `finish()`
 - **THEN** SDK MUST NOT 将该值视为用于终态控制权切换的显式声明 transform
-- **AND** 当不存在显式 React `style.transform` 时，终态 host transform 控制权 MUST 保持在原生采样结果一侧
+- **AND** 当不存在显式 React `style.transform` 时，终态容器根 transform 控制权 MUST 保持在原生采样结果一侧
 
 ### Requirement: 共享生命周期回调
 
@@ -242,17 +242,17 @@ Config MUST 支持以下生命周期回调：
 - **WHEN** `stop()`、`reset()` 或 `finish()` 之后 element animating mask 释放或更新 `opacity`
 - **THEN** SDK MUST 避免进入 native 外层 `opacity` 与 inner DOM `opacity` 在终态后同时继续控制同一视觉 `opacity` 的状态
 
-#### Scenario: host transform 的终态控制权切换不允许双重控制权
+#### Scenario: 容器根 transform 的终态控制权切换不允许双重控制权
 
-- **GIVEN** 一个 host transform 目标（`spatialized2d` 或 `dynamic3d`）正在动画化 host `transform`
-- **WHEN** `stop()`、`reset()` 或 `finish()` 之后 element animating mask 释放或更新 host `transform`
-- **THEN** SDK MUST 避免进入 native host transform 与 DOM host transform 在终态后同时继续控制同一视觉 `transform` 的状态
+- **GIVEN** 一个容器根 transform 目标（`spatialized2d`、`static3d` 或 `dynamic3d`）正在动画化容器根 `transform`
+- **WHEN** `stop()`、`reset()` 或 `finish()` 之后 element animating mask 释放或更新容器根 `transform`
+- **THEN** SDK MUST 避免进入 native 容器根 transform 与 DOM 容器根 transform 在终态后同时继续控制同一视觉 `transform` 的状态
 
-#### Scenario: 新的 play 会话会清除之前的 host transform 终态控制权
+#### Scenario: 新的 play 会话会清除之前的容器根 transform 终态控制权
 
-- **GIVEN** 一个 host transform 目标此前已通过 `stop()`、`reset()` 或 `finish()` 进入 host transform 终态控制权状态
+- **GIVEN** 一个容器根 transform 目标此前已通过 `stop()`、`reset()` 或 `finish()` 进入容器根 transform 终态控制权状态
 - **WHEN** 应用代码从 `idle` 或 `finished` 调用 `api.play()` 启动一个新会话
-- **THEN** SDK MUST 清除先前的 host transform 终态控制权决策
+- **THEN** SDK MUST 清除先前的容器根 transform 终态控制权决策
 - **AND** 新的 active 会话 MUST 按目标类型更新 element animating mask
 
 ### Requirement: v1 公开 authoring 以 from/to 与 timeline 为主，tracks 保留为内部 canonical 模型
