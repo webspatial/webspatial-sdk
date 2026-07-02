@@ -19,7 +19,7 @@ const SIMPLE_ENTRANCE_CONFIG = {
 }
 
 function createMockElement(id = 'motion-element-1') {
-  return { id }
+  return { id, kind: 'spatialized2d' as const }
 }
 
 function readTranslateX(style: { transform?: unknown }): number {
@@ -106,10 +106,7 @@ describe('motion runtime behavior', () => {
       expect(result.current[2].transform).toBeUndefined()
 
       await act(async () => {
-        result.current[0].__setElement?.(
-          createMockElement() as never,
-          'spatialized2d',
-        )
+        result.current[0].__setElement?.(createMockElement() as never)
       })
 
       expect(result.current[1].playState).toBe('idle')
@@ -136,10 +133,10 @@ describe('motion runtime behavior', () => {
       )
 
       await act(async () => {
-        result.current[0].__setElement?.(
-          createMockElement() as never,
-          'static3d',
-        )
+        result.current[0].__setElement?.({
+          ...createMockElement(),
+          kind: 'static3d' as const,
+        } as never)
       })
 
       expect(result.current[1].playState).toBe('idle')
@@ -170,10 +167,7 @@ describe('motion runtime behavior', () => {
       expect(result.current[1].playState).toBe('queued')
 
       await act(async () => {
-        result.current[0].__setElement?.(
-          createMockElement() as never,
-          'spatialized2d',
-        )
+        result.current[0].__setElement?.(createMockElement() as never)
       })
 
       await waitFor(() => {
@@ -203,8 +197,8 @@ describe('motion runtime behavior', () => {
       )
 
       await act(async () => {
-        result.current[0].__setElement?.(first as never, 'spatialized2d')
-        result.current[0].__setElement?.(second as never, 'spatialized2d')
+        result.current[0].__setElement?.(first as never)
+        result.current[0].__setElement?.(second as never)
       })
 
       expect(warnSpy).toHaveBeenCalledWith(
@@ -234,10 +228,7 @@ describe('motion runtime behavior', () => {
       )
 
       await act(async () => {
-        result.current[0].__setElement?.(
-          createMockElement() as never,
-          'spatialized2d',
-        )
+        result.current[0].__setElement?.(createMockElement() as never)
         result.current[1].play()
       })
       await act(async () => {
@@ -278,10 +269,7 @@ describe('motion runtime behavior', () => {
       )
 
       await act(async () => {
-        result.current[0].__setElement?.(
-          createMockElement() as never,
-          'spatialized2d',
-        )
+        result.current[0].__setElement?.(createMockElement() as never)
         result.current[1].play()
       })
       rerender({ distance: 200 })
@@ -309,10 +297,7 @@ describe('motion runtime behavior', () => {
       )
 
       await act(async () => {
-        result.current[0].__setElement?.(
-          createMockElement() as never,
-          'spatialized2d',
-        )
+        result.current[0].__setElement?.(createMockElement() as never)
       })
 
       expect(result.current[2].opacity).toBeUndefined()
@@ -356,7 +341,7 @@ describe('motion runtime behavior', () => {
         )
 
         expect(binding.__setElement).toHaveBeenCalledTimes(1)
-        expect(binding.__setElement).toHaveBeenCalledWith(element, kind)
+        expect(binding.__setElement).toHaveBeenCalledWith(element)
       },
     )
 
@@ -442,10 +427,7 @@ describe('motion runtime behavior', () => {
       )
 
       expect(binding.__setElement).toHaveBeenCalledTimes(1)
-      expect(binding.__setElement).toHaveBeenCalledWith(
-        element,
-        'spatialized2d',
-      )
+      expect(binding.__setElement).toHaveBeenCalledWith(element)
     })
 
     test.each([

@@ -120,11 +120,8 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     return this.finishedState
   }
 
-  __setElement(
-    element: SpatializedElement | null,
-    targetKind?: SpatializedMotionKind,
-  ): void {
-    this.bind(element, targetKind)
+  __setElement(element: SpatializedElement | null): void {
+    this.bind(element)
   }
 
   __onUnbind(element: SpatializedElement): void {
@@ -177,10 +174,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.options.onStateChange?.()
   }
 
-  private bind(
-    element: SpatializedElement | null,
-    targetKind?: SpatializedMotionKind,
-  ): void {
+  private bind(element: SpatializedElement | null): void {
     if (this.destroyed) return
     if (!element) {
       this.unbind()
@@ -192,16 +186,14 @@ export class AnimationBinding implements SpatializedPlaybackApi {
       )
       return
     }
-    if (targetKind) {
-      if (this.kind && this.kind !== targetKind) {
-        console.warn(
-          `[AnimationBinding] motion binding already resolved to ${this.kind}; ignoring ${targetKind}.`,
-        )
-        return
-      }
-      validateSpatializedMotionConfig(this.config)
-      this.kind = targetKind
+    if (this.kind && this.kind !== element.kind) {
+      console.warn(
+        `[AnimationBinding] motion binding already resolved to ${this.kind}; ignoring ${element.kind}.`,
+      )
+      return
     }
+    validateSpatializedMotionConfig(this.config)
+    this.kind = element.kind
     this.element = element
     this.ensureAnimationObject()
     this.options.onStateChange?.()
