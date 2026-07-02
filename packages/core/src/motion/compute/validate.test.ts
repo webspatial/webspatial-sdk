@@ -19,23 +19,20 @@ describe('validateNormalizedMotionConfig', () => {
     ).not.toThrow()
   })
 
-  test('accepts opacity tracks for static3d targets', () => {
+  test('accepts opacity tracks', () => {
     expect(() =>
-      validateNormalizedMotionConfig(
-        {
-          duration: 1,
-          tracks: [
-            {
-              property: 'opacity',
-              keyframes: [
-                { at: 0, value: 0 },
-                { at: 1, value: 1 },
-              ],
-            },
-          ],
-        },
-        { targetKind: 'static3d' },
-      ),
+      validateNormalizedMotionConfig({
+        duration: 1,
+        tracks: [
+          {
+            property: 'opacity',
+            keyframes: [
+              { at: 0, value: 0 },
+              { at: 1, value: 1 },
+            ],
+          },
+        ],
+      }),
     ).not.toThrow()
   })
 })

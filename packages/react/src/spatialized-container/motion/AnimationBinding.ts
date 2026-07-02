@@ -156,9 +156,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   }
 
   updateConfig(config: SpatializedMotionAuthorConfig): void {
-    validateSpatializedMotionConfig(config, {
-      targetKind: this.kind ?? undefined,
-    })
+    validateSpatializedMotionConfig(config)
     const nextSignature = getMotionConfigSignature(config)
     this.config = config
     this.normalizedConfig = normalizeMotionConfig(config)
@@ -201,7 +199,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
         )
         return
       }
-      validateSpatializedMotionConfig(this.config, { targetKind })
+      validateSpatializedMotionConfig(this.config)
       this.kind = targetKind
     }
     this.element = element
