@@ -1,18 +1,6 @@
 import { initScene } from '@webspatial/react-sdk'
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-window.xrCurrentSceneDefaults = async () => {
-  await new Promise<void>((resolve, _) => {
-    setTimeout(resolve, 2000)
-  })
-
-  return {
-    defaultSize: {
-      width: 1200,
-      height: 900,
-    },
-  }
-}
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'

@@ -61,6 +61,51 @@ flowchart LR
 
 本次影响边界是删除依赖 `window.xrCurrentSceneDefaults` / `window.xrCurrentSceneType` 的 pending scene config override path，以及 native 对这条路径的存在性检查。不删除 `initScene()`、发起侧 named scene config、manifest defaults、native fallback defaults、通用页面初始化，也不删除受支持 spatial API 依赖的 native `SpatialScene` 生命周期。
 
+## Manifest 默认值解析链路
+
+`SceneManager.setupManifest()` 在 init 时把 PWA manifest 的 `xr_spatial_scene` 配置一次性烘焙成模块级的 `xr_window_defaults` / `xr_volume_defaults`。这两个默认值是兜底来源，`initScene()` 和未调用 `initScene()` 的 `window.open` 都通过 `getSceneDefaultConfig(sceneType)` 读取它们。该链路独立于被删除的 scene globals，这也是移除 hook 后 `window.open` 仍能解析出默认值的原因。
+
+```mermaid
+sequenceDiagram
+    participant App as 应用页面
+    participant SM as SceneManager
+    participant M as getPWAManifest()
+    participant D as 模块级默认值<br/>(xr_window/volume_defaults)
+    participant W as window.open / initScene
+
+    App->>SM: init(window)
+    SM->>SM: void setupManifest()（后台，不阻塞）
+    SM->>W: 劫持 window.open
+
+    Note over SM,M: setupManifest() 异步执行
+    SM->>M: getPWAManifest()
+    M->>M: 定位 href（manifestUrl 或 <link rel="manifest">）
+    M->>M: ensureAbsoluteUrl(href)
+    alt data: URL
+        M->>M: atob / decodeURIComponent -> JSON.parse
+    else http(s) URL
+        M->>M: fetch(same-origin, 带 credentials)
+        M-->>M: 失败时 -> fetch(无 credentials)（CORS 兜底）
+    end
+    M-->>SM: manifest JSON（或 undefined）
+
+    alt 存在 manifest.xr_spatial_scene
+        SM->>SM: 拆分 { overrides, ...topLevel }
+        SM->>SM: normalizeXRDefaultsToSceneOptions（snake_case 优先）
+        SM->>SM: deepMergePlain(topLevel, window_scene / volume_scene override)
+        SM->>D: 写入 xr_window_defaults / xr_volume_defaults（仅当非空）
+    else 缺失 / 解析失败
+        SM->>SM: console.warn，保留内置默认值<br/>(1280x720 / 0.94m^3)
+    end
+
+    Note over W,D: 之后，在场景创建时
+    W->>D: getSceneDefaultConfig(sceneType)
+    D-->>W: 解析出的默认值
+    Note right of W: initScene()：deepMerge(基础默认值, callback 返回值)<br/>window.open() 未调用 initScene：直接使用默认值
+```
+
+归属说明：manifest -> 默认值 这条链路是 scene 默认值的唯一来源。本次改动不新增 JS 侧默认值模型，只删除了此前叠加在该链路之上的被打开页 global 覆盖路径。
+
 ## 目标 / 非目标
 
 **目标：**

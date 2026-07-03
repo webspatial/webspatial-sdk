@@ -403,27 +403,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addStateListener(.didFinishLoad) {
             if self.state == .pending {
-                self.checkHookExist()
-            }
-        }
-    }
-
-    private func checkHookExist(_ completion: ((Bool) -> Void)? = nil) {
-        let js = """
-        (function() {
-            return typeof window.xrCurrentSceneDefaults !== 'undefined';
-        })();
-        """
-
-        spatialWebViewModel.evaluateJS(js) { result in
-            let exists = result as? Bool ?? false
-
-            if let completion = completion {
-                completion(exists)
-            } else {
-                if !exists {
-                    self.moveToState(.willVisible, defaultSceneConfig)
-                }
+                self.moveToState(.willVisible, self.sceneConfig ?? defaultSceneConfig)
             }
         }
     }

@@ -61,6 +61,51 @@ flowchart LR
 
 The impact boundary is the pending scene config override path that used `window.xrCurrentSceneDefaults` / `window.xrCurrentSceneType`, plus the native existence check for that path. This does not remove `initScene()`, opener-side named scene config, manifest defaults, native fallback defaults, general page initialization, or the native `SpatialScene` lifecycle used by supported spatial APIs.
 
+## Manifest Default-Resolution Chain
+
+`SceneManager.setupManifest()` bakes the PWA manifest `xr_spatial_scene` config into module-level `xr_window_defaults` / `xr_volume_defaults` once at init. These defaults are the fallback source that both `initScene()` and no-`initScene()` `window.open` read through `getSceneDefaultConfig(sceneType)`. This chain is independent of the removed scene globals, which is why `window.open` still resolves defaults after the hook removal.
+
+```mermaid
+sequenceDiagram
+    participant App as App page
+    participant SM as SceneManager
+    participant M as getPWAManifest()
+    participant D as Module defaults<br/>(xr_window/volume_defaults)
+    participant W as window.open / initScene
+
+    App->>SM: init(window)
+    SM->>SM: void setupManifest() (background, non-blocking)
+    SM->>W: hijack window.open
+
+    Note over SM,M: setupManifest() runs async
+    SM->>M: getPWAManifest()
+    M->>M: locate href (manifestUrl or <link rel="manifest">)
+    M->>M: ensureAbsoluteUrl(href)
+    alt data: URL
+        M->>M: atob / decodeURIComponent -> JSON.parse
+    else http(s) URL
+        M->>M: fetch(same-origin, credentials)
+        M-->>M: on failure -> fetch(no credentials) (CORS fallback)
+    end
+    M-->>SM: manifest JSON (or undefined)
+
+    alt manifest.xr_spatial_scene present
+        SM->>SM: split { overrides, ...topLevel }
+        SM->>SM: normalizeXRDefaultsToSceneOptions (snake_case wins)
+        SM->>SM: deepMergePlain(topLevel, window_scene / volume_scene override)
+        SM->>D: write xr_window_defaults / xr_volume_defaults (only if non-empty)
+    else missing / parse error
+        SM->>SM: console.warn, keep built-in defaults<br/>(1280x720 / 0.94m^3)
+    end
+
+    Note over W,D: later, at scene creation time
+    W->>D: getSceneDefaultConfig(sceneType)
+    D-->>W: resolved defaults
+    Note right of W: initScene(): deepMerge(base defaults, callback return)<br/>window.open() no initScene: use defaults directly
+```
+
+Ownership note: the manifest -> defaults chain is the single source of scene defaults. This change does not add a JS-side default model; it only deletes the opened-page global override that previously sat on top of this chain.
+
 ## Goals / Non-Goals
 
 **Goals:**

@@ -2,26 +2,6 @@ import { initScene } from '@webspatial/react-sdk'
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 
-window.xrCurrentSceneType = 'volume'
-window.xrCurrentSceneDefaults = async () => {
-  return {
-    defaultSize: {
-      width: '1m',
-      height: '1m',
-      depth: '1m',
-    },
-    resizability: {
-      minWidth: '0.5m',
-      maxWidth: '2m',
-      minHeight: '0.5m',
-      maxHeight: '1m',
-    },
-    // worldScaling: 'automatic',
-    // worldAlignment: 'automatic',
-    // automatic: 'automatic',
-  }
-}
-
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
 
