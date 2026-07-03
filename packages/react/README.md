@@ -272,12 +272,9 @@ For layout/size changes prefer **declarative React updates** (props/state) rathe
 
 ### Nested ordering note
 
-`onSpatialContentReady` ordering guarantees are runtime-scoped:
+`onSpatialContentReady` **parent/child delivery order is not a guaranteed API contract** in any runtime (WebSpatial or plain-web fallback). Each nested `SpatialDiv` may become ready independently.
 
-- In a WebSpatial runtime, the parent `SpatialDiv` callback runs **before** the child callback on the same ready edge.
-- In non-WebSpatial fallback (plain web DOM), parent/child ordering is **not** a guaranteed contract and should be treated as unspecified.
-
-Recommended practice: initialize imperative renderers from each container's own `ctx.host` and avoid coupling setup logic to parent/child callback sequence in fallback web mode.
+Recommended practice: initialize imperative renderers from **that container's own** `ctx.host` only. Do not couple child setup to whether the parent callback has already run.
 
 ## SpatialDiv CSS and transforms
 
