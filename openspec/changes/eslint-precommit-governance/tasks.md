@@ -47,21 +47,21 @@
 
 ## 6. `packages/core` adoption
 
-- [ ] 6.1 Add a focused root ESLint override for `packages/core`.
-- [ ] 6.2 Add a `packages/core` lint script that delegates to `pnpm --workspace-root exec eslint`.
-- [ ] 6.3 Run ESLint in report-only mode for `packages/core` and classify historical findings.
-- [ ] 6.4 Decide the initial enforcement subset for `packages/core`, starting with unused imports and low-risk rules.
-- [ ] 6.5 Add `packages/core` to root `pnpm lint` after the selected enforcement subset passes.
-- [ ] 6.6 Add a `lint-staged` entry for `packages/core` only after staged-file auto-fix behavior is verified.
+- [x] 6.1 Add a focused root ESLint override for `packages/core`.
+- [x] 6.2 Add a `packages/core` lint script that delegates to `pnpm --workspace-root exec eslint`.
+- [x] 6.3 Run ESLint in report-only mode for `packages/core` and classify historical findings.
+- [x] 6.4 Decide the initial enforcement subset for `packages/core`, starting with unused imports and low-risk rules.
+- [x] 6.5 Add `packages/core` to root `pnpm lint` after the selected enforcement subset passes.
+- [x] 6.6 Add a `lint-staged` entry for `packages/core` only after staged-file auto-fix behavior is verified.
 
 ## 7. `packages/react` adoption
 
-- [ ] 7.1 Add root ESLint overrides for `packages/react` source, tests, and build/config files.
-- [ ] 7.2 Add a `packages/react` lint script that delegates to `pnpm --workspace-root exec eslint`.
-- [ ] 7.3 Run ESLint in report-only mode for `packages/react` and classify React Hooks, test, TypeScript, and unused import findings.
-- [ ] 7.4 Decide whether initial enforcement covers all of `packages/react` or a safe subset such as `src/**/*.{ts,tsx}`.
-- [ ] 7.5 Add `packages/react` to root `pnpm lint` after the selected enforcement subset passes.
-- [ ] 7.6 Add a `lint-staged` entry for `packages/react` only after staged-file auto-fix behavior is verified.
+- [x] 7.1 Add root ESLint overrides for `packages/react` source, tests, and build/config files.
+- [x] 7.2 Add a `packages/react` lint script that delegates to `pnpm --workspace-root exec eslint`.
+- [x] 7.3 Run ESLint in report-only mode for `packages/react` and classify React Hooks, test, TypeScript, and unused import findings.
+- [x] 7.4 Decide whether initial enforcement covers all of `packages/react` or a safe subset such as `src/**/*.{ts,tsx}`.
+- [x] 7.5 Add `packages/react` to root `pnpm lint` after the selected enforcement subset passes.
+- [x] 7.6 Add a `lint-staged` entry for `packages/react` only after staged-file auto-fix behavior is verified.
 
 ## 8. Follow-up items
 

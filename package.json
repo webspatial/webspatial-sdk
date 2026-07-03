@@ -20,7 +20,7 @@
     "test:react-compat": "pnpm --filter react18-compat test && pnpm --filter react19-compat test",
     "test:rspack-compat": "pnpm --filter spatial-rspack-min --fail-if-no-match build",
     "test:fixtures": "pnpm --filter spatial-vite-min --fail-if-no-match build && pnpm --filter spatial-next-min --fail-if-no-match build && pnpm --filter spatial-next-eager-min --fail-if-no-match build && pnpm --filter spatial-remix-min --fail-if-no-match build && pnpm run test:rspack-compat",
-    "lint": "eslint apps/test-server tests/ci-test packages/cli/src",
+    "lint": "eslint apps/test-server tests/ci-test packages/cli/src packages/core/src packages/react/src",
     "test:auto": "cd tests/autoTest/ && pnpm run test",
     "test:auto:setup-local": "cd tests/autoTest/ && pnpm run setup-local",
     "test:size-budget": "pnpm --filter @webspatial/react-sdk build && pnpm --filter marginal-delta-vite test",
@@ -49,6 +49,14 @@
       "prettier --write"
     ],
     "packages/cli/src/**/*.{js,ts}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "packages/core/src/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "packages/react/src/**/*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],

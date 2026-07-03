@@ -101,4 +101,42 @@ module.exports = tseslint.config(
       '@typescript-eslint/no-unused-expressions': 'off',
     },
   },
+  // packages/core: SDK runtime library. Enforce only unused-imports
+  // (from the base override); disable historical TS shapes so no source
+  // is rewritten.
+  {
+    files: ['packages/core/src/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-empty-object-type': 'off',
+    },
+  },
+  // packages/react: React SDK. Conservative adoption -- enforce only
+  // unused-imports. React Hooks rules are intentionally NOT enabled to
+  // avoid introducing new exhaustive-deps findings. Stale eslint-disable
+  // directives are preserved by turning off unused-disable reporting.
+  {
+    files: ['packages/react/src/**/*.{ts,tsx}'],
+    linterOptions: {
+      reportUnusedDisableDirectives: 'off',
+    },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      '@typescript-eslint/no-this-alias': 'off',
+      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
+    },
+  },
 )

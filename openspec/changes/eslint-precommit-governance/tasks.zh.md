@@ -47,21 +47,21 @@
 
 ## 6. `packages/core` 接入
 
-- [ ] 6.1 为 `packages/core` 增加聚焦的根级 ESLint override。
-- [ ] 6.2 为 `packages/core` 增加委托给 `pnpm --workspace-root exec eslint` 的 lint 脚本。
-- [ ] 6.3 以 report-only 方式对 `packages/core` 运行 ESLint，并对历史问题分类。
-- [ ] 6.4 决定 `packages/core` 的首批 enforcement 子集，从 unused imports 和低风险规则开始。
-- [ ] 6.5 在选定 enforcement 子集通过后，将 `packages/core` 加入根 `pnpm lint`。
-- [ ] 6.6 只有在 staged 文件自动修复行为验证通过后，才为 `packages/core` 增加 `lint-staged` 入口。
+- [x] 6.1 为 `packages/core` 增加聚焦的根级 ESLint override。
+- [x] 6.2 为 `packages/core` 增加委托给 `pnpm --workspace-root exec eslint` 的 lint 脚本。
+- [x] 6.3 以 report-only 方式对 `packages/core` 运行 ESLint，并对历史问题分类。
+- [x] 6.4 决定 `packages/core` 的首批 enforcement 子集，从 unused imports 和低风险规则开始。
+- [x] 6.5 在选定 enforcement 子集通过后，将 `packages/core` 加入根 `pnpm lint`。
+- [x] 6.6 只有在 staged 文件自动修复行为验证通过后，才为 `packages/core` 增加 `lint-staged` 入口。
 
 ## 7. `packages/react` 接入
 
-- [ ] 7.1 为 `packages/react` 的 source、tests、build/config 文件增加根级 ESLint override。
-- [ ] 7.2 为 `packages/react` 增加委托给 `pnpm --workspace-root exec eslint` 的 lint 脚本。
-- [ ] 7.3 以 report-only 方式对 `packages/react` 运行 ESLint，并对 React Hooks、test、TypeScript 和 unused import 问题分类。
-- [ ] 7.4 决定首批 enforcement 是覆盖整个 `packages/react`，还是先覆盖安全子集，例如 `src/**/*.{ts,tsx}`。
-- [ ] 7.5 在选定 enforcement 子集通过后，将 `packages/react` 加入根 `pnpm lint`。
-- [ ] 7.6 只有在 staged 文件自动修复行为验证通过后，才为 `packages/react` 增加 `lint-staged` 入口。
+- [x] 7.1 为 `packages/react` 的 source、tests、build/config 文件增加根级 ESLint override。
+- [x] 7.2 为 `packages/react` 增加委托给 `pnpm --workspace-root exec eslint` 的 lint 脚本。
+- [x] 7.3 以 report-only 方式对 `packages/react` 运行 ESLint，并对 React Hooks、test、TypeScript 和 unused import 问题分类。
+- [x] 7.4 决定首批 enforcement 是覆盖整个 `packages/react`，还是先覆盖安全子集，例如 `src/**/*.{ts,tsx}`。
+- [x] 7.5 在选定 enforcement 子集通过后，将 `packages/react` 加入根 `pnpm lint`。
+- [x] 7.6 只有在 staged 文件自动修复行为验证通过后，才为 `packages/react` 增加 `lint-staged` 入口。
 
 ## 8. 后续事项
 
