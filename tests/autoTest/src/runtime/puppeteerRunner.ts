@@ -944,10 +944,11 @@ export class PuppeteerRunner {
       polling?: number | 'raf' | 'mutation'
       timeout?: number
     },
+    ...args: any[]
   ): Promise<void> {
     if (!this.page) throw new Error('Puppeteer runner not started')
 
-    await this.page.waitForFunction(fn, options)
+    await this.page.waitForFunction(fn, options, ...args)
   }
 
   /**
