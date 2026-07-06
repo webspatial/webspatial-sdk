@@ -90,6 +90,7 @@ import SpatialElementMotionFadeInEntrancePage from './src/pages/spatial-element-
 import { SpatialDivMotionTimelinePercentPage } from './src/pages/spatial-div-motion/timeline-percent'
 import SpatialElementMotionScaleExpandPage from './src/pages/spatial-element-motion/scale-expand'
 import SpatialElementMotionOpacityFadePage from './src/pages/spatial-element-motion/opacity-fade'
+import SpatialElementMotionPropertyTakeoverPage from './src/pages/spatial-element-motion/property-takeover'
 import SpatialElementMotionCombinedDelayPage from './src/pages/spatial-element-motion/combined-delay'
 import { SpatialElementMotionDelayPauseReproPage } from './src/pages/spatial-element-motion/delay-pause-repro'
 import SpatialElementMotionPlaybackRatePage from './src/pages/spatial-element-motion/playback-rate'
@@ -307,6 +308,10 @@ function App() {
                 <Route
                   path="/spatial-element-motion/transform-translate"
                   element={<SpatialElementMotionTransformTranslatePage />}
+                />
+                <Route
+                  path="/spatial-element-motion/property-takeover"
+                  element={<SpatialElementMotionPropertyTakeoverPage />}
                 />
                 <Route
                   path="/spatial-element-motion/reverse-loop"

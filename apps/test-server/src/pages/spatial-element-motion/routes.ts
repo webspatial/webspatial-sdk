@@ -30,6 +30,12 @@ export const spatialElementMotionRoutes: SpatialElementMotionRoute[] = [
       'Opacity 1→0.2 with pause/resume + suppression interference test.',
   },
   {
+    path: '/spatial-element-motion/property-takeover',
+    label: 'Property Takeover',
+    description:
+      'Switch between translate and opacity takeover demos under one page entry.',
+  },
+  {
     path: '/spatial-element-motion/combined-delay',
     label: 'Combined + Delay',
     description:
