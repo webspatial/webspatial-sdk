@@ -193,6 +193,7 @@ export {
   Texture,
   UnlitMaterial,
   World,
+  PortalSurface,
 } from './facades'
 export type {
   AttachmentAssetProps,
@@ -208,6 +209,7 @@ export type {
   ModelProps,
   ModelRef,
   PlaneEntityProps,
+  PortalSurfaceProps,
   RealityProps,
   SceneGraphProps,
   SphereEntityProps,

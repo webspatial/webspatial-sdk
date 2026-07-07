@@ -4,8 +4,8 @@ import { useState } from 'react'
 
 import { getSpatialImpl, isSpatialReady } from '../runtime/bridge'
 
-function spatialPortalContainerPlaceholder(): undefined {
-  return undefined
+function spatialPortalContainerPlaceholder(): HTMLElement | undefined {
+  return typeof document === 'undefined' ? undefined : document.body
 }
 
 type UseSpatialPortalContainerImpl = () => HTMLElement | undefined

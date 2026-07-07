@@ -162,6 +162,9 @@ const DropdownMenuSpatialTest = React.lazy(
 const SpatialSemiModalTest = React.lazy(
   () => import('./src/pages/spatial-semi-modal/index'),
 )
+const PortalSurfaceModalTest = React.lazy(
+  () => import('./src/pages/portal-surface-modal/index'),
+)
 const RuntimeCapabilitiesPage = React.lazy(
   () => import('./src/pages/runtime-capabilities/index'),
 )
@@ -453,6 +456,10 @@ function App() {
                 <Route
                   path="/spatial-semi-modal"
                   element={<SpatialSemiModalTest />}
+                />
+                <Route
+                  path="/portal-surface-modal"
+                  element={<PortalSurfaceModalTest />}
                 />
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
                 <Route path="/geometry-verify" element={<GeometryVerify />} />

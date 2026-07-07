@@ -47,6 +47,10 @@ export {
   type UseSpatialOverlayOptions,
   type UseSpatialOverlayResult,
 } from '../spatialized-container/SpatialOverlay'
+export {
+  PortalSurface,
+  type PortalSurfaceProps,
+} from '../spatialized-container/PortalSurface'
 export { useSpatialPortalContainer } from '../spatialized-container/context/SpatialWindowContext'
 export { withSpatialMonitor } from '../spatialized-container-monitor'
 

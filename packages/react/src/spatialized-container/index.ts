@@ -13,6 +13,8 @@ export {
   type UseSpatialOverlayOptions,
   type UseSpatialOverlayResult,
 } from './SpatialOverlay'
+export { PortalSurface } from './PortalSurface'
+export type { PortalSurfaceProps } from '../PortalSurface.types'
 export { useSpatialPortalContainer } from './context/SpatialWindowContext'
 export {
   type Point3D,
