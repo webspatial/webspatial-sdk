@@ -28,6 +28,7 @@ import { SpatializedContainer } from './SpatializedContainer'
 import type { PortalInstanceObject } from './context/PortalInstanceContext'
 import { getSession } from '../utils'
 import { useSpatialContentReady } from './hooks/useSpatialContentReady'
+import { usePortalDocumentBridge } from './portal-bridge/usePortalDocumentBridge'
 
 function mergeRefs<T>(
   ...refs: Array<React.Ref<T> | undefined | null>
@@ -126,6 +127,7 @@ function SpatializedContent<P extends ElementType>(
   })
 
   useSyncHeadStyles(windowProxy)
+  usePortalDocumentBridge(windowProxy, portalInstanceObject)
 
   const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)
