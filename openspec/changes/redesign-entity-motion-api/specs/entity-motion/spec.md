@@ -9,7 +9,8 @@ The returned `animation` object MUST be bindable through `xr-animation` on Entit
 #### Scenario: Hook return shape
 - **WHEN** application code calls `useEntityAnimation(config)`
 - **THEN** the hook MUST return `[animation, api, entityProps]`
-- **AND** `api` MUST expose `play`, `pause`, `resume`, `stop`, `reset`, and `finish`
+- **AND** `api` MUST expose `play`, `pause`, `resume`, `stop`, `reset`, `finish`, and `set`
+- **AND** `set` MUST be documented as a state setter for committed transform values rather than a playback command
 - **AND** `entityProps` MUST only contain `position`, `rotation`, and `scale`
 
 #### Scenario: Entity binding uses `xr-animation`
@@ -59,7 +60,7 @@ The public v1 authoring surface MUST support segment-style `from` / `to` and per
 
 The SDK MUST use `entityProps` as the React-side persistence outlet for committed Entity transform values owned by the animation system.
 
-`entityProps` MUST NOT update every frame. It MUST only update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, and finish.
+`entityProps` MUST NOT update every frame. It MUST only update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, and each `api.set` call (including its updater form).
 
 #### Scenario: Complete writes terminal transform to `entityProps`
 - **WHEN** a non-looping Entity animation completes naturally
@@ -83,7 +84,7 @@ The target callback surface MUST include:
 
 Callback values MUST only include supported Entity transform fields.
 
-`api.set(values)` is not a settled requirement yet; whether it is exposed and whether it belongs to the playback API remains a follow-up decision.
+`api.set` is a settled requirement. It is the imperative write entry for committed transform state and is specified in the dedicated `api.set` requirement below. It MUST NOT be treated as a playback command.
 
 #### Scenario: Stop commits a stopped transform state
 - **WHEN** application code calls `api.stop()`
@@ -116,3 +117,59 @@ During active playback states, the animation system MUST own any animated Entity
 - **WHEN** the animation reaches a terminal state
 - **THEN** the committed values in `entityProps` MUST represent the authoritative terminal transform
 - **AND** the recommended composition order is for `entityProps` to be applied after stale base props
+
+
+### Requirement: Callbacks are notifications and do not drive terminal state
+
+Entity motion lifecycle callbacks MUST be notifications only. Their return values MUST be ignored and MUST NOT be used to control the terminal transform. The terminal transform MUST be determined either by the config declared before playback (such as `to`) or by explicit take-over after playback through `entityProps` or `api.set`.
+
+#### Scenario: onComplete return value is ignored
+- **WHEN** an `onComplete` callback returns a value
+- **THEN** the SDK MUST ignore that return value
+- **AND** the return value MUST NOT override or redefine the committed terminal transform
+
+#### Scenario: Dynamic terminal state uses config or explicit set
+- **WHEN** application code needs a terminal transform different from a statically written `to`
+- **THEN** it MUST express that either through the pre-playback config or through an explicit `api.set` call after the animation ends
+- **AND** it MUST NOT rely on a callback return value to do so
+
+### Requirement: `api.set` is the imperative write entry for committed transform state
+
+The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST accept either a sparse `EntityMotionProps` value or an updater function `(prev) => next`. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
+
+Entity transform is composed from two sources: Source A is React props / `entityProps` (the committed state, written declaratively or through `api.set`), and Source B is the `xr-animation` binding (per-frame sampled values). While the animation is active (`delay` / `running` / `paused`) Source B is authoritative; while it is inactive (`idle` / terminal) Source A is authoritative. `api.set` always writes Source A.
+
+The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST use the updater form of `api.set` or read the declarative `entityProps`.
+
+#### Scenario: set updates committed state and entityProps
+- **WHEN** application code calls `api.set(values)` with Entity transform values
+- **THEN** the SDK MUST update the committed animation-owned transform state
+- **AND** `entityProps` MUST update to the same committed transform values
+
+#### Scenario: set performs a sparse merge
+- **WHEN** application code calls `api.set` with only some transform fields, such as `{ position: { y: 0.3 } }`
+- **THEN** the SDK MUST overwrite only the provided fields
+- **AND** omitted fields such as `rotation` and `scale` MUST keep their previous committed values
+
+#### Scenario: updater form reads the current committed value
+- **WHEN** application code calls `api.set` with an updater function
+- **THEN** `prev` MUST be the current committed value (Source A)
+- **AND** the read-modify-write MUST be applied atomically without exposing a bare getter
+
+#### Scenario: set during an active animation does not throw and does not survive terminal fill
+- **GIVEN** an Entity animation is in `delay`, `running`, or `paused`
+- **WHEN** application code calls `api.set`
+- **THEN** the SDK MUST NOT throw
+- **AND** the SDK MUST NOT interrupt or override the active animation
+- **AND** the written value MUST NOT be queued for replay after the animation
+- **AND** when the animation reaches a terminal state the terminal fill MUST override the value written during the active animation
+
+#### Scenario: Start point after set then play
+- **WHEN** application code calls `api.set` and then `api.play()`
+- **THEN** if the config declares `from`, playback MUST start from `from`
+- **AND** if the config does not declare `from`, playback MUST start from the current committed value
+
+#### Scenario: Terminal fill does not snap back
+- **WHEN** an animation reaches a terminal state
+- **THEN** the SDK MUST fill to the terminal transform and write it back to `entityProps`
+- **AND** the SDK MUST NOT snap the Entity back to the pre-animation value
