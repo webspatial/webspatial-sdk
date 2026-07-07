@@ -39,6 +39,19 @@ export * from '../Model'
 export * from '../reality'
 export { useMetrics } from '../useMetrics'
 export { withSpatialized2DElementContainer } from '../spatialized-container'
+export {
+  SpatialOverlay,
+  useSpatialOverlay,
+  type SpatialOverlayPortalOption,
+  type SpatialOverlayProps,
+  type UseSpatialOverlayOptions,
+  type UseSpatialOverlayResult,
+} from '../spatialized-container/SpatialOverlay'
+export {
+  PortalSurface,
+  type PortalSurfaceProps,
+} from '../spatialized-container/PortalSurface'
+export { useSpatialPortalContainer } from '../spatialized-container/context/SpatialWindowContext'
 export { withSpatialMonitor } from '../spatialized-container-monitor'
 
 // Re-export `getSession` so the default-entry utilities (`enableDebugTool`,

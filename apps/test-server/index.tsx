@@ -15,73 +15,183 @@ const Placeholder = ({ name }: { name: string }) => (
   </div>
 )
 
-// Simple static imports. To add a test, import it here and add a <Route>.
-import AnimateTest from './src/pages/animate/index'
-import RealityTest from './src/pages/reality/index'
-import RealityDebug from './src/pages/reality/debug'
-import RealityDynamic3D from './src/pages/reality/dynamic3d'
-import RealityGestures from './src/pages/reality/gestures'
-import GestureDiv from './src/pages/reality/gestureDiv'
-import RealitySpatialDiv from './src/pages/reality/spatialDivDynamic'
-import BasicTransform from './src/pages/basic-transform/index'
-import ModelTest from './src/pages/model-test/index'
-import SpatialStyleTest from './src/pages/spatialStyleTest/index'
-import StyledComponentsSpatialTest from './src/pages/styledComponentsSpatialTest/index'
-import CanvasTest from './src/pages/canvas-test/index'
-import JSAPITest from './src/pages/jsapi-test/index'
-import SpatialDivRefreshValidation from './src/pages/jsapi-refresh-validation/index'
-import SceneTest from './src/pages/scene/index'
-import SceneVolume from './src/pages/scene/volume'
-import SceneXRApp from './src/pages/scene/xrapp'
-import RealityEmpty from './src/pages/reality/empty'
-import RealityGeometryEntity from './src/pages/reality/geometryEntity'
-import RealityInteractable from './src/pages/reality/interactable'
-import RealityIssue from './src/pages/reality/issue'
-import RealityLow from './src/pages/reality/low'
-import RealityNested from './src/pages/reality/nested'
-import RealityAttachments from './src/pages/reality/attachments'
-import RealityDynamicAssets from './src/pages/reality/dynamicAssets'
-import RealityTexturedUnlitBox from './src/pages/reality/texturedUnlitBox'
-import RealityTestIndex from './src/pages/reality-test/index'
-import RealityAliases from './src/pages/reality/aliases'
-import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
-import SpatialGuesture from './src/pages/spatial-guesture/index'
-import SpatialMagnifyGesture from './src/pages/spatial-magnify-gesture/index'
-import SpatialRotationGesture from './src/pages/spatial-rotation-gesture/index'
-import SpatialRotateAxisConstraint from './src/pages/spatial-rotate-axis-constraint/index'
-import BackgroundMaterial from './src/pages/backgroundmaterial/index'
-import FixedPositionTest from './src/pages/FixedPositionTest/index'
-import DisplayTest from './src/pages/displayTest/index'
-import MemoryStats from './src/pages/memoryStats/index'
-import NestedFixPosition from './src/pages/nestedfixposition/index'
-import NestedScroll from './src/pages/nestedscroll/index'
-import NestedSpatialOverflow from './src/pages/nested-spatial-overflow/index'
-import SpatialConverter from './src/pages/spatial-converter/index'
-import SpatialCorner from './src/pages/spatialCorner/index'
-import GeometryVerify from './src/pages/geometry-verify/index'
-import TransformVerify from './src/pages/transform-verify/index'
-import Static3DModel from './src/pages/static-3d-model/index'
-import NestedStatic3DModelReady from './src/pages/static-3d-model/nested-ready'
-import VisibleTest from './src/pages/visibleTest/index'
-import { CleanupSpa, CleanupIframe, CleanupModel } from './src/pages/cleanup'
-import HeadStyleSyncPage from './src/pages/head-style-sync/index'
-import UnitConvertTest from './src/pages/unitConvert'
-import CoordConvertTest from './src/pages/reality/coordConvertTest'
-import SpatialDivCoordTest from './src/pages/reality/spatialDivCoordTest'
-import EntitySpatialDivConvertTest from './src/pages/reality/entitySpatialDivConvertTest'
-import ModelSpatialDivConvertTest from './src/pages/reality/modelSpatialDivConvertTest'
-import SpatialDivTest from './src/pages/spatialDivTest/index'
-import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/index'
-import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
-import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
-import EntityAnimationPage from './src/pages/entity-animation/index'
-import EntityAnimationEntrancePage from './src/pages/entity-animation/entrance'
-import EntityAnimationManualTriggerPage from './src/pages/entity-animation/manual-trigger'
-import EntityAnimationReverseLoopPage from './src/pages/entity-animation/reverse-loop'
-import EntityAnimationCancelSyncPage from './src/pages/entity-animation/cancel-sync'
-import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/capability-check'
-import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loop'
-import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
+const AnimateTest = React.lazy(() => import('./src/pages/animate/index'))
+const RealityTest = React.lazy(() => import('./src/pages/reality/index'))
+const RealityDebug = React.lazy(() => import('./src/pages/reality/debug'))
+const RealityDynamic3D = React.lazy(
+  () => import('./src/pages/reality/dynamic3d'),
+)
+const RealityGestures = React.lazy(() => import('./src/pages/reality/gestures'))
+const GestureDiv = React.lazy(() => import('./src/pages/reality/gestureDiv'))
+const RealitySpatialDiv = React.lazy(
+  () => import('./src/pages/reality/spatialDivDynamic'),
+)
+const BasicTransform = React.lazy(
+  () => import('./src/pages/basic-transform/index'),
+)
+const ModelTest = React.lazy(() => import('./src/pages/model-test/index'))
+const SpatialStyleTest = React.lazy(
+  () => import('./src/pages/spatialStyleTest/index'),
+)
+const StyledComponentsSpatialTest = React.lazy(
+  () => import('./src/pages/styledComponentsSpatialTest/index'),
+)
+const CanvasTest = React.lazy(() => import('./src/pages/canvas-test/index'))
+const JSAPITest = React.lazy(() => import('./src/pages/jsapi-test/index'))
+const SpatialDivRefreshValidation = React.lazy(
+  () => import('./src/pages/jsapi-refresh-validation/index'),
+)
+const SceneTest = React.lazy(() => import('./src/pages/scene/index'))
+const SceneVolume = React.lazy(() => import('./src/pages/scene/volume'))
+const SceneXRApp = React.lazy(() => import('./src/pages/scene/xrapp'))
+const RealityEmpty = React.lazy(() => import('./src/pages/reality/empty'))
+const RealityGeometryEntity = React.lazy(
+  () => import('./src/pages/reality/geometryEntity'),
+)
+const RealityInteractable = React.lazy(
+  () => import('./src/pages/reality/interactable'),
+)
+const RealityIssue = React.lazy(() => import('./src/pages/reality/issue'))
+const RealityLow = React.lazy(() => import('./src/pages/reality/low'))
+const RealityNested = React.lazy(() => import('./src/pages/reality/nested'))
+const RealityAttachments = React.lazy(
+  () => import('./src/pages/reality/attachments'),
+)
+const RealityDynamicAssets = React.lazy(
+  () => import('./src/pages/reality/dynamicAssets'),
+)
+const RealityTexturedUnlitBox = React.lazy(
+  () => import('./src/pages/reality/texturedUnlitBox'),
+)
+const RealityTestIndex = React.lazy(
+  () => import('./src/pages/reality-test/index'),
+)
+const RealityAliases = React.lazy(() => import('./src/pages/reality/aliases'))
+const SpatialDragGesture = React.lazy(
+  () => import('./src/pages/spatial-drag-gesture/index'),
+)
+const SpatialGuesture = React.lazy(
+  () => import('./src/pages/spatial-guesture/index'),
+)
+const SpatialMagnifyGesture = React.lazy(
+  () => import('./src/pages/spatial-magnify-gesture/index'),
+)
+const SpatialRotationGesture = React.lazy(
+  () => import('./src/pages/spatial-rotation-gesture/index'),
+)
+const SpatialRotateAxisConstraint = React.lazy(
+  () => import('./src/pages/spatial-rotate-axis-constraint/index'),
+)
+const BackgroundMaterial = React.lazy(
+  () => import('./src/pages/backgroundmaterial/index'),
+)
+const FixedPositionTest = React.lazy(
+  () => import('./src/pages/FixedPositionTest/index'),
+)
+const DisplayTest = React.lazy(() => import('./src/pages/displayTest/index'))
+const MemoryStats = React.lazy(() => import('./src/pages/memoryStats/index'))
+const NestedFixPosition = React.lazy(
+  () => import('./src/pages/nestedfixposition/index'),
+)
+const NestedScroll = React.lazy(() => import('./src/pages/nestedscroll/index'))
+const NestedSpatialOverflow = React.lazy(
+  () => import('./src/pages/nested-spatial-overflow/index'),
+)
+const SpatialConverter = React.lazy(
+  () => import('./src/pages/spatial-converter/index'),
+)
+const SpatialCorner = React.lazy(
+  () => import('./src/pages/spatialCorner/index'),
+)
+const GeometryVerify = React.lazy(
+  () => import('./src/pages/geometry-verify/index'),
+)
+const TransformVerify = React.lazy(
+  () => import('./src/pages/transform-verify/index'),
+)
+const Static3DModel = React.lazy(
+  () => import('./src/pages/static-3d-model/index'),
+)
+const NestedStatic3DModelReady = React.lazy(
+  () => import('./src/pages/static-3d-model/nested-ready'),
+)
+const VisibleTest = React.lazy(() => import('./src/pages/visibleTest/index'))
+const CleanupSpa = React.lazy(() =>
+  import('./src/pages/cleanup').then(module => ({
+    default: module.CleanupSpa,
+  })),
+)
+const CleanupIframe = React.lazy(() =>
+  import('./src/pages/cleanup').then(module => ({
+    default: module.CleanupIframe,
+  })),
+)
+const CleanupModel = React.lazy(() =>
+  import('./src/pages/cleanup').then(module => ({
+    default: module.CleanupModel,
+  })),
+)
+const HeadStyleSyncPage = React.lazy(
+  () => import('./src/pages/head-style-sync/index'),
+)
+const UnitConvertTest = React.lazy(() => import('./src/pages/unitConvert'))
+const CoordConvertTest = React.lazy(
+  () => import('./src/pages/reality/coordConvertTest'),
+)
+const SpatialDivCoordTest = React.lazy(
+  () => import('./src/pages/reality/spatialDivCoordTest'),
+)
+const EntitySpatialDivConvertTest = React.lazy(
+  () => import('./src/pages/reality/entitySpatialDivConvertTest'),
+)
+const ModelSpatialDivConvertTest = React.lazy(
+  () => import('./src/pages/reality/modelSpatialDivConvertTest'),
+)
+const SpatialDivTest = React.lazy(
+  () => import('./src/pages/spatialDivTest/index'),
+)
+const SpatialContentReadyThree = React.lazy(
+  () => import('./src/pages/spatial-content-ready-three/index'),
+)
+const DropdownMenuTest = React.lazy(
+  () => import('./src/pages/dropdown-menu-test/index'),
+)
+const DropdownMenuSpatialTest = React.lazy(
+  () => import('./src/pages/dropdown-menu-spatial/index'),
+)
+const SpatialSemiModalTest = React.lazy(
+  () => import('./src/pages/spatial-semi-modal/index'),
+)
+const PortalSurfaceModalTest = React.lazy(
+  () => import('./src/pages/portal-surface-modal/index'),
+)
+const RuntimeCapabilitiesPage = React.lazy(
+  () => import('./src/pages/runtime-capabilities/index'),
+)
+const EntityAnimationPage = React.lazy(
+  () => import('./src/pages/entity-animation/index'),
+)
+const EntityAnimationEntrancePage = React.lazy(
+  () => import('./src/pages/entity-animation/entrance'),
+)
+const EntityAnimationManualTriggerPage = React.lazy(
+  () => import('./src/pages/entity-animation/manual-trigger'),
+)
+const EntityAnimationReverseLoopPage = React.lazy(
+  () => import('./src/pages/entity-animation/reverse-loop'),
+)
+const EntityAnimationCancelSyncPage = React.lazy(
+  () => import('./src/pages/entity-animation/cancel-sync'),
+)
+const EntityAnimationCapabilityCheckPage = React.lazy(
+  () => import('./src/pages/entity-animation/capability-check'),
+)
+const EntityAnimationResetLoopPage = React.lazy(
+  () => import('./src/pages/entity-animation/reset-loop'),
+)
+const EntityAnimationPlayStatePage = React.lazy(
+  () => import('./src/pages/entity-animation/play-state'),
+)
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -338,6 +448,18 @@ function App() {
                 <Route
                   path="/dropdown-menu-test"
                   element={<DropdownMenuTest />}
+                />
+                <Route
+                  path="/dropdown-menu-spatial"
+                  element={<DropdownMenuSpatialTest />}
+                />
+                <Route
+                  path="/spatial-semi-modal"
+                  element={<SpatialSemiModalTest />}
+                />
+                <Route
+                  path="/portal-surface-modal"
+                  element={<PortalSurfaceModalTest />}
                 />
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
                 <Route path="/geometry-verify" element={<GeometryVerify />} />

@@ -137,6 +137,7 @@ const SPATIAL_DEFAULT_STYLE_CSS = `
     --xr-background-material: none;
   }
   .xr-spatial-default[data-xr-host] {
+    animation: none !important;
     visibility: hidden !important;
     transition: none !important;
     transform: none !important;

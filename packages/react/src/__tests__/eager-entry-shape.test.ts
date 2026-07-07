@@ -96,6 +96,10 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     // hold (both entries omit them).
     'useMetrics',
     'useAnimation',
+    'useSpatialPortalContainer',
+    'useSpatialOverlay',
+    'SpatialOverlay',
+    'PortalSurface',
   ] as const
 
   const EXPECTED_LAZY_RUNTIME_STUBS = [

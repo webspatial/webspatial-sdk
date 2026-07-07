@@ -1,0 +1,90 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #0f172a;
+  color: #e5e7eb;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+button {
+  min-width: 180px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 40px;
+}
+
+.intro {
+  max-width: 880px;
+}
+
+.intro h1 {
+  margin: 8px 0;
+  font-size: 28px;
+}
+
+.intro p,
+.panel p,
+.floating-parent p {
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #38bdf8;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.panel,
+.floating-parent {
+  margin-top: 24px;
+  max-width: 900px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 8px;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.74);
+}
+
+.panel h2,
+.floating-parent h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.floating-parent {
+  min-height: 220px;
+  outline: 2px dashed rgba(248, 113, 113, 0.55);
+  outline-offset: -2px;
+  --xr-back: 120;
+  --xr-depth: 80;
+  --xr-background-material: thin;
+}

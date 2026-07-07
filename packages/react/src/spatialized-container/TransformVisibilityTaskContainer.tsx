@@ -77,6 +77,7 @@ export function TransformVisibilityTaskContainerBase(
     // width: 0,
     // height: 0,
     padding: 0,
+    animation: 'none',
     transition: 'none',
     position: 'absolute',
   }

@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@webspatial/react-sdk",
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@webspatial/core-sdk": ["../../packages/core/src/index.ts"],
+      "@webspatial/core-sdk/runtime": [
+        "../../packages/core/src/runtime/index.ts"
+      ],
+      "@webspatial/core-sdk/install-polyfills": [
+        "../../packages/core/src/install-polyfills.ts"
+      ],
+      "@webspatial/react-sdk": ["../../packages/react/src/index.ts"],
+      "@webspatial/react-sdk/jsx-runtime": [
+        "../../packages/react/src/jsx/jsx-runtime.ts"
+      ],
+      "@webspatial/react-sdk/jsx-dev-runtime": [
+        "../../packages/react/src/jsx/jsx-dev-runtime.ts"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "vite.config.ts",
+    "../../packages/react/src/types/global.d.ts",
+    "../../packages/core/src/types/global.d.ts"
+  ]
+}

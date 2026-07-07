@@ -58,6 +58,7 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       'Texture',
       'UnlitMaterial',
       'World',
+      'PortalSurface',
       // `withSpatialMonitor` and `withSpatialized2DElementContainer` were
       // factory-style HOC public exports in v1 and were demoted to
       // internal-only in v2 (see the `internalize-hoc-factories`
@@ -69,6 +70,9 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       // Hooks
       'useMetrics',
       'useAnimation',
+      'useSpatialPortalContainer',
+      'useSpatialOverlay',
+      'SpatialOverlay',
       // Deprecated v1 export
       'createElement',
       // Constants

@@ -49,5 +49,8 @@ export type {
 export { SceneGraph, World } from './SceneGraph'
 export type { SceneGraphProps } from './SceneGraph'
 
+export { PortalSurface } from './PortalSurface'
+export type { PortalSurfaceProps } from './PortalSurface'
+
 export { withSpatialized2DElementContainer } from './withSpatialized2DElementContainer'
 export { withSpatialMonitor } from './withSpatialMonitor'

@@ -1,0 +1,26 @@
+{
+  "name": "semi-modal-253-demo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -p tsconfig.json && vite build",
+    "test": "tsc -p tsconfig.json && vitest run src"
+  },
+  "dependencies": {
+    "@douyinfe/semi-ui": "2.53.2",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@webspatial/react-sdk": "workspace:*",
+    "@webspatial/core-sdk": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "6.4.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "typescript": "^5.2.2",
+    "vitest": "^4.1.8"
+  }
+}
