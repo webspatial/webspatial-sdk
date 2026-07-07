@@ -11,6 +11,7 @@ This change does not replace the existing `useEntityAnimation`. It is a non-brea
 - Keep public config aligned with Entity props hierarchy by continuing to use `position`, `rotation`, and `scale`.
 - Recommend `xr-animation` binding while keeping `animation` as a compatible binding.
 - Introduce `entityProps` as the React outlet for committed Entity transform values.
+- Add `api.set` (with an updater form) as the imperative write entry for the committed transform state that `entityProps` mirrors, so users can take over after an animation without maintaining their own `useState`.
 - Support `from` / `to` and percentage `timeline` as the public path, while keeping `tracks` as an internal non-public API.
 - Align playback, callback, and capability semantics with the broader motion family where applicable, while preserving Entity-specific constraints.
 - Restrict Entity motion targets to transform-only fields and require explicit failure for unsupported targets such as `opacity`.
@@ -124,13 +125,15 @@ This proposal does not support:
 
 ```text
 function useEntityAnimation(
-  config: SpatializedMotionAuthorConfig
+  config: EntityMotionAuthorConfig
 ): [
-  animation: SpatializedMotionBinding,
-  api: SpatializedPlaybackApi,
+  animation: EntityMotionBinding,
+  api: EntityPlaybackApi,
   entityProps: EntityMotionProps,
 ]
 ```
+
+`EntityMotionAuthorConfig`, `EntityMotionBinding`, and `EntityPlaybackApi` are the Entity-constrained variants of the shared `useAnimation` config / binding / playback-api types: same shape and playback semantics, but the authoring surface is restricted to Entity transform fields (`position` / `rotation` / `scale`) and does not accept `transform.translate / rotate / scale` or non-transform targets such as `opacity`.
 
 ```text
 type EntityMotionProps = {
@@ -164,7 +167,7 @@ Entity proposal does not use `transform.translate / transform.rotate / transform
 const [animation, api, entityProps] = useEntityAnimation({
   from: {
     position: { x: 0, y: 0, z: 0.8 },
-    rotation: { x: 0, y: 0, z: 0.8 },
+    rotation: { x: 0, y: 0, z: 0 },
     scale: { x: 1, y: 1, z: 1 },
   },
   to: {
@@ -184,13 +187,13 @@ const [animation, api, entityProps] = useEntityAnimation({
   timeline: {
     '0%': {
       position: { x: 0, y: 0, z: 0.8 },
-      rotation: { x: 0, y: 0, z: 0.8 },
+      rotation: { x: 0, y: 0, z: 0 },
       scale: { x: 1, y: 1, z: 1 },
     },
     '100%': {
-      position: { x: 0, y: 0, z: 0.8 },
-      rotation: { x: 0, y: 0, z: 0.8 },
-      scale: { x: 1, y: 1, z: 1 },
+      position: { x: 0, y: 0.25, z: 0.8 },
+      rotation: { x: 0, y: 180, z: 0 },
+      scale: { x: 1.1, y: 1.1, z: 1.1 },
     },
   },
 })
@@ -307,16 +310,54 @@ entityProps.scale updates to terminal scale
 3. `stop`.
 4. `reset`.
 5. `finish`.
+6. `api.set` (and its updater form).
 
 ### 7. api.set
 
-`api.set(values)` remains an open question.
+`api.set` is the imperative write entry for the committed Entity transform state that `entityProps` mirrors. Its purpose is to let users take over the transform after an animation ends without maintaining their own `useState`: the SDK already holds the committed state (it must, in order to write terminal values back through `entityProps`), so users should not have to mirror that state a second time.
 
-Open questions:
+#### 7.1 Two sources and the compositor
 
-1. Should it be exposed as a formal public API.
-2. If exposed, should it be considered part of the playback API.
-3. If exposed, should it update `entityProps` at the same time.
+Entity transform is composed from two sources:
+
+- Source A: React props / `entityProps` (the committed state, written declaratively or through `api.set`).
+- Source B: the `xr-animation` binding (per-frame sampled animation values).
+
+At any moment only one source is authoritative, decided by whether the animation is active:
+
+```text
+animation active (delay / running / paused)   -> Source B wins
+animation inactive (idle / terminal)          -> Source A wins
+```
+
+This is the same model as CSS: an animation overrides computed style while playing, and style takes over again once the animation is inactive. `api.set` always writes Source A; when it becomes visible is decided by the compositor, not by `api.set` itself.
+
+#### 7.2 Signature
+
+```text
+api.set(values: EntityMotionProps): void
+api.set(updater: (prev: EntityMotionProps) => EntityMotionProps): void
+```
+
+#### 7.3 Behavior
+
+1. Write target: `api.set` updates the SDK-held committed transform state, which updates `entityProps`, which writes back to the native Entity through `<BoxEntity {...entityProps} />`. `entityProps` is the reactive mirror of that state.
+2. Sparse merge: only the provided fields are overwritten; omitted fields keep their previous committed values. `api.set({ position: { y: 0.3 } })` does not touch `rotation` or `scale`.
+3. Updater form: `prev` is the current committed value (Source A). Read-modify-write is atomic inside the SDK, which is how offsets based on the current value are expressed. There is no bare `api.get`.
+4. Calling during an active animation does not throw, but the write does not survive the animation. It does not interrupt or override the active animation, and — consistent with the React-prop write behavior in section 8.2 — it is NOT queued for replay: when the animation reaches its terminal state, the terminal fill (see 7.4) writes the terminal values into the committed state and overrides whatever was written during the animation. To take over the transform, call `api.set` after the animation is inactive (idle / terminal).
+5. Not a playback command: `api.set` does not seek, start, or change playback progress.
+
+#### 7.4 Interaction with `play` and terminal fill
+
+- Start point after `api.set` then `play`: if the config declares `from`, playback starts from `from`; if `from` is not declared, playback starts from the current committed value (the pose written by `api.set`).
+- Terminal fill: when an animation reaches a terminal state, it fills to its terminal transform and writes that value back to `entityProps` (equivalent to CSS `fill-mode: forwards`); it does NOT snap back to the pre-animation value.
+
+#### 7.5 Reading the current value (no bare api.get)
+
+`api.get` is intentionally not provided, because an imperative getter in React tends to read stale values and invites read-then-write races.
+
+- Read-modify-write: use the updater form `api.set(prev => ...)`.
+- Declarative read of the current value: read `entityProps`, which is the reactive mirror of the committed state.
 
 ### 8. Conflict Semantics with React Props
 
@@ -382,9 +423,13 @@ api.reset()
 api.finish()
 ```
 
+`api.set` is a state setter (see section 7), not a playback command, and is intentionally not listed among the playback methods above.
+
 ### 10. Callback
 
 Support the callbacks already defined by `useAnimation`.
+
+Callbacks are notifications only. `onComplete`, `onStop`, `onReset`, `onStart`, and `onError` report that a lifecycle event happened and pass the relevant transform values; their return values are ignored and MUST NOT be used to drive the terminal transform. To decide where the Entity ends up, either declare the terminal state in the config (for example `to`) before playback, or take over after playback through the terminal `entityProps` value or an explicit `api.set` call.
 
 Callback values only include transform fields supported by Entity:
 

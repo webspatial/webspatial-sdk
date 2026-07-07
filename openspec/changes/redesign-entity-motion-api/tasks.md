@@ -7,9 +7,9 @@
 ## 2. Type and Contract Redesign
 
 - [ ] 2.1 Add failing tests for the new `useEntityAnimation` tuple shape `[animation, api, entityProps]`
-- [ ] 2.2 Redesign Core and React type surfaces for transform-shaped Entity motion config and transform-only callback values
+- [ ] 2.2 Redesign Core and React type surfaces for Entity motion config authored as `position` / `rotation` / `scale` and transform-only callback values
 - [ ] 2.3 Add failing tests for legacy config rejection and unsupported targets such as `opacity`
-- [ ] 2.4 Define the public playback surface for Entity motion, including `play`, `pause`, `resume`, `stop`, `reset`, `finish`, and `set`
+- [ ] 2.4 Define the public playback surface (`play`, `pause`, `resume`, `stop`, `reset`, `finish`) and the `api.set` state setter (accepting a value or an `(prev) => next` updater), documenting `api.set` as a state setter rather than a playback command
 
 ## 3. Entity Binding Migration
 
@@ -20,10 +20,11 @@
 
 ## 4. Playback and Outlet Semantics
 
-- [ ] 4.1 Add failing tests for `entityProps` lifecycle updates at start, complete, stop, reset, finish, and `set(values)`
+- [ ] 4.1 Add failing tests for `entityProps` lifecycle updates at start, complete, stop, reset, finish, and each `api.set` call (value and updater forms)
 - [ ] 4.2 Implement committed transform persistence through `entityProps` without per-frame React updates
 - [ ] 4.3 Add failing tests for active transform ownership so animated props ignore competing React transform writes during alive playback states
-- [ ] 4.4 Implement terminal-state and `set(values)` ownership rules so React resync preserves committed animation values
+- [ ] 4.4 Implement committed-state ownership rules: `api.set` sparse merge, updater `prev` = current committed value, calling `api.set` during an active animation writes Source A without throwing or overriding, start point after set-then-play is `from` when declared else current committed value, and terminal fill writes the terminal transform back to `entityProps` (fill-forwards, no snap-back)
+- [ ] 4.5 Add failing tests proving lifecycle callbacks are notifications: `onComplete` return values are ignored and cannot drive the terminal transform
 
 ## 5. Capability and Validation
 
@@ -33,12 +34,12 @@
 
 ## 6. Docs, Demos, and Migration
 
-- [ ] 6.1 Update Entity motion docs and examples to use transform-shaped config, `xr-animation`, and `entityProps`
+- [ ] 6.1 Update Entity motion docs and examples to use `position` / `rotation` / `scale` config, `xr-animation`, `entityProps`, and `api.set` (with its updater form and the no-bare-`api.get` guidance: read via the `api.set` updater or `entityProps`)
 - [ ] 6.2 Update `apps/test-server` Entity animation demos and capability pages to the new target-state API
 - [ ] 6.3 Add migration notes covering the removal of legacy `animation` prop binding and legacy top-level transform config
 
 ## 7. Verification
 
 - [ ] 7.1 Execute the implementation in TDD order: write failing tests first, implement the minimum change to pass, then refactor with tests still green
-- [ ] 7.2 Run targeted unit, integration, and capability tests for Entity motion and runtime capabilities
+- [ ] 7.2 Run targeted unit, integration, and capability tests for Entity motion and runtime capabilities, including `api.set` value/updater behavior, active-animation no-throw, set-then-play start point, and terminal fill
 - [ ] 7.3 Perform a final proposal-to-implementation review and archive or supersede the legacy Entity motion proposal once the new path is validated

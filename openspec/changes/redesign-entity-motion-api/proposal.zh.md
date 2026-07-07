@@ -124,13 +124,15 @@ return (
 
 ```text
 function useEntityAnimation(
-  config: SpatializedMotionAuthorConfig
+  config: EntityMotionAuthorConfig
 ): [
-  animation: SpatializedMotionBinding,
-  api: SpatializedPlaybackApi,
+  animation: EntityMotionBinding,
+  api: EntityPlaybackApi,
   entityProps: EntityMotionProps,
 ]
 ```
+
+`EntityMotionAuthorConfig`、`EntityMotionBinding`、`EntityPlaybackApi` 是共享 `useAnimation` config / binding / playback-api 类型在 Entity 上的约束变体:形态与 playback 语义一致,但 authoring surface 被限制为 Entity transform 字段(`position` / `rotation` / `scale`),不接受 `transform.translate / rotate / scale`,也不接受 `opacity` 等非 transform 目标。
 
 ```text
 type EntityMotionProps = {
@@ -164,7 +166,7 @@ Entity proposal 不使用 `transform.translate / transform.rotate / transform.sc
 const [animation, api, entityProps] = useEntityAnimation({
   from: {
     position: { x: 0, y: 0, z: 0.8 },
-    rotation: { x: 0, y: 0, z: 0.8 },
+    rotation: { x: 0, y: 0, z: 0 },
     scale: { x: 1, y: 1, z: 1 },
   },
   to: {
@@ -184,13 +186,13 @@ const [animation, api, entityProps] = useEntityAnimation({
   timeline: {
     '0%': {
       position: { x: 0, y: 0, z: 0.8 },
-      rotation: { x: 0, y: 0, z: 0.8 },
+      rotation: { x: 0, y: 0, z: 0 },
       scale: { x: 1, y: 1, z: 1 },
     },
     '100%': {
-      position: { x: 0, y: 0, z: 0.8 },
-      rotation: { x: 0, y: 0, z: 0.8 },
-      scale: { x: 1, y: 1, z: 1 },
+      position: { x: 0, y: 0.25, z: 0.8 },
+      rotation: { x: 0, y: 180, z: 0 },
+      scale: { x: 1.1, y: 1.1, z: 1.1 },
     },
   },
 })
@@ -307,16 +309,54 @@ entityProps.scale 更新为终态 scale
 3. `stop`。
 4. `reset`。
 5. `finish`。
+6. `api.set`(以及它的 updater 形式)。
 
 ### 7. api.set
 
-`api.set(values)` 当前仍是 open question。
+`api.set` 是 `entityProps` 所镜像的、已提交(committed)Entity transform 状态的命令式写入入口。它的目的是让用户在动画结束后接管 transform,而不必自己再维护一份 `useState`:SDK 本来就持有这份 committed 状态(它必须持有,才能通过 `entityProps` 回写终态),因此用户不应被迫再镜像一遍。
 
-待确认问题：
+#### 7.1 两个数据源与合成器(compositor)
 
-1. 是否作为正式 public API 暴露。
-2. 如果暴露，是否属于 playback API 的一部分。
-3. 如果暴露，是否应同时更新 `entityProps`。
+Entity transform 由两个数据源合成:
+
+- Source A:React props / `entityProps`(committed 状态,通过声明式写入或 `api.set` 写入)。
+- Source B:`xr-animation` 绑定(逐帧采样的 animation values)。
+
+任一时刻只有一个数据源是权威的,由动画是否活跃决定:
+
+```text
+动画活跃(delay / running / paused)   -> Source B 生效
+动画非活跃(idle / terminal)          -> Source A 生效
+```
+
+这与 CSS 模型一致:动画播放时覆盖 computed style,动画非活跃后 style 重新接管。`api.set` 始终写入 Source A;它何时可见由 compositor 决定,而不是由 `api.set` 本身决定。
+
+#### 7.2 签名
+
+```text
+api.set(values: EntityMotionProps): void
+api.set(updater: (prev: EntityMotionProps) => EntityMotionProps): void
+```
+
+#### 7.3 行为
+
+1. 写入目标:`api.set` 更新 SDK 持有的 committed transform 状态,该状态更新 `entityProps`,再通过 `<BoxEntity {...entityProps} />` 回写到 native Entity。`entityProps` 是该状态的响应式镜像。
+2. 稀疏合并(sparse merge):只覆盖传入的字段;未传入的字段保持之前的 committed 值。`api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
+3. Updater 形式:`prev` 是当前 committed 值(Source A)。读-改-写在 SDK 内部原子完成,这就是基于当前值做偏移的表达方式。不提供裸 `api.get`。
+4. 活跃动画期间调用不会抛错,但该写入不会在动画结束后存留。它不打断也不覆盖活动动画;并且与 8.2 节 React prop 写入行为一致——它不会被排队等待 replay:动画到达终态时,终态填充(见 7.4)会把终态值写入 committed 状态,覆盖动画期间写入的任何值。若要接管 transform,应在动画非活跃(idle / terminal)后再调用 `api.set`。
+5. 不是 playback 命令:`api.set` 不 seek、不 start、不改变播放进度。
+
+#### 7.4 与 `play` 和终态填充(terminal fill)的关系
+
+- `api.set` 之后再 `play` 的起点:如果 config 声明了 `from`,播放从 `from` 开始;如果未声明 `from`,播放从当前 committed 值(`api.set` 写入的姿态)开始。
+- 终态填充:动画到达终态时,填充到其终态 transform 并将该值回写到 `entityProps`(等价于 CSS `fill-mode: forwards`);它不会 snap 回动画前的值。
+
+#### 7.5 读取当前值(不提供裸 api.get)
+
+有意不提供 `api.get`,因为 React 中的命令式 getter 容易读到 stale 值,并诱发读-写竞态。
+
+- 读-改-写:使用 updater 形式 `api.set(prev => ...)`。
+- 声明式读取当前值:读 `entityProps`,它是 committed 状态的响应式镜像。
 
 ### 8. 与 React props 的冲突语义
 
@@ -382,9 +422,13 @@ api.reset()
 api.finish()
 ```
 
+`api.set` 是状态 setter(见第 7 节),不是 playback 命令,因此有意不列入上面的 playback 方法中。
+
 ### 10. Callback
 
 支持当前 `useAnimation` 已定义的 callbacks。
+
+Callback 只是通知。`onComplete`、`onStop`、`onReset`、`onStart`、`onError` 只报告某个 lifecycle 事件发生并传入相关 transform 值;它们的返回值被忽略,不得用于驱动终态 transform。要决定 Entity 最终停在哪里,要么在播放前于 config 中声明终态(例如 `to`),要么在播放后通过终态 `entityProps` 值或显式 `api.set` 调用接管。
 
 Callback values 只包含 Entity 支持的 transform：
 
