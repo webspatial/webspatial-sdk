@@ -74,17 +74,8 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
         return children
     }
 
-    func getChildrenOfType(_ type: SpatializedElementType) -> [String: SpatializedElement] {
-        return children.filter {
-            switch type {
-            case .Spatialized2DElement:
-                return $0.value is Spatialized2DElement
-            case .SpatializedStatic3DElement:
-                return $0.value is SpatializedStatic3DElement
-            case .SpatializedDynamic3DElement:
-                return $0.value is SpatializedDynamic3DElement
-            }
-        }
+    func getChildren<T: SpatializedElement>(ofType type: T.Type) -> [T] {
+        return children.values.compactMap { $0 as? T }
     }
 
     func loadHtml(_ html: String) {

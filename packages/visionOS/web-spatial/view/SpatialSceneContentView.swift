@@ -32,31 +32,28 @@ struct SpatialSceneContentView: View {
                         .frame(width: width, height: height)
                         .offset(z: -1)
 
-                    let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.Spatialized2DElement).values)
+                    let childrenOfSpatialized2DElement = spatialScene.getChildren(ofType: Spatialized2DElement.self)
 
                     ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
-                        SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                            Spatialized2DElementView()
+                        SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset, spatializedElement: child) {
+                            Spatialized2DElementView(spatialized2DElement: child)
                         }
-                        .environment(child)
                     }
 
-                    let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedStatic3DElement).values)
+                    let childrenOfSpatializedStatic3DElement = spatialScene.getChildren(ofType: SpatializedStatic3DElement.self)
 
                     ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
-                        SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                            SpatializedStatic3DView()
+                        SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset, spatializedElement: child) {
+                            SpatializedStatic3DView(spatializedStatic3DElement: child)
                         }
-                        .environment(child)
                     }
 
-                    let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialScene.getChildrenOfType(.SpatializedDynamic3DElement).values)
+                    let childrenOfSpatializedDynamic3DElement = spatialScene.getChildren(ofType: SpatializedDynamic3DElement.self)
 
                     ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
-                        SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset) {
-                            SpatializedDynamic3DView()
+                        SpatializedElementView(parentScrollOffset: spatialScene.scrollOffset, spatializedElement: child) {
+                            SpatializedDynamic3DView(spatializedDynamic3DElement: child)
                         }
-                        .environment(child)
                     }
                 }
             }
