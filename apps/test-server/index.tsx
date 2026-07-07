@@ -73,6 +73,7 @@ import ModelSpatialDivConvertTest from './src/pages/reality/modelSpatialDivConve
 import SpatialDivTest from './src/pages/spatialDivTest/index'
 import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
+import PortalBridgeDialogTest from './src/pages/portal-bridge-dialog/index'
 import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
 import EntityAnimationPage from './src/pages/entity-animation/index'
 import EntityAnimationEntrancePage from './src/pages/entity-animation/entrance'
@@ -338,6 +339,10 @@ function App() {
                 <Route
                   path="/dropdown-menu-test"
                   element={<DropdownMenuTest />}
+                />
+                <Route
+                  path="/portal-bridge-dialog"
+                  element={<PortalBridgeDialogTest />}
                 />
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
                 <Route path="/geometry-verify" element={<GeometryVerify />} />

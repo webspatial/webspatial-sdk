@@ -108,6 +108,7 @@ export const routes = [
         label: 'SpatialDiv + Three (ready)',
       },
       { path: '/dropdown-menu-test', label: 'Dropdown menu test' },
+      { path: '/portal-bridge-dialog', label: 'Portal bridge dialog' },
       { path: '/background-material', label: 'Background Material' },
       { path: '/fixed-position-test', label: 'Fixed Position' },
       { path: '/display-test', label: 'Display Test' },
