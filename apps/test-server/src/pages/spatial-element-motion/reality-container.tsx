@@ -46,7 +46,7 @@ const TIMELINE_CONFIG = {
 } as const
 
 export default function SpatialElementMotionRealityContainerPage() {
-  const { lines, log } = useLog()
+  const { lines, log, clear } = useLog()
   const dynamic3dAnim = supports('useAnimation')
 
   const [motion, api, style] = useAnimation({
@@ -159,6 +159,9 @@ export default function SpatialElementMotionRealityContainerPage() {
           </button>
           <button type="button" className={btnCls} onClick={() => api.reset()}>
             Reset
+          </button>
+          <button type="button" className={btnCls} onClick={clear}>
+            Clear Log
           </button>
         </div>
 

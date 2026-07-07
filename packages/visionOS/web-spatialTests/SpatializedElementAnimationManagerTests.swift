@@ -130,14 +130,16 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
 
         animation.play(at: 0)
         animation.tick(at: 1)
-        let frozenTransformX = element.transform.matrix.columns.3.x
-        let frozenOpacity = element.opacity
 
         animation.pause(at: 1.1)
+        let frozenTransformX = element.transform.matrix.columns.3.x
+        let frozenOpacity = element.opacity
         animation.tick(at: 1.6)
 
         XCTAssertEqual(element.animatingMask.transformAnimationId, animation.uuid)
         XCTAssertEqual(element.animatingMask.opacityAnimationId, animation.uuid)
+        XCTAssertEqual(frozenTransformX, 5.5, accuracy: 0.0001)
+        XCTAssertEqual(frozenOpacity, 0.5875, accuracy: 0.0001)
         XCTAssertEqual(element.transform.matrix.columns.3.x, frozenTransformX, accuracy: 0.0001)
         XCTAssertEqual(element.opacity, frozenOpacity, accuracy: 0.0001)
     }
@@ -903,6 +905,8 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertEqual(events.last?.action, "pause")
         XCTAssertEqual(events.last?.playState, .paused)
         XCTAssertEqual(events.last?.finished, false)
+        XCTAssertNotNil(events.last?.values)
+        XCTAssertNotNil(events.last?.values?.opacity)
     }
 
     func test_animationStateChangedIncludesFinishedForAllTerminalAndControlEvents() throws {

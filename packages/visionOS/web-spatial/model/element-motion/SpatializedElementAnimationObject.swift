@@ -97,6 +97,7 @@ final class SpatializedElementAnimationObject: SpatialObject {
         }
 
         let values = currentValues(at: timestamp)
+        applySample(values)
         playState = .paused
         pauseStartTime = timestamp
         emitStateChanged(action: "pause", playState: .paused, values: values)
