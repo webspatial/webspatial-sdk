@@ -71,6 +71,12 @@ The SDK MUST use `entityProps` as the React-side persistence outlet for committe
 - **WHEN** native playback is actively interpolating between keyframes
 - **THEN** the SDK MUST NOT update `entityProps` for every animation frame
 
+#### Scenario: Looping animation does not commit `entityProps` at loop boundaries
+- **GIVEN** an Entity animation with `loop: true`
+- **WHEN** the animation crosses a loop boundary
+- **THEN** the SDK MUST NOT update `entityProps` at that boundary
+- **AND** `entityProps` MUST only be committed on `stop`, `finish`, or a native-accepted `api.set(values)`
+
 ### Requirement: Playback and callbacks align with the new motion model
 
 Entity motion MUST align with the newer motion-family playback surface and lifecycle semantics while remaining transform-only.

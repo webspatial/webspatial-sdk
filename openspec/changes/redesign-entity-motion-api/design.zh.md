@@ -145,7 +145,7 @@ flowchart TB
 - `ControlSpatializedElementAnimationJSBCommand`
 - `spatialanimationstatechanged` event
 
-旧 `AnimateTransformJSBCommand` 是内部实现协议,不是公开承诺 API。目标态可以停止使用或删除它,不构成 public breaking change。
+旧 `AnimateTransformJSBCommand` 是内部实现协议,不是公开承诺 API。目标态直接删除它;因其非公开 API,不构成 public breaking change。
 
 ### CreateSpatializedElementAnimation
 
@@ -442,7 +442,7 @@ flowchart TB
 7. **Rotation:** `rotation.*` 输入单位是 Entity API 的 Euler degrees。Native 编译时转换为 RealityKit transform 所需的旋转表示,避免用 Euler 做逐帧插值。由于 RealityKit 以最短路径四元数 slerp 插值 orientation,某个 rotation channel 若关键帧增量 ≥180° 或跨多轴,其路径可能与逐轴 Euler 直觉不同;需要特定的多圈或多轴路径时,应显式补充中间关键帧。
 8. **Scale:** `scale.*` 必须为非负数。非法 scale 直接失败。
 9. **Timing function(per-channel):** keyframe 级 `timingFunction` 优先于 track 级,track 级优先于 timeline 默认值。解析后的 per-keyframe timing 保留在各 channel 的 keyframe 上,由该 channel 自己的 RealityKit animation 携带,不与其它 channel 合并。因此同一时间段内不同 channel 使用不同 timing function 是原生支持的,不再需要 segment 合并,也不会出现无法表达而降级的情况。对于 RealityKit 内建 timing(linear / easeIn / easeOut / easeInOut)直接映射;自定义 cubic-bezier 若无对应内建曲线,则将该 channel bake 成 `SampledAnimation`。
-10. **Loop / playbackRate / delay:** 这些 playback 参数保留在 `EntityChannelAnimationPlan` 顶层,对整个 `AnimationGroup` 统一生效,由 RealityKit playback/controller 层执行。
+10. **Loop / playbackRate / delay:** 这些 playback 参数保留在 `EntityChannelAnimationPlan` 顶层,对整个 `AnimationGroup` 统一生效,由 RealityKit playback/controller 层执行。循环动画没有自然的 `complete` 终态,因此 `entityProps` 不在每个 loop 边界更新,只在 `stop` / `finish` / native 接受的 `api.set` 时提交。
 11. **Terminal fill:** `complete` / `finish` 停在终态,`reset` 停在起点,`stop` 停在当前 native transform;这些 confirmed values 通过事件回传给 React。
 12. **失败显式化:** 如果 RealityKit 无法表达某个 channel plan(例如无法 bake 的 timing),Native adapter 必须通过 command failure 或 error event 显式失败,不能 silent ignore。
 
@@ -521,6 +521,7 @@ supports('useAnimation')
 4. `api.set` 发送 `ControlSpatializedElementAnimation(type: 'set')`,不写本地 cache。
 5. Entity 组件支持 `xr-animation` 绑定,并保留 `animation` 兼容绑定。
 6. 绑定器泛化为 `useBindMotionTarget({ binding, target })`,保留单 binding 单 target 不变量。
+7. 删除旧 entity-transform-animation 遗留,包括 JS 侧 suppression 机制(`animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径)。最终 transform 只由 Source A(static/base props + `entityProps`)与 Source B(`xr-animation`)的分量级仲裁组合;terminal 后由 `entityProps` 覆盖 stale base props(fill-forwards,不 snap-back)。删除这条路径,正是让旧的 snap-back 冲突结构上不可能发生的原因。
 
 ### Core 层 (`packages/core`)
 
@@ -536,7 +537,7 @@ supports('useAnimation')
 2. Entity adapter 编译 canonical Entity tracks 到 RealityKit transform animation。
 3. `onControlSpatializedElementAnimation` 支持 Entity animation object 的 `play/pause/resume/stop/reset/finish/destroy/set`。
 4. 每个 accepted start / terminal / set 操作都回传 confirmed Entity values。
-5. 删除或停止使用旧 `AnimateTransform` Entity 专用链路。
+5. 直接删除旧 `AnimateTransform` Entity 专用链路(不是仅停止使用),包括 JS 侧旧 entity-transform-animation 遗留:suppression 机制 `animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径,不保留第二条 native 执行路径。
 
 ## 类图
 
@@ -591,6 +592,12 @@ classDiagram
         class TargetResolver {
             +resolve(elementId)
         }
+        class MotionTargetAdapter {
+            <<interface>>
+            +create()
+            +control()
+            +emitConfirmedValues()
+        }
         class SpatializedElementMotionAdapter
         class EntityMotionAdapter {
             +compileTracks()
@@ -609,10 +616,13 @@ classDiagram
     AnimationObject --> CreateSpatializedElementAnimationJSBCommand
     AnimationObject --> ControlSpatializedElementAnimationJSBCommand
     CreateSpatializedElementAnimationJSBCommand --> TargetResolver
-    TargetResolver --> SpatializedElementMotionAdapter
-    TargetResolver --> EntityMotionAdapter
+    TargetResolver --> MotionTargetAdapter : 按 target type 分发
+    SpatializedElementMotionAdapter ..|> MotionTargetAdapter : implements
+    EntityMotionAdapter ..|> MotionTargetAdapter : implements
     EntityMotionAdapter --> RealityKit
 ```
+
+本图是 conceptual class diagram:为便于阅读把 React hook、Core `AnimationObject`、Native adapter 归在一起,并非表示它们是同一层 class。OOP 上真正重要的边界是:`AnimationObject` 只依赖 target-agnostic 的 create / control / event 协议,Native 按 target type 分发到某个 `MotionTargetAdapter` 实现(`SpatializedElementMotionAdapter` 或 `EntityMotionAdapter`);接口保持最小,不引入实现中不需要的抽象。
 
 ## Risks / Trade-offs
 
@@ -632,4 +642,4 @@ classDiagram
 - **Native 采用 per-channel timing 编译。** 每个 transform channel 单独编译为携带自身 timing function 的 RealityKit animation,经 `AnimationGroup` 并行绑定到 translation / orientation / scale sub-target,而不是把所有 channel 合并成共享单一 `timingFunction` 的 segment。原因:segment 合并后每段只能带一个 timing function,同一时间段内不同 channel 的不同曲线无法表达,在进入 native 前就丢失;per-channel 则与 CADisplayLink element 路径的逐帧 per-track 采样语义一致。代价见 Risks。
 - **Entity 编译产出不复用 `SpatializedMotionConfig` / `SpatializedMotionTrack`。** 理由有三:(1) **阶段不同**——`SpatializedMotion*Config` 是 public authoring 配置(带 `onStart`/`onComplete`/`autoStart` 回调、未脱糖 tracks、三级 fallback 的可选 `timingFunction`),而 `EntityChannelAnimationPlan` 是 native 编译后的可执行计划(已解百分比、已脱糖 `from`/`to`、已求缺帧 `baseline`、timing 已塔缩到每个 keyframe);config 里无处安放 `baseline`/已解析 timing,回调字段又是噪声。(2) **域不同**——`SpatializedMotionTrack.property` 是 CSS/element 视觉域(`opacity` / `transform.translate.*` / `transform.rotate.*` / `transform.scale.*`),Entity 是 pose 域(`position.*` / `rotation.*` / `scale.*`)且显式拒绝 `opacity`;value 域也不同(`SpatializedVisualValues` vs `EntityMotionProps`,后者 rotation 是 Euler degrees)。复用会把 `opacity`/`transform.translate` 混进 Entity 通道,并把结构约束降级成运行时校验。(3) **避免跨路径耦合**——本次重设计只复用跨边界协议(JSB command / 事件),内部数据类型不复用;element adapter(CADisplayLink per-track sampler)与 Entity adapter(RealityKit per-channel plan)各自持有编译产出,以免 element 侧 property 白名单或 `SpatializedVisualValues` 变动波及 Entity。若需对标“归一化 timeline”,element 侧是 `SpatializedMotionTimeline`、Entity 侧是 `EntityMotionTimelinePayload`,两者也各自独立。
 - **Ownership 粒度采用分量级(per-component),而不是整个 transform。** 某个 transform 分量(`position` / `rotation` / `scale`)只要有任一字段出现在 config,该分量在 active animation 期间整体归动画;完全没出现在 config 的分量归 React props,动画期间照常驱动。理由:(1) 本提案替换的旧 entity transform animation API 本身就是分量级 ownership(按字段维护抑制缓存、非动画字段照常更新),采用分量级可保持非破坏性替换;(2) 整体抑制的理由(element 路径 DOMMatrix 整体下发、拆分需矩阵分解/重组)不适用于 Entity——Entity props 本就是分量结构,per-channel 编译已提供分量级执行基础;(3) ownership 判定下推到 native(以 config 声明的分量为准),不引入 React 侧双权威缓存。边界:粒度止于分量,不做标量级(`position.x` vs `position.y`),因为 RealityKit sub-target 绑定就是分量级的;被动画分量内的非动画标量随 sub-target 冻结到 baseline(见 Risks)。
-- 旧 `AnimateTransformJSBCommand` 是内部实现协议,可被替换或删除。
+- 旧 `AnimateTransformJSBCommand` 是内部实现协议,已删除,而非仅停止使用。

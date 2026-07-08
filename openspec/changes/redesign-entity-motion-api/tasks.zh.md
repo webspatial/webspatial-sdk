@@ -17,6 +17,7 @@
 - [ ] 3.2 更新 Entity props 契约与 binding 生命周期，切换到新的 Entity motion 绑定路径
 - [ ] 3.3 保留单绑定不变量，保证同一个 animation object 不能驱动多个 Entity 实例
 - [ ] 3.4 保留 Entity `animation` 兼容绑定，并在文档中把 `xr-animation` 标注为推荐写法
+- [ ] 3.5 删除 JS 侧旧 entity-transform-animation 遗留，包括 suppression 机制 `animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径，确保不存在能与 native 竞争的第二个 transform 源
 
 ## 4. Playback 与 Outlet 语义
 
@@ -43,3 +44,4 @@
 - [ ] 7.1 严格按 TDD 顺序执行实现：先写失败测试，再做最小实现使其通过，最后在测试持续通过前提下重构
 - [ ] 7.2 运行 Entity motion 与 runtime capabilities 相关的定向单测、集成测试和能力测试,包括 `api.set(values)` patch-only 行为、active set 不暂存、未绑定 set 无效、set 后再 play 的起点,以及终态填充
 - [ ] 7.3 在新路径验证完成后，做一次提案与实现对照复核，并归档或正式替代 `add-entity-transform-animation`
+- [ ] 7.4 补一个测试:动画到达终态后 transform 不会 snap 回 pre-animation/base props(为已删除的 suppression 释放后重同步路径兜底回归)

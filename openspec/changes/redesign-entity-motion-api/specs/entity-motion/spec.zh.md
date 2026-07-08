@@ -71,6 +71,12 @@ SDK MUST 使用 `entityProps` 作为动画系统持有的已提交 Entity transf
 - **WHEN** native 播放正在关键帧之间插值
 - **THEN** SDK MUST NOT 在每一帧都更新 `entityProps`
 
+#### Scenario: 循环动画不在 loop 边界提交 `entityProps`
+- **GIVEN** 一个 `loop: true` 的 Entity 动画
+- **WHEN** 动画越过一个 loop 边界
+- **THEN** SDK MUST NOT 在该边界更新 `entityProps`
+- **AND** `entityProps` MUST 只在 `stop`、`finish` 或 native 接受的 `api.set(values)` 时提交
+
 ### Requirement: Playback 与 callback 语义对齐新的 motion 模型
 
 Entity motion MUST 在保持 transform-only 约束的前提下，对齐新的 motion 家族 playback surface 与生命周期语义。

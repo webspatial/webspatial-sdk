@@ -17,6 +17,7 @@
 - [ ] 3.2 Update Entity prop contracts and binding lifecycle to use the new Entity motion binding path
 - [ ] 3.3 Preserve the single-binding invariant so one animation object cannot drive multiple Entity instances
 - [ ] 3.4 Keep the Entity `animation` compatible binding and document `xr-animation` as the recommended form
+- [ ] 3.5 Delete the legacy entity-transform-animation leftovers on the JS side, including the suppression mechanism `animation.__getSuppressedFields` and the suppression-release base-props re-sync path, so there is no second transform source competing with native
 
 ## 4. Playback and Outlet Semantics
 
@@ -43,3 +44,4 @@
 - [ ] 7.1 Execute the implementation in TDD order: write failing tests first, implement the minimum change to pass, then refactor with tests still green
 - [ ] 7.2 Run targeted unit, integration, and capability tests for Entity motion and runtime capabilities, including `api.set(values)` patch-only behavior, active set not stashed, unbound set invalid, set-then-play start point, and terminal fill
 - [ ] 7.3 Perform a final proposal-to-implementation review and, once the new path is validated, archive or formally supersede `add-entity-transform-animation`
+- [ ] 7.4 Add a test proving that after an animation reaches its terminal state, the transform does not snap back to pre-animation/base props (regression guard for the deleted suppression-release re-sync path)
