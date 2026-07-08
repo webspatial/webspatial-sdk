@@ -351,36 +351,40 @@ type EntityMotionKeyframe = {
 
 ```text
 EntityMotionTimelinePayload
-  -> EntityTransformSegmentPlan
-  -> RealityKit AnimationResource / playback controller
+  -> EntityChannelAnimationPlan(per-channel)
+  -> RealityKit AnimationResource[] + AnimationGroup
   -> spatialanimationstatechanged(values)
 ```
 
-`EntityTransformSegmentPlan` 是 Native adapter 内部执行计划,不作为 JS/Core 公共类型:
+`EntityChannelAnimationPlan` 是 Native adapter 内部执行计划,不作为 JS/Core 公共类型。它按 **transform channel** 组织,每个 channel 携带自己的 keyframes 和 per-keyframe timing function,而不是把所有 channel 合并成共享同一段边界的 segment:
 
 ```text
-type EntityTransformSegmentPlan = {
+type EntityChannelAnimationPlan = {
   duration: number
   delay: number
   playbackRate: number
   loop?: boolean | { reverse?: boolean }
-  segments: EntityTransformSegment[]
+  channels: EntityChannelPlan[]
 }
 
-type EntityTransformSegment = {
-  fromTime: number
-  toTime: number
-  from: CompleteEntityTransform
-  to: CompleteEntityTransform
-  timingFunction: TimingFunction
+type EntityChannelPlan = {
+  channel: EntityMotionProperty   // position.x / rotation.y / scale.z ...
+  baseline: number                // 播放起点该 channel 的 native 值,缺帧时使用
+  keyframes: EntityChannelKeyframe[]
 }
 
-type CompleteEntityTransform = {
-  position: Vec3
-  rotationDegrees: Vec3
-  scale: Vec3
+type EntityChannelKeyframe = {
+  at: number
+  value: number
+  timingFunction: TimingFunction  // 该关键帧到下一关键帧区间使用的 timing
 }
 ```
+
+**为什么按 channel 而不是按 segment:**
+
+如果把所有 channel 合并到共享的时间段(segment),每段只能携带一个 `timingFunction`。但同一时间段内不同 channel 可能需要不同 timing function(例如 `position.y` 用 `easeOut`、`rotation.y` 用 `linear`),单一 slot 无法同时表达两条曲线——一旦按 segment 合并,per-channel 的 timing 信息在进入 RealityKit 前就已经丢失。逐帧 per-track 采样的 CADisplayLink element 路径不存在这个问题,因为每条 track 独立取自己的 timing。
+
+因此保留 per-channel 结构:每个 channel 单独编译成一个 RealityKit animation(携带自己的 timing function),再通过 `AnimationGroup` 并行播放,并绑定到对应 sub-target(translation / orientation / scale)。这样 per-channel timing 在整条链路上都不丢失,与 element 路径语义一致。
 
 ### 编译流程
 
@@ -389,22 +393,21 @@ flowchart TB
     Payload["EntityMotionTimelinePayload<br/>canonical tracks"]
     Validate["兜底校验<br/>duration / property / keyframes / scale"]
     Snapshot["读取 native current transform<br/>作为缺失通道基准"]
-    Times["收集并排序全局 keyframe times"]
-    Table["构建 channel value table<br/>position / rotation / scale"]
-    Fill["边界值求解<br/>keyframe / track interpolation / native baseline"]
-    Segments["合成 EntityTransformSegmentPlan<br/>每段 from/to 都是完整 Transform"]
-    RKCompile["编译为 RealityKit animation<br/>rotation degrees -> native rotation"]
-    Play["entity.playAnimation()"]
+    Baseline["读取缺帧 channel 的 native baseline"]
+    Channels["按 channel 组织 EntityChannelAnimationPlan<br/>每个 channel 保留自己的 keyframes + per-keyframe timing"]
+    RKCompile["每个 channel 编译为独立 RealityKit animation<br/>携带自身 timing;rotation degrees -> native rotation"]
+    Group["AnimationGroup 并行播放<br/>绑定 translation / orientation / scale sub-target"]
+    Play["entity.playAnimation(group)"]
     Confirm["terminal / set accepted 后<br/>回传 confirmed EntityMotionProps"]
 
     Payload --> Validate
     Validate --> Snapshot
     Snapshot --> Times
-    Times --> Table
-    Table --> Fill
-    Fill --> Segments
-    Segments --> RKCompile
-    RKCompile --> Play
+    Snapshot --> Baseline
+    Baseline --> Channels
+    Channels --> RKCompile
+    RKCompile --> Group
+    Group --> Play
     Play --> Confirm
 ```
 
@@ -413,23 +416,23 @@ flowchart TB
 1. **Property whitelist:** 只接受 `position.*`、`rotation.*`、`scale.*`。`opacity`、`transform.translate.*`、material / component property 等都必须显式失败。
 2. **时间范围:** `duration` 必须为正数;每个 keyframe 的 `at` 必须在 `[0, duration]` 内。
 3. **排序与重复:** 每条 track 的 keyframes 必须按 `at` 非递减排序;同一 property 不允许重复 track。
-4. **全局时间轴:** Native 从所有 tracks 收集 keyframe time,排序后形成 segment 边界。例如 `0, 0.6, 1.2` 会生成 `[0, 0.6]` 与 `[0.6, 1.2]` 两段。
-5. **边界值求解:** 某个 property 在某个 segment 边界没有显式 keyframe 时,Native adapter 必须按该 property 自己的 track 在该时间点求值。若该时间点位于两个 keyframes 之间,使用该 track 的 timing function 计算边界值;若早于该 property 第一个 keyframe,使用 native current transform 的对应通道;若晚于最后一个 keyframe,使用最后一个 keyframe 值。
-6. **完整 Transform:** 每个 segment 的 `from` 和 `to` 都必须是完整的 position / rotation / scale,不能把 partial channel 直接交给 RealityKit。
+4. **时间轴与 keyframe 区间:** 每个 channel 按自己的 keyframe times 形成区间,不与其它 channel 共享全局 segment 边界。例如某 channel 的 `0, 0.6, 1.2` 只影响该 channel 自己的 `[0, 0.6]` 与 `[0.6, 1.2]` 两个区间。
+5. **缺帧 baseline:** 每个 channel 独立编译。若某 channel 在 `0` 时刻没有显式 keyframe,使用播放起点该 channel 的 native current transform 值作为 baseline;若晚于该 channel 最后一个 keyframe,保持最后一个 keyframe 值。channel 之间不共享边界,也不互相插值。
+6. **Per-channel 并行:** 每个 channel 编译为独立的 RealityKit animation,通过 `AnimationGroup` 并行播放并绑定到对应 sub-target(translation / orientation / scale)。Native 不把多个 channel 合并成共享 timing 的 segment,以保证 per-channel timing function 不丢失。
 7. **Rotation:** `rotation.*` 输入单位是 Entity API 的 Euler degrees。Native 编译时转换为 RealityKit transform 所需的旋转表示,避免用 Euler 做逐帧插值。
 8. **Scale:** `scale.*` 必须为非负数。非法 scale 直接失败。
-9. **Timing function:** keyframe 级 `timingFunction` 优先于 track 级,track 级优先于 timeline 默认值。若同一时间段内不同 property 需要不同 timing function,Native adapter 必须选择 RealityKit 可表达的 per-channel 编译方式;如果无法表达,必须显式失败,不能降级成错误语义。
-10. **Loop / playbackRate / delay:** 这些 playback 参数保留在 segment plan 上,由 RealityKit playback/controller 层执行。
+9. **Timing function(per-channel):** keyframe 级 `timingFunction` 优先于 track 级,track 级优先于 timeline 默认值。解析后的 per-keyframe timing 保留在各 channel 的 keyframe 上,由该 channel 自己的 RealityKit animation 携带,不与其它 channel 合并。因此同一时间段内不同 channel 使用不同 timing function 是原生支持的,不再需要 segment 合并,也不会出现无法表达而降级的情况。对于 RealityKit 内建 timing(linear / easeIn / easeOut / easeInOut)直接映射;自定义 cubic-bezier 若无对应内建曲线,则将该 channel bake 成 `SampledAnimation`。
+10. **Loop / playbackRate / delay:** 这些 playback 参数保留在 `EntityChannelAnimationPlan` 顶层,对整个 `AnimationGroup` 统一生效,由 RealityKit playback/controller 层执行。
 11. **Terminal fill:** `complete` / `finish` 停在终态,`reset` 停在起点,`stop` 停在当前 native transform;这些 confirmed values 通过事件回传给 React。
-12. **失败显式化:** 如果 RealityKit 无法表达某类 segment plan,Native adapter 必须通过 command failure 或 error event 显式失败,不能 silent ignore。
+12. **失败显式化:** 如果 RealityKit 无法表达某个 channel plan(例如无法 bake 的 timing),Native adapter 必须通过 command failure 或 error event 显式失败,不能 silent ignore。
 
-### 示例:稀疏 tracks 到 segment plan
+### 示例:稀疏 tracks 到 per-channel plan
 
 输入 tracks:
 
 ```text
-position.y: (0 -> 0), (0.6 -> 0.25), (1.2 -> 0)
-rotation.y: (0 -> 0), (1.2 -> 180)
+position.y: (0 -> 0), (0.6 -> 0.25), (1.2 -> 0)   timing: easeOut
+rotation.y: (0 -> 0), (1.2 -> 180)                timing: linear
 ```
 
 假设 native current transform 为:
@@ -440,19 +443,22 @@ rotation: { x: 0, y: 0, z: 0 }
 scale:    { x: 1, y: 1, z: 1 }
 ```
 
-编译结果:
+编译结果(每个 channel 独立,不共享边界):
 
 ```text
-segments:
-  [0, 0.6]
-    from: position { x: 0, y: 0,    z: 0.8 }, rotation { x: 0, y: 0,   z: 0 }, scale { x: 1, y: 1, z: 1 }
-    to:   position { x: 0, y: 0.25, z: 0.8 }, rotation { x: 0, y: 90,  z: 0 }, scale { x: 1, y: 1, z: 1 }
-  [0.6, 1.2]
-    from: position { x: 0, y: 0.25, z: 0.8 }, rotation { x: 0, y: 90,  z: 0 }, scale { x: 1, y: 1, z: 1 }
-    to:   position { x: 0, y: 0,    z: 0.8 }, rotation { x: 0, y: 180, z: 0 }, scale { x: 1, y: 1, z: 1 }
+channels:
+  position.y  baseline 0
+    keyframes: (0, 0, easeOut) (0.6, 0.25, easeOut) (1.2, 0, easeOut)
+    -> RealityKit animation(easeOut),绑定 translation.y
+  rotation.y  baseline 0
+    keyframes: (0, 0, linear) (1.2, 180, linear)
+    -> RealityKit animation(linear),绑定 orientation(绕 y)
+
+未在 config 声明的 channel(position.x/z、rotation.x/z、scale.*)
+不生成 animation,保持播放起点的 native baseline。
 ```
 
-这里 `rotation.y` 只有 `0` 和 `1.2` 两个关键帧,在 `0.6` 边界的值由 native adapter 按该 track 的 timing function 在编译时求得。它只用于生成完整 segment 的边界 Transform;segment 内逐帧插值仍交给 RealityKit。
+对比旧的 segment 方案:`position.y` 的 `easeOut` 与 `rotation.y` 的 `linear` 不再被压进同一段共享一个 `timingFunction`,`rotation.y` 也不需要在 `0.6` 处求一个人为的中间边界值——它只按自己的 `(0, 1.2)` 两帧 + `linear` 播放。这就是 per-channel 编译相对 segment 合并的关键区别。
 
 ## Transform 拆解与 values
 
@@ -589,7 +595,8 @@ classDiagram
 ## Risks / Trade-offs
 
 - **历史命名误导。** 复用 `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` 会保留 element 字样。文档必须明确其目标态语义已泛化为 motion animation object 协议。
-- **Timeline 编译器是主要新增成本。** 多关键帧、稀疏关键帧、rotation 转换和 segment 合成都集中在 native Entity adapter。
+- **Timeline 编译器是主要新增成本。** 多关键帧、稀疏关键帧、rotation 转换和 per-channel 编译都集中在 native Entity adapter。
+- **Per-channel 编译的两项代价。** 为了让同一时间段内不同 channel 能各自保留 timing function,不能把多 channel 合并成一个完整 Transform 动画:(1) 必须把每个 channel 编译为独立 RealityKit animation 并绑定到 sub-target(translation / orientation / scale),再用 `AnimationGroup` 并行播放,而不是一条整 Transform 动画;(2) 自定义 timing(无对应 RealityKit 内建曲线时)可能需要把该 channel bake 成 `SampledAnimation`。
 - **Whole-transform ownership。** Entity transform 最终是一个 native Transform;v1 不做字段级所有权合成。动画下发的是完整 transform,未在 config 声明的字段按播放起点快照冻结,因此 active animation 期间无法让 React props 动态接管某个字段(如 position 动画 + rotation 走 props)——这会与 native 单一权威冲突并产生未定义行为。字段级 ownership 组合列为 future work / v2。
 - **不提供 updater form。** 因为 native 是唯一权威,`api.set(prev => next)` 会暗示 React `setState` 语义,但 `prev` 无法承诺为实时 native transform。v1 只支持 patch object;读当前 confirmed 状态通过 `entityProps` 完成。
 - **大量并发动画仍需 profiling。** RealityKit 原生播放优于 JS 逐帧写入,但规模并发仍应实测。
@@ -600,4 +607,6 @@ classDiagram
 - `entityProps` 是 native confirmed transform 的 React mirror outlet,不是本地 source of truth。
 - 复用 `CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand` 和现有事件通道,不新增 Entity 平行 JSB。
 - JS/Core 负责 `from`/`to`、`timeline` 到 canonical Entity tracks 的归一化;Native 只执行 canonical payload 并做兜底校验。
+- **Native 采用 per-channel timing 编译。** 每个 transform channel 单独编译为携带自身 timing function 的 RealityKit animation,经 `AnimationGroup` 并行绑定到 translation / orientation / scale sub-target,而不是把所有 channel 合并成共享单一 `timingFunction` 的 segment。原因:segment 合并后每段只能带一个 timing function,同一时间段内不同 channel 的不同曲线无法表达,在进入 native 前就丢失;per-channel 则与 CADisplayLink element 路径的逐帧 per-track 采样语义一致。代价见 Risks。
+- **Entity 编译产出不复用 `SpatializedMotionConfig` / `SpatializedMotionTrack`。** 理由有三:(1) **阶段不同**——`SpatializedMotion*Config` 是 public authoring 配置(带 `onStart`/`onComplete`/`autoStart` 回调、未脱糖 tracks、三级 fallback 的可选 `timingFunction`),而 `EntityChannelAnimationPlan` 是 native 编译后的可执行计划(已解百分比、已脱糖 `from`/`to`、已求缺帧 `baseline`、timing 已塔缩到每个 keyframe);config 里无处安放 `baseline`/已解析 timing,回调字段又是噪声。(2) **域不同**——`SpatializedMotionTrack.property` 是 CSS/element 视觉域(`opacity` / `transform.translate.*` / `transform.rotate.*` / `transform.scale.*`),Entity 是 pose 域(`position.*` / `rotation.*` / `scale.*`)且显式拒绝 `opacity`;value 域也不同(`SpatializedVisualValues` vs `EntityMotionProps`,后者 rotation 是 Euler degrees)。复用会把 `opacity`/`transform.translate` 混进 Entity 通道,并把结构约束降级成运行时校验。(3) **避免跨路径耦合**——本次重设计只复用跨边界协议(JSB command / 事件),内部数据类型不复用;element adapter(CADisplayLink per-track sampler)与 Entity adapter(RealityKit per-channel plan)各自持有编译产出,以免 element 侧 property 白名单或 `SpatializedVisualValues` 变动波及 Entity。若需对标“归一化 timeline”,element 侧是 `SpatializedMotionTimeline`、Entity 侧是 `EntityMotionTimelinePayload`,两者也各自独立。
 - 旧 `AnimateTransformJSBCommand` 是内部实现协议,可被替换或删除。
