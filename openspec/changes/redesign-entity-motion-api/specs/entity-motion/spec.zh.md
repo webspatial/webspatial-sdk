@@ -143,13 +143,14 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 
 #### Scenario: set 更新已提交状态与 entityProps
 - **WHEN** 应用调用 `api.set(values)` 并传入 Entity transform 值
-- **THEN** SDK MUST 更新动画系统持有的已提交 transform 状态
-- **AND** `entityProps` MUST 更新为相同的已提交 transform 值
+- **THEN** SDK MUST 把该写入下发 native,由 native 决定是否接受
+- **AND** native 接受后 `entityProps` MUST 更新为 native 回传的 confirmed transform 值
+- **AND** native 拒绝时 `entityProps` MUST NOT 更新
 
 #### Scenario: set 执行稀疏合并
 - **WHEN** 应用调用 `api.set` 只传入部分 transform 字段，例如 `{ position: { y: 0.3 } }`
-- **THEN** SDK MUST 只覆盖传入的字段
-- **AND** 未传入的字段如 `rotation`、`scale` MUST 保持之前的已提交值
+- **THEN** SDK MUST 在 JS/Core 侧以最近 confirmed 的 `entityProps` 为基线，只覆盖传入的字段并整份下发 native
+- **AND** 未传入的字段如 `rotation`、`scale` MUST 沿用基线中之前的已提交值
 
 #### Scenario: updater 形式读取当前已提交值
 - **WHEN** 应用以 updater 函数形式调用 `api.set`

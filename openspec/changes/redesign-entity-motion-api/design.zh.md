@@ -503,7 +503,7 @@ supports('useAnimation')
 1. `onCreateSpatializedElementAnimation` 按 `targetId` 查找 target 并分发到 spatialized / Entity adapter。
 2. Entity adapter 编译 canonical Entity tracks 到 RealityKit transform animation。
 3. `onControlSpatializedElementAnimation` 支持 Entity animation object 的 `play/pause/resume/stop/reset/finish/destroy/set`。
-4. 每个 accepted terminal / set 操作都回传 confirmed Entity values。
+4. 每个 accepted start / terminal / set 操作都回传 confirmed Entity values。
 5. 删除或停止使用旧 `AnimateTransform` Entity 专用链路。
 
 ## 类图

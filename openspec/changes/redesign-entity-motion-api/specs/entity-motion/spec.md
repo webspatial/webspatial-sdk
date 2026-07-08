@@ -143,13 +143,14 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 
 #### Scenario: set updates committed state and entityProps
 - **WHEN** application code calls `api.set(values)` with Entity transform values
-- **THEN** the SDK MUST update the committed animation-owned transform state
-- **AND** `entityProps` MUST update to the same committed transform values
+- **THEN** the SDK MUST send the write to native, which decides whether to accept it
+- **AND** when native accepts, `entityProps` MUST update to the confirmed transform values emitted by native
+- **AND** when native rejects, `entityProps` MUST NOT update
 
 #### Scenario: set performs a sparse merge
 - **WHEN** application code calls `api.set` with only some transform fields, such as `{ position: { y: 0.3 } }`
-- **THEN** the SDK MUST overwrite only the provided fields
-- **AND** omitted fields such as `rotation` and `scale` MUST keep their previous committed values
+- **THEN** the SDK MUST merge on the JS/Core side using the latest confirmed `entityProps` as the baseline, overwrite only the provided fields, and send the full merged value to native
+- **AND** omitted fields such as `rotation` and `scale` MUST keep the previous committed values from the baseline
 
 #### Scenario: updater form reads the current committed value
 - **WHEN** application code calls `api.set` with an updater function
