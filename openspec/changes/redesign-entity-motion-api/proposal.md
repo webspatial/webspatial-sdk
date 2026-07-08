@@ -4,6 +4,8 @@ Entity animation already has basic `useEntityAnimation` support, but it still la
 
 This change does not replace the existing `useEntityAnimation`. It is a non-breaking enhancement on top of the current API. The goal is to add timeline, outlet, binding, and behavior semantics while keeping Entity authoring aligned with Entity props hierarchy.
 
+This proposal supersedes `add-entity-transform-animation` as the target-state Entity motion proposal. The legacy change remains historical context until this new path is fully validated and the follow-up archive or formal supersede step is completed.
+
 ## What Changes
 
 - Add an enhancement proposal on top of the existing `useEntityAnimation`.

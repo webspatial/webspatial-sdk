@@ -42,4 +42,4 @@
 
 - [ ] 7.1 严格按 TDD 顺序执行实现：先写失败测试，再做最小实现使其通过，最后在测试持续通过前提下重构
 - [ ] 7.2 运行 Entity motion 与 runtime capabilities 相关的定向单测、集成测试和能力测试,包括 `api.set` value/updater 行为、活跃动画期间不抛错、set 后再 play 的起点,以及终态填充
-- [ ] 7.3 在新路径验证完成后，做一次提案与实现对照复核，并归档或正式替代旧的 Entity motion proposal
+- [ ] 7.3 在新路径验证完成后，做一次提案与实现对照复核，并归档或正式替代 `add-entity-transform-animation`

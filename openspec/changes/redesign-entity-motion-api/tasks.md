@@ -42,4 +42,4 @@
 
 - [ ] 7.1 Execute the implementation in TDD order: write failing tests first, implement the minimum change to pass, then refactor with tests still green
 - [ ] 7.2 Run targeted unit, integration, and capability tests for Entity motion and runtime capabilities, including `api.set` value/updater behavior, active-animation no-throw, set-then-play start point, and terminal fill
-- [ ] 7.3 Perform a final proposal-to-implementation review and archive or supersede the legacy Entity motion proposal once the new path is validated
+- [ ] 7.3 Perform a final proposal-to-implementation review and, once the new path is validated, archive or formally supersede `add-entity-transform-animation`
