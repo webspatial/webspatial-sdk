@@ -95,7 +95,7 @@ return (
 
 动画过程中，Entity 的 transform 由动画采样值决定，过程中用户无法控制。
 
-动画结束后，Entity 的 transform 始终由其上传入的 props 决定，用户可以通过修改 props 改变其状态。
+动画结束后，Entity 的 transform 始终由其上传入的 props 决定，用户可以通过修改 props 改变其状态;此类写入走与 `api.set` 相同的 native-first 路径:由 native confirm,`entityProps` 镜像已 confirm 的值。
 
 核心目标：
 

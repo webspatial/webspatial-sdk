@@ -34,7 +34,7 @@ The public Entity motion config MUST use fields aligned with Entity props:
 - `rotation`
 - `scale`
 
-The public v1 authoring surface MUST support segment-style `from` / `to` and percentage `timeline`. `tracks` MAY exist as an internal or advanced execution shape, but unsupported targets MUST fail explicitly.
+The public v1 authoring surface MUST support segment-style `from` / `to` and percentage `timeline`. `tracks` MUST remain an internal, non-public execution shape and MUST NOT be documented as a public authoring surface. Unsupported targets MUST fail explicitly.
 
 #### Scenario: Segment config uses Entity props fields
 - **WHEN** application code defines `from` or `to` for Entity motion
@@ -47,7 +47,7 @@ The public v1 authoring surface MUST support segment-style `from` / `to` and per
 - **AND** each keyframe block MUST use `position`, `rotation`, and `scale`
 
 #### Scenario: Tracks property uses Entity-style paths
-- **WHEN** the SDK exposes or internally handles Entity motion `tracks`
+- **WHEN** the SDK internally handles Entity motion `tracks`
 - **THEN** property paths MUST use `position.*`, `rotation.*`, and `scale.*`
 - **AND** `transform.translate.*`, `transform.rotate.*`, and `transform.scale.*` MUST NOT be the Entity target property-path contract
 
@@ -103,14 +103,14 @@ Callback values MUST only include supported Entity transform fields.
 - **THEN** `onError` MUST receive the failure information
 - **AND** no callback value payload in the Entity motion API may include unsupported fields such as `opacity`
 
-### Requirement: Active animation owns animated transform fields
+### Requirement: Active animation owns the whole Entity transform
 
-During active playback states, the animation system MUST own any animated Entity transform fields. Direct React prop writes to the same fields MUST NOT interrupt playback, MUST NOT immediately override active animation values, and MUST NOT be replayed automatically after completion.
+During active playback states, the animation system MUST own the whole Entity transform. Direct React prop writes to `position`, `rotation`, or `scale` MUST NOT interrupt playback, MUST NOT immediately override the active animation, and MUST NOT be replayed automatically after completion. v1 does not implement field-level ownership composition, so ownership applies to the whole transform regardless of which fields the config animates.
 
 #### Scenario: React props do not override active animation
 - **GIVEN** an Entity animation is in `delay`, `running`, or `paused`
-- **WHEN** application code updates `position`, `rotation`, or `scale` props that are currently animated
-- **THEN** those prop writes MUST NOT override the active animation
+- **WHEN** application code updates any `position`, `rotation`, or `scale` props while an animation is active
+- **THEN** those prop writes MUST NOT override the active animation, even for fields the config does not animate
 
 #### Scenario: Terminal state wins over stale base props
 - **GIVEN** an Entity component composes static props and spread `entityProps`
@@ -118,6 +118,17 @@ During active playback states, the animation system MUST own any animated Entity
 - **THEN** the committed values in `entityProps` MUST represent the authoritative terminal transform
 - **AND** the recommended composition order is for `entityProps` to be applied after stale base props
 
+
+### Requirement: Inactive-state prop writes go through native confirmation
+
+While no animation is active (`idle` or terminal), Source A is authoritative and application code changes the Entity transform by updating `position`, `rotation`, or `scale` props (or by calling `api.set`). Because native is the single authoritative transform source, such prop writes MUST follow the same native-first path as `api.set`: the SDK sends the write to native, native decides whether to accept it, and `entityProps` mirrors only native-confirmed values. The SDK MUST NOT keep a separate local committed cache that competes with native.
+
+#### Scenario: Inactive prop write is confirmed by native
+- **GIVEN** no Entity animation is active (`idle` or terminal)
+- **WHEN** application code updates `position`, `rotation`, or `scale` props
+- **THEN** the SDK MUST submit the write to native, which decides whether to accept it
+- **AND** when native accepts, `entityProps` MUST update to the confirmed transform values emitted by native
+- **AND** when native rejects, `entityProps` MUST NOT update
 
 ### Requirement: Callbacks are notifications and do not drive terminal state
 

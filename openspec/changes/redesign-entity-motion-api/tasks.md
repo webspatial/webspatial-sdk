@@ -2,7 +2,7 @@
 
 - [ ] 1.1 Review the legacy `add-entity-transform-animation` artifacts and mark the exact behaviors that are superseded by this new target state
 - [ ] 1.2 Review `spatialized-element-motion-api` references to Entity motion and align wording so the new Entity proposal is the authoritative target state
-- [ ] 1.3 Confirm whether `supports('useAnimation', ['entity'])` remains as a temporary compatibility alias or is removed from the documented contract immediately
+- [ ] 1.3 Remove `supports('useAnimation', ['entity'])` from the documented contract and reserved sub-tokens, and align `spatialized-element-motion-api` runtime-capabilities so no change reserves an `entity` sub-token
 
 ## 2. Type and Contract Redesign
 

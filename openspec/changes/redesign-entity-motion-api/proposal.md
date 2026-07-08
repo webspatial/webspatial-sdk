@@ -96,7 +96,7 @@ return (
 
 During animation playback, the Entity transform is determined by sampled animation values, and user writes do not take control.
 
-After animation ends, the Entity transform is still determined by the props supplied to the Entity. Users can change state by updating props.
+After animation ends, the Entity transform is still determined by the props supplied to the Entity. Users can change state by updating props, and such writes go through the same native-first path as `api.set`: native confirms the write and `entityProps` mirrors the confirmed values.
 
 Core goals:
 

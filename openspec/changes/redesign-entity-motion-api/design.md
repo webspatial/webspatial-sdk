@@ -274,7 +274,7 @@ Target-state docs and demos use the top-level capability:
 supports('useAnimation')
 ```
 
-`supports('useAnimation', ['entity'])` may only be mentioned in migration or compatibility context; it is not the recommended target-state contract.
+`supports('useAnimation', ['entity'])` is removed from the documented contract; only the top-level `supports('useAnimation')` key is used, and no `entity` sub-token is reserved.
 
 ## Key Changes per Layer
 
