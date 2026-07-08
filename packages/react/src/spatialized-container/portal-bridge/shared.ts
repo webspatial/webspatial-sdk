@@ -52,6 +52,15 @@ export interface BridgeGlobalState {
   savedOwnAddDescriptor: PropertyDescriptor | null
   savedOwnRemoveDescriptor: PropertyDescriptor | null
   patched: boolean
+  /**
+   * Once armed (first spatialized portal container mount), the interception
+   * patch stays installed even while zero portals are registered, so
+   * dismissal listeners added before/between portal registrations (e.g. a
+   * dialog whose own panel is the first portal and registers only after
+   * async native element creation) are recorded and replay onto the next
+   * portal. Fully reversed only by the test-hook reset.
+   */
+  armed: boolean
 }
 
 export function safeGetPlaceholder(

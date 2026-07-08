@@ -47,10 +47,33 @@ function getBridgeState(): BridgeGlobalState {
       savedOwnAddDescriptor: null,
       savedOwnRemoveDescriptor: null,
       patched: false,
+      armed: false,
     }
     g[BRIDGE_KEY] = state
   }
   return state
+}
+
+/**
+ * Installs the host-document listener interception eagerly, before any
+ * portal finishes registering. Called from the spatialized portal
+ * container's mount effect: child effects run before ancestor effects, so
+ * arming there records dismissal listeners an ancestor overlay (e.g. Radix
+ * DismissableLayer wrapping the panel) adds in the same commit — the
+ * portal itself only registers with the bridge after async native element
+ * creation, which would otherwise miss them.
+ *
+ * While armed with zero portals the patch is pass-through plus
+ * bookkeeping; mirrors attach only to registered portal documents.
+ * Idempotent and safe across duplicate SDK module instances.
+ */
+export function armPortalBridgeInterception(): void {
+  const state = getBridgeState()
+  if (!state.patched) {
+    installListenerMirror(state)
+    state.patched = isListenerMirrorInstalled(state.hostDocument)
+  }
+  state.armed = true
 }
 
 function disposeRegistration(
@@ -79,11 +102,7 @@ export function registerPortalDocumentBridge(params: {
   if (!portalDocument) return () => {}
 
   const state = getBridgeState()
-
-  if (state.portals.size === 0 && !state.patched) {
-    installListenerMirror(state)
-    state.patched = isListenerMirrorInstalled(state.hostDocument)
-  }
+  armPortalBridgeInterception()
 
   // Same portal document registered again (StrictMode double-mount /
   // remount race): dispose the stale registration first so wrapped
@@ -115,9 +134,10 @@ export function registerPortalDocumentBridge(params: {
     if (state.portals.get(portalDocument) !== reg) return
     disposeRegistration(state, reg)
     state.portals.delete(portalDocument)
-    if (state.portals.size === 0) {
-      teardownHostPatches(state)
-    }
+    // The interception patch intentionally stays armed after the last
+    // portal unregisters (see armPortalBridgeInterception): listeners
+    // registered between portal lifetimes must keep being recorded so the
+    // next portal can replay them.
   }
 }
 
@@ -139,6 +159,7 @@ export const __portalBridgeTest__ = {
       }
       state.portals.clear()
       teardownHostPatches(state)
+      state.armed = false
     }
     delete bridgeGlobal()[BRIDGE_KEY]
   },

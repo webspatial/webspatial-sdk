@@ -30,6 +30,7 @@ function constrainedAxisKey(
 }
 
 import { SpatialID } from './SpatialID'
+import { armPortalBridgeInterception } from './portal-bridge/registry'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
 import { useSpatializedElement } from './hooks/useSpatializedElement'
 import {
@@ -115,6 +116,12 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     [],
   )
   useEffect(() => {
+    // Arm the portal document bridge before ancestor effects run in this
+    // commit: an overlay wrapping this panel (e.g. Radix DismissableLayer)
+    // adds its document listeners in an ancestor effect, while this
+    // panel's bridge registration completes only after async native
+    // element creation. Arming here records those listeners for replay.
+    armPortalBridgeInterception()
     portalInstanceObject.init()
     return () => {
       portalInstanceObject.destroy()

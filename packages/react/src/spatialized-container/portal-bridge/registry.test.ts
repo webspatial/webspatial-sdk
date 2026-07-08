@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { __portalBridgeTest__, registerPortalDocumentBridge } from './registry'
+import {
+  __portalBridgeTest__,
+  armPortalBridgeInterception,
+  registerPortalDocumentBridge,
+} from './registry'
 import { createFakePortalWindow, createHostPlaceholder } from './testUtils'
 
 describe('portal bridge registry', () => {
@@ -27,7 +31,7 @@ describe('portal bridge registry', () => {
     return { windowProxy, portalDocument, unregister }
   }
 
-  it('patches the host document on first register and restores it after the last unregister', () => {
+  it('patches the host document on first register and stays armed after the last unregister', () => {
     expect(
       Object.getOwnPropertyDescriptor(document, 'addEventListener'),
     ).toBeUndefined()
@@ -44,17 +48,23 @@ describe('portal bridge registry', () => {
     ).toBeDefined()
 
     first.unregister()
-    expect(__portalBridgeTest__.isHostPatched()).toBe(true)
-
     second.unregister()
-    expect(__portalBridgeTest__.isHostPatched()).toBe(false)
+    expect(__portalBridgeTest__.getPortalCount()).toBe(0)
+
+    // Interception stays armed so listeners added between portal lifetimes
+    // keep being recorded; only reset() restores the document functions.
+    expect(__portalBridgeTest__.isHostPatched()).toBe(true)
+    expect(
+      Object.getOwnPropertyDescriptor(document, 'addEventListener'),
+    ).toBeDefined()
+
+    __portalBridgeTest__.reset()
     expect(
       Object.getOwnPropertyDescriptor(document, 'addEventListener'),
     ).toBeUndefined()
     expect(
       Object.getOwnPropertyDescriptor(document, 'removeEventListener'),
     ).toBeUndefined()
-    expect(__portalBridgeTest__.getState()?.listenerBook.size).toBe(0)
   })
 
   it('unregister is idempotent', () => {
@@ -62,7 +72,45 @@ describe('portal bridge registry', () => {
     unregister()
     unregister()
     expect(__portalBridgeTest__.getPortalCount()).toBe(0)
-    expect(__portalBridgeTest__.isHostPatched()).toBe(false)
+  })
+
+  it('arming before any portal registers records listeners for later replay', () => {
+    // This is the primary Radix Dialog sequence: the spatialized container
+    // mounts and arms, the overlay adds its dismissal listeners in an
+    // ancestor effect of the same commit, and only later (after async
+    // native element creation) does the portal register with the bridge.
+    armPortalBridgeInterception()
+
+    const listener = vi.fn()
+    document.addEventListener('keydown', listener)
+
+    const { portalDocument } = registerPortal()
+    portalDocument.body.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    )
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('records listeners added between portal lifetimes and replays them onto the next portal', () => {
+    const first = registerPortal()
+    first.unregister()
+
+    // No portals are registered here, but the bridge stays armed.
+    const listener = vi.fn()
+    document.addEventListener('keydown', listener)
+
+    const second = registerPortal()
+    second.portalDocument.body.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    )
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    // Removal while no portal is active must also stay tracked.
+    document.removeEventListener('keydown', listener)
+    second.portalDocument.body.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    )
+    expect(listener).toHaveBeenCalledTimes(1)
   })
 
   it('delivers exactly one call per event across unregister/re-register remounts', () => {
@@ -114,7 +162,7 @@ describe('portal bridge registry', () => {
     expect(listener).toHaveBeenCalledTimes(2)
 
     unregisterFresh()
-    expect(__portalBridgeTest__.isHostPatched()).toBe(false)
+    expect(__portalBridgeTest__.getPortalCount()).toBe(0)
   })
 
   it('shares one registry across duplicate SDK module instances', async () => {

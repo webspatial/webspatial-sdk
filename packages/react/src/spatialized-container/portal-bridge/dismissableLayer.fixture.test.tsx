@@ -2,7 +2,11 @@ import { render } from '@testing-library/react'
 import React, { useEffect, useRef } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { __portalBridgeTest__, registerPortalDocumentBridge } from './registry'
+import {
+  __portalBridgeTest__,
+  armPortalBridgeInterception,
+  registerPortalDocumentBridge,
+} from './registry'
 import { createFakePortalWindow } from './testUtils'
 
 /**
@@ -61,20 +65,14 @@ describe('DismissableLayer-style fixture over the portal bridge', () => {
     const button = portalDocument.createElement('button')
     portalDocument.body.appendChild(button)
 
-    // The portal registers before the layer mounts: the bridge patches the
-    // host document while at least one portal is active, so listeners the
-    // layer adds afterwards are mirrored live. (Listeners added while NO
-    // portal is registered are not recorded — a known Phase-1 limitation
-    // that matters when the dialog's own panel is the first/only portal
-    // and finishes its async registration after DismissableLayer's
-    // effects. See the summary note in registry.ts teardown.)
-    let placeholder: HTMLElement | null = null
-    const unregister = registerPortalDocumentBridge({
-      windowProxy,
-      // Lazy resolution, like `portalInstanceObject.dom`: the placeholder
-      // does not exist yet at registration time.
-      getPlaceholder: () => placeholder,
-    })
+    // Realistic Radix Dialog sequence for a dialog whose content wraps a
+    // `<div enable-xr>` panel:
+    // 1. the spatialized container's mount effect arms the interception
+    //    (child effects run before ancestor effects in the same commit),
+    // 2. DismissableLayer's effect adds its document listeners,
+    // 3. the portal registers with the bridge only later, after async
+    //    native element creation, and replays the recorded listeners.
+    armPortalBridgeInterception()
 
     // Host tree: the dialog "Content" subtree contains the spatial
     // placeholder, exactly like a Radix Dialog.Content wrapping a
@@ -84,9 +82,14 @@ describe('DismissableLayer-style fixture over the portal bridge', () => {
         <div data-testid="placeholder" />
       </MockDismissableLayer>,
     )
-    placeholder = container.querySelector(
+    const placeholder = container.querySelector(
       '[data-testid="placeholder"]',
     ) as HTMLElement
+
+    const unregister = registerPortalDocumentBridge({
+      windowProxy,
+      getPlaceholder: () => placeholder,
+    })
 
     return { onDismiss, placeholder, portalDocument, button, unregister }
   }

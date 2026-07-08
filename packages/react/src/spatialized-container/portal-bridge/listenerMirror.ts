@@ -317,11 +317,11 @@ export function teardownListenerMirror(state: BridgeGlobalState): void {
       }
     }
   }
-  // Listeners added while no portal is active are intentionally not
-  // remembered for later portals: with the patch uninstalled, removals
-  // could not be tracked, and replaying stale entries is worse than the
-  // gap (Radix-style libraries register on layer open, i.e. while the
-  // portal is mounted).
+  // Teardown only runs on a full bridge reset (test hook / realm change):
+  // once armed, the interception stays installed across portal lifetimes
+  // so the book keeps tracking adds AND removals. Clearing here is safe
+  // because the patch is restored in the same step - with interception
+  // gone, stale entries could never be kept accurate.
   state.listenerBook.clear()
 
   const doc = state.hostDocument

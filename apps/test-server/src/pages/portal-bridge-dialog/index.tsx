@@ -1,34 +1,30 @@
+import * as RadixDialog from '@radix-ui/react-dialog'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
- * Manual test for the react-sdk portal document bridge (Phase 1A).
+ * Manual test for the react-sdk portal document bridge.
  *
- * The dialog below uses the exact dismissal pattern of Radix
- * DismissableLayer (Radix is not a repo dependency, so the pattern is
- * inlined): `pointerdown` in the capture phase and `keydown` registered on
- * the host `document`, dismissing when the press target is outside the
- * dialog content or when Escape is pressed. The dialog content wraps a
- * `<div enable-xr>` panel, whose interactive DOM really lives in a child
- * webview document.
+ * Two dialogs are exercised:
+ * 1. An inline DismissableLayer-style dialog (the exact host-document
+ *    listener pattern Radix uses: capture-phase `pointerdown` + `keydown`).
+ * 2. A REAL Radix Dialog (@radix-ui/react-dialog) whose Content wraps a
+ *    `<div enable-xr>` panel - the actual DismissableLayer/FocusScope code
+ *    path.
  *
- * Expected WITH the bridge:
- * 1. Press/click a button INSIDE the spatial panel -> dialog stays open
- *    (the mirrored event's target is the placeholder inside the content
- *    subtree) and the log shows pointerdown with target "placeholder
- *    (inside content)".
- * 2. Press Escape while focus is inside the spatial panel (hardware
- *    keyboard) -> dialog closes.
- * 3. Press/click the page backdrop outside the dialog -> dialog closes.
+ * Expected with the bridge:
+ * - Press/click a button INSIDE the spatial panel -> dialog stays open
+ *   (the mirrored event's target is the placeholder inside the content
+ *   subtree; the log shows it).
+ * - Press Escape while focus is inside the spatial panel (hardware
+ *   keyboard) -> dialog closes.
+ * - Press/click outside the dialog -> dialog closes.
  *
- * Known Phase-1A caveat exercised here: listeners added while NO spatial
- * portal is registered are not mirrored. The "keep-alive" toggle mounts a
- * tiny spatial panel before the dialog opens so the document patch is
- * already active when the dialog registers its listeners - which is the
- * scenario the bridge currently covers. With keep-alive OFF, the dialog's
- * own panel is the first portal and its async registration can land after
- * the dialog's listeners; dismissal from inside the panel is then expected
- * to miss (that gap is the motivation for eager interception in a
- * follow-up).
+ * The bridge arms its document interception eagerly when the first
+ * spatialized container mounts, so this works even when the dialog's own
+ * panel is the first/only spatial portal on the page: dismissal listeners
+ * the dialog registers before the panel's async portal registration are
+ * recorded and replayed. The keep-alive toggle remains only to compare
+ * against the earlier behavior that required a pre-existing portal.
  */
 
 type LogEntry = {
@@ -143,8 +139,9 @@ const spatialPanelStyle: React.CSSProperties = {
 
 export default function PortalBridgeDialogTest() {
   const [open, setOpen] = useState(false)
-  const [keepAlivePanel, setKeepAlivePanel] = useState(true)
+  const [keepAlivePanel, setKeepAlivePanel] = useState(false)
   const [insideClicks, setInsideClicks] = useState(0)
+  const [radixInsideClicks, setRadixInsideClicks] = useState(0)
   const [lastDismiss, setLastDismiss] = useState<string>('none yet')
   const { entries, append } = useHostDocumentLog(true)
 
@@ -180,7 +177,8 @@ export default function PortalBridgeDialogTest() {
             checked={keepAlivePanel}
             onChange={event => setKeepAlivePanel(event.target.checked)}
           />
-          Keep-alive spatial panel (pre-activates the document patch)
+          Keep-alive spatial panel (no longer required - eager arming; toggle
+          kept for comparison)
         </label>
         <span className="text-sm text-gray-400">
           Last dismiss: <span className="text-gray-200">{lastDismiss}</span>
@@ -240,6 +238,69 @@ export default function PortalBridgeDialogTest() {
           </button>
         </DismissableDialog>
       )}
+
+      <section className="mb-6 rounded-xl border border-gray-800 bg-[#111] p-6">
+        <h2 className="mb-2 text-lg font-medium text-gray-200">
+          Real Radix Dialog (@radix-ui/react-dialog)
+        </h2>
+        <p className="mb-4 max-w-2xl text-sm text-gray-400">
+          The actual DismissableLayer / FocusScope code path, with an{' '}
+          <code className="text-gray-300">enable-xr</code> panel inside{' '}
+          <code className="text-gray-300">Dialog.Content</code>. Same
+          expectations: inside presses must not dismiss, Escape and outside
+          presses must dismiss.
+        </p>
+        <RadixDialog.Root
+          onOpenChange={nextOpen => {
+            if (!nextOpen) {
+              setLastDismiss('radix onOpenChange(false)')
+              append('RADIX DIALOG DISMISSED')
+            }
+          }}
+        >
+          <RadixDialog.Trigger asChild>
+            <button className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-500">
+              Open real Radix dialog
+            </button>
+          </RadixDialog.Trigger>
+          <RadixDialog.Portal>
+            <RadixDialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
+            <RadixDialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-gray-600 bg-[#16213a] p-6 shadow-2xl">
+              <RadixDialog.Title className="mb-1 text-lg font-medium">
+                Radix dialog content
+              </RadixDialog.Title>
+              <RadixDialog.Description className="mb-3 max-w-xs text-xs text-gray-400">
+                The panel below is a spatial child webview; Radix must treat its
+                events as inside this content.
+              </RadixDialog.Description>
+              <div
+                enable-xr
+                data-bridge-role="radix-spatial-panel"
+                style={spatialPanelStyle}
+              >
+                <span className="text-sm text-blue-200 font-medium">
+                  Inside spatial panel (child webview document)
+                </span>
+                <button
+                  className="rounded-lg bg-purple-600 px-3 py-2 text-sm hover:bg-purple-500"
+                  onClick={() => setRadixInsideClicks(count => count + 1)}
+                >
+                  Click me - must NOT dismiss ({radixInsideClicks})
+                </button>
+                <input
+                  className="rounded border border-gray-500 bg-gray-900 px-2 py-1 text-sm text-white"
+                  placeholder="Focus me, then press Escape"
+                />
+              </div>
+              <RadixDialog.Close asChild>
+                <button className="mt-4 rounded-lg border border-gray-500 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700">
+                  Close
+                </button>
+              </RadixDialog.Close>
+            </RadixDialog.Content>
+          </RadixDialog.Portal>
+        </RadixDialog.Root>
+      </section>
 
       <section className="rounded-xl border border-gray-800 bg-[#111] p-4">
         <h2 className="mb-2 text-sm font-medium text-gray-300">
