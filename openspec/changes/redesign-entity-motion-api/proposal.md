@@ -96,11 +96,11 @@ return (
 )
 ```
 
-During animation playback, the Entity transform is determined by sampled animation values, and user writes do not take control.
+During animation playback, the transform components present in the config are determined by sampled animation values and users cannot take control; components not present in the config are still driven normally by React props.
 
 After animation ends, the committed Entity transform is mirrored through `entityProps`. Users who need to take over dynamically after an animation should call `api.set`; ordinary Entity props remain the static/base inputs that `entityProps` intentionally overrides in the recommended composition order.
 
-v1 semantics: fields present in the config only determine the animation tracks (which properties animate), not the ownership boundary. During an active animation, ownership always applies to the whole transform; a transform field that does not appear in the config is still not dynamically taken over by React props during active animation. Therefore "animate only position while rotation stays controlled by React props" is not a v1 capability (see §3 Non-Goals).
+Ownership granularity is the transform component (`position` / `rotation` / `scale`). A component is owned entirely by the animation during an active animation as soon as any of its fields appear in the config; a component that does not appear in the config at all remains driven normally by React props during the active animation. Therefore "animate only position while rotation stays controlled by React props" is a supported composition.
 
 Core goals:
 
@@ -122,7 +122,6 @@ This proposal does not support:
 6. Writing native animation values back to React state every frame.
 7. Replaying user-authored `position / rotation / scale` writes during animation.
 8. Introducing a CSS-like `style` prop for Entity.
-9. Field-level ownership composition (for example, animating only `position` while `rotation` remains dynamically controlled by React props).
 
 ### 4. API Design
 
@@ -294,7 +293,7 @@ entityProps.scale updates to terminal scale
 5. `finish`.
 6. Native-accepted `api.set(values)` writes.
 
-> **Complete-pose semantics:** Before the first native-confirmed state, `entityProps` may be empty; once native returns a confirmed state, `entityProps` represents a complete Entity pose (`position` / `rotation` / `scale`) regardless of which fields the config declares. Spreading it onto the Entity therefore carries the result of whole-transform ownership, not only the animated fields.
+> **Pose-mirror semantics:** Before the first native-confirmed state, `entityProps` may be empty; once native returns a confirmed state, `entityProps` mirrors the transform components owned by the animation system (the animated components plus components written via `api.set`). Components that are not owned do not enter `entityProps`, so spreading it does not override components the user is still controlling live through React props.
 
 ### 7. api.set
 
@@ -307,14 +306,14 @@ Entity transform is composed from two sources:
 - Source A: static/base React props plus `entityProps` (the committed state mirrored by the SDK; dynamic take-over is written through `api.set`).
 - Source B: the `xr-animation` binding (per-frame sampled animation values).
 
-At any moment only one source is authoritative, decided by whether the animation is active:
+Arbitration is per transform component (`position` / `rotation` / `scale`) and independent:
 
 ```text
-animation active (delay / running / paused)   -> Source B wins
-animation inactive (idle / terminal)          -> Source A wins
+component present in config AND animation active (delay / running / paused)  -> Source B wins
+otherwise (component not in config, or animation inactive idle / terminal)    -> Source A wins
 ```
 
-This is the same model as CSS: an animation overrides computed style while playing, and style takes over again once the animation is inactive. `api.set` always writes Source A; when it becomes visible is decided by the compositor, not by `api.set` itself.
+This is the same model as CSS: an animation overrides computed style per property while playing, and style takes over for un-animated properties as well as once the animation is inactive. `api.set` always writes Source A; when it becomes visible is decided by the compositor, not by `api.set` itself.
 
 #### 7.2 Signature
 
@@ -355,24 +354,26 @@ When animation is in:
 delay / running / paused
 ```
 
-the animation owns the full Entity transform.
+the animation owns the transform components that appear in the config; components that do not appear in the config are not owned by the animation.
 
-If the user writes through React props:
+If the user writes an **owned component** through React props (e.g. the config animates `position`):
 
 ```text
 <BoxEntity position={position} />
 ```
 
-it will not override the active animation.
+it will not override the active animation. Writing an **un-owned component** (e.g. the config only animates `position` and the user writes `rotation`) takes effect normally.
 
 #### 8.2 Props updates during animation
 
-During animation, user writes to `position / rotation / scale`:
+During animation, user writes to an **owned component** (a component that appears in the config):
 
 1. do not interrupt animation.
 2. do not immediately override animation.
 3. do not become pending replay.
 4. ultimately yield to terminal animation values.
+
+During animation, user writes to an **un-owned component** (a component that does not appear in the config) take effect normally, driven live by React props, unaffected by the animation.
 
 #### 8.3 After animation ends
 

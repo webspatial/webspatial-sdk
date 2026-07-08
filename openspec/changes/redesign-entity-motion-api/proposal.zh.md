@@ -96,11 +96,11 @@ return (
 )
 ```
 
-动画过程中，Entity 的 transform 由动画采样值决定，过程中用户无法控制。
+动画过程中，config 中出现的 transform 分量由动画采样值决定,用户无法控制;未出现的分量仍由 React props 正常驱动。
 
 动画结束后，已提交的 Entity transform 通过 `entityProps` 镜像。用户如果需要在动画后动态接管 transform，应调用 `api.set`；普通 Entity props 保持为 static/base 输入，并在推荐组合顺序中被 `entityProps` 有意覆盖。
 
-v1 语义：config 中出现的字段只决定动画 tracks（动哪些属性），不决定 ownership 边界。active animation 期间 ownership 始终作用于整个 transform；即使某个 transform 字段没有出现在 config 中，它也不会在 active animation 期间被 React props 动态接管。因此“只动画 position、rotation 继续由 React props 控制”不是 v1 能力（见 §3 非目标）。
+Ownership 粒度 = transform 分量(`position` / `rotation` / `scale`)。某个分量只要有任一字段出现在 config 中,该分量在 active animation 期间整体归动画所有;完全没有出现在 config 中的分量,在 active animation 期间仍由 React props 正常驱动。因此“动画只控制 position,rotation 继续由 React props 控制”是被支持的组合。
 
 核心目标：
 
@@ -122,7 +122,6 @@ v1 语义：config 中出现的字段只决定动画 tracks（动哪些属性）
 6. 每帧把 native animation values 回写到 React state。
 7. 动画过程中 replay 用户写入的 `position / rotation / scale`。
 8. 给 Entity 引入 CSS-like `style` prop。
-9. 字段级 ownership 组合（例如动画只控制 `position`，`rotation` 同时仍由 React props 动态控制）。
 
 ### 4. API 设计
 
@@ -294,7 +293,7 @@ entityProps.scale 更新为终态 scale
 5. `finish`。
 6. native 接受的 `api.set(values)` 写入。
 
-> **完整 pose 语义：** 首个 native confirmed state 之前，`entityProps` 可能为空；一旦 native 回传 confirmed state，`entityProps` 表示完整的 Entity pose（`position` / `rotation` / `scale`），无论 config 只声明了哪些字段。这样把它 spread 到 Entity 上就能承载 whole-transform ownership 的结果，而不是只保住被动画的字段。
+> **pose 镜像语义:** 首个 native confirmed state 之前,`entityProps` 可能为空;一旦 native 回传 confirmed state,`entityProps` 镜像动画系统已接管的分量(被动画的分量,加上 `api.set` 写入的分量)。未被接管的分量不进入 `entityProps`,以免 spread 时覆盖用户仍在通过 React props 实时控制的分量。
 
 ### 7. api.set
 
@@ -307,14 +306,14 @@ Entity transform 由两个数据源合成:
 - Source A:static/base React props 加 `entityProps`(由 SDK 镜像的 committed 状态;动态接管通过 `api.set` 写入)。
 - Source B:`xr-animation` 绑定(逐帧采样的 animation values)。
 
-任一时刻只有一个数据源是权威的,由动画是否活跃决定:
+仲裁按 transform 分量(`position` / `rotation` / `scale`)独立进行:
 
 ```text
-动画活跃(delay / running / paused)   -> Source B 生效
-动画非活跃(idle / terminal)          -> Source A 生效
+分量在 config 中出现 且 动画活跃(delay / running / paused)  -> Source B 生效
+其余情况(分量不在 config 中,或动画非活跃 idle / terminal)     -> Source A 生效
 ```
 
-这与 CSS 模型一致:动画播放时覆盖 computed style,动画非活跃后 style 重新接管。`api.set` 始终写入 Source A;它何时可见由 compositor 决定,而不是由 `api.set` 本身决定。
+这与 CSS 模型一致:动画播放时按属性覆盖 computed style,未被动画的属性以及动画非活跃后由 style 接管。`api.set` 始终写入 Source A;它何时可见由 compositor 决定,而不是由 `api.set` 本身决定。
 
 #### 7.2 签名
 
@@ -355,24 +354,27 @@ api.set(values: EntityMotionProps): void
 delay / running / paused
 ```
 
-animation 持有整个 Entity transform ownership。
+animation 持有 config 中出现的那些 transform 分量的 ownership;未出现在 config 中的分量不被 animation 持有。
 
-此时用户通过 React props 写：
+此时用户通过 React props 写**被动画接管的分量**,例如 config 动画了 `position`:
 
 ```text
 <BoxEntity position={position} />
 ```
 
-不会覆盖正在播放的 animation。
+不会覆盖正在播放的 animation。写**未被动画接管的分量**(例如 config 只动画 `position`,而用户写 `rotation`)则正常生效。
 
 #### 8.2 动画期间的 props update
 
-动画期间用户写入的 `position / rotation / scale`：
+动画期间用户写入的、**已被动画接管的分量**(出现在 config 中的分量):
 
 1. 不打断动画。
 2. 不立即覆盖动画。
 3. 不 pending replay。
 4. 最终以 animation terminal values 为准。
+
+动画期间用户写入的、**未被动画接管的分量**(未出现在 config 中的分量):正常生效,由 React props 实时驱动,不受动画影响。
+
 
 #### 8.3 动画结束后
 
