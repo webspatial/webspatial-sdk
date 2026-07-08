@@ -158,7 +158,7 @@ enum DoubleClickProbeHTML {
               }
               body {
                 box-sizing: border-box;
-                padding: 20px;
+                padding: 20px 20px 118px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -174,6 +174,94 @@ enum DoubleClickProbeHTML {
                 font-weight: 700;
                 margin: 8px;
               }
+              #double-click-probe-event-hud {
+                position: fixed;
+                left: 12px;
+                right: 12px;
+                bottom: 12px;
+                z-index: 2147483647;
+                box-sizing: border-box;
+                padding: 12px 14px;
+                border: 1px solid rgba(255, 255, 255, 0.26);
+                border-radius: 16px;
+                background: rgba(2, 6, 23, 0.86);
+                box-shadow: 0 18px 45px rgba(0, 0, 0, 0.38);
+                color: white;
+                font-size: 13px;
+                pointer-events: none;
+                backdrop-filter: blur(16px);
+              }
+              .probe-hud-title {
+                margin-bottom: 8px;
+                color: rgba(255, 255, 255, 0.72);
+                font-size: 11px;
+                font-weight: 800;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+              }
+              .probe-hud-main {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+              }
+              .probe-hud-field {
+                min-width: 0;
+              }
+              .probe-hud-label {
+                display: block;
+                margin-bottom: 4px;
+                color: rgba(255, 255, 255, 0.58);
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+              }
+              .probe-hud-value {
+                display: block;
+                overflow: hidden;
+                min-height: 22px;
+                padding: 5px 8px;
+                border-radius: 10px;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                font-size: 13px;
+                font-weight: 900;
+              }
+              .probe-hud-value-type {
+                background: #334155;
+                color: white;
+              }
+              #double-click-probe-event-hud[data-event-type="pointerdown"] .probe-hud-value-type {
+                background: #b45309;
+              }
+              #double-click-probe-event-hud[data-event-type="pointerup"] .probe-hud-value-type {
+                background: #15803d;
+              }
+              #double-click-probe-event-hud[data-event-type="click"] .probe-hud-value-type {
+                background: #2563eb;
+              }
+              #double-click-probe-event-hud[data-event-type="dblclick"] .probe-hud-value-type {
+                background: #c026d3;
+              }
+              .probe-hud-value-target {
+                background: rgba(14, 165, 233, 0.22);
+                color: #bae6fd;
+              }
+              .probe-hud-meta {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 8px;
+                margin-top: 9px;
+                color: rgba(255, 255, 255, 0.72);
+                font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                font-size: 11px;
+              }
+              .probe-hud-meta span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
             </style>
           </head>
           <body>
@@ -181,6 +269,15 @@ enum DoubleClickProbeHTML {
             <script>
               \(probeScript())
               const label = "\(label)";
+              updateProbeEventHud(document, {
+                label,
+                scope: "ready",
+                type: "waiting",
+                detail: "-",
+                target: "none",
+                pointerType: "-",
+                isTrusted: "-"
+              });
               const button = document.getElementById("probe");
               if (button) installNativeProbe(button, label);
               \(extraScript)
@@ -207,8 +304,59 @@ enum DoubleClickProbeHTML {
           return `${target.tagName || "node"}${target.id ? "#" + target.id : ""}`;
         }
 
+        function eventDocument(event) {
+          return event?.target?.ownerDocument || event?.currentTarget?.ownerDocument || document;
+        }
+
+        function ensureProbeEventHud(doc) {
+          const ownerDocument = doc || document;
+          let hud = ownerDocument.getElementById("double-click-probe-event-hud");
+          if (hud) return hud;
+
+          hud = ownerDocument.createElement("aside");
+          hud.id = "double-click-probe-event-hud";
+          hud.setAttribute("aria-live", "polite");
+          hud.innerHTML = `
+            <div class="probe-hud-title">Current click info</div>
+            <div class="probe-hud-main">
+              <div class="probe-hud-field">
+                <span class="probe-hud-label">Event type</span>
+                <span class="probe-hud-value probe-hud-value-type" data-probe-field="type">waiting</span>
+              </div>
+              <div class="probe-hud-field">
+                <span class="probe-hud-label">Click target</span>
+                <span class="probe-hud-value probe-hud-value-target" data-probe-field="target">none</span>
+              </div>
+            </div>
+            <div class="probe-hud-meta">
+              <span data-probe-field="detail">detail=-</span>
+              <span data-probe-field="scope">scope=-</span>
+              <span data-probe-field="pointer">pointer=-</span>
+              <span data-probe-field="trusted">trusted=-</span>
+            </div>
+          `;
+          (ownerDocument.body || ownerDocument.documentElement).appendChild(hud);
+          return hud;
+        }
+
+        function setProbeText(hud, field, text) {
+          const node = hud.querySelector(`[data-probe-field="${field}"]`);
+          if (node) node.textContent = text;
+        }
+
+        function updateProbeEventHud(doc, payload) {
+          const hud = ensureProbeEventHud(doc);
+          hud.dataset.eventType = payload.type || "";
+          setProbeText(hud, "type", payload.type || "-");
+          setProbeText(hud, "target", payload.target || "-");
+          setProbeText(hud, "detail", `detail=${payload.detail ?? "-"}`);
+          setProbeText(hud, "scope", `scope=${payload.scope || "-"}`);
+          setProbeText(hud, "pointer", `pointer=${payload.pointerType || "-"}`);
+          setProbeText(hud, "trusted", `trusted=${payload.isTrusted ?? "-"}`);
+        }
+
         function logNativeEvent(label, scope, event) {
-          postProbe({
+          const payload = {
             label,
             scope,
             type: event.type,
@@ -220,11 +368,14 @@ enum DoubleClickProbeHTML {
             currentTarget: targetName(event.currentTarget),
             isTrusted: event.isTrusted,
             timeStamp: Math.round(event.timeStamp)
-          });
+          };
+          updateProbeEventHud(eventDocument(event), payload);
+          postProbe(payload);
         }
 
         function logReactEvent(label, event) {
-          postProbe({
+          const nativeEvent = event.nativeEvent || event;
+          const payload = {
             label,
             scope: `react-${event._reactName || event.type}`,
             type: event.type,
@@ -234,9 +385,11 @@ enum DoubleClickProbeHTML {
             buttons: event.buttons,
             target: targetName(event.target),
             currentTarget: targetName(event.currentTarget),
-            isTrusted: event.nativeEvent?.isTrusted,
+            isTrusted: nativeEvent?.isTrusted,
             timeStamp: Math.round(event.timeStamp)
-          });
+          };
+          updateProbeEventHud(eventDocument(nativeEvent), payload);
+          postProbe(payload);
         }
 
         function installNativeProbe(element, label) {
@@ -356,7 +509,6 @@ enum DoubleClickProbeHTML {
                 null,
                 React.createElement("div", null, React.createElement("strong", null, "React portal root")),
                 React.createElement(ProbeButton, { label: "\(rootLabel)" }),
-                React.createElement("button", { id: "open-child", onClick: () => openChildWindow("button") }, "Open child ornament WKWebView"),
                 childWindow
                   ? ReactDOM.createPortal(
                       React.createElement(ProbeButton, { label: "\(childLabel)" }),

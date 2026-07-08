@@ -61,7 +61,6 @@ struct Demo1WindowOpenChildOrnament: View {
         return DoubleClickProbeHTML.plainPage(
             label: "demo1-window-open-root",
             title: "Demo 1 Root WKWebView",
-            extraBody: #"<button id="open-child">Open child ornament WKWebView</button>"#,
             extraScript: windowOpenScript(childHTML: childHTML, url: "about:blank", childLabel: "demo1-window-open-child")
         )
     }
@@ -87,7 +86,6 @@ struct Demo1WindowOpenChildOrnament: View {
           postProbe({ label, scope: "window-open", type: "opened-child", reason, childLabel: "\(childLabel)" });
         }
 
-        document.getElementById("open-child").addEventListener("click", () => openChildWindow("button"));
         setTimeout(() => openChildWindow("auto"), 300);
         """
     }
@@ -131,7 +129,6 @@ struct Demo2WindowOpenChildWithViewportAndStyle: View {
         return DoubleClickProbeHTML.plainPage(
             label: "demo2-window-open-style-root",
             title: "Demo 2 Root WKWebView",
-            extraBody: #"<button id="open-child">Open child ornament WKWebView</button>"#,
             extraScript: """
             const childHTML = \(DoubleClickProbeHTML.jsStringLiteral(childHTML));
             let childWindow = null;
@@ -150,20 +147,19 @@ struct Demo2WindowOpenChildWithViewportAndStyle: View {
               postProbe({ label, scope: "window-open", type: "opened-child", reason, childLabel: "demo2-window-open-style-child" });
             }
 
-            document.getElementById("open-child").addEventListener("click", () => openChildWindow("button"));
             setTimeout(() => openChildWindow("auto"), 300);
             """
         )
     }
 }
 
-struct Demo3WindowOpenChildWithHeadSync: View {
+struct Demo3ProtocolURLChildWithViewportAndStyle: View {
     @State private var childWebView: WKWebView?
 
     var body: some View {
         WindowOpenProbeRootWebView(
             childWebView: $childWebView,
-            label: "demo3-window-open-head-root",
+            label: "demo3-protocol-style-root",
             html: rootHTML
         )
         .frame(width: 720, height: 520)
@@ -189,50 +185,55 @@ struct Demo3WindowOpenChildWithHeadSync: View {
 
     private var rootHTML: String {
         let childHTML = DoubleClickProbeHTML.plainPage(
-            label: "demo3-window-open-head-child",
-            title: "Demo 3 Child + Style + Head Sync"
+            label: "demo3-protocol-style-child",
+            title: "Demo 3 webspatial:// Child + WebSpatial Body Style"
         )
+
         return DoubleClickProbeHTML.plainPage(
-            label: "demo3-window-open-head-root",
+            label: "demo3-protocol-style-root",
             title: "Demo 3 Root WKWebView",
-            extraBody: #"<button id="open-child">Open child ornament WKWebView</button>"#,
             extraScript: """
             const childHTML = \(DoubleClickProbeHTML.jsStringLiteral(childHTML));
             let childWindow = null;
 
             function openChildWindow(reason) {
-              if (childWindow && !childWindow.closed) return;
-              childWindow = window.open("about:blank", "native-window-open-child", "width=360,height=240");
+              if (childWindow && !childWindow.closed) {
+                postProbe({ label, scope: "window-open", type: "child-already-open", reason });
+                return;
+              }
+
+              childWindow = window.open(
+                "webspatial://createOrnament?command=createOrnament&attachmentAnchor=bottom&contentAlignment=back&visibility=visible&width=360&height=240",
+                "native-window-open-child",
+                "width=360,height=240"
+              );
+
               if (!childWindow) {
                 postProbe({ label, scope: "window-open", type: "window-open-null", reason });
                 return;
               }
+
               childWindow.document.open();
               childWindow.document.write(childHTML);
               childWindow.document.close();
-              \(DoubleClickProbeHTML.webSpatialSetupScript(forWindow: "childWindow"))
-              postProbe({ label, scope: "window-open", type: "opened-child", reason, childLabel: "demo3-window-open-head-child" });
+              \(DoubleClickProbeHTML.webSpatialBodyStyleScript(forWindow: "childWindow"))
+              postProbe({ label, scope: "window-open", type: "opened-child", reason, childLabel: "demo3-protocol-style-child" });
             }
 
-            document.getElementById("open-child").addEventListener("click", () => openChildWindow("button"));
             setTimeout(() => openChildWindow("auto"), 300);
             """
         )
     }
 }
 
-struct Demo4ReactPortalToWindowOpenChild: View {
+struct Demo4WindowOpenChildWithHeadSync: View {
     @State private var childWebView: WKWebView?
 
     var body: some View {
         WindowOpenProbeRootWebView(
             childWebView: $childWebView,
-            label: "demo4-react-portal-root",
-            html: DoubleClickProbeHTML.reactPortalRootHTML(
-                rootLabel: "demo4-react-root",
-                childLabel: "demo4-react-portal-child",
-                openURL: "about:blank"
-            )
+            label: "demo4-window-open-head-root",
+            html: rootHTML
         )
         .frame(width: 720, height: 520)
         .glassBackgroundEffect()
@@ -254,19 +255,50 @@ struct Demo4ReactPortalToWindowOpenChild: View {
             .glassBackgroundEffect()
         }
     }
+
+    private var rootHTML: String {
+        let childHTML = DoubleClickProbeHTML.plainPage(
+            label: "demo4-window-open-head-child",
+            title: "Demo 4 Child + Style + Head Sync"
+        )
+        return DoubleClickProbeHTML.plainPage(
+            label: "demo4-window-open-head-root",
+            title: "Demo 4 Root WKWebView",
+            extraScript: """
+            const childHTML = \(DoubleClickProbeHTML.jsStringLiteral(childHTML));
+            let childWindow = null;
+
+            function openChildWindow(reason) {
+              if (childWindow && !childWindow.closed) return;
+              childWindow = window.open("about:blank", "native-window-open-child", "width=360,height=240");
+              if (!childWindow) {
+                postProbe({ label, scope: "window-open", type: "window-open-null", reason });
+                return;
+              }
+              childWindow.document.open();
+              childWindow.document.write(childHTML);
+              childWindow.document.close();
+              \(DoubleClickProbeHTML.webSpatialSetupScript(forWindow: "childWindow"))
+              postProbe({ label, scope: "window-open", type: "opened-child", reason, childLabel: "demo4-window-open-head-child" });
+            }
+
+            setTimeout(() => openChildWindow("auto"), 300);
+            """
+        )
+    }
 }
 
-struct Demo5ProtocolURLReactPortalChild: View {
+struct Demo5ReactPortalToWindowOpenChild: View {
     @State private var childWebView: WKWebView?
 
     var body: some View {
         WindowOpenProbeRootWebView(
             childWebView: $childWebView,
-            label: "demo5-protocol-react-root",
+            label: "demo5-react-portal-root",
             html: DoubleClickProbeHTML.reactPortalRootHTML(
-                rootLabel: "demo5-protocol-react-root",
-                childLabel: "demo5-protocol-react-portal-child",
-                openURL: "webspatial://createOrnament?command=createOrnament&attachmentAnchor=bottom&contentAlignment=back&visibility=visible&width=360&height=240"
+                rootLabel: "demo5-react-root",
+                childLabel: "demo5-react-portal-child",
+                openURL: "about:blank"
             )
         )
         .frame(width: 720, height: 520)
@@ -291,25 +323,60 @@ struct Demo5ProtocolURLReactPortalChild: View {
     }
 }
 
-struct Demo6NestedAboutBlankChildWebView: View {
+struct Demo6ProtocolURLReactPortalChild: View {
+    @State private var childWebView: WKWebView?
+
+    var body: some View {
+        WindowOpenProbeRootWebView(
+            childWebView: $childWebView,
+            label: "demo6-protocol-react-root",
+            html: DoubleClickProbeHTML.reactPortalRootHTML(
+                rootLabel: "demo6-protocol-react-root",
+                childLabel: "demo6-protocol-react-portal-child",
+                openURL: "webspatial://createOrnament?command=createOrnament&attachmentAnchor=bottom&contentAlignment=back&visibility=visible&width=360&height=240"
+            )
+        )
+        .frame(width: 720, height: 520)
+        .glassBackgroundEffect()
+        .ornament(
+            attachmentAnchor: .scene(.trailing),
+            contentAlignment: .center
+        ) {
+            Group {
+                if let childWebView {
+                    ExistingWKWebView(webView: childWebView)
+                } else {
+                    Text("Waiting for demo 6 child WKWebView")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .padding()
+                }
+            }
+            .frame(width: 360, height: 240)
+            .glassBackgroundEffect()
+        }
+    }
+}
+
+struct Demo7NestedAboutBlankChildWebView: View {
     @State private var childWebView: WKWebView?
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             WindowOpenProbeRootWebView(
                 childWebView: $childWebView,
-                label: "demo6-nested-about-root",
+                label: "demo7-nested-about-root",
                 html: rootHTML
             )
-            .frame(width: 900, height: 600)
+            .frame(width: 720, height: 520)
             .glassBackgroundEffect()
 
             childHost
                 .frame(width: 360, height: 240)
-                .offset(x: 500, y: 180)
+                .offset(x: 340, y: 160)
                 .offset(z: 80)
         }
-        .frame(width: 900, height: 600)
+        .frame(width: 720, height: 520)
     }
 
     private var childHost: some View {
@@ -317,7 +384,7 @@ struct Demo6NestedAboutBlankChildWebView: View {
             if let childWebView {
                 ExistingWKWebView(webView: childWebView)
             } else {
-                Text("Waiting for demo 6 nested child WKWebView")
+                Text("Waiting for demo 7 nested child WKWebView")
                     .font(.headline)
                     .foregroundStyle(.white)
                     .padding()
@@ -329,14 +396,13 @@ struct Demo6NestedAboutBlankChildWebView: View {
 
     private var rootHTML: String {
         let childHTML = DoubleClickProbeHTML.plainPage(
-            label: "demo6-nested-about-child",
-            title: "Demo 6 Nested about:blank Child WKWebView"
+            label: "demo7-nested-about-child",
+            title: "Demo 7 Nested about:blank Child WKWebView"
         )
 
         return DoubleClickProbeHTML.plainPage(
-            label: "demo6-nested-about-root",
-            title: "Demo 6 Root WKWebView",
-            extraBody: #"<button id="open-child">Open nested about:blank child WKWebView</button>"#,
+            label: "demo7-nested-about-root",
+            title: "Demo 7 Root WKWebView",
             extraScript: windowOpenScript(childHTML: childHTML)
         )
     }
@@ -361,34 +427,33 @@ struct Demo6NestedAboutBlankChildWebView: View {
           childWindow.document.open();
           childWindow.document.write(childHTML);
           childWindow.document.close();
-          postProbe({ label, scope: "nested-child", type: "opened-child", reason, childLabel: "demo6-nested-about-child" });
+          postProbe({ label, scope: "nested-child", type: "opened-child", reason, childLabel: "demo7-nested-about-child" });
         }
 
-        document.getElementById("open-child").addEventListener("click", () => openChildWindow("button"));
         setTimeout(() => openChildWindow("auto"), 300);
         """
     }
 }
 
-struct Demo7NestedProtocolChildWebView: View {
+struct Demo8NestedProtocolChildWebView: View {
     @State private var childWebView: WKWebView?
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             WindowOpenProbeRootWebView(
                 childWebView: $childWebView,
-                label: "demo7-nested-protocol-root",
+                label: "demo8-nested-protocol-root",
                 html: rootHTML
             )
-            .frame(width: 900, height: 600)
+            .frame(width: 720, height: 520)
             .glassBackgroundEffect()
 
             childHost
                 .frame(width: 360, height: 240)
-                .offset(x: 500, y: 180)
+                .offset(x: 340, y: 160)
                 .offset(z: 80)
         }
-        .frame(width: 900, height: 600)
+        .frame(width: 720, height: 520)
     }
 
     private var childHost: some View {
@@ -396,7 +461,7 @@ struct Demo7NestedProtocolChildWebView: View {
             if let childWebView {
                 ExistingWKWebView(webView: childWebView)
             } else {
-                Text("Waiting for demo 7 nested child WKWebView")
+                Text("Waiting for demo 8 nested child WKWebView")
                     .font(.headline)
                     .foregroundStyle(.white)
                     .padding()
@@ -408,14 +473,13 @@ struct Demo7NestedProtocolChildWebView: View {
 
     private var rootHTML: String {
         let childHTML = DoubleClickProbeHTML.plainPage(
-            label: "demo7-nested-protocol-child",
-            title: "Demo 7 Nested webspatial:// Child WKWebView"
+            label: "demo8-nested-protocol-child",
+            title: "Demo 8 Nested webspatial:// Child WKWebView"
         )
 
         return DoubleClickProbeHTML.plainPage(
-            label: "demo7-nested-protocol-root",
-            title: "Demo 7 Root WKWebView",
-            extraBody: #"<button id="open-child">Open nested webspatial:// child WKWebView</button>"#,
+            label: "demo8-nested-protocol-root",
+            title: "Demo 8 Root WKWebView",
             extraScript: protocolSpatialized2DScript(childHTML: childHTML)
         )
     }
@@ -450,87 +514,11 @@ struct Demo7NestedProtocolChildWebView: View {
             scope: "nested-child",
             type: "opened-child",
             reason,
-            childLabel: "demo7-nested-protocol-child"
+            childLabel: "demo8-nested-protocol-child"
           });
         }
 
-        document.getElementById("open-child").addEventListener("click", () => openChildWindow("button"));
         setTimeout(() => openChildWindow("auto"), 300);
         """
-    }
-}
-
-struct Demo8ProtocolURLChildWithViewportAndStyle: View {
-    @State private var childWebView: WKWebView?
-
-    var body: some View {
-        WindowOpenProbeRootWebView(
-            childWebView: $childWebView,
-            label: "demo8-protocol-style-root",
-            html: rootHTML
-        )
-        .frame(width: 720, height: 520)
-        .glassBackgroundEffect()
-        .ornament(
-            attachmentAnchor: .scene(.trailing),
-            contentAlignment: .center
-        ) {
-            Group {
-                if let childWebView {
-                    ExistingWKWebView(webView: childWebView)
-                } else {
-                    Text("Waiting for demo 8 child WKWebView")
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .padding()
-                }
-            }
-            .frame(width: 360, height: 240)
-            .glassBackgroundEffect()
-        }
-    }
-
-    private var rootHTML: String {
-        let childHTML = DoubleClickProbeHTML.plainPage(
-            label: "demo8-protocol-style-child",
-            title: "Demo 8 webspatial:// Child + WebSpatial Body Style"
-        )
-
-        return DoubleClickProbeHTML.plainPage(
-            label: "demo8-protocol-style-root",
-            title: "Demo 8 Root WKWebView",
-            extraBody: #"<button id="open-child">Open webspatial:// child ornament WKWebView</button>"#,
-            extraScript: """
-            const childHTML = \(DoubleClickProbeHTML.jsStringLiteral(childHTML));
-            let childWindow = null;
-
-            function openChildWindow(reason) {
-              if (childWindow && !childWindow.closed) {
-                postProbe({ label, scope: "window-open", type: "child-already-open", reason });
-                return;
-              }
-
-              childWindow = window.open(
-                "webspatial://createOrnament?command=createOrnament&attachmentAnchor=bottom&contentAlignment=back&visibility=visible&width=360&height=240",
-                "native-window-open-child",
-                "width=360,height=240"
-              );
-
-              if (!childWindow) {
-                postProbe({ label, scope: "window-open", type: "window-open-null", reason });
-                return;
-              }
-
-              childWindow.document.open();
-              childWindow.document.write(childHTML);
-              childWindow.document.close();
-              \(DoubleClickProbeHTML.webSpatialBodyStyleScript(forWindow: "childWindow"))
-              postProbe({ label, scope: "window-open", type: "opened-child", reason, childLabel: "demo8-protocol-style-child" });
-            }
-
-            document.getElementById("open-child").addEventListener("click", () => openChildWindow("button"));
-            setTimeout(() => openChildWindow("auto"), 300);
-            """
-        )
     }
 }

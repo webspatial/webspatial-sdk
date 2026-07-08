@@ -43,6 +43,15 @@ struct DoubleClickProbeDemoSelector: View {
                     .padding(20)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(.white.opacity(0.18), lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .shadow(color: .black.opacity(0.22), radius: 28, y: 18)
+        .padding(24)
     }
 
     private var sidebar: some View {
@@ -102,17 +111,17 @@ enum DoubleClickProbeDemo: String, CaseIterable, Identifiable {
         case .demo2:
             return "Demo 2 style"
         case .demo3:
-            return "Demo 3 head sync"
+            return "Demo 3 protocol style"
         case .demo4:
-            return "Demo 4 React portal"
+            return "Demo 4 head sync"
         case .demo5:
-            return "Demo 5 protocol portal"
+            return "Demo 5 React portal"
         case .demo6:
-            return "Demo 6 nested about"
+            return "Demo 6 protocol portal"
         case .demo7:
-            return "Demo 7 nested protocol"
+            return "Demo 7 nested about"
         case .demo8:
-            return "Demo 8 protocol style"
+            return "Demo 8 nested protocol"
         }
     }
 
@@ -125,17 +134,17 @@ enum DoubleClickProbeDemo: String, CaseIterable, Identifiable {
         case .demo2:
             return "Demo 2: about:blank + WebSpatial-like viewport/body style"
         case .demo3:
-            return "Demo 3: about:blank + head/style/class sync"
+            return "Demo 3: webspatial://createOrnament + WebSpatial-like body style"
         case .demo4:
-            return "Demo 4: about:blank + React portal"
+            return "Demo 4: about:blank + head/style/class sync"
         case .demo5:
-            return "Demo 5: webspatial://createOrnament + React portal"
+            return "Demo 5: about:blank + React portal"
         case .demo6:
-            return "Demo 6: about:blank + nested child WKWebView + z offset"
+            return "Demo 6: webspatial://createOrnament + React portal"
         case .demo7:
-            return "Demo 7: webspatial://createSpatialized2DElement + nested child WKWebView"
+            return "Demo 7: about:blank + nested child WKWebView + z offset"
         case .demo8:
-            return "Demo 8: webspatial://createOrnament + WebSpatial-like body style"
+            return "Demo 8: webspatial://createSpatialized2DElement + nested child WKWebView"
         }
     }
 
@@ -143,9 +152,9 @@ enum DoubleClickProbeDemo: String, CaseIterable, Identifiable {
         switch self {
         case .demo0:
             return "Native WKWebView baseline"
-        case .demo1, .demo2, .demo3, .demo4, .demo6:
+        case .demo1, .demo2, .demo4, .demo5, .demo7:
             return "Control path, expects dblclick"
-        case .demo5, .demo7, .demo8:
+        case .demo3, .demo6, .demo8:
             return "Protocol path, reproduces loss"
         }
     }
@@ -159,25 +168,25 @@ enum DoubleClickProbeDemo: String, CaseIterable, Identifiable {
         case .demo2:
             return "Adds WebSpatial-like viewport and body styles to the about:blank child window."
         case .demo3:
-            return "Adds head style/link cloning and documentElement className sync to the about:blank child window."
-        case .demo4:
-            return "Adds React synthetic events and a cross-window React portal on the about:blank path."
-        case .demo5:
-            return "Changes only the initial child URL to webspatial://createOrnament while keeping the React portal path."
-        case .demo6:
-            return "Uses a plain nested SwiftUI host with z offset and an about:blank child window."
-        case .demo7:
-            return "Uses the same nested SwiftUI host as demo 6, but opens webspatial://createSpatialized2DElement."
-        case .demo8:
             return "Keeps the no-React style probe from demo 2, but opens webspatial://createOrnament."
+        case .demo4:
+            return "Adds head style/link cloning and documentElement className sync to the about:blank child window."
+        case .demo5:
+            return "Adds React synthetic events and a cross-window React portal on the about:blank path."
+        case .demo6:
+            return "Changes only the initial child URL to webspatial://createOrnament while keeping the React portal path."
+        case .demo7:
+            return "Uses a plain nested SwiftUI host with z offset and an about:blank child window."
+        case .demo8:
+            return "Uses the same nested SwiftUI host as demo 7, but opens webspatial://createSpatialized2DElement."
         }
     }
 
     var expectsDoubleClick: Bool {
         switch self {
-        case .demo5, .demo7, .demo8:
+        case .demo3, .demo6, .demo8:
             return false
-        case .demo0, .demo1, .demo2, .demo3, .demo4, .demo6:
+        case .demo0, .demo1, .demo2, .demo4, .demo5, .demo7:
             return true
         }
     }
@@ -198,17 +207,17 @@ enum DoubleClickProbeDemo: String, CaseIterable, Identifiable {
         case .demo2:
             Demo2WindowOpenChildWithViewportAndStyle()
         case .demo3:
-            Demo3WindowOpenChildWithHeadSync()
+            Demo3ProtocolURLChildWithViewportAndStyle()
         case .demo4:
-            Demo4ReactPortalToWindowOpenChild()
+            Demo4WindowOpenChildWithHeadSync()
         case .demo5:
-            Demo5ProtocolURLReactPortalChild()
+            Demo5ReactPortalToWindowOpenChild()
         case .demo6:
-            Demo6NestedAboutBlankChildWebView()
+            Demo6ProtocolURLReactPortalChild()
         case .demo7:
-            Demo7NestedProtocolChildWebView()
+            Demo7NestedAboutBlankChildWebView()
         case .demo8:
-            Demo8ProtocolURLChildWithViewportAndStyle()
+            Demo8NestedProtocolChildWebView()
         }
     }
 }

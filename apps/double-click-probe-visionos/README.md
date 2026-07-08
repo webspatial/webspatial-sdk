@@ -34,12 +34,12 @@ A working path should show `click detail=2` followed by `dblclick detail=2`. A r
 | demo0 | none | direct root + SwiftUI ornament | no | `dblclick` works |
 | demo1 | `about:blank` | `createWebViewWith` + ornament | no | `dblclick` works |
 | demo2 | `about:blank` | ornament + WebSpatial-like body style | no | `dblclick` works |
-| demo3 | `about:blank` | ornament + head/style/class sync | no | `dblclick` works |
-| demo4 | `about:blank` | ornament + React portal | yes | `dblclick` works |
-| demo5 | `webspatial://createOrnament?...` | ornament + React portal | yes | `dblclick` is missing |
-| demo6 | `about:blank` | nested child view + z offset | no | `dblclick` works |
-| demo7 | `webspatial://createSpatialized2DElement?...` | nested child view + z offset | no | `dblclick` is missing |
-| demo8 | `webspatial://createOrnament?...` | ornament + WebSpatial-like body style | no | confirm locally; expected to miss `dblclick` |
+| demo3 | `webspatial://createOrnament?...` | ornament + WebSpatial-like body style | no | confirm locally; expected to miss `dblclick` |
+| demo4 | `about:blank` | ornament + head/style/class sync | no | `dblclick` works |
+| demo5 | `about:blank` | ornament + React portal | yes | `dblclick` works |
+| demo6 | `webspatial://createOrnament?...` | ornament + React portal | yes | `dblclick` is missing |
+| demo7 | `about:blank` | nested child view + z offset | no | `dblclick` works |
+| demo8 | `webspatial://createSpatialized2DElement?...` | nested child view + z offset | no | `dblclick` is missing |
 
 ## Notes
 
