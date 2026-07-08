@@ -679,6 +679,7 @@ export class InitializeAttachmentCommand extends JSBCommand {
       scale: this.options.scale ?? { x: 1, y: 1, z: 1 },
       width: this.options.width,
       height: this.options.height,
+      cornerRadius: this.options.cornerRadius,
       ownerViewId: this.options.ownerViewId,
     }
   }

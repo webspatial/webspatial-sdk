@@ -87,4 +87,29 @@ describe('Attachment entity wire format', () => {
       }),
     )
   })
+
+  it('updates cornerRadius for native frame clipping (visionOS + Android)', async () => {
+    const { Attachment } = await import('./Attachment')
+    const attachment = new Attachment('att-1', {} as WindowProxy, {
+      placement: { id: 'entity-1' },
+      ownerViewId: 'reality-1',
+    })
+
+    const cornerRadius = {
+      topLeading: 12,
+      bottomLeading: 12,
+      topTrailing: 12,
+      bottomTrailing: 12,
+    }
+
+    await attachment.update({ cornerRadius })
+
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'UpdateAttachmentEntity',
+      JSON.stringify({
+        id: 'att-1',
+        cornerRadius,
+      }),
+    )
+  })
 })

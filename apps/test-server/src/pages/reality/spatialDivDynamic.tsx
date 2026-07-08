@@ -8,6 +8,9 @@ export default function RealitySpatialDivDynamic() {
   const [rotOn, setRotOn] = useState(false)
   const animRef = useRef<number | null>(null)
   const [deg, setDeg] = useState(0)
+  const [cornerRadius, setCornerRadius] = useState(12)
+
+  const cornerRadii = [0, 12, 24, 50]
 
   useEffect(() => {
     if (rotOn) {
@@ -34,7 +37,7 @@ export default function RealitySpatialDivDynamic() {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: '12px',
+    borderRadius: `${cornerRadius}px`,
   }
 
   return (
@@ -53,6 +56,20 @@ export default function RealitySpatialDivDynamic() {
         >
           Toggle Rotation
         </button>
+        <button
+          className="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+          onClick={() =>
+            setCornerRadius(r => {
+              const i = cornerRadii.indexOf(r)
+              return cornerRadii[(i + 1) % cornerRadii.length]
+            })
+          }
+        >
+          Toggle Corner Radius
+        </button>
+        <span className="px-3 py-2 text-sm text-gray-400 tabular-nums self-center">
+          border-radius: {cornerRadius}px
+        </span>
       </div>
 
       <div className="flex justify-center items-center h-64 border border-dashed border-gray-800 rounded-2xl">

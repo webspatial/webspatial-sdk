@@ -406,6 +406,7 @@ struct InitializeAttachmentCommand: CommandDataProtocol {
     let scale: JSBVec3?
     let width: Double?
     let height: Double?
+    let cornerRadius: CornerRadius?
     let ownerViewId: String
 }
 
@@ -417,4 +418,5 @@ struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     let scale: JSBVec3?
     let width: Double?
     let height: Double?
+    let cornerRadius: CornerRadius?
 }

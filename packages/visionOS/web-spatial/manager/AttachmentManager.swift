@@ -8,6 +8,7 @@ struct AttachmentInfo: Identifiable, Equatable {
     var rotation: SIMD3<Float>
     var scale: SIMD3<Float>
     var frameSize: CGSize
+    var cornerRadius: CornerRadius
     var webViewModel: SpatialWebViewModel
 
     static func == (lhs: AttachmentInfo, rhs: AttachmentInfo) -> Bool {
@@ -34,6 +35,7 @@ class AttachmentManager {
         rotation: SIMD3<Float>,
         scale: SIMD3<Float>,
         frameSize: CGSize,
+        cornerRadius: CornerRadius = .init(),
         webViewModel: SpatialWebViewModel
     ) -> AttachmentInfo {
         webViewModel.setBackgroundTransparent(true)
@@ -46,6 +48,7 @@ class AttachmentManager {
             rotation: rotation,
             scale: scale,
             frameSize: frameSize,
+            cornerRadius: cornerRadius,
             webViewModel: webViewModel
         )
         attachments[id] = info
@@ -57,7 +60,8 @@ class AttachmentManager {
         position: SIMD3<Float>?,
         rotation: SIMD3<Float>?,
         scale: SIMD3<Float>?,
-        frameSize: CGSize?
+        frameSize: CGSize?,
+        cornerRadius: CornerRadius? = nil
     ) {
         guard var info = attachments[id] else { return }
 
@@ -72,6 +76,9 @@ class AttachmentManager {
         }
         if let frameSize = frameSize {
             info.frameSize = frameSize
+        }
+        if let cornerRadius = cornerRadius {
+            info.cornerRadius = cornerRadius
         }
 
         attachments[id] = info

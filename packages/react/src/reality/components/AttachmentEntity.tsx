@@ -1,12 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Attachment } from '@webspatial/core-sdk'
-import type { Vec3 } from '@webspatial/core-sdk'
+import type { CornerRadius, Vec3 } from '@webspatial/core-sdk'
 
 import { useRealityContext, useParentContext } from '../context'
 import { setOpenWindowStyle } from '../../utils/windowStyleSync'
 import { useSyncHeadStyles } from '../../utils/useSyncHeadStyles'
+import { parseCornerRadius } from '../../spatialized-container/utils'
 
 let instanceCounter = 0
+
+function cornerRadiusKey(cornerRadius: CornerRadius) {
+  return `${cornerRadius.topLeading},${cornerRadius.bottomLeading},${cornerRadius.topTrailing},${cornerRadius.bottomTrailing}`
+}
 
 type AttachmentEntityProps = {
   attachment: string
@@ -135,6 +140,36 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   }, [ctx, attachmentName])
 
   useSyncHeadStyles(childWindow)
+
+  // Mirror spatial div behavior: read border-radius from portaled attachment
+  // content and sync to the native attachment frame clip shape.
+  useEffect(() => {
+    if (!attachmentRef.current || !childWindow) return
+
+    const container = attachmentRef.current.getContainer()
+    const lastCornerRadiusRef = { current: '' }
+
+    const syncCornerRadius = () => {
+      const root = container.firstElementChild as HTMLElement | null
+      if (!root) return
+      const cornerRadius = parseCornerRadius(childWindow.getComputedStyle(root))
+      const key = cornerRadiusKey(cornerRadius)
+      if (key === lastCornerRadiusRef.current) return
+      lastCornerRadiusRef.current = key
+      attachmentRef.current?.update({ cornerRadius })
+    }
+
+    const observer = new MutationObserver(syncCornerRadius)
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class'],
+    })
+    syncCornerRadius()
+
+    return () => observer.disconnect()
+  }, [childWindow])
 
   // Update transform and meter dimensions when they change
   useEffect(() => {

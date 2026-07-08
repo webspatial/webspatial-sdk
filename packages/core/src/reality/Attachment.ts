@@ -33,6 +33,7 @@ export class Attachment extends SpatialObject {
     if (options.scale) this.options.scale = options.scale
     if (options.width !== undefined) this.options.width = options.width
     if (options.height !== undefined) this.options.height = options.height
+    if (options.cornerRadius) this.options.cornerRadius = options.cornerRadius
     return new UpdateAttachmentEntityCommand(this.id, options).execute()
   }
 }

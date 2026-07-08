@@ -476,6 +476,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let rotation = makeSIMD3(command.rotation, fallback: SIMD3<Float>(0, 0, 0))
         let scale = makeSIMD3(command.scale, fallback: SIMD3<Float>(1, 1, 1))
         let frameSize = attachmentFrameSize(width: command.width, height: command.height)
+        let cornerRadius = command.cornerRadius ?? .init()
 
         let ownerId = command.ownerViewId
         if spatialObjects[ownerId] == nil {
@@ -489,6 +490,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             rotation: rotation,
             scale: scale,
             frameSize: frameSize,
+            cornerRadius: cornerRadius,
             webViewModel: webViewModel
         )
 
@@ -1341,7 +1343,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             position: newPosition,
             rotation: newRotation,
             scale: newScale,
-            frameSize: newFrameSize
+            frameSize: newFrameSize,
+            cornerRadius: command.cornerRadius
         )
         resolve(.success(baseReplyData))
     }

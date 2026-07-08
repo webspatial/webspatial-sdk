@@ -85,6 +85,7 @@ function TestTransformApi() {
   const [scale, setScale] = React.useState(1)
   const [widthM, setWidthM] = React.useState(0.35)
   const [heightM, setHeightM] = React.useState(0.2)
+  const [cornerRadius, setCornerRadius] = React.useState(12)
 
   const position = { x: posX, y: posY, z: posZ }
   const rotation = { x: 0, y: rotY, z: 0 }
@@ -94,7 +95,9 @@ function TestTransformApi() {
     <TestCase title="1. Transform API (position, rotation, scale, width, height)">
       <p className="text-sm text-gray-600 mb-3">
         Drag sliders to update <code className="text-xs">AttachmentEntity</code>{' '}
-        transforms and meter dimensions without remounting.
+        transforms and meter dimensions without remounting. Set{' '}
+        <code className="text-xs">borderRadius</code> on the attachment root div
+        to clip the native attachment frame (same as spatial div corner radius).
       </p>
       <div className="mb-4 max-w-md space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
         <SliderRow
@@ -160,6 +163,15 @@ function TestTransformApi() {
           onChange={setHeightM}
           unit=" m"
         />
+        <SliderRow
+          label="Corner radius"
+          value={cornerRadius}
+          min={0}
+          max={50}
+          step={1}
+          onChange={setCornerRadius}
+          unit="px"
+        />
       </div>
       <Reality style={{ ...REALITY_FRAME, border: '1px solid #0d9488' }}>
         <UnlitMaterial id="matTransform" color="#0d9488" />
@@ -169,7 +181,8 @@ function TestTransformApi() {
               background: 'rgba(15,23,42,0.92)',
               color: 'white',
               padding: 12,
-              borderRadius: 8,
+              borderRadius: cornerRadius,
+              overflow: 'hidden',
               minHeight: '100%',
               boxSizing: 'border-box',
             }}
@@ -177,7 +190,7 @@ function TestTransformApi() {
             <p style={{ margin: 0, fontWeight: 600 }}>Profile card</p>
             <p style={{ margin: '6px 0 0', fontSize: 12, opacity: 0.85 }}>
               {widthM.toFixed(2)}×{heightM.toFixed(2)} m · rotY{' '}
-              {rotY.toFixed(0)}°
+              {rotY.toFixed(0)}° · radius {cornerRadius}px
             </p>
           </div>
         </AttachmentAsset>
