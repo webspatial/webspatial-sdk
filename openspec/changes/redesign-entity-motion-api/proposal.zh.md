@@ -4,6 +4,8 @@
 
 本次变更不是替换现有 `useEntityAnimation`，而是在现有能力基础上做非 breaking 增强。目标是在不改变 Entity props 层级 authoring 的前提下，补齐 timeline、outlet、绑定方式和行为语义，使其更容易与 `useAnimation` 家族对齐。
 
+本提案作为 Entity motion 的目标态提案正式替代 `add-entity-transform-animation`。旧提案在新路径完成验证、并完成后续归档或正式替代动作前，仅作为历史上下文保留。
+
 ## 变更内容
 
 - 在现有 `useEntityAnimation` 基础上新增 Entity motion 增强提案。
