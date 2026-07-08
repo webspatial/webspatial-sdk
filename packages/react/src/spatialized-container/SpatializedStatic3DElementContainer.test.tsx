@@ -258,6 +258,8 @@ describe('SpatializedStatic3DElementContainer lazy/eager loading behavior', () =
       Promise.resolve().then(() => extra.ready),
     ).resolves.toMatchObject({
       type: 'modelloaded',
+      currentTarget: domProxy,
+      target: domProxy,
     })
   })
 })
