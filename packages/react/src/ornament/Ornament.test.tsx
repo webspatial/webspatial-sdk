@@ -139,6 +139,10 @@ describe('Ornament', () => {
       })
       expect(mocks.addOrnament).toHaveBeenCalledWith('ornament-1')
       expect(mocks.syncParentHeadToChild).toHaveBeenCalledWith(childWindow)
+      expect(childWindow.document.body.style.display).toBe('block')
+      expect(childWindow.document.body.style.minWidth).toBe('100%')
+      expect(childWindow.document.body.style.maxWidth).toBe('100%')
+      expect(childWindow.document.body.style.minHeight).toBe('100%')
       expect(
         childWindow.document.body.querySelector(
           '[data-testid="ornament-child"]',

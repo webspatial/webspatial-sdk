@@ -62,8 +62,16 @@ function ensureBaseHref(windowProxy: WindowProxy) {
   base.href = document.baseURI
 }
 
+function setOrnamentWindowFrameFillStyle(windowProxy: WindowProxy) {
+  windowProxy.document.body.style.display = 'block'
+  windowProxy.document.body.style.minWidth = '100%'
+  windowProxy.document.body.style.maxWidth = '100%'
+  windowProxy.document.body.style.minHeight = '100%'
+}
+
 async function prepareOrnamentWindow(windowProxy: WindowProxy) {
   setOpenWindowStyle(windowProxy)
+  setOrnamentWindowFrameFillStyle(windowProxy)
   ensureViewportMeta(windowProxy)
   ensureBaseHref(windowProxy)
   await syncParentHeadToChild(windowProxy)
