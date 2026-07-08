@@ -44,9 +44,9 @@ Run it on an Apple Vision Pro simulator, select a demo from the sidebar, double 
 
 ## Demo matrix
 
-| Demo | Initial child URL | Host shape | React | Observed / expected |
+| Demo | `window.open` URL | Host shape | React | Observed / expected |
 | --- | --- | --- | --- | --- |
-| demo0 | none | direct root + SwiftUI ornament | no | `dblclick` works |
+| demo0 | no `window.open` | direct root + SwiftUI ornament | no | `dblclick` works |
 | demo1 | `about:blank` | `createWebViewWith` + ornament | no | `dblclick` works |
 | demo2 | `about:blank` | ornament + WebSpatial-like body style | no | `dblclick` works |
 | demo3 | `webspatial://createOrnament?...` | ornament + WebSpatial-like body style | no | local confirmation pending; expected to miss `dblclick` |

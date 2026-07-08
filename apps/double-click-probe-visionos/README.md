@@ -29,9 +29,9 @@ A working path should show `click detail=2` followed by `dblclick detail=2`. A r
 
 ## Demo matrix
 
-| Demo | Initial child URL | Host shape | React | Expected |
+| Demo | `window.open` URL | Host shape | React | Expected |
 | --- | --- | --- | --- | --- |
-| demo0 | none | direct root + SwiftUI ornament | no | `dblclick` works |
+| demo0 | no `window.open` | direct root + SwiftUI ornament | no | `dblclick` works |
 | demo1 | `about:blank` | `createWebViewWith` + ornament | no | `dblclick` works |
 | demo2 | `about:blank` | ornament + WebSpatial-like body style | no | `dblclick` works |
 | demo3 | `webspatial://createOrnament?...` | ornament + WebSpatial-like body style | no | confirm locally; expected to miss `dblclick` |
