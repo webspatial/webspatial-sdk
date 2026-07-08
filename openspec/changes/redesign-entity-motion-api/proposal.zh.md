@@ -100,6 +100,8 @@ return (
 
 动画结束后，已提交的 Entity transform 通过 `entityProps` 镜像。用户如果需要在动画后动态接管 transform，应调用 `api.set`；普通 Entity props 保持为 static/base 输入，并在推荐组合顺序中被 `entityProps` 有意覆盖。
 
+v1 语义：config 中出现的字段只决定动画 tracks（动哪些属性），不决定 ownership 边界。active animation 期间 ownership 始终作用于整个 transform；即使某个 transform 字段没有出现在 config 中，它也不会在 active animation 期间被 React props 动态接管。因此“只动画 position、rotation 继续由 React props 控制”不是 v1 能力（见 §3 非目标）。
+
 核心目标：
 
 1. Entity animation config 对齐 `useAnimation`，但层级保持跟 Entity props 一致。
@@ -120,6 +122,7 @@ return (
 6. 每帧把 native animation values 回写到 React state。
 7. 动画过程中 replay 用户写入的 `position / rotation / scale`。
 8. 给 Entity 引入 CSS-like `style` prop。
+9. 字段级 ownership 组合（例如动画只控制 `position`，`rotation` 同时仍由 React props 动态控制）。
 
 ### 4. API 设计
 
@@ -290,6 +293,8 @@ entityProps.scale 更新为终态 scale
 4. `reset`。
 5. `finish`。
 6. native 接受的 `api.set(values)` 写入。
+
+> **完整 pose 语义：** 首个 native confirmed state 之前，`entityProps` 可能为空；一旦 native 回传 confirmed state，`entityProps` 表示完整的 Entity pose（`position` / `rotation` / `scale`），无论 config 只声明了哪些字段。这样把它 spread 到 Entity 上就能承载 whole-transform ownership 的结果，而不是只保住被动画的字段。
 
 ### 7. api.set
 

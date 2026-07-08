@@ -4,7 +4,7 @@
 
 The SDK MUST provide `useEntityAnimation(config)` as the public Entity motion hook. The hook MUST return a 3-tuple `[animation, api, entityProps]`.
 
-The returned `animation` object MUST be bindable through `xr-animation` on Entity components and SHOULD remain compatible with `animation` binding. The returned `entityProps` object MUST be a sparse React outlet containing only Entity transform fields: `position`, `rotation`, and `scale`.
+The returned `animation` object MUST be bindable through `xr-animation` on Entity components and SHOULD remain compatible with `animation` binding. The returned `entityProps` object MAY be empty before the first native-confirmed state; once native returns a confirmed state, `entityProps` MUST represent a complete Entity pose containing `position`, `rotation`, and `scale`, regardless of which fields the config declares. It contains only these Entity transform fields and no other properties.
 
 #### Scenario: Hook return shape
 - **WHEN** application code calls `useEntityAnimation(config)`
@@ -60,7 +60,7 @@ The public v1 authoring surface MUST support segment-style `from` / `to` and per
 
 The SDK MUST use `entityProps` as the React-side persistence outlet for committed Entity transform values owned by the animation system.
 
-`entityProps` MUST NOT update every frame. It MUST only update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, and native-accepted `api.set(values)` writes.
+`entityProps` MUST NOT update every frame. It MUST only update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, and native-accepted `api.set(values)` writes. Before the first confirmed state, `entityProps` MAY be empty; once native returns a confirmed state, it MUST represent a complete Entity pose (`position` / `rotation` / `scale`), regardless of which fields the config animates.
 
 #### Scenario: Complete writes terminal transform to `entityProps`
 - **WHEN** a non-looping Entity animation completes naturally

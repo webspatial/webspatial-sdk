@@ -100,6 +100,8 @@ During animation playback, the Entity transform is determined by sampled animati
 
 After animation ends, the committed Entity transform is mirrored through `entityProps`. Users who need to take over dynamically after an animation should call `api.set`; ordinary Entity props remain the static/base inputs that `entityProps` intentionally overrides in the recommended composition order.
 
+v1 semantics: fields present in the config only determine the animation tracks (which properties animate), not the ownership boundary. During an active animation, ownership always applies to the whole transform; a transform field that does not appear in the config is still not dynamically taken over by React props during active animation. Therefore "animate only position while rotation stays controlled by React props" is not a v1 capability (see §3 Non-Goals).
+
 Core goals:
 
 1. Align Entity animation semantics with `useAnimation` while keeping config hierarchy aligned with Entity props.
@@ -120,6 +122,7 @@ This proposal does not support:
 6. Writing native animation values back to React state every frame.
 7. Replaying user-authored `position / rotation / scale` writes during animation.
 8. Introducing a CSS-like `style` prop for Entity.
+9. Field-level ownership composition (for example, animating only `position` while `rotation` remains dynamically controlled by React props).
 
 ### 4. API Design
 
@@ -290,6 +293,8 @@ entityProps.scale updates to terminal scale
 4. `reset`.
 5. `finish`.
 6. Native-accepted `api.set(values)` writes.
+
+> **Complete-pose semantics:** Before the first native-confirmed state, `entityProps` may be empty; once native returns a confirmed state, `entityProps` represents a complete Entity pose (`position` / `rotation` / `scale`) regardless of which fields the config declares. Spreading it onto the Entity therefore carries the result of whole-transform ownership, not only the animated fields.
 
 ### 7. api.set
 
