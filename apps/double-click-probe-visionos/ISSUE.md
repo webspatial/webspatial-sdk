@@ -75,12 +75,30 @@ The remaining distinguishing variable is the initial URL passed to `window.open`
 
 Avoid using `webspatial://...` as the real initial URL for the child browsing context.
 
+Keep the existing synchronous `window.open` creation model, but move the spatial command data from the custom scheme/host into the query string of a standard URL:
+
+```text
+window.open("about:blank?command=createOrnament&attachmentAnchor=bottom&...", target, features)
+```
+
+In other words, avoid putting the command in the URL scheme or host:
+
+```text
+webspatial://createOrnament?...
+```
+
+Instead, parameterize the same data on `about:blank`:
+
+```text
+about:blank?command=createOrnament&attachmentAnchor=bottom&contentAlignment=back&visibility=visible&width=360&height=240
+```
+
 One possible flow:
 
-1. Generate a request id in JavaScript.
-2. Send the pending spatial command to native through JSB or another existing bridge.
-3. Call `window.open("about:blank", targetWithRequestId, features)`.
-4. Resolve the pending command in `createWebViewWith` using the request id from target/features/native state.
-5. Return the child `WKWebView` and keep rendering into it as today.
+1. JavaScript synchronously calls `window.open("about:blank?<encoded-webspatial-params>", target, features)`.
+2. Native reads `navigationAction.request.url` in `createWebViewWith`.
+3. Native parses `command` and spatial element parameters from the URL query.
+4. Native creates the corresponding spatial container and returns the child `WKWebView`.
+5. The child document continues to be written by the SDK or rendered through React Portal.
 
-This preserves the child browsing context behavior of a standard URL while still letting native create the correct spatial container.
+This preserves the original synchronous `window.open` creation model while avoiding a custom-scheme URL that can affect WebKit child-window event synthesis.
