@@ -13,6 +13,7 @@
 - 保持公开 config 与 Entity props 层级一致，继续使用 `position`、`rotation`、`scale`。
 - 推荐通过 `xr-animation` 绑定，同时继续兼容 `animation` 绑定。
 - 引入 `entityProps`，作为 React 侧已提交 Entity transform 值的 outlet。
+- 引入 `api.set(values)`，只接受稀疏 patch object，作为已提交 transform 状态的命令式写入入口；不支持 `(prev) => next` updater 形式。
 - 将 `from` / `to` 与百分比 `timeline` 作为公开主路径，同时保留 `tracks` 作为内部非公开 API。
 - 在适用范围内对齐新的 motion playback、callback 和 capability 语义，同时保留 Entity 自身约束。
 - 将 Entity motion 限制为 transform-only 目标；对于 `opacity` 等不支持的目标必须显式失败，不能静默忽略。
@@ -288,11 +289,11 @@ entityProps.scale 更新为终态 scale
 3. `stop`。
 4. `reset`。
 5. `finish`。
-6. `api.set`(以及它的 updater 形式)。
+6. native 接受的 `api.set(values)` 写入。
 
 ### 7. api.set
 
-`api.set` 是 `entityProps` 所镜像的、已提交(committed)Entity transform 状态的命令式写入入口。它的目的是让用户在动画结束后接管 transform,而不必自己再维护一份 `useState`:这份 committed 状态的权威在 native,`entityProps` 是它的 confirmed mirror(SDK 必须暴露它,才能通过 `entityProps` 回写终态),因此用户不应被迫再镜像一遍。SDK 不额外维护本地 committed cache。
+`api.set` 是 `entityProps` 所镜像的、已提交(committed)Entity transform 状态的命令式写入入口。它的目的是让用户在动画结束后接管 transform。这份 committed 状态的权威在 native,`entityProps` 是它的 confirmed mirror(SDK 必须暴露它,才能通过 `entityProps` 回写终态)。`api.set` 只负责写入;读取当前 confirmed 状态通过 `entityProps` 完成。SDK 不额外维护本地 committed cache。
 
 #### 7.1 两个数据源与合成器(compositor)
 
@@ -314,16 +315,18 @@ Entity transform 由两个数据源合成:
 
 ```text
 api.set(values: EntityMotionProps): void
-api.set(updater: (prev: EntityMotionProps) => EntityMotionProps): void
 ```
+
+`api.set` 只接受 `EntityMotionProps` patch object,不支持 `(prev) => next` updater 形式。
 
 #### 7.3 行为
 
 1. 写入目标:`api.set` 下发 `ControlSpatializedElementAnimation(type: 'set')` 到 native;native 是唯一权威,由它决定该写入是否生效。native 接受后回传 confirmed values,`entityProps` 作为该 confirmed 状态的响应式镜像随之更新;native 拒绝时 `entityProps` 不更新。SDK 不写本地 committed cache。
-2. 稀疏合并(sparse merge):在 JS/Core 侧完成。以最近 confirmed 的 `entityProps` 为基线,只覆盖传入的字段、未传入字段沿用基线值,合并成完整值后整份下发 native。`api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
-3. Updater 形式:`prev` 是最近一次 native confirmed 的 `entityProps` 镜像值(Source A),可能滞后于 native 实时 transform。基于当前值做偏移就通过这个 updater 表达。不提供裸 `api.get`。
-4. 活跃动画期间调用不会抛错,但该写入不会在动画结束后存留。它不打断也不覆盖活动动画;并且与 8.2 节 React prop 写入行为一致——它不会被排队等待 replay:动画到达终态时,终态填充(见 7.4)会把终态值写入 committed 状态,覆盖动画期间写入的任何值。若要接管 transform,应在动画非活跃(idle / terminal)后再调用 `api.set`。
-5. 不是 playback 命令:`api.set` 不 seek、不 start、不改变播放进度。
+2. 稀疏合并(sparse merge):`api.set(values)` 可以只传部分字段。JS/Core 不用 `entityProps` 合并完整值,而是把 patch 下发 native;native 以当前 committed `entity.transform` 为基线,只覆盖 patch 中提供的字段。`api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
+3. 不支持 updater 形式:不提供 `api.set(prev => next)`。需要基于当前 confirmed 值计算 patch 的应用代码应读取 `entityProps`,自行计算后调用 `api.set(values)`。
+4. 活跃动画期间调用不会暂存。它不打断也不覆盖活动动画,不会被排队等待 replay;native 应拒绝或忽略该写入,并通过既有 command failure / error event 机制暴露。`entityProps` 不更新。若要接管 transform,应在动画非活跃(idle / terminal)后再调用 `api.set`。
+5. 未绑定或 native object 尚未创建时,`api.set` 无效;它不创建 pending write,也不在绑定完成后 replay。失败通过既有 command failure / error event 机制暴露。
+6. 不是 playback 命令:`api.set` 不 seek、不 start、不改变播放进度。
 
 #### 7.4 与 `play` 和终态填充(terminal fill)的关系
 
@@ -334,8 +337,8 @@ api.set(updater: (prev: EntityMotionProps) => EntityMotionProps): void
 
 有意不提供 `api.get`,因为 React 中的命令式 getter 容易读到 stale 值,并诱发读-写竞态。
 
-- 读-改-写:使用 updater 形式 `api.set(prev => ...)`。
-- 声明式读取当前值:读 `entityProps`,它是 committed 状态的响应式镜像。
+- 读取当前 confirmed 值:读 `entityProps`,它是 committed 状态的响应式镜像。
+- 读-改-写:应用代码基于 `entityProps` 计算新的 patch,再调用 `api.set(values)`。
 
 ### 8. 与 React props 的冲突语义
 

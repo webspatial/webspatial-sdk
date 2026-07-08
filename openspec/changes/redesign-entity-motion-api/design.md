@@ -85,7 +85,7 @@ A mixed variant (some shapes via RealityKit, some via sampler) is also rejected:
 │   useEntityAnimation(config): [animation, api, entityProps]            │
 │     - creates EntityMotionBinding / playback api                      │
 │     - exposes entityProps (mirror of native confirmed transform)       │
-│     - api.set(value | updater) sends to native, no local cache write   │
+│     - api.set(values patch) sends to native, no local cache write      │
 │   useBindMotionTarget({ binding, target })                            │
 │     - xr-animation (recommended) + animation (compatible)              │
 └───────────────┬───────────────────────────────────────────────────────┘
@@ -162,10 +162,10 @@ ControlSpatializedElementAnimation {
 }
 ```
 
-`api.set` does not add a JSB command. It sends `type: 'set'` to native:
+`api.set` does not add a JSB command. It only accepts an `EntityMotionProps` patch object and does not support the `(prev) => next` updater form. It sends `type: 'set'` to native:
 
 - native rejects: command failure or error event, `entityProps` does not update.
-- native accepts: native applies / composes the transform, then emits confirmed values through `spatialanimationstatechanged`; React updates `entityProps`.
+- native accepts: native merges the patch over the current committed `entity.transform`, applies the transform, then emits confirmed values through `spatialanimationstatechanged`; React updates `entityProps`.
 
 ### spatialanimationstatechanged
 
@@ -248,15 +248,15 @@ sequenceDiagram
     participant Obj as AnimationObject
     participant Native as RealityKit Entity Adapter
 
-    App->>Hook: api.set(values or updater)
-    Hook->>Hook: updater computes next values from latest confirmed entityProps
-    Hook->>Obj: set(nextValues)
+    App->>Hook: api.set(values patch)
+    Hook->>Obj: set(values patch)
     Obj->>Native: ControlSpatializedElementAnimation(type=set, values)
     alt native rejects
         Native-->>Obj: command failure or error event
         Obj-->>Hook: onError
         Hook-->>App: entityProps unchanged
     else native accepts
+        Native->>Native: merge patch over current committed transform
         Native->>Native: apply accepted transform
         Native-->>Obj: spatialanimationstatechanged(values)
         Obj-->>Hook: confirmed EntityMotionProps
@@ -264,7 +264,7 @@ sequenceDiagram
     end
 ```
 
-`api.set` is not a playback command: it does not seek, start, or change playback progress. It also does not write local pending state; native is the only layer that decides whether the write takes effect.
+`api.set` is not a playback command: it does not seek, start, or change playback progress. It also does not write local pending state; native is the only layer that decides whether the write takes effect. Native does not stash set patches during active animation, and set before binding or before native object creation is invalid; those failures are exposed through the existing command failure / error event path and do not update `entityProps`.
 
 ## Entity Tracks and RealityKit Compilation
 
@@ -452,7 +452,7 @@ Decomposition rules:
 - `position` comes from native transform translation.
 - `scale` comes from native transform scale.
 - `rotation` uses Euler degrees, consistent with Entity props / config.
-- callback values, `entityProps`, and `api.set` updater `prev` all use this same shape.
+- callback values, `entityProps`, and `api.set(values)` patches all use this same shape.
 
 ## Capability
 
@@ -508,7 +508,7 @@ classDiagram
             +stop()
             +reset()
             +finish()
-            +set(values_or_updater)
+            +set(values)
         }
         class useBindMotionTarget {
             +binding
@@ -562,7 +562,7 @@ classDiagram
 - **Historical naming confusion.** Reusing `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` keeps "element" in the command names. Documentation must make clear that target-state semantics generalize them into the motion animation object protocol.
 - **Timeline compiler is the main new cost.** Multi-keyframes, sparse keyframes, rotation conversion, and segment synthesis are concentrated in the native Entity adapter.
 - **Whole-transform ownership.** Entity transform is ultimately a native Transform; v1 does not implement field-level ownership composition.
-- **Updater uses the latest confirmed mirror.** Because native is the single authority, `api.set(prev => next)` can only use the latest native-confirmed `entityProps`, not a real-time native sample.
+- **No updater form.** Because native is the single authority, `api.set(prev => next)` would imply React `setState` semantics, but `prev` cannot be promised as a real-time native transform. v1 only supports patch objects; reads of the current confirmed state go through `entityProps`.
 - **Large concurrent animations still need profiling.** RealityKit native playback is better than JS per-frame writes, but scale should still be measured.
 
 ## Decisions
