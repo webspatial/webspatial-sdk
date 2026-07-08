@@ -244,7 +244,7 @@ sequenceDiagram
     participant Event as spatialanimationstatechanged
     participant Native as RealityKit Entity Adapter
 
-    Native->>Native: RealityKit 状态变化<br/>complete / stop / reset / finish / set accepted
+    Native->>Native: RealityKit 状态变化<br/>start / complete / stop / reset / finish / set accepted
     Native->>Native: 读取 authoritative entity.transform
     Native->>Native: 拆解为 position / rotation / scale
     Native->>Event: emit(values)

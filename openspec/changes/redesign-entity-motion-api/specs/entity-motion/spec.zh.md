@@ -153,8 +153,8 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 
 #### Scenario: updater 形式读取当前已提交值
 - **WHEN** 应用以 updater 函数形式调用 `api.set`
-- **THEN** `prev` MUST 是当前已提交值（Source A）
-- **AND** 读-改-写 MUST 原子完成，不暴露裸 getter
+- **THEN** `prev` MUST 是最近 native confirmed 的 `entityProps` 镜像值（Source A），MAY 滞后于 native 实时 transform
+- **AND** 读-改-写 MUST 通过 updater 表达，不暴露裸 getter
 
 #### Scenario: 活跃动画期间调用 set 不抛错，且不在终态填充后存留
 - **GIVEN** 一个 Entity 动画处于 `delay`、`running` 或 `paused`

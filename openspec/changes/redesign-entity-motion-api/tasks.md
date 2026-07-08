@@ -23,7 +23,7 @@
 - [ ] 4.1 Add failing tests for `entityProps` lifecycle updates at start, complete, stop, reset, finish, and each `api.set` call (value and updater forms)
 - [ ] 4.2 Implement committed transform persistence through `entityProps` without per-frame React updates
 - [ ] 4.3 Add failing tests for active transform ownership so animated props ignore competing React transform writes during alive playback states
-- [ ] 4.4 Implement committed-state ownership rules: `api.set` sparse merge, updater `prev` = current committed value, calling `api.set` during an active animation writes Source A without throwing or overriding, start point after set-then-play is `from` when declared else current committed value, and terminal fill writes the terminal transform back to `entityProps` (fill-forwards, no snap-back)
+- [ ] 4.4 Implement committed-state ownership rules: `api.set` sparse merge, updater `prev` = latest native-confirmed `entityProps` mirror value, calling `api.set` during an active animation writes Source A without throwing or overriding, start point after set-then-play is `from` when declared else current committed value, and terminal fill writes the terminal transform back to `entityProps` (fill-forwards, no snap-back)
 - [ ] 4.5 Add failing tests proving lifecycle callbacks are notifications: `onComplete` return values are ignored and cannot drive the terminal transform
 
 ## 5. Capability and Validation

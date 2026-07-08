@@ -67,8 +67,8 @@ const [animation, api, entityProps] = useEntityAnimation({
       scale: { x: 1, y: 1, z: 1 },
     },
   },
-  onStart: () => {
-    console.log('Entity animation started')
+  onStart: values => {
+    console.log('Entity animation started', values)
   },
   onComplete: values => {
     console.log('Entity animation completed', values)
@@ -342,7 +342,7 @@ api.set(updater: (prev: EntityMotionProps) => EntityMotionProps): void
 
 1. 写入目标:`api.set` 更新 SDK 持有的 committed transform 状态,该状态更新 `entityProps`,再通过 `<BoxEntity {...entityProps} />` 回写到 native Entity。`entityProps` 是该状态的响应式镜像。
 2. 稀疏合并(sparse merge):只覆盖传入的字段;未传入的字段保持之前的 committed 值。`api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
-3. Updater 形式:`prev` 是当前 committed 值(Source A)。读-改-写在 SDK 内部原子完成,这就是基于当前值做偏移的表达方式。不提供裸 `api.get`。
+3. Updater 形式:`prev` 是最近一次 native confirmed 的 `entityProps` 镜像值(Source A),可能滞后于 native 实时 transform。基于当前值做偏移就通过这个 updater 表达。不提供裸 `api.get`。
 4. 活跃动画期间调用不会抛错,但该写入不会在动画结束后存留。它不打断也不覆盖活动动画;并且与 8.2 节 React prop 写入行为一致——它不会被排队等待 replay:动画到达终态时,终态填充(见 7.4)会把终态值写入 committed 状态,覆盖动画期间写入的任何值。若要接管 transform,应在动画非活跃(idle / terminal)后再调用 `api.set`。
 5. 不是 playback 命令:`api.set` 不 seek、不 start、不改变播放进度。
 
