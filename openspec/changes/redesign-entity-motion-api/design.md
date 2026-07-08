@@ -176,11 +176,11 @@ Control continues to use the existing command type and adds `set`:
 ControlSpatializedElementAnimation {
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
-  values?: EntityMotionProps
+  values?: EntityMotionPatch
 }
 ```
 
-`api.set` does not add a JSB command. It only accepts an `EntityMotionProps` patch object and does not support the `(prev) => next` updater form. It sends `type: 'set'` to native:
+`api.set` does not add a JSB command. It only accepts an `EntityMotionPatch` object (the write-side patch type, same shape as the read-side `EntityMotionProps`) and does not support the `(prev) => next` updater form. It sends `type: 'set'` to native:
 
 - native rejects: command failure or error event, `entityProps` does not update.
 - native accepts: native merges the patch over the current committed `entity.transform`, applies the transform, then emits confirmed values through `spatialanimationstatechanged`; React updates `entityProps`.
@@ -204,6 +204,28 @@ detail: {
 
 - spatialized target: `SpatializedVisualValues`
 - Entity target: `EntityMotionProps` (`position` / `rotation` / `scale`)
+
+### Determining the `values` shape and discarding stale events
+
+Consumers MUST NOT rely on a new event field to decide whether `values` is `SpatializedVisualValues` or `EntityMotionProps`. The event carries `animationId`; the receiver reverse-looks-up the local animation object created for that `animationId` and uses that object's known target type to interpret `values`. If `animationId` matches no live local animation object (unknown or stale, e.g. after `destroy`), the event MUST be discarded without dispatch and MUST NOT update `entityProps`.
+
+### `SpatializedPlaybackError`
+
+`error` is present when `action` is `'failed'`. `SpatializedPlaybackError.code` is a closed classification set shared by both targets:
+
+```text
+type SpatializedPlaybackError = {
+  code:
+    | 'TARGET_NOT_FOUND'           // elementId not in the spatial object registry
+    | 'UNSUPPORTED_TARGET'         // resolved object is neither SpatializedElement nor SpatialEntity
+    | 'TARGET_DESTROYED'           // the spatial object was destroyed; the animation is invalid
+    | 'SET_REJECTED_DURING_ACTIVE' // api.set arrived while the animation was active (delay / running / paused)
+    | 'SET_BEFORE_READY'           // api.set arrived before binding / native object creation
+  message?: string
+}
+```
+
+All of these reach the user through the `onError` callback. The `code` MUST be distinguishable so application code can branch on the failure kind rather than parsing `message`.
 
 ## Data Flow
 
@@ -282,7 +304,7 @@ sequenceDiagram
     end
 ```
 
-`api.set` is not a playback command: it does not seek, start, or change playback progress. It also does not write local pending state; native is the only layer that decides whether the write takes effect. Native does not stash set patches during active animation, and set before binding or before native object creation is invalid; those failures are exposed through the existing command failure / error event path and do not update `entityProps`.
+`api.set` is not a playback command: it does not seek, start, or change playback progress. It also does not write local pending state; native is the only layer that decides whether the write takes effect. Native does not stash set patches during active animation, and set before binding or before native object creation is invalid; those failures are exposed through the existing command failure / error event path and do not update `entityProps`. `create` / bind does not emit an extra initial confirmed value, so `entityProps` may be empty until the first lifecycle commit (a play terminal or an accepted set) and is not promised readable at mount.
 
 ## Entity Tracks and RealityKit Compilation
 
@@ -417,7 +439,7 @@ flowchart TB
 4. **Timeline and keyframe intervals:** Each channel forms intervals from its own keyframe times and does not share global segment boundaries with other channels. For example, a channel's `0, 0.6, 1.2` only affects that channel's own `[0, 0.6]` and `[0.6, 1.2]` intervals.
 5. **Missing-keyframe baseline and non-animated components:** Each channel is compiled independently. If a channel has no explicit keyframe at time `0`, use that channel's native current transform value at playback start as the baseline; if it is later than the channel's last keyframe, hold the last keyframe value. Channels do not share boundaries and do not interpolate against each other. **Component granularity distinguishes two kinds of absence:** (a) *non-animated scalars within an animated component* — e.g. animating only `position.y` freezes `position.x` / `position.z` to baseline because the RealityKit translation sub-target is bound as a whole; (b) *entirely absent components* — e.g. if the config has no `scale.*`, no animation is generated for the scale sub-target, scale is not owned by the animation, and it is driven by React props during the animation.
 6. **Per-channel parallelism:** Each channel is compiled into its own RealityKit animation, played in parallel through an `AnimationGroup` and bound to the corresponding sub-target (translation / orientation / scale). Native does not merge multiple channels into a segment that shares timing, so that per-channel timing functions are not lost.
-7. **Rotation:** `rotation.*` inputs use Entity API Euler degrees. Native converts them to the rotation representation required by RealityKit during compilation, avoiding per-frame Euler interpolation.
+7. **Rotation:** `rotation.*` inputs use Entity API Euler degrees. Native converts them to the rotation representation required by RealityKit during compilation, avoiding per-frame Euler interpolation. Because RealityKit interpolates orientation as a shortest-path quaternion slerp, a rotation channel whose keyframe delta is ≥180° or spans multiple axes may follow a path that differs from per-axis Euler intuition; author intermediate keyframes when a specific multi-turn or multi-axis path is required.
 8. **Scale:** `scale.*` MUST be non-negative. Invalid scale fails immediately.
 9. **Timing function (per-channel):** keyframe-level `timingFunction` takes precedence over track-level, which takes precedence over the timeline default. The resolved per-keyframe timing stays on each channel's keyframes and is carried by that channel's own RealityKit animation, not merged with other channels. Therefore different channels using different timing functions within the same time span is natively supported; segment merging is no longer needed, and there is no case that cannot be expressed and has to degrade. RealityKit built-in timing (linear / easeIn / easeOut / easeInOut) maps directly; a custom cubic-bezier with no matching built-in curve bakes that channel into a `SampledAnimation`.
 10. **Loop / playbackRate / delay:** These playback parameters remain at the top level of `EntityChannelAnimationPlan`, apply uniformly to the whole `AnimationGroup`, and are executed by the RealityKit playback/controller layer.
@@ -477,7 +499,7 @@ Decomposition rules:
 - `position` comes from native transform translation.
 - `scale` comes from native transform scale.
 - `rotation` uses Euler degrees, consistent with Entity props / config.
-- callback values, `entityProps`, and `api.set(values)` patches all use this same shape.
+- callback values and `entityProps` use this `EntityMotionProps` shape; `api.set(values)` takes the same-shaped `EntityMotionPatch`, named distinctly to separate the write side from the read side.
 
 ## Capability
 

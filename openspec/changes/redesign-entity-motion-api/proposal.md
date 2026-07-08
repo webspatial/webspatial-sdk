@@ -318,10 +318,10 @@ This is the same model as CSS: an animation overrides computed style per propert
 #### 7.2 Signature
 
 ```text
-api.set(values: EntityMotionProps): void
+api.set(values: EntityMotionPatch): void
 ```
 
-`api.set` only accepts an `EntityMotionProps` patch object. The `(prev) => next` updater form is not supported.
+`api.set` only accepts an `EntityMotionPatch` object. `EntityMotionPatch` is the write-side sparse patch type; it has the same `{ position?, rotation?, scale? }` shape as `EntityMotionProps`, but the two names are kept distinct on purpose: `EntityMotionPatch` is the input to `api.set`, while `EntityMotionProps` is the read-side confirmed mirror exposed through `entityProps` and callback values. The `(prev) => next` updater form is not supported.
 
 #### 7.3 Behavior
 
@@ -343,6 +343,7 @@ api.set(values: EntityMotionProps): void
 
 - Read the current confirmed value through `entityProps`, which is the reactive mirror of the committed state.
 - For read-modify-write, application code computes a new patch from `entityProps` and then calls `api.set(values)`.
+- `entityProps` MAY be empty before the first native-confirmed state and is not promised readable at mount: `create` / `bind` does NOT emit an extra initial confirmed value. To read the native pose, application code must first trigger a lifecycle that commits a confirmed value (a `play` terminal, or an accepted `api.set`).
 
 ### 8. Conflict Semantics with React Props
 

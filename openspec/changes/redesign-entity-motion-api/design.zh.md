@@ -176,11 +176,11 @@ otherwise                           -> failure
 ControlSpatializedElementAnimation {
   animationId: string
   type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
-  values?: EntityMotionProps
+  values?: EntityMotionPatch
 }
 ```
 
-`api.set` 不新增 JSB。它只接受 `EntityMotionProps` patch object,不支持 `(prev) => next` updater 形式。它发送 `type: 'set'` 到 native:
+`api.set` 不新增 JSB。它只接受 `EntityMotionPatch` object(写入侧 patch 类型，与读取侧 `EntityMotionProps` 同形态),不支持 `(prev) => next` updater 形式。它发送 `type: 'set'` 到 native:
 
 - native 拒绝:命令失败或 error event,`entityProps` 不更新。
 - native 接受:native 基于当前 committed `entity.transform` 合并 patch、应用 transform 后,通过 `spatialanimationstatechanged` 回传 confirmed values,React 再更新 `entityProps`。
@@ -204,6 +204,28 @@ detail: {
 
 - spatialized target: `SpatializedVisualValues`
 - Entity target: `EntityMotionProps`(`position` / `rotation` / `scale`)
+
+### `values` 判型与丢弃过期事件
+
+消费方 MUST NOT 依赖事件上的新字段来判断 `values` 是 `SpatializedVisualValues` 还是 `EntityMotionProps`。事件携带 `animationId`;接收方以 `animationId` 反查本地为该 id 创建的 animation object,用该对象已知的 target 类型来解释 `values`。若 `animationId` 匹配不到任何存活的本地 animation object(未知或过期,例如 `destroy` 之后),该事件 MUST 被丢弃、不分发,且 MUST NOT 更新 `entityProps`。
+
+### `SpatializedPlaybackError`
+
+`action` 为 `'failed'` 时携带 `error`。`SpatializedPlaybackError.code` 是两类 target 共享的封闭分类集合:
+
+```text
+type SpatializedPlaybackError = {
+  code:
+    | 'TARGET_NOT_FOUND'           // elementId 不在 spatial object registry 中
+    | 'UNSUPPORTED_TARGET'         // 解析到的对象既不是 SpatializedElement 也不是 SpatialEntity
+    | 'TARGET_DESTROYED'           // spatial object 已销毁,动画失效
+    | 'SET_REJECTED_DURING_ACTIVE' // 活跃动画(delay / running / paused)期间到达的 api.set
+    | 'SET_BEFORE_READY'           // 绑定 / native object 创建之前到达的 api.set
+  message?: string
+}
+```
+
+以上都会通过 `onError` 回调抵达用户。`code` MUST 可区分,以便应用代码按失败类型分支,而不是解析 `message`。
 
 ## 数据流
 
@@ -282,7 +304,7 @@ sequenceDiagram
     end
 ```
 
-`api.set` 不是 playback 命令,不 seek、不 start、不改变播放进度。它也不写本地 pending state;native 是唯一决定该写入是否生效的地方。活跃动画期间 native 不暂存 set patch,未绑定或 native object 尚未创建前的 set 也无效;这些失败通过既有 command failure / error event 暴露,且不会更新 `entityProps`。
+`api.set` 不是 playback 命令,不 seek、不 start、不改变播放进度。它也不写本地 pending state;native 是唯一决定该写入是否生效的地方。活跃动画期间 native 不暂存 set patch,未绑定或 native object 尚未创建前的 set 也无效;这些失败通过既有 command failure / error event 暴露,且不会更新 `entityProps`。`create` / bind 不会额外 emit 初始 confirmed value,因此首个 lifecycle 提交(一次 play 终态或被接受的 set)之前 `entityProps` 可能为空,也不承诺 mount 时即可读。
 
 ## Entity tracks 与 RealityKit 编译
 
@@ -417,7 +439,7 @@ flowchart TB
 4. **时间轴与 keyframe 区间:** 每个 channel 按自己的 keyframe times 形成区间,不与其它 channel 共享全局 segment 边界。例如某 channel 的 `0, 0.6, 1.2` 只影响该 channel 自己的 `[0, 0.6]` 与 `[0.6, 1.2]` 两个区间。
 5. **缺帧 baseline 与非动画分量:** 每个 channel 独立编译。若某 channel 在 `0` 时刻没有显式 keyframe,使用播放起点该 channel 的 native current transform 值作为 baseline;若晚于该 channel 最后一个 keyframe,保持最后一个 keyframe 值。channel 之间不共享边界,也不互相插值。**分量粒度区分两种缺帧:**(a)*被动画分量内的非动画标量*——例如只动画 `position.y`,则 `position.x` / `position.z` 因 RealityKit translation sub-target 被整体绑定而以 baseline 冻结;(b)*完全未出现的分量*——例如 config 没有任何 `scale.*`,则不为 scale sub-target 生成 animation,scale 不被动画持有,动画期间仍由 React props 驱动。
 6. **Per-channel 并行:** 每个 channel 编译为独立的 RealityKit animation,通过 `AnimationGroup` 并行播放并绑定到对应 sub-target(translation / orientation / scale)。Native 不把多个 channel 合并成共享 timing 的 segment,以保证 per-channel timing function 不丢失。
-7. **Rotation:** `rotation.*` 输入单位是 Entity API 的 Euler degrees。Native 编译时转换为 RealityKit transform 所需的旋转表示,避免用 Euler 做逐帧插值。
+7. **Rotation:** `rotation.*` 输入单位是 Entity API 的 Euler degrees。Native 编译时转换为 RealityKit transform 所需的旋转表示,避免用 Euler 做逐帧插值。由于 RealityKit 以最短路径四元数 slerp 插值 orientation,某个 rotation channel 若关键帧增量 ≥180° 或跨多轴,其路径可能与逐轴 Euler 直觉不同;需要特定的多圈或多轴路径时,应显式补充中间关键帧。
 8. **Scale:** `scale.*` 必须为非负数。非法 scale 直接失败。
 9. **Timing function(per-channel):** keyframe 级 `timingFunction` 优先于 track 级,track 级优先于 timeline 默认值。解析后的 per-keyframe timing 保留在各 channel 的 keyframe 上,由该 channel 自己的 RealityKit animation 携带,不与其它 channel 合并。因此同一时间段内不同 channel 使用不同 timing function 是原生支持的,不再需要 segment 合并,也不会出现无法表达而降级的情况。对于 RealityKit 内建 timing(linear / easeIn / easeOut / easeInOut)直接映射;自定义 cubic-bezier 若无对应内建曲线,则将该 channel bake 成 `SampledAnimation`。
 10. **Loop / playbackRate / delay:** 这些 playback 参数保留在 `EntityChannelAnimationPlan` 顶层,对整个 `AnimationGroup` 统一生效,由 RealityKit playback/controller 层执行。
@@ -477,7 +499,7 @@ type EntityMotionProps = {
 - `position` 来自 native transform translation。
 - `scale` 来自 native transform scale。
 - `rotation` 使用 Entity props / config 一致的 Euler degrees。
-- callback values、`entityProps`、`api.set(values)` patch 都使用同一 shape。
+- callback values 和 `entityProps` 使用这个 `EntityMotionProps` shape；`api.set(values)` 接受同形态的 `EntityMotionPatch`，命名区分写入侧与读取侧。
 
 ## Capability
 

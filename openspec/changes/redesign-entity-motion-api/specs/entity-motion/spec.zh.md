@@ -150,11 +150,11 @@ Entity motion 的生命周期 callback MUST 只是通知。它们的返回值 MU
 
 ### Requirement: `api.set` 是已提交 transform 状态的命令式写入入口
 
-SDK MUST 提供 `api.set` 作为 `entityProps` 所镜像的已提交 Entity transform 状态的命令式写入入口。`api.set` MUST 只接受一个稀疏的 `EntityMotionProps` patch object，MUST NOT 支持 updater 函数 `(prev) => next`。`api.set` MUST NOT 是 playback 命令，MUST NOT seek、start 或改变播放进度。
+SDK MUST 提供 `api.set` 作为 `entityProps` 所镜像的已提交 Entity transform 状态的命令式写入入口。`api.set` MUST 只接受一个稀疏的 `EntityMotionPatch` object(写入侧 patch 类型；与读取侧 `EntityMotionProps` 同为 `{ position?, rotation?, scale? }` 形态，但命名区分)，MUST NOT 支持 updater 函数 `(prev) => next`。`api.set` MUST NOT 是 playback 命令，MUST NOT seek、start 或改变播放进度。
 
 Entity transform 由两个数据源合成:Source A 是 static/base React props 加 `entityProps`(由 SDK 镜像的已提交状态;动态接管通过 `api.set` 写入),Source B 是 `xr-animation` 绑定(逐帧采样值)。仲裁 MUST 按 transform 分量(`position` / `rotation` / `scale`)独立进行:对于出现在 config 中的分量,动画活跃(`delay` / `running` / `paused`)时 Source B 权威,动画非活跃(`idle` / terminal)时 Source A 权威;未出现在 config 中的分量始终由 Source A 权威。`api.set` 始终写入 Source A。
 
-SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码 MUST 读取声明式的 `entityProps`，并在需要写入时自行计算 patch 后调用 `api.set(values)`。
+SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码 MUST 读取声明式的 `entityProps`，并在需要写入时自行计算 patch 后调用 `api.set(values)`。首个 native confirmed state 之前 `entityProps` MAY 为空，且 MUST NOT 承诺在 mount 时可读：创建或绑定动画 MUST NOT 额外 emit 一个初始 confirmed value。要读取有意义的 native 姿态，应用代码 MUST 先触发一次提交 confirmed value 的 lifecycle（一次到达终态 / lifecycle 节点的 `play`，或一次被接受的 `api.set`）。
 
 #### Scenario: set 更新已提交状态与 entityProps
 - **WHEN** 应用调用 `api.set(values)` 并传入 Entity transform 值
@@ -198,3 +198,17 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 - **WHEN** 动画到达 terminal 状态
 - **THEN** SDK MUST 填充到终态 transform 并回写到 `entityProps`
 - **AND** SDK MUST NOT 把 Entity snap 回动画前的值
+
+### Requirement: 播放错误可分类,事件可按 `animationId` 寻址
+
+SDK MUST 为 Entity motion 失败暴露一个封闭的 `SpatializedPlaybackError.code` 分类,至少覆盖 `TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、`TARGET_DESTROYED`、`SET_REJECTED_DURING_ACTIVE`、`SET_BEFORE_READY`。所有已分类失败 MUST 通过 `onError` 抵达用户。消费方 MUST 通过 `animationId` 反查本地 animation object 来判定 `values` 形态,而不是依赖事件上的任何 target 类型字段;对于 `animationId` 匹配不到任何存活本地 animation object 的事件,MUST 丢弃。
+
+#### Scenario: 错误码可区分
+- **WHEN** 某个 Entity motion 操作失败
+- **THEN** `onError` MUST 收到一个 `SpatializedPlaybackError`,其 `code` 标识失败类型
+- **AND** 应用代码 MUST 能够按 `code` 分支,而无需解析 `message`
+
+#### Scenario: 过期或未知 animationId 事件被丢弃
+- **WHEN** 一个 `spatialanimationstatechanged` 事件携带的 `animationId` 匹配不到任何存活的本地 animation object
+- **THEN** SDK MUST 丢弃该事件
+- **AND** `entityProps` MUST NOT 因此更新
