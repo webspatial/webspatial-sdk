@@ -9,7 +9,7 @@ This proposal supersedes `add-entity-transform-animation` as the target-state En
 ## What Changes
 
 - Add an enhancement proposal on top of the existing `useEntityAnimation`.
-- Define `useEntityAnimation` as an Entity adapter: `useAnimation config + Entity props outlet`.
+- Define `useEntityAnimation` as the Entity-specific surface over `useAnimation`: `useAnimation config + Entity props outlet`.
 - Keep public config aligned with Entity props hierarchy by continuing to use `position`, `rotation`, and `scale`.
 - Recommend `xr-animation` binding while keeping `animation` as a compatible binding.
 - Introduce `entityProps` as the React outlet for committed Entity transform values.
@@ -44,7 +44,7 @@ This design still differs from the newer `useAnimation` story:
 
 ### 2. Goals
 
-Redefine `useEntityAnimation` as an Entity adapter:
+Redefine `useEntityAnimation` as the Entity-specific surface over `useAnimation`:
 
 ```text
 useEntityAnimation = useAnimation config + Entity props outlet
@@ -205,7 +205,7 @@ const [animation, api, entityProps] = useEntityAnimation({
 
 #### 5.3 tracks
 
-`tracks` remains an internal non-public execution shape. Applications author Entity motion with `from` / `to` or percentage `timeline`; the SDK may normalize those public shapes into internal tracks before sending work to the native Entity adapter.
+`tracks` remains an internal non-public execution shape. Applications author Entity motion with `from` / `to` or percentage `timeline`; the SDK may normalize those public shapes into internal tracks before sending work to the native Entity motion subsystem.
 
 Entity targets only allow:
 

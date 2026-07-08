@@ -9,7 +9,7 @@
 ## 变更内容
 
 - 在现有 `useEntityAnimation` 基础上新增 Entity motion 增强提案。
-- 将 `useEntityAnimation` 定义为 Entity adapter：`useAnimation config + Entity props outlet`。
+- 将 `useEntityAnimation` 定义为 `useAnimation` 之上的 Entity 专用 surface：`useAnimation config + Entity props outlet`。
 - 保持公开 config 与 Entity props 层级一致，继续使用 `position`、`rotation`、`scale`。
 - 推荐通过 `xr-animation` 绑定，同时继续兼容 `animation` 绑定。
 - 引入 `entityProps`，作为 React 侧已提交 Entity transform 值的 outlet。
@@ -44,7 +44,7 @@ const [animation, api] = useEntityAnimation({
 
 ### 2. 目标
 
-将 `useEntityAnimation` 重定义为 Entity adapter：
+将 `useEntityAnimation` 重定义为 `useAnimation` 之上的 Entity 专用 surface：
 
 ```text
 useEntityAnimation = useAnimation config + Entity props outlet
@@ -205,7 +205,7 @@ const [animation, api, entityProps] = useEntityAnimation({
 
 #### 5.3 tracks
 
-`tracks` 保留为内部非公开执行形态。应用通过 `from` / `to` 或百分比 `timeline` author Entity motion；SDK 可以先把这些公开形态规范化为内部 tracks，再发送给 native Entity adapter。
+`tracks` 保留为内部非公开执行形态。应用通过 `from` / `to` 或百分比 `timeline` author Entity motion；SDK 可以先把这些公开形态规范化为内部 tracks，再发送给 native Entity motion 子系统。
 
 Entity target 只允许：
 
