@@ -98,7 +98,7 @@ flowchart TB
         Normalize["normalizeEntityMotionConfig(config)<br/>from/to + timeline + internal tracks"]
         Tracks["canonical tracks<br/>position.* / rotation.* / scale.*"]
         Validate["validateEntityMotionConfig()<br/>拒绝 opacity / 未知属性"]
-        CreateObject["AnimationObject.create({ targetId, timeline })"]
+        CreateObject["AnimationObject.create({ elementId, timeline })"]
         ControlObject["ControlSpatializedElementAnimation({ animationId, type, values? })"]
 
         Normalize --> Tracks
@@ -108,7 +108,7 @@ flowchart TB
     end
 
     subgraph Native["Native 层 (RealityKit backend)"]
-        Resolve["resolveTarget(targetId)<br/>via spatialObjects"]
+        Resolve["resolveSpatialObject(elementId)<br/>via spatialObjects"]
         ElementAdapter["SpatializedElement<br/>现有 element adapter"]
         EntityAdapter["SpatialEntity<br/>新 Entity adapter"]
         NativeValidate["validate canonical tracks<br/>兜底校验"]
@@ -133,7 +133,7 @@ flowchart TB
 **各层职责:**
 
 - **React** 负责 hook API、binding 生命周期、`entityProps` mirror、callback 分发和 rerender。React 不维护独立 transform cache。
-- **Core** 负责把公共编写形态(`from`/`to`、百分比 `timeline`)和内部 `tracks` 归一化为 canonical Entity tracks,并把 `AnimationObject` 从 `elementId` 泛化到 `targetId`。
+- **Core** 负责把公共编写形态(`from`/`to`、百分比 `timeline`)和内部 `tracks` 归一化为 canonical Entity tracks。`AnimationObject` 保留现有 wire 字段 `elementId`,其目标态含义是 spatial object id。
 - **Native** 负责 target resolution、兜底校验、RealityKit 编译与执行、命令接受/拒绝、最终 transform 拆解与事件回传。
 
 ## JSB 协议
@@ -148,22 +148,24 @@ flowchart TB
 
 ### CreateSpatializedElementAnimation
 
-命令名保留,语义从 element-only 泛化为 motion target create:
+命令名与 `elementId` 字段都保留以兼容现有链路。目标态里,`elementId` 是历史 wire 字段名,实际含义是 spatial object id;它可以指向 `SpatializedElement`,也可以指向 `SpatialEntity`。
 
 ```text
 CreateSpatializedElementAnimation {
-  targetId: string
+  elementId: string
   timeline: EntityMotionTimeline | SpatializedMotionTimeline
 }
 ```
 
-实现上可以先兼容读取旧字段名 `elementId`,但 design 语义以 `targetId` 为准。Native 通过 `targetId` 查 `spatialObjects`,再按运行时类型分发:
+Native 通过 `elementId` 查 `spatialObjects`,再按运行时类型分发:
 
 ```text
-target is SpatializedElement -> existing spatialized element adapter
-target is SpatialEntity      -> Entity motion adapter
-otherwise                    -> failure
+spatial object is SpatializedElement -> existing spatialized element adapter
+spatial object is SpatialEntity      -> Entity motion adapter
+otherwise                           -> failure
 ```
+
+如果 `elementId` 在 `spatialObjects` registry 中找不到,create MUST 显式失败,不能静默排队。若查到的 spatial object 类型不是 `SpatializedElement` 或 `SpatialEntity`,create MUST 以 unsupported animation target 失败。`ControlSpatializedElementAnimation` 不重复携带 `elementId`;它只通过 `animationId` 找已创建的 animation object。若目标 spatial object 已销毁,关联 animation MUST 被销毁或失效,后续 control MUST 失败并通过 command failure / error event 暴露,不能 silent no-op。
 
 ### ControlSpatializedElementAnimation
 
@@ -221,10 +223,10 @@ sequenceDiagram
     Hook->>Core: validateEntityMotionConfig(tracks)
     Core-->>Hook: transform-only config accepted
     App->>Hook: BoxEntity xr-animation / animation binding
-    Hook->>Obj: AnimationObject.create({ targetId, timeline })
-    Obj->>JSB: execute({ targetId, timeline })
+    Hook->>Obj: AnimationObject.create({ elementId, timeline })
+    Obj->>JSB: execute({ elementId, timeline })
     JSB->>Native: create animation
-    Native->>Native: resolveTarget(targetId) as SpatialEntity
+    Native->>Native: resolve elementId as SpatialEntity
     Native->>Native: compile tracks -> RealityKit transform animation
     Native-->>Obj: animationId
     App->>Hook: api.play()
@@ -493,14 +495,14 @@ supports('useAnimation')
 ### Core 层 (`packages/core`)
 
 1. 新增 Entity motion 类型、property whitelist、normalizer 和 validator。
-2. `AnimationObjectCreateOptions.elementId` 泛化为 `targetId`。
-3. `CreateSpatializedElementAnimationJSBCommand` payload 使用 `targetId` 语义。
+2. `AnimationObjectCreateOptions.elementId` 保持为 wire 字段,并文档化为 spatial object id 的历史字段名。
+3. `CreateSpatializedElementAnimationJSBCommand` payload 继续使用 `elementId`,并通过 spatial object registry 解析。
 4. `ControlSpatializedElementAnimationJSBCommand` 支持 `set` 和 optional `values`。
 5. `AnimationObject` 的 values 类型从 spatialized-only 扩展为 target-specific values。
 
 ### Native 层 (RealityKit)
 
-1. `onCreateSpatializedElementAnimation` 按 `targetId` 查找 target 并分发到 spatialized / Entity adapter。
+1. `onCreateSpatializedElementAnimation` 按 `elementId` 查找 spatial object,并按运行时类型分发到 spatialized / Entity adapter。
 2. Entity adapter 编译 canonical Entity tracks 到 RealityKit transform animation。
 3. `onControlSpatializedElementAnimation` 支持 Entity animation object 的 `play/pause/resume/stop/reset/finish/destroy/set`。
 4. 每个 accepted start / terminal / set 操作都回传 confirmed Entity values。
@@ -542,7 +544,7 @@ classDiagram
             +validateEntityMotionConfig(tracks)
         }
         class AnimationObject {
-            +targetId string
+            +elementId string
             +timeline MotionTimeline
             +play()
             +pause()
@@ -557,7 +559,7 @@ classDiagram
     }
     namespace NativeLayer {
         class TargetResolver {
-            +resolve(targetId)
+            +resolve(elementId)
         }
         class SpatializedElementMotionAdapter
         class EntityMotionAdapter {
@@ -572,7 +574,7 @@ classDiagram
     useEntityAnimation --> EntityMotionProps : returns entityProps
     useEntityAnimation --> EntityMotionNormalizer : normalize config
     EntityMotionBinding --> useBindMotionTarget : bind target
-    useBindMotionTarget --> AnimationObject : attach targetId
+    useBindMotionTarget --> AnimationObject : attach elementId
     EntityPlaybackApi --> AnimationObject : delegate commands
     AnimationObject --> CreateSpatializedElementAnimationJSBCommand
     AnimationObject --> ControlSpatializedElementAnimationJSBCommand
