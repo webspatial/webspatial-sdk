@@ -2,7 +2,7 @@
 
 `proposal.md` is the single source of truth for the public API surface, and `specs/` is the source of truth for normative behavior. This document only describes the **implementation architecture** required to deliver that target state; it does not restate the public API contract or the behavioral requirements.
 
-The redesign turns `useEntityAnimation` into an Entity adapter over the shared `useAnimation` motion family (`useEntityAnimation = useAnimation config + Entity props outlet`). It adds percentage `timeline`, the `entityProps` outlet, `api.set`, and the recommended `xr-animation` binding, while keeping `animation` as a compatible binding. This is a non-breaking enhancement.
+The redesign turns `useEntityAnimation` into the Entity-specific surface over the shared `useAnimation` motion family (`useEntityAnimation = useAnimation config + Entity props outlet`). It adds percentage `timeline`, the `entityProps` outlet, `api.set`, and the recommended `xr-animation` binding, while keeping `animation` as a compatible binding. This is a non-breaking enhancement.
 
 ## Design Principles
 
@@ -29,12 +29,12 @@ This means:
 
 ### Reuse the `useAnimation` architecture
 
-`useEntityAnimation` should reuse the `useAnimation` binding / target resolution / `AnimationObject` lifecycle / create-control-event chain as much as possible. Entity-specific behavior is limited to an adapter:
+`useEntityAnimation` should reuse the `useAnimation` binding / target resolution / `AnimationObject` lifecycle / create-control-event chain as much as possible. Entity-specific behavior is limited to the Entity-specific surface and native manager boundary:
 
 - authoring: `position` / `rotation` / `scale`
 - validation: transform-only, reject `opacity`
 - outlet: `entityProps`, not CSS `style`
-- target adapter: `SpatialEntity`
+- target type: `SpatialEntity`
 - native execution: RealityKit Entity backend
 
 ## Goals / Non-Goals
@@ -44,7 +44,7 @@ This means:
 - Specify the data flow from config -> canonical tracks -> native transform
 - Specify the write-back flow from native confirmed transform -> `entityProps` mirror
 - Specify reuse of the existing `CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand`, with no parallel Entity JSB commands
-- Specify how `AnimationObject` generalizes from element-only to target adapters
+- Specify how `AnimationObject` generalizes from element-only to target-aware motion objects
 
 **Non-Goals:**
 - Restating the public API definition that lives in `proposal.md`
@@ -110,16 +110,16 @@ flowchart TB
 
     subgraph Native["Native layer (RealityKit backend)"]
         Resolve["resolveSpatialObject(elementId)<br/>via spatialObjects"]
-        ElementAdapter["SpatializedElement<br/>existing element adapter"]
-        EntityAdapter["SpatialEntity<br/>new Entity adapter"]
+        ElementAdapter["SpatializedElement<br/>existing element manager"]
+        EntityManager["SpatialEntity<br/>new Entity manager"]
         NativeValidate["validate canonical tracks<br/>bottom guard"]
         Compile["tracks -> RealityKit transform animation"]
         Authority["native transform state<br/>single authority"]
         Event["spatialanimationstatechanged<br/>confirmed values"]
 
         Resolve --> ElementAdapter
-        Resolve --> EntityAdapter
-        EntityAdapter --> NativeValidate
+        Resolve --> EntityManager
+        EntityManager --> NativeValidate
         NativeValidate --> Compile
         Compile --> Authority
         Authority --> Event
@@ -161,8 +161,8 @@ CreateSpatializedElementAnimation {
 Native looks up `spatialObjects` by `elementId`, then dispatches by runtime type:
 
 ```text
-spatial object is SpatializedElement -> existing spatialized element adapter
-spatial object is SpatialEntity      -> Entity motion adapter
+spatial object is SpatializedElement -> existing spatialized element manager
+spatial object is SpatialEntity      -> EntityMotionManager
 otherwise                           -> failure
 ```
 
@@ -238,7 +238,7 @@ sequenceDiagram
     participant Core as Core normalizer / validator
     participant Obj as AnimationObject
     participant JSB as CreateSpatializedElementAnimationJSBCommand
-    participant Native as RealityKit Entity Adapter
+    participant Native as RealityKit Entity Manager
 
     App->>Hook: useEntityAnimation(config)
     Hook->>Core: normalizeEntityMotionConfig(config)
@@ -267,7 +267,7 @@ sequenceDiagram
     participant Hook as useEntityAnimation
     participant Obj as AnimationObject
     participant Event as spatialanimationstatechanged
-    participant Native as RealityKit Entity Adapter
+    participant Native as RealityKit Entity Manager
 
     Native->>Native: RealityKit state changes<br/>start / complete / stop / reset / finish / set accepted
     Native->>Native: read authoritative entity.transform
@@ -286,7 +286,7 @@ sequenceDiagram
     participant App
     participant Hook as useEntityAnimation
     participant Obj as AnimationObject
-    participant Native as RealityKit Entity Adapter
+    participant Native as RealityKit Entity Manager
 
     App->>Hook: api.set(values patch)
     Hook->>Obj: set(values patch)
@@ -308,7 +308,7 @@ sequenceDiagram
 
 ## Entity Tracks and RealityKit Compilation
 
-The Native Entity adapter only accepts the canonical Entity timeline payload normalized by JS/Core. This payload is an internal shape, not public hook config. Native does not parse percentage keys and does not desugar `from` / `to`; those are JS/Core normalizer responsibilities.
+The Native Entity motion manager only accepts the canonical Entity timeline payload normalized by JS/Core. This payload is an internal shape, not public hook config. Native does not parse percentage keys and does not desugar `from` / `to`; those are JS/Core normalizer responsibilities.
 
 ### Input
 
@@ -377,7 +377,7 @@ EntityMotionTimelinePayload
   -> spatialanimationstatechanged(values)
 ```
 
-`EntityChannelAnimationPlan` is an internal Native adapter execution plan, not a public JS/Core type. It is organized by **transform channel**: each channel carries its own keyframes and per-keyframe timing function, rather than merging all channels into segments that share a single boundary:
+`EntityChannelAnimationPlan` is an internal Native manager / compiler execution plan, not a public JS/Core type. It is organized by **transform channel**: each channel carries its own keyframes and per-keyframe timing function, rather than merging all channels into segments that share a single boundary:
 
 ```text
 type EntityChannelAnimationPlan = {
@@ -444,7 +444,7 @@ flowchart TB
 9. **Timing function (per-channel):** keyframe-level `timingFunction` takes precedence over track-level, which takes precedence over the timeline default. The resolved per-keyframe timing stays on each channel's keyframes and is carried by that channel's own RealityKit animation, not merged with other channels. Therefore different channels using different timing functions within the same time span is natively supported; segment merging is no longer needed, and there is no case that cannot be expressed and has to degrade. RealityKit built-in timing (linear / easeIn / easeOut / easeInOut) maps directly; a custom cubic-bezier with no matching built-in curve bakes that channel into a `SampledAnimation`.
 10. **Loop / playbackRate / delay:** These playback parameters remain at the top level of `EntityChannelAnimationPlan`, apply uniformly to the whole `AnimationGroup`, and are executed by the RealityKit playback/controller layer. A looping animation has no natural `complete` terminal, so `entityProps` is NOT updated at each loop boundary; it is only committed on `stop` / `finish` / native-accepted `api.set`.
 11. **Terminal fill:** `complete` / `finish` stop at terminal, `reset` stops at start, and `stop` freezes at the current native transform. These confirmed values are emitted back to React through events.
-12. **Explicit failure:** If RealityKit cannot express a channel plan (for example a timing that cannot be baked), the Native adapter MUST fail through command failure or error event. It must not silently ignore the limitation.
+12. **Explicit failure:** If RealityKit cannot express a channel plan (for example a timing that cannot be baked), the Native manager MUST fail through command failure or error event. It must not silently ignore the limitation.
 
 ### Example: Sparse Tracks to Per-Channel Plan
 
@@ -515,29 +515,21 @@ supports('useAnimation')
 
 ### React layer (`packages/react`)
 
-1. `useEntityAnimation` returns `[animation, api, entityProps]`.
-2. `api` exposes `play/pause/resume/stop/reset/finish` and `set`.
-3. `entityProps` reflects native-confirmed values only.
-4. `api.set` sends `ControlSpatializedElementAnimation(type: 'set')`; it does not write a local cache.
-5. Entity components support `xr-animation` binding and keep compatible `animation` binding.
-6. The binder generalizes to `useBindMotionTarget({ binding, target })` while preserving the single-binding single-target invariant.
-7. The legacy entity-transform-animation leftovers are deleted, including the JS-side suppression mechanism (`animation.__getSuppressedFields` and the suppression-release base-props re-sync path). The final transform is composed only through Source A (static/base props + `entityProps`) and Source B (`xr-animation`) per-component arbitration; after a terminal state, `entityProps` overrides stale base props (fill-forwards, no snap-back). Deleting this path is what makes the old snap-back conflict structurally impossible.
+- **Reuse / mostly reuse:** Keep `useEntityAnimation` as the public Entity motion hook name, keep the existing Entity `animation` compatible binding entry, and reuse the Entity props hierarchy for `position` / `rotation` / `scale`.
+- **Generalize / replace:** Change `useEntityAnimation` from the old `[AnimatedProps, AnimationApi]` shape to `[animation, api, entityProps]`; `api` exposes `play/pause/resume/stop/reset/finish` and `set`; `api.set` sends `ControlSpatializedElementAnimation(type: 'set')` and does not write a local cache. The legacy entity-transform-animation leftovers are deleted, including the JS-side suppression mechanism (`animation.__getSuppressedFields` and the suppression-release base-props re-sync path). The final transform is composed only through Source A (static/base props + `entityProps`) and Source B (`xr-animation`) per-component arbitration; after a terminal state, `entityProps` overrides stale base props (fill-forwards, no snap-back). Deleting this path is what makes the old snap-back conflict structurally impossible.
+- **Add:** Add `EntityMotionBinding`, `EntityPlaybackApi.set(values)`, and the `EntityMotionProps` mirror outlet. Entity components support the recommended `xr-animation` binding and keep the compatible `animation` binding; the binder adds or generalizes to `useBindMotionTarget({ binding, target })` while preserving the single-binding single-target invariant.
 
 ### Core layer (`packages/core`)
 
-1. Add Entity motion types, property whitelist, normalizer, and validator.
-2. Keep `AnimationObjectCreateOptions.elementId` as the wire field and document it as a historical name for spatial object id.
-3. `CreateSpatializedElementAnimationJSBCommand` payload continues to use `elementId` and resolves it through the spatial object registry.
-4. `ControlSpatializedElementAnimationJSBCommand` supports `set` and optional `values`.
-5. `AnimationObject` values widen from spatialized-only to target-specific values.
+- **Reuse / mostly reuse:** Reuse the `AnimationObject` lifecycle model, the `CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand` command classes, and the `spatialanimationstatechanged` event channel.
+- **Generalize / replace:** Widen `AnimationObject` from spatialized-only to target-specific timeline / values; keep `AnimationObjectCreateOptions.elementId` as the wire field and document it as the historical name for spatial object id; `CreateSpatializedElementAnimationJSBCommand` payload continues to use `elementId` and resolves it through the spatial object registry; `ControlSpatializedElementAnimationJSBCommand` supports `set` and optional `values`.
+- **Add:** Add Entity motion types, `EntityMotionPatch`, property whitelist, `normalizeEntityMotionConfig`, `validateEntityMotionConfig`, and the canonical `EntityMotionTimelinePayload` / tracks shape. Public authoring still exposes only `from` / `to` and percentage `timeline`; `tracks` remains an internal execution shape.
 
 ### Native layer (RealityKit)
 
-1. `onCreateSpatializedElementAnimation` looks up the spatial object by `elementId` and dispatches to spatialized / Entity adapter by runtime type.
-2. Entity adapter compiles canonical Entity tracks to RealityKit transform animation.
-3. `onControlSpatializedElementAnimation` supports Entity animation object `play/pause/resume/stop/reset/finish/destroy/set`.
-4. Every accepted start / terminal / set operation emits confirmed Entity values.
-5. Delete the old `AnimateTransform` Entity-specific path outright (not merely stop using it), including the legacy entity-transform-animation leftovers on the JS side: the suppression mechanism `animation.__getSuppressedFields` and the suppression-release base-props re-sync path. Do not leave a second native execution path.
+- **Reuse / mostly reuse:** Reuse the `spatialObjects` registry, the existing spatialized element motion manager path, the RealityKit execution environment, and the existing create / control / event cross-boundary protocol.
+- **Generalize / replace:** `onCreateSpatializedElementAnimation` looks up the spatial object by `elementId` and changes from accepting only `SpatializedElement` to dispatching by runtime type to the spatialized element manager or Entity motion manager; `onControlSpatializedElementAnimation` supports Entity animation object `play/pause/resume/stop/reset/finish/destroy/set`; every accepted start / terminal / set operation emits confirmed Entity values. Delete the old `AnimateTransform` Entity-specific path outright (not merely stop using it), including the legacy entity-transform-animation leftovers on the JS side: the suppression mechanism `animation.__getSuppressedFields` and the suppression-release base-props re-sync path. Do not leave a second native execution path.
+- **Add:** Add the Entity native motion subsystem. `EntityMotionManager` is the native entry for SpatialEntity create / control and owns bottom-guard validation for canonical Entity tracks, timeline compilation orchestration, the animation registry, Entity control / set routing, lifecycle, and target invalidation; native confirmed transform decomposition and `spatialanimationstatechanged` emission are split across the manager / object / bridge helpers by responsibility. `MotionTargetAdapter` remains only a conceptual boundary; v1 does not require a new Entity forwarding layer.
 
 ## Class Diagram
 
@@ -589,19 +581,16 @@ classDiagram
         class ControlSpatializedElementAnimationJSBCommand
     }
     namespace NativeLayer {
-        class TargetResolver {
-            +resolve(elementId)
+        class SpatialScene {
+            +onCreateSpatializedElementAnimation()
+            +onControlSpatializedElementAnimation()
+            +findSpatialObject(id)
         }
-        class MotionTargetAdapter {
-            <<interface>>
+        class SpatializedElementAnimationManager
+        class EntityMotionManager {
             +create()
             +control()
-            +emitConfirmedValues()
-        }
-        class SpatializedElementMotionAdapter
-        class EntityMotionAdapter {
-            +compileTracks()
-            +control()
+            +get(animationId)
             +emitConfirmedValues()
         }
         class RealityKit
@@ -615,19 +604,128 @@ classDiagram
     EntityPlaybackApi --> AnimationObject : delegate commands
     AnimationObject --> CreateSpatializedElementAnimationJSBCommand
     AnimationObject --> ControlSpatializedElementAnimationJSBCommand
-    CreateSpatializedElementAnimationJSBCommand --> TargetResolver
-    TargetResolver --> MotionTargetAdapter : resolves by target type
-    SpatializedElementMotionAdapter ..|> MotionTargetAdapter : implements
-    EntityMotionAdapter ..|> MotionTargetAdapter : implements
-    EntityMotionAdapter --> RealityKit
+    CreateSpatializedElementAnimationJSBCommand --> SpatialScene : JSB handler
+    ControlSpatializedElementAnimationJSBCommand --> SpatialScene : JSB handler
+    SpatialScene --> SpatializedElementAnimationManager : SpatializedElement target
+    SpatialScene --> EntityMotionManager : SpatialEntity target
+    EntityMotionManager --> RealityKit
 ```
 
-This is a conceptual class diagram: it groups React hooks, the Core `AnimationObject`, and Native adapters for readability, not as one uniform class layer. The OOP-relevant boundary is that `AnimationObject` depends only on the target-agnostic create / control / event protocol, and Native dispatches by target type to a `MotionTargetAdapter` implementation (`SpatializedElementMotionAdapter` or `EntityMotionAdapter`); the interface stays minimal and introduces no abstraction the implementation does not need.
+This is a conceptual class diagram: it groups React hooks, the Core `AnimationObject`, and Native handlers / managers for readability, not as one uniform class layer. Native target resolution is not a new `TargetResolver` class; it is the lookup performed by the existing `SpatialScene.onCreateSpatializedElementAnimation` / `onControlSpatializedElementAnimation` handlers through `findSpatialObject` / the `spatialObjects` registry, followed by runtime target-type dispatch to the existing `SpatializedElementAnimationManager` or the new `EntityMotionManager`. `MotionTargetAdapter` remains only a conceptual boundary: if real duplication appears between the element and Entity paths later, the implementation can extract a Swift protocol or adapter then; v1 does not add a new Entity forwarding layer. The main Entity native motion state and orchestration live in `EntityMotionManager` and its object / compiler / bridge / timing / values helpers.
+
+### RealityKit Entity Motion Subsystem
+
+The Entity native motion subsystem should be split for readability and testability, not to mirror the element path's file count. The following boundaries are recommended design responsibilities; implementation may merge manager-internal helpers and only split them when complexity or reuse makes the split pay for itself.
+
+```mermaid
+classDiagram
+    class SpatialScene {
+        +onCreateSpatializedElementAnimation()
+        +onControlSpatializedElementAnimation()
+        +findSpatialObject(id)
+    }
+    class EntityMotionManager {
+        +create(command, target)
+        +control(command)
+        +register(object)
+        +get(animationId)
+        +destroy(animationId)
+        +invalidateForTarget(targetId)
+        +emitErrorOrEvent()
+    }
+    class EntityMotionAnimationObject {
+        +animationId
+        +target SpatialEntity
+        +playState
+        +ownedComponents
+        +controller
+    }
+    class EntityMotionTimelineCompiler {
+        +compile(payload, baseline)
+    }
+    class EntityMotionBridgeTypes {
+        +decodePayload()
+        +encodeValues()
+        +encodeError()
+    }
+    class EntityMotionTiming {
+        +resolveTiming()
+        +mapPlaybackOptions()
+    }
+    class EntityMotionTransformValues {
+        +readConfirmedValues()
+        +mergePatch()
+        +decomposeTransform()
+    }
+    class RealityKit
+
+    SpatialScene --> EntityMotionManager : resolved SpatialEntity target
+    EntityMotionManager --> EntityMotionAnimationObject
+    EntityMotionManager --> EntityMotionTimelineCompiler
+    EntityMotionTimelineCompiler --> EntityMotionTiming
+    EntityMotionTimelineCompiler --> EntityMotionTransformValues
+    EntityMotionManager --> EntityMotionBridgeTypes
+    EntityMotionAnimationObject --> RealityKit : playback controller / entity animation
+    EntityMotionTimelineCompiler --> RealityKit : AnimationResource / AnimationGroup
+```
+
+**Recommended responsibilities:**
+
+- `EntityMotionManager`: Native entry for SpatialEntity motion. It receives create / control after `SpatialScene` dispatches the target, owns the animation registry and lifecycle, and handles create / control routing. On create, it calls the compiler, creates the `EntityMotionAnimationObject`, registers it, and returns `animationId`; on control, it looks up the object by `animationId` and invokes play / pause / resume / stop / reset / finish / set. It also handles the bridge exit for command failures / `spatialanimationstatechanged` events, destroy, and target-destroyed invalidation so `SpatialScene` does not hold Entity animation state.
+- `EntityMotionAnimationObject`: Represents one Entity animation object. It stores `animationId`, target `SpatialEntity`, playState, owned components, RealityKit playback controller / resources, and handles per-object play / pause / resume / stop / reset / finish state transitions.
+- `EntityMotionTimelineCompiler`: Compiles the JS/Core-normalized `EntityMotionTimelinePayload` into a per-channel RealityKit execution plan, `AnimationResource`, and `AnimationGroup`. It does not parse public `from` / `to` or percentage keys.
+- `EntityMotionBridgeTypes`: Holds native bridge decode / encode structures, including canonical payloads, control `values`, confirmed `EntityMotionProps`, and `SpatializedPlaybackError`. If the existing command types are sufficient, this responsibility may live as several structs instead of one file.
+- `EntityMotionTiming`: Maps timingFunction, delay, loop, and playbackRate to RealityKit playback / timing representations. When a cubic-bezier cannot map directly, the compiler decides whether to bake the channel into sampled animation.
+- `EntityMotionTransformValues`: Reads confirmed values from `entity.transform`, merges `api.set` sparse patches over the native committed baseline, and converts between Entity API Euler degrees and RealityKit rotation representation.
+
+**create + play sequence:**
+
+```mermaid
+sequenceDiagram
+    participant JSB as Create/Control JSB
+    participant Scene as SpatialScene
+    participant Manager as EntityMotionManager
+    participant Compiler as EntityMotionTimelineCompiler
+    participant Obj as EntityMotionAnimationObject
+    participant RK as RealityKit
+    participant Event as spatialanimationstatechanged
+
+    JSB->>Scene: CreateSpatializedElementAnimation(elementId, timeline)
+    Scene->>Scene: findSpatialObject(elementId)
+    alt resolved target is SpatialEntity
+        Scene->>Manager: create(command, target)
+        Manager->>Manager: bottom-guard validate canonical payload
+        Manager->>RK: read target.transform as playback baseline
+        Manager->>Compiler: compile(payload, baseline)
+        Compiler-->>Manager: AnimationResource[] + AnimationGroup + ownedComponents
+        Manager->>Obj: init(animationId, target, group, ownedComponents)
+        Manager->>Manager: register(object)
+        Manager-->>Scene: animationId
+        Scene-->>JSB: success({ id: animationId })
+    else target missing / unsupported
+        Scene-->>JSB: failure(TARGET_NOT_FOUND / UNSUPPORTED_TARGET)
+    end
+
+    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=play)
+    Scene->>Manager: control(command)
+    Manager->>Manager: get(animationId)
+    Manager->>Obj: play()
+    Obj->>RK: entity.playAnimation(group)
+    RK-->>Obj: playback controller
+    Obj->>Event: emit action=start, confirmed values
+    RK-->>Obj: completion / terminal callback
+    Obj->>Obj: read target.transform and decompose confirmed values
+    Obj->>Event: emit action=complete / finish / stop / reset, confirmed values
+```
+
+`create` only creates the native animation object and compiled plan, then returns `animationId`; it does not emit an extra initial confirmed value. `entityProps` still updates only from native confirmed events such as start, terminal lifecycle, and accepted `set`. `EntityMotionAnimationObject` owns the group/controller compiled from the whole `EntityMotionTimelinePayload`, not a single track; single-track / channel granularity only exists inside the compiler's `EntityChannelPlan`.
+
+Boundary rule: `SpatialScene` should only perform target lookup / runtime type dispatch / JSB resolve; Entity-specific compilation and playback state should not spread through `SpatialScene` handlers. v1 does not add an Entity forwarding layer that only forwards calls; registry, create/control orchestration, and lifecycle belong to `EntityMotionManager`. If the element and Entity paths later need a uniform target boundary, extract a Swift protocol or thin facade then.
 
 ## Risks / Trade-offs
 
 - **Historical naming confusion.** Reusing `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` keeps "element" in the command names. Documentation must make clear that target-state semantics generalize them into the motion animation object protocol.
-- **Timeline compiler is the main new cost.** Multi-keyframes, sparse keyframes, rotation conversion, and per-channel compilation are all concentrated in the native Entity adapter.
+- **Timeline compiler is the main new cost.** Multi-keyframes, sparse keyframes, rotation conversion, and per-channel compilation are all concentrated in the native Entity motion manager / compiler.
 - **Two costs of per-channel compilation.** To let different channels keep their own timing function within the same time span, multiple channels cannot be merged into a single complete-Transform animation: (1) each channel must be compiled into its own RealityKit animation bound to a sub-target (translation / orientation / scale) and played in parallel through an `AnimationGroup`, rather than one whole-Transform animation; (2) custom timing (when there is no matching RealityKit built-in curve) may require baking that channel into a `SampledAnimation`.
 - **Per-component ownership and sub-target binding granularity.** Ownership granularity is the transform component (`position` / `rotation` / `scale`), because RealityKit sub-target binding is itself per component (translation / orientation / scale), not per scalar (`position.x` vs `position.y`). A component is owned entirely by the animation as soon as any of its channels appear in the config; a component that does not appear at all stays with React props and is driven normally during the animation. Note the scalar sub-granularity: if only `position.y` is animated, that channel's RealityKit animation binds the whole translation sub-target, so `position.x` / `position.z` are frozen to the playback-start native baseline during the animation rather than flowing through props — this is dictated by sub-target binding granularity, not by the ownership model. Cross-component composition (position animated while rotation flows through props) is fully supported.
 - **No updater form.** Because native is the single authority, `api.set(prev => next)` would imply React `setState` semantics, but `prev` cannot be promised as a real-time native transform. v1 only supports patch objects; reads of the current confirmed state go through `entityProps`.
@@ -640,6 +738,6 @@ This is a conceptual class diagram: it groups React hooks, the Core `AnimationOb
 - Reuse `CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand` and the existing event channel; do not add parallel Entity JSB.
 - JS/Core normalizes `from`/`to` and `timeline` into canonical Entity tracks; Native executes canonical payload and performs bottom-guard validation.
 - **Native uses per-channel timing compilation.** Each transform channel is compiled into its own RealityKit animation carrying its own timing function, bound in parallel to the translation / orientation / scale sub-targets through an `AnimationGroup`, rather than merging all channels into a segment that shares a single `timingFunction`. Reason: after segment merging each segment can carry only one timing function, so different curves for different channels within the same time span cannot be expressed and are lost before reaching native; per-channel is consistent with the per-frame per-track sampling semantics of the CADisplayLink element path. Costs are in Risks.
-- **The Entity compilation output does not reuse `SpatializedMotionConfig` / `SpatializedMotionTrack`.** Three reasons: (1) **Different stage** — `SpatializedMotion*Config` is a public authoring config (with `onStart`/`onComplete`/`autoStart` callbacks, un-desugared tracks, and an optional `timingFunction` with three-level fallback), whereas `EntityChannelAnimationPlan` is a native-compiled executable plan (percentages resolved, `from`/`to` desugared, missing-keyframe `baseline` solved, timing collapsed onto each keyframe); the config has nowhere to place `baseline` / resolved timing, and the callback fields are noise. (2) **Different domain** — `SpatializedMotionTrack.property` is the CSS/element visual domain (`opacity` / `transform.translate.*` / `transform.rotate.*` / `transform.scale.*`), while Entity is the pose domain (`position.*` / `rotation.*` / `scale.*`) and explicitly rejects `opacity`; the value domain also differs (`SpatializedVisualValues` vs `EntityMotionProps`, the latter using Euler degrees for rotation). Reuse would mix `opacity`/`transform.translate` into Entity channels and degrade structural constraints into runtime validation. (3) **Avoid cross-path coupling** — this redesign only reuses the cross-boundary protocol (JSB command / events); internal data types are not reused. The element adapter (CADisplayLink per-track sampler) and the Entity adapter (RealityKit per-channel plan) each hold their own compilation output, so that element-side property whitelist or `SpatializedVisualValues` changes do not ripple into Entity. If a "normalized timeline" counterpart is needed, the element side is `SpatializedMotionTimeline` and the Entity side is `EntityMotionTimelinePayload`, and those are independent as well.
+- **The Entity compilation output does not reuse `SpatializedMotionConfig` / `SpatializedMotionTrack`.** Three reasons: (1) **Different stage** — `SpatializedMotion*Config` is a public authoring config (with `onStart`/`onComplete`/`autoStart` callbacks, un-desugared tracks, and an optional `timingFunction` with three-level fallback), whereas `EntityChannelAnimationPlan` is a native-compiled executable plan (percentages resolved, `from`/`to` desugared, missing-keyframe `baseline` solved, timing collapsed onto each keyframe); the config has nowhere to place `baseline` / resolved timing, and the callback fields are noise. (2) **Different domain** — `SpatializedMotionTrack.property` is the CSS/element visual domain (`opacity` / `transform.translate.*` / `transform.rotate.*` / `transform.scale.*`), while Entity is the pose domain (`position.*` / `rotation.*` / `scale.*`) and explicitly rejects `opacity`; the value domain also differs (`SpatializedVisualValues` vs `EntityMotionProps`, the latter using Euler degrees for rotation). Reuse would mix `opacity`/`transform.translate` into Entity channels and degrade structural constraints into runtime validation. (3) **Avoid cross-path coupling** — this redesign only reuses the cross-boundary protocol (JSB command / events); internal data types are not reused. The element path (CADisplayLink per-track sampler) and the Entity path (RealityKit per-channel plan) each hold their own compilation output, so that element-side property whitelist or `SpatializedVisualValues` changes do not ripple into Entity. If a "normalized timeline" counterpart is needed, the element side is `SpatializedMotionTimeline` and the Entity side is `EntityMotionTimelinePayload`, and those are independent as well.
 - **Ownership granularity is per-component, not the whole transform.** A transform component (`position` / `rotation` / `scale`) is owned entirely by the animation during an active animation as soon as any of its fields appear in the config; a component that does not appear in the config at all stays with React props and is driven normally during the animation. Rationale: (1) the old entity transform animation API this proposal replaces was already per-component (per-field suppression cache, non-animated fields keep updating), so per-component keeps the replacement non-breaking; (2) the whole-transform rationale (element path sends DOMMatrix whole, splitting needs matrix decompose/recompose) does not apply to Entity — Entity props are already component-structured and per-channel compilation provides the execution foundation; (3) the ownership decision is pushed to native (based on components declared in config), with no dual-authority React-side cache. Boundary: granularity stops at the component, not the scalar (`position.x` vs `position.y`), because RealityKit sub-target binding is per-component; non-animated scalars within an animated component are frozen to baseline via their sub-target (see Risks).
 - The old `AnimateTransformJSBCommand` is an internal implementation protocol and is removed, not merely left unused.
