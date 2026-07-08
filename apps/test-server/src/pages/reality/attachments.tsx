@@ -85,6 +85,7 @@ function TestTransformApi() {
   const [scale, setScale] = React.useState(1)
   const [widthM, setWidthM] = React.useState(0.35)
   const [heightM, setHeightM] = React.useState(0.2)
+  const [borderRadius, setBorderRadius] = React.useState(12)
 
   const position = { x: posX, y: posY, z: posZ }
   const rotation = { x: 0, y: rotY, z: 0 }
@@ -94,7 +95,10 @@ function TestTransformApi() {
     <TestCase title="1. Transform API (position, rotation, scale, width, height)">
       <p className="text-sm text-gray-600 mb-3">
         Drag sliders to update <code className="text-xs">AttachmentEntity</code>{' '}
-        transforms and meter dimensions without remounting.
+        placement and meter dimensions. Set{' '}
+        <code className="text-xs">border-radius</code> on the{' '}
+        <code className="text-xs">AttachmentAsset</code> root div to sync native
+        corner clipping.
       </p>
       <div className="mb-4 max-w-md space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
         <SliderRow
@@ -160,24 +164,35 @@ function TestTransformApi() {
           onChange={setHeightM}
           unit=" m"
         />
+        <SliderRow
+          label="Border radius"
+          value={borderRadius}
+          min={0}
+          max={50}
+          step={1}
+          onChange={setBorderRadius}
+          unit="px"
+        />
       </div>
       <Reality style={{ ...REALITY_FRAME, border: '1px solid #0d9488' }}>
         <UnlitMaterial id="matTransform" color="#0d9488" />
         <AttachmentAsset id="profile-card">
           <div
             style={{
+              borderRadius: `${borderRadius}px`,
+              overflow: 'hidden',
               background: 'rgba(15,23,42,0.92)',
               color: 'white',
               padding: 12,
-              borderRadius: 8,
-              minHeight: '100%',
+              width: '100%',
+              height: '100%',
               boxSizing: 'border-box',
             }}
           >
             <p style={{ margin: 0, fontWeight: 600 }}>Profile card</p>
             <p style={{ margin: '6px 0 0', fontSize: 12, opacity: 0.85 }}>
               {widthM.toFixed(2)}×{heightM.toFixed(2)} m · rotY{' '}
-              {rotY.toFixed(0)}°
+              {rotY.toFixed(0)}° · radius {borderRadius}px
             </p>
           </div>
         </AttachmentAsset>

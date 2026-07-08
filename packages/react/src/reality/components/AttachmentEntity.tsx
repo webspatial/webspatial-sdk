@@ -5,6 +5,7 @@ import type { Vec3 } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import { setOpenWindowStyle } from '../../utils/windowStyleSync'
 import { useSyncHeadStyles } from '../../utils/useSyncHeadStyles'
+import { parseCornerRadius } from '../../spatialized-container/utils'
 
 let instanceCounter = 0
 
@@ -135,6 +136,41 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   }, [ctx, attachmentName])
 
   useSyncHeadStyles(childWindow)
+
+  // Sync CSS border-radius from AttachmentAsset root div to native cornerRadius.
+  useEffect(() => {
+    if (!attachmentRef.current || !childWindow) return
+
+    const container = attachmentRef.current.getContainer()
+    let lastKey = ''
+
+    const sync = () => {
+      const root = container.firstElementChild as HTMLElement | null
+      const cornerRadius = root
+        ? parseCornerRadius(childWindow.getComputedStyle(root))
+        : {
+            topLeading: 0,
+            bottomLeading: 0,
+            topTrailing: 0,
+            bottomTrailing: 0,
+          }
+      const key = JSON.stringify(cornerRadius)
+      if (key === lastKey) return
+      lastKey = key
+      attachmentRef.current?.update({ cornerRadius })
+    }
+
+    const observer = new MutationObserver(sync)
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class'],
+    })
+    sync()
+
+    return () => observer.disconnect()
+  }, [childWindow])
 
   // Update transform and meter dimensions when they change
   useEffect(() => {

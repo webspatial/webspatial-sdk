@@ -177,6 +177,11 @@ struct SpatializedDynamic3DView: View {
                             width: info.frameSize.width,
                             height: info.frameSize.height
                         )
+                        .materialWithBorderCorner(
+                            .Transparent,
+                            info.cornerRadius,
+                            .window
+                        )
                 }
             }
         })

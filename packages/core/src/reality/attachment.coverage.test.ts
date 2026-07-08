@@ -87,4 +87,34 @@ describe('Attachment entity wire format', () => {
       }),
     )
   })
+
+  it('updates internal cornerRadius in UpdateAttachmentEntity payload', async () => {
+    const { Attachment } = await import('./Attachment')
+    const attachment = new Attachment('att-1', {} as WindowProxy, {
+      placement: { id: 'entity-1' },
+      ownerViewId: 'reality-1',
+    })
+
+    await attachment.update({
+      cornerRadius: {
+        topLeading: 24,
+        bottomLeading: 24,
+        topTrailing: 24,
+        bottomTrailing: 24,
+      },
+    })
+
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'UpdateAttachmentEntity',
+      JSON.stringify({
+        id: 'att-1',
+        cornerRadius: {
+          topLeading: 24,
+          bottomLeading: 24,
+          topTrailing: 24,
+          bottomTrailing: 24,
+        },
+      }),
+    )
+  })
 })

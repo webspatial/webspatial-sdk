@@ -433,6 +433,7 @@ export interface AttachmentEntityOptions {
   scale?: Vec3
   width?: number
   height?: number
+  cornerRadius?: CornerRadius
   ownerViewId: string
 }
 
@@ -442,6 +443,7 @@ export interface AttachmentEntityUpdateOptions {
   scale?: Vec3
   width?: number
   height?: number
+  cornerRadius?: CornerRadius
 }
 
 // manifest
