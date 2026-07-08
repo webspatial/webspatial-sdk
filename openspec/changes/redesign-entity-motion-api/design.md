@@ -300,7 +300,7 @@ supports('useAnimation')
 1. `onCreateSpatializedElementAnimation` looks up target by `targetId` and dispatches to spatialized / Entity adapter.
 2. Entity adapter compiles canonical Entity tracks to RealityKit transform animation.
 3. `onControlSpatializedElementAnimation` supports Entity animation object `play/pause/resume/stop/reset/finish/destroy/set`.
-4. Every accepted terminal / set operation emits confirmed Entity values.
+4. Every accepted start / terminal / set operation emits confirmed Entity values.
 5. Delete or stop using the old `AnimateTransform` Entity-specific path.
 
 ## Class Diagram

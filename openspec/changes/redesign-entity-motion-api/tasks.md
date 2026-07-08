@@ -13,17 +13,17 @@
 
 ## 3. Entity Binding Migration
 
-- [ ] 3.1 Add failing tests proving Entity motion binds through `xr-animation` and no longer uses the legacy `animation` prop as target-state behavior
+- [ ] 3.1 Add failing tests proving Entity motion binds through the recommended `xr-animation` while `animation` remains usable as a compatible binding
 - [ ] 3.2 Update Entity prop contracts and binding lifecycle to use the new Entity motion binding path
 - [ ] 3.3 Preserve the single-binding invariant so one animation object cannot drive multiple Entity instances
-- [ ] 3.4 Remove or deprecate the legacy Entity `animation` prop path in the implementation and documentation
+- [ ] 3.4 Keep the Entity `animation` compatible binding and document `xr-animation` as the recommended form
 
 ## 4. Playback and Outlet Semantics
 
 - [ ] 4.1 Add failing tests for `entityProps` lifecycle updates at start, complete, stop, reset, finish, and each `api.set` call (value and updater forms)
 - [ ] 4.2 Implement committed transform persistence through `entityProps` without per-frame React updates
 - [ ] 4.3 Add failing tests for active transform ownership so animated props ignore competing React transform writes during alive playback states
-- [ ] 4.4 Implement committed-state ownership rules: `api.set` sparse merge, updater `prev` = latest native-confirmed `entityProps` mirror value, calling `api.set` during an active animation writes Source A without throwing or overriding, start point after set-then-play is `from` when declared else current committed value, and terminal fill writes the terminal transform back to `entityProps` (fill-forwards, no snap-back)
+- [ ] 4.4 Implement committed-state ownership rules: `api.set` sparse merge, updater `prev` = latest native-confirmed `entityProps` mirror value, calling `api.set` during an active animation submits a Source A write through native confirmation without throwing or overriding, start point after set-then-play is `from` when declared else current committed value, and terminal fill writes the terminal transform back to `entityProps` (fill-forwards, no snap-back)
 - [ ] 4.5 Add failing tests proving lifecycle callbacks are notifications: `onComplete` return values are ignored and cannot drive the terminal transform
 
 ## 5. Capability and Validation
@@ -36,7 +36,7 @@
 
 - [ ] 6.1 Update Entity motion docs and examples to use `position` / `rotation` / `scale` config, `xr-animation`, `entityProps`, and `api.set` (with its updater form and the no-bare-`api.get` guidance: read via the `api.set` updater or `entityProps`)
 - [ ] 6.2 Update `apps/test-server` Entity animation demos and capability pages to the new target-state API
-- [ ] 6.3 Add migration notes covering the removal of legacy `animation` prop binding and legacy top-level transform config
+- [ ] 6.3 Add migration notes covering the removal of legacy top-level transform config and the recommended `animation` -> `xr-animation` migration (with `animation` kept for compatibility)
 
 ## 7. Verification
 

@@ -13,17 +13,17 @@
 
 ## 3. Entity 绑定迁移
 
-- [ ] 3.1 先编写失败测试，证明 Entity motion 通过 `xr-animation` 绑定，且旧 `animation` prop 不再是目标态行为
+- [ ] 3.1 先编写失败测试，证明 Entity motion 推荐通过 `xr-animation` 绑定，且 `animation` 作为兼容绑定继续可用
 - [ ] 3.2 更新 Entity props 契约与 binding 生命周期，切换到新的 Entity motion 绑定路径
 - [ ] 3.3 保留单绑定不变量，保证同一个 animation object 不能驱动多个 Entity 实例
-- [ ] 3.4 在实现和文档中移除或废弃旧的 Entity `animation` prop 路径
+- [ ] 3.4 保留 Entity `animation` 兼容绑定，并在文档中把 `xr-animation` 标注为推荐写法
 
 ## 4. Playback 与 Outlet 语义
 
 - [ ] 4.1 先编写失败测试，覆盖 `entityProps` 在 start、complete、stop、reset、finish 以及每次 `api.set` 调用(value 与 updater 形式)时的更新语义
 - [ ] 4.2 实现通过 `entityProps` 持久化已提交 transform，且不做逐帧 React 更新
 - [ ] 4.3 先编写失败测试，覆盖动画 alive 期间 transform ownership，确保竞争性的 React transform 写入不会覆盖活动动画
-- [ ] 4.4 实现 committed-state ownership 规则:`api.set` 稀疏合并、updater `prev` = 最近 confirmed 的 `entityProps` 镜像值、活跃动画期间调用 `api.set` 写入 Source A 但不抛错也不覆盖、set 后再 play 的起点在声明 `from` 时为 `from` 否则为当前 committed 值、终态填充将终态 transform 回写到 `entityProps`(fill-forwards,不 snap 回退)
+- [ ] 4.4 实现 committed-state ownership 规则:`api.set` 稀疏合并、updater `prev` = 最近 confirmed 的 `entityProps` 镜像值、活跃动画期间调用 `api.set` 通过 native 确认提交一次 Source A 写入,但不抛错也不覆盖、set 后再 play 的起点在声明 `from` 时为 `from` 否则为当前 committed 值、终态填充将终态 transform 回写到 `entityProps`(fill-forwards,不 snap 回退)
 - [ ] 4.5 先编写失败测试,证明 lifecycle callback 只是通知:`onComplete` 的返回值被忽略,不能驱动终态 transform
 
 ## 5. Capability 与校验
@@ -36,7 +36,7 @@
 
 - [ ] 6.1 更新 Entity motion 文档与示例，统一使用 `position` / `rotation` / `scale` config、`xr-animation`、`entityProps` 和 `api.set`(含其 updater 形式,以及不提供裸 `api.get` 的指引:通过 `api.set` updater 或 `entityProps` 读取)
 - [ ] 6.2 更新 `apps/test-server` 中的 Entity animation demo 与 capability 页面到新的目标态 API
-- [ ] 6.3 补充迁移说明，覆盖旧 `animation` prop 绑定路径和旧顶层 transform config 的移除
+- [ ] 6.3 补充迁移说明，覆盖旧顶层 transform config 的移除，并说明 `animation` -> `xr-animation` 的推荐迁移（`animation` 兼容保留）
 
 ## 7. 验证
 

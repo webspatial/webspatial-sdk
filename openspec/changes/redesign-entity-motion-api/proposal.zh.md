@@ -313,7 +313,7 @@ entityProps.scale 更新为终态 scale
 
 ### 7. api.set
 
-`api.set` 是 `entityProps` 所镜像的、已提交(committed)Entity transform 状态的命令式写入入口。它的目的是让用户在动画结束后接管 transform,而不必自己再维护一份 `useState`:SDK 本来就持有这份 committed 状态(它必须持有,才能通过 `entityProps` 回写终态),因此用户不应被迫再镜像一遍。
+`api.set` 是 `entityProps` 所镜像的、已提交(committed)Entity transform 状态的命令式写入入口。它的目的是让用户在动画结束后接管 transform,而不必自己再维护一份 `useState`:这份 committed 状态的权威在 native,`entityProps` 是它的 confirmed mirror(SDK 必须暴露它,才能通过 `entityProps` 回写终态),因此用户不应被迫再镜像一遍。SDK 不额外维护本地 committed cache。
 
 #### 7.1 两个数据源与合成器(compositor)
 
@@ -340,8 +340,8 @@ api.set(updater: (prev: EntityMotionProps) => EntityMotionProps): void
 
 #### 7.3 行为
 
-1. 写入目标:`api.set` 更新 SDK 持有的 committed transform 状态,该状态更新 `entityProps`,再通过 `<BoxEntity {...entityProps} />` 回写到 native Entity。`entityProps` 是该状态的响应式镜像。
-2. 稀疏合并(sparse merge):只覆盖传入的字段;未传入的字段保持之前的 committed 值。`api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
+1. 写入目标:`api.set` 下发 `ControlSpatializedElementAnimation(type: 'set')` 到 native;native 是唯一权威,由它决定该写入是否生效。native 接受后回传 confirmed values,`entityProps` 作为该 confirmed 状态的响应式镜像随之更新;native 拒绝时 `entityProps` 不更新。SDK 不写本地 committed cache。
+2. 稀疏合并(sparse merge):在 JS/Core 侧完成。以最近 confirmed 的 `entityProps` 为基线,只覆盖传入的字段、未传入字段沿用基线值,合并成完整值后整份下发 native。`api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
 3. Updater 形式:`prev` 是最近一次 native confirmed 的 `entityProps` 镜像值(Source A),可能滞后于 native 实时 transform。基于当前值做偏移就通过这个 updater 表达。不提供裸 `api.get`。
 4. 活跃动画期间调用不会抛错,但该写入不会在动画结束后存留。它不打断也不覆盖活动动画;并且与 8.2 节 React prop 写入行为一致——它不会被排队等待 replay:动画到达终态时,终态填充(见 7.4)会把终态值写入 committed 状态,覆盖动画期间写入的任何值。若要接管 transform,应在动画非活跃(idle / terminal)后再调用 `api.set`。
 5. 不是 playback 命令:`api.set` 不 seek、不 start、不改变播放进度。
