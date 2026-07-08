@@ -64,8 +64,8 @@
 		2B06AF312E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				dynamic3d/EntityAnimationSession.swift,
 				dynamic3d/EntityAnimationManager.swift,
+				dynamic3d/EntityAnimationSession.swift,
 				dynamic3d/Geometry.swift,
 				dynamic3d/SpatialComponent.swift,
 				dynamic3d/SpatialEntity.swift,
@@ -118,6 +118,7 @@
 				SpatialSceneView.swift,
 				"view-modifier/HideViewModifier.swift",
 				"view-modifier/MaterialWithBorderCornerModifier.swift",
+				"view-modifier/OrbitModifier.swift",
 			);
 			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
 		};
@@ -607,7 +608,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = 2B2F1D5B2BEBFAAA006897EE /* Project object */;
 }

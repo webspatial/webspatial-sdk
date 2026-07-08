@@ -2,14 +2,10 @@ import RealityKit
 import SwiftUI
 
 struct SpatializedStatic3DView: View {
-    @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
+    @Bindable var spatializedStatic3DElement: SpatializedStatic3DElement
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
 
     @State private var loadState: LoadState = .idle
-
-    private var spatializedStatic3DElement: SpatializedStatic3DElement {
-        return spatializedElement as! SpatializedStatic3DElement
-    }
 
     private var asset: Model3DAsset? {
         if case let .loaded(asset, _) = loadState { return asset }
@@ -17,16 +13,20 @@ struct SpatializedStatic3DView: View {
     }
 
     func onLoadSuccess(src: String) {
-        spatialScene.sendWebMsg(spatializedElement.id, ModelLoadSuccess(src: src))
+        spatialScene.sendWebMsg(spatializedStatic3DElement.id, ModelLoadSuccess(src: src))
     }
 
     func onLoadFailure() {
-        spatialScene.sendWebMsg(spatializedElement.id, ModelLoadFailure())
+        spatialScene.sendWebMsg(spatializedStatic3DElement.id, ModelLoadFailure())
+    }
+
+    private func onOrbit(_ transform: AffineTransform3D) {
+        spatialScene.sendWebMsg(spatializedStatic3DElement.id, EntityTransformChangeEvent(transform))
     }
 
     var body: some View {
-        let depth = spatializedElement.depth
-        let transform = spatializedStatic3DElement.modelTransform
+        let depth = spatializedStatic3DElement.depth
+        let transform = spatializedStatic3DElement.entityTransform
         let translation = transform.translation
         let scale = transform.scale
         let rotation = transform.rotation!
@@ -34,7 +34,7 @@ struct SpatializedStatic3DView: View {
         let y = translation.y
         let z = translation.z
 
-        let enableGesture = spatializedElement.enableGesture
+        let enableGesture = spatializedStatic3DElement.enableGesture
         if spatializedStatic3DElement.loading == .eager {
             Group {
                 switch loadState {
@@ -44,10 +44,7 @@ struct SpatializedStatic3DView: View {
                     Model3D(asset: asset) { resolvedModel3D in
                         resolvedModel3D
                             .resizable(true)
-                            .aspectRatio(
-                                nil,
-                                contentMode: .fit
-                            )
+                            .aspectRatio(nil, contentMode: .fit)
                             .if(!depth.isZero) { view in view.scaledToFit3D() }
                             .if(enableGesture) { view in view.hoverEffect() }
                     }
@@ -55,13 +52,12 @@ struct SpatializedStatic3DView: View {
                     posterView {}
                 }
             }
-            .scaleEffect(
-                x: scale.width,
-                y: scale.height,
-                z: scale.depth
-            )
-            .rotation3DEffect(
-                rotation
+            .scaleEffect(scale)
+            .rotation3DEffect(rotation)
+            .orbit(
+                enabled: spatializedStatic3DElement.stagemode == .orbit,
+                entityTransform: $spatializedStatic3DElement.entityTransform,
+                onChange: onOrbit
             )
             .offset(x: x, y: y)
             .offset(z: z)
@@ -151,7 +147,7 @@ struct SpatializedStatic3DView: View {
         let duration = controller?.duration ?? 0
         let currentTime = controller?.time ?? 0
         spatialScene.sendWebMsg(
-            spatializedElement.id,
+            spatializedStatic3DElement.id,
             AnimationStateChangeEvent(
                 detail: AnimationStateChangeDetail(
                     paused: isPaused,

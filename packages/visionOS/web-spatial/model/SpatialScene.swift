@@ -495,15 +495,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return
         }
 
-        var position = SIMD3<Float>(0, 0, 0)
-        if let posArray = command.position, posArray.count >= 3 {
-            position = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
-        }
-
-        let size = CGSize(
-            width: command.size?.width ?? 100,
-            height: command.size?.height ?? 100
-        )
+        let position = makeSIMD3(command.position, fallback: SIMD3<Float>(0, 0, 0))
+        let rotation = makeSIMD3(command.rotation, fallback: SIMD3<Float>(0, 0, 0))
+        let scale = makeSIMD3(command.scale, fallback: SIMD3<Float>(1, 1, 1))
+        let frameSize = attachmentFrameSize(width: command.width, height: command.height)
 
         let ownerId = command.ownerViewId
         if spatialObjects[ownerId] == nil {
@@ -512,9 +507,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         attachmentManager.create(
             id: command.id,
-            parentEntityId: command.parentEntityId,
+            placementId: command.placementId,
             position: position,
-            size: size,
+            rotation: rotation,
+            scale: scale,
+            frameSize: frameSize,
             webViewModel: webViewModel
         )
 
@@ -711,7 +708,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             let column3 = simd_double4(array[12], array[13], array[14], array[15])
             let simd_double4x4 = simd_double4x4(columns: (column0, column1, column2, column3))
             let affineTransform3D = AffineTransform3D(truncating: simd_double4x4)
-            spatializedElement.modelTransform = affineTransform3D
+            spatializedElement.entityTransform = affineTransform3D
         }
 
         if let autoplay = command.autoplay {
@@ -740,6 +737,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         if let loading = command.loading {
             spatializedElement.loading = Loading(stringValue: loading)
+        }
+
+        if let stagemode = command.stagemode {
+            spatializedElement.stagemode = StageMode(stringValue: stagemode)
         }
 
         resolve(.success(baseReplyData))
@@ -984,17 +985,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         children.removeValue(forKey: spatializedElement.id)
     }
 
-    func getChildrenOfType(_ type: SpatializedElementType) -> [String: SpatializedElement] {
-        return children.filter {
-            switch type {
-            case .Spatialized2DElement:
-                return $0.value is Spatialized2DElement
-            case .SpatializedStatic3DElement:
-                return $0.value is SpatializedStatic3DElement
-            case .SpatializedDynamic3DElement:
-                return $0.value is SpatializedDynamic3DElement
-            }
-        }
+    func getChildren<T: SpatializedElement>(ofType type: T.Type) -> [T] {
+        return children.values.compactMap { $0 as? T }
     }
 
     func getChildren() -> [String: SpatializedElement] {
@@ -1370,20 +1362,36 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    private func makeSIMD3(_ vector: JSBVec3?, fallback: SIMD3<Float>) -> SIMD3<Float> {
+        guard let vector = vector else { return fallback }
+        return SIMD3<Float>(Float(vector.x), Float(vector.y), Float(vector.z))
+    }
+
+    private func attachmentFrameSize(width: Double?, height: Double?) -> CGSize {
+        CGSize(
+            width: width.map { $0 * (meterToPtScaled ?? 1000) } ?? 100,
+            height: height.map { $0 * (meterToPtScaled ?? 1000) } ?? 100
+        )
+    }
+
     private func onUpdateAttachmentEntity(command: UpdateAttachmentEntityCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard attachmentManager.get(id: command.id) != nil else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Attachment \(command.id) not found")))
             return
         }
-        var newPosition: SIMD3<Float>? = nil
-        if let posArray = command.position, posArray.count >= 3 {
-            newPosition = SIMD3<Float>(posArray[0], posArray[1], posArray[2])
-        }
-        var newSize: CGSize? = nil
-        if let sizeObj = command.size {
-            newSize = CGSize(width: sizeObj.width, height: sizeObj.height)
-        }
-        attachmentManager.update(id: command.id, position: newPosition, size: newSize)
+        let newPosition = command.position.map { makeSIMD3($0, fallback: SIMD3<Float>(0, 0, 0)) }
+        let newRotation = command.rotation.map { makeSIMD3($0, fallback: SIMD3<Float>(0, 0, 0)) }
+        let newScale = command.scale.map { makeSIMD3($0, fallback: SIMD3<Float>(1, 1, 1)) }
+        let newFrameSize: CGSize? = (command.width != nil || command.height != nil)
+            ? attachmentFrameSize(width: command.width, height: command.height)
+            : nil
+        attachmentManager.update(
+            id: command.id,
+            position: newPosition,
+            rotation: newRotation,
+            scale: newScale,
+            frameSize: newFrameSize
+        )
         resolve(.success(baseReplyData))
     }
 
