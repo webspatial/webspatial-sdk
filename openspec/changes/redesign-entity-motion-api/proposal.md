@@ -13,7 +13,7 @@ This proposal supersedes `add-entity-transform-animation` as the target-state En
 - Keep public config aligned with Entity props hierarchy by continuing to use `position`, `rotation`, and `scale`.
 - Recommend `xr-animation` binding while keeping `animation` as a compatible binding.
 - Introduce `entityProps` as the React outlet for committed Entity transform values.
-- Add `api.set` (with an updater form) as the imperative write entry for the committed transform state that `entityProps` mirrors, so users can take over after an animation without maintaining their own `useState`.
+- Add `api.set(values)`, accepting only sparse patch objects, as the imperative write entry for the committed transform state that `entityProps` mirrors. The `(prev) => next` updater form is not supported.
 - Support `from` / `to` and percentage `timeline` as the public path, while keeping `tracks` as an internal non-public API.
 - Align playback, callback, and capability semantics with the broader motion family where applicable, while preserving Entity-specific constraints.
 - Restrict Entity motion targets to transform-only fields and require explicit failure for unsupported targets such as `opacity`.
@@ -289,11 +289,11 @@ entityProps.scale updates to terminal scale
 3. `stop`.
 4. `reset`.
 5. `finish`.
-6. `api.set` (and its updater form).
+6. Native-accepted `api.set(values)` writes.
 
 ### 7. api.set
 
-`api.set` is the imperative write entry for the committed Entity transform state that `entityProps` mirrors. Its purpose is to let users take over the transform after an animation ends without maintaining their own `useState`: the committed state is authoritative in native and `entityProps` is its confirmed mirror (which the SDK must expose in order to write terminal values back), so users should not have to mirror that state a second time. The SDK does not keep a separate local committed cache.
+`api.set` is the imperative write entry for the committed Entity transform state that `entityProps` mirrors. Its purpose is to let users take over the transform after an animation ends. The committed state is authoritative in native, and `entityProps` is its confirmed mirror (which the SDK must expose in order to write terminal values back). `api.set` only writes; reading the current confirmed state is done through `entityProps`. The SDK does not keep a separate local committed cache.
 
 #### 7.1 Two sources and the compositor
 
@@ -315,16 +315,18 @@ This is the same model as CSS: an animation overrides computed style while playi
 
 ```text
 api.set(values: EntityMotionProps): void
-api.set(updater: (prev: EntityMotionProps) => EntityMotionProps): void
 ```
+
+`api.set` only accepts an `EntityMotionProps` patch object. The `(prev) => next` updater form is not supported.
 
 #### 7.3 Behavior
 
 1. Write target: `api.set` sends `ControlSpatializedElementAnimation(type: 'set')` to native; native is the single authority that decides whether the write takes effect. When native accepts, it emits confirmed values and `entityProps` updates as the reactive mirror of that confirmed state; when native rejects, `entityProps` does not update. The SDK does not keep a local committed cache.
-2. Sparse merge: performed on the JS/Core side. Using the latest confirmed `entityProps` as the baseline, only the provided fields are overwritten while omitted fields keep the baseline value, and the merged full value is sent to native. `api.set({ position: { y: 0.3 } })` does not touch `rotation` or `scale`.
-3. Updater form: `prev` is the latest native-confirmed `entityProps` mirror value (Source A), which may lag the real-time native transform. Offsets based on the current value are expressed through this updater. There is no bare `api.get`.
-4. Calling during an active animation does not throw, but the write does not survive the animation. It does not interrupt or override the active animation, and — consistent with the React-prop write behavior in section 8.2 — it is NOT queued for replay: when the animation reaches its terminal state, the terminal fill (see 7.4) writes the terminal values into the committed state and overrides whatever was written during the animation. To take over the transform, call `api.set` after the animation is inactive (idle / terminal).
-5. Not a playback command: `api.set` does not seek, start, or change playback progress.
+2. Sparse merge: `api.set(values)` may pass only part of the transform. JS/Core does not merge a full value from `entityProps`; it sends the patch to native. Native merges the patch over the current committed `entity.transform`, overwriting only fields present in the patch. `api.set({ position: { y: 0.3 } })` does not touch `rotation` or `scale`.
+3. No updater form: `api.set(prev => next)` is not supported. Application code that needs to compute a patch from the current confirmed value should read `entityProps`, compute the patch itself, and then call `api.set(values)`.
+4. Calling during an active animation is not stashed. It does not interrupt or override the active animation, and it is not queued for replay. Native should reject or ignore the write and expose that through the existing command failure / error event mechanism. `entityProps` does not update. To take over the transform, call `api.set` after the animation is inactive (idle / terminal).
+5. Calling before binding or native object creation is invalid. It does not create a pending write and is not replayed after binding completes. Failure is exposed through the existing command failure / error event mechanism.
+6. Not a playback command: `api.set` does not seek, start, or change playback progress.
 
 #### 7.4 Interaction with `play` and terminal fill
 
@@ -335,8 +337,8 @@ api.set(updater: (prev: EntityMotionProps) => EntityMotionProps): void
 
 `api.get` is intentionally not provided, because an imperative getter in React tends to read stale values and invites read-then-write races.
 
-- Read-modify-write: use the updater form `api.set(prev => ...)`.
-- Declarative read of the current value: read `entityProps`, which is the reactive mirror of the committed state.
+- Read the current confirmed value through `entityProps`, which is the reactive mirror of the committed state.
+- For read-modify-write, application code computes a new patch from `entityProps` and then calls `api.set(values)`.
 
 ### 8. Conflict Semantics with React Props
 

@@ -60,7 +60,7 @@ The public v1 authoring surface MUST support segment-style `from` / `to` and per
 
 The SDK MUST use `entityProps` as the React-side persistence outlet for committed Entity transform values owned by the animation system.
 
-`entityProps` MUST NOT update every frame. It MUST only update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, and each `api.set` call (including its updater form).
+`entityProps` MUST NOT update every frame. It MUST only update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, and native-accepted `api.set(values)` writes.
 
 #### Scenario: Complete writes terminal transform to `entityProps`
 - **WHEN** a non-looping Entity animation completes naturally
@@ -145,11 +145,11 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 
 ### Requirement: `api.set` is the imperative write entry for committed transform state
 
-The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST accept either a sparse `EntityMotionProps` value or an updater function `(prev) => next`. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
+The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST only accept a sparse `EntityMotionProps` patch object and MUST NOT support the updater function form `(prev) => next`. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
 
 Entity transform is composed from two sources: Source A is static/base React props plus `entityProps` (the committed state mirrored by the SDK; dynamic take-over is written through `api.set`), and Source B is the `xr-animation` binding (per-frame sampled values). While the animation is active (`delay` / `running` / `paused`) Source B is authoritative; while it is inactive (`idle` / terminal) Source A is authoritative. `api.set` always writes Source A.
 
-The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST use the updater form of `api.set` or read the declarative `entityProps`.
+The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST read declarative `entityProps`, and compute its own patch before calling `api.set(values)` when it needs to write.
 
 #### Scenario: set updates committed state and entityProps
 - **WHEN** application code calls `api.set(values)` with Entity transform values
@@ -159,21 +159,30 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 
 #### Scenario: set performs a sparse merge
 - **WHEN** application code calls `api.set` with only some transform fields, such as `{ position: { y: 0.3 } }`
-- **THEN** the SDK MUST merge on the JS/Core side using the latest confirmed `entityProps` as the baseline, overwrite only the provided fields, and send the full merged value to native
-- **AND** omitted fields such as `rotation` and `scale` MUST keep the previous committed values from the baseline
+- **THEN** the SDK MUST send that sparse patch to native instead of merging a full value on the JS/Core side using `entityProps`
+- **AND** native MUST use the current committed `entity.transform` as the baseline and overwrite only fields provided in the patch
+- **AND** omitted fields such as `rotation` and `scale` MUST keep the previous committed values from the native committed baseline
 
-#### Scenario: updater form reads the current committed value
+#### Scenario: set does not support updater form
 - **WHEN** application code calls `api.set` with an updater function
-- **THEN** `prev` MUST be the latest native-confirmed `entityProps` mirror value (Source A), which MAY lag the real-time native transform
-- **AND** read-modify-write MUST be expressed through the updater without exposing a bare getter
+- **THEN** the SDK MUST explicitly reject the call
+- **AND** the SDK MUST NOT fabricate `prev` from an empty object, defaults, or a stale mirror
+- **AND** read-modify-write MUST be expressed by reading `entityProps` and then explicitly calling `api.set(values)`
 
-#### Scenario: set during an active animation does not throw and does not survive terminal fill
+#### Scenario: set during an active animation is not stashed
 - **GIVEN** an Entity animation is in `delay`, `running`, or `paused`
 - **WHEN** application code calls `api.set`
-- **THEN** the SDK MUST NOT throw
-- **AND** the SDK MUST NOT interrupt or override the active animation
-- **AND** the written value MUST NOT be queued for replay after the animation
-- **AND** when the animation reaches a terminal state the terminal fill MUST override the value written during the active animation
+- **THEN** the SDK MUST NOT interrupt or override the active animation
+- **AND** native MUST NOT stash the write and MUST NOT replay it after the animation ends
+- **AND** `entityProps` MUST NOT update due to that write
+- **AND** failure MUST be exposed through the existing command failure or error event mechanism
+
+#### Scenario: set before binding or native object creation is invalid
+- **GIVEN** the Entity motion binding is not bound yet, or the corresponding native object has not been created
+- **WHEN** application code calls `api.set`
+- **THEN** the SDK MUST NOT create a pending write
+- **AND** the write MUST NOT be replayed after later binding or native object creation
+- **AND** failure MUST be exposed through the existing command failure or error event mechanism
 
 #### Scenario: Start point after set then play
 - **WHEN** application code calls `api.set` and then `api.play()`

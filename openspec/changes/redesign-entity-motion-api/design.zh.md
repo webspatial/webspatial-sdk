@@ -85,7 +85,7 @@ flowchart TB
         UseEntity["useEntityAnimation(config)<br/>返回 [animation, api, entityProps]"]
         ReactBinding["创建 EntityMotionBinding / playback api"]
         EntityProps["entityProps<br/>native confirmed transform 的 mirror"]
-        ApiSet["api.set(value | updater)<br/>直接发 native,不写本地 cache"]
+        ApiSet["api.set(values patch)<br/>直接发 native,不写本地 cache"]
         BindTarget["useBindMotionTarget({ binding, target })<br/>xr-animation 推荐 / animation 兼容"]
 
         UseEntity --> ReactBinding
@@ -179,10 +179,10 @@ ControlSpatializedElementAnimation {
 }
 ```
 
-`api.set` 不新增 JSB。它发送 `type: 'set'` 到 native:
+`api.set` 不新增 JSB。它只接受 `EntityMotionProps` patch object,不支持 `(prev) => next` updater 形式。它发送 `type: 'set'` 到 native:
 
 - native 拒绝:命令失败或 error event,`entityProps` 不更新。
-- native 接受:native 应用 / 合成 transform 后,通过 `spatialanimationstatechanged` 回传 confirmed values,React 再更新 `entityProps`。
+- native 接受:native 基于当前 committed `entity.transform` 合并 patch、应用 transform 后,通过 `spatialanimationstatechanged` 回传 confirmed values,React 再更新 `entityProps`。
 
 ### spatialanimationstatechanged
 
@@ -265,15 +265,15 @@ sequenceDiagram
     participant Obj as AnimationObject
     participant Native as RealityKit Entity Adapter
 
-    App->>Hook: api.set(values or updater)
-    Hook->>Hook: updater 基于最近 confirmed entityProps 计算 next values
-    Hook->>Obj: set(nextValues)
+    App->>Hook: api.set(values patch)
+    Hook->>Obj: set(values patch)
     Obj->>Native: ControlSpatializedElementAnimation(type=set, values)
     alt native rejects
         Native-->>Obj: command failure or error event
         Obj-->>Hook: onError
         Hook-->>App: entityProps unchanged
     else native accepts
+        Native->>Native: merge patch over current committed transform
         Native->>Native: apply accepted transform
         Native-->>Obj: spatialanimationstatechanged(values)
         Obj-->>Hook: confirmed EntityMotionProps
@@ -281,7 +281,7 @@ sequenceDiagram
     end
 ```
 
-`api.set` 不是 playback 命令,不 seek、不 start、不改变播放进度。它也不写本地 pending state;native 是唯一决定该写入是否生效的地方。
+`api.set` 不是 playback 命令,不 seek、不 start、不改变播放进度。它也不写本地 pending state;native 是唯一决定该写入是否生效的地方。活跃动画期间 native 不暂存 set patch,未绑定或 native object 尚未创建前的 set 也无效;这些失败通过既有 command failure / error event 暴露,且不会更新 `entityProps`。
 
 ## Entity tracks 与 RealityKit 编译
 
@@ -469,7 +469,7 @@ type EntityMotionProps = {
 - `position` 来自 native transform translation。
 - `scale` 来自 native transform scale。
 - `rotation` 使用 Entity props / config 一致的 Euler degrees。
-- callback values、`entityProps`、`api.set` updater 的 `prev` 都使用同一 shape。
+- callback values、`entityProps`、`api.set(values)` patch 都使用同一 shape。
 
 ## Capability
 
@@ -525,7 +525,7 @@ classDiagram
             +stop()
             +reset()
             +finish()
-            +set(values_or_updater)
+            +set(values)
         }
         class EntityMotionBinding
         class EntityMotionProps {
@@ -589,7 +589,7 @@ classDiagram
 - **历史命名误导。** 复用 `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` 会保留 element 字样。文档必须明确其目标态语义已泛化为 motion animation object 协议。
 - **Timeline 编译器是主要新增成本。** 多关键帧、稀疏关键帧、rotation 转换和 segment 合成都集中在 native Entity adapter。
 - **Whole-transform ownership。** Entity transform 最终是一个 native Transform;v1 不做字段级所有权合成。
-- **Updater 基于最近 confirmed mirror。** 因为 native 是唯一权威,`api.set(prev => next)` 的 `prev` 只能是最近一次 native confirmed `entityProps`,不是实时 native 采样值。
+- **不提供 updater form。** 因为 native 是唯一权威,`api.set(prev => next)` 会暗示 React `setState` 语义,但 `prev` 无法承诺为实时 native transform。v1 只支持 patch object;读当前 confirmed 状态通过 `entityProps` 完成。
 - **大量并发动画仍需 profiling。** RealityKit 原生播放优于 JS 逐帧写入,但规模并发仍应实测。
 
 ## Decisions
