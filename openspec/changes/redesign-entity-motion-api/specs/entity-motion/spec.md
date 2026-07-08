@@ -150,11 +150,11 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 
 ### Requirement: `api.set` is the imperative write entry for committed transform state
 
-The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST only accept a sparse `EntityMotionProps` patch object and MUST NOT support the updater function form `(prev) => next`. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
+The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST only accept a sparse `EntityMotionPatch` object (the write-side patch type; the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly) and MUST NOT support the updater function form `(prev) => next`. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
 
 Entity transform is composed from two sources: Source A is static/base React props plus `entityProps` (the committed state mirrored by the SDK; dynamic take-over is written through `api.set`), and Source B is the `xr-animation` binding (per-frame sampled values). Arbitration MUST be per transform component (`position` / `rotation` / `scale`) and independent: for a component present in the config, Source B is authoritative while the animation is active (`delay` / `running` / `paused`) and Source A is authoritative while it is inactive (`idle` / terminal); a component not present in the config is always authoritative from Source A. `api.set` always writes Source A.
 
-The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST read declarative `entityProps`, and compute its own patch before calling `api.set(values)` when it needs to write.
+The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST read declarative `entityProps`, and compute its own patch before calling `api.set(values)` when it needs to write. `entityProps` MAY be empty before the first native-confirmed state and MUST NOT be promised readable at mount: creating or binding the animation MUST NOT emit an extra initial confirmed value. To read a meaningful native pose, application code MUST first trigger a lifecycle that commits a confirmed value (a `play` that reaches a terminal / lifecycle node, or an accepted `api.set`).
 
 #### Scenario: set updates committed state and entityProps
 - **WHEN** application code calls `api.set(values)` with Entity transform values
@@ -198,3 +198,17 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 - **WHEN** an animation reaches a terminal state
 - **THEN** the SDK MUST fill to the terminal transform and write it back to `entityProps`
 - **AND** the SDK MUST NOT snap the Entity back to the pre-animation value
+
+### Requirement: Playback errors are classified and events are addressable by `animationId`
+
+The SDK MUST expose a closed `SpatializedPlaybackError.code` classification for Entity motion failures, covering at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, `TARGET_DESTROYED`, `SET_REJECTED_DURING_ACTIVE`, and `SET_BEFORE_READY`. All classified failures MUST be delivered to the user through `onError`. Consumers MUST determine the `values` shape by reverse-looking-up the local animation object identified by `animationId`, not by any target-type field on the event, and MUST discard events whose `animationId` matches no live local animation object.
+
+#### Scenario: Error code is distinguishable
+- **WHEN** an Entity motion operation fails
+- **THEN** `onError` MUST receive a `SpatializedPlaybackError` whose `code` identifies the failure kind
+- **AND** application code MUST be able to branch on `code` without parsing `message`
+
+#### Scenario: Stale or unknown animationId events are discarded
+- **WHEN** a `spatialanimationstatechanged` event carries an `animationId` that matches no live local animation object
+- **THEN** the SDK MUST discard the event
+- **AND** `entityProps` MUST NOT update as a result

@@ -318,10 +318,10 @@ Entity transform 由两个数据源合成:
 #### 7.2 签名
 
 ```text
-api.set(values: EntityMotionProps): void
+api.set(values: EntityMotionPatch): void
 ```
 
-`api.set` 只接受 `EntityMotionProps` patch object,不支持 `(prev) => next` updater 形式。
+`api.set` 只接受 `EntityMotionPatch` object。`EntityMotionPatch` 是写入侧的稀疏 patch 类型,与 `EntityMotionProps` 同为 `{ position?, rotation?, scale? }` 形态,但两者命名有意区分:`EntityMotionPatch` 是 `api.set` 的输入,`EntityMotionProps` 是通过 `entityProps` 和 callback values 暴露的读取侧 confirmed mirror。不支持 `(prev) => next` updater 形式。
 
 #### 7.3 行为
 
@@ -343,6 +343,7 @@ api.set(values: EntityMotionProps): void
 
 - 读取当前 confirmed 值:读 `entityProps`,它是 committed 状态的响应式镜像。
 - 读-改-写:应用代码基于 `entityProps` 计算新的 patch,再调用 `api.set(values)`。
+- 首个 native confirmed state 之前,`entityProps` 可能为空,且在 mount 时不承诺可读:`create` / `bind` 不会额外 emit 初始 confirmed value。要读到 native 姿态,应用代码必须先触发一次能提交 confirmed value 的 lifecycle(一次 `play` 终态,或一次被接受的 `api.set`)。
 
 ### 8. 与 React props 的冲突语义
 
