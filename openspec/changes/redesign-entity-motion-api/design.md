@@ -25,7 +25,7 @@ This means:
 - If native rejects a command, the write is ineffective and `entityProps` does not update.
 - If native accepts a command, it emits the confirmed transform through the existing animation state event, and React updates `entityProps` from that event.
 - React mirrors native-confirmed state for users; it does not predict terminal values or queue replay writes made while animation is active.
-- Before the first confirmed state, `entityProps` may be empty; after confirmation it is a complete pose (`position` / `rotation` / `scale`), not a touched-fields patch.
+- Before the first confirmed state, `entityProps` may be empty; after confirmation it mirrors the transform components owned by the animation system (the animated components plus components written via `api.set`), limited to `position` / `rotation` / `scale`; components that are not owned do not enter `entityProps`.
 
 ### Reuse the `useAnimation` architecture
 
@@ -52,7 +52,6 @@ This means:
 - Designing a CADisplayLink sampler backend (explicitly not chosen; see Backend Rationale)
 - A public seek / scrub / progress API (proposal Non-Goal)
 - Adding `CreateEntityAnimationJSBCommand` / `ControlEntityAnimationJSBCommand`
-- Field-level ownership composition (position animated while rotation/scale are dynamically taken over by props); under the current whole-matrix animation path, field-level coexistence produces undefined behavior, tracked as future work / v2
 
 ## Backend Rationale (RealityKit)
 
@@ -351,36 +350,40 @@ The output is not React state. It is a native executable plan plus confirmed val
 
 ```text
 EntityMotionTimelinePayload
-  -> EntityTransformSegmentPlan
-  -> RealityKit AnimationResource / playback controller
+  -> EntityChannelAnimationPlan (per-channel)
+  -> RealityKit AnimationResource[] + AnimationGroup
   -> spatialanimationstatechanged(values)
 ```
 
-`EntityTransformSegmentPlan` is an internal Native adapter execution plan, not a public JS/Core type:
+`EntityChannelAnimationPlan` is an internal Native adapter execution plan, not a public JS/Core type. It is organized by **transform channel**: each channel carries its own keyframes and per-keyframe timing function, rather than merging all channels into segments that share a single boundary:
 
 ```text
-type EntityTransformSegmentPlan = {
+type EntityChannelAnimationPlan = {
   duration: number
   delay: number
   playbackRate: number
   loop?: boolean | { reverse?: boolean }
-  segments: EntityTransformSegment[]
+  channels: EntityChannelPlan[]
 }
 
-type EntityTransformSegment = {
-  fromTime: number
-  toTime: number
-  from: CompleteEntityTransform
-  to: CompleteEntityTransform
-  timingFunction: TimingFunction
+type EntityChannelPlan = {
+  channel: EntityMotionProperty   // position.x / rotation.y / scale.z ...
+  baseline: number                // the native value of this channel at playback start, used when a keyframe is missing
+  keyframes: EntityChannelKeyframe[]
 }
 
-type CompleteEntityTransform = {
-  position: Vec3
-  rotationDegrees: Vec3
-  scale: Vec3
+type EntityChannelKeyframe = {
+  at: number
+  value: number
+  timingFunction: TimingFunction  // the timing used from this keyframe to the next
 }
 ```
+
+**Why per-channel instead of per-segment:**
+
+If all channels are merged into shared time segments, each segment can carry only one `timingFunction`. But within the same time span, different channels may require different timing functions (for example `position.y` uses `easeOut` while `rotation.y` uses `linear`); a single slot cannot express two curves at once — once merged into segments, the per-channel timing information is already lost before it reaches RealityKit. The per-frame per-track sampling CADisplayLink element path does not have this problem, because each track independently takes its own timing.
+
+Therefore the per-channel structure is preserved: each channel is compiled into its own RealityKit animation (carrying its own timing function), then played in parallel through an `AnimationGroup` bound to the corresponding sub-target (translation / orientation / scale). This way per-channel timing is never lost along the whole path, consistent with the element-path semantics.
 
 ### Compilation Flow
 
@@ -389,22 +392,20 @@ flowchart TB
     Payload["EntityMotionTimelinePayload<br/>canonical tracks"]
     Validate["bottom-guard validation<br/>duration / property / keyframes / scale"]
     Snapshot["read native current transform<br/>as missing-channel baseline"]
-    Times["collect and sort global keyframe times"]
-    Table["build channel value table<br/>position / rotation / scale"]
-    Fill["solve boundary values<br/>keyframe / track interpolation / native baseline"]
-    Segments["synthesize EntityTransformSegmentPlan<br/>each segment from/to is a complete Transform"]
-    RKCompile["compile to RealityKit animation<br/>rotation degrees -> native rotation"]
-    Play["entity.playAnimation()"]
+    Baseline["read the native baseline of missing-keyframe channels"]
+    Channels["organize EntityChannelAnimationPlan by channel<br/>each channel keeps its own keyframes + per-keyframe timing"]
+    RKCompile["compile each channel into its own RealityKit animation<br/>carrying its own timing; rotation degrees -> native rotation"]
+    Group["AnimationGroup plays in parallel<br/>bound to translation / orientation / scale sub-target"]
+    Play["entity.playAnimation(group)"]
     Confirm["after terminal / set accepted<br/>emit confirmed EntityMotionProps"]
 
     Payload --> Validate
     Validate --> Snapshot
-    Snapshot --> Times
-    Times --> Table
-    Table --> Fill
-    Fill --> Segments
-    Segments --> RKCompile
-    RKCompile --> Play
+    Snapshot --> Baseline
+    Baseline --> Channels
+    Channels --> RKCompile
+    RKCompile --> Group
+    Group --> Play
     Play --> Confirm
 ```
 
@@ -413,23 +414,23 @@ flowchart TB
 1. **Property whitelist:** Accept only `position.*`, `rotation.*`, and `scale.*`. `opacity`, `transform.translate.*`, material properties, and component properties MUST fail explicitly.
 2. **Time range:** `duration` MUST be positive. Each keyframe `at` MUST be within `[0, duration]`.
 3. **Ordering and duplicates:** Keyframes in each track MUST be sorted by non-decreasing `at`. Duplicate tracks for the same property are not allowed.
-4. **Global timeline:** Native collects keyframe times across all tracks and sorts them into segment boundaries. For example, `0, 0.6, 1.2` produces `[0, 0.6]` and `[0.6, 1.2]`.
-5. **Boundary value solving:** If a property has no explicit keyframe at a segment boundary, the Native adapter MUST evaluate that property's own track at that time. If the time is between two keyframes, use that track's timing function to compute the boundary value. If the time is before the property's first keyframe, use the corresponding channel from the current native transform. If the time is after the last keyframe, use the last keyframe value.
-6. **Complete Transform:** Each segment `from` and `to` MUST be a complete position / rotation / scale transform. Partial channels must not be passed directly to RealityKit.
+4. **Timeline and keyframe intervals:** Each channel forms intervals from its own keyframe times and does not share global segment boundaries with other channels. For example, a channel's `0, 0.6, 1.2` only affects that channel's own `[0, 0.6]` and `[0.6, 1.2]` intervals.
+5. **Missing-keyframe baseline and non-animated components:** Each channel is compiled independently. If a channel has no explicit keyframe at time `0`, use that channel's native current transform value at playback start as the baseline; if it is later than the channel's last keyframe, hold the last keyframe value. Channels do not share boundaries and do not interpolate against each other. **Component granularity distinguishes two kinds of absence:** (a) *non-animated scalars within an animated component* — e.g. animating only `position.y` freezes `position.x` / `position.z` to baseline because the RealityKit translation sub-target is bound as a whole; (b) *entirely absent components* — e.g. if the config has no `scale.*`, no animation is generated for the scale sub-target, scale is not owned by the animation, and it is driven by React props during the animation.
+6. **Per-channel parallelism:** Each channel is compiled into its own RealityKit animation, played in parallel through an `AnimationGroup` and bound to the corresponding sub-target (translation / orientation / scale). Native does not merge multiple channels into a segment that shares timing, so that per-channel timing functions are not lost.
 7. **Rotation:** `rotation.*` inputs use Entity API Euler degrees. Native converts them to the rotation representation required by RealityKit during compilation, avoiding per-frame Euler interpolation.
 8. **Scale:** `scale.*` MUST be non-negative. Invalid scale fails immediately.
-9. **Timing function:** keyframe-level `timingFunction` takes precedence over track-level, which takes precedence over the timeline default. If different properties in the same time span require different timing functions, the Native adapter MUST choose a RealityKit-expressible per-channel compilation strategy; if it cannot express the shape, it MUST fail explicitly rather than degrading into wrong semantics.
-10. **Loop / playbackRate / delay:** These playback parameters remain on the segment plan and are executed by the RealityKit playback/controller layer.
+9. **Timing function (per-channel):** keyframe-level `timingFunction` takes precedence over track-level, which takes precedence over the timeline default. The resolved per-keyframe timing stays on each channel's keyframes and is carried by that channel's own RealityKit animation, not merged with other channels. Therefore different channels using different timing functions within the same time span is natively supported; segment merging is no longer needed, and there is no case that cannot be expressed and has to degrade. RealityKit built-in timing (linear / easeIn / easeOut / easeInOut) maps directly; a custom cubic-bezier with no matching built-in curve bakes that channel into a `SampledAnimation`.
+10. **Loop / playbackRate / delay:** These playback parameters remain at the top level of `EntityChannelAnimationPlan`, apply uniformly to the whole `AnimationGroup`, and are executed by the RealityKit playback/controller layer.
 11. **Terminal fill:** `complete` / `finish` stop at terminal, `reset` stops at start, and `stop` freezes at the current native transform. These confirmed values are emitted back to React through events.
-12. **Explicit failure:** If RealityKit cannot express a segment plan, the Native adapter MUST fail through command failure or error event. It must not silently ignore the limitation.
+12. **Explicit failure:** If RealityKit cannot express a channel plan (for example a timing that cannot be baked), the Native adapter MUST fail through command failure or error event. It must not silently ignore the limitation.
 
-### Example: Sparse Tracks to Segment Plan
+### Example: Sparse Tracks to Per-Channel Plan
 
 Input tracks:
 
 ```text
-position.y: (0 -> 0), (0.6 -> 0.25), (1.2 -> 0)
-rotation.y: (0 -> 0), (1.2 -> 180)
+position.y: (0 -> 0), (0.6 -> 0.25), (1.2 -> 0)   timing: easeOut
+rotation.y: (0 -> 0), (1.2 -> 180)                timing: linear
 ```
 
 Assume the native current transform is:
@@ -440,19 +441,24 @@ rotation: { x: 0, y: 0, z: 0 }
 scale:    { x: 1, y: 1, z: 1 }
 ```
 
-Compiled result:
+Compiled result (each channel is independent and shares no boundaries):
 
 ```text
-segments:
-  [0, 0.6]
-    from: position { x: 0, y: 0,    z: 0.8 }, rotation { x: 0, y: 0,   z: 0 }, scale { x: 1, y: 1, z: 1 }
-    to:   position { x: 0, y: 0.25, z: 0.8 }, rotation { x: 0, y: 90,  z: 0 }, scale { x: 1, y: 1, z: 1 }
-  [0.6, 1.2]
-    from: position { x: 0, y: 0.25, z: 0.8 }, rotation { x: 0, y: 90,  z: 0 }, scale { x: 1, y: 1, z: 1 }
-    to:   position { x: 0, y: 0,    z: 0.8 }, rotation { x: 0, y: 180, z: 0 }, scale { x: 1, y: 1, z: 1 }
+channels:
+  position.y  baseline 0
+    keyframes: (0, 0, easeOut) (0.6, 0.25, easeOut) (1.2, 0, easeOut)
+    -> RealityKit animation(easeOut), bound to translation.y
+  rotation.y  baseline 0
+    keyframes: (0, 0, linear) (1.2, 180, linear)
+    -> RealityKit animation(linear), bound to orientation (about y)
+
+Undeclared scalars within the same component (position.x/z, rotation.x/z)
+are bound with their sub-target and frozen to the native baseline at playback start.
+Entirely absent components (scale.*) generate no animation, are not owned by
+the animation, and are driven by React props during the animation.
 ```
 
-Here `rotation.y` only has keyframes at `0` and `1.2`; the value at the `0.6` boundary is computed by the Native adapter using that track's timing function during compilation. It is only used to generate the complete boundary Transform for the segment; per-frame interpolation inside each segment remains RealityKit's responsibility.
+Compared to the old segment approach: `position.y`'s `easeOut` and `rotation.y`'s `linear` are no longer squeezed into one segment sharing a single `timingFunction`, and `rotation.y` no longer needs an artificial intermediate boundary value at `0.6` — it plays with just its own `(0, 1.2)` two keyframes + `linear`. This is the key difference of per-channel compilation over segment merging.
 
 ## Transform Decomposition and Values
 
@@ -589,8 +595,9 @@ classDiagram
 ## Risks / Trade-offs
 
 - **Historical naming confusion.** Reusing `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` keeps "element" in the command names. Documentation must make clear that target-state semantics generalize them into the motion animation object protocol.
-- **Timeline compiler is the main new cost.** Multi-keyframes, sparse keyframes, rotation conversion, and segment synthesis are concentrated in the native Entity adapter.
-- **Whole-transform ownership.** Entity transform is ultimately a native Transform; v1 does not implement field-level ownership composition. The animation dispatches a complete transform, and fields not declared in the config are frozen to their playback-start snapshot, so during an active animation React props cannot dynamically take over an individual field (e.g. position animated while rotation flows through props) — that would conflict with native single-authority and produce undefined behavior. Field-level ownership composition is tracked as future work / v2.
+- **Timeline compiler is the main new cost.** Multi-keyframes, sparse keyframes, rotation conversion, and per-channel compilation are all concentrated in the native Entity adapter.
+- **Two costs of per-channel compilation.** To let different channels keep their own timing function within the same time span, multiple channels cannot be merged into a single complete-Transform animation: (1) each channel must be compiled into its own RealityKit animation bound to a sub-target (translation / orientation / scale) and played in parallel through an `AnimationGroup`, rather than one whole-Transform animation; (2) custom timing (when there is no matching RealityKit built-in curve) may require baking that channel into a `SampledAnimation`.
+- **Per-component ownership and sub-target binding granularity.** Ownership granularity is the transform component (`position` / `rotation` / `scale`), because RealityKit sub-target binding is itself per component (translation / orientation / scale), not per scalar (`position.x` vs `position.y`). A component is owned entirely by the animation as soon as any of its channels appear in the config; a component that does not appear at all stays with React props and is driven normally during the animation. Note the scalar sub-granularity: if only `position.y` is animated, that channel's RealityKit animation binds the whole translation sub-target, so `position.x` / `position.z` are frozen to the playback-start native baseline during the animation rather than flowing through props — this is dictated by sub-target binding granularity, not by the ownership model. Cross-component composition (position animated while rotation flows through props) is fully supported.
 - **No updater form.** Because native is the single authority, `api.set(prev => next)` would imply React `setState` semantics, but `prev` cannot be promised as a real-time native transform. v1 only supports patch objects; reads of the current confirmed state go through `entityProps`.
 - **Large concurrent animations still need profiling.** RealityKit native playback is better than JS per-frame writes, but scale should still be measured.
 
@@ -600,4 +607,7 @@ classDiagram
 - `entityProps` is a React mirror outlet for native-confirmed transform, not a local source of truth.
 - Reuse `CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand` and the existing event channel; do not add parallel Entity JSB.
 - JS/Core normalizes `from`/`to` and `timeline` into canonical Entity tracks; Native executes canonical payload and performs bottom-guard validation.
+- **Native uses per-channel timing compilation.** Each transform channel is compiled into its own RealityKit animation carrying its own timing function, bound in parallel to the translation / orientation / scale sub-targets through an `AnimationGroup`, rather than merging all channels into a segment that shares a single `timingFunction`. Reason: after segment merging each segment can carry only one timing function, so different curves for different channels within the same time span cannot be expressed and are lost before reaching native; per-channel is consistent with the per-frame per-track sampling semantics of the CADisplayLink element path. Costs are in Risks.
+- **The Entity compilation output does not reuse `SpatializedMotionConfig` / `SpatializedMotionTrack`.** Three reasons: (1) **Different stage** — `SpatializedMotion*Config` is a public authoring config (with `onStart`/`onComplete`/`autoStart` callbacks, un-desugared tracks, and an optional `timingFunction` with three-level fallback), whereas `EntityChannelAnimationPlan` is a native-compiled executable plan (percentages resolved, `from`/`to` desugared, missing-keyframe `baseline` solved, timing collapsed onto each keyframe); the config has nowhere to place `baseline` / resolved timing, and the callback fields are noise. (2) **Different domain** — `SpatializedMotionTrack.property` is the CSS/element visual domain (`opacity` / `transform.translate.*` / `transform.rotate.*` / `transform.scale.*`), while Entity is the pose domain (`position.*` / `rotation.*` / `scale.*`) and explicitly rejects `opacity`; the value domain also differs (`SpatializedVisualValues` vs `EntityMotionProps`, the latter using Euler degrees for rotation). Reuse would mix `opacity`/`transform.translate` into Entity channels and degrade structural constraints into runtime validation. (3) **Avoid cross-path coupling** — this redesign only reuses the cross-boundary protocol (JSB command / events); internal data types are not reused. The element adapter (CADisplayLink per-track sampler) and the Entity adapter (RealityKit per-channel plan) each hold their own compilation output, so that element-side property whitelist or `SpatializedVisualValues` changes do not ripple into Entity. If a "normalized timeline" counterpart is needed, the element side is `SpatializedMotionTimeline` and the Entity side is `EntityMotionTimelinePayload`, and those are independent as well.
+- **Ownership granularity is per-component, not the whole transform.** A transform component (`position` / `rotation` / `scale`) is owned entirely by the animation during an active animation as soon as any of its fields appear in the config; a component that does not appear in the config at all stays with React props and is driven normally during the animation. Rationale: (1) the old entity transform animation API this proposal replaces was already per-component (per-field suppression cache, non-animated fields keep updating), so per-component keeps the replacement non-breaking; (2) the whole-transform rationale (element path sends DOMMatrix whole, splitting needs matrix decompose/recompose) does not apply to Entity — Entity props are already component-structured and per-channel compilation provides the execution foundation; (3) the ownership decision is pushed to native (based on components declared in config), with no dual-authority React-side cache. Boundary: granularity stops at the component, not the scalar (`position.x` vs `position.y`), because RealityKit sub-target binding is per-component; non-animated scalars within an animated component are frozen to baseline via their sub-target (see Risks).
 - The old `AnimateTransformJSBCommand` is an internal implementation protocol and may be replaced or removed.

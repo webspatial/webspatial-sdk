@@ -25,7 +25,7 @@ React config / api.set
 - native 拒绝命令时,对应写入无效,`entityProps` 不更新。
 - native 接受命令时,通过现有 animation state event 回传确认后的 transform,React 再更新 `entityProps`。
 - React 侧只负责把 native 确认过的状态镜像给用户,不自行预测终态、不排队 replay 活跃期间的写入。
-- 首个 confirmed state 之前 `entityProps` 可能为空;confirmed 之后它是完整 pose(`position` / `rotation` / `scale`),而不是 touched-fields patch。
+- 首个 confirmed state 之前 `entityProps` 可能为空;confirmed 之后它镜像动画系统已接管的 transform 分量(被动画的分量,加上 `api.set` 写入的分量),字段范围限定在 `position` / `rotation` / `scale` 之内,未被接管的分量不进入 `entityProps`。
 
 ### 复用 `useAnimation` 架构
 
@@ -52,7 +52,6 @@ React config / api.set
 - 设计 CADisplayLink 采样器 backend(明确未采用,见 Backend 理由)
 - 提供公共 seek / scrub / progress API(proposal Non-Goal)
 - 新增 `CreateEntityAnimationJSBCommand` / `ControlEntityAnimationJSBCommand`
-- 字段级 ownership 组合(position 动画 + rotation/scale 由 props 动态接管);当前整矩阵动画路径下字段级共存会产生未定义行为,列为 future work / v2
 
 ## Backend 理由(RealityKit)
 
@@ -402,7 +401,6 @@ flowchart TB
 
     Payload --> Validate
     Validate --> Snapshot
-    Snapshot --> Times
     Snapshot --> Baseline
     Baseline --> Channels
     Channels --> RKCompile
@@ -417,7 +415,7 @@ flowchart TB
 2. **时间范围:** `duration` 必须为正数;每个 keyframe 的 `at` 必须在 `[0, duration]` 内。
 3. **排序与重复:** 每条 track 的 keyframes 必须按 `at` 非递减排序;同一 property 不允许重复 track。
 4. **时间轴与 keyframe 区间:** 每个 channel 按自己的 keyframe times 形成区间,不与其它 channel 共享全局 segment 边界。例如某 channel 的 `0, 0.6, 1.2` 只影响该 channel 自己的 `[0, 0.6]` 与 `[0.6, 1.2]` 两个区间。
-5. **缺帧 baseline:** 每个 channel 独立编译。若某 channel 在 `0` 时刻没有显式 keyframe,使用播放起点该 channel 的 native current transform 值作为 baseline;若晚于该 channel 最后一个 keyframe,保持最后一个 keyframe 值。channel 之间不共享边界,也不互相插值。
+5. **缺帧 baseline 与非动画分量:** 每个 channel 独立编译。若某 channel 在 `0` 时刻没有显式 keyframe,使用播放起点该 channel 的 native current transform 值作为 baseline;若晚于该 channel 最后一个 keyframe,保持最后一个 keyframe 值。channel 之间不共享边界,也不互相插值。**分量粒度区分两种缺帧:**(a)*被动画分量内的非动画标量*——例如只动画 `position.y`,则 `position.x` / `position.z` 因 RealityKit translation sub-target 被整体绑定而以 baseline 冻结;(b)*完全未出现的分量*——例如 config 没有任何 `scale.*`,则不为 scale sub-target 生成 animation,scale 不被动画持有,动画期间仍由 React props 驱动。
 6. **Per-channel 并行:** 每个 channel 编译为独立的 RealityKit animation,通过 `AnimationGroup` 并行播放并绑定到对应 sub-target(translation / orientation / scale)。Native 不把多个 channel 合并成共享 timing 的 segment,以保证 per-channel timing function 不丢失。
 7. **Rotation:** `rotation.*` 输入单位是 Entity API 的 Euler degrees。Native 编译时转换为 RealityKit transform 所需的旋转表示,避免用 Euler 做逐帧插值。
 8. **Scale:** `scale.*` 必须为非负数。非法 scale 直接失败。
@@ -454,8 +452,10 @@ channels:
     keyframes: (0, 0, linear) (1.2, 180, linear)
     -> RealityKit animation(linear),绑定 orientation(绕 y)
 
-未在 config 声明的 channel(position.x/z、rotation.x/z、scale.*)
-不生成 animation,保持播放起点的 native baseline。
+同一分量内未声明的标量(position.x/z、rotation.x/z)随所属 sub-target
+被绑定,以播放起点的 native baseline 冻结。
+完全未出现的分量(scale.*)不生成 animation,不被动画持有,
+动画期间仍由 React props 驱动。
 ```
 
 对比旧的 segment 方案:`position.y` 的 `easeOut` 与 `rotation.y` 的 `linear` 不再被压进同一段共享一个 `timingFunction`,`rotation.y` 也不需要在 `0.6` 处求一个人为的中间边界值——它只按自己的 `(0, 1.2)` 两帧 + `linear` 播放。这就是 per-channel 编译相对 segment 合并的关键区别。
@@ -597,7 +597,7 @@ classDiagram
 - **历史命名误导。** 复用 `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` 会保留 element 字样。文档必须明确其目标态语义已泛化为 motion animation object 协议。
 - **Timeline 编译器是主要新增成本。** 多关键帧、稀疏关键帧、rotation 转换和 per-channel 编译都集中在 native Entity adapter。
 - **Per-channel 编译的两项代价。** 为了让同一时间段内不同 channel 能各自保留 timing function,不能把多 channel 合并成一个完整 Transform 动画:(1) 必须把每个 channel 编译为独立 RealityKit animation 并绑定到 sub-target(translation / orientation / scale),再用 `AnimationGroup` 并行播放,而不是一条整 Transform 动画;(2) 自定义 timing(无对应 RealityKit 内建曲线时)可能需要把该 channel bake 成 `SampledAnimation`。
-- **Whole-transform ownership。** Entity transform 最终是一个 native Transform;v1 不做字段级所有权合成。动画下发的是完整 transform,未在 config 声明的字段按播放起点快照冻结,因此 active animation 期间无法让 React props 动态接管某个字段(如 position 动画 + rotation 走 props)——这会与 native 单一权威冲突并产生未定义行为。字段级 ownership 组合列为 future work / v2。
+- **分量级 ownership 与 sub-target 绑定粒度。** Ownership 粒度是 transform 分量(`position` / `rotation` / `scale`),因为 RealityKit 的 sub-target 绑定就是分量级的(translation / orientation / scale),不是标量级(`position.x` vs `position.y`)。某个分量只要有任一 channel 出现在 config,整个分量归动画;完全没出现的分量归 React props,动画期间照常驱动。注意标量子粒度:若只动画 `position.y`,该 channel 的 RealityKit animation 绑定整个 translation sub-target,因此 `position.x` / `position.z` 在动画期间以播放起点的 native baseline 冻结,而不是走 props——这是 sub-target 绑定粒度决定的,不是 ownership 模型的选择。跨分量组合(position 动画 + rotation 走 props)则完全支持。
 - **不提供 updater form。** 因为 native 是唯一权威,`api.set(prev => next)` 会暗示 React `setState` 语义,但 `prev` 无法承诺为实时 native transform。v1 只支持 patch object;读当前 confirmed 状态通过 `entityProps` 完成。
 - **大量并发动画仍需 profiling。** RealityKit 原生播放优于 JS 逐帧写入,但规模并发仍应实测。
 
@@ -609,4 +609,5 @@ classDiagram
 - JS/Core 负责 `from`/`to`、`timeline` 到 canonical Entity tracks 的归一化;Native 只执行 canonical payload 并做兜底校验。
 - **Native 采用 per-channel timing 编译。** 每个 transform channel 单独编译为携带自身 timing function 的 RealityKit animation,经 `AnimationGroup` 并行绑定到 translation / orientation / scale sub-target,而不是把所有 channel 合并成共享单一 `timingFunction` 的 segment。原因:segment 合并后每段只能带一个 timing function,同一时间段内不同 channel 的不同曲线无法表达,在进入 native 前就丢失;per-channel 则与 CADisplayLink element 路径的逐帧 per-track 采样语义一致。代价见 Risks。
 - **Entity 编译产出不复用 `SpatializedMotionConfig` / `SpatializedMotionTrack`。** 理由有三:(1) **阶段不同**——`SpatializedMotion*Config` 是 public authoring 配置(带 `onStart`/`onComplete`/`autoStart` 回调、未脱糖 tracks、三级 fallback 的可选 `timingFunction`),而 `EntityChannelAnimationPlan` 是 native 编译后的可执行计划(已解百分比、已脱糖 `from`/`to`、已求缺帧 `baseline`、timing 已塔缩到每个 keyframe);config 里无处安放 `baseline`/已解析 timing,回调字段又是噪声。(2) **域不同**——`SpatializedMotionTrack.property` 是 CSS/element 视觉域(`opacity` / `transform.translate.*` / `transform.rotate.*` / `transform.scale.*`),Entity 是 pose 域(`position.*` / `rotation.*` / `scale.*`)且显式拒绝 `opacity`;value 域也不同(`SpatializedVisualValues` vs `EntityMotionProps`,后者 rotation 是 Euler degrees)。复用会把 `opacity`/`transform.translate` 混进 Entity 通道,并把结构约束降级成运行时校验。(3) **避免跨路径耦合**——本次重设计只复用跨边界协议(JSB command / 事件),内部数据类型不复用;element adapter(CADisplayLink per-track sampler)与 Entity adapter(RealityKit per-channel plan)各自持有编译产出,以免 element 侧 property 白名单或 `SpatializedVisualValues` 变动波及 Entity。若需对标“归一化 timeline”,element 侧是 `SpatializedMotionTimeline`、Entity 侧是 `EntityMotionTimelinePayload`,两者也各自独立。
+- **Ownership 粒度采用分量级(per-component),而不是整个 transform。** 某个 transform 分量(`position` / `rotation` / `scale`)只要有任一字段出现在 config,该分量在 active animation 期间整体归动画;完全没出现在 config 的分量归 React props,动画期间照常驱动。理由:(1) 本提案替换的旧 entity transform animation API 本身就是分量级 ownership(按字段维护抑制缓存、非动画字段照常更新),采用分量级可保持非破坏性替换;(2) 整体抑制的理由(element 路径 DOMMatrix 整体下发、拆分需矩阵分解/重组)不适用于 Entity——Entity props 本就是分量结构,per-channel 编译已提供分量级执行基础;(3) ownership 判定下推到 native(以 config 声明的分量为准),不引入 React 侧双权威缓存。边界:粒度止于分量,不做标量级(`position.x` vs `position.y`),因为 RealityKit sub-target 绑定就是分量级的;被动画分量内的非动画标量随 sub-target 冻结到 baseline(见 Risks)。
 - 旧 `AnimateTransformJSBCommand` 是内部实现协议,可被替换或删除。
