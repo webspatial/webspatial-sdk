@@ -96,7 +96,7 @@ return (
 
 During animation playback, the Entity transform is determined by sampled animation values, and user writes do not take control.
 
-After animation ends, the Entity transform is still determined by the props supplied to the Entity. Users can change state by updating props, and such writes go through the same native-first path as `api.set`: native confirms the write and `entityProps` mirrors the confirmed values.
+After animation ends, the committed Entity transform is mirrored through `entityProps`. Users who need to take over dynamically after an animation should call `api.set`; ordinary Entity props remain the static/base inputs that `entityProps` intentionally overrides in the recommended composition order.
 
 Core goals:
 
@@ -201,30 +201,7 @@ const [animation, api, entityProps] = useEntityAnimation({
 
 #### 5.3 tracks
 
-`tracks` remains an internal non-public API:
-
-```text
-const [animation, api, entityProps] = useEntityAnimation({
-  duration: 2,
-  tracks: [
-    {
-      property: 'position.y',
-      keyframes: [
-        { at: 0, value: 0 },
-        { at: 1, value: 0.25 },
-        { at: 2, value: 0 },
-      ],
-    },
-    {
-      property: 'rotation.y',
-      keyframes: [
-        { at: 0, value: 0 },
-        { at: 2, value: 180 },
-      ],
-    },
-  ],
-})
-```
+`tracks` remains an internal non-public execution shape. Applications author Entity motion with `from` / `to` or percentage `timeline`; the SDK may normalize those public shapes into internal tracks before sending work to the native Entity adapter.
 
 Entity targets only allow:
 
@@ -320,7 +297,7 @@ entityProps.scale updates to terminal scale
 
 Entity transform is composed from two sources:
 
-- Source A: React props / `entityProps` (the committed state, written declaratively or through `api.set`).
+- Source A: static/base React props plus `entityProps` (the committed state mirrored by the SDK; dynamic take-over is written through `api.set`).
 - Source B: the `xr-animation` binding (per-frame sampled animation values).
 
 At any moment only one source is authoritative, decided by whether the animation is active:

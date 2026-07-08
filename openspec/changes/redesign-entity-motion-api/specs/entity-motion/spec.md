@@ -119,16 +119,15 @@ During active playback states, the animation system MUST own the whole Entity tr
 - **AND** the recommended composition order is for `entityProps` to be applied after stale base props
 
 
-### Requirement: Inactive-state prop writes go through native confirmation
+### Requirement: Dynamic take-over uses `api.set`
 
-While no animation is active (`idle` or terminal), Source A is authoritative and application code changes the Entity transform by updating `position`, `rotation`, or `scale` props (or by calling `api.set`). Because native is the single authoritative transform source, such prop writes MUST follow the same native-first path as `api.set`: the SDK sends the write to native, native decides whether to accept it, and `entityProps` mirrors only native-confirmed values. The SDK MUST NOT keep a separate local committed cache that competes with native.
+While no animation is active (`idle` or terminal), Source A is authoritative. Application code that needs to dynamically take over the committed Entity transform after animation MUST use `api.set`. Ordinary Entity props remain static/base inputs in the recommended composition pattern and MUST NOT be treated as a second dynamic take-over channel that competes with `entityProps`.
 
-#### Scenario: Inactive prop write is confirmed by native
+#### Scenario: Inactive dynamic take-over uses set
 - **GIVEN** no Entity animation is active (`idle` or terminal)
-- **WHEN** application code updates `position`, `rotation`, or `scale` props
-- **THEN** the SDK MUST submit the write to native, which decides whether to accept it
-- **AND** when native accepts, `entityProps` MUST update to the confirmed transform values emitted by native
-- **AND** when native rejects, `entityProps` MUST NOT update
+- **WHEN** application code needs to take over the committed `position`, `rotation`, or `scale`
+- **THEN** it MUST call `api.set` with the desired Entity transform values
+- **AND** static/base Entity props MUST NOT override `entityProps` in the recommended composition order
 
 ### Requirement: Callbacks are notifications and do not drive terminal state
 
@@ -148,7 +147,7 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 
 The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST accept either a sparse `EntityMotionProps` value or an updater function `(prev) => next`. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
 
-Entity transform is composed from two sources: Source A is React props / `entityProps` (the committed state, written declaratively or through `api.set`), and Source B is the `xr-animation` binding (per-frame sampled values). While the animation is active (`delay` / `running` / `paused`) Source B is authoritative; while it is inactive (`idle` / terminal) Source A is authoritative. `api.set` always writes Source A.
+Entity transform is composed from two sources: Source A is static/base React props plus `entityProps` (the committed state mirrored by the SDK; dynamic take-over is written through `api.set`), and Source B is the `xr-animation` binding (per-frame sampled values). While the animation is active (`delay` / `running` / `paused`) Source B is authoritative; while it is inactive (`idle` / terminal) Source A is authoritative. `api.set` always writes Source A.
 
 The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST use the updater form of `api.set` or read the declarative `entityProps`.
 

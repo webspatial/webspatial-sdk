@@ -13,7 +13,7 @@ For Entity motion, native RealityKit backend state is the only authoritative sou
 `entityProps` is a React mirror outlet for transform state that native has confirmed:
 
 ```text
-React config / props / api.set
+React config / api.set
   -> native Entity motion backend (single authority)
   -> confirmed transform state
   -> entityProps mirror outlet
@@ -229,7 +229,7 @@ api.set(values or updater)
 
 ## Entity Tracks and RealityKit Compilation
 
-JS/Core outputs canonical Entity tracks:
+JS/Core outputs canonical Entity tracks. This is an internal payload shape, not public hook config:
 
 ```text
 position.x | position.y | position.z

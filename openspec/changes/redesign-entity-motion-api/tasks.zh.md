@@ -2,7 +2,7 @@
 
 - [ ] 1.1 复核旧的 `add-entity-transform-animation` 文档，明确哪些行为会被新的目标态替代
 - [ ] 1.2 复核 `spatialized-element-motion-api` 中对 Entity motion 的引用，统一措辞到“新 Entity 提案是权威目标态”
-- [ ] 1.3 从文档契约和保留 sub-token 中移除 `supports('useAnimation', ['entity'])`，并对齐 `spatialized-element-motion-api` runtime-capabilities，使任何 change 都不再保留 `entity` sub-token
+- [ ] 1.3 从本提案的文档契约和保留 sub-token 中移除 `supports('useAnimation', ['entity'])`；`spatialized-element-motion-api` 的相关措辞另行协调，不在本提案修改批次中直接改动
 
 ## 2. 类型与契约重设计
 
@@ -23,7 +23,7 @@
 - [ ] 4.1 先编写失败测试，覆盖 `entityProps` 在 start、complete、stop、reset、finish 以及每次 `api.set` 调用(value 与 updater 形式)时的更新语义
 - [ ] 4.2 实现通过 `entityProps` 持久化已提交 transform，且不做逐帧 React 更新
 - [ ] 4.3 先编写失败测试，覆盖动画 alive 期间 transform ownership，确保竞争性的 React transform 写入不会覆盖活动动画
-- [ ] 4.4 实现 committed-state ownership 规则:`api.set` 稀疏合并、updater `prev` = 最近 confirmed 的 `entityProps` 镜像值、活跃动画期间调用 `api.set` 通过 native 确认提交一次 Source A 写入,但不抛错也不覆盖、set 后再 play 的起点在声明 `from` 时为 `from` 否则为当前 committed 值、终态填充将终态 transform 回写到 `entityProps`(fill-forwards,不 snap 回退)
+- [ ] 4.4 实现 committed-state ownership 规则:`api.set` 稀疏合并、updater `prev` = 最近 confirmed 的 `entityProps` 镜像值、非活跃 playback 后的动态接管使用 `api.set` 而不是竞争性的 React prop 写入、活跃动画期间调用 `api.set` 通过 native 确认提交一次 Source A 写入,但不抛错也不覆盖、set 后再 play 的起点在声明 `from` 时为 `from` 否则为当前 committed 值、终态填充将终态 transform 回写到 `entityProps`(fill-forwards,不 snap 回退)
 - [ ] 4.5 先编写失败测试,证明 lifecycle callback 只是通知:`onComplete` 的返回值被忽略,不能驱动终态 transform
 
 ## 5. Capability 与校验

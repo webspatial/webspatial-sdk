@@ -119,16 +119,15 @@ callback values MUST 只包含受支持的 Entity transform 字段。
 - **AND** 推荐的组合顺序是让 `entityProps` 放在陈旧 base props 之后应用
 
 
-### Requirement: 非活跃状态下的 props 写入经 native confirm
+### Requirement: 动态接管使用 `api.set`
 
-在没有活跃动画时（`idle` 或 terminal），Source A 权威，应用通过更新 `position`、`rotation`、`scale` props（或调用 `api.set`）改变 Entity transform。由于 native 是唯一权威 transform 数据源，此类 props 写入 MUST 走与 `api.set` 相同的 native-first 路径:SDK 把写入下发 native,由 native 决定是否接受,`entityProps` 只镜像 native 已 confirm 的值。SDK MUST NOT 额外维护一份与 native 竞争的本地 committed cache。
+在没有活跃动画时（`idle` 或 terminal），Source A 权威。应用如果需要在动画后动态接管已提交的 Entity transform，MUST 使用 `api.set`。普通 Entity props 在推荐组合模式中保持为 static/base 输入，MUST NOT 被视为与 `entityProps` 竞争的第二条动态接管通道。
 
-#### Scenario: 非活跃 props 写入经 native confirm
+#### Scenario: 非活跃动态接管使用 set
 - **GIVEN** 没有活跃的 Entity 动画（`idle` 或 terminal）
-- **WHEN** 应用更新 `position`、`rotation` 或 `scale` props
-- **THEN** SDK MUST 把该写入下发 native,由 native 决定是否接受
-- **AND** native 接受后 `entityProps` MUST 更新为 native 回传的 confirmed transform 值
-- **AND** native 拒绝时 `entityProps` MUST NOT 更新
+- **WHEN** 应用需要接管已提交的 `position`、`rotation` 或 `scale`
+- **THEN** 它 MUST 调用 `api.set` 并传入期望的 Entity transform 值
+- **AND** static/base Entity props MUST NOT 在推荐组合顺序中覆盖 `entityProps`
 
 ### Requirement: Callback 只是通知，不驱动终态
 
@@ -148,7 +147,7 @@ Entity motion 的生命周期 callback MUST 只是通知。它们的返回值 MU
 
 SDK MUST 提供 `api.set` 作为 `entityProps` 所镜像的已提交 Entity transform 状态的命令式写入入口。`api.set` MUST 接受一个稀疏的 `EntityMotionProps` 值，或一个 updater 函数 `(prev) => next`。`api.set` MUST NOT 是 playback 命令，MUST NOT seek、start 或改变播放进度。
 
-Entity transform 由两个数据源合成：Source A 是 React props / `entityProps`（已提交状态，通过声明式或 `api.set` 写入），Source B 是 `xr-animation` 绑定（逐帧采样值）。动画活跃（`delay` / `running` / `paused`）时 Source B 权威；动画非活跃（`idle` / terminal）时 Source A 权威。`api.set` 始终写入 Source A。
+Entity transform 由两个数据源合成：Source A 是 static/base React props 加 `entityProps`（由 SDK 镜像的已提交状态；动态接管通过 `api.set` 写入），Source B 是 `xr-animation` 绑定（逐帧采样值）。动画活跃（`delay` / `running` / `paused`）时 Source B 权威；动画非活跃（`idle` / terminal）时 Source A 权威。`api.set` 始终写入 Source A。
 
 SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码 MUST 使用 `api.set` 的 updater 形式或读取声明式的 `entityProps`。
 

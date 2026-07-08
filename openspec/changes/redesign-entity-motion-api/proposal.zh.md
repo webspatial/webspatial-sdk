@@ -95,7 +95,7 @@ return (
 
 动画过程中，Entity 的 transform 由动画采样值决定，过程中用户无法控制。
 
-动画结束后，Entity 的 transform 始终由其上传入的 props 决定，用户可以通过修改 props 改变其状态;此类写入走与 `api.set` 相同的 native-first 路径:由 native confirm,`entityProps` 镜像已 confirm 的值。
+动画结束后，已提交的 Entity transform 通过 `entityProps` 镜像。用户如果需要在动画后动态接管 transform，应调用 `api.set`；普通 Entity props 保持为 static/base 输入，并在推荐组合顺序中被 `entityProps` 有意覆盖。
 
 核心目标：
 
@@ -200,30 +200,7 @@ const [animation, api, entityProps] = useEntityAnimation({
 
 #### 5.3 tracks
 
-`tracks` 保留为内部非公开 API：
-
-```text
-const [animation, api, entityProps] = useEntityAnimation({
-  duration: 2,
-  tracks: [
-    {
-      property: 'position.y',
-      keyframes: [
-        { at: 0, value: 0 },
-        { at: 1, value: 0.25 },
-        { at: 2, value: 0 },
-      ],
-    },
-    {
-      property: 'rotation.y',
-      keyframes: [
-        { at: 0, value: 0 },
-        { at: 2, value: 180 },
-      ],
-    },
-  ],
-})
-```
+`tracks` 保留为内部非公开执行形态。应用通过 `from` / `to` 或百分比 `timeline` author Entity motion；SDK 可以先把这些公开形态规范化为内部 tracks，再发送给 native Entity adapter。
 
 Entity target 只允许：
 
@@ -319,7 +296,7 @@ entityProps.scale 更新为终态 scale
 
 Entity transform 由两个数据源合成:
 
-- Source A:React props / `entityProps`(committed 状态,通过声明式写入或 `api.set` 写入)。
+- Source A:static/base React props 加 `entityProps`(由 SDK 镜像的 committed 状态;动态接管通过 `api.set` 写入)。
 - Source B:`xr-animation` 绑定(逐帧采样的 animation values)。
 
 任一时刻只有一个数据源是权威的,由动画是否活跃决定:

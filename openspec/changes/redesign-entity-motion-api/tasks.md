@@ -2,7 +2,7 @@
 
 - [ ] 1.1 Review the legacy `add-entity-transform-animation` artifacts and mark the exact behaviors that are superseded by this new target state
 - [ ] 1.2 Review `spatialized-element-motion-api` references to Entity motion and align wording so the new Entity proposal is the authoritative target state
-- [ ] 1.3 Remove `supports('useAnimation', ['entity'])` from the documented contract and reserved sub-tokens, and align `spatialized-element-motion-api` runtime-capabilities so no change reserves an `entity` sub-token
+- [ ] 1.3 Remove `supports('useAnimation', ['entity'])` from this proposal's documented contract and reserved sub-tokens; coordinate any `spatialized-element-motion-api` wording separately instead of changing it in this proposal pass
 
 ## 2. Type and Contract Redesign
 
@@ -23,7 +23,7 @@
 - [ ] 4.1 Add failing tests for `entityProps` lifecycle updates at start, complete, stop, reset, finish, and each `api.set` call (value and updater forms)
 - [ ] 4.2 Implement committed transform persistence through `entityProps` without per-frame React updates
 - [ ] 4.3 Add failing tests for active transform ownership so animated props ignore competing React transform writes during alive playback states
-- [ ] 4.4 Implement committed-state ownership rules: `api.set` sparse merge, updater `prev` = latest native-confirmed `entityProps` mirror value, calling `api.set` during an active animation submits a Source A write through native confirmation without throwing or overriding, start point after set-then-play is `from` when declared else current committed value, and terminal fill writes the terminal transform back to `entityProps` (fill-forwards, no snap-back)
+- [ ] 4.4 Implement committed-state ownership rules: `api.set` sparse merge, updater `prev` = latest native-confirmed `entityProps` mirror value, dynamic take-over after inactive playback uses `api.set` rather than competing React prop writes, calling `api.set` during an active animation submits a Source A write through native confirmation without throwing or overriding, start point after set-then-play is `from` when declared else current committed value, and terminal fill writes the terminal transform back to `entityProps` (fill-forwards, no snap-back)
 - [ ] 4.5 Add failing tests proving lifecycle callbacks are notifications: `onComplete` return values are ignored and cannot drive the terminal transform
 
 ## 5. Capability and Validation
