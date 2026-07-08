@@ -153,8 +153,8 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 
 #### Scenario: updater form reads the current committed value
 - **WHEN** application code calls `api.set` with an updater function
-- **THEN** `prev` MUST be the current committed value (Source A)
-- **AND** the read-modify-write MUST be applied atomically without exposing a bare getter
+- **THEN** `prev` MUST be the latest native-confirmed `entityProps` mirror value (Source A), which MAY lag the real-time native transform
+- **AND** read-modify-write MUST be expressed through the updater without exposing a bare getter
 
 #### Scenario: set during an active animation does not throw and does not survive terminal fill
 - **GIVEN** an Entity animation is in `delay`, `running`, or `paused`

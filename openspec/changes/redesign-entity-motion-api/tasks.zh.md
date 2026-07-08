@@ -23,7 +23,7 @@
 - [ ] 4.1 先编写失败测试，覆盖 `entityProps` 在 start、complete、stop、reset、finish 以及每次 `api.set` 调用(value 与 updater 形式)时的更新语义
 - [ ] 4.2 实现通过 `entityProps` 持久化已提交 transform，且不做逐帧 React 更新
 - [ ] 4.3 先编写失败测试，覆盖动画 alive 期间 transform ownership，确保竞争性的 React transform 写入不会覆盖活动动画
-- [ ] 4.4 实现 committed-state ownership 规则:`api.set` 稀疏合并、updater `prev` = 当前 committed 值、活跃动画期间调用 `api.set` 写入 Source A 但不抛错也不覆盖、set 后再 play 的起点在声明 `from` 时为 `from` 否则为当前 committed 值、终态填充将终态 transform 回写到 `entityProps`(fill-forwards,不 snap 回退)
+- [ ] 4.4 实现 committed-state ownership 规则:`api.set` 稀疏合并、updater `prev` = 最近 confirmed 的 `entityProps` 镜像值、活跃动画期间调用 `api.set` 写入 Source A 但不抛错也不覆盖、set 后再 play 的起点在声明 `from` 时为 `from` 否则为当前 committed 值、终态填充将终态 transform 回写到 `entityProps`(fill-forwards,不 snap 回退)
 - [ ] 4.5 先编写失败测试,证明 lifecycle callback 只是通知:`onComplete` 的返回值被忽略,不能驱动终态 transform
 
 ## 5. Capability 与校验

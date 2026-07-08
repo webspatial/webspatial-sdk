@@ -68,8 +68,8 @@ const [animation, api, entityProps] = useEntityAnimation({
       scale: { x: 1, y: 1, z: 1 },
     },
   },
-  onStart: () => {
-    console.log('Entity animation started')
+  onStart: values => {
+    console.log('Entity animation started', values)
   },
   onComplete: values => {
     console.log('Entity animation completed', values)
@@ -343,7 +343,7 @@ api.set(updater: (prev: EntityMotionProps) => EntityMotionProps): void
 
 1. Write target: `api.set` updates the SDK-held committed transform state, which updates `entityProps`, which writes back to the native Entity through `<BoxEntity {...entityProps} />`. `entityProps` is the reactive mirror of that state.
 2. Sparse merge: only the provided fields are overwritten; omitted fields keep their previous committed values. `api.set({ position: { y: 0.3 } })` does not touch `rotation` or `scale`.
-3. Updater form: `prev` is the current committed value (Source A). Read-modify-write is atomic inside the SDK, which is how offsets based on the current value are expressed. There is no bare `api.get`.
+3. Updater form: `prev` is the latest native-confirmed `entityProps` mirror value (Source A), which may lag the real-time native transform. Offsets based on the current value are expressed through this updater. There is no bare `api.get`.
 4. Calling during an active animation does not throw, but the write does not survive the animation. It does not interrupt or override the active animation, and — consistent with the React-prop write behavior in section 8.2 — it is NOT queued for replay: when the animation reaches its terminal state, the terminal fill (see 7.4) writes the terminal values into the committed state and overrides whatever was written during the animation. To take over the transform, call `api.set` after the animation is inactive (idle / terminal).
 5. Not a playback command: `api.set` does not seek, start, or change playback progress.
 

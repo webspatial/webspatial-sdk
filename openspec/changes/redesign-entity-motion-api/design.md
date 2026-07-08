@@ -205,7 +205,7 @@ useEntityAnimation(config)
 ### native confirmed transform -> React mirror
 
 ```text
-RealityKit state changes (complete / stop / reset / finish / set accepted)
+RealityKit state changes (start / complete / stop / reset / finish / set accepted)
   -> native reads authoritative entity.transform
   -> transform decomposes to { position, rotation, scale }
   -> spatialanimationstatechanged(values)
