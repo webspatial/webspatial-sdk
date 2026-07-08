@@ -2,7 +2,7 @@
 
 - [ ] 1.1 复核旧的 `add-entity-transform-animation` 文档，明确哪些行为会被新的目标态替代
 - [ ] 1.2 复核 `spatialized-element-motion-api` 中对 Entity motion 的引用，统一措辞到“新 Entity 提案是权威目标态”
-- [ ] 1.3 确认 `supports('useAnimation', ['entity'])` 是仅保留兼容别名，还是立即从文档契约中移除
+- [ ] 1.3 从文档契约和保留 sub-token 中移除 `supports('useAnimation', ['entity'])`，并对齐 `spatialized-element-motion-api` runtime-capabilities，使任何 change 都不再保留 `entity` sub-token
 
 ## 2. 类型与契约重设计
 

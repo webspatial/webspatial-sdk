@@ -477,7 +477,7 @@ type EntityMotionProps = {
 supports('useAnimation')
 ```
 
-`supports('useAnimation', ['entity'])` 只可在迁移或兼容语境中提及,不作为推荐目标态契约。
+`supports('useAnimation', ['entity'])` 从文档化契约中移除;仅使用顶层 `supports('useAnimation')` key,不保留任何 `entity` sub-token。
 
 ## 各层关键改动
 
