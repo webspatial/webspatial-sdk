@@ -25,6 +25,7 @@ React config / api.set
 - native 拒绝命令时,对应写入无效,`entityProps` 不更新。
 - native 接受命令时,通过现有 animation state event 回传确认后的 transform,React 再更新 `entityProps`。
 - React 侧只负责把 native 确认过的状态镜像给用户,不自行预测终态、不排队 replay 活跃期间的写入。
+- 首个 confirmed state 之前 `entityProps` 可能为空;confirmed 之后它是完整 pose(`position` / `rotation` / `scale`),而不是 touched-fields patch。
 
 ### 复用 `useAnimation` 架构
 
@@ -51,6 +52,7 @@ React config / api.set
 - 设计 CADisplayLink 采样器 backend(明确未采用,见 Backend 理由)
 - 提供公共 seek / scrub / progress API(proposal Non-Goal)
 - 新增 `CreateEntityAnimationJSBCommand` / `ControlEntityAnimationJSBCommand`
+- 字段级 ownership 组合(position 动画 + rotation/scale 由 props 动态接管);当前整矩阵动画路径下字段级共存会产生未定义行为,列为 future work / v2
 
 ## Backend 理由(RealityKit)
 
@@ -588,7 +590,7 @@ classDiagram
 
 - **历史命名误导。** 复用 `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` 会保留 element 字样。文档必须明确其目标态语义已泛化为 motion animation object 协议。
 - **Timeline 编译器是主要新增成本。** 多关键帧、稀疏关键帧、rotation 转换和 segment 合成都集中在 native Entity adapter。
-- **Whole-transform ownership。** Entity transform 最终是一个 native Transform;v1 不做字段级所有权合成。
+- **Whole-transform ownership。** Entity transform 最终是一个 native Transform;v1 不做字段级所有权合成。动画下发的是完整 transform,未在 config 声明的字段按播放起点快照冻结,因此 active animation 期间无法让 React props 动态接管某个字段(如 position 动画 + rotation 走 props)——这会与 native 单一权威冲突并产生未定义行为。字段级 ownership 组合列为 future work / v2。
 - **不提供 updater form。** 因为 native 是唯一权威,`api.set(prev => next)` 会暗示 React `setState` 语义,但 `prev` 无法承诺为实时 native transform。v1 只支持 patch object;读当前 confirmed 状态通过 `entityProps` 完成。
 - **大量并发动画仍需 profiling。** RealityKit 原生播放优于 JS 逐帧写入,但规模并发仍应实测。
 

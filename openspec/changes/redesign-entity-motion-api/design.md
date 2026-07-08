@@ -25,6 +25,7 @@ This means:
 - If native rejects a command, the write is ineffective and `entityProps` does not update.
 - If native accepts a command, it emits the confirmed transform through the existing animation state event, and React updates `entityProps` from that event.
 - React mirrors native-confirmed state for users; it does not predict terminal values or queue replay writes made while animation is active.
+- Before the first confirmed state, `entityProps` may be empty; after confirmation it is a complete pose (`position` / `rotation` / `scale`), not a touched-fields patch.
 
 ### Reuse the `useAnimation` architecture
 
@@ -51,6 +52,7 @@ This means:
 - Designing a CADisplayLink sampler backend (explicitly not chosen; see Backend Rationale)
 - A public seek / scrub / progress API (proposal Non-Goal)
 - Adding `CreateEntityAnimationJSBCommand` / `ControlEntityAnimationJSBCommand`
+- Field-level ownership composition (position animated while rotation/scale are dynamically taken over by props); under the current whole-matrix animation path, field-level coexistence produces undefined behavior, tracked as future work / v2
 
 ## Backend Rationale (RealityKit)
 
@@ -588,7 +590,7 @@ classDiagram
 
 - **Historical naming confusion.** Reusing `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` keeps "element" in the command names. Documentation must make clear that target-state semantics generalize them into the motion animation object protocol.
 - **Timeline compiler is the main new cost.** Multi-keyframes, sparse keyframes, rotation conversion, and segment synthesis are concentrated in the native Entity adapter.
-- **Whole-transform ownership.** Entity transform is ultimately a native Transform; v1 does not implement field-level ownership composition.
+- **Whole-transform ownership.** Entity transform is ultimately a native Transform; v1 does not implement field-level ownership composition. The animation dispatches a complete transform, and fields not declared in the config are frozen to their playback-start snapshot, so during an active animation React props cannot dynamically take over an individual field (e.g. position animated while rotation flows through props) — that would conflict with native single-authority and produce undefined behavior. Field-level ownership composition is tracked as future work / v2.
 - **No updater form.** Because native is the single authority, `api.set(prev => next)` would imply React `setState` semantics, but `prev` cannot be promised as a real-time native transform. v1 only supports patch objects; reads of the current confirmed state go through `entityProps`.
 - **Large concurrent animations still need profiling.** RealityKit native playback is better than JS per-frame writes, but scale should still be measured.
 
