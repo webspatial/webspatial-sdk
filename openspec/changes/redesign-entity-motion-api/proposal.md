@@ -458,7 +458,7 @@ Add percentage `timeline`, `entityProps` outlet, and recommended `xr-animation` 
 
 ## Impact
 
-- Affected OpenSpec artifacts include the previous `add-entity-transform-animation` change and the in-progress `spatialized-element-motion-api` change where Entity motion is currently deferred or referenced.
+- Affected OpenSpec artifacts include the completed `add-entity-transform-animation` change and the in-progress `spatialized-element-motion-api` change where Entity motion is currently deferred or referenced.
 - Affected public React SDK surfaces include `useEntityAnimation`, Entity transform props, Entity binding props, and runtime capability guidance.
 - Affected implementation areas include React Entity hooks, Core motion and animation types, Entity binding logic, validation, test-server demos, and migration documentation.
 - This proposal is currently tracked as a non-breaking enhancement focused on adding `timeline`, `entityProps` outlet, recommended `xr-animation` binding, and unified semantics.

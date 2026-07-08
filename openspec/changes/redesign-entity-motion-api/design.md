@@ -79,38 +79,55 @@ A mixed variant (some shapes via RealityKit, some via sampler) is also rejected:
 
 ## Layered Architecture
 
-```text
-┌───────────────────────────────────────────────────────────────────────┐
-│ React layer (packages/react)                                           │
-│   useEntityAnimation(config): [animation, api, entityProps]            │
-│     - creates EntityMotionBinding / playback api                      │
-│     - exposes entityProps (mirror of native confirmed transform)       │
-│     - api.set(values patch) sends to native, no local cache write      │
-│   useBindMotionTarget({ binding, target })                            │
-│     - xr-animation (recommended) + animation (compatible)              │
-└───────────────┬───────────────────────────────────────────────────────┘
-                │ target-agnostic binding
-┌───────────────▼───────────────────────────────────────────────────────┐
-│ Core layer (packages/core)                                             │
-│   normalizeEntityMotionConfig(config) -> canonical tracks             │
-│     from/to  ─┐                                                        │
-│     timeline ─┼─► tracks(position.* rotation.* scale.*)                │
-│     tracks   ─┘ internal only                                          │
-│   validateEntityMotionConfig() -> reject opacity / unknown property   │
-│   AnimationObject.create({ elementId, timeline })                     │
-│   ControlSpatializedElementAnimation({ animationId, type, values? })  │
-└───────────────┬───────────────────────────────────────────────────────┘
-                │ JSB: reuse existing create/control/event protocol
-┌───────────────▼───────────────────────────────────────────────────────┐
-│ Native layer (RealityKit backend)                                      │
-│   resolveSpatialObject(elementId) via spatialObjects                  │
-│     - SpatializedElement -> existing element adapter                   │
-│     - SpatialEntity -> new Entity adapter                             │
-│   validate canonical tracks (bottom guard)                            │
-│   tracks -> RealityKit transform animation                            │
-│   native transform state is the single authority                       │
-│   spatialanimationstatechanged -> confirmed values                    │
-└───────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph React["React layer (packages/react)"]
+        UseEntity["useEntityAnimation(config)<br/>returns [animation, api, entityProps]"]
+        ReactBinding["creates EntityMotionBinding / playback api"]
+        EntityProps["entityProps<br/>mirror of native confirmed transform"]
+        ApiSet["api.set(values patch)<br/>sends to native, no local cache write"]
+        BindTarget["useBindMotionTarget({ binding, target })<br/>xr-animation recommended / animation compatible"]
+
+        UseEntity --> ReactBinding
+        UseEntity --> EntityProps
+        UseEntity --> ApiSet
+        ReactBinding --> BindTarget
+    end
+
+    subgraph Core["Core layer (packages/core)"]
+        Normalize["normalizeEntityMotionConfig(config)<br/>from/to + timeline + internal tracks"]
+        Tracks["canonical tracks<br/>position.* / rotation.* / scale.*"]
+        Validate["validateEntityMotionConfig()<br/>reject opacity / unknown property"]
+        CreateObject["AnimationObject.create({ elementId, timeline })"]
+        ControlObject["ControlSpatializedElementAnimation({ animationId, type, values? })"]
+
+        Normalize --> Tracks
+        Tracks --> Validate
+        Validate --> CreateObject
+        ControlObject --> CreateObject
+    end
+
+    subgraph Native["Native layer (RealityKit backend)"]
+        Resolve["resolveSpatialObject(elementId)<br/>via spatialObjects"]
+        ElementAdapter["SpatializedElement<br/>existing element adapter"]
+        EntityAdapter["SpatialEntity<br/>new Entity adapter"]
+        NativeValidate["validate canonical tracks<br/>bottom guard"]
+        Compile["tracks -> RealityKit transform animation"]
+        Authority["native transform state<br/>single authority"]
+        Event["spatialanimationstatechanged<br/>confirmed values"]
+
+        Resolve --> ElementAdapter
+        Resolve --> EntityAdapter
+        EntityAdapter --> NativeValidate
+        NativeValidate --> Compile
+        Compile --> Authority
+        Authority --> Event
+    end
+
+    BindTarget -->|"target-agnostic binding"| Normalize
+    CreateObject -->|"CreateSpatializedElementAnimationJSBCommand"| Resolve
+    ControlObject -->|"ControlSpatializedElementAnimationJSBCommand"| Resolve
+    Event -->|"confirmed values"| EntityProps
 ```
 
 **Layer responsibilities:**
@@ -510,6 +527,12 @@ classDiagram
             +finish()
             +set(values)
         }
+        class EntityMotionBinding
+        class EntityMotionProps {
+            +position Vec3
+            +rotation Vec3
+            +scale Vec3
+        }
         class useBindMotionTarget {
             +binding
             +target
@@ -546,9 +569,13 @@ classDiagram
         }
         class RealityKit
     }
-    useEntityAnimation --> EntityMotionNormalizer
-    useEntityAnimation --> useBindMotionTarget
-    useBindMotionTarget --> AnimationObject
+    useEntityAnimation --> EntityMotionBinding : returns animation
+    useEntityAnimation --> EntityPlaybackApi : returns api
+    useEntityAnimation --> EntityMotionProps : returns entityProps
+    useEntityAnimation --> EntityMotionNormalizer : normalize config
+    EntityMotionBinding --> useBindMotionTarget : bind target
+    useBindMotionTarget --> AnimationObject : attach elementId
+    EntityPlaybackApi --> AnimationObject : delegate commands
     AnimationObject --> CreateSpatializedElementAnimationJSBCommand
     AnimationObject --> ControlSpatializedElementAnimationJSBCommand
     CreateSpatializedElementAnimationJSBCommand --> TargetResolver
