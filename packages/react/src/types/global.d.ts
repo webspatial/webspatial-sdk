@@ -1,4 +1,5 @@
 import type React from 'react'
+import type { ModelLoadEvent } from '../spatialized-container/types'
 
 declare global {
   interface Window {
@@ -19,8 +20,8 @@ declare global {
           poster?: string
           autoplay?: boolean
           loop?: boolean
-          onLoad?: (...args: any[]) => void
-          onError?: (...args: any[]) => void
+          onLoad?: (event: ModelLoadEvent) => void
+          onError?: (event: ModelLoadEvent) => void
         },
         HTMLElement
       >
