@@ -1,58 +1,105 @@
-## Why
+## What This Is
 
-Entity animation already has basic `useEntityAnimation` support, but it still lacks parts of the newer motion story, such as percentage `timeline`, the recommended `xr-animation` binding, and an `entityProps` outlet for React-side terminal-state persistence.
+`useEntityAnimation` is a React Hook for animating a 3D object (an Entity) in the scene, letting it move, rotate, or scale smoothly.
 
-This change does not replace the existing `useEntityAnimation`. It is a non-breaking enhancement on top of the current API. The goal is to add timeline, outlet, binding, and behavior semantics while keeping Entity authoring aligned with Entity props hierarchy.
+`useEntityAnimation` provides three core capabilities:
 
-This proposal supersedes `add-entity-transform-animation` as the target-state Entity motion proposal. The legacy change remains historical context until this new path is fully validated and the follow-up archive or formal supersede step is completed.
+1. **Keyframe animation (`timeline`)**: do a simple "from A to B" motion, or write multi-step animations like `0% → 50% → 100%`.
+2. **Result write-back (`entityProps`)**: the Hook hands the animation's final pose back to you, so the object stays put at the end instead of snapping back.
+3. **Recommended binding (`xr-animation`)**: binds the animation to the object; the `animation` binding also works.
 
-## What Changes
+> **A few basic terms** (used throughout):
+> - **Entity**: a 3D object in the scene, e.g. a box `<BoxEntity>`.
+> - **transform**: the object's spatial pose, made of three parts — position `position` (unit: meters), rotation `rotation` (unit: degrees), and scale `scale` (a multiplier, 1 = original size).
+> - **`Vec3`**: a 3D vector shaped like `{ x, y, z }`, used for the three axes of each part above.
+> - **component**: one of `position` / `rotation` / `scale`.
 
-- Add an enhancement proposal on top of the existing `useEntityAnimation`.
-- Define `useEntityAnimation` as the Entity-specific surface over `useAnimation`: `useAnimation config + Entity props outlet`.
-- Keep public config aligned with Entity props hierarchy by continuing to use `position`, `rotation`, and `scale`.
-- Recommend `xr-animation` binding while keeping `animation` as a compatible binding.
-- Introduce `entityProps` as the React outlet for committed Entity transform values.
-- Add `api.set(values)`, accepting only sparse patch objects, as the imperative write entry for the committed transform state that `entityProps` mirrors. The `(prev) => next` updater form is not supported.
-- Support `from` / `to` and percentage `timeline` as the public path, while keeping `tracks` as an internal non-public API.
-- Align playback, callback, and capability semantics with the broader motion family where applicable, while preserving Entity-specific constraints.
-- Restrict Entity motion targets to transform-only fields and require explicit failure for unsupported targets such as `opacity`.
+---
 
-### 1. Background
+## I Want To Do X — What Do I Use (Quick Reference)
 
-The current Entity animation API uses the legacy `useEntityAnimation` shape:
+| What I want to do | What to use |
+|---|---|
+| Move/rotate/scale an object from one pose to another | Write `from` / `to` in the config |
+| Do a multi-step keyframe animation (e.g. 0% → 50% → 100%) | Write `timeline` in the config |
+| Keep the object at the end pose after the animation, no snap-back | Spread `{...entityProps}` onto the component |
+| Move the object to a new pose in code after the animation | Call `api.set({ ... })` |
+| Let the animation control position only, keep rotation manual | Put only `position` in the config; keep passing `rotation` via props |
+| Read the final pose the animation hands back | Read `entityProps` (there is no `api.get`) |
+| Control playback (start/pause/resume/stop/reset) | `api.play()` / `pause()` / `resume()` / `stop()` / `reset()` / `finish()` |
+| Check whether the runtime supports animation | `supports('useAnimation')` |
 
-```text
-const [animation, api] = useEntityAnimation({
+> **Transform only**: this version can animate `position` / `rotation` / `scale` only. It does **not** support `opacity`, material, color, etc. Targeting something unsupported throws an error rather than being silently ignored.
+
+---
+
+## Quick Start: A Complete Example
+
+```tsx
+import { useEntityAnimation } from '...'
+
+function MyBox() {
+  // Move the box up by 0.25m and scale it to 1.1x over 0.8s
+  const [animation, api, entityProps] = useEntityAnimation({
+    from: { position: { x: 0, y: 0, z: 0.8 }, scale: { x: 1, y: 1, z: 1 } },
+    to:   { position: { y: 0.25 },            scale: { x: 1.1, y: 1.1, z: 1.1 } },
+    duration: 0.8,
+    autoStart: true,
+    onComplete: () => console.log('animation done'),
+  })
+
+  return (
+    <Reality>
+      <SceneGraph>
+        {/* Put entityProps last so the object stays at the end pose */}
+        <BoxEntity {...entityProps} xr-animation={animation} />
+      </SceneGraph>
+    </Reality>
+  )
+}
+```
+
+The Hook returns three values, destructured in order:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation(config)
+```
+
+| Return value | What it does |
+|---|---|
+| `animation` | The animation binding; pass it to the component's `xr-animation` (or `animation`) prop |
+| `api` | The playback controller; provides `play / pause / resume / stop / reset / finish` and `set` |
+| `entityProps` | The final pose handed back at key moments (not a live per-frame value), shaped like `{ position?, rotation?, scale? }`; spread it onto the component |
+
+---
+
+## Describing the Animation (config)
+
+### Option 1: from / to (from one pose to another)
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
   from: {
-    position: { x: 0, y: 0, z: 0 },
+    position: { x: 0, y: 0, z: 0.8 },
+    rotation: { x: 0, y: 0, z: 0 },
+    scale: { x: 1, y: 1, z: 1 },
   },
   to: {
-    position: { x: 0.1, y: 0, z: 0 },
+    position: { y: 0.25 },
+    scale: { x: 1.1, y: 1.1, z: 1.1 },
   },
+  duration: 0.8,
+  autoStart: true,
 })
-
-<BoxEntity animation={animation} />
 ```
 
-This design still differs from the newer `useAnimation` story:
+Both `from` and `to` can list only the fields you care about; unlisted fields stay unchanged.
 
-1. Legacy Entity binds through the `animation` prop.
-2. The newer motion API recommends `xr-animation`.
-3. Legacy Entity animation does not support percentage `timeline` or `tracks`.
-4. Entity has no CSS `style` outlet and therefore cannot directly reuse the spatialized element `style` write-back pattern.
+### Option 2: timeline (multi-step keyframes)
 
-### 2. Goals
+Use percentages to describe the pose at different points in time — good for more complex motion:
 
-Redefine `useEntityAnimation` as the Entity-specific surface over `useAnimation`:
-
-```text
-useEntityAnimation = useAnimation config + Entity props outlet
-```
-
-Target API:
-
-```text
+```tsx
 const [animation, api, entityProps] = useEntityAnimation({
   duration: 1.2,
   timingFunction: 'easeInOut',
@@ -70,189 +117,28 @@ const [animation, api, entityProps] = useEntityAnimation({
       scale: { x: 1, y: 1, z: 1 },
     },
   },
-  onStart: values => {
-    console.log('Entity animation started', values)
-  },
-  onComplete: values => {
-    console.log('Entity animation completed', values)
-  },
-  onStop: values => {
-    console.log('Entity animation stopped', values)
-  },
-  onReset: values => {
-    console.log('Entity animation reset', values)
-  },
-  onError: error => {
-    console.error('Entity animation failed', error)
-  },
-})
-
-return (
-  <Reality>
-    <SceneGraph>
-      <BoxEntity {...entityProps} xr-animation={animation} />
-    </SceneGraph>
-  </Reality>
-)
-```
-
-During animation playback, the transform components present in the config are determined by sampled animation values and users cannot take control; components not present in the config are still driven normally by React props.
-
-After animation ends, the committed Entity transform is mirrored through `entityProps`. Users who need to take over dynamically after an animation should call `api.set`; ordinary Entity props remain the static/base inputs that `entityProps` intentionally overrides in the recommended composition order.
-
-Ownership granularity is the transform component (`position` / `rotation` / `scale`). A component is owned entirely by the animation during an active animation as soon as any of its fields appear in the config; a component that does not appear in the config at all remains driven normally by React props during the active animation. Therefore "animate only position while rotation stays controlled by React props" is a supported composition.
-
-Core goals:
-
-1. Align Entity animation semantics with `useAnimation` while keeping config hierarchy aligned with Entity props.
-2. Recommend `xr-animation` binding while continuing to support `animation`.
-3. Use the third tuple value `entityProps` as the Entity props outlet.
-4. Define `entityProps` as `{ position, rotation, scale }`.
-5. Write terminal animation state back to React through `entityProps`.
-
-### 3. Non-Goals
-
-This proposal does not support:
-
-1. Entity opacity animation.
-2. Entity material / color animation.
-3. Entity component property animation.
-4. Sharing one animation object across multiple Entities.
-5. A public seek / scrub / progress API.
-6. Writing native animation values back to React state every frame.
-7. Replaying user-authored `position / rotation / scale` writes during animation.
-8. Introducing a CSS-like `style` prop for Entity.
-
-### 4. API Design
-
-#### 4.1 Hook Signature
-
-```text
-function useEntityAnimation(
-  config: EntityMotionAuthorConfig
-): [
-  animation: EntityMotionBinding,
-  api: EntityPlaybackApi,
-  entityProps: EntityMotionProps,
-]
-```
-
-`EntityMotionAuthorConfig`, `EntityMotionBinding`, and `EntityPlaybackApi` are the Entity-constrained variants of the shared `useAnimation` config / binding / playback-api types: same shape and playback semantics, but the authoring surface is restricted to Entity transform fields (`position` / `rotation` / `scale`) and does not accept `transform.translate / rotate / scale` or non-transform targets such as `opacity`.
-
-```text
-type EntityMotionProps = {
-  position?: Vec3
-  rotation?: Vec3
-  scale?: Vec3
-}
-```
-
-#### 4.2 Config Unification
-
-Entity public config stays aligned with Entity props:
-
-```text
-useEntityAnimation({
-  to: {
-    position: { x: 0.1, y: 0, z: 0 },
-    rotation: { y: 90 },
-    scale: { x: 1, y: 1, z: 1 },
-  },
 })
 ```
 
-Entity proposal does not use `transform.translate / transform.rotate / transform.scale` as its public authoring shape.
+### Which Fields You Can Write
 
-### 5. Supported Config
-
-#### 5.1 from / to
+The config accepts only these fields (matching the Entity's own prop hierarchy):
 
 ```text
-const [animation, api, entityProps] = useEntityAnimation({
-  from: {
-    position: { x: 0, y: 0, z: 0.8 },
-    rotation: { x: 0, y: 0, z: 0 },
-    scale: { x: 1, y: 1, z: 1 },
-  },
-  to: {
-    position: { y: 0.25 },
-    scale: { x: 1.1, y: 1.1, z: 1.1 },
-  },
-  duration: 0.8,
-  autoStart: true,
-})
+position.x / position.y / position.z
+rotation.x / rotation.y / rotation.z
+scale.x    / scale.y    / scale.z
 ```
 
-#### 5.2 timeline
+Targeting something unsupported like `opacity` throws an error or triggers `onError`; it is never silently ignored.
 
-```text
-const [animation, api, entityProps] = useEntityAnimation({
-  duration: 1.2,
-  timeline: {
-    '0%': {
-      position: { x: 0, y: 0, z: 0.8 },
-      rotation: { x: 0, y: 0, z: 0 },
-      scale: { x: 1, y: 1, z: 1 },
-    },
-    '100%': {
-      position: { x: 0, y: 0.25, z: 0.8 },
-      rotation: { x: 0, y: 180, z: 0 },
-      scale: { x: 1.1, y: 1.1, z: 1.1 },
-    },
-  },
-})
-```
+---
 
-#### 5.3 tracks
+## Keeping the Result at the End Pose (entityProps)
 
-`tracks` remains an internal non-public execution shape. Applications author Entity motion with `from` / `to` or percentage `timeline`; the SDK may normalize those public shapes into internal tracks before sending work to the native Entity motion subsystem.
+`entityProps` is the third value returned by the Hook — it is the **final pose the animation hands back** at key moments (see "When it updates" below), not a value that refreshes every frame. Spread it onto the component so the object stays at the end pose after the animation:
 
-Entity targets only allow:
-
-```text
-'position.x'
-'position.y'
-'position.z'
-'rotation.x'
-'rotation.y'
-'rotation.z'
-'scale.x'
-'scale.y'
-'scale.z'
-```
-
-Not allowed:
-
-```text
-'opacity'
-```
-
-If `opacity` appears in config, the SDK must throw or trigger `onError`. Silent ignore is not allowed.
-
-### 6. entityProps Outlet
-
-The third return value of `useEntityAnimation` is the Entity props outlet:
-
-```text
-type EntityMotionProps = {
-  position?: Vec3
-  rotation?: Vec3
-  scale?: Vec3
-}
-```
-
-It is used to write animation values back into Entity props:
-
-```text
-animation values
-  -> entityProps
-  -> <BoxEntity {...entityProps} />
-  -> native Entity transform
-```
-
-Example:
-
-```text
+```tsx
 const [animation, api, entityProps] = useEntityAnimation({
   to: {
     position: { x: 0.1, y: 0, z: 0 },
@@ -262,133 +148,75 @@ const [animation, api, entityProps] = useEntityAnimation({
 })
 
 return (
-  <BoxEntity
-    {...entityProps}
-    xr-animation={animation}
-  />
+  <BoxEntity {...entityProps} xr-animation={animation} />
 )
 ```
 
-Compatible usage still supports:
+You can also use the `animation` binding:
 
-```text
+```tsx
 <BoxEntity {...entityProps} animation={animation} />
 ```
 
-After animation completes:
+**After the animation completes**, `entityProps` updates to the end pose (position, rotation, scale); the object stays on its last frame and **does not snap back to the start**.
 
-```text
-native Entity stays at terminal state
-entityProps.position updates to terminal position
-entityProps.rotation updates to terminal rotation
-entityProps.scale updates to terminal scale
+**When it updates**: `entityProps` does not update every frame. It only updates at key moments: when playback starts, completes, stops, resets, finishes, and when an `api.set` write succeeds.
+
+> **Note**: before the first playback, or before the first successful `api.set`, `entityProps` may be empty. Do not assume it already has a value right when the component mounts — play the animation once, or call `api.set` successfully once, and it will then hold a value.
+
+---
+
+## Moving the Object in Code After the Animation (api.set)
+
+Once the animation is done, if you want to move the object to a new pose from code, call `api.set`:
+
+```tsx
+// Raise the box to y = 0.3 (everything else unchanged)
+api.set({ position: { y: 0.3 } })
 ```
 
-`entityProps` does not update every frame. It only updates at key lifecycle points:
+A few rules:
 
-1. `play` start.
-2. `complete`.
-3. `stop`.
-4. `reset`.
-5. `finish`.
-6. Native-accepted `api.set(values)` writes.
-
-> **Pose-mirror semantics:** Before the first native-confirmed state, `entityProps` may be empty; once native returns a confirmed state, `entityProps` mirrors the transform components owned by the animation system (the animated components plus components written via `api.set`). Components that are not owned do not enter `entityProps`, so spreading it does not override components the user is still controlling live through React props.
-
-### 7. api.set
-
-`api.set` is the imperative write entry for the committed Entity transform state that `entityProps` mirrors. Its purpose is to let users take over the transform after an animation ends. The committed state is authoritative in native, and `entityProps` is its confirmed mirror (which the SDK must expose in order to write terminal values back). `api.set` only writes; reading the current confirmed state is done through `entityProps`. The SDK does not keep a separate local committed cache.
-
-#### 7.1 Two sources and the compositor
-
-Entity transform is composed from two sources:
-
-- Source A: static/base React props plus `entityProps` (the committed state mirrored by the SDK; dynamic take-over is written through `api.set`).
-- Source B: the `xr-animation` binding (per-frame sampled animation values).
-
-Arbitration is per transform component (`position` / `rotation` / `scale`) and independent:
-
-```text
-component present in config AND animation active (delay / running / paused)  -> Source B wins
-otherwise (component not in config, or animation inactive idle / terminal)    -> Source A wins
+1. **Use it only while the animation is not playing** (this includes: never played, already finished, stopped / reset). As long as the animation is playing (including delay and paused), calling `api.set` is ignored (it neither interrupts the animation nor gets queued for later replay), and it triggers the `onError` callback you passed in the config; the object stays unchanged and `entityProps` does not update. To take over the object mid-animation, stop the animation first, or wait until it ends.
+2. **Pass only the fields you want to change**; the rest stay as they are. For example, `api.set({ position: { y: 0.3 } })` does not touch `rotation` or `scale`.
+3. **On a successful write, `entityProps` updates** to the new pose; if the write does not take effect, `entityProps` stays unchanged and `onError` fires. Use it to detect a failed write:
+```tsx
+useEntityAnimation({
+  onError: error => console.error('api.set write failed', error),
+})
 ```
+4. **Want to change based on the current value?** Read `entityProps` to get the current pose, compute the new value yourself, then pass it to `api.set`. There is no `api.get` here — in React, an imperative getter tends to read stale values and cause read-then-write conflicts.
+5. **It is not a playback command**: `api.set` does not start playback or change playback progress.
 
-This is the same model as CSS: an animation overrides computed style per property while playing, and style takes over for un-animated properties as well as once the animation is inactive. `api.set` always writes Source A; when it becomes visible is decided by the compositor, not by `api.set` itself.
+### Where Playback Starts After api.set
 
-#### 7.2 Signature
+- If the config declares `from`: playback starts from `from`.
+- If `from` is not declared: playback starts from the current pose (the value `api.set` just wrote).
 
-```text
-api.set(values: EntityMotionPatch): void
-```
+---
 
-`api.set` only accepts an `EntityMotionPatch` object. `EntityMotionPatch` is the write-side sparse patch type; it has the same `{ position?, rotation?, scale? }` shape as `EntityMotionProps`, but the two names are kept distinct on purpose: `EntityMotionPatch` is the input to `api.set`, while `EntityMotionProps` is the read-side confirmed mirror exposed through `entityProps` and callback values. The `(prev) => next` updater form is not supported.
+## Who Wins: Animation vs. Your Props
 
-#### 7.3 Behavior
+The object's pose can be influenced from two sides at once: the props you pass manually (including `entityProps`), and the animation that is playing. The rule is decided **per component (`position` / `rotation` / `scale`), independently**:
 
-1. Write target: `api.set` sends `ControlSpatializedElementAnimation(type: 'set')` to native; native is the single authority that decides whether the write takes effect. When native accepts, it emits confirmed values and `entityProps` updates as the reactive mirror of that confirmed state; when native rejects, `entityProps` does not update. The SDK does not keep a local committed cache.
-2. Sparse merge: `api.set(values)` may pass only part of the transform. JS/Core does not merge a full value from `entityProps`; it sends the patch to native. Native merges the patch over the current committed `entity.transform`, overwriting only fields present in the patch. `api.set({ position: { y: 0.3 } })` does not touch `rotation` or `scale`.
-3. No updater form: `api.set(prev => next)` is not supported. Application code that needs to compute a patch from the current confirmed value should read `entityProps`, compute the patch itself, and then call `api.set(values)`.
-4. Calling during an active animation is not stashed. It does not interrupt or override the active animation, and it is not queued for replay. Native should reject or ignore the write and expose that through the existing command failure / error event mechanism. `entityProps` does not update. To take over the transform, call `api.set` after the animation is inactive (idle / terminal).
-5. Calling before binding or native object creation is invalid. It does not create a pending write and is not replayed after binding completes. Failure is exposed through the existing command failure / error event mechanism.
-6. Not a playback command: `api.set` does not seek, start, or change playback progress.
+| Situation | Who wins |
+|---|---|
+| The component is written in the config AND the animation is playing (including delay, paused) | The animation |
+| Otherwise (the component is not in the config, or the animation has ended / not started) | Your props / `api.set` |
 
-#### 7.4 Interaction with `play` and terminal fill
+This matches CSS animations: while playing, the animation takes over these transform properties per property; properties it does not cover — and these transform properties once the animation ends — are handed back to you.
 
-- Start point after `api.set` then `play`: if the config declares `from`, playback starts from `from`; if `from` is not declared, playback starts from the current committed value (the pose written by `api.set`).
-- Terminal fill: when an animation reaches a terminal state, it fills to its terminal transform and writes that value back to `entityProps` (equivalent to CSS `fill-mode: forwards`); it does NOT snap back to the pre-animation value.
+A few practical takeaways follow:
 
-#### 7.5 Reading the current value (no bare api.get)
+- **While the animation is playing**, the properties listed in the config are taken over by the animation, so writing them via props has no effect; properties not in the config are still controlled by props as usual.
+- **"Let the animation control position only, keep rotation on props" is supported** — just put only `position` in the config and leave out `rotation`.
+- **After the animation ends**, these transform properties go back to being controlled by props (including `entityProps`), and the object stays at the end pose.
 
-`api.get` is intentionally not provided, because an imperative getter in React tends to read stale values and invites read-then-write races.
+### Recommended Pattern
 
-- Read the current confirmed value through `entityProps`, which is the reactive mirror of the committed state.
-- For read-modify-write, application code computes a new patch from `entityProps` and then calls `api.set(values)`.
-- `entityProps` MAY be empty before the first native-confirmed state and is not promised readable at mount: `create` / `bind` does NOT emit an extra initial confirmed value. To read the native pose, application code must first trigger a lifecycle that commits a confirmed value (a `play` terminal, or an accepted `api.set`).
+Put `entityProps` **after** your other props, so the object correctly stays at the end pose after the animation instead of being overwritten by older prop values:
 
-### 8. Conflict Semantics with React Props
-
-#### 8.1 During alive animation
-
-When animation is in:
-
-```text
-delay / running / paused
-```
-
-the animation owns the transform components that appear in the config; components that do not appear in the config are not owned by the animation.
-
-If the user writes an **owned component** through React props (e.g. the config animates `position`):
-
-```text
-<BoxEntity position={position} />
-```
-
-it will not override the active animation. Writing an **un-owned component** (e.g. the config only animates `position` and the user writes `rotation`) takes effect normally.
-
-#### 8.2 Props updates during animation
-
-During animation, user writes to an **owned component** (a component that appears in the config):
-
-1. do not interrupt animation.
-2. do not immediately override animation.
-3. do not become pending replay.
-4. ultimately yield to terminal animation values.
-
-During animation, user writes to an **un-owned component** (a component that does not appear in the config) take effect normally, driven live by React props, unaffected by the animation.
-
-#### 8.3 After animation ends
-
-When animation enters a terminal state:
-
-```text
-complete / stop / reset / finish
-```
-
-the native Entity has already stopped at that transform, and `entityProps` updates to that same transform.
-
-Recommended usage:
-
-```text
+```tsx
 <BoxEntity
   position={basePosition}
   {...entityProps}
@@ -396,76 +224,125 @@ Recommended usage:
 />
 ```
 
-`entityProps` should appear after static props to avoid stale props pulling terminal state back to old values.
+---
 
-### 9. Playback API
+## api Methods Overview
 
-Align with `useAnimation`:
+`api` provides the following methods:
 
-```text
-api.play()
-api.pause()
-api.resume()
-api.stop()
-api.reset()
-api.finish()
+```tsx
+api.play()      // start playing
+api.pause()     // pause
+api.resume()    // resume from pause
+api.stop()      // stop
+api.reset()     // reset
+api.finish()    // jump straight to the end state
+api.set(values) // set a pose (see "Moving the Object in Code After the Animation" above)
 ```
 
-`api.set` is a state setter (see section 7), not a playback command, and is intentionally not listed among the playback methods above.
+The first six are **playback controls** that operate the animation's playback progress; `api.set` is a **pose setter** that changes the object's static pose directly and does not affect playback progress. All of them live on `api` but serve different purposes: use the first six to control the animation, and use `api.set` to place the object by hand after the animation ends.
 
-### 10. Callback
+---
 
-Support the callbacks already defined by `useAnimation`.
+## Animation States
 
-Callbacks are notifications only. `onComplete`, `onStop`, `onReset`, `onStart`, and `onError` report that a lifecycle event happened and pass the relevant transform values; their return values are ignored and MUST NOT be used to drive the terminal transform. To decide where the Entity ends up, either declare the terminal state in the config (for example `to`) before playback, or take over after playback through the terminal `entityProps` value or an explicit `api.set` call.
+During its lifecycle an animation moves through the states below. Reading this diagram helps you tell, at any moment: whether `api.set` is usable, whether `entityProps` updates, and who controls the object.
 
-Callback values only include transform fields supported by Entity:
+```mermaid
+stateDiagram-v2
+    state "NotStarted" as NotStarted
+    state "Playing (incl. delay, paused)" as Playing
+    state "Ended" as Ended
 
-```text
-type EntityMotionCallbackValues = {
-  position?: Vec3
-  rotation?: Vec3
-  scale?: Vec3
-}
+    [*] --> NotStarted
+    NotStarted --> Playing: play() / autoStart
+    Playing --> Playing: pause() / resume()
+    Playing --> Ended: reaches end / finish() / stop()
+    Ended --> Playing: play() (replay)
+    Ended --> NotStarted: reset()
+    Playing --> NotStarted: reset()
+
+    note right of Playing
+        The "active" state, incl. the start delay and paused
+        Properties present in the config are owned by the animation
+        api.set is ignored here and triggers onError
+    end note
+    note right of Ended
+        complete / stop / finish stops at the matching pose
+        entityProps updates to that pose
+        properties are handed back to your props / api.set
+    end note
 ```
 
-### 11. Capability Requirement
+> "Playing" in the diagram covers the **start delay** and **paused** as well — as long as the animation has not ended and has not been reset, it counts as "active", and `api.set` is rejected.
 
-Use capability detection to indicate runtime support for `useAnimation`:
+### Behavior in Each State
+
+| State | How to enter | Is `api.set` usable | Does `entityProps` update | Who controls the transform |
+|---|---|---|---|---|
+| **Not started** | Initial state; or after `reset()` | ✅ Usable | No (may be empty — do not rely on it at mount) | Your props |
+| **Playing** (incl. delay, paused) | `play()` / `autoStart`; still counts after `pause()` | ❌ Ignored, triggers `onError` | Only once, at the moment playback starts | The animation (properties present in the config); the rest by your props |
+| **Ended** | Reaches the end, `complete` / `stop` / `finish` | ✅ Usable | ✅ Updates to the final pose (`stop` freezes at current, `finish`/`complete` at the end) | Your props / `api.set` |
+
+> **Note**: a looping animation has no natural "reaches end", so `entityProps` does not update at each loop boundary during looping; only `stop()` / `finish()` or a successful `api.set` updates it.
+
+---
+
+## Event Callbacks (callback)
+
+You can pass callbacks in the config to get notified at different stages of the animation:
+
+```tsx
+useEntityAnimation({
+  // ...
+  onStart:    values => console.log('start', values),
+  onComplete: values => console.log('complete', values),
+  onStop:     values => console.log('stop', values),
+  onReset:    values => console.log('reset', values),
+  onError:    error  => console.error('error', error),
+})
+```
+
+Callbacks are **notifications only**. Their return values are ignored and cannot decide where the object ends up. To decide the end pose, declare it in the config before playback (e.g. via `to`), or take over after playback through `entityProps` / `api.set`.
+
+The `values` passed to callbacks contain only the fields Entity supports:
 
 ```text
+{ position?: Vec3, rotation?: Vec3, scale?: Vec3 }
+```
+
+---
+
+## Checking Runtime Support
+
+Use capability detection to check whether the current runtime supports animation:
+
+```tsx
 supports('useAnimation')
 ```
 
-Semantics:
+Meaning: the current runtime supports binding animation to an Entity via `xr-animation` (or `animation`).
 
-```text
-The current runtime supports Reality Entity components binding useAnimation motion through xr-animation or animation.
+If it returns `false`, the current runtime does not support animation; skip the animation and render the object at its target pose with static props instead:
+
+```tsx
+if (supports('useAnimation')) {
+  return <BoxEntity {...entityProps} xr-animation={animation} />
+}
+// Not supported: render straight to the final pose, no animation
+return <BoxEntity position={targetPosition} />
 ```
 
-This capability is detected through the top-level `useAnimation` key and does not require a separate sub-token.
+**This version supports transform only (`position` / `rotation` / `scale`); it does not support `opacity`.**
 
-Documentation must state clearly:
+---
 
-```text
-Entity target currently supports transform only and does not support opacity.
-```
+## Limitations (This Version)
 
-### 12. One-Line Summary
+This version can **animate transform only** (`position` / `rotation` / `scale`); it does not support opacity (`opacity`), material, color, or other properties. In addition, an animation object binds to a single object and cannot be shared across multiple objects.
 
-Add percentage `timeline`, `entityProps` outlet, and recommended `xr-animation` binding on top of the existing `useEntityAnimation`, while keeping Entity authoring in `position / rotation / scale` form and limiting v1 to transform only.
+---
 
-## Capabilities
+## One-Line Summary
 
-### New Capabilities
-- `entity-motion`: Add timeline, Entity props outlet, binding guidance, and behavior requirements on top of the existing `useEntityAnimation`.
-
-### Modified Capabilities
-- `runtime-capabilities`: Update documented motion capability requirements to reflect the new Entity motion proposal and its supported detection contract.
-
-## Impact
-
-- Affected OpenSpec artifacts include the completed `add-entity-transform-animation` change and the in-progress `spatialized-element-motion-api` change where Entity motion is currently deferred or referenced.
-- Affected public React SDK surfaces include `useEntityAnimation`, Entity transform props, Entity binding props, and runtime capability guidance.
-- Affected implementation areas include React Entity hooks, Core motion and animation types, Entity binding logic, validation, test-server demos, and migration documentation.
-- This proposal is currently tracked as a non-breaking enhancement focused on adding `timeline`, `entityProps` outlet, recommended `xr-animation` binding, and unified semantics.
+`useEntityAnimation` describes animation with `position / rotation / scale`, and supports percentage `timeline`, `entityProps` result write-back, and the recommended `xr-animation` binding; this version supports transform only, not opacity.
