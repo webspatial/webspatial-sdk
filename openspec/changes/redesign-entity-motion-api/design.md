@@ -591,7 +591,7 @@ classDiagram
             +create()
             +control()
             +get(animationId)
-            +emitConfirmedValues()
+            +emitCommandError()
         }
         class RealityKit
     }
@@ -639,6 +639,14 @@ classDiagram
         +playState
         +ownedComponents
         +controller
+        +play()
+        +pause()
+        +resume()
+        +stop()
+        +reset()
+        +finish()
+        +set(values)
+        +emitStateChanged()
     }
     class EntityMotionTimelineCompiler {
         +compile(payload, baseline)
@@ -665,14 +673,17 @@ classDiagram
     EntityMotionTimelineCompiler --> EntityMotionTiming
     EntityMotionTimelineCompiler --> EntityMotionTransformValues
     EntityMotionManager --> EntityMotionBridgeTypes
+    EntityMotionManager --> RealityKit : read baseline transform
+    EntityMotionAnimationObject --> EntityMotionTransformValues : decompose / merge patch
+    EntityMotionAnimationObject --> EntityMotionBridgeTypes : encode confirmed values / error
     EntityMotionAnimationObject --> RealityKit : playback controller / entity animation
     EntityMotionTimelineCompiler --> RealityKit : AnimationResource / AnimationGroup
 ```
 
 **Recommended responsibilities:**
 
-- `EntityMotionManager`: Native entry for SpatialEntity motion. It receives create / control after `SpatialScene` dispatches the target, owns the animation registry and lifecycle, and handles create / control routing. On create, it calls the compiler, creates the `EntityMotionAnimationObject`, registers it, and returns `animationId`; on control, it looks up the object by `animationId` and invokes play / pause / resume / stop / reset / finish / set. It also handles the bridge exit for command failures / `spatialanimationstatechanged` events, destroy, and target-destroyed invalidation so `SpatialScene` does not hold Entity animation state.
-- `EntityMotionAnimationObject`: Represents one Entity animation object. It stores `animationId`, target `SpatialEntity`, playState, owned components, RealityKit playback controller / resources, and handles per-object play / pause / resume / stop / reset / finish state transitions.
+- `EntityMotionManager`: Native entry for SpatialEntity motion. It receives create / control after `SpatialScene` dispatches the target, owns the animation registry and lifecycle, and handles create / control routing. On create, it calls the compiler, creates the `EntityMotionAnimationObject`, registers it, and returns `animationId`; on control, it looks up the object by `animationId` and invokes play / pause / resume / stop / reset / finish / set. It also handles JSB resolution for command failures, destroy, and target-destroyed invalidation so `SpatialScene` does not hold Entity animation state. The `spatialanimationstatechanged` emit of confirmed values is done by the object (see below); the manager only reports errors when it fails outright during the lookup / validation stage.
+- `EntityMotionAnimationObject`: Represents one Entity animation object. It stores `animationId`, target `SpatialEntity`, playState, owned components, RealityKit playback controller / resources, and handles per-object play / pause / resume / stop / reset / finish / set state transitions; after each start / terminal / accepted set it decomposes confirmed values via `EntityMotionTransformValues`, encodes them via `EntityMotionBridgeTypes`, and emits `spatialanimationstatechanged`.
 - `EntityMotionTimelineCompiler`: Compiles the JS/Core-normalized `EntityMotionTimelinePayload` into a per-channel RealityKit execution plan, `AnimationResource`, and `AnimationGroup`. It does not parse public `from` / `to` or percentage keys.
 - `EntityMotionBridgeTypes`: Holds native bridge decode / encode structures, including canonical payloads, control `values`, confirmed `EntityMotionProps`, and `SpatializedPlaybackError`. If the existing command types are sufficient, this responsibility may live as several structs instead of one file.
 - `EntityMotionTiming`: Maps timingFunction, delay, loop, and playbackRate to RealityKit playback / timing representations. When a cubic-bezier cannot map directly, the compiler decides whether to bake the channel into sampled animation.
