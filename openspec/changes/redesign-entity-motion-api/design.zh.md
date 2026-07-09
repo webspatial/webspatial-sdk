@@ -591,7 +591,7 @@ classDiagram
             +create()
             +control()
             +get(animationId)
-            +emitConfirmedValues()
+            +emitCommandError()
         }
         class RealityKit
     }
@@ -639,6 +639,14 @@ classDiagram
         +playState
         +ownedComponents
         +controller
+        +play()
+        +pause()
+        +resume()
+        +stop()
+        +reset()
+        +finish()
+        +set(values)
+        +emitStateChanged()
     }
     class EntityMotionTimelineCompiler {
         +compile(payload, baseline)
@@ -665,14 +673,17 @@ classDiagram
     EntityMotionTimelineCompiler --> EntityMotionTiming
     EntityMotionTimelineCompiler --> EntityMotionTransformValues
     EntityMotionManager --> EntityMotionBridgeTypes
+    EntityMotionManager --> RealityKit : read baseline transform
+    EntityMotionAnimationObject --> EntityMotionTransformValues : decompose / merge patch
+    EntityMotionAnimationObject --> EntityMotionBridgeTypes : encode confirmed values / error
     EntityMotionAnimationObject --> RealityKit : playback controller / entity animation
     EntityMotionTimelineCompiler --> RealityKit : AnimationResource / AnimationGroup
 ```
 
 **建议职责:**
 
-- `EntityMotionManager`: 作为 SpatialEntity motion 的 native 入口,承接 `SpatialScene` 分发后的 create / control,管理 animation registry 与 lifecycle,负责 create / control routing:create 时调用 compiler、创建 `EntityMotionAnimationObject`、register 并返回 `animationId`;control 时按 `animationId` 找 object 并调用 play / pause / resume / stop / reset / finish / set;处理 command failure / `spatialanimationstatechanged` bridge、destroy / target destroyed invalidation,避免 `SpatialScene` 持有 Entity animation 状态。
-- `EntityMotionAnimationObject`: 表示单个 Entity animation object,保存 `animationId`、目标 `SpatialEntity`、playState、owned components、RealityKit playback controller / resources,并负责单对象的 play / pause / resume / stop / reset / finish 状态转换。
+- `EntityMotionManager`: 作为 SpatialEntity motion 的 native 入口,承接 `SpatialScene` 分发后的 create / control,管理 animation registry 与 lifecycle,负责 create / control routing:create 时调用 compiler、创建 `EntityMotionAnimationObject`、register 并返回 `animationId`;control 时按 `animationId` 找 object 并调用 play / pause / resume / stop / reset / finish / set;负责 command failure 的 JSB resolve、destroy / target destroyed invalidation,避免 `SpatialScene` 持有 Entity animation 状态。confirmed values 的 `spatialanimationstatechanged` emit 由 object 完成(见下),manager 只在 lookup / 校验阶段直接失败时负责 error 上报。
+- `EntityMotionAnimationObject`: 表示单个 Entity animation object,保存 `animationId`、目标 `SpatialEntity`、playState、owned components、RealityKit playback controller / resources,并负责单对象的 play / pause / resume / stop / reset / finish / set 状态转换;每次 start / terminal / accepted set 后借 `EntityMotionTransformValues` 拆解 confirmed values、经 `EntityMotionBridgeTypes` 编码,并 emit `spatialanimationstatechanged`。
 - `EntityMotionTimelineCompiler`: 把 JS/Core 归一化后的 `EntityMotionTimelinePayload` 编译为 per-channel RealityKit 可执行计划、`AnimationResource` 与 `AnimationGroup`;它不解析 public `from` / `to` 或百分比 key。
 - `EntityMotionBridgeTypes`: 承载 native bridge 的 decode / encode 结构,包括 canonical payload、control `values`、confirmed `EntityMotionProps` 与 `SpatializedPlaybackError`。如果现有 command types 已足够,该职责可作为若干 struct 分散存在。
 - `EntityMotionTiming`: 负责 timingFunction、delay、loop、playbackRate 到 RealityKit playback / timing 表达的映射;无法直接映射的 cubic-bezier 由 compiler 决定是否 bake 成 sampled animation。
