@@ -720,6 +720,90 @@ sequenceDiagram
 
 `create` only creates the native animation object and compiled plan, then returns `animationId`; it does not emit an extra initial confirmed value. `entityProps` still updates only from native confirmed events such as start, terminal lifecycle, and accepted `set`. `EntityMotionAnimationObject` owns the group/controller compiled from the whole `EntityMotionTimelinePayload`, not a single track; single-track / channel granularity only exists inside the compiler's `EntityChannelPlan`.
 
+**pause / resume sequence:**
+
+```mermaid
+sequenceDiagram
+    participant JSB as Control JSB
+    participant Scene as SpatialScene
+    participant Manager as EntityMotionManager
+    participant Obj as EntityMotionAnimationObject
+    participant RK as RealityKit
+    participant Event as spatialanimationstatechanged
+
+    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=pause/resume)
+    Scene->>Manager: control(command)
+    Manager->>Manager: get(animationId)
+    alt animation found and state allows control
+        Manager->>Obj: pause() / resume()
+        Obj->>RK: controller.pause() / controller.resume()
+        Obj->>Event: emit action=pause/resume, playState
+        Scene-->>JSB: success(nil)
+    else animation missing / invalid state
+        Scene-->>JSB: failure(animation not found / invalid state)
+    end
+```
+
+**stop / reset / finish sequence:**
+
+```mermaid
+sequenceDiagram
+    participant JSB as Control JSB
+    participant Scene as SpatialScene
+    participant Manager as EntityMotionManager
+    participant Obj as EntityMotionAnimationObject
+    participant RK as RealityKit
+    participant Event as spatialanimationstatechanged
+
+    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=stop/reset/finish)
+    Scene->>Manager: control(command)
+    Manager->>Manager: get(animationId)
+    alt animation found
+        Manager->>Obj: stop() / reset() / finish()
+        Obj->>RK: read target.transform or compute terminal transform
+        Obj->>RK: controller.stop()
+        Obj->>RK: entity.stopAllAnimations()
+        Obj->>RK: entity.move(to: committedTransform, duration: 0)
+        Obj->>Obj: read target.transform and decompose confirmed values
+        Obj->>Event: emit action=stop/reset/finish, confirmed values
+        Scene-->>JSB: success(nil)
+    else animation missing / target destroyed
+        Scene-->>JSB: failure(animation not found / TARGET_DESTROYED)
+    end
+```
+
+**set sequence:**
+
+```mermaid
+sequenceDiagram
+    participant JSB as Control JSB
+    participant Scene as SpatialScene
+    participant Manager as EntityMotionManager
+    participant Obj as EntityMotionAnimationObject
+    participant RK as RealityKit
+    participant Event as spatialanimationstatechanged
+
+    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=set, values)
+    Scene->>Manager: control(command)
+    Manager->>Manager: get(animationId)
+    alt animation missing / target destroyed
+        Scene-->>JSB: failure(animation not found / TARGET_DESTROYED)
+    else animation is delay / running / paused
+        Obj->>Event: emit action=failed, error=SET_REJECTED_DURING_ACTIVE
+        Scene-->>JSB: failure(SET_REJECTED_DURING_ACTIVE)
+    else animation is idle / terminal
+        Manager->>Obj: set(values)
+        Obj->>RK: read target.transform as committed baseline
+        Obj->>Obj: merge sparse patch over committed transform
+        Obj->>RK: entity.move(to: mergedTransform, duration: 0)
+        Obj->>Obj: read target.transform and decompose confirmed values
+        Obj->>Event: emit action=set, confirmed values
+        Scene-->>JSB: success(nil)
+    end
+```
+
+`pause` / `resume` only control the current RealityKit playback controller and do not recompile the `AnimationGroup`. `stop` / `reset` / `finish` terminate the current playback and commit the terminal transform through `entity.move(duration: 0)`. `set` does not use a RealityKit animation resource; it only commits a sparse patch merged over the native committed transform while the animation is inactive.
+
 Boundary rule: `SpatialScene` should only perform target lookup / runtime type dispatch / JSB resolve; Entity-specific compilation and playback state should not spread through `SpatialScene` handlers. v1 does not add an Entity forwarding layer that only forwards calls; registry, create/control orchestration, and lifecycle belong to `EntityMotionManager`. If the element and Entity paths later need a uniform target boundary, extract a Swift protocol or thin facade then.
 
 ## Risks / Trade-offs

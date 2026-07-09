@@ -720,6 +720,90 @@ sequenceDiagram
 
 `create` 只创建 native animation object 与 compiled plan,并返回 `animationId`;它不会额外 emit initial confirmed value。`entityProps` 仍只从 start、terminal lifecycle、accepted `set` 等 native confirmed event 更新。`EntityMotionAnimationObject` 持有的是整条 `EntityMotionTimelinePayload` 编译后的 group/controller,不是单个 track;单 track / channel 粒度只存在于 compiler 的 `EntityChannelPlan` 内部。
 
+**pause / resume 时序:**
+
+```mermaid
+sequenceDiagram
+    participant JSB as Control JSB
+    participant Scene as SpatialScene
+    participant Manager as EntityMotionManager
+    participant Obj as EntityMotionAnimationObject
+    participant RK as RealityKit
+    participant Event as spatialanimationstatechanged
+
+    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=pause/resume)
+    Scene->>Manager: control(command)
+    Manager->>Manager: get(animationId)
+    alt animation found and state allows control
+        Manager->>Obj: pause() / resume()
+        Obj->>RK: controller.pause() / controller.resume()
+        Obj->>Event: emit action=pause/resume, playState
+        Scene-->>JSB: success(nil)
+    else animation missing / invalid state
+        Scene-->>JSB: failure(animation not found / invalid state)
+    end
+```
+
+**stop / reset / finish 时序:**
+
+```mermaid
+sequenceDiagram
+    participant JSB as Control JSB
+    participant Scene as SpatialScene
+    participant Manager as EntityMotionManager
+    participant Obj as EntityMotionAnimationObject
+    participant RK as RealityKit
+    participant Event as spatialanimationstatechanged
+
+    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=stop/reset/finish)
+    Scene->>Manager: control(command)
+    Manager->>Manager: get(animationId)
+    alt animation found
+        Manager->>Obj: stop() / reset() / finish()
+        Obj->>RK: read target.transform or compute terminal transform
+        Obj->>RK: controller.stop()
+        Obj->>RK: entity.stopAllAnimations()
+        Obj->>RK: entity.move(to: committedTransform, duration: 0)
+        Obj->>Obj: read target.transform and decompose confirmed values
+        Obj->>Event: emit action=stop/reset/finish, confirmed values
+        Scene-->>JSB: success(nil)
+    else animation missing / target destroyed
+        Scene-->>JSB: failure(animation not found / TARGET_DESTROYED)
+    end
+```
+
+**set 时序:**
+
+```mermaid
+sequenceDiagram
+    participant JSB as Control JSB
+    participant Scene as SpatialScene
+    participant Manager as EntityMotionManager
+    participant Obj as EntityMotionAnimationObject
+    participant RK as RealityKit
+    participant Event as spatialanimationstatechanged
+
+    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=set, values)
+    Scene->>Manager: control(command)
+    Manager->>Manager: get(animationId)
+    alt animation missing / target destroyed
+        Scene-->>JSB: failure(animation not found / TARGET_DESTROYED)
+    else animation is delay / running / paused
+        Obj->>Event: emit action=failed, error=SET_REJECTED_DURING_ACTIVE
+        Scene-->>JSB: failure(SET_REJECTED_DURING_ACTIVE)
+    else animation is idle / terminal
+        Manager->>Obj: set(values)
+        Obj->>RK: read target.transform as committed baseline
+        Obj->>Obj: merge sparse patch over committed transform
+        Obj->>RK: entity.move(to: mergedTransform, duration: 0)
+        Obj->>Obj: read target.transform and decompose confirmed values
+        Obj->>Event: emit action=set, confirmed values
+        Scene-->>JSB: success(nil)
+    end
+```
+
+`pause` / `resume` 只控制当前 RealityKit playback controller,不重新编译 `AnimationGroup`。`stop` / `reset` / `finish` 终止当前 playback,并通过 `entity.move(duration: 0)` 提交 terminal transform。`set` 不使用 RealityKit animation resource,只在非活跃状态下把 sparse patch 合并到 native committed transform 后提交。
+
 边界约束: `SpatialScene` 只做 target lookup / runtime type dispatch / JSB resolve;Entity-specific 编译与播放状态不要散落在 `SpatialScene` handler 中。v1 不新增只负责转发的 Entity forwarding layer;registry、create/control orchestration 与 lifecycle 归 `EntityMotionManager`。如果未来 element / Entity 路径需要统一 target boundary,再抽 Swift protocol 或 thin facade。
 
 ## Risks / Trade-offs
