@@ -29,10 +29,10 @@ The public Entity motion config MUST use fields aligned with Entity props:
 - `rotation`
 - `scale`
 
-The public v1 authoring surface MUST support segment-style `from` / `to` and percentage `timeline`. `tracks` MUST remain an internal, non-public execution shape and MUST NOT be documented as a public authoring surface. Unsupported targets MUST fail explicitly.
+The public v1 authoring surface MUST support `timeline` authoring in two shapes: segment-style `timeline.from` / `timeline.to`, and percentage keyframes. `tracks` MUST remain an internal, non-public execution shape and MUST NOT be documented as a public authoring surface. Unsupported targets MUST fail explicitly.
 
 #### Scenario: Segment config uses Entity props fields
-- **WHEN** application code defines `from` or `to` for Entity motion
+- **WHEN** application code defines `timeline.from` or `timeline.to` for Entity motion
 - **THEN** Entity transform values MUST be authored through `position`, `rotation`, and `scale`
 - **AND** `transform.translate`, `transform.rotate`, and `transform.scale` MUST NOT be the public target-state config contract for Entity
 
@@ -137,7 +137,7 @@ While no animation is active (`idle` or terminal), Source A is authoritative. Ap
 
 ### Requirement: Callbacks are notifications and do not drive terminal state
 
-Entity motion lifecycle callbacks MUST be notifications only. Their return values MUST be ignored and MUST NOT be used to control the terminal transform. The terminal transform MUST be determined either by the config declared before playback (such as `to`) or by explicit take-over after playback through `entityProps` or `api.set`.
+Entity motion lifecycle callbacks MUST be notifications only. Their return values MUST be ignored and MUST NOT be used to control the terminal transform. The terminal transform MUST be determined either by the config declared before playback (such as `timeline.to`) or by explicit take-over after playback through `entityProps` or `api.set`.
 
 #### Scenario: onComplete return value is ignored
 - **WHEN** an `onComplete` callback returns a value
@@ -145,7 +145,7 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 - **AND** the return value MUST NOT override or redefine the committed terminal transform
 
 #### Scenario: Dynamic terminal state uses config or explicit set
-- **WHEN** application code needs a terminal transform different from a statically written `to`
+- **WHEN** application code needs a terminal transform different from a statically written `timeline.to`
 - **THEN** it MUST express that either through the pre-playback config or through an explicit `api.set` call after the animation ends
 - **AND** it MUST NOT rely on a callback return value to do so
 
@@ -192,8 +192,8 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 
 #### Scenario: Start point after set then play
 - **WHEN** application code calls `api.set` and then `api.play()`
-- **THEN** if the config declares `from`, playback MUST start from `from`
-- **AND** if the config does not declare `from`, playback MUST start from the current committed value
+- **THEN** if the config declares `timeline.from`, playback MUST start from `timeline.from`
+- **AND** if the config does not declare `timeline.from`, playback MUST start from the current committed value
 
 #### Scenario: Terminal fill does not snap back
 - **WHEN** an animation reaches a terminal state
