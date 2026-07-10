@@ -2,7 +2,7 @@
 
 - [ ] 1.1 Review the legacy `add-entity-transform-animation` artifacts and mark the exact behaviors that are superseded by this new target state
 - [ ] 1.2 Review `spatialized-element-motion-api` references to Entity motion and align wording so the new Entity proposal is the authoritative target state
-- [ ] 1.3 Remove `supports('useAnimation', ['entity'])` from this proposal's documented contract and reserved sub-tokens; coordinate any `spatialized-element-motion-api` wording separately instead of changing it in this proposal pass
+- [ ] 1.3 Remove `supports('useEntityAnimation', ['entity'])` from this proposal's documented contract and reserved sub-tokens; coordinate any `spatialized-element-motion-api` wording separately instead of changing it in this proposal pass
 
 ## 2. Type and Contract Redesign
 
@@ -13,10 +13,10 @@
 
 ## 3. Entity Binding Migration
 
-- [ ] 3.1 Add failing tests proving Entity motion binds through the recommended `xr-animation` while `animation` remains usable as a compatible binding
+- [ ] 3.1 Add failing tests proving Entity motion binds through the `animation` prop
 - [ ] 3.2 Update Entity prop contracts and binding lifecycle to use the new Entity motion binding path
 - [ ] 3.3 Preserve the single-binding invariant so one animation object cannot drive multiple Entity instances
-- [ ] 3.4 Keep the Entity `animation` compatible binding and document `xr-animation` as the recommended form
+- [ ] 3.4 Document `animation` as the Entity motion binding
 - [ ] 3.5 Delete the legacy entity-transform-animation leftovers on the JS side, including the suppression mechanism `animation.__getSuppressedFields` and the suppression-release base-props re-sync path, so there is no second transform source competing with native
 
 ## 4. Playback and Outlet Semantics
@@ -29,15 +29,15 @@
 
 ## 5. Capability and Validation
 
-- [ ] 5.1 Add failing tests for the documented Entity motion capability check using `supports('useAnimation')`
+- [ ] 5.1 Add failing tests for the documented Entity motion capability check using `supports('useEntityAnimation')`
 - [ ] 5.2 Update runtime capability documentation and implementation behavior to match the new target-state contract
 - [ ] 5.3 Add failing tests for explicit validation failures on unsupported Entity motion targets and invalid transform authoring
 
 ## 6. Docs, Demos, and Migration
 
-- [ ] 6.1 Update Entity motion docs and examples to use `position` / `rotation` / `scale` config, `xr-animation`, `entityProps`, and patch-object-only `api.set`, with no-bare-`api.get` guidance: read through `entityProps`, write through `api.set(values)`
+- [ ] 6.1 Update Entity motion docs and examples to use `position` / `rotation` / `scale` config, `animation`, `entityProps`, and patch-object-only `api.set`, with no-bare-`api.get` guidance: read through `entityProps`, write through `api.set(values)`
 - [ ] 6.2 Update `apps/test-server` Entity animation demos and capability pages to the new target-state API
-- [ ] 6.3 Add migration notes covering the removal of legacy top-level transform config and the recommended `animation` -> `xr-animation` migration (with `animation` kept for compatibility)
+- [ ] 6.3 Add migration notes covering the removal of legacy top-level transform config ; the Entity motion binding uses `animation`
 
 ## 7. Verification
 

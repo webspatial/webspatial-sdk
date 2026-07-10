@@ -2,7 +2,7 @@
 
 - [ ] 1.1 复核旧的 `add-entity-transform-animation` 文档，明确哪些行为会被新的目标态替代
 - [ ] 1.2 复核 `spatialized-element-motion-api` 中对 Entity motion 的引用，统一措辞到“新 Entity 提案是权威目标态”
-- [ ] 1.3 从本提案的文档契约和保留 sub-token 中移除 `supports('useAnimation', ['entity'])`；`spatialized-element-motion-api` 的相关措辞另行协调，不在本提案修改批次中直接改动
+- [ ] 1.3 从本提案的文档契约和保留 sub-token 中移除 `supports('useEntityAnimation', ['entity'])`；`spatialized-element-motion-api` 的相关措辞另行协调，不在本提案修改批次中直接改动
 
 ## 2. 类型与契约重设计
 
@@ -13,10 +13,10 @@
 
 ## 3. Entity 绑定迁移
 
-- [ ] 3.1 先编写失败测试，证明 Entity motion 推荐通过 `xr-animation` 绑定，且 `animation` 作为兼容绑定继续可用
+- [ ] 3.1 先编写失败测试，证明 Entity motion 通过 `animation` 属性绑定
 - [ ] 3.2 更新 Entity props 契约与 binding 生命周期，切换到新的 Entity motion 绑定路径
 - [ ] 3.3 保留单绑定不变量，保证同一个 animation object 不能驱动多个 Entity 实例
-- [ ] 3.4 保留 Entity `animation` 兼容绑定，并在文档中把 `xr-animation` 标注为推荐写法
+- [ ] 3.4 在文档中把 `animation` 作为 Entity motion 的绑定方式
 - [ ] 3.5 删除 JS 侧旧 entity-transform-animation 遗留，包括 suppression 机制 `animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径，确保不存在能与 native 竞争的第二个 transform 源
 
 ## 4. Playback 与 Outlet 语义
@@ -29,15 +29,15 @@
 
 ## 5. Capability 与校验
 
-- [ ] 5.1 先编写失败测试，覆盖使用 `supports('useAnimation')` 检测 Entity motion 的目标态契约
+- [ ] 5.1 先编写失败测试，覆盖使用 `supports('useEntityAnimation')` 检测 Entity motion 的目标态契约
 - [ ] 5.2 更新 runtime capability 文档与实现行为，使之匹配新的目标态契约
 - [ ] 5.3 先编写失败测试，覆盖不支持的 Entity motion target 和非法 transform authoring 的显式校验失败
 
 ## 6. 文档、Demo 与迁移
 
-- [ ] 6.1 更新 Entity motion 文档与示例，统一使用 `position` / `rotation` / `scale` config、`xr-animation`、`entityProps` 和只接受 patch object 的 `api.set`,并说明不提供裸 `api.get`:读取通过 `entityProps`,写入通过 `api.set(values)`
+- [ ] 6.1 更新 Entity motion 文档与示例，统一使用 `position` / `rotation` / `scale` config、`animation`、`entityProps` 和只接受 patch object 的 `api.set`,并说明不提供裸 `api.get`:读取通过 `entityProps`,写入通过 `api.set(values)`
 - [ ] 6.2 更新 `apps/test-server` 中的 Entity animation demo 与 capability 页面到新的目标态 API
-- [ ] 6.3 补充迁移说明，覆盖旧顶层 transform config 的移除，并说明 `animation` -> `xr-animation` 的推荐迁移（`animation` 兼容保留）
+- [ ] 6.3 补充迁移说明，覆盖旧顶层 transform config 的移除，Entity motion 绑定统一使用 `animation`
 
 ## 7. 验证
 
