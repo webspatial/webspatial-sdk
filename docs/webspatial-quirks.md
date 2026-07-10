@@ -43,13 +43,13 @@ A `<div enable-xr>` (SpatialDiv) is **not** a single DOM node for styling purpos
 
 ### What to use instead
 
-| Approach | Works for spatial transform |
-| --- | --- |
-| Class selector (`.panel { transform: … }`) | Yes — `className` is mirrored host → probe |
-| Inline `style={{ transform: … }}` | Yes — applied to the probe |
-| `ref.current.style.transform = '…'` | Yes — forwarded to the probe |
-| Tag selector on matching intrinsic (`h1 {}` with `<h1 enable-xr>`) | Yes (after probe tag mirror) |
-| Ancestor + tag (`.page h1 {}`) | Often **no** |
+| Approach                                                           | Works for spatial transform                |
+| ------------------------------------------------------------------ | ------------------------------------------ |
+| Class selector (`.panel { transform: … }`)                         | Yes — `className` is mirrored host → probe |
+| Inline `style={{ transform: … }}`                                  | Yes — applied to the probe                 |
+| `ref.current.style.transform = '…'`                                | Yes — forwarded to the probe               |
+| Tag selector on matching intrinsic (`h1 {}` with `<h1 enable-xr>`) | Yes (after probe tag mirror)               |
+| Ancestor + tag (`.page h1 {}`)                                     | Often **no**                               |
 
 ### CSS-in-JS in SpatialDiv (styled-components, Emotion, …)
 
@@ -71,7 +71,7 @@ A `<div enable-xr>` (SpatialDiv) is **not** a single DOM node for styling purpos
 
 **Manual check:** test-server `#/styledComponentsSpatialTest` (host, child, nested tabs). On device, drag the opacity slider and/or run `window.__runStyledComponentsSpatialOpacitySweep()`; expect `mismatchFrames === 0`.
 
-Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md` — *Portal head sync (CSS-in-JS)*.
+Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md` — _Portal head sync (CSS-in-JS)_.
 
 ### Dev workflow note
 
@@ -94,12 +94,45 @@ Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md`.
 
 **What to use instead:**
 
-| Goal | Approach |
-| --- | --- |
+| Goal                            | Approach                                                                                                       |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Keep child inside parent bounds | Constrain child CSS size (`max-width`, `max-height`, flex/grid) so the child layout does not exceed the parent |
-| Clip content to a rounded panel | Use a single `SpatialDiv` and put overflow-sensitive UI in **plain HTML** inside that portal |
-| Layered panels that may overlap | Accept that child spatial panels can extend past the parent; tune `--xr-back` / `z-index` for depth ordering |
+| Clip content to a rounded panel | Use a single `SpatialDiv` and put overflow-sensitive UI in **plain HTML** inside that portal                   |
+| Layered panels that may overlap | Accept that child spatial panels can extend past the parent; tune `--xr-back` / `z-index` for depth ordering   |
 
 **Manual check:** test-server `#/nested-spatial-overflow`. Open in the visionOS simulator (or target device). Toggle child size and parent `overflow`; the spatial child panel should remain unclipped when larger than the parent. The plain-HTML reference block on the same page shows normal browser clipping for comparison.
 
-Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md` — *Portal lifecycle and local dev (HMR)*.
+Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md` — _Portal lifecycle and local dev (HMR)_.
+
+## Dialog / overlay libraries (Radix-style) inside `enable-xr`
+
+**Symptom:** Radix Dialog (or Headless UI / floating-ui overlays) wrapping a `<div enable-xr>` panel: pressing inside the panel falsely dismisses the dialog, Escape pressed inside the panel does nothing, and dropdown submenus / popovers triggered from inside the panel render on the flat page instead of in the panel.
+
+**Root cause:** `enable-xr` content is React-portaled into a child-webview document; the host page keeps only a hidden placeholder. React synthetic events cross that boundary, but native `document` listeners, focus, and `document.body` portals do not. Dismissal libraries listen on the host `document` (`pointerdown`, `keydown`) and portal floating content to the host `document.body`.
+
+**Current behavior (portal document bridge):**
+
+- Host-document listeners for `pointerdown`, `pointerup`, `click`, `keydown`, and `focusin` are mirrored onto every active spatial portal document. The mirrored event's `target` / `composedPath()` are remapped to the host-side placeholder, so `content.contains(event.target)` style outside-press checks pass and Escape reaches host `keydown` listeners. There is no re-dispatch — the original listener is invoked directly with a proxied event.
+- Interception arms when the first spatialized container mounts and stays armed, so listeners a dialog registers before its own panel finishes async portal registration are recorded and replayed. Validated against real `@radix-ui/react-dialog` (its DismissableLayer performs no `event.isTrusted` checks).
+- For nested portals (dropdown submenus, popovers, tooltips) triggered from inside a panel, pass the spatial container to each portal part:
+
+  ```tsx
+  import { useSpatialPortalContainer } from '@webspatial/react-sdk'
+
+  const container = useSpatialPortalContainer() // null on plain web → Radix default
+  <DropdownMenu.Portal container={container}>…</DropdownMenu.Portal>
+  // Every nested Portal part (Content AND SubContent) needs the container.
+  ```
+
+**Remaining limitations:**
+
+- No native background dim/scrim and no true cross-native-layer modality yet — DOM-side blocking cannot affect sibling native spatial layers (Phase 2).
+- Nested-portal content passed a spatial container is clipped to the panel's webview bounds; menus cannot hang outside the panel edge.
+- Without the `container` override, Radix secondary portals still land on the host body — the bridge mirrors events, it does not relocate portals.
+- Panel enter/exit animations during dialog teardown are not solved by this bridge.
+- File inputs must live in the same `enable-xr` subtree as their trigger; cross-document hidden-input `.click()` is not supported.
+- Listener types outside the whitelist (e.g. `mousemove`, `keyup`) are not mirrored.
+
+**Manual check:** test-server `#/portal-bridge-dialog` (inline + real Radix dialog) and `#/dropdown-menu-test` (Radix submenu portaled into the panel).
+
+Maintainer details: `packages/react/src/spatialized-container/portal-bridge/` (registry, listener mirror, event proxy) and `packages/react/src/useSpatialPortalContainer.ts`.

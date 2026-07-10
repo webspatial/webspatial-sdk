@@ -69,6 +69,7 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       // Hooks
       'useMetrics',
       'useAnimation',
+      'useSpatialPortalContainer',
       // Deprecated v1 export
       'createElement',
       // Constants

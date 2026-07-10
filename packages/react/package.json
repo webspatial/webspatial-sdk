@@ -80,6 +80,7 @@
     "@babel/parser": "^7.29.3",
     "@babel/types": "^7.29.0",
     "@radix-ui/react-dialog": "^1.1.19",
+    "@radix-ui/react-dropdown-menu": "^2.1.20",
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
     "@types/node": "^22.5.5",

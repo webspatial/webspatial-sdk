@@ -218,6 +218,12 @@ export type {
 // --- Hooks (placeholder / ready-gated per spec "Hook placeholders") ---------
 export { useMetrics } from './hooks-web/useMetrics'
 export { useAnimation } from './hooks-web/useAnimation'
+// Portal container for nested overlay portals (Radix Portal etc.) inside
+// `enable-xr` subtrees. Default-entry safe: the module touches no spatial
+// implementation code — the context object is globalThis-anchored and the
+// provider lives in the spatial chunk's `SpatializedContent`. Returns null
+// until spatial content provides it (plain web / SSR / outside panels).
+export { useSpatialPortalContainer } from './useSpatialPortalContainer'
 
 // --- Public type surface (no runtime values) --------------------------------
 // Spatial event + ref types — referenced by facade prop / ref typing.

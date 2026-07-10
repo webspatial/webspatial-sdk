@@ -29,6 +29,9 @@ import type { PortalInstanceObject } from './context/PortalInstanceContext'
 import { getSession } from '../utils'
 import { useSpatialContentReady } from './hooks/useSpatialContentReady'
 import { usePortalDocumentBridge } from './portal-bridge/usePortalDocumentBridge'
+import { getSpatialPortalContainerContext } from '../useSpatialPortalContainer'
+
+const SpatialPortalContainerContext = getSpatialPortalContainerContext()
 
 function mergeRefs<T>(
   ...refs: Array<React.Ref<T> | undefined | null>
@@ -142,7 +145,16 @@ function SpatializedContent<P extends ElementType>(
     setHostCallback,
   )
 
-  return createPortal(JSXPortalInstance, windowProxy.document.body)
+  // Expose this panel's document.body so nested overlay portals (Radix
+  // Portal etc.) rendered by content inside the panel can opt into the
+  // panel's document via useSpatialPortalContainer() instead of landing on
+  // the host page body.
+  return createPortal(
+    <SpatialPortalContainerContext.Provider value={windowProxy.document.body}>
+      {JSXPortalInstance}
+    </SpatialPortalContainerContext.Provider>,
+    windowProxy.document.body,
+  )
 }
 
 function getExtraSpatializedElementProperties(

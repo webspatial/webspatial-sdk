@@ -140,6 +140,7 @@ export { WebSpatialMixedEntryError } from './runtime/entryRegistry'
 // the whole default-entry facade graph into the eager static closure.
 export { enableDebugTool } from './utils/debugTool'
 export { convertCoordinate } from './utils/convertCoordinate'
+export { useSpatialPortalContainer } from './useSpatialPortalContainer'
 export { initScene } from './initScene'
 export { WebSpatialRuntime } from './webSpatialRuntime'
 export { WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
