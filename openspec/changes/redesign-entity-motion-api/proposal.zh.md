@@ -6,7 +6,7 @@
 
 1. **关键帧动画(`timeline`)**:既能做“从 A 到 B”的简单动画,也能写 `0% → 50% → 100%` 这样的多段动画。
 2. **动画结果回写(`entityProps`)**:Hook 会把动画的最终姿态交回给你,让物体在动画结束后稳稳停在终点。
-3. **推荐的绑定方式(`xr-animation`)**:把动画绑定到物体上;也可以使用 `animation` 绑定。
+3. **绑定方式(`animation`)**:通过组件的 `animation` 属性把动画绑定到物体上。
 
 > **几个基础名词**(下文会反复用到):
 > - **Entity**:场景里的一个 3D 物体,比如一个盒子 `<BoxEntity>`。
@@ -27,7 +27,7 @@
 | 只让动画控制位置,旋转仍由我手动控制 | config 里只写 `position`,`rotation` 照常用 props 传 |
 | 读取动画交回的最终姿态 | 读 `entityProps`(没有 `api.get`) |
 | 控制播放(开始/暂停/继续/停止/重置) | `api.play()` / `pause()` / `resume()` / `stop()` / `reset()` / `finish()` |
-| 判断运行环境是否支持动画 | `supports('useAnimation')` |
+| 判断运行环境是否支持动画 | `supports('useEntityAnimation')` |
 
 > **只支持 transform**:当前版本只能动画 `position` / `rotation` / `scale`,**不支持** `opacity`(透明度)、材质、颜色等。写了不支持的目标会直接报错,不会被悄悄忽略。
 
@@ -52,7 +52,7 @@ function MyBox() {
     <Reality>
       <SceneGraph>
         {/* entityProps 放在最后,保证动画结束后停在终点 */}
-        <BoxEntity {...entityProps} xr-animation={animation} />
+        <BoxEntity {...entityProps} animation={animation} />
       </SceneGraph>
     </Reality>
   )
@@ -67,7 +67,7 @@ const [animation, api, entityProps] = useEntityAnimation(config)
 
 | 返回值 | 作用 |
 |---|---|
-| `animation` | 动画绑定对象,传给组件的 `xr-animation`(或 `animation`)属性 |
+| `animation` | 动画绑定对象,传给组件的 `animation` 属性 |
 | `api` | 播放控制器,提供 `play / pause / resume / stop / reset / finish` 和 `set` |
 | `entityProps` | 动画在关键节点交回的最终姿态(非逐帧实时值),形如 `{ position?, rotation?, scale? }`,展开到组件上即可 |
 
@@ -148,14 +148,8 @@ const [animation, api, entityProps] = useEntityAnimation({
 })
 
 return (
-  <BoxEntity {...entityProps} xr-animation={animation} />
+  <BoxEntity {...entityProps} animation={animation} />
 )
-```
-
-也可以用 `animation` 绑定:
-
-```tsx
-<BoxEntity {...entityProps} animation={animation} />
 ```
 
 **动画完成后**,`entityProps` 会更新为终点姿态(位置、旋转、缩放),物体停在最后一帧,**不会弹回起点**。
@@ -177,14 +171,9 @@ api.set({ position: { y: 0.3 } })
 
 几条规则:
 
-1. **只在动画不处于播放状态时用**(包括:从未播放、已播完、已停止 / 重置)。只要动画正在播放(含延迟、暂停),调用 `api.set` 就会被忽略(不打断动画、也不会延后补播),并触发你在 config 里传入的 `onError` 回调;此时物体保持不变,`entityProps` 也不更新。想在动画进行中接管物体,请先停止动画,或等它结束。
+1. **只在动画不处于播放状态时用**(包括:从未播放、已播完、已停止 / 重置)。只要动画正在播放(含延迟、暂停),调用 `api.set` 会被 native 拒绝——此时它是一次 **noop**(不打断动画、也不会延后补播,物体保持不变,`entityProps` 也不更新),并在控制台打印一条警告(warning),**不会**触发 `onError`。想在动画进行中接管物体,请先停止动画,或等它结束。
 2. **只传你想改的字段即可**,其余保持原样。例如 `api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
-3. **写入成功后 `entityProps` 会更新**为新姿态;如果写入未生效,`entityProps` 不变,并触发 `onError`。可以用它判断写入是否失败:
-```tsx
-useEntityAnimation({
-  onError: error => console.error('api.set 写入失败', error),
-})
-```
+3. **写入成功后 `entityProps` 会更新**为新姿态;如果写入未被接受(比如在动画播放中调用),则是一次 noop——`entityProps` 保持不变,并在控制台打印一条警告,不会触发 `onError`。
 4. **想基于当前值来改**?先读 `entityProps` 拿到当前姿态,自己算好新值,再传给 `api.set`。这里没有 `api.get`——因为在 React 里用取值函数容易读到过期的旧值、产生先读后写的冲突。
 5. **它不是播放命令**:`api.set` 不会开始播放、也不改变播放进度。
 
@@ -220,7 +209,7 @@ useEntityAnimation({
 <BoxEntity
   position={basePosition}
   {...entityProps}
-  xr-animation={animation}
+  animation={animation}
 />
 ```
 
@@ -265,7 +254,7 @@ stateDiagram-v2
     note right of Playing
         动画“活跃”状态，含起播前的延迟与暂停
         config 里出现的属性归动画控制
-        此时 api.set 会被忽略并触发 onError
+        此时 api.set 会被拒绝:noop + 控制台警告
     end note
     note right of Ended
         complete / stop / finish 停在对应姿态
@@ -281,7 +270,7 @@ stateDiagram-v2
 | 状态 | 怎么进入 | `api.set` 能用吗 | `entityProps` 会更新吗 | transform 归谁控制 |
 |---|---|---|---|---|
 | **尚未开始** | 初始状态;或 `reset()` 之后 | ✅ 能用 | 否(可能为空,别在挂载时就依赖它) | 你的 props |
-| **播放中**(含延迟、暂停) | `play()` / `autoStart`;`pause()` 后仍属此类 | ❌ 被忽略,触发 `onError` | 仅在开始播放那一刻更新一次 | 动画(config 里出现的属性);其余归你的 props |
+| **播放中**(含延迟、暂停) | `play()` / `autoStart`;`pause()` 后仍属此类 | ❌ 被拒绝(noop + 警告) | 仅在开始播放那一刻更新一次 | 动画(config 里出现的属性);其余归你的 props |
 | **已结束** | 播放到终点、`complete` / `stop` / `finish` | ✅ 能用 | ✅ 更新为最终姿态(`stop` 停在当前、`finish`/`complete` 停在终点) | 你的 props / `api.set` |
 
 > **提示**:循环动画没有自然的“播放到终点”,所以循环期间 `entityProps` 不会在每圈结束时更新,只有 `stop()` / `finish()` 或成功的 `api.set` 才会更新它。
@@ -318,16 +307,16 @@ useEntityAnimation({
 用能力检测判断当前运行环境是否支持动画:
 
 ```tsx
-supports('useAnimation')
+supports('useEntityAnimation')
 ```
 
-含义:当前环境支持 Entity 通过 `xr-animation`(或 `animation`)绑定动画。
+含义:当前环境支持 Entity 通过 `animation` 绑定动画。
 
 如果返回 `false`,说明当前环境不支持动画,建议跳过动画、直接用静态 props 把物体渲染到目标姿态:
 
 ```tsx
-if (supports('useAnimation')) {
-  return <BoxEntity {...entityProps} xr-animation={animation} />
+if (supports('useEntityAnimation')) {
+  return <BoxEntity {...entityProps} animation={animation} />
 }
 // 不支持:直接渲染到最终姿态,不做动画
 return <BoxEntity position={targetPosition} />
@@ -345,4 +334,4 @@ return <BoxEntity position={targetPosition} />
 
 ## 一句话总结
 
-`useEntityAnimation` 用 `position / rotation / scale` 描述动画,支持百分比 `timeline`、`entityProps` 结果回写和推荐的 `xr-animation` 绑定;当前版本只支持 transform,不支持 opacity。
+`useEntityAnimation` 用 `position / rotation / scale` 描述动画,支持百分比 `timeline`、`entityProps` 结果回写和 `animation` 绑定;当前版本只支持 transform,不支持 opacity。

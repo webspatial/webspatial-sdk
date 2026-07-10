@@ -4,7 +4,7 @@
 
 The SDK MUST provide `useEntityAnimation(config)` as the public Entity motion hook. The hook MUST return a 3-tuple `[animation, api, entityProps]`.
 
-The returned `animation` object MUST be bindable through `xr-animation` on Entity components and SHOULD remain compatible with `animation` binding. The returned `entityProps` object MAY be empty before the first native-confirmed state; once native returns a confirmed state, `entityProps` MUST represent the transform components owned by the animation system (the animated components plus components written via `api.set`), limited to the `position`, `rotation`, and `scale` fields and no other properties; components that are not owned MUST NOT appear in `entityProps`.
+The returned `animation` object MUST be bindable through the `animation` prop on Entity components. The returned `entityProps` object MAY be empty before the first native-confirmed state; once native returns a confirmed state, `entityProps` MUST represent the transform components owned by the animation system (the animated components plus components written via `api.set`), limited to the `position`, `rotation`, and `scale` fields and no other properties; components that are not owned MUST NOT appear in `entityProps`.
 
 #### Scenario: Hook return shape
 - **WHEN** application code calls `useEntityAnimation(config)`
@@ -13,14 +13,9 @@ The returned `animation` object MUST be bindable through `xr-animation` on Entit
 - **AND** `set` MUST be documented as a state setter for committed transform values rather than a playback command
 - **AND** `entityProps` MUST only contain `position`, `rotation`, and `scale`
 
-#### Scenario: Entity binding uses `xr-animation`
-- **WHEN** the returned `animation` object is passed to an Entity component through `xr-animation`
+#### Scenario: Entity binding uses `animation`
+- **WHEN** the returned `animation` object is passed to an Entity component through the `animation` prop
 - **THEN** the SDK MUST treat it as the Entity motion binding input
-
-#### Scenario: Entity remains compatible with `animation` binding
-- **WHEN** the returned `animation` object is passed to an Entity component through `animation`
-- **THEN** the SDK MUST continue to treat it as a valid Entity motion binding input
-- **AND** documentation SHOULD describe `xr-animation` as the recommended shape
 
 #### Scenario: One binding cannot drive multiple entities
 - **GIVEN** an `animation` object is already bound to one Entity instance
@@ -158,7 +153,7 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 
 The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST only accept a sparse `EntityMotionPatch` object (the write-side patch type; the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly) and MUST NOT support the updater function form `(prev) => next`. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
 
-Entity transform is composed from two sources: Source A is static/base React props plus `entityProps` (the committed state mirrored by the SDK; dynamic take-over is written through `api.set`), and Source B is the `xr-animation` binding (per-frame sampled values). Arbitration MUST be per transform component (`position` / `rotation` / `scale`) and independent: for a component present in the config, Source B is authoritative while the animation is active (`delay` / `running` / `paused`) and Source A is authoritative while it is inactive (`idle` / terminal); a component not present in the config is always authoritative from Source A. `api.set` always writes Source A.
+Entity transform is composed from two sources: Source A is static/base React props plus `entityProps` (the committed state mirrored by the SDK; dynamic take-over is written through `api.set`), and Source B is the `animation` binding (per-frame sampled values). Arbitration MUST be per transform component (`position` / `rotation` / `scale`) and independent: for a component present in the config, Source B is authoritative while the animation is active (`delay` / `running` / `paused`) and Source A is authoritative while it is inactive (`idle` / terminal); a component not present in the config is always authoritative from Source A. `api.set` always writes Source A.
 
 The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST read declarative `entityProps`, and compute its own patch before calling `api.set(values)` when it needs to write. `entityProps` MAY be empty before the first native-confirmed state and MUST NOT be promised readable at mount: creating or binding the animation MUST NOT emit an extra initial confirmed value. To read a meaningful native pose, application code MUST first trigger a lifecycle that commits a confirmed value (a `play` that reaches a terminal / lifecycle node, or an accepted `api.set`).
 
@@ -166,7 +161,7 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 - **WHEN** application code calls `api.set(values)` with Entity transform values
 - **THEN** the SDK MUST send the write to native, which decides whether to accept it
 - **AND** when native accepts, `entityProps` MUST update to the confirmed transform values emitted by native
-- **AND** when native rejects, `entityProps` MUST NOT update
+- **AND** when native rejects, `entityProps` MUST NOT update, and the rejection MUST surface a console warning rather than an `onError` event
 
 #### Scenario: set performs a sparse merge
 - **WHEN** application code calls `api.set` with only some transform fields, such as `{ position: { y: 0.3 } }`
@@ -186,14 +181,14 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 - **THEN** the SDK MUST NOT interrupt or override the active animation
 - **AND** native MUST NOT stash the write and MUST NOT replay it after the animation ends
 - **AND** `entityProps` MUST NOT update due to that write
-- **AND** failure MUST be exposed through the existing command failure or error event mechanism
+- **AND** the rejected write MUST be a no-op that surfaces a console warning, and MUST NOT be delivered through `onError`
 
 #### Scenario: set before binding or native object creation is invalid
 - **GIVEN** the Entity motion binding is not bound yet, or the corresponding native object has not been created
 - **WHEN** application code calls `api.set`
 - **THEN** the SDK MUST NOT create a pending write
 - **AND** the write MUST NOT be replayed after later binding or native object creation
-- **AND** failure MUST be exposed through the existing command failure or error event mechanism
+- **AND** the rejected write MUST be a no-op that surfaces a console warning, and MUST NOT be delivered through `onError`
 
 #### Scenario: Start point after set then play
 - **WHEN** application code calls `api.set` and then `api.play()`
@@ -207,7 +202,7 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 
 ### Requirement: Playback errors are classified and events are addressable by `animationId`
 
-The SDK MUST expose a closed `SpatializedPlaybackError.code` classification for Entity motion failures, covering at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, `TARGET_DESTROYED`, `SET_REJECTED_DURING_ACTIVE`, and `SET_BEFORE_READY`. All classified failures MUST be delivered to the user through `onError`. Consumers MUST determine the `values` shape by reverse-looking-up the local animation object identified by `animationId`, not by any target-type field on the event, and MUST discard events whose `animationId` matches no live local animation object.
+The SDK MUST expose a closed `SpatializedPlaybackError.code` classification for Entity motion failures, covering at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, and `TARGET_DESTROYED`. All classified failures MUST be delivered to the user through `onError`. Rejected `api.set` writes — during an active animation, or before binding / native object creation — MUST NOT be delivered through `onError`; they MUST be no-ops that emit a console warning. Consumers MUST determine the `values` shape by reverse-looking-up the local animation object identified by `animationId`, not by any target-type field on the event, and MUST discard events whose `animationId` matches no live local animation object.
 
 #### Scenario: Error code is distinguishable
 - **WHEN** an Entity motion operation fails

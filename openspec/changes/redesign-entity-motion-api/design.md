@@ -2,7 +2,7 @@
 
 `proposal.md` is the single source of truth for the public API surface, and `specs/` is the source of truth for normative behavior. This document only describes the **implementation architecture** required to deliver that target state; it does not restate the public API contract or the behavioral requirements.
 
-The redesign turns `useEntityAnimation` into the Entity-specific surface over the shared `useAnimation` motion family (`useEntityAnimation = useAnimation config + Entity props outlet`). It adds percentage `timeline`, the `entityProps` outlet, `api.set`, and the recommended `xr-animation` binding, while keeping `animation` as a compatible binding. This is a non-breaking enhancement.
+The redesign turns `useEntityAnimation` into the Entity-specific surface over the shared `useAnimation` motion family (`useEntityAnimation = useAnimation config + Entity props outlet`). It adds percentage `timeline`, the `entityProps` outlet, `api.set`, and the `animation` binding. This is a non-breaking enhancement.
 
 ## Design Principles
 
@@ -87,7 +87,7 @@ flowchart TB
         ReactBinding["creates EntityMotionBinding / playback api"]
         EntityProps["entityProps<br/>mirror of native confirmed transform"]
         ApiSet["api.set(values patch)<br/>sends to native, no local cache write"]
-        BindTarget["useBindMotionTarget({ binding, target })<br/>xr-animation recommended / animation compatible"]
+        BindTarget["useBindMotionTarget({ binding, target })<br/>animation binding"]
 
         UseEntity --> ReactBinding
         UseEntity --> EntityProps
@@ -219,13 +219,11 @@ type SpatializedPlaybackError = {
     | 'TARGET_NOT_FOUND'           // elementId not in the spatial object registry
     | 'UNSUPPORTED_TARGET'         // resolved object is neither SpatializedElement nor SpatialEntity
     | 'TARGET_DESTROYED'           // the spatial object was destroyed; the animation is invalid
-    | 'SET_REJECTED_DURING_ACTIVE' // api.set arrived while the animation was active (delay / running / paused)
-    | 'SET_BEFORE_READY'           // api.set arrived before binding / native object creation
   message?: string
 }
 ```
 
-All of these reach the user through the `onError` callback. The `code` MUST be distinguishable so application code can branch on the failure kind rather than parsing `message`.
+All of these reach the user through the `onError` callback. Rejected `api.set` writes (during an active animation, or before binding / native object creation) are the exception: they are no-ops that emit a console warning and are NOT routed to `onError`. The `code` MUST be distinguishable so application code can branch on the failure kind rather than parsing `message`.
 
 ## Data Flow
 
@@ -245,7 +243,7 @@ sequenceDiagram
     Core-->>Hook: canonical tracks(position.* / rotation.* / scale.*)
     Hook->>Core: validateEntityMotionConfig(tracks)
     Core-->>Hook: transform-only config accepted
-    App->>Hook: BoxEntity xr-animation / animation binding
+    App->>Hook: BoxEntity animation binding
     Hook->>Obj: AnimationObject.create({ elementId, timeline })
     Obj->>JSB: execute({ elementId, timeline })
     JSB->>Native: create animation
@@ -506,18 +504,18 @@ Decomposition rules:
 Target-state docs and demos use the top-level capability:
 
 ```text
-supports('useAnimation')
+supports('useEntityAnimation')
 ```
 
-`supports('useAnimation', ['entity'])` is removed from the documented contract; only the top-level `supports('useAnimation')` key is used, and no `entity` sub-token is reserved.
+`supports('useEntityAnimation', ['entity'])` is removed from the documented contract; only the top-level `supports('useEntityAnimation')` key is used, and no `entity` sub-token is reserved.
 
 ## Key Changes per Layer
 
 ### React layer (`packages/react`)
 
 - **Reuse / mostly reuse:** Keep `useEntityAnimation` as the public Entity motion hook name, keep the existing Entity `animation` compatible binding entry, and reuse the Entity props hierarchy for `position` / `rotation` / `scale`.
-- **Generalize / replace:** Change `useEntityAnimation` from the old `[AnimatedProps, AnimationApi]` shape to `[animation, api, entityProps]`; `api` exposes `play/pause/resume/stop/reset/finish` and `set`; `api.set` sends `ControlSpatializedElementAnimation(type: 'set')` and does not write a local cache. The legacy entity-transform-animation leftovers are deleted, including the JS-side suppression mechanism (`animation.__getSuppressedFields` and the suppression-release base-props re-sync path). The final transform is composed only through Source A (static/base props + `entityProps`) and Source B (`xr-animation`) per-component arbitration; after a terminal state, `entityProps` overrides stale base props (fill-forwards, no snap-back). Deleting this path is what makes the old snap-back conflict structurally impossible.
-- **Add:** Add `EntityMotionBinding`, `EntityPlaybackApi.set(values)`, and the `EntityMotionProps` mirror outlet. Entity components support the recommended `xr-animation` binding and keep the compatible `animation` binding; the binder adds or generalizes to `useBindMotionTarget({ binding, target })` while preserving the single-binding single-target invariant.
+- **Generalize / replace:** Change `useEntityAnimation` from the old `[AnimatedProps, AnimationApi]` shape to `[animation, api, entityProps]`; `api` exposes `play/pause/resume/stop/reset/finish` and `set`; `api.set` sends `ControlSpatializedElementAnimation(type: 'set')` and does not write a local cache. The legacy entity-transform-animation leftovers are deleted, including the JS-side suppression mechanism (`animation.__getSuppressedFields` and the suppression-release base-props re-sync path). The final transform is composed only through Source A (static/base props + `entityProps`) and Source B (`animation`) per-component arbitration; after a terminal state, `entityProps` overrides stale base props (fill-forwards, no snap-back). Deleting this path is what makes the old snap-back conflict structurally impossible.
+- **Add:** Add `EntityMotionBinding`, `EntityPlaybackApi.set(values)`, and the `EntityMotionProps` mirror outlet. Entity components support the `animation` binding; the binder adds or generalizes to `useBindMotionTarget({ binding, target })` while preserving the single-binding single-target invariant.
 
 ### Core layer (`packages/core`)
 
@@ -800,8 +798,8 @@ sequenceDiagram
     alt animation missing / target destroyed
         Scene-->>JSB: failure(animation not found / TARGET_DESTROYED)
     else animation is delay / running / paused
-        Obj->>Event: emit action=failed, error=SET_REJECTED_DURING_ACTIVE
-        Scene-->>JSB: failure(SET_REJECTED_DURING_ACTIVE)
+        Note over Obj: no-op + console warning (not routed to onError)
+        Scene-->>JSB: rejected(no-op)
     else animation is idle / terminal
         Manager->>Obj: set(values)
         Obj->>RK: read target.transform as committed baseline

@@ -2,7 +2,7 @@
 
 `proposal.md` 是公共 API surface 的唯一主来源,`specs/` 是规范性行为的唯一主来源。本文档只描述实现目标态所需的**实现架构**,不重复公共 API 契约,也不重复行为需求。
 
-本次重设计把 `useEntityAnimation` 变成共享 `useAnimation` 运动家族之上的 Entity 适配器(`useEntityAnimation = useAnimation 配置 + Entity props outlet`)。它新增百分比 `timeline`、`entityProps` outlet、`api.set`,以及推荐的 `xr-animation` 绑定,同时保留 `animation` 作为兼容绑定。这是一次非破坏性增强。
+本次重设计把 `useEntityAnimation` 变成共享 `useAnimation` 运动家族之上的 Entity 适配器(`useEntityAnimation = useAnimation 配置 + Entity props outlet`)。它新增百分比 `timeline`、`entityProps` outlet、`api.set`,以及 `animation` 绑定。这是一次非破坏性增强。
 
 ## 设计原则
 
@@ -87,7 +87,7 @@ flowchart TB
         ReactBinding["创建 EntityMotionBinding / playback api"]
         EntityProps["entityProps<br/>native confirmed transform 的 mirror"]
         ApiSet["api.set(values patch)<br/>直接发 native,不写本地 cache"]
-        BindTarget["useBindMotionTarget({ binding, target })<br/>xr-animation 推荐 / animation 兼容"]
+        BindTarget["useBindMotionTarget({ binding, target })<br/>animation 绑定"]
 
         UseEntity --> ReactBinding
         UseEntity --> EntityProps
@@ -219,13 +219,11 @@ type SpatializedPlaybackError = {
     | 'TARGET_NOT_FOUND'           // elementId 不在 spatial object registry 中
     | 'UNSUPPORTED_TARGET'         // 解析到的对象既不是 SpatializedElement 也不是 SpatialEntity
     | 'TARGET_DESTROYED'           // spatial object 已销毁,动画失效
-    | 'SET_REJECTED_DURING_ACTIVE' // 活跃动画(delay / running / paused)期间到达的 api.set
-    | 'SET_BEFORE_READY'           // 绑定 / native object 创建之前到达的 api.set
   message?: string
 }
 ```
 
-以上都会通过 `onError` 回调抵达用户。`code` MUST 可区分,以便应用代码按失败类型分支,而不是解析 `message`。
+以上都会通过 `onError` 回调抵达用户。被拒绝的 `api.set` 写入(活跃动画期间,或绑定 / native object 创建之前)是例外:它们是 no-op,只输出 console warning,不路由到 `onError`。`code` MUST 可区分,以便应用代码按失败类型分支,而不是解析 `message`。
 
 ## 数据流
 
@@ -245,7 +243,7 @@ sequenceDiagram
     Core-->>Hook: canonical tracks(position.* / rotation.* / scale.*)
     Hook->>Core: validateEntityMotionConfig(tracks)
     Core-->>Hook: transform-only config accepted
-    App->>Hook: BoxEntity xr-animation / animation binding
+    App->>Hook: BoxEntity animation binding
     Hook->>Obj: AnimationObject.create({ elementId, timeline })
     Obj->>JSB: execute({ elementId, timeline })
     JSB->>Native: create animation
@@ -506,18 +504,18 @@ type EntityMotionProps = {
 目标态文档和 demo 使用顶层 capability:
 
 ```text
-supports('useAnimation')
+supports('useEntityAnimation')
 ```
 
-`supports('useAnimation', ['entity'])` 从文档化契约中移除;仅使用顶层 `supports('useAnimation')` key,不保留任何 `entity` sub-token。
+`supports('useEntityAnimation', ['entity'])` 从文档化契约中移除;仅使用顶层 `supports('useEntityAnimation')` key,不保留任何 `entity` sub-token。
 
 ## 各层关键改动
 
 ### React 层 (`packages/react`)
 
 - **复用 / 基本复用:** 保留 `useEntityAnimation` 作为公开 Entity motion hook 名称,保留 Entity 组件现有 `animation` 兼容绑定入口,并复用现有 Entity props 的 `position` / `rotation` / `scale` 层级。
-- **改造 / 替换:** `useEntityAnimation` 从旧的 `[AnimatedProps, AnimationApi]` 形态改为 `[animation, api, entityProps]`;`api` 暴露 `play/pause/resume/stop/reset/finish` 和 `set`;`api.set` 发送 `ControlSpatializedElementAnimation(type: 'set')`,不写本地 cache。删除旧 entity-transform-animation 遗留,包括 JS 侧 suppression 机制(`animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径)。最终 transform 只由 Source A(static/base props + `entityProps`)与 Source B(`xr-animation`)的分量级仲裁组合;terminal 后由 `entityProps` 覆盖 stale base props(fill-forwards,不 snap-back)。删除这条路径,正是让旧的 snap-back 冲突结构上不可能发生的原因。
-- **新增:** 新增 `EntityMotionBinding`、`EntityPlaybackApi.set(values)`、`EntityMotionProps` mirror outlet。Entity 组件支持推荐的 `xr-animation` 绑定,并保留 `animation` 兼容绑定;绑定器新增/泛化为 `useBindMotionTarget({ binding, target })`,保留单 binding 单 target 不变量。
+- **改造 / 替换:** `useEntityAnimation` 从旧的 `[AnimatedProps, AnimationApi]` 形态改为 `[animation, api, entityProps]`;`api` 暴露 `play/pause/resume/stop/reset/finish` 和 `set`;`api.set` 发送 `ControlSpatializedElementAnimation(type: 'set')`,不写本地 cache。删除旧 entity-transform-animation 遗留,包括 JS 侧 suppression 机制(`animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径)。最终 transform 只由 Source A(static/base props + `entityProps`)与 Source B(`animation`)的分量级仲裁组合;terminal 后由 `entityProps` 覆盖 stale base props(fill-forwards,不 snap-back)。删除这条路径,正是让旧的 snap-back 冲突结构上不可能发生的原因。
+- **新增:** 新增 `EntityMotionBinding`、`EntityPlaybackApi.set(values)`、`EntityMotionProps` mirror outlet。Entity 组件支持 `animation` 绑定;绑定器新增/泛化为 `useBindMotionTarget({ binding, target })`,保留单 binding 单 target 不变量。
 
 ### Core 层 (`packages/core`)
 
@@ -800,8 +798,8 @@ sequenceDiagram
     alt animation missing / target destroyed
         Scene-->>JSB: failure(animation not found / TARGET_DESTROYED)
     else animation is delay / running / paused
-        Obj->>Event: emit action=failed, error=SET_REJECTED_DURING_ACTIVE
-        Scene-->>JSB: failure(SET_REJECTED_DURING_ACTIVE)
+        Note over Obj: no-op + console warning(不路由到 onError)
+        Scene-->>JSB: rejected(no-op)
     else animation is idle / terminal
         Manager->>Obj: set(values)
         Obj->>RK: read target.transform as committed baseline
