@@ -20,7 +20,7 @@
 
 | 我想做的事 | 用什么 |
 |---|---|
-| 让物体从一个姿态移动/旋转/缩放到另一个姿态 | config 里写 `from` / `to` |
+| 让物体从一个姿态移动/旋转/缩放到另一个姿态 | config 里写 `timeline.from` / `timeline.to` |
 | 做多段关键帧动画(如 0% → 50% → 100%) | config 里写 `timeline` |
 | 让动画结束后物体停在终点、不弹回起点 | 把 `{...entityProps}` 展开到组件上 |
 | 动画结束后,用代码把物体挪到新姿态 | 调用 `api.set({ ... })` |
@@ -41,8 +41,10 @@ import { useEntityAnimation } from '...'
 function MyBox() {
   // 让盒子在 0.8 秒内向上移动 0.25 米,并放大到 1.1 倍
   const [animation, api, entityProps] = useEntityAnimation({
-    from: { position: { x: 0, y: 0, z: 0.8 }, scale: { x: 1, y: 1, z: 1 } },
-    to:   { position: { y: 0.25 },            scale: { x: 1.1, y: 1.1, z: 1.1 } },
+    timeline: {
+      from: { position: { x: 0, y: 0, z: 0.8 }, scale: { x: 1, y: 1, z: 1 } },
+      to:   { position: { y: 0.25 },            scale: { x: 1.1, y: 1.1, z: 1.1 } },
+    },
     duration: 0.8,
     autoStart: true,
     onComplete: () => console.log('动画结束'),
@@ -75,29 +77,31 @@ const [animation, api, entityProps] = useEntityAnimation(config)
 
 ## 怎么描述动画(config)
 
-### 方式一:from / to(从一个姿态到另一个)
+### 方式一:timeline.from / timeline.to(从一个姿态到另一个)
 
 ```tsx
 const [animation, api, entityProps] = useEntityAnimation({
-  from: {
-    position: { x: 0, y: 0, z: 0.8 },
-    rotation: { x: 0, y: 0, z: 0 },
-    scale: { x: 1, y: 1, z: 1 },
-  },
-  to: {
-    position: { y: 0.25 },
-    scale: { x: 1.1, y: 1.1, z: 1.1 },
+  timeline: {
+    from: {
+      position: { x: 0, y: 0, z: 0.8 },
+      rotation: { x: 0, y: 0, z: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+    to: {
+      position: { y: 0.25 },
+      scale: { x: 1.1, y: 1.1, z: 1.1 },
+    },
   },
   duration: 0.8,
   autoStart: true,
 })
 ```
 
-`from` / `to` 都可以只写你关心的字段,没写的字段保持不变。
+`timeline.from` / `timeline.to` 都可以只写你关心的字段,没写的字段保持不变。
 
 ### 方式二:timeline(多段关键帧)
 
-用百分比描述一段动画在不同时间点的姿态,适合更复杂的运动:
+在 `timeline` 里用百分比描述一段动画在不同时间点的姿态,适合更复杂的运动:
 
 ```tsx
 const [animation, api, entityProps] = useEntityAnimation({
@@ -140,10 +144,12 @@ scale.x    / scale.y    / scale.z
 
 ```tsx
 const [animation, api, entityProps] = useEntityAnimation({
-  to: {
-    position: { x: 0.1, y: 0, z: 0 },
-    rotation: { y: 90 },
-    scale: { x: 1, y: 1, z: 1 },
+  timeline: {
+    to: {
+      position: { x: 0.1, y: 0, z: 0 },
+      rotation: { y: 90 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
   },
 })
 
@@ -179,8 +185,8 @@ api.set({ position: { y: 0.3 } })
 
 ### api.set 之后再播放的起点
 
-- 如果 config 里声明了 `from`:从 `from` 开始播。
-- 如果没声明 `from`:从当前姿态(也就是 `api.set` 刚写入的值)开始播。
+- 如果 config 里声明了 `timeline.from`:从 `timeline.from` 开始播。
+- 如果没声明 `timeline.from`:从当前姿态(也就是 `api.set` 刚写入的值)开始播。
 
 ---
 
@@ -292,7 +298,7 @@ useEntityAnimation({
 })
 ```
 
-回调**只是通知**,它们的返回值会被忽略,不能用来决定物体最终停在哪里。要决定终点,请在播放前于 config 里声明(比如用 `to`),或在播放后通过 `entityProps` / `api.set` 接管。
+回调**只是通知**,它们的返回值会被忽略,不能用来决定物体最终停在哪里。要决定终点,请在播放前于 config 里声明(比如用 `timeline.to`),或在播放后通过 `entityProps` / `api.set` 接管。
 
 回调收到的 `values` 只包含 Entity 支持的字段:
 

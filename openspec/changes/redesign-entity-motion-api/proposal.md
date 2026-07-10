@@ -20,7 +20,7 @@
 
 | What I want to do | What to use |
 |---|---|
-| Move/rotate/scale an object from one pose to another | Write `from` / `to` in the config |
+| Move/rotate/scale an object from one pose to another | Write `timeline.from` / `timeline.to` in the config |
 | Do a multi-step keyframe animation (e.g. 0% → 50% → 100%) | Write `timeline` in the config |
 | Keep the object at the end pose after the animation, no snap-back | Spread `{...entityProps}` onto the component |
 | Move the object to a new pose in code after the animation | Call `api.set({ ... })` |
@@ -41,8 +41,10 @@ import { useEntityAnimation } from '...'
 function MyBox() {
   // Move the box up by 0.25m and scale it to 1.1x over 0.8s
   const [animation, api, entityProps] = useEntityAnimation({
-    from: { position: { x: 0, y: 0, z: 0.8 }, scale: { x: 1, y: 1, z: 1 } },
-    to:   { position: { y: 0.25 },            scale: { x: 1.1, y: 1.1, z: 1.1 } },
+    timeline: {
+      from: { position: { x: 0, y: 0, z: 0.8 }, scale: { x: 1, y: 1, z: 1 } },
+      to:   { position: { y: 0.25 },            scale: { x: 1.1, y: 1.1, z: 1.1 } },
+    },
     duration: 0.8,
     autoStart: true,
     onComplete: () => console.log('animation done'),
@@ -75,29 +77,31 @@ const [animation, api, entityProps] = useEntityAnimation(config)
 
 ## Describing the Animation (config)
 
-### Option 1: from / to (from one pose to another)
+### Option 1: timeline.from / timeline.to (from one pose to another)
 
 ```tsx
 const [animation, api, entityProps] = useEntityAnimation({
-  from: {
-    position: { x: 0, y: 0, z: 0.8 },
-    rotation: { x: 0, y: 0, z: 0 },
-    scale: { x: 1, y: 1, z: 1 },
-  },
-  to: {
-    position: { y: 0.25 },
-    scale: { x: 1.1, y: 1.1, z: 1.1 },
+  timeline: {
+    from: {
+      position: { x: 0, y: 0, z: 0.8 },
+      rotation: { x: 0, y: 0, z: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+    to: {
+      position: { y: 0.25 },
+      scale: { x: 1.1, y: 1.1, z: 1.1 },
+    },
   },
   duration: 0.8,
   autoStart: true,
 })
 ```
 
-Both `from` and `to` can list only the fields you care about; unlisted fields stay unchanged.
+Both `timeline.from` and `timeline.to` can list only the fields you care about; unlisted fields stay unchanged.
 
 ### Option 2: timeline (multi-step keyframes)
 
-Use percentages to describe the pose at different points in time — good for more complex motion:
+Use percentages inside `timeline` to describe the pose at different points in time — good for more complex motion:
 
 ```tsx
 const [animation, api, entityProps] = useEntityAnimation({
@@ -140,10 +144,12 @@ Targeting something unsupported like `opacity` throws an error or triggers `onEr
 
 ```tsx
 const [animation, api, entityProps] = useEntityAnimation({
-  to: {
-    position: { x: 0.1, y: 0, z: 0 },
-    rotation: { y: 90 },
-    scale: { x: 1, y: 1, z: 1 },
+  timeline: {
+    to: {
+      position: { x: 0.1, y: 0, z: 0 },
+      rotation: { y: 90 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
   },
 })
 
@@ -179,8 +185,8 @@ A few rules:
 
 ### Where Playback Starts After api.set
 
-- If the config declares `from`: playback starts from `from`.
-- If `from` is not declared: playback starts from the current pose (the value `api.set` just wrote).
+- If the config declares `timeline.from`: playback starts from `timeline.from`.
+- If `timeline.from` is not declared: playback starts from the current pose (the value `api.set` just wrote).
 
 ---
 
@@ -292,7 +298,7 @@ useEntityAnimation({
 })
 ```
 
-Callbacks are **notifications only**. Their return values are ignored and cannot decide where the object ends up. To decide the end pose, declare it in the config before playback (e.g. via `to`), or take over after playback through `entityProps` / `api.set`.
+Callbacks are **notifications only**. Their return values are ignored and cannot decide where the object ends up. To decide the end pose, declare it in the config before playback (e.g. via `timeline.to`), or take over after playback through `entityProps` / `api.set`.
 
 The `values` passed to callbacks contain only the fields Entity supports:
 
