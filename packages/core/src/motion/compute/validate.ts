@@ -1,9 +1,8 @@
 import { SPATIALIZED_MOTION_PROPERTIES } from '../../types/motion/spatializedMotion'
 import type {
+  NormalizedSpatializedMotionConfig,
   SpatializedMotionProperty,
   SpatializedMotionConfig,
-  SpatializedMotionSegmentConfig,
-  SpatializedMotionTimelineConfig,
   SpatializedMotionTrack,
 } from '../../types/motion/spatializedMotion'
 import { normalizeMotionConfig } from './normalize'
@@ -25,11 +24,11 @@ const FORBIDDEN_PREFIXES = [
  * @param config Motion config in any supported input shape.
  */
 export function validateSpatializedMotionConfig(
-  config:
-    | SpatializedMotionConfig
-    | SpatializedMotionSegmentConfig
-    | SpatializedMotionTimelineConfig,
+  config: SpatializedMotionConfig,
 ): void {
+  if ('tracks' in config) {
+    throw new Error('[SpatializedMotion] tracks authoring is internal')
+  }
   const normalized = normalizeMotionConfig(config)
   validateNormalizedMotionConfig(normalized)
 }
@@ -40,7 +39,7 @@ export function validateSpatializedMotionConfig(
  * @param config Canonical motion config to validate.
  */
 export function validateNormalizedMotionConfig(
-  config: SpatializedMotionConfig,
+  config: NormalizedSpatializedMotionConfig,
 ): void {
   const { duration, tracks } = config
 

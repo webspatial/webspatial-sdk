@@ -43,7 +43,7 @@ export interface SpatializedMotionTrack {
 /** Single-segment motion: `from` → `to` over `duration` (Plan A + `useAnimation`). */
 export interface SpatializedMotionSegmentConfig {
   to: SpatializedVisualValues
-  from?: SpatializedVisualValues
+  from: SpatializedVisualValues
   tracks?: never
   timeline?: never
   duration?: number
@@ -59,31 +59,14 @@ export interface SpatializedMotionSegmentConfig {
   onError?: (error: SpatializedPlaybackError) => void
 }
 
-/** Multi-track timeline motion (Plan B). */
-export interface SpatializedMotionConfig {
-  duration: number
-  tracks: SpatializedMotionTrack[]
-  from?: never
-  to?: never
-  timeline?: never
-  timingFunction?: TimingFunction
-  delay?: number
-  autoStart?: boolean
-  loop?: boolean | { reverse?: boolean }
-  playbackRate?: number
-  onStart?: () => void
-  onComplete?: (values: SpatializedVisualValues) => void
-  onStop?: (values: SpatializedVisualValues) => void
-  onReset?: (values: SpatializedVisualValues) => void
-  onError?: (error: SpatializedPlaybackError) => void
-}
-
 /** Percentage-keyframe timeline authoring shape before desugaring. */
 export interface SpatializedMotionTimelineConfig {
-  duration: number
+  duration?: number
   timeline: Record<string, SpatializedMotionKeyframeValues>
-  from?: never
-  to?: never
+  /** Ignored when timeline authoring is present. */
+  from?: SpatializedVisualValues
+  /** Ignored when timeline authoring is present. */
+  to?: SpatializedVisualValues
   tracks?: never
   timingFunction?: TimingFunction
   delay?: number
@@ -97,10 +80,41 @@ export interface SpatializedMotionTimelineConfig {
   onError?: (error: SpatializedPlaybackError) => void
 }
 
-export type SpatializedMotionAuthorConfig =
+/** Public authoring accepted by spatialized container motion. */
+export type SpatializedMotionConfig =
   | SpatializedMotionSegmentConfig
-  | SpatializedMotionConfig
   | SpatializedMotionTimelineConfig
+
+/** Backward-compatible name for the public spatialized motion config. */
+export type SpatializedMotionAuthorConfig = SpatializedMotionConfig
+
+/** Canonical internal track document produced before native create. */
+export interface NormalizedSpatializedMotionConfig {
+  /** Timeline duration in seconds. */
+  duration: number
+  /** Canonical per-property numeric tracks. */
+  tracks: SpatializedMotionTrack[]
+  /** Default interpolation for tracks without an override. */
+  timingFunction?: TimingFunction
+  /** Playback delay in seconds. */
+  delay?: number
+  /** Whether playback starts automatically after binding. */
+  autoStart?: boolean
+  /** Loop behavior for the animation session. */
+  loop?: boolean | { reverse?: boolean }
+  /** Playback speed multiplier. */
+  playbackRate?: number
+  /** Called when playback starts. */
+  onStart?: () => void
+  /** Called when playback completes. */
+  onComplete?: (values: SpatializedVisualValues) => void
+  /** Called when playback stops. */
+  onStop?: (values: SpatializedVisualValues) => void
+  /** Called when playback resets. */
+  onReset?: (values: SpatializedVisualValues) => void
+  /** Called when asynchronous playback fails. */
+  onError?: (error: SpatializedPlaybackError) => void
+}
 
 /** Normalized timeline wire payload for native playback. */
 export interface SpatializedMotionTimeline {
@@ -126,7 +140,6 @@ export type SpatializedMotionPlayState =
 export interface SpatializedPlaybackApi {
   play(): void
   pause(): void
-  resume(): void
   stop(): void
   reset(): void
   finish(): void

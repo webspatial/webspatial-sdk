@@ -45,7 +45,7 @@ The stable `useAnimation(config)` input MUST support either:
 
 When `timeline` is present, top-level `from` and `to` MAY both be absent. If either is present, Core MUST ignore it; top-level values MUST NOT participate in validation or normalization. Top-level `tracks` MUST be rejected by the public type surface and runtime validation.
 
-For every animated scalar property in `timeline`, the author MUST provide exactly one explicit start value through either `from` or `0%`, and exactly one explicit end value through either `to` or `100%`. A property declared in both `from` and `0%`, or in both `to` and `100%`, MUST be rejected as a duplicate boundary declaration.
+Every animated scalar property in `timeline` MUST produce at least two keyframes. A property MAY begin after 0% or end before 100%; sampling outside its authored keyframe range MUST hold its first or last value. A property declared in both `from` and `0%`, or in both `to` and `100%`, MUST be rejected as a duplicate boundary declaration.
 
 #### Scenario: Top-level segment is accepted
 
@@ -67,7 +67,7 @@ For every animated scalar property in `timeline`, the author MUST provide exactl
 
 #### Scenario: Timeline authoring omits top-level boundaries
 
-- **WHEN** a valid `timeline` supplies every property's start and end boundaries
+- **WHEN** a valid `timeline` supplies at least two keyframes for every animated property
 - **AND** top-level `from` and `to` are both absent
 - **THEN** the SDK MUST accept the config
 
@@ -78,14 +78,23 @@ For every animated scalar property in `timeline`, the author MUST provide exactl
 - **THEN** Core MUST ignore the top-level `from` and `to`
 - **AND** only `timeline` content MUST determine the animation
 
-#### Scenario: Missing explicit start is rejected
+#### Scenario: Property begins after timeline start
 
-- **WHEN** an animated property has neither a `from` value nor a `0%` value
-- **THEN** runtime validation MUST reject the config before native create
+- **GIVEN** an animated property first appears after 0% and appears in at least one later frame
+- **WHEN** the timeline is validated and sampled before that property's first keyframe
+- **THEN** the SDK MUST accept the config
+- **AND** it MUST hold that property's first value before its first keyframe
 
-#### Scenario: Missing explicit end is rejected
+#### Scenario: Property ends before timeline end
 
-- **WHEN** an animated property has neither a `to` value nor a `100%` value
+- **GIVEN** an animated property appears in at least two frames and its last keyframe is before 100%
+- **WHEN** the timeline is validated and sampled after that property's last keyframe
+- **THEN** the SDK MUST accept the config
+- **AND** it MUST hold that property's last value through timeline end
+
+#### Scenario: Single property keyframe is rejected
+
+- **WHEN** an animated property appears in only one timeline entry
 - **THEN** runtime validation MUST reject the config before native create
 
 #### Scenario: Duplicate boundary declaration is rejected
@@ -100,7 +109,7 @@ For every animated scalar property in `timeline`, the author MUST provide exactl
 
 ### Requirement: Percentage-keyframe behavior is deterministic
 
-Decimal percentages MUST be supported. Every percentage MUST be in `[0%, 100%]`; invalid keys and out-of-range percentages MUST be rejected. A timeline MAY contain a single intermediate percentage key when explicit start and end values are supplied through `from` / `to` or boundary percentage frames.
+Decimal percentages MUST be supported. Every percentage MUST be in `[0%, 100%]`; invalid keys and out-of-range percentages MUST be rejected. Timeline entries MAY be sparse across properties as long as every animated property produces at least two keyframes.
 
 Normalization MUST treat `from` as 0% and `to` as 100%, parse each percentage into a ratio, and multiply it by `duration` to produce an absolute internal keyframe time. Each animated scalar property MUST be collected independently. If a property is absent from an intermediate percentage frame, no keyframe is generated for that property at that time.
 
@@ -124,7 +133,7 @@ Normalization MUST treat `from` as 0% and `to` as 100%, parse each percentage in
 
 ### Requirement: Tracks are internal only
 
-The SDK MUST normalize top-level segment authoring and public timeline authoring into a canonical internal tracks document before native create. The internal document MUST contain `duration`, optional timing controls, and a non-empty tracks array. Each track MUST contain one whitelisted property and at least two sorted numeric absolute-time keyframes, including explicit values at time zero and `duration`.
+The SDK MUST normalize top-level segment authoring and public timeline authoring into a canonical internal tracks document before native create. The internal document MUST contain `duration`, optional timing controls, and a non-empty tracks array. Each track MUST contain one whitelisted property and at least two sorted numeric absolute-time keyframes. A sparse track MAY begin after time zero or end before `duration`.
 
 Track, keyframe, property-path, normalized timeline, and native wire types MUST NOT be exported from stable Core or React package entry points. `useAnimation` MUST NOT accept tracks authoring. Public documentation and test-server examples MUST NOT present tracks as authoring. The SDK MUST NOT provide an experimental tracks entry point in this change.
 
@@ -245,7 +254,7 @@ The API MUST expose `play`, `pause`, `stop`, `reset`, and `finish`, plus `isAnim
 - Paused `play()` resumes the session.
 - Running `play()` is a no-op.
 - `stop()` freezes the current sampled values and returns to `idle` with `finished=false`.
-- `reset()` always seeks to the explicit normalized start values and returns to `idle` with `finished=false`, including while already idle.
+- `reset()` always samples the timeline at time zero and returns to `idle` with `finished=false`, including while already idle; sparse property tracks use their first values.
 - `finish()` seeks to terminal values and enters `finished` only after native confirmation.
 - A pre-bind `finish()` remains `queued` with `finished=false` until the native-backed object exists and confirms the terminal state.
 

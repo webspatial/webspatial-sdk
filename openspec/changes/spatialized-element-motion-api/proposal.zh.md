@@ -88,11 +88,20 @@ export function PulsingPanel() {
 Timeline authoring 遵循以下规则：
 
 - `from` 等价于 `0%`，`to` 等价于 `100%`。
-- 对每个动画属性，起点必须且只能由 `from` 或 `0%` 之一提供，终点必须且只能由 `to` 或 `100%` 之一提供。
 - 使用任意百分比 key 时，`duration` 必填，单位为秒。
 - Key 范围为 `0%` 到 `100%`，支持 `30.33%` 等小数百分比。
-- 属性可以只出现在与它相关的帧中；它在这些帧之间插值，并在该范围之外保持首值或末值。
+- 每个动画属性至少需要两个值。属性可以只出现在与它相关的帧中：在这些帧之间插值，在首帧之前保持首值，在末帧之后保持末值。
 - 帧上的 `timingFunction` 控制从该帧到下一帧的插值；未设置时使用 config 级 timing function，再回退到 `linear`。
+
+例如，下面的旋转在前半段从 -20° 变化到 80°，之后保持 80° 到结束；opacity 则继续贯穿整个 timeline：
+
+```tsx
+timeline: {
+  '0%': { opacity: 0, transform: { rotate: { z: -20 } } },
+  '50%': { transform: { rotate: { z: 80 } } },
+  '100%': { opacity: 1 },
+}
+```
 
 Timeline authoring 将动画边界放在 `timeline` 内，外层 config 承载 duration 和播放控制。顶层 `from` 和 `to` 继续作为简单 authoring 形式。
 

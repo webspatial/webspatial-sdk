@@ -6,7 +6,7 @@ import { btnCls, btnPrimary, fmtNum, fmtValues, Log } from './shared'
 const DURATION = 4
 
 /**
- * Rotate tracks: yaw (rotate.y) + spin (rotate.z) on overlapping timelines.
+ * Rotate timeline: yaw (rotate.y) + spin (rotate.z) on overlapping intervals.
  */
 export function SpatialDivMotionRotatePage() {
   const [lines, setLines] = useState<string[]>([])
@@ -19,24 +19,15 @@ export function SpatialDivMotionRotatePage() {
   const [motion, api, style] = useAnimation({
     duration: DURATION,
     autoStart: true,
-    tracks: [
-      {
-        property: 'transform.rotate.y',
-        keyframes: [
-          { at: 0, value: 0 },
-          { at: DURATION, value: 90 },
-        ],
-        timingFunction: 'easeInOut',
-      },
-      {
-        property: 'transform.rotate.z',
-        keyframes: [
-          { at: 1, value: 0 },
-          { at: DURATION, value: 180 },
-        ],
+    timeline: {
+      from: { transform: { rotate: { y: 0, z: 0 } } },
+      '25%': {
+        transform: { rotate: { z: 0 } },
         timingFunction: 'linear',
       },
-    ],
+      to: { transform: { rotate: { y: 90, z: 180 } } },
+    },
+    timingFunction: 'easeInOut',
     onStart: () => {
       setLines(l => [...l, 'onStart'])
       setHint('Playing — yaw + spin')
@@ -67,9 +58,9 @@ export function SpatialDivMotionRotatePage() {
 
   return (
     <div className="p-6 text-gray-200 max-w-3xl">
-      <h1 className="text-xl font-bold mb-2">Plan B — rotate (y + z)</h1>
+      <h1 className="text-xl font-bold mb-2">Timeline — rotate (y + z)</h1>
       <p className="text-sm text-gray-400 mb-2">
-        Multi-track rotation: card yaws on Y while spinning on Z after t=1s.
+        Multi-stage rotation: card yaws on Y while spinning on Z after t=1s.
         Validates rotate keyframes on Web and native timeline.
       </p>
       <p className="text-xs text-emerald-400/90 mb-4 font-mono">{hint}</p>

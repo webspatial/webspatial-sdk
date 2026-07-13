@@ -182,8 +182,15 @@
 - [x] 保留顶层 `from` / `to`，存在 timeline 时由 timeline 优先，并允许 timeline `from` / `to` 与百分比关键帧混用
 - [x] 定义 tracks 为仅供内部使用的 canonical 表示，不提供公开或 experimental 入口
 - [x] 保持 proposal 面向用户，将技术实现细节迁移到 design
-- [ ] TDD 红灯：新增完整顶层 segment、拒绝不完整顶层 segment、timeline 不提供顶层边界、timeline 优先级、混合 timeline entry、拒绝缺少或重复的属性边界、拒绝 tracks authoring 以及移除 `api.resume()` 的公开类型与运行时校验测试
-- [ ] TDD 绿灯：更新公开 Core / React config 类型与导出，同时保留内部 canonical tracks
-- [ ] TDD 绿灯：更新 Core normalization 和 runtime validation，支持顶层 segment authoring 与混合 timeline authoring；保持 native 数值 tracks contract 不变
-- [ ] 将使用公开 tracks authoring 的 React 集成测试和 test-server 页面迁移为公开 timeline authoring；保留合法的顶层 segment 示例
-- [ ] 运行 Core / React 测试、typecheck、test-server 检查、仓库搜索与 OpenSpec 校验
+- [x] TDD 红灯：新增完整顶层 segment、拒绝不完整顶层 segment、timeline 不提供顶层边界、timeline 优先级、混合 timeline entry、属性边界行为、拒绝 tracks authoring 以及移除 `api.resume()` 的公开类型与运行时校验测试
+- [x] TDD 绿灯：更新公开 Core / React config 类型与导出，同时保留内部 canonical tracks
+- [x] TDD 绿灯：更新 Core normalization 和 runtime validation，支持顶层 segment authoring 与混合 timeline authoring；保持 native 数值 tracks contract 不变
+- [x] 将使用公开 tracks authoring 的 React 集成测试和 test-server 页面迁移为公开 timeline authoring；保留合法的顶层 segment 示例
+- [x] 运行 Core / React 测试、typecheck、test-server 检查、仓库搜索与 OpenSpec 校验
+
+## Phase 14 — 保留 sparse property timeline 语义
+
+- [x] 对齐 proposal、design 与 spec：property track 可以晚于 0% 开始或早于 100% 结束，同时保留重复边界拒绝和至少两个关键帧要求
+- [x] TDD 红灯：将缺失边界拒绝测试改为 sparse range 接受测试，并保留单关键帧 track 与重复边界拒绝测试
+- [x] TDD 绿灯：移除 Core normalization 的缺失边界拒绝，同时保持 sparse 数值 tracks 与 native sampler contract
+- [x] 运行 Core / React 测试、typecheck、test-server 检查、仓库搜索与 OpenSpec 校验

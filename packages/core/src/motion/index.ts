@@ -1,6 +1,2 @@
-export * from './compute'
 export * from './AnimationObject'
-export {
-  parseSpatializedVisualValues,
-  motionConfigToNativeTimeline,
-} from './native'
+export { validateSpatializedMotionConfig } from './compute/validate'

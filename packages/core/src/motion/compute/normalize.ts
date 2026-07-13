@@ -1,6 +1,7 @@
 import type { SpatializedVisualValues } from '../../types/motion/spatializedVisual'
 import type { TimingFunction } from '../../types/animation'
 import type {
+  NormalizedSpatializedMotionConfig,
   SpatializedMotionConfig,
   SpatializedMotionProperty,
   SpatializedMotionSegmentConfig,
@@ -39,21 +40,6 @@ function collectScalars(
 }
 
 /**
- * Guards timeline shorthand against mixing with canonical config fields.
- *
- * @param config Timeline config to validate.
- */
-function validateTimelineConfigShape(
-  config: SpatializedMotionTimelineConfig,
-): void {
-  if ('tracks' in config || 'from' in config || 'to' in config) {
-    throw new Error(
-      '[SpatializedMotion] timeline config is mutually exclusive with tracks/from-to',
-    )
-  }
-}
-
-/**
  * Converts `0%`-style timeline keys into [0, 1] ratios.
  *
  * @param key Percentage key from the timeline config.
@@ -78,7 +64,12 @@ function parsePercentageKey(key: string): number {
  */
 export function segmentConfigToMotionConfig(
   simple: SpatializedMotionSegmentConfig,
-): SpatializedMotionConfig {
+): NormalizedSpatializedMotionConfig {
+  if (!simple.from || !simple.to) {
+    throw new Error(
+      '[SpatializedMotion] top-level from and to are both required',
+    )
+  }
   const duration = simple.duration ?? 0.3
   const fromScalars: Array<{
     property: SpatializedMotionProperty
@@ -89,20 +80,34 @@ export function segmentConfigToMotionConfig(
     value: number
   }> = []
 
-  if (simple.from) collectScalars(simple.from, fromScalars)
+  collectScalars(simple.from, fromScalars)
   collectScalars(simple.to, toScalars)
 
   const trackMap = new Map<SpatializedMotionProperty, SpatializedMotionTrack>()
+  const properties = new Set([
+    ...fromScalars.map(entry => entry.property),
+    ...toScalars.map(entry => entry.property),
+  ])
 
-  for (const { property, value } of toScalars) {
+  for (const property of properties) {
     const fromEntry = fromScalars.find(f => f.property === property)
-    const fromValue = fromEntry?.value ?? value
+    const toEntry = toScalars.find(f => f.property === property)
+    if (!fromEntry) {
+      throw new Error(
+        `[SpatializedMotion] missing start boundary for "${property}"`,
+      )
+    }
+    if (!toEntry) {
+      throw new Error(
+        `[SpatializedMotion] missing end boundary for "${property}"`,
+      )
+    }
     trackMap.set(property, {
       property,
       timingFunction: simple.timingFunction,
       keyframes: [
-        { at: 0, value: fromValue },
-        { at: duration, value },
+        { at: 0, value: fromEntry.value },
+        { at: duration, value: toEntry.value },
       ],
     })
   }
@@ -138,22 +143,31 @@ export function segmentConfigToMotionConfig(
  */
 export function desugarTimelineConfig(
   config: SpatializedMotionTimelineConfig,
-): SpatializedMotionConfig {
-  validateTimelineConfigShape(config)
-
-  const entries = Object.entries(config.timeline)
-  if (entries.length < 2) {
-    throw new Error(
-      '[SpatializedMotion] timeline must contain at least 2 percentage keys',
-    )
+): NormalizedSpatializedMotionConfig {
+  if (Array.isArray(config.timeline) || !config.timeline) {
+    throw new Error('[SpatializedMotion] timeline must be an object')
   }
 
+  const entries = Object.entries(config.timeline)
+  let hasPercentageKey = false
   const frames = entries
-    .map(([key, values]) => ({
-      atRatio: parsePercentageKey(key),
-      values,
-    }))
+    .map(([key, values]) => {
+      if (!values || typeof values !== 'object' || Array.isArray(values)) {
+        throw new Error(`[SpatializedMotion] invalid timeline frame "${key}"`)
+      }
+      if (key === 'from') return { key, atRatio: 0, values }
+      if (key === 'to') return { key, atRatio: 1, values }
+      hasPercentageKey = true
+      return { key, atRatio: parsePercentageKey(key), values }
+    })
     .sort((a, b) => a.atRatio - b.atRatio)
+
+  if (hasPercentageKey && config.duration === undefined) {
+    throw new Error(
+      '[SpatializedMotion] duration is required when timeline uses percentage keys',
+    )
+  }
+  const duration = config.duration ?? 0.3
 
   const trackMap = new Map<
     SpatializedMotionProperty,
@@ -163,15 +177,27 @@ export function desugarTimelineConfig(
       timingFunction?: TimingFunction
     }>
   >()
+  const fromProperties = new Set<SpatializedMotionProperty>()
+  const zeroProperties = new Set<SpatializedMotionProperty>()
+  const toProperties = new Set<SpatializedMotionProperty>()
+  const hundredProperties = new Set<SpatializedMotionProperty>()
 
   for (const frame of frames) {
-    const at = frame.atRatio * config.duration
+    const at = frame.atRatio * duration
     const scalars: Array<{
       property: SpatializedMotionProperty
       value: number
     }> = []
     collectScalars(frame.values, scalars)
     for (const scalar of scalars) {
+      if (frame.key === 'from') fromProperties.add(scalar.property)
+      if (frame.key !== 'from' && frame.atRatio === 0) {
+        zeroProperties.add(scalar.property)
+      }
+      if (frame.key === 'to') toProperties.add(scalar.property)
+      if (frame.key !== 'to' && frame.atRatio === 1) {
+        hundredProperties.add(scalar.property)
+      }
       const keyframes = trackMap.get(scalar.property) ?? []
       const keyframe = {
         at,
@@ -185,14 +211,32 @@ export function desugarTimelineConfig(
     }
   }
 
-  const tracks = [...trackMap.entries()].map(([property, keyframes]) => ({
-    property,
-    timingFunction: config.timingFunction,
-    keyframes,
-  }))
+  const tracks = [...trackMap.entries()].map(([property, keyframes]) => {
+    const startCount =
+      Number(fromProperties.has(property)) +
+      Number(zeroProperties.has(property))
+    const endCount =
+      Number(toProperties.has(property)) +
+      Number(hundredProperties.has(property))
+    if (startCount > 1) {
+      throw new Error(
+        `[SpatializedMotion] duplicate start boundary for "${property}"`,
+      )
+    }
+    if (endCount > 1) {
+      throw new Error(
+        `[SpatializedMotion] duplicate end boundary for "${property}"`,
+      )
+    }
+    return {
+      property,
+      timingFunction: config.timingFunction,
+      keyframes,
+    }
+  })
 
   return {
-    duration: config.duration,
+    duration,
     tracks,
     timingFunction: config.timingFunction,
     delay: config.delay,
@@ -214,16 +258,10 @@ export function desugarTimelineConfig(
  * @returns Canonical track-based motion config.
  */
 export function normalizeMotionConfig(
-  config:
-    | SpatializedMotionSegmentConfig
-    | SpatializedMotionConfig
-    | SpatializedMotionTimelineConfig,
-): SpatializedMotionConfig {
+  config: SpatializedMotionConfig,
+): NormalizedSpatializedMotionConfig {
   if ('timeline' in config) {
     return desugarTimelineConfig(config as SpatializedMotionTimelineConfig)
   }
-  if ('tracks' in config) {
-    return config as SpatializedMotionConfig
-  }
-  return segmentConfigToMotionConfig(config)
+  return segmentConfigToMotionConfig(config as SpatializedMotionSegmentConfig)
 }

@@ -1,11 +1,11 @@
 import type {
-  SpatializedMotionConfig,
+  NormalizedSpatializedMotionConfig,
   SpatializedMotionTimeline,
 } from '../../types/motion/spatializedMotion'
 
 /** Full timeline payload for native Phase 2b. */
 export function motionConfigToNativeTimeline(
-  config: SpatializedMotionConfig,
+  config: NormalizedSpatializedMotionConfig,
 ): SpatializedMotionTimeline {
   return {
     duration: config.duration,

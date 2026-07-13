@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import type {
-  SpatializedMotionAuthorConfig as CoreSpatializedMotionAuthorConfig,
+  SpatializedMotionConfig as CoreSpatializedMotionConfig,
   SpatializedMotionSegmentConfig as CoreSpatializedMotionSegmentConfig,
   SpatializedPlaybackApi,
   SpatializedVisualValues,
@@ -15,7 +15,7 @@ import { valuesToMotionStyle } from './style'
 /**
  * React-facing motion config accepted by `useAnimation()`.
  */
-export type SpatializedMotionConfig = CoreSpatializedMotionAuthorConfig
+export type SpatializedMotionConfig = CoreSpatializedMotionConfig
 
 /** Convenience alias for the segment-style authoring shape. */
 export type SpatializedMotionSegmentConfig = CoreSpatializedMotionSegmentConfig
@@ -78,7 +78,6 @@ export function useAnimation(
     () => ({
       play: () => binding.play(),
       pause: () => binding.pause(),
-      resume: () => binding.resume(),
       stop: () => binding.stop(),
       reset: () => binding.reset(),
       finish: () => binding.finish(),

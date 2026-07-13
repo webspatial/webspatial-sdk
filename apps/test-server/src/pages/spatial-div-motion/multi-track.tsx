@@ -6,7 +6,7 @@ import { btnCls, btnPrimary, fmtNum, fmtValues, Log } from './shared'
 const DURATION = 5
 
 /**
- * Canonical Plan B acceptance demo (matches OpenSpec):
+ * Public timeline acceptance demo (matches OpenSpec):
  * - translate.x: 0 → 100 over 0–5s
  * - opacity: 0.5 → 1 over 3–5s (linear; holds 0.5 before t=3s)
  */
@@ -19,24 +19,18 @@ export function SpatialDivMotionMultiTrackPage() {
   const [motion, api, style] = useAnimation({
     duration: DURATION,
     autoStart: true,
-    tracks: [
-      {
-        property: 'transform.translate.x',
-        keyframes: [
-          { at: 0, value: 0 },
-          { at: DURATION, value: 100 },
-        ],
-        timingFunction: 'linear',
+    timeline: {
+      from: {
+        opacity: 0.5,
+        transform: { translate: { x: 0 } },
       },
-      {
-        property: 'opacity',
-        keyframes: [
-          { at: 3, value: 0.5 },
-          { at: DURATION, value: 1 },
-        ],
-        timingFunction: 'linear',
+      '60%': { opacity: 0.5 },
+      to: {
+        opacity: 1,
+        transform: { translate: { x: 100 } },
       },
-    ],
+    },
+    timingFunction: 'linear',
     onStart: () => {
       setLines(l => [...l, 'onStart'])
       setHint('Playing… (0–3s: move only; 3–5s: move + fade)')
@@ -68,7 +62,7 @@ export function SpatialDivMotionMultiTrackPage() {
 
   return (
     <div className="p-6 text-gray-200 max-w-3xl">
-      <h1 className="text-xl font-bold mb-2">Plan B — Multi-track motion</h1>
+      <h1 className="text-xl font-bold mb-2">Timeline — Multi-stage motion</h1>
       <p className="text-sm text-gray-400 mb-2">
         Auto-starts on load. Works in <strong>plain Chrome</strong> (Web
         backend) and in spatial runtime. On native, <code>style</code> updates

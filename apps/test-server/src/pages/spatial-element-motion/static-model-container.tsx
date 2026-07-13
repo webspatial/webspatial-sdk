@@ -141,9 +141,6 @@ export default function SpatialElementMotionStaticModelContainerPage() {
           <button type="button" className={btnCls} onClick={() => api.pause()}>
             Pause
           </button>
-          <button type="button" className={btnCls} onClick={() => api.resume()}>
-            Resume
-          </button>
           <button type="button" className={btnCls} onClick={() => api.stop()}>
             Stop
           </button>

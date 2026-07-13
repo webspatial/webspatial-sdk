@@ -182,8 +182,15 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Retain top-level `from` / `to`, let timeline take precedence when present, and allow timeline `from` / `to` to mix with percentage keyframes
 - [x] Define tracks as an internal-only canonical representation with no public or experimental entry point
 - [x] Keep proposal user-facing and move technical implementation detail to design
-- [ ] TDD red: add public type and runtime validation tests for complete top-level segments, rejected incomplete top-level segments, timeline configs without top-level boundaries, timeline precedence, mixed timeline entries, rejected missing or duplicate property boundaries, rejected tracks authoring, and removal of `api.resume()`
-- [ ] TDD green: update public Core / React config types and exports while retaining internal canonical tracks
-- [ ] TDD green: update Core normalization and runtime validation for top-level segment authoring and mixed timeline authoring; keep the native numeric tracks contract unchanged
-- [ ] Migrate React integration tests and test-server pages that use public tracks authoring to public timeline authoring; retain valid top-level segment examples
-- [ ] Run Core / React tests, typechecks, test-server checks, repository searches, and OpenSpec validation
+- [x] TDD red: add public type and runtime validation tests for complete top-level segments, rejected incomplete top-level segments, timeline configs without top-level boundaries, timeline precedence, mixed timeline entries, property boundary behavior, rejected tracks authoring, and removal of `api.resume()`
+- [x] TDD green: update public Core / React config types and exports while retaining internal canonical tracks
+- [x] TDD green: update Core normalization and runtime validation for top-level segment authoring and mixed timeline authoring; keep the native numeric tracks contract unchanged
+- [x] Migrate React integration tests and test-server pages that use public tracks authoring to public timeline authoring; retain valid top-level segment examples
+- [x] Run Core / React tests, typechecks, test-server checks, repository searches, and OpenSpec validation
+
+## Phase 14 — Preserve sparse property timeline semantics
+
+- [x] Align proposal, design, and spec so property tracks may begin after 0% or end before 100%, while retaining duplicate-boundary rejection and the two-keyframe minimum
+- [x] TDD red: replace missing-boundary rejection tests with sparse-range acceptance tests and retain rejection tests for one-keyframe tracks and duplicate boundaries
+- [x] TDD green: remove missing-boundary rejection from Core normalization while preserving sparse numeric tracks and the native sampler contract
+- [x] Run Core / React tests, typechecks, test-server checks, repository searches, and OpenSpec validation

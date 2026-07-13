@@ -58,14 +58,6 @@ function createMockAnimationObject(id = 'animation-object-1') {
         finished: false,
       })
     }),
-    resume: vi.fn(async () => {
-      setState({
-        playState: 'running',
-        isAnimating: true,
-        isPaused: false,
-        finished: false,
-      })
-    }),
     stop: vi.fn(async () => {
       setState({
         playState: 'idle',
@@ -193,16 +185,9 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 5,
         autoStart: false,
-        tracks: [
-          {
-            property: 'transform.translate.x',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 5, value: 100 },
-            ],
-            timingFunction: 'linear',
-          },
-        ],
+        from: { transform: { translate: { x: 0 } } },
+        to: { transform: { translate: { x: 100 } } },
+        timingFunction: 'linear',
       }),
     )
 
@@ -228,16 +213,9 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 5,
         autoStart: false,
-        tracks: [
-          {
-            property: 'transform.translate.x',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 5, value: 100 },
-            ],
-            timingFunction: 'linear',
-          },
-        ],
+        from: { transform: { translate: { x: 0 } } },
+        to: { transform: { translate: { x: 100 } } },
+        timingFunction: 'linear',
       }),
     )
 
@@ -270,15 +248,8 @@ describe('useAnimation tuple api native backend', () => {
       () =>
         useAnimation({
           duration: 1,
-          tracks: [
-            {
-              property: 'opacity',
-              keyframes: [
-                { at: 0, value: 0 },
-                { at: 1, value: 1 },
-              ],
-            },
-          ],
+          from: { opacity: 0 },
+          to: { opacity: 1 },
         }),
       { wrapper },
     )
@@ -300,15 +271,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
       }),
     )
 
@@ -352,16 +316,9 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 5,
         autoStart: false,
-        tracks: [
-          {
-            property: 'transform.translate.x',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 5, value: 100 },
-            ],
-            timingFunction: 'linear',
-          },
-        ],
+        from: { transform: { translate: { x: 0 } } },
+        to: { transform: { translate: { x: 100 } } },
+        timingFunction: 'linear',
       }),
     )
 
@@ -389,16 +346,9 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 5,
         autoStart: false,
-        tracks: [
-          {
-            property: 'transform.translate.x',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 5, value: 100 },
-            ],
-            timingFunction: 'linear',
-          },
-        ],
+        from: { transform: { translate: { x: 0 } } },
+        to: { transform: { translate: { x: 100 } } },
+        timingFunction: 'linear',
         onComplete,
       }),
     )
@@ -516,16 +466,9 @@ describe('useAnimation tuple api native backend', () => {
         useAnimation({
           duration: 2,
           autoStart: false,
-          tracks: [
-            {
-              property: 'transform.translate.x',
-              keyframes: [
-                { at: 0, value: 0 },
-                { at: 2, value: 50 },
-              ],
-              timingFunction: 'linear',
-            },
-          ],
+          from: { transform: { translate: { x: 0 } } },
+          to: { transform: { translate: { x: 50 } } },
+          timingFunction: 'linear',
         }),
       )
 
@@ -565,16 +508,9 @@ describe('useAnimation tuple api native backend', () => {
         useAnimation({
           duration,
           autoStart: false,
-          tracks: [
-            {
-              property: 'transform.translate.x',
-              keyframes: [
-                { at: 0, value: 0 },
-                { at: duration, value: distance },
-              ],
-              timingFunction: 'linear',
-            },
-          ],
+          from: { transform: { translate: { x: 0 } } },
+          to: { transform: { translate: { x: distance } } },
+          timingFunction: 'linear',
         }),
       {
         initialProps: { distance: 100, duration: 5 },
@@ -606,15 +542,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
         onReset,
       }),
     )
@@ -641,15 +570,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
       }),
     )
 
@@ -676,15 +598,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
       }),
     )
 
@@ -708,15 +623,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
       }),
     )
 
@@ -751,28 +659,14 @@ describe('useAnimation tuple api native backend', () => {
         const [bindingA, apiA] = useAnimation({
           duration: 1,
           autoStart: false,
-          tracks: [
-            {
-              property: 'opacity',
-              keyframes: [
-                { at: 0, value: 0 },
-                { at: 1, value: 1 },
-              ],
-            },
-          ],
+          from: { opacity: 0 },
+          to: { opacity: 1 },
         })
         const [bindingB, apiB] = useAnimation({
           duration: 2,
           autoStart: false,
-          tracks: [
-            {
-              property: 'opacity',
-              keyframes: [
-                { at: 0, value: 1 },
-                { at: 2, value: 0 },
-              ],
-            },
-          ],
+          from: { opacity: 1 },
+          to: { opacity: 0 },
         })
 
         useBindSpatializedMotion({
@@ -812,15 +706,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
       }),
     )
 
@@ -844,15 +731,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
         onComplete,
       }),
     )
@@ -888,15 +768,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
         onError,
       }),
     )
@@ -935,15 +808,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
       }),
     )
 
@@ -974,15 +840,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
       }),
     )
 
@@ -999,15 +858,8 @@ describe('useAnimation tuple api native backend', () => {
       useAnimation({
         duration: 1,
         autoStart: false,
-        tracks: [
-          {
-            property: 'opacity',
-            keyframes: [
-              { at: 0, value: 0 },
-              { at: 1, value: 1 },
-            ],
-          },
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
       }),
     )
 
@@ -1020,11 +872,8 @@ describe('useAnimation tuple api native backend', () => {
     )
     expect(element.createAnimation).toHaveBeenCalledWith(
       expect.objectContaining({
-        tracks: [
-          expect.objectContaining({
-            property: 'opacity',
-          }),
-        ],
+        from: { opacity: 0 },
+        to: { opacity: 1 },
       }),
     )
     expect(result.current[2].opacity).toBeUndefined()

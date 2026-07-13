@@ -1,7 +1,6 @@
 import type {
   AnimationObject,
   SpatializedElement,
-  SpatializedMotionAuthorConfig,
   SpatializedMotionConfig,
   SpatializedMotionKind,
   SpatializedMotionPlayState,
@@ -9,20 +8,10 @@ import type {
   SpatializedPlaybackError,
   SpatializedVisualValues,
 } from '@webspatial/core-sdk'
-import {
-  normalizeMotionConfig,
-  supports,
-  validateSpatializedMotionConfig,
-} from '@webspatial/core-sdk'
+import { supports, validateSpatializedMotionConfig } from '@webspatial/core-sdk'
 import { getMotionConfigSignature } from './motionConfigSignature'
 
-type AnimationCommandType =
-  | 'play'
-  | 'pause'
-  | 'resume'
-  | 'stop'
-  | 'reset'
-  | 'finish'
+type AnimationCommandType = 'play' | 'pause' | 'stop' | 'reset' | 'finish'
 
 type AnimationCommand = {
   type: AnimationCommandType
@@ -59,8 +48,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   private createToken = 0
   private pendingCommands: AnimationCommand[] = []
   private configSignature: string
-  private config: SpatializedMotionAuthorConfig
-  private normalizedConfig: SpatializedMotionConfig
+  private config: SpatializedMotionConfig
   private values: SpatializedVisualValues
   private state: SpatializedMotionPlayState = 'idle'
   private isAnimatingState = false
@@ -69,7 +57,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   private readonly options: AnimationBindingOptions
 
   constructor(
-    config: SpatializedMotionAuthorConfig,
+    config: SpatializedMotionConfig,
     options: AnimationBindingOptions = {},
   ) {
     validateSpatializedMotionConfig(config)
@@ -77,17 +65,12 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.options = options
     this.config = config
     this.configSignature = getMotionConfigSignature(config)
-    this.normalizedConfig = normalizeMotionConfig(config)
     // Keep the fallback snapshot empty after removing timeline sampling utilities.
     this.values = {}
   }
 
-  get configSnapshot(): SpatializedMotionAuthorConfig {
+  get configSnapshot(): SpatializedMotionConfig {
     return this.config
-  }
-
-  get normalizedConfigSnapshot(): SpatializedMotionConfig {
-    return this.normalizedConfig
   }
 
   get currentValues(): SpatializedVisualValues {
@@ -135,10 +118,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.dispatchCommand({ type: 'pause' })
   }
 
-  resume(): void {
-    this.dispatchCommand({ type: 'resume' })
-  }
-
   stop(): void {
     this.dispatchCommand({ type: 'stop' })
   }
@@ -151,11 +130,10 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.dispatchCommand({ type: 'finish' })
   }
 
-  updateConfig(config: SpatializedMotionAuthorConfig): void {
+  updateConfig(config: SpatializedMotionConfig): void {
     validateSpatializedMotionConfig(config)
     const nextSignature = getMotionConfigSignature(config)
     this.config = config
-    this.normalizedConfig = normalizeMotionConfig(config)
     if (nextSignature !== this.configSignature) {
       this.configSignature = nextSignature
       this.recreateAnimationObject()
@@ -345,7 +323,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   private applyQueuedState(command: AnimationCommand): void {
     switch (command.type) {
       case 'play':
-      case 'resume':
         this.state = 'queued'
         this.isAnimatingState = true
         this.isPausedState = false

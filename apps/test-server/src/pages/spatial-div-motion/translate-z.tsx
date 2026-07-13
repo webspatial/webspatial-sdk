@@ -15,16 +15,9 @@ export function SpatialDivMotionTranslateZPage() {
   const [motion, api, style] = useAnimation({
     duration: DURATION,
     autoStart: true,
-    tracks: [
-      {
-        property: 'transform.translate.z',
-        keyframes: [
-          { at: 0, value: 0 },
-          { at: DURATION, value: -120 },
-        ],
-        timingFunction: 'easeInOut',
-      },
-    ],
+    from: { transform: { translate: { z: 0 } } },
+    to: { transform: { translate: { z: -120 } } },
+    timingFunction: 'easeInOut',
     onStart: () => {
       setLines(l => [...l, 'onStart'])
       setHint('Playing — depth (translate.z toward viewer)')
@@ -53,9 +46,9 @@ export function SpatialDivMotionTranslateZPage() {
 
   return (
     <div className="p-6 text-gray-200 max-w-3xl">
-      <h1 className="text-xl font-bold mb-2">Plan B — translate.z (depth)</h1>
+      <h1 className="text-xl font-bold mb-2">Segment — translate.z (depth)</h1>
       <p className="text-sm text-gray-400 mb-2">
-        Single-track depth motion. Use <code>--xr-back</code> so the panel has
+        Single-segment depth motion. Use <code>--xr-back</code> so the panel has
         room in space. Negative z moves toward the viewer on AVP.
       </p>
       <p className="text-xs text-emerald-400/90 mb-4 font-mono">{hint}</p>

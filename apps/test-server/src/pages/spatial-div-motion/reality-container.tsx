@@ -25,24 +25,13 @@ export function SpatializedMotionRealityContainerPage() {
   const [motion, api] = useAnimation({
     duration: DURATION,
     autoStart: true,
-    tracks: [
-      {
-        property: 'transform.translate.y',
-        keyframes: [
-          { at: 0, value: 0 },
-          { at: DURATION, value: 0.18 },
-        ],
-        timingFunction: 'easeInOut',
-      },
-      {
-        property: 'transform.rotate.y',
-        keyframes: [
-          { at: 0, value: 0 },
-          { at: DURATION, value: 90 },
-        ],
-        timingFunction: 'linear',
-      },
-    ],
+    from: {
+      transform: { translate: { y: 0 }, rotate: { y: 0 } },
+    },
+    to: {
+      transform: { translate: { y: 0.18 }, rotate: { y: 90 } },
+    },
+    timingFunction: 'easeInOut',
     onStart: () => {
       setLines(l => [...l, 'onStart'])
       setHint('Playing — whole Reality container lifts + yaws')
@@ -67,7 +56,7 @@ export function SpatializedMotionRealityContainerPage() {
         Dynamic3D — Reality container motion
       </h1>
       <p className="text-sm text-gray-400 mb-2">
-        <code>useAnimation(&#123; from/to or tracks &#125;)</code> +{' '}
+        <code>useAnimation(&#123; from/to or timeline &#125;)</code> +{' '}
         <code>&lt;Reality xr-animation&gt;</code>. Timeline drives the{' '}
         <strong>Reality root</strong> (not child <code>Entity</code> nodes).
         Values are <strong>meters / degrees</strong>.
@@ -123,9 +112,6 @@ export function SpatializedMotionRealityContainerPage() {
         </button>
         <button type="button" className={btnCls} onClick={() => api.pause()}>
           Pause
-        </button>
-        <button type="button" className={btnCls} onClick={() => api.resume()}>
-          Resume
         </button>
         <button type="button" className={btnCls} onClick={() => api.stop()}>
           Stop

@@ -22,7 +22,7 @@ The implementation is split across React SDK, Core SDK, and native runtime:
 
 The stable `useAnimation(config)` input accepts either top-level `from` / `to` segment authoring or a `timeline` object. The top-level branch requires both boundaries. The timeline branch carries its boundaries inside `timeline` and has no top-level boundary requirement. A timeline may mix `from`, `to`, and percentage-keyframe entries. When timeline is present, Core discards any top-level `from` and `to` before validation and normalization. Public `tracks` authoring remains invalid.
 
-Core treats timeline `from` as 0% and `to` as 100%, merges them with percentage entries, and normalizes every property into a complete numeric track with absolute-time keyframes. Each property must have exactly one explicit start boundary from `from` or `0%` and one explicit end boundary from `to` or `100%`; missing or duplicate boundaries fail validation before native create. Track, keyframe, property-path, normalized timeline, and native wire types remain internal implementation details: they are not exported from the stable package entry points, accepted by `useAnimation`, documented as authoring API, or exposed through an experimental entry point.
+Core treats timeline `from` as 0% and `to` as 100%, merges them with percentage entries, and normalizes every property independently into a numeric track with absolute-time keyframes. A property track may begin after time zero or end before duration, but it must contain at least two keyframes. Sampling before the first keyframe holds its first value, and sampling after the last keyframe holds its last value. A property declared in both `from` and `0%`, or in both `to` and `100%`, fails validation as a duplicate boundary declaration. Track, keyframe, property-path, normalized timeline, and native wire types remain internal implementation details: they are not exported from the stable package entry points, accepted by `useAnimation`, documented as authoring API, or exposed through an experimental entry point.
 
 Core sends fully resolved numeric tracks to native, so the existing native timeline sampler contract remains unchanged.
 
@@ -43,7 +43,7 @@ The `style` outlet is the React-side visual-state closure output of `useAnimatio
 |--------|----------------|
 | `SpatializedElement.createAnimation(config)` | Creates a native-backed `AnimationObject` after target binding, and owns validation, normalization, and create JSB send; native response returns the created object identity as `{ id }`. |
 | `AnimationObject` | First-class Core object extending `SpatialObject`; implements playback controls directly, inherits `destroy()`, subscribes to NativeWebMsg directly, and owns its state. |
-| `validateSpatializedMotionConfig` | Applies timeline precedence, rejects missing or duplicate property boundaries, and validates the resulting internal tracks, including Static3D `opacity`. |
+| `validateSpatializedMotionConfig` | Applies timeline precedence, rejects duplicate boundary declarations, and validates that resulting internal tracks contain at least two keyframes, including Static3D `opacity`. |
 | `motionConfigToAnimationTimeline` | Compiles normalized motion config into the canonical `CreateSpatializedElementAnimation` payload. |
 
 ## Native Runtime / visionOS module boundaries
@@ -314,7 +314,7 @@ sequenceDiagram
 
 `play`, `pause`, `stop`, `reset`, and `finish` all operate on the same already-created `AnimationObject`. `play()` starts an idle session, resumes a paused session, and is a no-op while running. These playback controls do not recreate the native object and do not change the object id.
 
-Only config signature changes, target rebinding, recreation after explicit `destroy()`, or element destroy cascading enter the destroy + recreate lifecycle. `reset()` writes the explicit normalized start value and `finish()` writes the explicit normalized end value; both operate on the current native `AnimationObject`.
+Only config signature changes, target rebinding, recreation after explicit `destroy()`, or element destroy cascading enter the destroy + recreate lifecycle. `reset()` writes the timeline sample at time zero and `finish()` writes the sample at duration; sparse property tracks therefore use their first and last values respectively. Both controls operate on the current native `AnimationObject`.
 
 ## Pre-bind explicit play sequence
 
@@ -422,9 +422,9 @@ The mask lives on the native `SpatializedElement` runtime or target write adapte
 |--------|-------------|--------------|
 | `pause` | preserve current sampled value | keep mask because the animation still owns the visual field |
 | `stop` | write current sampled value | release mask fields owned by this animation |
-| `reset` | write the explicit normalized start value | release mask fields owned by this animation |
-| `finish` | write the explicit normalized end value | release mask fields owned by this animation |
-| natural completion | write the explicit normalized end value | release mask fields owned by this animation |
+| `reset` | write the sample at time zero | release mask fields owned by this animation |
+| `finish` | write the sample at duration | release mask fields owned by this animation |
+| natural completion | write the sample at duration | release mask fields owned by this animation |
 | `destroy` | do not force an additional terminal write; clean up the animation | release mask fields owned by this animation |
 
 ## Config changes, destruction, and cascading cleanup

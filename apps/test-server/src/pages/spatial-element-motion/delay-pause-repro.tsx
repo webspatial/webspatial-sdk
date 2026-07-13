@@ -80,15 +80,8 @@ export function SpatialElementMotionDelayPauseReproPage() {
     delay: DELAY_MS / 1000,
     autoStart: false,
     timingFunction: 'linear',
-    tracks: [
-      {
-        property: 'transform.translate.x',
-        keyframes: [
-          { at: 0, value: 0 },
-          { at: DURATION_MS / 1000, value: 220 },
-        ],
-      },
-    ],
+    from: { transform: { translate: { x: 0 } } },
+    to: { transform: { translate: { x: 220 } } },
     onStart: () => {
       log(`onStart at ${fmtMs(elapsed())} (expected ~= ${EXPECTED_START_MS}ms)`)
     },

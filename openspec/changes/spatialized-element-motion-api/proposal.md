@@ -88,11 +88,20 @@ export function PulsingPanel() {
 Timeline authoring follows these rules:
 
 - `from` is equivalent to `0%`; `to` is equivalent to `100%`.
-- For each animated property, provide the start through exactly one of `from` or `0%`, and the end through exactly one of `to` or `100%`.
 - `duration` is required when any percentage key is used and is measured in seconds.
 - Keys range from `0%` to `100%`; decimal values such as `30.33%` are supported.
-- A property may appear only in the frames relevant to it. Its values are interpolated between those frames and held outside that range.
+- Each animated property needs at least two values. It may appear only in the frames relevant to it: values are interpolated between those frames, with the first value held before its first frame and the last value held after its last frame.
 - A frame-level `timingFunction` controls interpolation from that frame to the next. Otherwise the config-level timing function is used, then `linear`.
+
+For example, this rotates from -20° to 80° during the first half, then holds 80° through the end, while opacity continues across the full timeline:
+
+```tsx
+timeline: {
+  '0%': { opacity: 0, transform: { rotate: { z: -20 } } },
+  '50%': { transform: { rotate: { z: 80 } } },
+  '100%': { opacity: 1 },
+}
+```
 
 Timeline authoring places the animation boundaries inside `timeline`, while the outer config carries duration and playback controls. Top-level `from` and `to` remain the simple authoring form.
 

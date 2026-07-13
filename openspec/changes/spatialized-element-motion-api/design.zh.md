@@ -22,7 +22,7 @@
 
 稳定的 `useAnimation(config)` 输入接受顶层 `from` / `to` segment authoring 或 `timeline` 对象。顶层分支要求两个边界都存在；timeline 分支将边界放在 `timeline` 内，对顶层边界没有要求。Timeline 可以混合使用 `from`、`to` 和百分比关键帧。存在 timeline 时，Core 在 validation 和 normalization 前丢弃任何顶层 `from` 和 `to`。公开 `tracks` authoring 仍然非法。
 
-Core 将 timeline `from` 视为 0%、将 `to` 视为 100%，与百分比 entry 合并，并把每个属性归一化为使用绝对时间关键帧的完整数值 track。每个属性必须通过 `from` 或 `0%` 恰好提供一个显式起始边界，并通过 `to` 或 `100%` 恰好提供一个显式终止边界；缺少或重复边界时，validation 在 native create 前失败。Track、keyframe、property path、归一化 timeline 与 native wire 类型仅属于内部实现：稳定包入口不导出这些类型，`useAnimation` 不接受它们，公开文档不把它们作为 authoring API，也不提供 experimental 入口。
+Core 将 timeline `from` 视为 0%、将 `to` 视为 100%，与百分比 entry 合并，并把每个属性独立归一化为使用绝对时间关键帧的数值 track。属性 track 可以晚于 time zero 开始或早于 duration 结束，但必须至少包含两个关键帧。首个关键帧之前的采样保持首值，最后一个关键帧之后的采样保持末值。同一属性同时声明在 `from` 和 `0%`，或同时声明在 `to` 和 `100%` 时，validation 将其作为重复边界拒绝。Track、keyframe、property path、归一化 timeline 与 native wire 类型仅属于内部实现：稳定包入口不导出这些类型，`useAnimation` 不接受它们，公开文档不把它们作为 authoring API，也不提供 experimental 入口。
 
 Core 向 native 发送完全解析的数值 tracks，因此现有 native timeline sampler contract 保持不变。
 
@@ -43,7 +43,7 @@ Core 向 native 发送完全解析的数值 tracks，因此现有 native timelin
 |------|------|
 | `SpatializedElement.createAnimation(config)` | 绑定 target 后创建 native-backed `AnimationObject`，负责 validation、normalization 和 create JSB；native response 以 `{ id }` 返回新建对象的 identity。 |
 | `AnimationObject` | Core 一等对象，继承 `SpatialObject`，直接实现播放控制，继承 `destroy()`，直接订阅 NativeWebMsg 并维护自身状态。 |
-| `validateSpatializedMotionConfig` | 应用 timeline 优先级，拒绝缺少或重复的属性边界，并校验生成的内部 tracks，包括 Static3D `opacity`。 |
+| `validateSpatializedMotionConfig` | 应用 timeline 优先级，拒绝重复边界声明，并校验生成的内部 track 至少包含两个关键帧，包括 Static3D `opacity`。 |
 | `motionConfigToAnimationTimeline` | 将归一化后的 motion config 编译为 canonical `CreateSpatializedElementAnimation` payload。 |
 
 ## Native Runtime / visionOS 模块边界
@@ -314,7 +314,7 @@ sequenceDiagram
 
 `play`、`pause`、`stop`、`reset` 和 `finish` 都作用于同一个已经创建的 `AnimationObject`。`play()` 在 idle 时开始会话，在 paused 时恢复，在 running 时为 no-op。这些 playback controls 不重建 native object，也不改变 object id。
 
-只有 config signature 变化、target 重新绑定、显式 `destroy()` 后重新创建，或 element destroy 级联清理，才进入 destroy + recreate 生命周期。`reset()` 写入显式的 normalized start value，`finish()` 写入显式的 normalized end value；二者都作用于当前 native `AnimationObject`。
+只有 config signature 变化、target 重新绑定、显式 `destroy()` 后重新创建，或 element destroy 级联清理，才进入 destroy + recreate 生命周期。`reset()` 写入 time zero 处的 timeline sample，`finish()` 写入 duration 处的 sample；因此 sparse property track 分别使用首值和末值。二者都作用于当前 native `AnimationObject`。
 
 ## Bind 前显式 play 时序
 
@@ -422,9 +422,9 @@ Mask 位于 native `SpatializedElement` runtime 或 target write adapter。
 |--------|-------------|--------------|
 | `pause` | 保留当前 sampled value | 保留 mask，因为 animation 仍拥有该视觉字段 |
 | `stop` | 写入当前 sampled value | 释放本 animation 拥有的 mask fields |
-| `reset` | 写入显式的 normalized start value | 释放本 animation 拥有的 mask fields |
-| `finish` | 写入显式的 normalized end value | 释放本 animation 拥有的 mask fields |
-| natural completion | 写入显式的 normalized end value | 释放本 animation 拥有的 mask fields |
+| `reset` | 写入 time zero 处的 sample | 释放本 animation 拥有的 mask fields |
+| `finish` | 写入 duration 处的 sample | 释放本 animation 拥有的 mask fields |
+| natural completion | 写入 duration 处的 sample | 释放本 animation 拥有的 mask fields |
 | `destroy` | 不额外强制写入终态；清理 animation | 释放本 animation 拥有的 mask fields |
 
 ## Config 变化、销毁和级联清理

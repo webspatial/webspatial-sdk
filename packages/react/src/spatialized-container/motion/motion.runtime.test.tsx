@@ -86,12 +86,12 @@ describe('motion runtime behavior', () => {
         expect.objectContaining({
           play: expect.any(Function),
           pause: expect.any(Function),
-          resume: expect.any(Function),
           stop: expect.any(Function),
           reset: expect.any(Function),
           finish: expect.any(Function),
         }),
       )
+      expect('resume' in api).toBe(false)
       expect(api.playState).toBe('idle')
       expect(api.isAnimating).toBe(false)
       expect(api.isPaused).toBe(false)
@@ -120,15 +120,8 @@ describe('motion runtime behavior', () => {
         useAnimation({
           duration: 1,
           autoStart: false,
-          tracks: [
-            {
-              property: 'transform.translate.x',
-              keyframes: [
-                { at: 0, value: 0 },
-                { at: 1, value: 100 },
-              ],
-            },
-          ],
+          from: { transform: { translate: { x: 0 } } },
+          to: { transform: { translate: { x: 100 } } },
         }),
       )
 
@@ -149,15 +142,8 @@ describe('motion runtime behavior', () => {
         useAnimation({
           duration: 0.2,
           autoStart: false,
-          tracks: [
-            {
-              property: 'opacity',
-              keyframes: [
-                { at: 0, value: 0 },
-                { at: 0.2, value: 1 },
-              ],
-            },
-          ],
+          from: { opacity: 0 },
+          to: { opacity: 1 },
         }),
       )
 
@@ -184,15 +170,8 @@ describe('motion runtime behavior', () => {
         useAnimation({
           duration: 1,
           autoStart: false,
-          tracks: [
-            {
-              property: 'transform.translate.x',
-              keyframes: [
-                { at: 0, value: 0 },
-                { at: 1, value: 10 },
-              ],
-            },
-          ],
+          from: { transform: { translate: { x: 0 } } },
+          to: { transform: { translate: { x: 10 } } },
         }),
       )
 
@@ -214,16 +193,9 @@ describe('motion runtime behavior', () => {
         useAnimation({
           duration: 5,
           autoStart: false,
-          tracks: [
-            {
-              property: 'transform.translate.x',
-              keyframes: [
-                { at: 0, value: 0 },
-                { at: 5, value: 100 },
-              ],
-              timingFunction: 'linear',
-            },
-          ],
+          from: { transform: { translate: { x: 0 } } },
+          to: { transform: { translate: { x: 100 } } },
+          timingFunction: 'linear',
         }),
       )
 
@@ -252,16 +224,9 @@ describe('motion runtime behavior', () => {
           useAnimation({
             duration: 5,
             autoStart: false,
-            tracks: [
-              {
-                property: 'transform.translate.x',
-                keyframes: [
-                  { at: 0, value: 0 },
-                  { at: 5, value: distance },
-                ],
-                timingFunction: 'linear',
-              },
-            ],
+            from: { transform: { translate: { x: 0 } } },
+            to: { transform: { translate: { x: distance } } },
+            timingFunction: 'linear',
           }),
         {
           initialProps: { distance: 100 },

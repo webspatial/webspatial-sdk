@@ -343,7 +343,7 @@ describe('AnimationObject', () => {
 
     await animation.play()
     await animation.pause()
-    await animation.resume()
+    await animation.play()
     await animation.stop()
     await animation.reset()
     await animation.finish()
@@ -352,7 +352,7 @@ describe('AnimationObject', () => {
     expect(spies.controlCommandSpy.mock.calls.map(call => call[0])).toEqual([
       { animationId: animation.id, type: 'play' },
       { animationId: animation.id, type: 'pause' },
-      { animationId: animation.id, type: 'resume' },
+      { animationId: animation.id, type: 'play' },
       { animationId: animation.id, type: 'stop' },
       { animationId: animation.id, type: 'reset' },
       { animationId: animation.id, type: 'finish' },

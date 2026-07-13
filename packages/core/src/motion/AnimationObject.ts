@@ -100,10 +100,6 @@ export class AnimationObject
     return this.control('pause')
   }
 
-  resume(): Promise<void> {
-    return this.control('resume')
-  }
-
   stop(): Promise<void> {
     return this.control('stop')
   }

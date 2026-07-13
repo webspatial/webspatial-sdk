@@ -17,24 +17,13 @@ export function SpatializedMotionModelContainerPage() {
   const [motion, api] = useAnimation({
     duration: DURATION,
     autoStart: true,
-    tracks: [
-      {
-        property: 'transform.translate.y',
-        keyframes: [
-          { at: 0, value: 0 },
-          { at: DURATION, value: 0.12 },
-        ],
-        timingFunction: 'easeInOut',
-      },
-      {
-        property: 'transform.rotate.y',
-        keyframes: [
-          { at: 0, value: 0 },
-          { at: DURATION, value: 90 },
-        ],
-        timingFunction: 'linear',
-      },
-    ],
+    from: {
+      transform: { translate: { y: 0 }, rotate: { y: 0 } },
+    },
+    to: {
+      transform: { translate: { y: 0.12 }, rotate: { y: 90 } },
+    },
+    timingFunction: 'easeInOut',
     onStart: () => {
       setLines(l => [...l, 'onStart'])
       setHint('Playing — model root lifts + yaws (modelTransform)')
@@ -59,7 +48,7 @@ export function SpatializedMotionModelContainerPage() {
         Static3D — Model container motion
       </h1>
       <p className="text-sm text-gray-400 mb-2">
-        <code>useAnimation(&#123; from/to or tracks &#125;)</code> +{' '}
+        <code>useAnimation(&#123; from/to or timeline &#125;)</code> +{' '}
         <code>&lt;Model xr-animation&gt;</code>. Timeline drives{' '}
         <strong>modelTransform</strong> (not USD embedded clip playback).
         Separate from <code>ref.play()</code> on the model asset.
@@ -106,9 +95,6 @@ export function SpatializedMotionModelContainerPage() {
         </button>
         <button type="button" className={btnCls} onClick={() => api.pause()}>
           Pause
-        </button>
-        <button type="button" className={btnCls} onClick={() => api.resume()}>
-          Resume
         </button>
         <button type="button" className={btnCls} onClick={() => api.stop()}>
           Stop
