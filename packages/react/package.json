@@ -8,6 +8,7 @@
   "sideEffects": [
     "./dist/index.js",
     "./dist/eager.js",
+    "./dist/experimental.js",
     "./dist/spatial.js",
     "./src/eager.ts",
     "./src/runtime/registerEagerEntry.ts",
@@ -21,6 +22,10 @@
     "./eager": {
       "types": "./dist/eager.d.ts",
       "default": "./dist/eager.js"
+    },
+    "./experimental": {
+      "types": "./dist/experimental.d.ts",
+      "default": "./dist/experimental.js"
     },
     "./spatial": {
       "types": "./dist/spatial.d.ts",
