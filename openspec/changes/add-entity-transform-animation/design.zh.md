@@ -136,14 +136,7 @@ interface AnimationApi {
   /** 当前是否处于暂停状态。 */
   readonly isPaused: boolean
 
-  /**
-   * 当前会话状态。
-   *
-   * 命令方法本身是同步的，但 native 侧状态变化是异步的。
-   * 在同一个 tick 里刚调用完 play()/pause()/cancel()/finish()/resume() 后立刻读取，
-   * 仍可能得到上一次已提交的状态，直到对应的 native 状态事件回来为止。
-   * 这里的例外是未绑定的 queued 路径，它会立即更新本地排队状态。
-   */
+  /** 当前会话状态。 */
   readonly playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 
   /** 最近一个当前有效会话是否已自然完成。 */
@@ -341,9 +334,6 @@ function FastEntry() {
 
 `api.playState` 提供当前会话的精确状态：`idle`、`queued`、`running`、`paused` 或 `finished`。
 适合在 UI 中根据动画状态显示不同反馈，或在不同状态下执行不同操作。
-当动画已经绑定到 native 播放时，状态变化会通过 native 事件异步回写；如果在同一个 tick 里
-刚调用完命令就读取 `api.playState`，仍可能看到上一次已提交的状态，直到对应的 native 事件被处理。
-未绑定的 queued 路径是例外，它会立即反映本地排队状态。
 
 ```tsx
 function StateAwareBox() {

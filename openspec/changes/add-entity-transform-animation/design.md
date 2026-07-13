@@ -85,10 +85,7 @@ interface AnimationConfig {
    */
   playbackRate?: number
 
-  /**
-   * Called when the native session is established successfully; the first state may be delaying or running.
-   * State changes caused by this command are observed asynchronously from native state events.
-   */
+  /** Called when the native session is established successfully; the first state may be delaying or running. */
   onStart?: () => void
 
   /** Called when a non-looping animation finishes naturally. Receives the final native transform. */
@@ -139,14 +136,7 @@ interface AnimationApi {
   /** Whether the animation is currently paused. */
   readonly isPaused: boolean
 
-  /**
-   * Current session state.
-   *
-   * Command methods are synchronous, but native-backed state changes are asynchronous.
-   * After calling play()/pause()/cancel()/finish()/resume(), a same-tick read may still
-   * return the previously committed state until the corresponding native state event arrives.
-   * The queued/unbound path is the exception: it updates local queued state immediately.
-   */
+  /** Current session state. */
   readonly playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
 
   /** Whether the most recent current session completed naturally. */
@@ -363,9 +353,6 @@ function FastEntry() {
 
 `api.playState` provides the precise current session state: `idle`, `queued`, `running`, `paused`, or `finished`.
 Use it to show different UI feedback depending on the animation state, or to conditionally enable/disable controls.
-When the animation is already bound to native playback, state changes are delivered asynchronously; if you read
-`api.playState` immediately after a command call in the same tick, you may still observe the previously committed state
-until the matching native event is processed. The unbound queued path updates locally right away.
 
 ```tsx
 function StateAwareBox() {
