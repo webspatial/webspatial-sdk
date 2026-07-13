@@ -1,477 +1,290 @@
-# 空间化元素动画（伞式）
+# 空间化容器动画
+
+## 范围
+
+本能力为 `Spatialized2DElement`、`SpatializedStatic3DElement` 和 `SpatializedDynamic3DElement` 定义一套公开容器动画 API。Entity 动画继续使用独立的 `useEntityAnimation` / `AnimateTransform` 栈。
 
 ## 新增需求
 
-### Requirement: 伞式定义绑定时目标解析的声明式动画
+### Requirement: 一套与目标无关的容器动画 API
 
-平台 MUST 为以下目标文档化和实现声明式 timeline 动画：`spatialized2d`、`static3d`、`dynamic3d`。每个目标 MUST 有子 spec 定义属性白名单、native 后端和 React 集成。公开 hook MUST NOT 需要 `config.kind`；目标在返回的 `animation` binding 作为 `xr-animation` prop 传给组件时自动解析（`<div enable-xr>` → spatialized2d、`<Model>` → static3d、`<Reality>` → dynamic3d）。`SpatialEntity` transform timeline 不在本伞式范围内，当前继续通过独立 entity 栈上的 `useEntityAnimation` 处理。
+SDK MUST 暴露返回 `[animation, api, style]` 的 `useAnimation(config)`。Config MUST NOT 包含目标 `kind`；SDK MUST 在 opaque `animation` binding 通过 `xr-animation` 绑定时解析目标。
 
-#### Scenario: 能力矩阵为规范
+| 绑定组件 | 解析目标 | Native 动画字段 |
+|---|---|---|
+| `<div enable-xr>` / SpatialDiv | `spatialized2d` | 容器根 `transform`、`opacity` |
+| `<Model>` | `static3d` | 容器根 `transform`、`opacity` |
+| `<Reality>` | `dynamic3d` | 容器根 `transform`、`opacity` |
 
-- **WHEN** 产品负责人审查动画支持
-- **THEN** [CAPABILITY_MATRIX.md](../../CAPABILITY_MATRIX.md) MUST 列出每种 kind 的已交付 vs 计划状态
+#### Scenario: Binding 解析目标
 
-### Requirement: Native-first AnimationObject 架构
+- **WHEN** 同一份有效动画 config 绑定到 `enable-xr` 节点、`<Model>` 或 `<Reality>`
+- **THEN** SDK MUST 对三种目标接受相同的公开 config 形状
+- **AND** SDK MUST 为解析出的目标创建 native 播放
 
-Spatialized element motion MUST 使用 native-first 的 `AnimationObject` 目标态架构。每个已绑定的 `SpatializedElement` MUST 暴露 `createAnimation(config)`，创建一个与单个 spatialized element target 关联的 `AnimationObject : SpatialObject`。创建时 MUST 发送 `CreateSpatializedElementAnimation`，其中包含归一化 timeline payload 和元素 identity。Core SDK MUST 仍在创建前解析 target kind 以执行目标特化校验，而 native runtime MUST 从具体 native element 类型解析最终生效的 target kind。运行时控制 MUST 使用 `ControlSpatializedElementAnimation` 命令（`play`、`pause`、`resume`、`stop`、`reset`、`finish`、`destroy`）。Native runtime state change MUST 通过 `SpatialAnimationStateChanged` 观察。
+#### Scenario: 一个 binding 只有一个目标
 
-目标态架构 MUST NOT 依赖 Web RAF playback、`SpatializedMotionController`、`NativePlaybackBackend`、Portal suppression 或 `AnimateSpatializedElementMotion` 作为规范性执行原语。既有 authoring 与 playback 语义继续保持规范性，但执行所有者是 native `AnimationObject`。
+- **WHEN** 同一 `animation` binding 同时绑定到多个组件
+- **THEN** SDK MUST 拒绝后续绑定或发出警告
+- **AND** 只有第一次绑定 MUST 生效
 
-#### Scenario: SpatializedElement.createAnimation 创建 AnimationObject
+#### Scenario: Entity 动画保持独立
 
-- **WHEN** 一个 `animation` binding 解析为具体 spatialized element target
-- **THEN** SDK MUST 对该 target 调用 `SpatializedElement.createAnimation(config)`
-- **AND** 返回的 handle MUST 表示一个 `AnimationObject : SpatialObject`
+- **WHEN** 开发者通过 `useEntityAnimation` 动画化子 `Entity`
+- **THEN** 该动画 MUST 保持在 Entity 栈
+- **AND** 它 MUST NOT 使用容器 `AnimationObject`
 
-#### Scenario: create 锁定 timeline config
+### Requirement: 公开 config 支持简单写法和 timeline 写法
 
-- **WHEN** `CreateSpatializedElementAnimation` 成功
-- **THEN** 创建出的 `AnimationObject` MUST 锁定用于创建的归一化 timeline config
-- **AND** 在该 object 被 destroy 并 recreate 前，其后的终止命令 MUST 使用这份已锁定 timeline
+稳定的 `useAnimation(config)` 输入 MUST 支持以下两种写法之一：
 
-#### Scenario: Config 变更必须 destroy 并 recreate
+1. 顶层 segment authoring，必须同时提供 `from` 和 `to` 视觉值。
+2. `timeline` 对象，可以混合使用 `from`、`to` 和 key 匹配 `/^\d+(\.\d+)?%$/` 的百分比关键帧。
 
-- **GIVEN** binding 已经创建了一个 `AnimationObject`
-- **WHEN** authoring config 的变化导致归一化 timeline 或目标校验结果变化
-- **THEN** SDK MUST destroy 现有 `AnimationObject`
-- **AND** SDK MUST 创建新的 `AnimationObject`，而不是原地修改旧 object 锁定的 timeline
+`duration`、`timingFunction`、`delay`、`autoStart`、`loop`、`playbackRate` 和生命周期回调保留在外层 config。未使用百分比 key 时，duration 可选并默认为 0.3 秒。Config 只要包含百分比 key，就 MUST 提供 `duration`。
 
-#### Scenario: 控制命令走 animation object 通道
+存在 `timeline` 时，顶层 `from` 和 `to` MAY 同时不存在。若提供其中任意字段，Core MUST 忽略该字段；顶层值 MUST NOT 参与 validation 或 normalization。公开类型和运行时校验 MUST 拒绝顶层 `tracks`。
 
-- **WHEN** 开发者调用 `api.play()`、`api.pause()`、`api.resume()`、`api.stop()`、`api.reset()` 或 `api.finish()`
-- **THEN** SDK MUST 向当前 `AnimationObject` 发送匹配的 `ControlSpatializedElementAnimation` 命令
-- **AND** playback state MUST 基于 `SpatialAnimationStateChanged` 对齐
+对于 `timeline` 中的每个动画标量属性，开发者 MUST 通过 `from` 或 `0%` 恰好提供一个显式起点，并通过 `to` 或 `100%` 恰好提供一个显式终点。同一属性同时出现在 `from` 和 `0%`，或同时出现在 `to` 和 `100%` 时，SDK MUST 将其作为重复边界声明拒绝。
 
-#### Scenario: Element animating mask 持有 animated sync fields
+#### Scenario: 接受顶层 segment
 
-- **WHEN** 一个 `AnimationObject` 处于 active 状态或持有 terminal visual value
-- **THEN** 目标元素 MUST 暴露 animated fields 的 animating mask
-- **AND** 常规 element sync MUST NOT 覆盖 mask 标记为 animation-owned 的字段
+- **WHEN** 开发者在没有 `timeline` 时提供顶层 `from` 和 `to`
+- **THEN** SDK MUST 将其作为简单 segment authoring 接受
+- **AND** SDK MUST 在播放前将其归一化为内部按属性拆分的 tracks
 
-#### Scenario: 纯 Web runtime 不运行 RAF fallback
+#### Scenario: 拒绝不完整的顶层 segment
 
-- **WHEN** 已解析目标的 runtime capability 不可用，包括纯 Web runtime
-- **THEN** `supports('useAnimation')` MUST 返回 `false`
-- **AND** SDK MUST NOT 为目标态 `useAnimation` 路径启动 Web RAF playback 作为 fallback
+- **WHEN** config 没有 `timeline`，并且缺少顶层 `from` 或顶层 `to` 之一
+- **THEN** 公开类型 MUST 拒绝该 config
+- **AND** 运行时校验 MUST 在 native create 前拒绝该 config
 
-### Requirement: 共享的播放 API 形状
+#### Scenario: timeline 混合边界和百分比关键帧
 
-支持声明式动画的所有 kind MUST 暴露 `SpatializedPlaybackApi`（`play`、`pause`、`resume`、`stop`、`reset`、`finish`、`playState`、`isAnimating`、`isPaused`、`finished`）。Controller 级 `pause()` 与 `resume()` MUST 只表示整体会话控制，且不接受 `keys` 参数。本次变更明确不包含任何按 track / action 的局部控制；如果未来确实需要局部控制，必须作为独立的 track/action 级 API 另行设计，例如 `pauseTrack(trackId)`，不能通过扩展 controller 的 `pause()` / `resume()` 来实现。
+- **WHEN** 开发者在 `timeline` 中提供 `from`、一个或多个中间百分比 key 和 `to`
+- **THEN** SDK MUST 接受该混合 timeline
+- **AND** SDK MUST 将 `from` 归一化为 0%、`to` 归一化为 100%，并按声明位置归一化百分比 key
 
-#### Scenario: 播放 API 与绑定目标无关
+#### Scenario: timeline authoring 省略顶层边界
 
-- **WHEN** 开发者从 `useAnimation(config)` 获得 motion 元组
-- **THEN** 返回的 `api` MUST 暴露 `play`、`pause`、`resume`、`stop`、`reset`、`finish`、`playState`、`isAnimating`、`isPaused`、`finished`，无论 `animation` 后续绑定到哪个组件
+- **WHEN** 有效 `timeline` 为每个属性提供完整的起点和终点边界
+- **AND** 顶层 `from` 和 `to` 同时不存在
+- **THEN** SDK MUST 接受该 config
 
-#### Scenario: pause() 和 resume() 不接受额外参数
+#### Scenario: timeline 优先于顶层边界
 
-- **WHEN** 应用代码尝试以额外参数调用 `api.pause()` 或 `api.resume()`
-- **THEN** controller API MUST 在类型层面拒绝该调用，且公开 surface 上不得提供任何接收附加 controller-control 参数的重载
+- **GIVEN** config 同时包含 `timeline` 和顶层 `from` 或 `to`
+- **WHEN** config 被校验和归一化
+- **THEN** Core MUST 忽略顶层 `from` 和 `to`
+- **AND** 只有 `timeline` 内容 MUST 决定动画
 
-### Requirement: 返回的 style outlet 负责闭合宿主视觉状态
+#### Scenario: 拒绝缺少显式起点
 
-对于任何通过宿主节点绑定的目标，`useAnimation(config)` 返回的 `style` MUST 被视为必需的 API 输出，并合并回接收 `xr-animation` 的同一宿主元素或组件上。该合并负责将动画发出的值闭合到后续 rerender、终止命令和宿主 resync 链路中。
+- **WHEN** 某动画属性既没有 `from` 值，也没有 `0%` 值
+- **THEN** 运行时校验 MUST 在 native create 前拒绝该 config
 
-#### Scenario: 合并 style 后终态视觉值在 resync 后保持稳定
+#### Scenario: 拒绝缺少显式终点
 
-- **GIVEN** 一个宿主绑定目标将返回的 `style` 合并回接收 `xr-animation` 的同一宿主
-- **WHEN** `stop()`、`reset()`、`finish()` 或自然结束之后又发生 rerender 或宿主 resync
-- **THEN** 宿主侧视觉状态 MUST 继续反映该动画会话最后一次发出的终态值
+- **WHEN** 某动画属性既没有 `to` 值，也没有 `100%` 值
+- **THEN** 运行时校验 MUST 在 native create 前拒绝该 config
 
-#### Scenario: 未合并 style 时终态持久性不受保证
+#### Scenario: 拒绝重复边界声明
 
-- **GIVEN** 一个宿主绑定目标没有将返回的 `style` 合并回接收 `xr-animation` 的同一宿主
-- **WHEN** 播放仍通过 native animation 路径开始
-- **THEN** SDK MAY 仍然播放该动画
-- **AND** `stop()`、`reset()`、`finish()` 或自然结束之后的终态视觉持久性 MUST 被视为未定义
+- **WHEN** 同一属性同时出现在 `from` 和 `0%`，或同时出现在 `to` 和 `100%`
+- **THEN** 运行时校验 MUST 在 native create 前拒绝该 config
 
-#### Scenario: stop() 将 active session 冻结在当前值
+#### Scenario: 拒绝 timeline 数组
 
-- **WHEN** 动画正在运行或暂停时调用 `api.stop()`
-- **THEN** active session MUST 被终止，style MUST 冻结在当前播放时刻的采样值，`playState` MUST 变为 `idle`，`finished` MUST 变为 `false`，且 MUST 调用 `onStop` 并传入冻结值
+- **WHEN** 开发者提供 `timeline: []`
+- **THEN** 运行时校验 MUST 在 native create 前拒绝该 config
 
-#### Scenario: reset() 回滚到初始值
+### Requirement: 百分比关键帧行为确定
 
-- **WHEN** 调用 `api.reset()`
-- **THEN** style MUST 回滚到 `from`（初始）值，`playState` MUST 变为 `idle`，`finished` MUST 变为 `false`，且 MUST 调用 `onReset` 并传入初始值
+SDK MUST 支持小数百分比。每个百分比 MUST 位于 `[0%, 100%]`；非法 key 和越界百分比 MUST 被拒绝。当显式起点和终点由 `from` / `to` 或边界百分比帧提供时，timeline MAY 只包含一个中间百分比 key。
 
-#### Scenario: finish() 跳到最终值
+归一化 MUST 将 `from` 视为 0%、将 `to` 视为 100%，将每个百分比解析为比例，并乘以 `duration` 得到内部绝对关键帧时间。每个动画标量属性 MUST 独立收集。如果某属性未出现在某个中间百分比帧中，该属性在该时间点不生成关键帧。
 
-- **GIVEN** controller 已经持有一个 native-backed `AnimationObject`
-- **WHEN** 调用 `api.finish()`
-- **THEN** style MUST 跳到 `to`（最终）值，`playState` MUST 变为 `finished`，`finished` MUST 变为 `true`，且 MUST 调用 `onComplete` 并传入最终值
+#### Scenario: 归一化小数百分比
 
-#### Scenario: idle.reset() 不得为 no-op
+- **WHEN** `duration` 为 10，某帧声明在 `30.33%`
+- **THEN** 其内部绝对关键帧时间 MUST 为 3.033 秒
 
-- **GIVEN** 动画已经处于 `idle`
-- **WHEN** 调用 `api.reset()`
-- **THEN** SDK MUST 继续发出 `from` 值，并且 MUST 保持 `playState` 为 `idle`
+#### Scenario: 独立收集属性
 
-#### Scenario: 绑定前的 finish() 会排队，直到 native 确认终态
+- **GIVEN** opacity 声明在 `0%`、`50%` 和 `100%`
+- **AND** translation X 只声明在 `0%` 和 `100%`
+- **WHEN** timeline 被归一化
+- **THEN** opacity track MUST 包含三个关键帧
+- **AND** translation X track MUST 包含两个关键帧
 
-- **GIVEN** 动画处于 `idle`，且还不存在 native-backed `AnimationObject`
-- **WHEN** 调用 `api.finish()`
-- **THEN** SDK MUST 记录一条显式排队的 `finish` 命令
-- **AND** 在 native 确认前，公开可见的 `playState` MUST 保持为 `queued`
-- **AND** 在 native 确认前，公开可见的 `finished` MUST 保持为 `false`
-- **AND** native-backed `AnimationObject` 创建完成后，SDK MUST flush 这条排队的 `finish` 命令
-- **AND** 只有后续 native 终态确认才 MAY 将 API 切换为 `playState=finished` 且 `finished=true`
+#### Scenario: 属性关键帧范围外保持值
 
-#### Scenario: 只有从 idle 或 finished 启动的新 play 会话才会读取最新配置
+- **WHEN** 内部 track 在首个关键帧前或最后一个关键帧后被采样
+- **THEN** 它 MUST 分别使用首值或末值
 
-- **GIVEN** controller 随后收到了 `updateConfig(nextConfig)`
-- **WHEN** `api.play()` 从 `idle` 或 `finished` 启动一个新的播放会话
-- **THEN** SDK MUST 读取并锁定最新 config 作为该新会话的配置
-- **AND** 在下一个新会话开始前，该会话上的终止命令 MUST 始终基于这份已锁定的会话配置生效
+### Requirement: Tracks 仅供内部使用
 
-#### Scenario: paused 状态下的 play() 只恢复当前会话，不读取更新后的配置
+SDK MUST 在 native create 前将顶层 segment authoring 和公开 timeline authoring 归一化为 canonical 内部 tracks 文档。内部文档 MUST 包含 `duration`、可选时序控制和非空 tracks 数组。每条 track MUST 包含一个白名单属性和至少两个按绝对时间排序的数值关键帧，其中包括 time zero 和 `duration` 处的显式值。
 
-- **GIVEN** controller 当前处于 `paused`，并且已经持有一份会话配置快照
-- **AND** 应用代码调用了 `updateConfig(nextConfig)`
-- **WHEN** 应用代码再次调用 `api.play()`
-- **THEN** 该调用 MUST 等价于 `resume()`
-- **AND** SDK MUST NOT 把 `nextConfig` 读入当前会话
+Track、keyframe、property path、归一化 timeline 和 native wire 类型 MUST NOT 从稳定 Core 或 React 包入口导出。`useAnimation` MUST NOT 接受 tracks authoring。公开文档和 test-server 示例 MUST NOT 将 tracks 展示为 authoring。本变更 MUST NOT 提供 experimental tracks 入口。
 
-#### Scenario: finish() 之后 reset() 在下一次新 play 之前继续使用已完成会话的配置
+#### Scenario: 顶层 segment 编译为内部 tracks
 
-- **GIVEN** 一次播放会话由 `configA` 启动
-- **AND** 该会话通过 `api.finish()` 进入 `finished`
-- **AND** 应用代码随后调用 `updateConfig(configB)`
-- **WHEN** 在下一次新 `play()` 之前调用 `api.reset()`
-- **THEN** SDK MUST 恢复由 `configA` 启动的该已完成会话的初始值
-- **AND** SDK MUST NOT 使用 `configB` 的初始值
+- **WHEN** 顶层 segment 在 0.5 秒内将 opacity 从 0 动画到 1
+- **THEN** 归一化 MUST 创建时间为 0 和 0.5 秒的内部 opacity track
 
-#### Scenario: stop() 之后 reset() 在下一次新 play 之前继续使用被 stop 的会话配置
+#### Scenario: 百分比 timeline 编译为内部 tracks
 
-- **GIVEN** 一次播放会话由 `configA` 启动
-- **AND** 该会话通过 `api.stop()` 进入 `idle`
-- **AND** 应用代码随后调用 `updateConfig(configB)`
-- **WHEN** 在下一次新 `play()` 之前调用 `api.reset()`
-- **THEN** SDK MUST 恢复由 `configA` 启动的该被 stop 会话的初始值
-- **AND** SDK MUST NOT 使用 `configB` 的初始值
+- **WHEN** 两秒 timeline 在 `0%`、`50%` 和 `100%` 声明 opacity
+- **THEN** 归一化 MUST 创建时间为 0、1 和 2 秒的内部 opacity 关键帧
 
-#### Scenario: Terminal values 来自 AnimationObject
+#### Scenario: Canonical tracks 发送给 native
 
-- **WHEN** 调用终止方法（`stop`、`reset`、`finish`）
-- **THEN** terminal style values MUST 由 native `AnimationObject` 提供
-- **AND** JS timeline 评估 MAY 仅用于 config validation、测试夹具或显式非 runtime 工具，不作为目标态 playback backend
+- **WHEN** Core 发送 `CreateSpatializedElementAnimation`
+- **THEN** command MUST 包含归一化后的内部 tracks 文档
+- **AND** native MUST NOT 接收或解析公开 authoring 形状
 
-#### Scenario: 显式声明的 `style.opacity` 在 2D 终态控制权切换中优先
+### Requirement: 仅允许视觉容器属性
 
-- **GIVEN** 一个绑定到 React 节点的 `spatialized2d` motion，并且该节点显式传入了 `style.opacity`
-- **WHEN** `stop()`、`reset()` 或 `finish()` 完成，且 element animating mask 释放或更新 `opacity`
-- **THEN** `opacity` 的终态后视觉控制方 MUST 变成这个显式声明的 `style.opacity`
-- **AND** 终态原生采样值仍然 MUST 作为回调参数与终态会话语义的来源
+容器动画 MUST 支持 `opacity`，以及 `transform.translate`、`transform.rotate`、`transform.scale` 下的 X、Y、Z 标量路径。`width`、`height`、`back`、`backOffset`、`depth` 等布局和空间尺寸字段 MUST 在 native create 前被拒绝。
 
-#### Scenario: 非显式声明的 CSS `opacity` 不参与终态控制权切换
+#### Scenario: 拒绝布局属性
 
-- **GIVEN** `opacity` 仅通过 `className`、样式表规则、父层造成的视觉变暗，或 `getComputedStyle()` 结果体现出来
-- **WHEN** 一个 `spatialized2d` motion 到达 `stop()`、`reset()` 或 `finish()`
-- **THEN** SDK MUST NOT 将该值视为用于终态控制权切换的显式声明透明度
-- **AND** 当不存在显式 React `style.opacity` 时，终态 `opacity` 控制权 MUST 保持在原生采样结果一侧
+- **WHEN** 公开 timeline 值解析出不可动画化的布局或空间尺寸字段
+- **THEN** 校验 MUST 在 native 播放前失败
 
-#### Scenario: 显式声明的 `style.transform` 在容器根 transform 终态控制权切换中优先
+#### Scenario: Transform 组合顺序稳定
 
-- **GIVEN** 一个容器根 transform 目标（`spatialized2d`、`static3d` 或 `dynamic3d`）绑定到了带有显式 `style.transform` 的 React 节点
-- **WHEN** `stop()`、`reset()` 或 `finish()` 完成，且 element animating mask 释放或更新容器根 `transform`
-- **THEN** 容器根 `transform` 的终态后视觉控制方 MUST 变成这个显式声明的 `style.transform`
-- **AND** 终态原生采样 transform 值仍然 MUST 作为回调参数与终态会话语义的来源
+- **WHEN** 同一时间采样到多个 transform 标量
+- **THEN** SDK MUST 按 translate、rotate、scale 的顺序组合
 
-#### Scenario: 非显式声明的 CSS `transform` 不参与终态控制权切换
+### Requirement: Timing function 解析可预测
 
-- **GIVEN** 容器根 `transform` 仅通过 `className`、样式表规则、继承布局副作用或 `getComputedStyle()` 结果体现出来
-- **WHEN** 一个容器根 transform 目标到达 `stop()`、`reset()` 或 `finish()`
-- **THEN** SDK MUST NOT 将该值视为用于终态控制权切换的显式声明 transform
-- **AND** 当不存在显式 React `style.transform` 时，终态容器根 transform 控制权 MUST 保持在原生采样结果一侧
+对于百分比关键帧 authoring，从某帧到下一帧的插值 MUST 依次使用该帧的 `timingFunction`、外层 config 的 `timingFunction`、`linear`。最后一帧上的 timing function 不生效。段 authoring MUST 使用外层 config timing function 或 `linear`。
 
-### Requirement: 共享生命周期回调
+内部 tracks 文档 MAY 在关键帧或 track 上携带解析后的 timing function，但这些内部字段不属于公开 authoring API。
 
-Config MUST 支持以下生命周期回调：
+#### Scenario: 帧 timing 覆盖 config timing
 
-| 回调 | 触发条件 | 参数 |
-|------|---------|------|
-| `onStart` | `play()` 后首帧播放 | 无 |
-| `onComplete` | 自然播放结束 **或** `finish()` | `values: SpatializedVisualValues`（to 值） |
-| `onStop` | 调用 `stop()` | `values: SpatializedVisualValues`（当前值） |
-| `onReset` | 调用 `reset()` | `values: SpatializedVisualValues`（from 值） |
-| `onError` | Native 桥异步失败 | `error: SpatializedPlaybackError` |
+- **WHEN** 某百分比帧声明 `easeOut`，外层 config 声明 `easeIn`
+- **THEN** 从该帧到下一帧的插值 MUST 使用 `easeOut`
 
-每次会话终止时回调 MUST 互斥：`onComplete`、`onStop`、`onReset` 中恰好触发一个。`onError` MAY 在 native 失败时独立触发。
+#### Scenario: 默认 timing 为 linear
 
-三个终止方法 MUST 保持相互独立：`stop()` 只终止 active session 且不 seek，`reset()` 总是 seek 到起点值，`finish()` 总是 seek 到终点值。调用其中任一方法 MUST NOT 被另一个终止方法的语义吞掉或替代。
+- **WHEN** 当前帧和外层 config 都未声明 timing function
+- **THEN** 插值 MUST 使用 `linear`
 
-#### Scenario: 自然结束触发 onComplete
+### Requirement: Native-first AnimationObject 播放
 
-- **WHEN** 动画在未被中断的情况下到达 `duration`
-- **THEN** MUST 调用 `onComplete` 并传入最终值，`playState` MUST 为 `finished`
+Binding 解析目标后，Core MUST 通过 `SpatializedElement.createAnimation(config)` 创建 native-backed `AnimationObject`。Create MUST 校验并归一化公开 config，为该对象锁定归一化 timeline；除非随后触发 implicit auto-start 或排队的显式 play，否则 create 本身 MUST NOT 启动采样。
 
-#### Scenario: finish() 触发 onComplete
+播放控制 MUST 作用于同一对象。Config signature 变化或 target 重新绑定时，SDK MUST 销毁并重建对象，而不是修改已锁定 timeline。纯 Web runtime MUST NOT 启动 Web RAF fallback。
 
-- **WHEN** 调用 `api.finish()` 且 native 确认终态
-- **THEN** MUST 调用 `onComplete` 并传入 `to` 值（与自然结束相同）
+#### Scenario: Bind 前 play 排队
 
-#### Scenario: stop() 触发 onStop
+- **WHEN** `api.play()` 在 `xr-animation` 解析目标前调用
+- **THEN** 命令 MUST 排队
+- **AND** 它 MUST 在 native-backed 对象创建后运行
+- **AND** 不得启动 Web RAF fallback
 
-- **WHEN** 调用 `api.stop()`
-- **THEN** MUST 调用 `onStop` 并传入当前采样值
+#### Scenario: 显式 play 不被 autoStart false 吞掉
 
-#### Scenario: reset() 触发 onReset
+- **GIVEN** `autoStart` 为 false
+- **WHEN** bind 前显式调用 `api.play()`
+- **THEN** 该命令 MUST 仍在 bind 后运行
 
-- **WHEN** 调用 `api.reset()`
-- **THEN** MUST 调用 `onReset` 并传入初始（`from`）值
+#### Scenario: Config 变化重建播放对象
 
-#### Scenario: stop() 和 reset() 会清除 finished 标记
+- **WHEN** 归一化 config signature 变化
+- **THEN** 当前 native-backed 对象 MUST 被销毁
+- **AND** SDK MUST 为已绑定目标创建拥有新锁定 timeline 的新对象
 
-- **WHEN** 调用 `api.stop()` 或 `api.reset()`
-- **THEN** `finished` 标记 MUST 为 `false`
+#### Scenario: 纯 Web runtime 无播放 fallback
 
-#### Scenario: finish() 会设置 finished 标记
+- **WHEN** native `AnimationObject` 支持不可用
+- **THEN** `supports('useAnimation')` MUST 为 false
+- **AND** SDK MUST NOT 运行 JavaScript RAF sampler
 
-- **WHEN** 调用 `api.finish()` 且 native 确认终态
-- **THEN** `finished` 标记 MUST 为 `true`
+### Requirement: Target-specific 写入保持组件边界
 
-#### Scenario: Controller state 只表达整体会话
+Static3D 动画 MUST 写 `<Model>` 容器根，MUST NOT 写模型内部 `entityTransform` 或 `modelTransform` 字段。Dynamic3D 动画 MUST 写 `<Reality>` 容器根；子 Entity 保持在局部空间并随容器移动。Spatialized2D 动画 MUST 写空间化容器根。
 
-- **WHEN** 开发者暂停或恢复 motion controller
-- **THEN** controller 状态机 MUST 只表达整体会话状态（`idle`、`queued`、`running`、`paused`、`finished`）
-- **AND** controller MUST NOT 暴露 partially-paused 或 key-level 聚合状态
+#### Scenario: Model clip 播放保持独立
 
-#### Scenario: `opacity` 的终态控制权切换不允许双重控制权
+- **WHEN** 开发者通过 Model ref 调用 `play()` 或 `pause()` 播放内嵌 USD clip
+- **THEN** 容器动画会话 MUST 保持独立
 
-- **GIVEN** 一个 `spatialized2d` motion 正在动画化 `opacity`
-- **WHEN** `stop()`、`reset()` 或 `finish()` 之后 element animating mask 释放或更新 `opacity`
-- **THEN** SDK MUST 避免进入 native 外层 `opacity` 与 inner DOM `opacity` 在终态后同时继续控制同一视觉 `opacity` 的状态
+#### Scenario: Reality 动画不成为 Entity 动画
 
-#### Scenario: 容器根 transform 的终态控制权切换不允许双重控制权
+- **WHEN** timeline 绑定到 `<Reality>`
+- **THEN** native 播放 MUST 更新 Reality 容器根
+- **AND** 它 MUST NOT 将子 Entity transform 路由到容器动画栈
 
-- **GIVEN** 一个容器根 transform 目标（`spatialized2d`、`static3d` 或 `dynamic3d`）正在动画化容器根 `transform`
-- **WHEN** `stop()`、`reset()` 或 `finish()` 之后 element animating mask 释放或更新容器根 `transform`
-- **THEN** SDK MUST 避免进入 native 容器根 transform 与 DOM 容器根 transform 在终态后同时继续控制同一视觉 `transform` 的状态
+### Requirement: 返回的 style 闭合宿主视觉状态
 
-#### Scenario: 新的 play 会话会清除之前的容器根 transform 终态控制权
+开发者 MUST 将返回的 `style` 合并到接收 `xr-animation` 的同一宿主。未合并时播放 MAY 启动，但 rerender 或 resync 后的终态视觉持久性不受保证。
 
-- **GIVEN** 一个容器根 transform 目标此前已通过 `stop()`、`reset()` 或 `finish()` 进入容器根 transform 终态控制权状态
-- **WHEN** 应用代码从 `idle` 或 `finished` 调用 `api.play()` 启动一个新会话
-- **THEN** SDK MUST 清除先前的容器根 transform 终态控制权决策
-- **AND** 新的 active 会话 MUST 按目标类型更新 element animating mask
+对于 Spatialized2D 终态 handoff，只有直接在 React props 中提供的 `style.opacity` 或 `style.transform` 才属于显式声明样式。仅来自 `className`、样式表、继承视觉效果或 `getComputedStyle()` 的值 MUST NOT 被视为显式声明值。
 
-### Requirement: v1 公开 authoring 以 from/to 与 timeline 为主，tracks 保留为内部 canonical 模型
+#### Scenario: 合并 style 保持终态值
 
-Hook MUST 接受三种互斥配置形状之一：
+- **WHEN** stop、reset、finish 或自然完成后发生宿主 rerender 或 resync
+- **THEN** 已合并返回 style 的宿主 MUST 保持动画发出的终态视觉值
 
-1. **段配置**（推荐默认）：`{ from, to, duration, timingFunction? }`
-2. **Timeline 配置**（推荐关键帧路径）：`{ duration, timeline: { "0%": { ...values, timingFunction? }, ... "100%": { ...values } }, timingFunction? }`
-3. **Tracks 配置**（兼容 / 高级 escape hatch）：`{ duration, tracks: [{ property, keyframes: [{ at, value, timingFunction? }], timingFunction? }], timingFunction? }`
+#### Scenario: 2D 显式声明样式重新获得控制权
 
-在同一配置对象中同时传递 `from`/`to`、`tracks`、`timeline` 中多于一项 MUST 是类型错误（判别联合）。内部实现中，段配置和 timeline 配置 MUST 编译为 tracks 后再执行。当 `useAnimation` 使用 native 播放时，这条统一路径 MUST 持续执行 canonical tracks 模型，且 MUST NOT 降级到旧版 native segment 命令。
+- **GIVEN** Spatialized2D 宿主在 React `style` 中显式声明被动画化字段
+- **WHEN** 终态 mask handoff 完成
+- **THEN** 该显式声明值 MUST 重新获得终态后控制权
+- **AND** native 采样终态值 MUST 继续作为生命周期回调值
 
-所有 kind MUST 在所有配置形状中使用视觉 transform 路径（`transform.translate.*`、`opacity` 等）。
+### Requirement: 播放和生命周期语义共享
 
-#### Scenario: from/to 编译为 tracks
+API MUST 暴露 `play`、`pause`、`stop`、`reset` 和 `finish`，以及 `isAnimating`、`isPaused`、`finished`、`playState`。API MUST NOT 暴露 `resume()`。`play()` 和 `pause()` 是整体会话操作，MUST NOT 接受 track selector。
 
-- **WHEN** 开发者传入 `{ from: { opacity: 0 }, to: { opacity: 1 }, duration: 0.5 }`
-- **THEN** SDK MUST 内部编译为单条 track `{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 0.5, value: 1 }] }` 后再执行
+- Paused 状态下调用 `play()` 会恢复会话。
+- Running 状态下调用 `play()` 是 no-op。
+- `stop()` 冻结当前采样值，返回 `idle`，并设置 `finished=false`。
+- `reset()` 总是 seek 到显式的 normalized start value，返回 `idle`，并设置 `finished=false`，即使已经处于 idle。
+- `finish()` seek 到终态值，且仅在 native 确认后进入 `finished`。
+- Bind 前的 `finish()` 保持 `queued` 且 `finished=false`，直到 native-backed 对象存在并确认终态。
 
-#### Scenario: tracks 配置直接执行
+#### Scenario: 终止命令保持独立
 
-- **WHEN** 开发者传入 `{ duration, tracks: [...] }`
-- **THEN** SDK MUST 直接执行 tracks 而无需变换
+- **WHEN** 调用 stop、reset 或 finish
+- **THEN** 其行为 MUST NOT 被另一个终止命令吞掉或替代
 
-#### Scenario: timeline 配置编译为 tracks
+#### Scenario: Native 终态权威
 
-- **WHEN** 开发者传入 `{ duration: 2, timeline: { "0%": { opacity: 0 }, "50%": { opacity: 0.8 }, "100%": { opacity: 1 } } }`
-- **THEN** SDK MUST 编译为单条 track `{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 0.8 }, { at: 2, value: 1 }] }` 后再执行
+- **WHEN** stop、reset、finish 或自然完成产生终态值
+- **THEN** native-backed `AnimationObject` MUST 提供这些值和权威状态
 
-#### Scenario: tracks 不是 v1 用户评审主路径
+### Requirement: 生命周期回调一致且互斥
 
-- **WHEN** 面向用户的 API 摘要文档展示 v1 用法
-- **THEN** 它们 MUST 优先展示 `from/to` 与 `timeline` 作为公开 authoring 路径
-- **AND** `tracks` MAY 仅以内部 canonical 模型或当前实现 / 类型保留的兼容高级输入身份出现
+Config MUST 支持 `onStart`、`onComplete`、`onStop`、`onReset` 和 `onError`。自然完成和已确认的 `finish()` 调用 `onComplete`；`stop()` 调用 `onStop`；`reset()` 调用 `onReset`。每次会话终止时，`onComplete`、`onStop`、`onReset` 中恰好一个 MUST 触发。`onError` MAY 因异步 native 失败独立触发。
 
-#### Scenario: 同时传入 timeline 和 tracks 是类型错误
+#### Scenario: Finish 调用 onComplete
 
-- **WHEN** 开发者传入 `{ duration, timeline: {...}, tracks: [...] }`
-- **THEN** SDK MUST 在类型层面拒绝和/或在校验时抛错
+- **WHEN** native 确认显式 finish
+- **THEN** `onComplete` MUST 接收终态值
+- **AND** `finished` MUST 变为 true
 
-#### Scenario: 同时传入 timeline 和 from/to 是类型错误
+#### Scenario: Stop 和 reset 清除 finished
 
-- **WHEN** 开发者传入 `{ from, to, duration, timeline: {...} }`
-- **THEN** SDK MUST 在类型层面拒绝和/或在校验时抛错
+- **WHEN** stop 或 reset 完成
+- **THEN** `finished` MUST 为 false
 
-#### Scenario: 共享配置形状与目标无关
+### Requirement: Animating mask 保护 active native 控制权
 
-- **WHEN** 开发者提交相同配置（段、tracks 或 timeline），且结果 `animation` 绑定到 `<div enable-xr>`、`<Model>` 或 `<Reality>` 中的任何一个
-- **THEN** 校验 MUST 在目标特定播放开始前接受相同的配置结构
+Native 播放拥有 `transform` 或 `opacity` 时，普通 element sync MUST NOT 覆盖被拥有字段。Pause 保留采样值和 mask。Stop、reset、finish、自然完成、unbind、destroy 和 element destroy MUST 一致地释放或更新 mask 控制权，且 MUST NOT 让 native 与 React 同时拥有同一视觉字段。
 
-### Requirement: Timeline 百分比关键帧配置（CSS @keyframes 风格）
+#### Scenario: 普通更新不能覆盖 active animation
 
-Hook MUST 接受含 `timeline` 字段的配置，该字段包含百分比 key（匹配 `/^\d+(\.\d+)?%$/` 的字符串）映射到 `SpatializedMotionKeyframeValues`（`SpatializedVisualValues` 扩展了可选 `timingFunction`）。`timeline` 对象 MUST NOT 包含非百分比 key；所有 config 级选项（`duration`、`timingFunction`、`delay`、`loop`、`playbackRate`、回调）保留在外层 config 上。
+- **GIVEN** native 播放拥有 transform 或 opacity
+- **WHEN** 普通 element sync 写入该字段
+- **THEN** 冲突写入 MUST 被忽略或延迟到控制权 handoff 后
 
-`timeline` 是单个 CSS `@keyframes` 风格的关键帧对象，不是串行动画编排原语。v1 不支持 `timeline: []`、多个 action 或多段编排语义。
+#### Scenario: Element destroy 清理 animation
 
-脱糖规则：
-- 每个百分比 key 解析为 `[0, 1]` 归一化比例，乘以 `duration` 得到秒级 `at` 值。
-- 每个动画属性独立跨所有百分比帧收集，形成每属性一条 track。
-- 如果某属性在某百分比帧中未出现，该属性在该时间点不生成 keyframe。
-- `timeline` 对象 MUST 包含至少 2 个百分比 key；少于 2 个 MUST 校验报错。
-- 小数百分比（如 `"30.33%"`）MUST 被支持。
-
-#### Scenario: 小数百分比解析
-
-- **WHEN** 开发者传入 `{ duration: 10, timeline: { "0%": { opacity: 0 }, "30.33%": { opacity: 0.5 }, "100%": { opacity: 1 } } }`
-- **THEN** SDK MUST 编译为 `{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 3.033, value: 0.5 }, { at: 10, value: 1 }] }`
-
-#### Scenario: 每属性独立收集
-
-- **GIVEN** `{ duration: 2, timeline: { "0%": { opacity: 0, transform: { translate: { x: 0 } } }, "50%": { opacity: 1 }, "100%": { opacity: 0.5, transform: { translate: { x: 100 } } } } }`
-- **THEN** SDK MUST 生成两条 track：
-  - `opacity`：keyframes 为 `[{ at: 0, value: 0 }, { at: 1, value: 1 }, { at: 2, value: 0.5 }]`
-  - `transform.translate.x`：keyframes 为 `[{ at: 0, value: 0 }, { at: 2, value: 100 }]`（`at: 1` 无 keyframe，因为 `"50%"` 未声明 `transform.translate.x`）
-
-#### Scenario: 缺失属性使用 hold 规则
-
-- **GIVEN** 从 timeline 编译的 track 首个 keyframe 在 `at: 1`（来自 `"50%"`，`duration: 2`）
-- **WHEN** 在 `t = 0.5` 评估时
-- **THEN** track 值 MUST 等于首个 keyframe 的值（hold 规则）
-
-#### Scenario: 少于 2 个百分比 key 被拒绝
-
-- **WHEN** 开发者传入 `{ duration: 1, timeline: { "50%": { opacity: 1 } } }`
-- **THEN** 校验 MUST 在播放前抛错
-
-#### Scenario: timeline 中非法 key 被拒绝
-
-- **WHEN** `timeline` 对象包含不匹配 `/^\d+(\.\d+)?%$/` 的 key（如 `"halfway"`、`"duration"`）
-- **THEN** 校验 MUST 在播放前抛错
-
-#### Scenario: timeline 数组会被拒绝
-
-- **WHEN** 开发者传入 `timeline: []`
-- **THEN** 校验 MUST 在播放前拒绝该配置
-
-#### Scenario: timeline 中 per-keyframe timingFunction
-
-- **WHEN** 开发者传入 `{ duration: 2, timeline: { "0%": { opacity: 0, timingFunction: "easeInOut" }, "100%": { opacity: 1 } } }`
-- **THEN** 编译后 `at: 0` 的 keyframe MUST 携带 `timingFunction: "easeInOut"`（控制从 0% 到 100% 的插值）
-
-#### Scenario: 最后一帧的 timingFunction 被忽略
-
-- **GIVEN** timeline 中仅 `"100%"` 帧有 `timingFunction: "easeIn"`
-- **WHEN** timeline 被编译和评估
-- **THEN** 最后一帧上的 `timingFunction` MUST 无效果（没有下一个 keyframe 可以插值）
-
----
-
-### Requirement: 三级 timingFunction 级联
-
-评估两个相邻 keyframe 之间的插值曲线时，SDK MUST 按以下优先级（从高到低）解析 `timingFunction`：
-
-1. `keyframe.timingFunction` -- 每帧级（控制本帧 -> 下一帧）
-2. `track.timingFunction` -- 每轨默认
-3. `config.timingFunction` -- 全局默认
-4. `'linear'` -- 内置兜底
-
-此级联统一适用于所有三种配置形状（段、tracks、timeline）。在 timeline 配置中，百分比帧内的 per-keyframe `timingFunction` 在脱糖后映射为第 1 级。
-
-#### Scenario: 默认兜底为 linear
-
-- **WHEN** 任何层级都未指定 `timingFunction`
-- **THEN** keyframe 之间的插值 MUST 使用 `'linear'`
-
-#### Scenario: config 级 timingFunction 覆盖默认
-
-- **WHEN** config 指定 `timingFunction: 'easeInOut'` 且无 track 或 keyframe 覆盖
-- **THEN** 所有 keyframe 对 MUST 使用 `'easeInOut'`
-
-#### Scenario: track 级覆盖 config 级
-
-- **GIVEN** config `timingFunction: 'linear'` 且某 track 有 `timingFunction: 'easeIn'`
-- **THEN** 该 track 的 keyframe 对 MUST 使用 `'easeIn'`
-
-#### Scenario: keyframe 级覆盖 track 级
-
-- **GIVEN** 某 track 有 `timingFunction: 'easeIn'`，其中一个 keyframe 有 `timingFunction: 'easeOut'`
-- **THEN** 从该 keyframe 到下一个的段 MUST 使用 `'easeOut'`
-
-#### Scenario: 最后一个 keyframe 的 timingFunction 无效果
-
-- **GIVEN** track 中最终 keyframe（最高 `at`）有 `timingFunction: 'easeIn'`
-- **THEN** 它 MUST 被忽略（不存在后续 keyframe）
-
----
-
-### Requirement: React API 中每个 binding 对应一个 AnimationObject
-
-SDK MUST 通过一个 opaque React `animation` binding 实现容器动画，该 binding 同一时刻最多由一个 native `AnimationObject` 支撑。按目标的控制器类别名 MUST NOT 作为公共 API 的一部分。
-
-#### Scenario: React 单一 hook + 绑定时创建 AnimationObject
-
-- **WHEN** 开发者调用 `useAnimation(config)` 并将 `animation` 通过 `xr-animation` prop 传给组件
-- **THEN** SDK MUST 从组件类型解析目标，并为该目标创建 `AnimationObject`
-
-### Requirement: Model 上 clip 播放独立
-
-`SpatializedStatic3DElement` 上的 USD 内嵌动画（model ref 的 `play`/`pause`）MUST 保持为独立于 transform timeline `motion.play()` 的 API。
-
-#### Scenario: Model clip 播放不占用 motion api
-
-- **WHEN** 开发者在 `<Model>` 上调用 `ref.play()`
-- **THEN** motion 元组 API MUST 保持独立，MUST NOT 被 clip 播放调用所暗示
-
-### Requirement: 目标在绑定时解析
-
-公开 hook `useAnimation(config)` MUST NOT 要求 config 中有 `kind` 字段。返回的 `animation` binding MUST 携带延迟目标。目标解析 MUST 在 binding 作为 `xr-animation` prop 传给组件时发生：
-
-| 组件 | 解析目标 |
-|------|---------|
-| `<div enable-xr>` / `<SpatialDiv>` | `spatialized2d` |
-| `<Model>` | `static3d` |
-| `<Reality>` | `dynamic3d` |
-
-#### Scenario: 绑定到 enable-xr 解析为 2D
-
-- **WHEN** `useAnimation(config)` 返回的 `animation` 作为 `xr-animation` 传给 `<div enable-xr>`
-- **THEN** SDK MUST 将目标解析为 `spatialized2d` 并创建 element `AnimationObject`
-
-#### Scenario: 绑定到 Model 解析为 static3d
-
-- **WHEN** `animation` 作为 `xr-animation` 传给 `<Model>`
-- **THEN** SDK MUST 将目标解析为 `static3d` 并创建 element `AnimationObject`
-
-#### Scenario: 绑定到 Reality 解析为 dynamic3d
-
-- **WHEN** `animation` 作为 `xr-animation` 传给 `<Reality>`
-- **THEN** SDK MUST 将目标解析为 `dynamic3d` 并创建 element `AnimationObject`
-
-#### Scenario: 单绑定约束
-
-- **WHEN** 同一 `animation` binding 同时传给多个组件
-- **THEN** SDK MUST 抛错或警告，仅第一次绑定 MUST 生效
-
-#### Scenario: 绑定前播放排队
-
-- **WHEN** 在 `animation` 绑定到任何组件之前调用 `api.play()`
-- **THEN** play 命令 MUST 被排队，目标解析后执行
-
-#### Scenario: autoStart false 不吞掉绑定前显式 play
-
-- **GIVEN** `useAnimation({ ..., autoStart: false })` 返回了未绑定的 `animation`
-- **WHEN** 应用代码在绑定前显式调用 `api.play()`
-- **AND** `animation` 随后绑定到支持的目标
-- **THEN** SDK MUST 执行排队的显式 play
-- **AND** `autoStart: false` MUST 只禁止 implicit play-on-bind
-
-#### Scenario: 绑定前显式 finish 会在绑定后 flush
-
-- **GIVEN** `useAnimation({ ..., autoStart: false })` 返回了未绑定的 `animation`
-- **WHEN** 应用代码在绑定前显式调用 `api.finish()`
-- **AND** `animation` 随后绑定到支持的目标
-- **THEN** native-backed `AnimationObject` 创建完成后，SDK MUST flush 这条排队的显式 `finish` 命令
-- **AND** API MUST 继续以 native 状态确认作为唯一 finished 状态来源，而不是本地合成一个 `finished` 状态
-
-#### Scenario: Static3D opacity 在校验阶段被接受
-
-- **GIVEN** animation binding 解析为 `static3d`
-- **WHEN** 归一化 config 包含 `opacity` track
-- **THEN** `validateSpatializedMotionConfig` MUST 在 `CreateSpatializedElementAnimation` 前接受该 config
-- **AND** SDK MUST 在 native create 和 playback 中保留该 `opacity` track
+- **WHEN** 已绑定的 spatialized element 被销毁
+- **THEN** 所有关联 native-backed animation 状态和 mask 控制权 MUST 被清理

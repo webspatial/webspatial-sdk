@@ -3,7 +3,6 @@
 > 分支：`proposal/spatial-div-motion-timeline`  
 > OpenSpec：`openspec/changes/spatial-div-motion-api/`  
 > 对比方案 A（会话式 `animation` API）：见 [COMPARISON.md](./COMPARISON.md)  
-> **全平台 umbrella（Static3D / Entity）：** [spatialized-element-motion-api](../spatialized-element-motion-api/API.zh.md) — **本 change 当前仅交付 2D。**
 
 本文档汇总 **当前 spec 已定义、实现中的对外能力**，便于与 product、设计对齐范围与集成方式。技术细节见 `design.md`、`specs/spatial-div-motion/spec.md`。
 
@@ -14,8 +13,8 @@
 | 元素类型 | 本 change 是否交付 |
 |----------|-------------------|
 | `Spatialized2DElement`（SpatialDiv） | **是** — `useSpatializedMotion({ kind: 'spatialized2d', … })` |
-| `SpatializedStatic3DElement`（Model） | 否 → umbrella [已交付](../spatialized-element-motion-api/API.zh.md) |
-| `SpatializedDynamic3DElement`（Reality 容器） | 否 → umbrella [已交付](../spatialized-element-motion-api/API.zh.md) |
+| `SpatializedStatic3DElement`（Model） | 否（本 change 仅交付 2D） |
+| `SpatializedDynamic3DElement`（Reality 容器） | 否（本 change 仅交付 2D） |
 | Reality 内 `SpatialEntity` | 否 → 继续 `useAnimation`（非 container motion） |
 
 ---

@@ -8,11 +8,11 @@
 - [x] Core spec：定义 `SpatializedElement.createAnimation(config)` 和 `CreateSpatializedElementAnimation`
 - [x] Core spec：定义 `ControlSpatializedElementAnimation`，覆盖 `play`、`pause`、`resume`、`stop`、`reset`、`finish`、`destroy`
 - [x] Core spec：定义 `SpatialAnimationStateChanged` 作为 native state / error / terminal-value 事件
-- [x] Core spec：定义 create 时锁定 timeline 的语义
+- [x] Core spec：定义 create 时锁定 normalized numeric timeline 的语义
 - [x] Core spec：定义 config 变化必须 destroy + recreate，而不是原地修改 timeline
 - [x] Core spec：移除目标态对旧 controller / backend / Web RAF / old motion command 执行路径的依赖
 - [x] Core spec：定义 element animating mask 作为目标态字段所有权机制
-- [x] Core spec：保留 `from`/`to`、`timeline`、`tracks` 的 authoring 兼容性
+- [x] Core spec：定义向内部 canonical tracks 模型的归一化
 - [x] Core spec：保留既有 playback API 和 terminal callback 语义
 
 ## Phase 2 — Runtime capability delta
@@ -23,15 +23,14 @@
 - [x] 文档化纯 Web runtime 对所有 spatialized element animation target token 返回 `false`
 - [x] 文档化 `supports('useAnimation')` 是发布后 motion API 的唯一能力 gate
 
-## Phase 3 — 目标特定 spec 对齐
+## Phase 3 — 统一 target 矩阵对齐
 
-- [x] 2D spec：要求 native-first `AnimationObject` target path，且无 Web RAF fallback
-- [x] 2D spec：要求 native create 携带 canonical tracks
-- [x] 2D spec：用 element animating mask wording 替换旧字段所有权表述
-- [x] Static3D spec：要求容器根 transform / opacity timeline 通过 `AnimationObject` 执行
-- [x] Static3D spec：在 `validateSpatializedMotionConfig` 阶段支持 `opacity` tracks，不得静默丢弃
-- [x] Dynamic3D spec：要求 container transform / opacity timeline 通过 `AnimationObject` 执行
-- [x] Entity spec 边界：entity animation 继续独立于 container `AnimationObject`
+- [x] 统一 spec：要求 native-first `AnimationObject` target path，且无 Web RAF fallback
+- [x] 统一 spec：要求 native create 携带内部 canonical tracks
+- [x] 统一 spec：定义 element animating mask 所有权表述
+- [x] 统一 spec：要求 Static3D 容器根 transform / opacity 动画
+- [x] 统一 spec：要求 Dynamic3D 容器根 transform / opacity 动画
+- [x] 统一 spec：保持 Entity 动画与容器 motion 分离
 
 ## Phase 4 — Design 对齐
 
@@ -52,10 +51,10 @@
 
 ## Phase 5 — Compatibility preservation tests
 
-- [x] 测试：保留 React-facing `api` 上的 `play` / `pause` / `resume` / `stop` / `reset` / `finish` API shape
-- [x] 测试：验证 `pause()` 与 `resume()` 不接受 keys 或 partial selectors
+- [x] 测试：保留 React-facing `api` 上的 `play` / `pause` / `stop` / `reset` / `finish` API shape
+- [x] 测试：验证 paused 时 `play()` 恢复、running 时 `play()` 为 no-op，且 `play()` / `pause()` 不接受 keys 或 partial selectors
 - [x] 测试：验证 `stop()` 冻结当前值、设置 `playState=idle`、设置 `finished=false`，并触发 `onStop(values)`
-- [x] 测试：验证 `reset()` emit `from` 值、设置 `playState=idle`、设置 `finished=false`，并触发 `onReset(values)`
+- [x] 测试：验证 `reset()` emit 会话起始值、设置 `playState=idle`、设置 `finished=false`，并触发 `onReset(values)`
 - [x] 测试：验证 `finish()` 在 native 终态确认后 emit `to` 值、设置 `playState=finished`、设置 `finished=true`，并触发 `onComplete(values)`
 - [x] 测试：验证自然结束触发 `onComplete(values)`
 - [x] 测试：验证 `idle.reset()` 不是 no-op，仍 emit `from` 值
@@ -66,22 +65,13 @@
 - [x] 校验测试：create 前接受 Static3D `opacity` tracks；不得静默丢弃
 - [x] Capability 测试：验证 `supports('useAnimation')` 支持状态和纯 Web `false` 行为
 
-## Phase 6 — Implementation invariants spec
+## Phase 6 — Design 中的实现约束
 
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 `AnimationObject` identity 由 native 持有
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 `CreateSpatializedElementAnimation` response 以 `{ id }` 返回创建出的对象 identity
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 playback controls 复用同一个 native `AnimationObject`
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 `AnimationObject.destroy()` MUST 使用继承自 `SpatialObject` 的 destroy 生命周期
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 Core SDK MUST 暴露 `SpatializedElement.createAnimation(config)` 返回的一等 `AnimationObject`
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 Core `AnimationObject` MUST 直接订阅 NativeWebMsg 并按匹配的 animation id 过滤 `SpatialAnimationStateChanged`
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 element animating mask 由 native `SpatializedElement` runtime 或 write adapter 持有，MUST NOT 依赖 `PortalInstanceObject`
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 target kind 到 writable fields / mask fields 的映射
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 terminal mask handoff 规则
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 React SDK 只在 `xr-animation` binding 解析到具体 target 后创建 native-backed `AnimationObject`
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 visionOS runtime 通过 `SpatializedElementAnimationManager` 管理 native `AnimationObject` 生命周期
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 element destroy 必须级联销毁关联 animations
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确 native frame loop 生命周期由 manager 持有
-- [x] 新增 `spatialized-animation-object-invariants` spec，明确纯 Web runtime 不提供 Core RAF fallback
+- [x] Design：native-owned `AnimationObject` identity 与通用 `SpatialObject` 销毁
+- [x] Design：同对象 playback control 与 NativeWebMsg 驱动状态
+- [x] Design：target 字段映射、animating mask 所有权与终态 handoff
+- [x] Design：bind-time 对象创建、manager 生命周期、element destroy 级联与 frame-loop 所有权
+- [x] 保持目标架构不包含纯 Web RAF fallback
 
 ## Phase 7 — Design architecture details
 
@@ -99,7 +89,7 @@
 - [x] Core：发送 `CreateSpatializedElementAnimation`，并把 native 返回的 `{ id }` 包装成 `AnimationObject`
 - [x] Core：实现 `AnimationObject extends SpatialObject`
 - [x] Core：让 `AnimationObject` 走继承自 `SpatialObject` 的 identity 路径
-- [x] Core：直接在同一个 `AnimationObject` 上实现 `play/pause/resume/stop/reset/finish`
+- [x] Core：直接在同一个 `AnimationObject` 上实现 `play/pause/stop/reset/finish`，其中 paused 时 `play()` 恢复播放
 - [x] Core：确保 `reset/finish` 不重建 native `AnimationObject`
 - [x] Core：确保 `AnimationObject.destroy()` 使用继承自 `SpatialObject` 的 destroy 生命周期
 - [x] Core：让 `AnimationObject` 直接订阅 NativeWebMsg
@@ -116,7 +106,7 @@
 - [x] React：在 `useAnimation(config)` 时创建 `AnimationBinding`
 - [x] React：保留 `[animation, api, style]` 公开 API
 - [x] React：在 `AnimationBinding` 中保存 config 和 normalized config signature
-- [x] React：在 `AnimationBinding` 中排队 bind 前 `api.play/pause/resume/stop/reset/finish` 显式命令
+- [x] React：在 `AnimationBinding` 中排队 bind 前 `api.play/pause/stop/reset/finish` 显式命令
 - [x] React：仅在 `xr-animation` binding 解析 target 后创建 Core `AnimationObject`
 - [x] React：Core `AnimationObject` 创建后 flush 已排队显式命令
 - [x] React：`PlaybackApi` 订阅 Core `AnimationObject` 状态并同步 `playState/isAnimating/isPaused/finished`
@@ -171,9 +161,9 @@
 - [x] Test：不新增独立 `NativeWebMsgEmitter`，WebMsg 发送复用现有 SpatialScene 路径
 - [x] Test：visionOS manager 在 target element destroy 时销毁关联 animations
 - [x] Test：stop 冻结当前值并触发 `onStop(values)`，随后释放 mask
-- [x] Test：reset 发出 from 值并触发 `onReset(values)`，随后释放 mask
-- [x] Test：finish 发出 to 值并触发 `onComplete(values)`，随后释放 mask
-- [x] Test：pause 保留当前值并保留 mask
+- [x] Test：reset 发出 normalized start value 并触发 `onReset(values)`，随后释放 mask
+- [x] Test：finish 发出 normalized end value 并触发 `onComplete(values)`，随后释放 mask
+- [x] Test：`pause()` 保留当前值和 mask；paused 时 `play()` 恢复播放
 - [x] Test：native state 对 Core SDK state 具有权威性
 - [x] Test：Static3D opacity tracks 在 native create 前被接受
 - [x] Test：Static3D animation 写容器根 `transform` / `opacity`，且不写 `entityTransform`
@@ -184,5 +174,16 @@
 
 - [x] 更新仓库内 proposal / API 文档，确保目标态文案不再描述已移除的 Controller / Web RAF / `AnimateSpatializedElementMotion` 路径
 - [x] 在中英双语 proposal / design / spec / API 文档中澄清：返回的 `style` 是必需的宿主状态闭环输出，且 MUST 合并回接收 `xr-animation` 的宿主
-- [x] 实现落地后更新 demos 和公开文档
-- [ ] 实现落地后更新 PR 描述，避免继续宣称旧 Controller/Web RAF 路径是目标态实现
+
+## Phase 13 — 公开 segment/timeline authoring 与 tracks 完全内部化
+
+- [x] 将 2D、Static3D、Dynamic3D 行为收敛到唯一 `spatialized-element-motion` spec
+- [x] 删除 deferred Entity、legacy-session 和 implementation-invariants spec capability；Entity 边界保留在统一 spec，实现架构保留在 design
+- [x] 保留顶层 `from` / `to`，存在 timeline 时由 timeline 优先，并允许 timeline `from` / `to` 与百分比关键帧混用
+- [x] 定义 tracks 为仅供内部使用的 canonical 表示，不提供公开或 experimental 入口
+- [x] 保持 proposal 面向用户，将技术实现细节迁移到 design
+- [ ] TDD 红灯：新增完整顶层 segment、拒绝不完整顶层 segment、timeline 不提供顶层边界、timeline 优先级、混合 timeline entry、拒绝缺少或重复的属性边界、拒绝 tracks authoring 以及移除 `api.resume()` 的公开类型与运行时校验测试
+- [ ] TDD 绿灯：更新公开 Core / React config 类型与导出，同时保留内部 canonical tracks
+- [ ] TDD 绿灯：更新 Core normalization 和 runtime validation，支持顶层 segment authoring 与混合 timeline authoring；保持 native 数值 tracks contract 不变
+- [ ] 将使用公开 tracks authoring 的 React 集成测试和 test-server 页面迁移为公开 timeline authoring；保留合法的顶层 segment 示例
+- [ ] 运行 Core / React 测试、typecheck、test-server 检查、仓库搜索与 OpenSpec 校验

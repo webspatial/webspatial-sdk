@@ -8,11 +8,11 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Core spec: define `SpatializedElement.createAnimation(config)` and `CreateSpatializedElementAnimation`
 - [x] Core spec: define `ControlSpatializedElementAnimation` for `play`, `pause`, `resume`, `stop`, `reset`, `finish`, and `destroy`
 - [x] Core spec: define `SpatialAnimationStateChanged` as the native state/error/terminal-value event
-- [x] Core spec: define create-time locked timeline semantics
+- [x] Core spec: define create-time locked normalized numeric timeline semantics
 - [x] Core spec: define config changes as destroy + recreate, not in-place timeline mutation
 - [x] Core spec: remove target-state dependence on legacy controller/backend/Web RAF/old motion command execution paths
 - [x] Core spec: define element animating mask as the target-state field ownership mechanism
-- [x] Core spec: preserve existing authoring compatibility for `from`/`to`, `timeline`, and `tracks`
+- [x] Core spec: define normalization into the canonical internal tracks model
 - [x] Core spec: preserve existing playback API and terminal callback semantics
 
 ## Phase 2 — Runtime capability delta
@@ -23,15 +23,14 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Document that pure Web runtime returns `false` for all spatialized element animation target tokens
 - [x] Document that `supports('useAnimation')` is the single released motion API capability gate
 
-## Phase 3 — Target-specific spec alignment
+## Phase 3 — Unified target-matrix alignment
 
-- [x] 2D spec: require native-first `AnimationObject` target path with no Web RAF fallback
-- [x] 2D spec: require native create to carry canonical tracks
-- [x] 2D spec: replace legacy field-ownership wording with element animating mask wording
-- [x] Static3D spec: require container-root transform / opacity timeline through `AnimationObject`
-- [x] Static3D spec: support `opacity` tracks during `validateSpatializedMotionConfig`; do not silently drop them
-- [x] Dynamic3D spec: require container transform/opacity timeline through `AnimationObject`
-- [x] Entity spec boundary: keep entity animation separate from container `AnimationObject`
+- [x] Unified spec: require native-first `AnimationObject` target path with no Web RAF fallback
+- [x] Unified spec: require native create to carry canonical internal tracks
+- [x] Unified spec: define element animating mask ownership wording
+- [x] Unified spec: require Static3D container-root transform / opacity animation
+- [x] Unified spec: require Dynamic3D container-root transform / opacity animation
+- [x] Unified spec: keep Entity animation separate from container motion
 
 ## Phase 4 — Design alignment
 
@@ -52,10 +51,10 @@ This task list describes the target-state OpenSpec work for native-first spatial
 
 ## Phase 5 — Compatibility preservation tests
 
-- [x] Tests: preserve `play` / `pause` / `resume` / `stop` / `reset` / `finish` API shape on the React-facing `api`
-- [x] Tests: verify `pause()` and `resume()` do not accept keys or partial selectors
+- [x] Tests: preserve `play` / `pause` / `stop` / `reset` / `finish` API shape on the React-facing `api`
+- [x] Tests: verify paused `play()` resumes, running `play()` is a no-op, and `play()` / `pause()` do not accept keys or partial selectors
 - [x] Tests: verify `stop()` freezes current values, sets `playState=idle`, sets `finished=false`, and invokes `onStop(values)`
-- [x] Tests: verify `reset()` emits `from` values, sets `playState=idle`, sets `finished=false`, and invokes `onReset(values)`
+- [x] Tests: verify `reset()` emits session-start values, sets `playState=idle`, sets `finished=false`, and invokes `onReset(values)`
 - [x] Tests: verify `finish()` emits `to` values, sets `playState=finished`, sets `finished=true`, and invokes `onComplete(values)` after native terminal-state confirmation
 - [x] Tests: verify natural completion invokes `onComplete(values)`
 - [x] Tests: verify `idle.reset()` is not a no-op and still emits `from` values
@@ -66,22 +65,13 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Validation tests: accept Static3D `opacity` tracks before create; do not silently drop them
 - [x] Capability tests: verify `supports('useAnimation')` support and pure Web `false` behavior
 
-## Phase 6 — Implementation invariants spec
+## Phase 6 — Implementation invariants in design
 
-- [x] Add `spatialized-animation-object-invariants` spec requiring native-owned `AnimationObject` identity
-- [x] Add `spatialized-animation-object-invariants` spec requiring `CreateSpatializedElementAnimation` response to return the created object identity as `{ id }`
-- [x] Add `spatialized-animation-object-invariants` spec requiring playback controls to reuse the same native `AnimationObject`
-- [x] Add `spatialized-animation-object-invariants` spec requiring `AnimationObject.destroy()` to use the destroy lifecycle inherited from `SpatialObject`
-- [x] Add `spatialized-animation-object-invariants` spec requiring Core SDK to expose the first-class `AnimationObject` returned by `SpatializedElement.createAnimation(config)`
-- [x] Add `spatialized-animation-object-invariants` spec requiring Core `AnimationObject` to subscribe to NativeWebMsg directly and filter `SpatialAnimationStateChanged` by matching animation id
-- [x] Add `spatialized-animation-object-invariants` spec requiring element animating mask to be owned by native `SpatializedElement` runtime or write adapter, not `PortalInstanceObject`
-- [x] Add `spatialized-animation-object-invariants` spec requiring target kind to writable fields / mask fields mapping
-- [x] Add `spatialized-animation-object-invariants` spec requiring terminal mask handoff rules
-- [x] Add `spatialized-animation-object-invariants` spec requiring React SDK to create native-backed `AnimationObject` only after `xr-animation` binding resolves a concrete target
-- [x] Add `spatialized-animation-object-invariants` spec requiring visionOS runtime to manage native `AnimationObject` lifecycle through `SpatializedElementAnimationManager`
-- [x] Add `spatialized-animation-object-invariants` spec requiring element destroy to cascade destroy related animations
-- [x] Add `spatialized-animation-object-invariants` spec requiring native frame loop lifecycle to be manager-owned
-- [x] Add `spatialized-animation-object-invariants` spec requiring pure Web runtime to have no Core RAF fallback
+- [x] Design native-owned `AnimationObject` identity and common `SpatialObject` destruction
+- [x] Design same-object playback controls and NativeWebMsg-driven state
+- [x] Design target field mapping, animating mask ownership, and terminal handoff
+- [x] Design bind-time object creation, manager lifecycle, element-destroy cascading, and frame-loop ownership
+- [x] Keep pure Web RAF fallback excluded from the target architecture
 
 ## Phase 7 — Design architecture details
 
@@ -99,7 +89,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Core: send `CreateSpatializedElementAnimation` and wrap the native returned `{ id }` as `AnimationObject`
 - [x] Core: implement `AnimationObject extends SpatialObject`
 - [x] Core: keep `AnimationObject` on the inherited `SpatialObject` identity path
-- [x] Core: implement `play/pause/resume/stop/reset/finish` directly on the same `AnimationObject`
+- [x] Core: implement `play/pause/stop/reset/finish` directly on the same `AnimationObject`, with paused `play()` resuming playback
 - [x] Core: ensure `reset/finish` do not recreate the native `AnimationObject`
 - [x] Core: ensure `AnimationObject.destroy()` uses the lifecycle inherited from `SpatialObject`
 - [x] Core: make `AnimationObject` subscribe to NativeWebMsg directly
@@ -116,7 +106,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] React: create `AnimationBinding` during `useAnimation(config)`
 - [x] React: preserve `[animation, api, style]` public API
 - [x] React: store config and normalized config signature in `AnimationBinding`
-- [x] React: queue pre-bind `api.play/pause/resume/stop/reset/finish` explicit commands in `AnimationBinding`
+- [x] React: queue pre-bind `api.play/pause/stop/reset/finish` explicit commands in `AnimationBinding`
 - [x] React: create Core `AnimationObject` only after `xr-animation` binding resolves target
 - [x] React: flush queued explicit commands after Core `AnimationObject` is created
 - [x] React: `PlaybackApi` subscribes to Core `AnimationObject` state and syncs `playState/isAnimating/isPaused/finished`
@@ -171,9 +161,9 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Test: no standalone `NativeWebMsgEmitter` is added; WebMsg emission reuses the existing SpatialScene path
 - [x] Test: visionOS manager destroys related animations when the target element is destroyed
 - [x] Test: stop freezes current value, emits `onStop(values)`, and then releases mask
-- [x] Test: reset emits from value, emits `onReset(values)`, and then releases mask
-- [x] Test: finish emits to value, emits `onComplete(values)`, and then releases mask
-- [x] Test: pause keeps the current value and keeps mask ownership
+- [x] Test: reset emits the normalized start value, emits `onReset(values)`, and then releases mask
+- [x] Test: finish emits the normalized end value, emits `onComplete(values)`, and then releases mask
+- [x] Test: `pause()` keeps the current value and mask ownership; paused `play()` resumes playback
 - [x] Test: native state is authoritative over Core SDK state
 - [x] Test: Static3D opacity tracks are accepted before native create
 - [x] Test: Static3D animation writes container-root `transform` / `opacity` and does not write `entityTransform`
@@ -184,5 +174,16 @@ This task list describes the target-state OpenSpec work for native-first spatial
 
 - [x] Update in-repo proposal/API docs so target-state copy no longer describes the removed Controller / Web RAF / `AnimateSpatializedElementMotion` paths
 - [x] Clarify in bilingual proposal/design/spec/API docs that the returned `style` is a required host-state closure output and MUST be merged back to the host receiving `xr-animation`
-- [x] Update demos and public docs after implementation lands
-- [ ] Update PR description after implementation lands so it no longer presents the old Controller/Web RAF path as target-state implementation
+
+## Phase 13 — Public segment/timeline authoring and internal-only tracks
+
+- [x] Consolidate 2D, Static3D, and Dynamic3D behavior into the single `spatialized-element-motion` spec
+- [x] Remove the deferred Entity, legacy-session, and implementation-invariants spec capabilities; retain Entity boundaries in the unified spec and implementation architecture in design
+- [x] Retain top-level `from` / `to`, let timeline take precedence when present, and allow timeline `from` / `to` to mix with percentage keyframes
+- [x] Define tracks as an internal-only canonical representation with no public or experimental entry point
+- [x] Keep proposal user-facing and move technical implementation detail to design
+- [ ] TDD red: add public type and runtime validation tests for complete top-level segments, rejected incomplete top-level segments, timeline configs without top-level boundaries, timeline precedence, mixed timeline entries, rejected missing or duplicate property boundaries, rejected tracks authoring, and removal of `api.resume()`
+- [ ] TDD green: update public Core / React config types and exports while retaining internal canonical tracks
+- [ ] TDD green: update Core normalization and runtime validation for top-level segment authoring and mixed timeline authoring; keep the native numeric tracks contract unchanged
+- [ ] Migrate React integration tests and test-server pages that use public tracks authoring to public timeline authoring; retain valid top-level segment examples
+- [ ] Run Core / React tests, typechecks, test-server checks, repository searches, and OpenSpec validation
