@@ -16,16 +16,11 @@ export default function AnimateTest() {
       <div className="m-10">
         <p className="text-gray-300 mb-4 text-sm">
           Plan B RFC:{' '}
-          <Link className="text-blue-400 underline" to="/spatial-div-motion">
-            Spatialized Motion (2D + 3D containers)
-          </Link>
-          {' · '}
-          Plan A reference:{' '}
           <Link
-            className="text-amber-400 underline"
-            to="/spatial-div-animation"
+            className="text-blue-400 underline"
+            to="/spatial-element-motion"
           >
-            SpatialDiv Animation archive
+            Spatialized Element Motion (2D + 3D containers)
           </Link>
         </p>
         <PopmotionTest />
