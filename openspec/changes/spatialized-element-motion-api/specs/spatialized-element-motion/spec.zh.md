@@ -243,19 +243,10 @@ Static3D 动画 MUST 写 `<Model>` 容器根，MUST NOT 写模型内部 `entityT
 
 开发者 MUST 将返回的 `style` 合并到接收 `xr-animation` 的同一宿主。未合并时播放 MAY 启动，但 rerender 或 resync 后的终态视觉持久性不受保证。
 
-对于 Spatialized2D 终态 handoff，只有直接在 React props 中提供的 `style.opacity` 或 `style.transform` 才属于显式声明样式。仅来自 `className`、样式表、继承视觉效果或 `getComputedStyle()` 的值 MUST NOT 被视为显式声明值。
-
 #### Scenario: 合并 style 保持终态值
 
 - **WHEN** stop、reset、finish 或自然完成后发生宿主 rerender 或 resync
 - **THEN** 已合并返回 style 的宿主 MUST 保持动画发出的终态视觉值
-
-#### Scenario: 2D 显式声明样式重新获得控制权
-
-- **GIVEN** Spatialized2D 宿主在 React `style` 中显式声明被动画化字段
-- **WHEN** 终态 mask handoff 完成
-- **THEN** 该显式声明值 MUST 重新获得终态后控制权
-- **AND** native 采样终态值 MUST 继续作为生命周期回调值
 
 ### Requirement: 播放和生命周期语义共享
 

@@ -243,19 +243,10 @@ Static3D motion MUST write the `<Model>` container root and MUST NOT write model
 
 Authors MUST merge the returned `style` onto the same host that receives `xr-animation`. Playback MAY start without this merge, but terminal visual persistence after rerender or resync is not guaranteed.
 
-For Spatialized2D terminal handoff, only `style.opacity` or `style.transform` supplied directly in React props qualifies as explicit authored style. Values found only through `className`, stylesheets, inherited visual effects, or `getComputedStyle()` MUST NOT be treated as explicit authored values.
-
 #### Scenario: Merged style preserves terminal values
 
 - **WHEN** stop, reset, finish, or natural completion is followed by host rerender or resync
 - **THEN** a host that merged the returned style MUST preserve the emitted terminal visual values
-
-#### Scenario: Explicit 2D authored style regains ownership
-
-- **GIVEN** a Spatialized2D host explicitly declares the animated field in React `style`
-- **WHEN** terminal mask handoff completes
-- **THEN** that explicit authored value MUST regain post-terminal ownership
-- **AND** the native sampled terminal value MUST still be used for lifecycle callback values
 
 ### Requirement: Playback and lifecycle semantics are shared
 
