@@ -1,6 +1,12 @@
 // src/runtime/puppeteerRunner.ts
 
-import puppeteer, { Browser, Page, Viewport } from 'puppeteer'
+import puppeteer, {
+  Browser,
+  type EvaluateFunc,
+  type FrameWaitForFunctionOptions,
+  Page,
+  Viewport,
+} from 'puppeteer'
 import { WebSpatial } from '../WebSpatial'
 import { BackgroundMaterial, WindowStyle, SpatialScene } from '../types/types'
 import {
@@ -938,13 +944,13 @@ export class PuppeteerRunner {
    * @param fn Wait condition function
    * @param options Waiting options
    */
-  async waitForFunction(
-    fn: string | ((...args: any[]) => boolean | Promise<boolean> | null),
-    options?: {
-      polling?: number | 'raf' | 'mutation'
-      timeout?: number
-    },
-    ...args: any[]
+  async waitForFunction<
+    Params extends unknown[],
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>,
+  >(
+    fn: Func | string,
+    options?: FrameWaitForFunctionOptions,
+    ...args: Params
   ): Promise<void> {
     if (!this.page) throw new Error('Puppeteer runner not started')
 
