@@ -29,7 +29,6 @@ export interface SpatialAnimationStateChangedDetail {
     | 'created'
     | 'start'
     | 'complete'
-    | 'completed'
     | 'failed'
   playState: SpatializedMotionPlayState
   finished: boolean

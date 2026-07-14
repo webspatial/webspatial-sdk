@@ -168,11 +168,7 @@ export class AnimationObject
       return
     }
 
-    if (
-      detail.action === 'complete' ||
-      detail.action === 'completed' ||
-      detail.action === 'finish'
-    ) {
+    if (detail.action === 'complete' || detail.action === 'finish') {
       this.started = false
       this.callbacks.onComplete?.(detail.values ?? {})
       return
