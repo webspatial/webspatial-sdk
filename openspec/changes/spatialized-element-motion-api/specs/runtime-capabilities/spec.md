@@ -2,7 +2,7 @@
 
 ### Requirement: Advertise spatialized element animation support
 
-The runtime capability API MUST document and resolve the key `useAnimation` as the public capability gate for released container motion. Target names such as `spatialized2d`, `static3d`, and `dynamic3d` are internal binding-resolution kinds and MUST NOT be exposed as `useAnimation` sub-tokens. The legacy `entity` sub-token remains reserved for `useEntityAnimation`.
+The runtime capability API MUST document and resolve the key `useAnimation` as the public capability gate for released container motion. Target names such as `spatialized2d`, `static3d`, and `dynamic3d` are internal binding-resolution kinds and MUST NOT be exposed as `useAnimation` sub-tokens.
 
 Applications MUST check `supports('useAnimation')` before relying on the motion API.
 

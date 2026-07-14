@@ -2,7 +2,7 @@
 
 ### Requirement: 宣告 spatialized element animation 能力支持
 
-运行时能力 API MUST 文档化并解析 `useAnimation` key，作为发布后容器 motion 的公开能力 gate。`spatialized2d`、`static3d`、`dynamic3d` 等目标名是内部绑定解析 kind，MUST NOT 作为 `useAnimation` sub-token 暴露。legacy `entity` sub-token 继续保留给 `useEntityAnimation`。
+运行时能力 API MUST 文档化并解析 `useAnimation` key，作为发布后容器 motion 的公开能力 gate。`spatialized2d`、`static3d`、`dynamic3d` 等目标名是内部绑定解析 kind，MUST NOT 作为 `useAnimation` sub-token 暴露。
 
 应用在依赖 motion API 前 MUST 检查 `supports('useAnimation')`。
 
