@@ -40,7 +40,7 @@ export interface SpatializedMotionTrack {
   timingFunction?: TimingFunction
 }
 
-/** Single-segment motion: `from` → `to` over `duration` (Plan A + `useAnimation`). */
+/** Single-segment motion: `from` → `to` over `duration`. */
 export interface SpatializedMotionSegmentConfig {
   to: SpatializedVisualValues
   from: SpatializedVisualValues

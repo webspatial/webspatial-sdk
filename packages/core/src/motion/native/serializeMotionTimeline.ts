@@ -3,7 +3,7 @@ import type {
   SpatializedMotionTimeline,
 } from '../../types/motion/spatializedMotion'
 
-/** Full timeline payload for native Phase 2b. */
+/** Full timeline payload for native. */
 export function motionConfigToNativeTimeline(
   config: NormalizedSpatializedMotionConfig,
 ): SpatializedMotionTimeline {
