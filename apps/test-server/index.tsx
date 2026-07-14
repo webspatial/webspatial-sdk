@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 import { SpatialBoot, WebSpatialBootError } from '@webspatial/react-sdk'
 import Sidebar from './src/components/Sidebar'
 import Home from './src/pages/Home'
@@ -313,15 +313,6 @@ function App() {
                 <Route
                   path="/spatial-element-motion/nested-animation"
                   element={<SpatialElementMotionNestedAnimationPage />}
-                />
-                <Route
-                  path="/reality/dynamic3d-motion"
-                  element={
-                    <Navigate
-                      to="/spatial-element-motion/reality-container"
-                      replace
-                    />
-                  }
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />
