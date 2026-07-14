@@ -21,7 +21,6 @@
 export type {} from './types/global'
 
 export { SpatialObject } from './SpatialObject'
-export { AnimationObject } from './motion/AnimationObject'
 export { Spatial } from './Spatial'
 export { SpatialSession } from './SpatialSession'
 export { SpatialScene } from './SpatialScene'
