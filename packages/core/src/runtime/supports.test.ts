@@ -105,13 +105,13 @@ describe('getRuntime / supports', () => {
     resetRuntimeCacheForTests()
     expect(supports('Model', ['currentTime', 'poster', 'loading'])).toBe(true)
     expect(supports('Model', ['stagemode'])).toBe(false)
-    expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
+    expect(supports('useAnimation')).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
     expect(supports('xrInnerDepth')).toBe(false)
     expect(supports('xrOuterDepth')).toBe(false)
   })
 
-  test('pico UA above latest known row keeps PicoWebApp/0.3.1 capabilities', async () => {
+  test('pico UA above PicoWebApp/0.3.1 keeps its capabilities before OTA0', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (X11; Linux x86_64; unknown OS0.11.0 like Quest) AppleWebKit/537.36 PicoWebApp/0.3.2 (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0',
@@ -119,8 +119,8 @@ describe('getRuntime / supports', () => {
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
     expect(supports('Model', ['currentTime', 'poster', 'loading'])).toBe(true)
-    expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
+    expect(supports('useAnimation')).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
   })
 
   test('alias Box → BoxEntity', async () => {
@@ -242,11 +242,11 @@ describe('getRuntime / supports', () => {
     resetRuntimeCacheForTests()
     expect(supports('Model', ['currentTime', 'loading', 'poster'])).toBe(true)
     expect(supports('Model', ['stagemode'])).toBe(false)
-    expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
+    expect(supports('useAnimation')).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
   })
 
-  test('visionOS WSAppShell/1.8.0: useAnimation and entity are true while target tokens are false', async () => {
+  test('visionOS WSAppShell/1.8.0: useAnimation is true while sub-tokens are false', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
@@ -254,19 +254,19 @@ describe('getRuntime / supports', () => {
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
     expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
     expect(supports('useAnimation', ['element'])).toBe(false)
   })
 
-  test('useAnimation keeps entity token and rejects target tokens', async () => {
+  test('useAnimation rejects all sub-tokens', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.7.0 WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
-    expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
+    expect(supports('useAnimation')).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
     expect(supports('useAnimation', ['element'])).toBe(false)
     expect(supports('useAnimation', ['static3d'])).toBe(false)
     expect(supports('useAnimation', ['dynamic3d'])).toBe(false)
@@ -303,7 +303,7 @@ describe('supports("useAnimation") for motion', () => {
     vi.unstubAllGlobals()
   })
 
-  test('visionOS WSAppShell/1.8.0: useAnimation and entity are true while target tokens are false', async () => {
+  test('visionOS WSAppShell/1.8.0: useAnimation is true while sub-tokens are false', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
@@ -312,22 +312,22 @@ describe('supports("useAnimation") for motion', () => {
     resetRuntimeCacheForTests()
     expect(supports('useAnimation')).toBe(true)
     expect(supports('useAnimation', [])).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
     expect(supports('useAnimation', ['element'])).toBe(false)
     expect(supports('useAnimation', ['static3d'])).toBe(false)
     expect(supports('useAnimation', ['dynamic3d'])).toBe(false)
   })
 
-  test('visionOS WSAppShell/1.7.0: useAnimation and entity are true while target tokens are false', async () => {
+  test('visionOS WSAppShell/1.7.0: useAnimation and sub-tokens are false', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.7.0 WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
-    expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', [])).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
+    expect(supports('useAnimation')).toBe(false)
+    expect(supports('useAnimation', [])).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
     expect(supports('useAnimation', ['element'])).toBe(false)
     expect(supports('useAnimation', ['static3d'])).toBe(false)
     expect(supports('useAnimation', ['dynamic3d'])).toBe(false)

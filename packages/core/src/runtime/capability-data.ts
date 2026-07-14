@@ -1,6 +1,6 @@
 /**
  * Versioned capability rows transcribed from the product matrix (`capability-matrix.template.md`).
- * visionOS **WSAppShell/1.5.0** & **1.6.0** & **1.7.0** & **1.8.0**; picoOS **PicoWebApp/0.1.1** & **0.1.2** & **0.2.2** & **0.3.1** — see matrix in OpenSpec / product docs.
+ * visionOS **WSAppShell/1.5.0** & **1.6.0** & **1.7.0** & **1.8.0**; picoOS **PicoWebApp/0.1.1** & **0.1.2** & **0.2.2** & **0.3.1** & **0.4.90** — see matrix in OpenSpec / product docs.
  *
  * **picoOS** rows use dedicated builders (alpha2.0 / alpha2.1 subtokens); visionOS rows are separate.
  */
@@ -50,9 +50,8 @@ function matrixVision_1_5_0_Flags(): Record<string, boolean> {
     flags[`Model:${t}`] = false
   }
   flags['SpatialRotateEvent:constrainedToAxis'] = true
-  // useAnimation not supported until WSAppShell/1.7.0
+  // Container useAnimation is not supported until WSAppShell/1.8.0.
   flags['useAnimation'] = false
-  flags['useAnimation:entity'] = false
   return flags
 }
 
@@ -66,20 +65,17 @@ function matrixVision_1_6_0_Flags(): Record<string, boolean> {
     flags[`Model:${t}`] = false
   }
   flags['SpatialRotateEvent:constrainedToAxis'] = true
-  // useAnimation not supported until WSAppShell/1.7.0
+  // Container useAnimation is not supported until WSAppShell/1.8.0.
   flags['useAnimation'] = false
-  flags['useAnimation:entity'] = false
   return flags
 }
 
 /**
  * visionOS **WSAppShell/1.7.0** — entity transform animation support.
- * Inherits from 1.6.0 and enables `useAnimation`.
+ * Container `useAnimation` remains unavailable in this row.
  */
 function matrixVision_1_7_0_Flags(): Record<string, boolean> {
   const flags = matrixVision_1_6_0_Flags()
-  flags['useAnimation'] = true
-  flags['useAnimation:entity'] = true
   flags['Model:currentTime'] = true
   flags['Model:loading'] = true
   flags['Model:poster'] = true
@@ -91,6 +87,7 @@ function matrixVision_1_7_0_Flags(): Record<string, boolean> {
  */
 function matrixVision_1_8_0_Flags(): Record<string, boolean> {
   const flags = matrixVision_1_7_0_Flags()
+  flags['useAnimation'] = true
   return flags
 }
 
@@ -120,12 +117,10 @@ function matrixPico_0_1_2_Flags(): Record<string, boolean> {
 
 /**
  * picoOS **PicoWebApp/0.2.2** — entity transform animation support.
- * Inherits from 0.1.2 and enables `useAnimation`.
+ * Container `useAnimation` remains unavailable in this row.
  */
 function matrixPico_0_2_2_Flags(): Record<string, boolean> {
   const flags = matrixPico_0_1_2_Flags()
-  flags['useAnimation'] = true
-  flags['useAnimation:entity'] = true
   return flags
 }
 
@@ -135,6 +130,15 @@ function matrixPico_0_2_2_Flags(): Record<string, boolean> {
 function matrixPico_0_3_1_Flags(): Record<string, boolean> {
   const flags = matrixPico_0_2_2_Flags()
   flags['Model:loading'] = true
+  return flags
+}
+
+/**
+ * picoOS **PicoWebApp/0.4.90** — OTA0 container animation support.
+ */
+function matrixPico_0_4_90_Flags(): Record<string, boolean> {
+  const flags = matrixPico_0_3_1_Flags()
+  flags['useAnimation'] = true
   return flags
 }
 
@@ -175,6 +179,13 @@ function picoOsRow_0_3_1(): CapabilityVersionRow {
   return { version: '0.3.1', flags: matrixPico_0_3_1_Flags() }
 }
 
+/**
+ * Build the capability row for picoOS **PicoWebApp/0.4.90** OTA0.
+ */
+function picoOsRow_0_4_90(): CapabilityVersionRow {
+  return { version: '0.4.90', flags: matrixPico_0_4_90_Flags() }
+}
+
 export const CAPABILITY_TABLE: {
   visionos: CapabilityVersionRow[]
   picoos: CapabilityVersionRow[]
@@ -190,5 +201,6 @@ export const CAPABILITY_TABLE: {
     picoOsRow_0_1_2(),
     picoOsRow_0_2_2(),
     picoOsRow_0_3_1(),
+    picoOsRow_0_4_90(),
   ],
 }
