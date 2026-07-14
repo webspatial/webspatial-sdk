@@ -1,5 +1,6 @@
 import { supports } from '@webspatial/core-sdk'
-import { Model, useAnimation } from '@webspatial/react-sdk'
+import { Model } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 import {
   Log,
   PlayStateBadge,

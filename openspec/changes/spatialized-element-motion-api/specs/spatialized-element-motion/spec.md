@@ -8,7 +8,7 @@ This capability defines one public container-motion API for `Spatialized2DElemen
 
 ### Requirement: One target-agnostic container-motion API
 
-The SDK MUST expose `useAnimation(config)` returning `[animation, api, style]`. The config MUST NOT contain a target `kind`; the SDK MUST resolve the target when the returned opaque `animation` binding is assigned through `xr-animation`.
+The SDK experimental entry `@webspatial/react-sdk/experimental` MUST expose `useAnimation(config)` returning `[animation, api, style]`. The default and eager React SDK entries MUST NOT expose `useAnimation` or `useEntityAnimation`. The config MUST NOT contain a target `kind`; the SDK MUST resolve the target when the returned opaque `animation` binding is assigned through `xr-animation`.
 
 | Bound component | Resolved target | Animated native fields |
 |---|---|---|
@@ -36,7 +36,7 @@ The SDK MUST expose `useAnimation(config)` returning `[animation, api, style]`. 
 
 ### Requirement: Public config supports simple and timeline authoring
 
-The stable `useAnimation(config)` input MUST support either:
+The experimental `useAnimation(config)` input MUST support either:
 
 1. Top-level segment authoring with required `from` and required `to` visual values.
 2. A `timeline` object that MAY combine `from`, `to`, and percentage-keyframe entries whose keys match `/^\d+(\.\d+)?%$/`.

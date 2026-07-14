@@ -1,9 +1,5 @@
-import {
-  BoxEntity,
-  Reality,
-  SceneGraph,
-  useEntityAnimation,
-} from '@webspatial/react-sdk'
+import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
   Log,

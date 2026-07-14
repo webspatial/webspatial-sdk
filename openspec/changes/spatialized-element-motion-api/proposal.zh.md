@@ -4,6 +4,8 @@ SpatialDiv、Model 和 Reality 容器需要一套统一的声明式动画 API，
 
 本变更提供 `useAnimation(config)`，用于动画化容器根 transform 和 opacity。它既支持简单的起止过渡，也支持多阶段百分比关键帧，并为所有支持的容器提供一致的播放控制和生命周期回调。
 
+`useAnimation` 和 `useEntityAnimation` 是实验 API，应从 `@webspatial/react-sdk/experimental` 导入。
+
 ## 什么需求使用什么 API
 
 当视觉容器本身需要移动、旋转、缩放或淡入淡出时，使用 `useAnimation`：
@@ -23,7 +25,7 @@ SpatialDiv、Model 和 Reality 容器需要一套统一的声明式动画 API，
 入口、退出、移动、缩放、旋转和淡入淡出等只有一个起点和终点的过渡，使用 `from`/`to` 形式。
 
 ```tsx
-import { useAnimation } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 
 export function EnteringPanel() {
   const [animation, api, style] = useAnimation({
@@ -244,5 +246,5 @@ const presentation = supports('useAnimation')
 ## 影响
 
 - **包：** `@webspatial/react-sdk`、`@webspatial/core-sdk` 和空间运行时。
-- **公开 API：** `useAnimation`、`SpatializedMotionConfig`、`SpatializedPlaybackApi`、`xr-animation` 和 `supports('useAnimation')`。
+- **实验 API：** `useAnimation`、`useEntityAnimation`、`SpatializedMotionConfig` 和 `SpatializedPlaybackApi` 从 `@webspatial/react-sdk/experimental` 导出；`xr-animation` 和 `supports('useAnimation')` 保持现有入口不变。
 - **迁移：** 继续支持现有顶层 `from` / `to` authoring；多阶段 demo 和文档使用公开 timeline authoring。

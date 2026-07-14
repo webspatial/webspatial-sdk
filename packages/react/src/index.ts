@@ -69,12 +69,6 @@ export type { CapabilityKey } from '@webspatial/core-sdk/runtime'
 //
 // Names that already resolve to a richer parameterized type via
 // `./spatialized-container/types` (the `SpatialTapEvent` / `SpatialDragEvent`
-export type {
-  UseAnimationResult,
-  SpatializedMotionConfig,
-  SpatializedMotionSegmentConfig,
-  SpatializedPlaybackApi,
-} from './spatialized-container/motion'
 // family) intentionally do NOT appear here — re-exporting the simpler
 // core-sdk version of the same name would shadow the more useful one in
 // consumer IDEs.
@@ -219,8 +213,6 @@ export type {
 
 // --- Hooks (placeholder / ready-gated per spec "Hook placeholders") ---------
 export { useMetrics } from './hooks-web/useMetrics'
-export { useAnimation } from './hooks-web/useAnimation'
-export { useEntityAnimation } from './hooks-web/useEntityAnimation'
 
 // --- Public type surface (no runtime values) --------------------------------
 // Spatial event + ref types — referenced by facade prop / ref typing.

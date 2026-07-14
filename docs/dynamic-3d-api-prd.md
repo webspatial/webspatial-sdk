@@ -31,8 +31,8 @@ import {
   UnlitMaterial,
   Texture,
   ModelAsset,
-  useEntityAnimation,
 } from '@webspatial/react-sdk';
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental';
 ```
 
 ---
@@ -270,7 +270,7 @@ const [color, setColor] = useState('#ff0000');
 Animate entity transforms (position, rotation, scale) at native frame rate using the `useEntityAnimation` hook. Playback runs in RealityKit at 90 fps — no per-frame JS bridge calls.
 
 ```text
-import { useEntityAnimation } from '@webspatial/react-sdk';
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental';
 
 const [animation, api] = useEntityAnimation({
   to: { position: { x: 0, y: 1.5, z: -2 } },

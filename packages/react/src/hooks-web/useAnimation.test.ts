@@ -5,7 +5,7 @@ import type { AnimationConfig } from '@webspatial/core-sdk'
 import { WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
 import { renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import * as sdk from '../index'
+import * as experimentalSdk from '../experimental'
 import {
   __getSpatialLoadAttemptForTests,
   __resetSpatialBridgeForTests,
@@ -27,19 +27,19 @@ const spatializedConfig: SpatializedMotionConfig = {
   to: { opacity: 1 },
 }
 
-function useAnimationFromDefault() {
-  return (sdk as Record<string, unknown>).useAnimation as (
+function useAnimationFromExperimental() {
+  return (experimentalSdk as Record<string, unknown>).useAnimation as (
     config: SpatializedMotionConfig,
   ) => unknown
 }
 
-function useEntityAnimationFromDefault() {
-  return (sdk as Record<string, unknown>).useEntityAnimation as (
+function useEntityAnimationFromExperimental() {
+  return (experimentalSdk as Record<string, unknown>).useEntityAnimation as (
     config: AnimationConfig,
   ) => unknown
 }
 
-describe('useAnimation default-entry facade', () => {
+describe('useAnimation experimental-entry facade', () => {
   beforeEach(() => {
     __resetSpatialBridgeForTests()
   })
@@ -50,7 +50,7 @@ describe('useAnimation default-entry facade', () => {
   })
 
   it('keeps animation ready-gated before bootSpatial readiness', () => {
-    const useAnimation = useAnimationFromDefault()
+    const useAnimation = useAnimationFromExperimental()
 
     try {
       renderHook(() => useAnimation(spatializedConfig))
@@ -64,7 +64,7 @@ describe('useAnimation default-entry facade', () => {
   })
 
   it('keeps entity animation ready-gated before bootSpatial readiness', () => {
-    const useEntityAnimation = useEntityAnimationFromDefault()
+    const useEntityAnimation = useEntityAnimationFromExperimental()
 
     const entityConfig: AnimationConfig = {
       to: { position: { x: 0, y: 0, z: 0 } },

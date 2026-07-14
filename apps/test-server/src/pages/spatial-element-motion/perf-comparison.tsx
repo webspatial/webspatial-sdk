@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { useAnimation } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 import { SpatialElementMotionPageShell, btnPrimary, btnCls } from './shared'
 
 // --- Animation target values (shared between JS-driven and declarative) ---

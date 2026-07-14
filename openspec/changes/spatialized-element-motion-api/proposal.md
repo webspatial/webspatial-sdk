@@ -4,6 +4,8 @@ SpatialDiv, Model, and Reality containers need one declarative animation API wit
 
 This change provides `useAnimation(config)` for container-root transform and opacity animation. It supports simple start-to-end transitions and multi-step percentage keyframes, with shared playback controls and lifecycle callbacks.
 
+`useAnimation` and `useEntityAnimation` are experimental APIs. Import them from `@webspatial/react-sdk/experimental`.
+
 ## When to use this API
 
 Use `useAnimation` when the visual container itself should move, rotate, scale, or fade:
@@ -23,7 +25,7 @@ Use `useAnimation` when the visual container itself should move, rotate, scale, 
 Use the `from`/`to` form for entrance, exit, move, scale, rotate, and fade transitions with one start and one end state.
 
 ```tsx
-import { useAnimation } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 
 export function EnteringPanel() {
   const [animation, api, style] = useAnimation({
@@ -244,5 +246,5 @@ Use `supports('useAnimation')` to choose between the animated and static present
 ## Impact
 
 - **Packages:** `@webspatial/react-sdk`, `@webspatial/core-sdk`, and the spatial runtime.
-- **Public API:** `useAnimation`, `SpatializedMotionConfig`, `SpatializedPlaybackApi`, `xr-animation`, and `supports('useAnimation')`.
+- **Experimental API:** `useAnimation`, `useEntityAnimation`, `SpatializedMotionConfig`, and `SpatializedPlaybackApi` are exported from `@webspatial/react-sdk/experimental`; `xr-animation` and `supports('useAnimation')` retain their existing entry points.
 - **Migration:** existing top-level `from` / `to` authoring remains supported; multi-stage demos and documentation use public timeline authoring.

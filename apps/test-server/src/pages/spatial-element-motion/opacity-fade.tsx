@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useAnimation } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 import {
   SpatialElementMotionPageShell,
   Log,

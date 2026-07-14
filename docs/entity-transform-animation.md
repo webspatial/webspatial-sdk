@@ -9,8 +9,8 @@ import {
   BoxEntity,
   Reality,
   SceneGraph,
-  useEntityAnimation,
 } from '@webspatial/react-sdk'
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 
 function AnimatedBox() {
   const [animation, api] = useEntityAnimation({

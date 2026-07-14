@@ -14,13 +14,13 @@
 
 实现分为 React SDK、Core SDK 和 native runtime 三层：
 
-- React SDK 持有 `AnimationBinding`，由 `useAnimation(config)` 创建。它负责保存 config、bind 前命令排队，并且只在 `xr-animation` 解析到具体 `SpatializedElement` target 后创建 Core `AnimationObject`。
+- React SDK 从 `@webspatial/react-sdk/experimental` 导出 ready-gated `useAnimation` 和 `useEntityAnimation` facade。React SDK 持有 `AnimationBinding`，由 `useAnimation(config)` 创建。它负责保存 config、bind 前命令排队，并且只在 `xr-animation` 解析到具体 `SpatializedElement` target 后创建 Core `AnimationObject`。
 - Core SDK 持有 `AnimationObject extends SpatialObject`。它解析播放控制，继承 `destroy()`，订阅 `NativeWebMsg`，按匹配的 animation identity 过滤 `SpatialAnimationStateChanged`，并更新自身可观察状态。
 - visionOS 持有 native `AnimationObject extends SpatialObject` 和 `SpatializedElementAnimationManager`。`SpatialScene` 注册 JSB listener 并存储 native spatial object；manager 负责 animation 业务生命周期、create/control lookup、frame loop 调度、element destroy 级联清理、animating mask 协调，以及构造 `SpatialAnimationStateChanged` 并通过 WebMsg 路径发送。
 
 ## 公开 authoring 与内部表示
 
-稳定的 `useAnimation(config)` 输入接受顶层 `from` / `to` segment authoring 或 `timeline` 对象。顶层分支要求两个边界都存在；timeline 分支将边界放在 `timeline` 内，对顶层边界没有要求。Timeline 可以混合使用 `from`、`to` 和百分比关键帧。存在 timeline 时，Core 在 validation 和 normalization 前丢弃任何顶层 `from` 和 `to`。公开 `tracks` authoring 仍然非法。
+实验性的 `useAnimation(config)` 输入接受顶层 `from` / `to` segment authoring 或 `timeline` 对象。顶层分支要求两个边界都存在；timeline 分支将边界放在 `timeline` 内，对顶层边界没有要求。Timeline 可以混合使用 `from`、`to` 和百分比关键帧。存在 timeline 时，Core 在 validation 和 normalization 前丢弃任何顶层 `from` 和 `to`。公开 `tracks` authoring 仍然非法。
 
 Core 将 timeline `from` 视为 0%、将 `to` 视为 100%，与百分比 entry 合并，并把每个属性独立归一化为使用绝对时间关键帧的数值 track。属性 track 可以晚于 time zero 开始或早于 duration 结束，但必须至少包含两个关键帧。首个关键帧之前的采样保持首值，最后一个关键帧之后的采样保持末值。同一属性同时声明在 `from` 和 `0%`，或同时声明在 `to` 和 `100%` 时，validation 将其作为重复边界拒绝。Track、keyframe、property path、归一化 timeline 与 native wire 类型仅属于内部实现：稳定包入口不导出这些类型，`useAnimation` 不接受它们，公开文档不把它们作为 authoring API，也不提供 experimental 入口。
 

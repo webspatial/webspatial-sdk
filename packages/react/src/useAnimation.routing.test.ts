@@ -55,13 +55,15 @@ describe('useEntityAnimation hook', () => {
   })
 })
 
-describe('root export compatibility', () => {
-  test('exports useAnimation and useEntityAnimation from the package root', async () => {
+describe('experimental export compatibility', () => {
+  test('exports animation hooks only from the experimental entry', async () => {
     vi.stubGlobal('__WEBSPATIAL_REACT_SDK_VERSION__', 'test')
-    const mod = await import('./index')
-    expect(typeof mod.useAnimation).toBe('function')
-    expect(typeof mod.useEntityAnimation).toBe('function')
-    expect('useSpatializedMotion' in mod).toBe(false)
+    const root = await import('./index')
+    const experimental = await import('./experimental')
+    expect('useAnimation' in root).toBe(false)
+    expect('useEntityAnimation' in root).toBe(false)
+    expect(typeof experimental.useAnimation).toBe('function')
+    expect(typeof experimental.useEntityAnimation).toBe('function')
   })
 
   test('exports useAnimation from spatialized-container', async () => {

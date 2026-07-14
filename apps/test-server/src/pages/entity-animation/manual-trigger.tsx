@@ -4,8 +4,8 @@ import {
   Reality,
   SceneGraph,
   UnlitMaterial,
-  useEntityAnimation,
 } from '@webspatial/react-sdk'
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
   Log,

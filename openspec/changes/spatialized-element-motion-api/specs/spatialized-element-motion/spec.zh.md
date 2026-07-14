@@ -8,7 +8,7 @@
 
 ### Requirement: 一套与目标无关的容器动画 API
 
-SDK MUST 暴露返回 `[animation, api, style]` 的 `useAnimation(config)`。Config MUST NOT 包含目标 `kind`；SDK MUST 在 opaque `animation` binding 通过 `xr-animation` 绑定时解析目标。
+SDK 的实验入口 `@webspatial/react-sdk/experimental` MUST 暴露返回 `[animation, api, style]` 的 `useAnimation(config)`。React SDK 默认入口和 eager 入口 MUST NOT 暴露 `useAnimation` 或 `useEntityAnimation`。Config MUST NOT 包含目标 `kind`；SDK MUST 在 opaque `animation` binding 通过 `xr-animation` 绑定时解析目标。
 
 | 绑定组件 | 解析目标 | Native 动画字段 |
 |---|---|---|
@@ -36,7 +36,7 @@ SDK MUST 暴露返回 `[animation, api, style]` 的 `useAnimation(config)`。Con
 
 ### Requirement: 公开 config 支持简单写法和 timeline 写法
 
-稳定的 `useAnimation(config)` 输入 MUST 支持以下两种写法之一：
+实验性的 `useAnimation(config)` 输入 MUST 支持以下两种写法之一：
 
 1. 顶层 segment authoring，必须同时提供 `from` 和 `to` 视觉值。
 2. `timeline` 对象，可以混合使用 `from`、`to` 和 key 匹配 `/^\d+(\.\d+)?%$/` 的百分比关键帧。

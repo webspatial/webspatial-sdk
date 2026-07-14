@@ -4,8 +4,8 @@ import {
   Reality,
   SceneGraph,
   UnlitMaterial,
-  useAnimation,
 } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 import {
   Log,
   PlayStateBadge,

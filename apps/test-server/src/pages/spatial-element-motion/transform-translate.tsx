@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { supports } from '@webspatial/core-sdk'
-import { useAnimation } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 import {
   SpatialElementMotionPageShell,
   Log,

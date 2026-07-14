@@ -2,12 +2,12 @@
 
 ## Overview
 
-The `useAnimation` hook drives declarative, timeline-based motion on a spatialized element (`<div enable-xr>`, `<Model>`, `<Reality>`). It normalizes an authoring config into per-property tracks, binds them to the element's native container, and returns an imperative playback handle plus a React style outlet. It is the single public entry point for spatialized element motion; the internal binding kinds (`spatialized2d` / `static3d` / `dynamic3d`) are resolved from the bound element's native type and are never exposed as capability sub-tokens.
+The experimental `useAnimation` hook drives declarative, timeline-based motion on a spatialized element (`<div enable-xr>`, `<Model>`, `<Reality>`). It normalizes an authoring config into per-property tracks, binds them to the element's native container, and returns an imperative playback handle plus a React style outlet. The internal binding kinds (`spatialized2d` / `static3d` / `dynamic3d`) are resolved from the bound element's native type and are never exposed as capability sub-tokens.
 
 ## Try it
 
 ```jsx
-import { useAnimation } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 
 function FadeIn() {
   const [motion, api, style] = useAnimation({
@@ -141,7 +141,7 @@ When `supports('useAnimation')` is `false`, calling `useAnimation` logs a one-ti
 ### Fade-in entrance (segment)
 
 ```jsx
-import { useAnimation } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 
 function FadeInEntrance() {
   const [motion, api, style] = useAnimation({
@@ -165,7 +165,7 @@ function FadeInEntrance() {
 ### Timeline keyframes
 
 ```jsx
-import { useAnimation } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 
 const TIMELINE = {
   '0%': {
@@ -237,7 +237,7 @@ function Pulse() {
 
 |                     |                                                                                                                                          |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Entry point         | `useAnimation(config)` from `@webspatial/react-sdk`.                                                                                     |
+| Entry point         | `useAnimation(config)` from `@webspatial/react-sdk/experimental`.                                                                        |
 | Return value        | Readonly tuple `[animation: SpatializedMotionBinding, api: SpatializedPlaybackApi, style: CSSProperties]`.                              |
 | Authoring shapes    | Segment (`from`/`to`) or timeline (percentage keyframes); mutually exclusive.                                                            |
 | Animatable fields   | `opacity` and `transform.translate/rotate/scale` on x/y/z. No `width`/`height`/`back`/`depth`.                                          |
