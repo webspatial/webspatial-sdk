@@ -788,6 +788,104 @@ describe('useAnimation tuple api native backend', () => {
     expect(result.current[1].isAnimating).toBe(false)
   })
 
+  test('reports a direct Core control failure exactly once', async () => {
+    const onError = vi.fn()
+    const element = createMockElement('direct-control-fail')
+    const error = {
+      animationId: element.animation.id,
+      command: 'play',
+      reason: 'play failed',
+    }
+    element.animation.play.mockImplementationOnce(async () => {
+      throw new Error(error.reason)
+    })
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        autoStart: false,
+        from: { opacity: 0 },
+        to: { opacity: 1 },
+        onError,
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any)
+    })
+    await waitFor(() =>
+      expect(element.animation.setCallbacks).toHaveBeenCalled(),
+    )
+
+    act(() => result.current[1].play())
+
+    await waitFor(() => expect(onError).toHaveBeenCalledTimes(1))
+    await flushPromises()
+    expect(onError).toHaveBeenCalledTimes(1)
+  })
+
+  test('reports a queued Core control failure exactly once', async () => {
+    const onError = vi.fn()
+    const element = createMockElement('queued-control-fail')
+    const error = {
+      animationId: element.animation.id,
+      command: 'play',
+      reason: 'queued play failed',
+    }
+    element.animation.play.mockImplementationOnce(async () => {
+      throw new Error(error.reason)
+    })
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        autoStart: false,
+        from: { opacity: 0 },
+        to: { opacity: 1 },
+        onError,
+      }),
+    )
+
+    act(() => result.current[1].play())
+    await act(async () => {
+      result.current[0].__setElement?.(element as any)
+    })
+
+    await waitFor(() => expect(onError).toHaveBeenCalledTimes(1))
+    await flushPromises()
+    expect(onError).toHaveBeenCalledTimes(1)
+  })
+
+  test('reports an autoStart Core control failure exactly once', async () => {
+    const onError = vi.fn()
+    const element = createMockElement('autostart-control-fail')
+    const error = {
+      animationId: element.animation.id,
+      command: 'play',
+      reason: 'autoStart play failed',
+    }
+    element.animation.play.mockImplementationOnce(async () => {
+      throw new Error(error.reason)
+    })
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        from: { opacity: 0 },
+        to: { opacity: 1 },
+        onError,
+      }),
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any)
+    })
+
+    await waitFor(() => expect(onError).toHaveBeenCalledTimes(1))
+    await flushPromises()
+    expect(onError).toHaveBeenCalledTimes(1)
+  })
+
   test('flushes pending commands sequentially after Core AnimationObject creation', async () => {
     let resolvePlay: (() => void) | undefined
     const animation = createMockAnimationObject('sequential-animation')

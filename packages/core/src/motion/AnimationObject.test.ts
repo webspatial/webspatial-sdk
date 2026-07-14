@@ -259,13 +259,7 @@ describe('AnimationObject', () => {
 
     await expect(animation.play()).rejects.toThrow('play failed')
     expect(onStart).not.toHaveBeenCalled()
-    expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({
-        animationId: animation.id,
-        command: 'play',
-        reason: 'play failed',
-      }),
-    )
+    expect(onError).not.toHaveBeenCalled()
 
     await animation.play()
     expect(onStart).not.toHaveBeenCalled()

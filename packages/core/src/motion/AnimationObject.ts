@@ -127,15 +127,10 @@ export class AnimationObject
     }).execute()
 
     if (!ret.success) {
-      const error = {
-        animationId: this.id,
-        command: type === 'destroy' ? 'stop' : type,
-        reason:
-          ret.errorMessage ??
+      throw new Error(
+        ret.errorMessage ??
           `ControlSpatializedElementAnimation(${type}) command failed`,
-      } as SpatializedPlaybackError
-      this.callbacks.onError?.(error)
-      throw new Error(error.reason)
+      )
     }
   }
 
