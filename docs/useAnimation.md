@@ -33,11 +33,11 @@ function FadeIn() {
 
 `api` A `SpatializedPlaybackApi` object exposing imperative playback controls and reactive state getters (see [JavaScript API](#javascript-api)).
 
-`style` A `CSSProperties` object reflecting the element's current animated values. Spread it onto the target element's `style` so that the DOM/web fallback stays visually in sync with the native animation.
+`style` A `CSSProperties` object containing the visual values most recently emitted by the native-backed animation. Spread it onto the same target element that receives `xr-animation` so those values survive React rerenders and host resynchronization. The object may initially be empty and is not a playback source.
 
 ## Config
 
-`useAnimation` accepts a `SpatializedMotionConfig`, which is a union of two authoring shapes: **segment** and **timeline**. Both share the same playback options and callbacks.
+`useAnimation` accepts segment or timeline authoring. Both share the same playback options and callbacks. When `timeline` is present, it takes precedence over top-level `from` and `to`; those values are ignored and a development warning is emitted.
 
 ### Segment authoring
 
@@ -127,14 +127,16 @@ import { WebSpatialRuntime } from '@webspatial/react-sdk'
 const supported = WebSpatialRuntime.supports('useAnimation')
 ```
 
-When `supports('useAnimation')` is `false`, calling `useAnimation` logs a one-time warning and returns a no-op API: `play()` becomes a no-op and `isAnimating` stays `false`. The style outlet still reflects the config's initial values so the web fallback renders correctly.
+Check `supports('useAnimation')` before mounting a component that calls `useAnimation`. When the capability is unavailable, render a static alternative instead. No `useAnimation` behavior is guaranteed on an unsupported runtime.
+
+The experimental facade also requires the spatial implementation to be ready. Calling it before `bootSpatial()` has completed throws `WebSpatialRuntimeError`.
 
 ## Usage Notes
 
 - **Bind via `xr-animation`**: The `animation` tuple element must be assigned to the element's `xr-animation` prop; without binding, playback controls have no target.
-- **Spread `style`**: Always spread the returned `style` onto the target so the DOM fallback tracks the native animation.
+- **Spread `style`**: Always spread the returned `style` onto the same target that receives `xr-animation` so native-emitted visual values remain synchronized across React rerenders and host resynchronization.
 - **Internal kinds are hidden**: `useAnimation` resolves the internal target kind from the bound element's native type; never pass or expect `spatialized2d` / `static3d` / `dynamic3d` as public tokens.
-- **`from`/`to` ignored with timeline**: Supplying `timeline` takes precedence; any `from` / `to` are dropped during normalization.
+- **`from`/`to` ignored with timeline**: Supplying `timeline` takes precedence; any top-level `from` / `to` are ignored and a development warning is emitted.
 
 ## Examples
 
@@ -239,12 +241,12 @@ function Pulse() {
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Entry point         | `useAnimation(config)` from `@webspatial/react-sdk/experimental`.                                                                        |
 | Return value        | Readonly tuple `[animation: SpatializedMotionBinding, api: SpatializedPlaybackApi, style: CSSProperties]`.                              |
-| Authoring shapes    | Segment (`from`/`to`) or timeline (percentage keyframes); mutually exclusive.                                                            |
+| Authoring shapes    | Segment (`from`/`to`) or timeline authoring; when both are supplied, timeline takes precedence.                                          |
 | Animatable fields   | `opacity` and `transform.translate/rotate/scale` on x/y/z. No `width`/`height`/`back`/`depth`.                                          |
 | Timing functions    | `linear`, `easeIn`, `easeOut`, `easeInOut`.                                                                                              |
 | Play states         | `idle`, `queued`, `running`, `paused`, `finished`.                                                                                       |
 | Capability gate     | `WebSpatialRuntime.supports('useAnimation')`; internal kinds `spatialized2d`/`static3d`/`dynamic3d` are never exposed as sub-tokens.    |
-| Binding             | Assign `animation` to the element's `xr-animation` prop; spread `style` for the web/DOM fallback.                                        |
+| Binding             | Assign `animation` to the element's `xr-animation` prop; spread `style` onto the same host to preserve native-emitted visual state.     |
 
 ## Browser Compatibility
 
@@ -285,7 +287,7 @@ The native layer emits element-motion state changes with action values such as `
 ## Risks
 
 - **Whitelist-only visual model**: Only opacity and translate/rotate/scale are animatable. Requests for skew, perspective, matrix, or size interpolation are out of scope and must be handled outside `useAnimation`.
-- **Capability variance**: On runtimes where `supports('useAnimation')` is `false`, motion silently degrades to a no-op with a web-style fallback; consumers relying on `onComplete` timing should feature-detect first.
+- **Capability variance**: On runtimes where `supports('useAnimation')` is `false`, applications must render an alternative before mounting a component that calls `useAnimation`. Unsupported-runtime behavior is not guaranteed.
 
 ## References
 
