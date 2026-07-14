@@ -30,7 +30,7 @@
 - [x] 统一 spec：定义 element animating mask 所有权表述
 - [x] 统一 spec：要求 Static3D 容器根 transform / opacity 动画
 - [x] 统一 spec：要求 Dynamic3D 容器根 transform / opacity 动画
-- [x] 统一 spec：保持 Entity 动画与容器 motion 分离
+- [x] 统一 spec：将 Entity-level animation 保持在本变更的公开 API 和 capability 范围之外
 
 ## Phase 4 — Design 对齐
 

@@ -8,7 +8,7 @@
 
 #### Scenario: 支持 motion API
 
-- **WHEN** 当前 runtime 实现了 `CreateSpatializedElementAnimation`、`ControlSpatializedElementAnimation`、`SpatialAnimationStateChanged`、element animating mask 行为，以及发布后的 Entity animation 路径
+- **WHEN** 当前 runtime 实现了 `CreateSpatializedElementAnimation`、`ControlSpatializedElementAnimation`、`SpatialAnimationStateChanged` 和 element animating mask 行为
 - **THEN** `supports('useAnimation')` MUST 返回 `true`
 
 #### Scenario: 纯 Web runtime 返回 false

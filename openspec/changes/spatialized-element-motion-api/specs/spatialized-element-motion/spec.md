@@ -2,13 +2,13 @@
 
 ## Scope
 
-This capability defines one public container-motion API for `Spatialized2DElement`, `SpatializedStatic3DElement`, and `SpatializedDynamic3DElement`. Entity animation remains on the separate `useEntityAnimation` / `AnimateTransform` stack.
+This capability defines one public container-motion API for `Spatialized2DElement`, `SpatializedStatic3DElement`, and `SpatializedDynamic3DElement`. Entity-level animation is outside the public API and capability scope of this change.
 
 ## ADDED Requirements
 
 ### Requirement: One target-agnostic container-motion API
 
-The SDK experimental entry `@webspatial/react-sdk/experimental` MUST expose `useAnimation(config)` returning `[animation, api, style]`. The default and eager React SDK entries MUST NOT expose `useAnimation` or `useEntityAnimation`. The config MUST NOT contain a target `kind`; the SDK MUST resolve the target when the returned opaque `animation` binding is assigned through `xr-animation`.
+The SDK experimental entry `@webspatial/react-sdk/experimental` MUST expose `useAnimation(config)` returning `[animation, api, style]`. The default and eager React SDK entries MUST NOT expose `useAnimation`. The config MUST NOT contain a target `kind`; the SDK MUST resolve the target when the returned opaque `animation` binding is assigned through `xr-animation`.
 
 | Bound component | Resolved target | Animated native fields |
 |---|---|---|
@@ -27,12 +27,6 @@ The SDK experimental entry `@webspatial/react-sdk/experimental` MUST expose `use
 - **WHEN** the same `animation` binding is assigned to multiple components concurrently
 - **THEN** the SDK MUST reject or warn about the later binding
 - **AND** only the first binding MUST remain effective
-
-#### Scenario: Entity animation remains separate
-
-- **WHEN** an author animates a child `Entity` through `useEntityAnimation`
-- **THEN** that animation MUST remain on the Entity stack
-- **AND** it MUST NOT use the container `AnimationObject`
 
 ### Requirement: Public config supports simple and timeline authoring
 

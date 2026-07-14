@@ -8,7 +8,7 @@ Applications MUST check `supports('useAnimation')` before relying on the motion 
 
 #### Scenario: Motion API is supported
 
-- **WHEN** the current runtime implements `CreateSpatializedElementAnimation`, `ControlSpatializedElementAnimation`, `SpatialAnimationStateChanged`, element animating mask behavior, and the released Entity animation path
+- **WHEN** the current runtime implements `CreateSpatializedElementAnimation`, `ControlSpatializedElementAnimation`, `SpatialAnimationStateChanged`, and element animating mask behavior
 - **THEN** `supports('useAnimation')` MUST return `true`
 
 #### Scenario: Pure Web runtime returns false

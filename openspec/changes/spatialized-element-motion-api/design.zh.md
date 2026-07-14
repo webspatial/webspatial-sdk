@@ -6,7 +6,7 @@
 - `static3d`，基于 `SpatializedStatic3DElement`
 - `dynamic3d`，基于 `SpatializedDynamic3DElement`
 
-三者共享同一套公开 segment/timeline authoring 模型和内部 canonical `tracks` 执行模型，但在 React 绑定入口和 native 写入路径上不同。Entity 动画保持独立栈。
+三者共享同一套公开 segment/timeline authoring 模型和内部 canonical `tracks` 执行模型，但在 React 绑定入口和 native 写入路径上不同。Entity-level animation 不属于本变更的公开 API 和 capability 范围。
 
 本设计定义 playback lifecycle、native frame sampling、animation-owned mask、terminal callback 语义、公开 segment/timeline authoring、内部 canonical `tracks`、`xr-animation` bind-time target resolution 和 React `style` outlet。
 
@@ -14,7 +14,7 @@
 
 实现分为 React SDK、Core SDK 和 native runtime 三层：
 
-- React SDK 从 `@webspatial/react-sdk/experimental` 导出 ready-gated `useAnimation` 和 `useEntityAnimation` facade。React SDK 持有 `AnimationBinding`，由 `useAnimation(config)` 创建。它负责保存 config、bind 前命令排队，并且只在 `xr-animation` 解析到具体 `SpatializedElement` target 后创建 Core `AnimationObject`。
+- React SDK 从 `@webspatial/react-sdk/experimental` 导出 ready-gated `useAnimation` facade。React SDK 持有 `AnimationBinding`，由 `useAnimation(config)` 创建。它负责保存 config、bind 前命令排队，并且只在 `xr-animation` 解析到具体 `SpatializedElement` target 后创建 Core `AnimationObject`。
 - Core SDK 持有 `AnimationObject extends SpatialObject`。它解析播放控制，继承 `destroy()`，订阅 `NativeWebMsg`，按匹配的 animation identity 过滤 `SpatialAnimationStateChanged`，并更新自身可观察状态。
 - visionOS 持有 native `AnimationObject extends SpatialObject` 和 `SpatializedElementAnimationManager`。`SpatialScene` 注册 JSB listener 并存储 native spatial object；manager 负责 animation 业务生命周期、create/control lookup、frame loop 调度、element destroy 级联清理、animating mask 协调，以及构造 `SpatialAnimationStateChanged` 并通过 WebMsg 路径发送。
 

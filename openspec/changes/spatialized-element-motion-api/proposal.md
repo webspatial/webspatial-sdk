@@ -4,7 +4,7 @@ SpatialDiv, Model, and Reality containers need one declarative animation API wit
 
 This change provides `useAnimation(config)` for container-root transform and opacity animation. It supports simple start-to-end transitions and multi-step percentage keyframes, with shared playback controls and lifecycle callbacks.
 
-`useAnimation` and `useEntityAnimation` are experimental APIs. Import them from `@webspatial/react-sdk/experimental`.
+`useAnimation` is an experimental API. Import it from `@webspatial/react-sdk/experimental`. Entity-level animation is outside the public API and capability scope of this change.
 
 ## When to use this API
 
@@ -16,7 +16,6 @@ Use `useAnimation` when the visual container itself should move, rotate, scale, 
 | Move, rotate, scale, or fade a Model container | `useAnimation` + `xr-animation` on `<Model>` |
 | Move, rotate, scale, or fade a Reality container and all of its children together | `useAnimation` + `xr-animation` on `<Reality>` |
 | Play animation embedded in a USD model | Model ref `play()` / `pause()` |
-| Animate an individual Entity inside Reality | `useEntityAnimation` |
 | Run one simple start-to-end transition | Top-level `from` and `to` |
 | Run three or more stages, or change properties at different times | `timeline` mixing boundaries and percentage keyframes |
 
@@ -153,7 +152,7 @@ return (
 )
 ```
 
-This animates the Reality container, so its child entities move with it while retaining their local transforms. To animate one child Entity independently, use `useEntityAnimation`.
+This animates the Reality container, so its child entities move with it while retaining their local transforms.
 
 ## Config reference
 
@@ -247,5 +246,5 @@ Use `supports('useAnimation')` to choose between the animated and static present
 ## Impact
 
 - **Packages:** `@webspatial/react-sdk`, `@webspatial/core-sdk`, and the spatial runtime.
-- **Experimental API:** `useAnimation`, `useEntityAnimation`, `SpatializedMotionConfig`, and `SpatializedPlaybackApi` are exported from `@webspatial/react-sdk/experimental`; `xr-animation` and `supports('useAnimation')` retain their existing entry points.
+- **Experimental API:** `useAnimation`, `SpatializedMotionConfig`, and `SpatializedPlaybackApi` are exported from `@webspatial/react-sdk/experimental`; `xr-animation` and `supports('useAnimation')` retain their existing entry points.
 - **Migration:** existing top-level `from` / `to` authoring remains supported; multi-stage demos and documentation use public timeline authoring.

@@ -6,7 +6,7 @@ This change defines declarative motion for three spatialized container kinds:
 - `static3d` via `SpatializedStatic3DElement`
 - `dynamic3d` via `SpatializedDynamic3DElement`
 
-All three share the same public segment/timeline authoring model and canonical internal `tracks` execution model, but they differ in React binding entry points and native write paths. Entity animation remains a separate stack.
+All three share the same public segment/timeline authoring model and canonical internal `tracks` execution model, but they differ in React binding entry points and native write paths. Entity-level animation is outside the public API and capability scope of this change.
 
 The design defines playback lifecycle, native frame sampling, animation-owned masks, terminal callback semantics, public segment/timeline authoring, canonical internal `tracks`, `xr-animation` bind-time target resolution, and the React `style` outlet.
 
@@ -14,7 +14,7 @@ The design defines playback lifecycle, native frame sampling, animation-owned ma
 
 The implementation is split across React SDK, Core SDK, and native runtime:
 
-- React SDK exports the ready-gated `useAnimation` and `useEntityAnimation` facades from `@webspatial/react-sdk/experimental`. React SDK owns `AnimationBinding`, created by `useAnimation(config)`. It stores config, queues pre-bind commands, and creates the Core `AnimationObject` only after `xr-animation` resolves a concrete `SpatializedElement` target.
+- React SDK exports the ready-gated `useAnimation` facade from `@webspatial/react-sdk/experimental`. React SDK owns `AnimationBinding`, created by `useAnimation(config)`. It stores config, queues pre-bind commands, and creates the Core `AnimationObject` only after `xr-animation` resolves a concrete `SpatializedElement` target.
 - Core SDK owns `AnimationObject extends SpatialObject`. It resolves playback controls, inherits `destroy()`, subscribes to `NativeWebMsg`, filters `SpatialAnimationStateChanged` by matching animation identity, and updates its own observable state.
 - visionOS owns native `AnimationObject extends SpatialObject` and `SpatializedElementAnimationManager`. `SpatialScene` registers JSB listeners and stores native spatial objects; the manager owns animation business lifecycle, create/control lookup, frame loop scheduling, element destroy cascading, animating mask coordination, and construction of `SpatialAnimationStateChanged` payloads sent through the WebMsg path.
 

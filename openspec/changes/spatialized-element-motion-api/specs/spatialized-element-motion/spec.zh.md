@@ -2,13 +2,13 @@
 
 ## 范围
 
-本能力为 `Spatialized2DElement`、`SpatializedStatic3DElement` 和 `SpatializedDynamic3DElement` 定义一套公开容器动画 API。Entity 动画继续使用独立的 `useEntityAnimation` / `AnimateTransform` 栈。
+本能力为 `Spatialized2DElement`、`SpatializedStatic3DElement` 和 `SpatializedDynamic3DElement` 定义一套公开容器动画 API。Entity-level animation 不属于本变更的公开 API 和 capability 范围。
 
 ## 新增需求
 
 ### Requirement: 一套与目标无关的容器动画 API
 
-SDK 的实验入口 `@webspatial/react-sdk/experimental` MUST 暴露返回 `[animation, api, style]` 的 `useAnimation(config)`。React SDK 默认入口和 eager 入口 MUST NOT 暴露 `useAnimation` 或 `useEntityAnimation`。Config MUST NOT 包含目标 `kind`；SDK MUST 在 opaque `animation` binding 通过 `xr-animation` 绑定时解析目标。
+SDK 的实验入口 `@webspatial/react-sdk/experimental` MUST 暴露返回 `[animation, api, style]` 的 `useAnimation(config)`。React SDK 默认入口和 eager 入口 MUST NOT 暴露 `useAnimation`。Config MUST NOT 包含目标 `kind`；SDK MUST 在 opaque `animation` binding 通过 `xr-animation` 绑定时解析目标。
 
 | 绑定组件 | 解析目标 | Native 动画字段 |
 |---|---|---|
@@ -27,12 +27,6 @@ SDK 的实验入口 `@webspatial/react-sdk/experimental` MUST 暴露返回 `[ani
 - **WHEN** 同一 `animation` binding 同时绑定到多个组件
 - **THEN** SDK MUST 拒绝后续绑定或发出警告
 - **AND** 只有第一次绑定 MUST 生效
-
-#### Scenario: Entity 动画保持独立
-
-- **WHEN** 开发者通过 `useEntityAnimation` 动画化子 `Entity`
-- **THEN** 该动画 MUST 保持在 Entity 栈
-- **AND** 它 MUST NOT 使用容器 `AnimationObject`
 
 ### Requirement: 公开 config 支持简单写法和 timeline 写法
 

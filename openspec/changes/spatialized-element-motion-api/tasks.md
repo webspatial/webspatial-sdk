@@ -30,7 +30,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Unified spec: define element animating mask ownership wording
 - [x] Unified spec: require Static3D container-root transform / opacity animation
 - [x] Unified spec: require Dynamic3D container-root transform / opacity animation
-- [x] Unified spec: keep Entity animation separate from container motion
+- [x] Unified spec: keep Entity-level animation outside the public API and capability scope of this change
 
 ## Phase 4 — Design alignment
 

@@ -4,7 +4,7 @@ SpatialDiv、Model 和 Reality 容器需要一套统一的声明式动画 API，
 
 本变更提供 `useAnimation(config)`，用于动画化容器根 transform 和 opacity。它既支持简单的起止过渡，也支持多阶段百分比关键帧，并为所有支持的容器提供一致的播放控制和生命周期回调。
 
-`useAnimation` 和 `useEntityAnimation` 是实验 API，应从 `@webspatial/react-sdk/experimental` 导入。
+`useAnimation` 是实验 API，应从 `@webspatial/react-sdk/experimental` 导入。Entity-level animation 不属于本变更的公开 API 和 capability 范围。
 
 ## 什么需求使用什么 API
 
@@ -16,7 +16,6 @@ SpatialDiv、Model 和 Reality 容器需要一套统一的声明式动画 API，
 | 移动、旋转、缩放或淡入淡出 Model 容器 | `useAnimation` + `<Model>` 上的 `xr-animation` |
 | 整体动画化 Reality 容器及其所有子节点 | `useAnimation` + `<Reality>` 上的 `xr-animation` |
 | 播放 USD 模型内嵌动画 | Model ref 的 `play()` / `pause()` |
-| 独立动画化 Reality 内的某个 Entity | `useEntityAnimation` |
 | 运行一次简单的起止过渡 | 使用顶层 `from` 和 `to` |
 | 运行三个及以上阶段，或让不同属性在不同时间变化 | 使用混合边界与百分比关键帧的 `timeline` |
 
@@ -153,7 +152,7 @@ return (
 )
 ```
 
-这会动画化 Reality 容器，子 Entity 在保留自身局部 transform 的同时随容器一起移动。若要独立动画化某个子 Entity，应使用 `useEntityAnimation`。
+这会动画化 Reality 容器，子 Entity 在保留自身局部 transform 的同时随容器一起移动。
 
 ## Config 参考
 
@@ -247,5 +246,5 @@ const presentation = supports('useAnimation')
 ## 影响
 
 - **包：** `@webspatial/react-sdk`、`@webspatial/core-sdk` 和空间运行时。
-- **实验 API：** `useAnimation`、`useEntityAnimation`、`SpatializedMotionConfig` 和 `SpatializedPlaybackApi` 从 `@webspatial/react-sdk/experimental` 导出；`xr-animation` 和 `supports('useAnimation')` 保持现有入口不变。
+- **实验 API：** `useAnimation`、`SpatializedMotionConfig` 和 `SpatializedPlaybackApi` 从 `@webspatial/react-sdk/experimental` 导出；`xr-animation` 和 `supports('useAnimation')` 保持现有入口不变。
 - **迁移：** 继续支持现有顶层 `from` / `to` authoring；多阶段 demo 和文档使用公开 timeline authoring。
