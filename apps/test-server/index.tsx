@@ -90,7 +90,6 @@ import SpatialElementMotionScaleExpandPage from './src/pages/spatial-element-mot
 import SpatialElementMotionOpacityFadePage from './src/pages/spatial-element-motion/opacity-fade'
 import SpatialElementMotionPropertyTakeoverPage from './src/pages/spatial-element-motion/property-takeover'
 import SpatialElementMotionCombinedDelayPage from './src/pages/spatial-element-motion/combined-delay'
-import { SpatialElementMotionDelayPauseReproPage } from './src/pages/spatial-element-motion/delay-pause-repro'
 import SpatialElementMotionPlaybackRatePage from './src/pages/spatial-element-motion/playback-rate'
 import SpatialElementMotionRotate3dPage from './src/pages/spatial-element-motion/rotate-3d'
 import SpatialElementMotionTransformTranslatePage from './src/pages/spatial-element-motion/transform-translate'
@@ -274,10 +273,6 @@ function App() {
                 <Route
                   path="/spatial-element-motion/combined-delay"
                   element={<SpatialElementMotionCombinedDelayPage />}
-                />
-                <Route
-                  path="/spatial-element-motion/delay-pause-repro"
-                  element={<SpatialElementMotionDelayPauseReproPage />}
                 />
                 <Route
                   path="/spatial-element-motion/playback-rate"

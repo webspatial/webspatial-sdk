@@ -36,11 +36,6 @@ export const spatialElementMotionRoutes: SpatialElementMotionRoute[] = [
       'translate.y + scale + opacity together with 500ms start delay.',
   },
   {
-    path: '/spatial-element-motion/delay-pause-repro',
-    label: 'Delay Pause Repro',
-    description: 'Native delay-window pause/resume clock repro.',
-  },
-  {
     path: '/spatial-element-motion/playback-rate',
     label: 'Playback Rate (2×)',
     description:
