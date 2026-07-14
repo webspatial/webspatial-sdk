@@ -3,7 +3,7 @@ import { supports } from '@webspatial/core-sdk'
 import type { SpatializedVisualValues } from '@webspatial/core-sdk'
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   PlayStateBadge,
   btnCls,
@@ -538,7 +538,7 @@ export default function PropertyTakeoverPage() {
   const [mode, setMode] = useState<TakeoverMode>('translate')
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Property Takeover"
       description={
         <>
@@ -568,6 +568,6 @@ export default function PropertyTakeoverPage() {
       ) : (
         <OpacityTakeoverPanel />
       )}
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

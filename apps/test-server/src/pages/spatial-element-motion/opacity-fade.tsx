@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   PlayStateBadge,
   btnCls,
@@ -52,7 +52,7 @@ export default function OpacityFadePage() {
   }
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Opacity Fade + Suppression"
       description={
         <>
@@ -120,6 +120,6 @@ export default function OpacityFadePage() {
         </div>
         <Log lines={lines} />
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   btnCls,
   fmtValues,
@@ -13,7 +13,7 @@ export default function FadeInEntrancePage() {
   const [key, setKey] = useState(0)
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Fade-In Entrance"
       description="translate.z 0→100 and opacity 0→1 with easeOut over 0.6s. Auto-starts on element bind, and the controls let you replay or force the timeline state."
     >
@@ -35,7 +35,7 @@ export default function FadeInEntrancePage() {
         <FadeInScene key={key} log={log} />
         <Log lines={lines} />
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }
 

@@ -1,11 +1,11 @@
 import { WebSpatialRuntime } from '@webspatial/react-sdk'
-import { SpatialDivAnimationPageShell } from './shared'
+import { SpatialElementMotionPageShell } from './shared'
 
-export default function SpatialDivCapabilityCheckPage() {
+export default function SpatialElementMotionCapabilityCheckPage() {
   const allSupported = WebSpatialRuntime.supports('useAnimation')
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Capability Detection"
       description="Probe the runtime for Spatialized Motion support."
     >
@@ -34,6 +34,6 @@ export default function SpatialDivCapabilityCheckPage() {
           <code>isAnimating</code> stays <code>false</code>.
         </p>
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

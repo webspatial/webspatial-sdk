@@ -1,6 +1,6 @@
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   PlayStateBadge,
   btnCls,
@@ -39,7 +39,7 @@ export default function ReverseLoopPage() {
   }
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Reverse Loop (Ping-Pong)"
       description="loop: { reverse: true } makes translate.x ping-pong between -80 and 80. The toggle button drives play / pause / resume on the same session."
     >
@@ -87,6 +87,6 @@ export default function ReverseLoopPage() {
         </div>
         <Log lines={lines} />
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

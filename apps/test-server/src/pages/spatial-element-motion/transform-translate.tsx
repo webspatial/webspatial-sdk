@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react'
 import { supports } from '@webspatial/core-sdk'
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   PlayStateBadge,
   btnCls,
@@ -94,15 +94,15 @@ export default function TransformTranslatePage() {
   }
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Transform Translate"
       description={
         <>
-          Translate (0,0,0)→(100, 10, 100)px over 2s. The SpatialDiv moves in 3D
-          space using pixel-based translate values. Restart proves play re-entry
-          semantics. The Suppression Test rapidly re-renders the component
-          during animation — if transform suppression works, motion stays
-          smooth.
+          Translate (0,0,0)→(100, 10, 100)px over 2s. The spatial element moves
+          in 3D space using pixel-based translate values. Restart proves play
+          re-entry semantics. The Suppression Test rapidly re-renders the
+          component during animation — if transform suppression works, motion
+          stays smooth.
         </>
       }
     >
@@ -216,6 +216,6 @@ export default function TransformTranslatePage() {
           </ul>
         </div>
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

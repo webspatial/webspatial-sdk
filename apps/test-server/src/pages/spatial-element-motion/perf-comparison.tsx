@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { useAnimation } from '@webspatial/react-sdk'
-import { SpatialDivAnimationPageShell, btnPrimary, btnCls } from './shared'
+import { SpatialElementMotionPageShell, btnPrimary, btnCls } from './shared'
 
 // --- Animation target values (shared between JS-driven and declarative) ---
 const ANIM_DURATION_MS = 5000
@@ -309,7 +309,7 @@ export default function PerfComparisonPage() {
   const declRunning = phase === 'decl'
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Perf Comparison: JS-Driven vs Declarative"
       description={
         <>
@@ -458,6 +458,6 @@ export default function PerfComparisonPage() {
           </p>
         </section>
       )}
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

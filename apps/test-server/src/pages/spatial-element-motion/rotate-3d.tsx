@@ -1,6 +1,6 @@
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   PlayStateBadge,
   btnCls,
@@ -29,7 +29,7 @@ export default function Rotate3DPage() {
   })
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="3D Rotate (X/Y/Z)"
       description="transform.rotate.x/y/z 0→180 degrees over 2.5s. Pause / resume / reset exercise the full session lifecycle."
     >
@@ -77,6 +77,6 @@ export default function Rotate3DPage() {
         </div>
         <Log lines={lines} />
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

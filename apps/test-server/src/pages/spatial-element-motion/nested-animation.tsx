@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   PlayStateBadge,
   btnCls,
@@ -11,7 +11,7 @@ import {
 } from './shared'
 
 /**
- * Nested SpatialDiv Animation Test
+ * Nested Spatial Element Animation Test
  *
  * Verifies that independent animations on nested enable-xr divs
  * (parent / child / grandchild) work correctly:
@@ -233,7 +233,7 @@ export default function NestedAnimationPage() {
   const [showMiddle, setShowMiddle] = useState(true)
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Nested Animation"
       description={
         <>
@@ -297,6 +297,6 @@ export default function NestedAnimationPage() {
         {/* Event log */}
         <Log lines={lines} />
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

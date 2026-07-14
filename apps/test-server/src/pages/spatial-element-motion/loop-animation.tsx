@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { useAnimation } from '@webspatial/react-sdk'
-import { SpatialDivAnimationPageShell, btnPrimary } from './shared'
+import { SpatialElementMotionPageShell, btnPrimary } from './shared'
 
 const ANIM_DURATION_MS = 2000
 const TARGET = {
@@ -141,7 +141,7 @@ export default function LoopAnimationPage() {
   const isJsMode = mode === 'js'
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Loop Animation: JS-Driven vs Declarative"
       description={
         <>
@@ -250,6 +250,6 @@ export default function LoopAnimationPage() {
           ? '* JS-driven mode: each instance runs its own requestAnimationFrame loop with manual transform interpolation. Performance degrades as instance count increases due to main thread workload.'
           : '* Declarative mode: animation runs natively via useAnimation with loop: { reverse: true }. Main thread stays free regardless of instance count.'}
       </p>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

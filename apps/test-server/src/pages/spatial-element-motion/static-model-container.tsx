@@ -3,7 +3,7 @@ import { Model, useAnimation } from '@webspatial/react-sdk'
 import {
   Log,
   PlayStateBadge,
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   btnCls,
   btnPrimary,
   fmtValues,
@@ -62,7 +62,7 @@ export default function SpatialElementMotionStaticModelContainerPage() {
   })
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Static Model Container Timeline"
       description={
         <>
@@ -161,6 +161,6 @@ export default function SpatialElementMotionStaticModelContainerPage() {
           ]}
         />
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

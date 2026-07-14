@@ -18,7 +18,7 @@ export function fmtNum(n: number | undefined, digits = 2): string {
   return typeof n === 'number' && Number.isFinite(n) ? n.toFixed(digits) : '-'
 }
 
-/** Pretty-print whitelisted SpatialDiv animated values for log lines. */
+/** Pretty-print whitelisted spatial element animated values for log lines. */
 export function fmtValues(values: SpatializedVisualValues | undefined): string {
   if (!values) return '-'
   const parts: string[] = []
@@ -94,7 +94,7 @@ export function PlayStateBadge({ state }: { state: string }) {
   )
 }
 
-export function SpatialDivAnimationPageShell({
+export function SpatialElementMotionPageShell({
   title,
   description,
   children,
@@ -128,7 +128,7 @@ export function SpatialDivAnimationPageShell({
   )
 }
 
-export function SpatialDivAnimationOverview() {
+export function SpatialElementMotionOverview() {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {spatialElementMotionRoutes.map(route => (

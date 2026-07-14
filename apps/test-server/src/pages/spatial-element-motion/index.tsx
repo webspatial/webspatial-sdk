@@ -1,6 +1,6 @@
-import { SpatialDivAnimationOverview } from './shared'
+import { SpatialElementMotionOverview } from './shared'
 
-export default function SpatialDivAnimationPage() {
+export default function SpatialElementMotionPage() {
   return (
     <div className="min-h-full bg-[#0d0d0d] p-6 text-white">
       <div className="mx-auto max-w-6xl">
@@ -35,7 +35,7 @@ export default function SpatialDivAnimationPage() {
           <code>backOffset</code>, <code>depth</code>) are explicitly rejected.
         </div>
 
-        <SpatialDivAnimationOverview />
+        <SpatialElementMotionOverview />
 
         <section className="mt-10 border-t border-gray-800 pt-6 text-sm text-gray-500">
           <h3 className="mb-2 font-medium text-gray-400">

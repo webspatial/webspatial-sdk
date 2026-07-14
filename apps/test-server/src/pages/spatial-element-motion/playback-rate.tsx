@@ -1,6 +1,6 @@
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   PlayStateBadge,
   btnCls,
@@ -32,7 +32,7 @@ export default function PlaybackRatePage() {
   })
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Playback Rate (2× speed)"
       description="rotate.z 0→360 + opacity 1→0.4 over 2s at 2× speed (effective ~1s). Linear easing."
     >
@@ -73,6 +73,6 @@ export default function PlaybackRatePage() {
         </div>
         <Log lines={lines} />
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

@@ -1,6 +1,6 @@
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   PlayStateBadge,
   btnCls,
@@ -38,7 +38,7 @@ export default function CombinedDelayPage() {
   })
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Combined Properties + 500ms Delay"
       description="Animates transform.translate.y, transform.scale, and opacity simultaneously after a 500ms delay. Duration 1.2s."
     >
@@ -86,6 +86,6 @@ export default function CombinedDelayPage() {
         </div>
         <Log lines={lines} />
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

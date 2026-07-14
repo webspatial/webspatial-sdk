@@ -9,7 +9,7 @@ import {
 import {
   Log,
   PlayStateBadge,
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   btnCls,
   btnPrimary,
   fmtValues,
@@ -68,7 +68,7 @@ export default function SpatialElementMotionRealityContainerPage() {
   })
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Reality Container Timeline"
       description={
         <>
@@ -171,6 +171,6 @@ export default function SpatialElementMotionRealityContainerPage() {
           ]}
         />
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

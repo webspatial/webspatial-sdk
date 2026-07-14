@@ -1,6 +1,6 @@
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   PlayStateBadge,
   btnCls,
@@ -29,7 +29,7 @@ export default function ScaleExpandPage() {
   })
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="Scale Expand + Cancel"
       description="transform.scale 0.6→1.0 over 1s. Cancel restores the from snapshot — no manual React state sync required."
     >
@@ -77,6 +77,6 @@ export default function ScaleExpandPage() {
         </div>
         <Log lines={lines} />
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }

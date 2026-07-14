@@ -1,6 +1,6 @@
 import { useAnimation } from '@webspatial/react-sdk'
 import {
-  SpatialDivAnimationPageShell,
+  SpatialElementMotionPageShell,
   Log,
   PlayStateBadge,
   btnCls,
@@ -29,7 +29,7 @@ export default function SpatializedMotionPlayStatePage() {
   }
 
   return (
-    <SpatialDivAnimationPageShell
+    <SpatialElementMotionPageShell
       title="PlayState Inspector"
       description={
         <>
@@ -133,6 +133,6 @@ export default function SpatializedMotionPlayStatePage() {
           </ul>
         </div>
       </section>
-    </SpatialDivAnimationPageShell>
+    </SpatialElementMotionPageShell>
   )
 }
