@@ -204,14 +204,13 @@ The internal tracks document MAY carry the resolved timing function per keyframe
 
 After binding resolves a target, Core MUST create a native-backed `AnimationObject` through `SpatializedElement.createAnimation(config)`. Create MUST validate and normalize the public config, lock the normalized timeline for that object, and MUST NOT itself start sampling unless implicit auto-start or a queued explicit play follows.
 
-Playback controls MUST operate on the same object. A config signature change or target rebinding MUST destroy and recreate the object rather than mutate its locked timeline. Pure Web runtimes MUST NOT start a Web RAF fallback.
+Playback controls MUST operate on the same object. A config signature change or target rebinding MUST destroy and recreate the object rather than mutate its locked timeline.
 
 #### Scenario: Play before bind is queued
 
 - **WHEN** `api.play()` is called before `xr-animation` resolves a target
 - **THEN** the command MUST queue
 - **AND** it MUST run after the native-backed object is created
-- **AND** no Web RAF fallback may start
 
 #### Scenario: Explicit play survives autoStart false
 
@@ -224,12 +223,6 @@ Playback controls MUST operate on the same object. A config signature change or 
 - **WHEN** the normalized config signature changes
 - **THEN** the current native-backed object MUST be destroyed
 - **AND** a new object with a newly locked timeline MUST be created for the bound target
-
-#### Scenario: Pure Web runtime has no playback fallback
-
-- **WHEN** native `AnimationObject` support is unavailable
-- **THEN** `supports('useAnimation')` MUST be false
-- **AND** the SDK MUST NOT run a JavaScript RAF sampler
 
 ### Requirement: Target-specific writes preserve component boundaries
 

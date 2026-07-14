@@ -204,14 +204,13 @@ Track、keyframe、property path、归一化 timeline 和 native wire 类型 MUS
 
 Binding 解析目标后，Core MUST 通过 `SpatializedElement.createAnimation(config)` 创建 native-backed `AnimationObject`。Create MUST 校验并归一化公开 config，为该对象锁定归一化 timeline；除非随后触发 implicit auto-start 或排队的显式 play，否则 create 本身 MUST NOT 启动采样。
 
-播放控制 MUST 作用于同一对象。Config signature 变化或 target 重新绑定时，SDK MUST 销毁并重建对象，而不是修改已锁定 timeline。纯 Web runtime MUST NOT 启动 Web RAF fallback。
+播放控制 MUST 作用于同一对象。Config signature 变化或 target 重新绑定时，SDK MUST 销毁并重建对象，而不是修改已锁定 timeline。
 
 #### Scenario: Bind 前 play 排队
 
 - **WHEN** `api.play()` 在 `xr-animation` 解析目标前调用
 - **THEN** 命令 MUST 排队
 - **AND** 它 MUST 在 native-backed 对象创建后运行
-- **AND** 不得启动 Web RAF fallback
 
 #### Scenario: 显式 play 不被 autoStart false 吞掉
 
@@ -224,12 +223,6 @@ Binding 解析目标后，Core MUST 通过 `SpatializedElement.createAnimation(c
 - **WHEN** 归一化 config signature 变化
 - **THEN** 当前 native-backed 对象 MUST 被销毁
 - **AND** SDK MUST 为已绑定目标创建拥有新锁定 timeline 的新对象
-
-#### Scenario: 纯 Web runtime 无播放 fallback
-
-- **WHEN** native `AnimationObject` 支持不可用
-- **THEN** `supports('useAnimation')` MUST 为 false
-- **AND** SDK MUST NOT 运行 JavaScript RAF sampler
 
 ### Requirement: Target-specific 写入保持组件边界
 
