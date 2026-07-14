@@ -166,12 +166,18 @@ Track, keyframe, property-path, normalized timeline, and native wire types MUST 
 
 ### Requirement: Only visual container properties are animatable
 
-Container motion MUST support `opacity` and the scalar paths under `transform.translate`, `transform.rotate`, and `transform.scale` for X, Y, and Z. Layout and spatial-size fields including `width`, `height`, `back`, `backOffset`, and `depth` MUST be rejected before native create.
+Container motion MUST support `opacity` and the scalar paths under `transform.translate`, `transform.rotate`, and `transform.scale` for X, Y, and Z. Other fields, including layout and spatial-size fields such as `width`, `height`, `back`, `backOffset`, and `depth`, MUST be ignored during normalization and MUST NOT appear in the internal tracks sent to native. The public TypeScript authoring surface MUST continue to expose only supported fields.
 
-#### Scenario: Layout property is rejected
+#### Scenario: Unsupported property is ignored
 
-- **WHEN** public timeline values resolve to a non-animatable layout or spatial-size field
-- **THEN** validation MUST fail before native playback
+- **WHEN** public visual values contain both supported scalar fields and unsupported fields
+- **THEN** normalization MUST produce tracks only for the supported scalar fields
+- **AND** the unsupported fields MUST NOT be sent to native
+
+#### Scenario: No supported property remains after normalization
+
+- **WHEN** all fields in the public visual values are unsupported and normalization produces no tracks
+- **THEN** the existing normalized-track validation MUST reject the config before native create
 
 #### Scenario: Transform composition order is stable
 

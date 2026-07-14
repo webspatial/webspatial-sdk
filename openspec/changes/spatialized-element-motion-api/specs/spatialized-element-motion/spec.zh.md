@@ -166,12 +166,18 @@ Track、keyframe、property path、归一化 timeline 和 native wire 类型 MUS
 
 ### Requirement: 仅允许视觉容器属性
 
-容器动画 MUST 支持 `opacity`，以及 `transform.translate`、`transform.rotate`、`transform.scale` 下的 X、Y、Z 标量路径。`width`、`height`、`back`、`backOffset`、`depth` 等布局和空间尺寸字段 MUST 在 native create 前被拒绝。
+容器动画 MUST 支持 `opacity`，以及 `transform.translate`、`transform.rotate`、`transform.scale` 下的 X、Y、Z 标量路径。其他字段，包括 `width`、`height`、`back`、`backOffset`、`depth` 等布局和空间尺寸字段，MUST 在 normalization 期间被忽略，且 MUST NOT 出现在发送给 native 的内部 tracks 中。公开 TypeScript authoring 类型 MUST 继续只暴露支持的字段。
 
-#### Scenario: 拒绝布局属性
+#### Scenario: 忽略不支持的属性
 
-- **WHEN** 公开 timeline 值解析出不可动画化的布局或空间尺寸字段
-- **THEN** 校验 MUST 在 native 播放前失败
+- **WHEN** 公开 visual values 同时包含支持的标量字段和不支持的字段
+- **THEN** normalization MUST 只为支持的标量字段生成 tracks
+- **AND** 不支持的字段 MUST NOT 被发送给 native
+
+#### Scenario: Normalization 后没有支持的属性
+
+- **WHEN** 公开 visual values 中的所有字段均不受支持，且 normalization 未生成任何 tracks
+- **THEN** 现有的 normalized-track 校验 MUST 在 native create 前拒绝该 config
 
 #### Scenario: Transform 组合顺序稳定
 
