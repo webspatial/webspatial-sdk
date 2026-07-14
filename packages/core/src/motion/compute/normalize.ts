@@ -162,6 +162,28 @@ export function desugarTimelineConfig(
     })
     .sort((a, b) => a.atRatio - b.atRatio)
 
+  // Dev warn: top-level from/to are ignored once a timeline is present.
+  if (config.from !== undefined || config.to !== undefined) {
+    console.warn(
+      '[SpatializedMotion] top-level from/to are ignored because timeline is present',
+    )
+  }
+
+  // Start/end boundary frames are required; this change does not fill missing
+  // boundaries from underlying element style.
+  const hasStartFrame = frames.some(frame => frame.atRatio === 0)
+  const hasEndFrame = frames.some(frame => frame.atRatio === 1)
+  if (!hasStartFrame) {
+    throw new Error(
+      '[SpatializedMotion] timeline must define a start frame (from or 0%)',
+    )
+  }
+  if (!hasEndFrame) {
+    throw new Error(
+      '[SpatializedMotion] timeline must define an end frame (to or 100%)',
+    )
+  }
+
   if (hasPercentageKey && config.duration === undefined) {
     throw new Error(
       '[SpatializedMotion] duration is required when timeline uses percentage keys',

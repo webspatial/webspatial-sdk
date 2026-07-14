@@ -99,6 +99,7 @@ import SpatialElementMotionPlayStatePage from './src/pages/spatial-element-motio
 import SpatialElementMotionPerfComparisonPage from './src/pages/spatial-element-motion/perf-comparison'
 import SpatialElementMotionLoopAnimationPage from './src/pages/spatial-element-motion/loop-animation'
 import SpatialElementMotionNestedAnimationPage from './src/pages/spatial-element-motion/nested-animation'
+import SpatialElementMotionTimelineMixedBoundariesPage from './src/pages/spatial-element-motion/timeline-mixed-boundaries'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -313,6 +314,10 @@ function App() {
                 <Route
                   path="/spatial-element-motion/nested-animation"
                   element={<SpatialElementMotionNestedAnimationPage />}
+                />
+                <Route
+                  path="/spatial-element-motion/timeline-mixed-boundaries"
+                  element={<SpatialElementMotionTimelineMixedBoundariesPage />}
                 />
                 <Route path="/scene" element={<SceneTest />} />
                 <Route path="/scene/volume" element={<SceneVolume />} />

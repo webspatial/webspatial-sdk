@@ -90,6 +90,7 @@ export function PulsingPanel() {
 Timeline authoring follows these rules:
 
 - `from` is equivalent to `0%`; `to` is equivalent to `100%`.
+- The timeline as a whole must define both a start frame (`from` or `0%`) and an end frame (`to` or `100%`). A timeline missing either boundary is rejected; missing boundaries are never filled from the underlying element style.
 - `duration` is required when any percentage key is used and is measured in seconds.
 - Keys range from `0%` to `100%`; decimal values such as `30.33%` are supported.
 - Each animated property needs at least two values. It may appear only in the frames relevant to it: values are interpolated between those frames, with the first value held before its first frame and the last value held after its last frame.
@@ -105,7 +106,7 @@ timeline: {
 }
 ```
 
-Timeline authoring places the animation boundaries inside `timeline`, while the outer config carries duration and playback controls. Top-level `from` and `to` remain the simple authoring form.
+Timeline authoring places the animation boundaries inside `timeline`, while the outer config carries duration and playback controls. Top-level `from` and `to` remain the simple authoring form; when a `timeline` is present, any top-level `from`/`to` are ignored and Core emits a development warning that they were ignored.
 
 ## Supported hosts
 

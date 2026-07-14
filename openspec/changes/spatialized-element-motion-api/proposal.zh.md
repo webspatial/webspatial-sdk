@@ -90,6 +90,7 @@ export function PulsingPanel() {
 Timeline authoring 遵循以下规则：
 
 - `from` 等价于 `0%`，`to` 等价于 `100%`。
+- 整个 timeline 必须同时定义起始帧(`from` 或 `0%`)和结束帧(`to` 或 `100%`)。缺失任一边界的 timeline 会被拒绝;缺失的边界不会从底层元素样式补齐。
 - 使用任意百分比 key 时，`duration` 必填，单位为秒。
 - Key 范围为 `0%` 到 `100%`，支持 `30.33%` 等小数百分比。
 - 每个动画属性至少需要两个值。属性可以只出现在与它相关的帧中：在这些帧之间插值，在首帧之前保持首值，在末帧之后保持末值。
@@ -105,7 +106,7 @@ timeline: {
 }
 ```
 
-Timeline authoring 将动画边界放在 `timeline` 内，外层 config 承载 duration 和播放控制。顶层 `from` 和 `to` 继续作为简单 authoring 形式。
+Timeline authoring 将动画边界放在 `timeline` 内，外层 config 承载 duration 和播放控制。顶层 `from` 和 `to` 继续作为简单 authoring 形式;当存在 `timeline` 时,任何顶层 `from`/`to` 都会被忽略,Core 会发出开发期告警提示它们被忽略。
 
 ## 支持的宿主
 

@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import {
   validateNormalizedMotionConfig,
   validateSpatializedMotionConfig,
@@ -98,26 +98,54 @@ describe('validateSpatializedMotionConfig', () => {
     ).not.toThrow()
   })
 
-  test.each([
-    {
-      duration: 1,
-      timeline: { '50%': { opacity: 0.5 }, to: { opacity: 1 } },
-    },
-    {
-      duration: 1,
-      timeline: { from: { opacity: 0 }, '50%': { opacity: 0.5 } },
-    },
-  ])('accepts sparse property boundaries', config => {
-    expect(() => validateSpatializedMotionConfig(config as never)).not.toThrow()
-  })
-
-  test('rejects a property with only one keyframe', () => {
+  test('rejects a timeline missing the start frame', () => {
     expect(() =>
       validateSpatializedMotionConfig({
         duration: 1,
-        timeline: { '50%': { opacity: 0.5 } },
+        timeline: { '50%': { opacity: 0.5 }, to: { opacity: 1 } },
       }),
-    ).toThrow(/track "opacity" needs at least 2 keyframes/)
+    ).toThrow(/must define a start frame/)
+  })
+
+  test('rejects a timeline missing the end frame', () => {
+    expect(() =>
+      validateSpatializedMotionConfig({
+        duration: 1,
+        timeline: { from: { opacity: 0 }, '50%': { opacity: 0.5 } },
+      }),
+    ).toThrow(/must define an end frame/)
+  })
+
+  test('warns when top-level from/to coexist with a timeline', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    validateSpatializedMotionConfig({
+      duration: 1,
+      from: { opacity: 0.25 },
+      to: { opacity: 0.75 },
+      timeline: {
+        '0%': { opacity: 0 },
+        '100%': { opacity: 1 },
+      },
+    })
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('top-level from/to are ignored'),
+    )
+    warnSpy.mockRestore()
+  })
+
+  test('rejects a property with only one keyframe', () => {
+    // Timeline has overall start/end frames (opacity at 0% and 100%), but the
+    // rotate.z property appears only once at 50%, which is fewer than two keyframes.
+    expect(() =>
+      validateSpatializedMotionConfig({
+        duration: 1,
+        timeline: {
+          '0%': { opacity: 0 },
+          '50%': { transform: { rotate: { z: 45 } } },
+          '100%': { opacity: 1 },
+        },
+      }),
+    ).toThrow(/track "transform.rotate.z" needs at least 2 keyframes/)
   })
 
   test.each([

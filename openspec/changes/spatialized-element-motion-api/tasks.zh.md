@@ -188,9 +188,9 @@
 - [x] 将使用公开 tracks authoring 的 React 集成测试和 test-server 页面迁移为公开 timeline authoring；保留合法的顶层 segment 示例
 - [x] 运行 Core / React 测试、typecheck、test-server 检查、仓库搜索与 OpenSpec 校验
 
-## Phase 14 — 保留 sparse property timeline 语义
+## Phase 14 — 要求 timeline 起止帧必填并在忽略顶层 from/to 时告警
 
-- [x] 对齐 proposal、design 与 spec：property track 可以晚于 0% 开始或早于 100% 结束，同时保留重复边界拒绝和至少两个关键帧要求
-- [x] TDD 红灯：将缺失边界拒绝测试改为 sparse range 接受测试，并保留单关键帧 track 与重复边界拒绝测试
-- [x] TDD 绿灯：移除 Core normalization 的缺失边界拒绝，同时保持 sparse 数值 tracks 与 native sampler contract
+- [x] 对齐 proposal、design 与 spec:timeline MUST 同时定义起始帧(`from`/`0%`)和结束帧(`to`/`100%`),缺失边界一律拒绝且不从底层样式补齐;同时保留 property 级 sparse(每个属性可在 timeline 内部晚开始/早结束)与至少两个关键帧要求
+- [x] TDD 红灯:新增缺失起始帧、缺失结束帧的拒绝测试,新增顶层 `from`/`to` 与 timeline 并存时的告警测试,并保留单关键帧 track 与重复边界拒绝测试
+- [x] TDD 绿灯:在 Core normalization 中强制要求起止帧,并在顶层 `from`/`to` 与 timeline 并存时无条件发出开发期告警,同时保持 sparse 数值 tracks 与 native sampler contract
 - [x] 运行 Core / React 测试、typecheck、test-server 检查、仓库搜索与 OpenSpec 校验

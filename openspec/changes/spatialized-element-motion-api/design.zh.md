@@ -20,9 +20,9 @@
 
 ## 公开 authoring 与内部表示
 
-实验性的 `useAnimation(config)` 输入接受顶层 `from` / `to` segment authoring 或 `timeline` 对象。顶层分支要求两个边界都存在；timeline 分支将边界放在 `timeline` 内，对顶层边界没有要求。Timeline 可以混合使用 `from`、`to` 和百分比关键帧。存在 timeline 时，Core 在 validation 和 normalization 前丢弃任何顶层 `from` 和 `to`。公开 `tracks` authoring 仍然非法。
+实验性的 `useAnimation(config)` 输入接受顶层 `from` / `to` segment authoring 或 `timeline` 对象。顶层分支要求两个边界都存在；timeline 分支将边界放在 `timeline` 内;整个 timeline 必须同时定义起始帧(`from`/`0%`)和结束帧(`to`/`100%`),缺失任一边界时 Core 直接拒绝而不从底层样式补齐。Timeline 可以混合使用 `from`、`to` 和百分比关键帧。存在 timeline 时,Core 在 validation 和 normalization 前丢弃任何顶层 `from` 和 `to`,并无条件发出开发期告警提示顶层边界被忽略。公开 `tracks` authoring 仍然非法。
 
-Core 将 timeline `from` 视为 0%、将 `to` 视为 100%，与百分比 entry 合并，并把每个属性独立归一化为使用绝对时间关键帧的数值 track。属性 track 可以晚于 time zero 开始或早于 duration 结束，但必须至少包含两个关键帧。首个关键帧之前的采样保持首值，最后一个关键帧之后的采样保持末值。同一属性同时声明在 `from` 和 `0%`，或同时声明在 `to` 和 `100%` 时，validation 将其作为重复边界拒绝。Track、keyframe、property path、归一化 timeline 与 native wire 类型仅属于内部实现：稳定包入口不导出这些类型，`useAnimation` 不接受它们，公开文档不把它们作为 authoring API，也不提供 experimental 入口。
+Core 将 timeline `from` 视为 0%、将 `to` 视为 100%，与百分比 entry 合并，并把每个属性独立归一化为使用绝对时间关键帧的数值 track。属性 track 可以晚于 timeline 起点开始或早于 timeline 终点结束,但必须至少包含两个关键帧;timeline 本身仍必须提供起始与结束边界帧。首个关键帧之前的采样保持首值，最后一个关键帧之后的采样保持末值。同一属性同时声明在 `from` 和 `0%`，或同时声明在 `to` 和 `100%` 时，validation 将其作为重复边界拒绝。Track、keyframe、property path、归一化 timeline 与 native wire 类型仅属于内部实现：稳定包入口不导出这些类型，`useAnimation` 不接受它们，公开文档不把它们作为 authoring API，也不提供 experimental 入口。
 
 Core 向 native 发送完全解析的数值 tracks，因此现有 native timeline sampler contract 保持不变。
 

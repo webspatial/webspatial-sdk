@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { normalizeMotionConfig } from './normalize'
 
 describe('normalizeMotionConfig', () => {
@@ -35,6 +35,7 @@ describe('normalizeMotionConfig', () => {
   })
 
   test('uses only timeline values when top-level boundaries are present', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(
       normalizeMotionConfig({
         from: { opacity: 0.25 },
@@ -56,6 +57,10 @@ describe('normalizeMotionConfig', () => {
         },
       ],
     })
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('top-level from/to are ignored'),
+    )
+    warnSpy.mockRestore()
   })
 
   test('preserves sparse property keyframe ranges', () => {

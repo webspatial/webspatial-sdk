@@ -45,7 +45,7 @@ The experimental `useAnimation(config)` input MUST support either:
 
 When `timeline` is present, top-level `from` and `to` MAY both be absent. If either is present, Core MUST ignore it; top-level values MUST NOT participate in validation or normalization. Top-level `tracks` MUST be rejected by the public type surface and runtime validation.
 
-Every animated scalar property in `timeline` MUST produce at least two keyframes. A property MAY begin after 0% or end before 100%; sampling outside its authored keyframe range MUST hold its first or last value. A property declared in both `from` and `0%`, or in both `to` and `100%`, MUST be rejected as a duplicate boundary declaration.
+The timeline as a whole MUST define both a start frame (`from` or `0%`) and an end frame (`to` or `100%`). A timeline missing either boundary MUST be rejected; missing boundaries MUST NOT be filled from the underlying element style. Every animated scalar property in `timeline` MUST produce at least two keyframes. A property MAY begin after the timeline start or end before the timeline end; sampling outside its authored keyframe range MUST hold its first or last value. A property declared in both `from` and `0%`, or in both `to` and `100%`, MUST be rejected as a duplicate boundary declaration.
 
 #### Scenario: Top-level segment is accepted
 
@@ -76,6 +76,7 @@ Every animated scalar property in `timeline` MUST produce at least two keyframes
 - **GIVEN** a config contains `timeline` and top-level `from` or `to`
 - **WHEN** the config is validated and normalized
 - **THEN** Core MUST ignore the top-level `from` and `to`
+- **AND** Core MUST emit a development warning that top-level `from`/`to` are ignored because a timeline is present
 - **AND** only `timeline` content MUST determine the animation
 
 #### Scenario: Property begins after timeline start
@@ -91,6 +92,16 @@ Every animated scalar property in `timeline` MUST produce at least two keyframes
 - **WHEN** the timeline is validated and sampled after that property's last keyframe
 - **THEN** the SDK MUST accept the config
 - **AND** it MUST hold that property's last value through timeline end
+
+#### Scenario: Timeline missing a start frame is rejected
+
+- **WHEN** a `timeline` declares no `from` and no `0%` frame
+- **THEN** runtime validation MUST reject the config before native create
+
+#### Scenario: Timeline missing an end frame is rejected
+
+- **WHEN** a `timeline` declares no `to` and no `100%` frame
+- **THEN** runtime validation MUST reject the config before native create
 
 #### Scenario: Single property keyframe is rejected
 

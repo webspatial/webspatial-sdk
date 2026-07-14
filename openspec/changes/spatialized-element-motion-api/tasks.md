@@ -188,9 +188,9 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Migrate React integration tests and test-server pages that use public tracks authoring to public timeline authoring; retain valid top-level segment examples
 - [x] Run Core / React tests, typechecks, test-server checks, repository searches, and OpenSpec validation
 
-## Phase 14 — Preserve sparse property timeline semantics
+## Phase 14 — Require timeline start/end boundaries and warn on ignored top-level from/to
 
-- [x] Align proposal, design, and spec so property tracks may begin after 0% or end before 100%, while retaining duplicate-boundary rejection and the two-keyframe minimum
-- [x] TDD red: replace missing-boundary rejection tests with sparse-range acceptance tests and retain rejection tests for one-keyframe tracks and duplicate boundaries
-- [x] TDD green: remove missing-boundary rejection from Core normalization while preserving sparse numeric tracks and the native sampler contract
+- [x] Align proposal, design, and spec so a timeline MUST define both a start frame (`from`/`0%`) and an end frame (`to`/`100%`), missing boundaries are rejected and never filled from underlying style, while property-level sparseness (each property may begin/end inside the timeline) and the two-keyframe minimum are retained
+- [x] TDD red: add missing-start-frame and missing-end-frame rejection tests, add a warning test for top-level `from`/`to` coexisting with a timeline, and retain rejection tests for one-keyframe tracks and duplicate boundaries
+- [x] TDD green: enforce required start/end boundary frames in Core normalization and emit an unconditional development warning when top-level `from`/`to` coexist with a timeline, while preserving sparse numeric tracks and the native sampler contract
 - [x] Run Core / React tests, typechecks, test-server checks, repository searches, and OpenSpec validation

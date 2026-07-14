@@ -100,4 +100,10 @@ export const spatialElementMotionRoutes: SpatialElementMotionRoute[] = [
     description:
       'Timeline keyframes on <Model xr-animation> for monitor snap-back comparison.',
   },
+  {
+    path: '/spatial-element-motion/timeline-mixed-boundaries',
+    label: 'Timeline Mixed Boundaries',
+    description:
+      'timeline mixes from/to boundaries with a 50% keyframe; top-level from/to ignored.',
+  },
 ]

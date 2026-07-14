@@ -45,7 +45,7 @@ SDK 的实验入口 `@webspatial/react-sdk/experimental` MUST 暴露返回 `[ani
 
 存在 `timeline` 时，顶层 `from` 和 `to` MAY 同时不存在。若提供其中任意字段，Core MUST 忽略该字段；顶层值 MUST NOT 参与 validation 或 normalization。公开类型和运行时校验 MUST 拒绝顶层 `tracks`。
 
-`timeline` 中的每个动画标量属性 MUST 生成至少两个关键帧。属性 MAY 晚于 0% 开始或早于 100% 结束；在其已声明关键帧范围之外采样时 MUST 保持首值或末值。同一属性同时出现在 `from` 和 `0%`，或同时出现在 `to` 和 `100%` 时，SDK MUST 将其作为重复边界声明拒绝。
+整个 timeline MUST 同时定义起始帧(`from` 或 `0%`)和结束帧(`to` 或 `100%`)。缺失任一边界的 timeline MUST 被拒绝;缺失的边界 MUST NOT 从底层元素样式补齐。`timeline` 中的每个动画标量属性 MUST 生成至少两个关键帧。属性 MAY 晚于 timeline 起点开始或早于 timeline 终点结束;在其已声明关键帧范围之外采样时 MUST 保持首值或末值。同一属性同时出现在 `from` 和 `0%`,或同时出现在 `to` 和 `100%` 时,SDK MUST 将其作为重复边界声明拒绝。
 
 #### Scenario: 接受顶层 segment
 
@@ -76,6 +76,7 @@ SDK 的实验入口 `@webspatial/react-sdk/experimental` MUST 暴露返回 `[ani
 - **GIVEN** config 同时包含 `timeline` 和顶层 `from` 或 `to`
 - **WHEN** config 被校验和归一化
 - **THEN** Core MUST 忽略顶层 `from` 和 `to`
+- **AND** Core MUST 发出开发期警告,提示因为存在 timeline 所以顶层 `from`/`to` 被忽略
 - **AND** 只有 `timeline` 内容 MUST 决定动画
 
 #### Scenario: 属性晚于 timeline 起点开始
@@ -91,6 +92,16 @@ SDK 的实验入口 `@webspatial/react-sdk/experimental` MUST 暴露返回 `[ani
 - **WHEN** timeline 被校验，并在该属性最后一个关键帧之后采样
 - **THEN** SDK MUST 接受该 config
 - **AND** SDK MUST 将该属性末值保持到 timeline 结束
+
+#### Scenario: 拒绝缺失起始帧的 timeline
+
+- **WHEN** 某 `timeline` 未声明 `from` 也未声明 `0%` 帧
+- **THEN** 运行时校验 MUST 在 native create 前拒绝该 config
+
+#### Scenario: 拒绝缺失结束帧的 timeline
+
+- **WHEN** 某 `timeline` 未声明 `to` 也未声明 `100%` 帧
+- **THEN** 运行时校验 MUST 在 native create 前拒绝该 config
 
 #### Scenario: 拒绝属性只有一个关键帧
 
