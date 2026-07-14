@@ -5,7 +5,6 @@ export type {
   SpatializedMotionSegmentConfig,
   SpatializedMotionTimelineConfig,
   SpatializedMotionConfig,
-  SpatializedMotionAuthorConfig,
   SpatializedMotionPlayState,
   SpatializedPlaybackApi,
 } from './spatializedMotion'

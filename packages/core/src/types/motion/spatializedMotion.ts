@@ -85,9 +85,6 @@ export type SpatializedMotionConfig =
   | SpatializedMotionSegmentConfig
   | SpatializedMotionTimelineConfig
 
-/** Backward-compatible name for the public spatialized motion config. */
-export type SpatializedMotionAuthorConfig = SpatializedMotionConfig
-
 /** Canonical internal track document produced before native create. */
 export interface NormalizedSpatializedMotionConfig {
   /** Timeline duration in seconds. */

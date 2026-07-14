@@ -34,7 +34,7 @@ import {
   SpatialWebMsgType,
 } from './WebMsgCommand'
 import type {
-  SpatializedMotionAuthorConfig,
+  SpatializedMotionConfig,
   SpatializedMotionKind,
 } from './types/motion/spatializedMotion'
 
@@ -74,7 +74,7 @@ export abstract class SpatializedElement extends SpatialObject {
    * Creates a native-first AnimationObject bound to this spatialized element.
    */
   async createAnimation(
-    config: SpatializedMotionAuthorConfig,
+    config: SpatializedMotionConfig,
   ): Promise<AnimationObject> {
     const normalized = normalizeMotionConfig(config)
     validateNormalizedMotionConfig(normalized)
