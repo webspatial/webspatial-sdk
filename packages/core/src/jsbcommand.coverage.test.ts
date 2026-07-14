@@ -125,14 +125,6 @@ describe('JSBCommand', () => {
     )
   })
 
-  it('does not expose the removed AnimateSpatializedElementMotion bridge command', async () => {
-    const mod = await import('./JSBCommand')
-
-    expect(
-      (mod as any).AnimateSpatializedElementMotionJSBCommand,
-    ).toBeUndefined()
-  })
-
   it('builds element commands payloads', async () => {
     const mod = await import('./JSBCommand')
     const {

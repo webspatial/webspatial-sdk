@@ -11,22 +11,22 @@ export default function SpatialDivAnimationPage() {
           <code className="text-cyan-300">
             {'<div enable-xr xr-animation={...}>'}
           </code>
-          . The hook auto-dispatches to the target path based on the{' '}
-          <code>to</code> key set.
+          . The hook applies the motion to the bound element and resolves the
+          internal binding kind from the element's native type.
         </p>
         <p className="mb-4 max-w-3xl text-xs text-gray-500">
           Requires the WebSpatial visionOS runtime with{' '}
-          <code>AnimateSpatializedElementMotion</code> (
-          <code>targetKind: spatialized2d</code>) JSB support. In a regular
-          browser, the <code>enable-xr</code> div renders as a normal div;
-          callbacks and state transitions remain testable.
+          <code>CreateSpatializedElementAnimation</code> /{' '}
+          <code>ControlSpatializedElementAnimation</code> JSB support. In a
+          regular browser, the <code>enable-xr</code> div renders as a normal
+          div; callbacks and state transitions remain testable.
         </p>
 
         <div className="mb-8 rounded-xl border border-yellow-900/60 bg-yellow-950/30 p-4 text-xs text-yellow-200">
           <div className="mb-1 font-semibold text-yellow-300">
             Visual whitelist only
           </div>
-          The SpatialDiv animation API only accepts visual fields:{' '}
+          The Spatialized Element Motion API only accepts visual fields:{' '}
           <code className="text-cyan-300">transform.translate.x/y/z</code>,{' '}
           <code className="text-cyan-300">transform.rotate.x/y/z</code>,{' '}
           <code className="text-cyan-300">transform.scale.x/y/z</code>, and{' '}
@@ -81,9 +81,10 @@ export default function SpatialDivAnimationPage() {
             </li>
             <li>
               Capability detection page reports{' '}
-              <code>supports('useAnimation')</code> and per-kind tokens
-              consistently with runtime expectation. Public hook name used by
-              the pages is <code>useAnimation</code>.
+              <code>supports('useAnimation')</code> consistently with runtime
+              expectation; internal target kinds are never exposed as
+              sub-tokens. Public hook name used by the pages is{' '}
+              <code>useAnimation</code>.
             </li>
           </ul>
         </section>
