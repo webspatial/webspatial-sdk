@@ -6,10 +6,9 @@ import type {
   SpatializedPlaybackApi,
   SpatializedVisualValues,
 } from '@webspatial/core-sdk'
-import { createMotionBinding } from './createMotionBinding'
 import { getMotionConfigSignature } from './motionConfigSignature'
 import type { SpatializedMotionBinding } from './motionBindingTypes'
-import type { AnimationBinding } from './AnimationBinding'
+import { AnimationBinding } from './AnimationBinding'
 import { valuesToMotionStyle } from './style'
 
 /**
@@ -45,7 +44,7 @@ export function useAnimation(
   const destroyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   if (!bindingRef.current) {
-    bindingRef.current = createMotionBinding(config, {
+    bindingRef.current = new AnimationBinding(config, {
       onValuesChange: () => forceRender(),
       onStateChange: () => forceRender(),
     })
