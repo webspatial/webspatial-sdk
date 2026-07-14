@@ -113,7 +113,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] React: ensure `autoStart: false` only disables implicit play-on-bind and does not drop explicit queued commands
 - [x] React: destroy the current `AnimationObject` on unmount / unbind
 - [x] React: destroy and recreate `AnimationObject` when normalized config signature changes
-- [x] React: keep Static3D / Dynamic3D `style` as `{}`
+- [x] React: expose native-emitted values through the `style` outlet for Spatialized2D, Static3D, and Dynamic3D
 - [x] React: ensure `style` outlet is not the playback source for native-backed animation
 - [x] React: do not implement Web RAF fallback for pure Web runtime
 

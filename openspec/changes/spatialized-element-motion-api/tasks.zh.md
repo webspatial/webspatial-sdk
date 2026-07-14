@@ -113,7 +113,7 @@
 - [x] React：确保 `autoStart: false` 只禁止 implicit play-on-bind，不丢弃显式排队命令
 - [x] React：在 unmount / unbind 时 destroy 当前 `AnimationObject`
 - [x] React：normalized config signature 变化时 destroy 并 recreate `AnimationObject`
-- [x] React：保持 Static3D / Dynamic3D 的 `style` 为 `{}`
+- [x] React：通过 `style` outlet 暴露 Spatialized2D、Static3D 和 Dynamic3D 的 native 回传值
 - [x] React：确保 `style` outlet 不作为 native-backed animation 的 playback source
 - [x] React：纯 Web runtime 不实现 Web RAF fallback
 
