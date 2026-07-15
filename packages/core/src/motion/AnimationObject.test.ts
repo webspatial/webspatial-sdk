@@ -276,6 +276,32 @@ describe('AnimationObject', () => {
     expect(onStart).toHaveBeenCalledTimes(1)
   })
 
+  it('normalizes native playback errors without exposing animation id', async () => {
+    const animation = await createAnimation()
+    const onError = vi.fn()
+    animation.setCallbacks({ onError })
+    const receiver = SpatialWebEvent.eventReceiver[animation.id]
+
+    receiver?.({
+      detail: {
+        animationId: animation.id,
+        action: 'error',
+        playState: 'idle',
+        finished: false,
+        error: {
+          code: 'mask-conflict',
+          message: 'Another animation is already writing this target',
+        },
+      },
+    })
+
+    expect(onError).toHaveBeenCalledWith({
+      command: 'play',
+      code: 'mask-conflict',
+      reason: 'Another animation is already writing this target',
+    })
+  })
+
   it.each(['stop', 'reset', 'finish'] as const)(
     'does not re-fire onStart after %s until native terminal event arrives',
     async controlType => {

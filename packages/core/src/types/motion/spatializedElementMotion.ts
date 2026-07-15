@@ -1,7 +1,14 @@
 import type { SpatializedMotionTimeline } from './spatializedMotion'
 import type { SpatializedMotionPlayState } from './spatializedMotion'
-import type { SpatializedPlaybackError } from './spatializedPlayback'
 import type { SpatializedVisualValues } from './spatializedVisual'
+
+/** Native playback error payload carried by the bridge event. */
+interface SpatializedElementAnimationErrorDetail {
+  /** Machine-readable native error code. */
+  code: string
+  /** Human-readable native error message. */
+  message: string
+}
 
 export interface CreateSpatializedElementAnimationCommand {
   elementId: string
@@ -29,11 +36,11 @@ export interface SpatialAnimationStateChangedDetail {
     | 'created'
     | 'start'
     | 'complete'
-    | 'failed'
+    | 'error'
   playState: SpatializedMotionPlayState
   finished: boolean
   values?: SpatializedVisualValues
-  error?: SpatializedPlaybackError
+  error?: SpatializedElementAnimationErrorDetail
 }
 
 export interface SpatialAnimationStateChangedMsg {

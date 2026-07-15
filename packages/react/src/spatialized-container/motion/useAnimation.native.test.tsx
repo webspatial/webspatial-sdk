@@ -783,7 +783,12 @@ describe('useAnimation tuple api native backend', () => {
       result.current[0].__setElement?.(element as any)
     })
 
-    await waitFor(() => expect(onError).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(onError).toHaveBeenCalledWith({
+        command: 'create',
+        reason: 'create failed',
+      }),
+    )
     expect(result.current[1].playState).toBe('idle')
     expect(result.current[1].isAnimating).toBe(false)
   })
@@ -792,7 +797,6 @@ describe('useAnimation tuple api native backend', () => {
     const onError = vi.fn()
     const element = createMockElement('direct-control-fail')
     const error = {
-      animationId: element.animation.id,
       command: 'play',
       reason: 'play failed',
     }
@@ -819,7 +823,7 @@ describe('useAnimation tuple api native backend', () => {
 
     act(() => result.current[1].play())
 
-    await waitFor(() => expect(onError).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(error))
     await flushPromises()
     expect(onError).toHaveBeenCalledTimes(1)
   })
@@ -828,7 +832,6 @@ describe('useAnimation tuple api native backend', () => {
     const onError = vi.fn()
     const element = createMockElement('queued-control-fail')
     const error = {
-      animationId: element.animation.id,
       command: 'play',
       reason: 'queued play failed',
     }
@@ -851,7 +854,7 @@ describe('useAnimation tuple api native backend', () => {
       result.current[0].__setElement?.(element as any)
     })
 
-    await waitFor(() => expect(onError).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(error))
     await flushPromises()
     expect(onError).toHaveBeenCalledTimes(1)
   })
@@ -860,7 +863,6 @@ describe('useAnimation tuple api native backend', () => {
     const onError = vi.fn()
     const element = createMockElement('autostart-control-fail')
     const error = {
-      animationId: element.animation.id,
       command: 'play',
       reason: 'autoStart play failed',
     }
@@ -881,7 +883,7 @@ describe('useAnimation tuple api native backend', () => {
       result.current[0].__setElement?.(element as any)
     })
 
-    await waitFor(() => expect(onError).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(error))
     await flushPromises()
     expect(onError).toHaveBeenCalledTimes(1)
   })

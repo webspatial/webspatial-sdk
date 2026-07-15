@@ -93,7 +93,7 @@ Motion lifecycle callbacks are passed directly on the config object.
 
 `onReset` Fired when the animation is reset via `reset()`. Receives the reset values.
 
-`onError` Fired when asynchronous native playback fails. Receives a `SpatializedPlaybackError` (`{ animationId, command, code?, reason }`).
+`onError` Fired when asynchronous playback fails. Receives a `SpatializedPlaybackError` (`{ command, code?, reason }`).
 
 ## JavaScript API
 

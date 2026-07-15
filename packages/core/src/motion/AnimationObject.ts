@@ -151,7 +151,12 @@ export class AnimationObject
 
     if (detail.error) {
       this.started = false
-      this.callbacks.onError?.(detail.error)
+      // Native currently emits asynchronous errors only when play cannot acquire the ownership mask.
+      this.callbacks.onError?.({
+        command: 'play',
+        code: detail.error.code,
+        reason: detail.error.message,
+      })
       return
     }
 

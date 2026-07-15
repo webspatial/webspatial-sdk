@@ -1,7 +1,17 @@
 /** Async playback failure from native bridge. */
 export interface SpatializedPlaybackError {
-  animationId: string
-  command: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish'
+  /** Operation that failed. */
+  command:
+    | 'create'
+    | 'play'
+    | 'pause'
+    | 'resume'
+    | 'stop'
+    | 'reset'
+    | 'finish'
+    | 'destroy'
+  /** Native or SDK error code when available. */
   code?: string
+  /** Human-readable failure reason. */
   reason: string
 }
