@@ -47,7 +47,6 @@ This task list describes the target-state OpenSpec work for native-first spatial
 - [x] Describe element destroy cascading to related `AnimationObject` instances
 - [x] Describe element animating mask and terminal ownership handoff for `pause/stop/reset/finish/natural completion/destroy`
 - [x] Keep terminal callback semantics unchanged: `onComplete`, `onStop`, `onReset` mutually exclusive; `onError` independent
-- [x] Keep bilingual `design.md` / `design.zh.md` aligned
 
 ## Phase 5 — Compatibility preservation tests
 
@@ -173,7 +172,7 @@ This task list describes the target-state OpenSpec work for native-first spatial
 ## Phase 12 — Docs and demos follow-up
 
 - [x] Update in-repo proposal/API docs so target-state copy no longer describes the removed Controller / Web RAF / `AnimateSpatializedElementMotion` paths
-- [x] Clarify in bilingual proposal/design/spec/API docs that the returned `style` is a required host-state closure output and MUST be merged back to the host receiving `xr-animation`
+- [x] Clarify in proposal/design/spec/API docs that the returned `style` is a required host-state closure output and MUST be merged back to the host receiving `xr-animation`
 
 ## Phase 13 — Public segment/timeline authoring and internal-only tracks
 
