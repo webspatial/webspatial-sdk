@@ -33,7 +33,6 @@ export interface SpatialAnimationStateChangedDetail {
   animationId: string
   action:
     | SpatializedElementAnimationControlType
-    | 'created'
     | 'start'
     | 'complete'
     | 'error'
