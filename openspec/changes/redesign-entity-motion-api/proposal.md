@@ -175,6 +175,37 @@ A couple of notes:
 - `from` and `0%`, `to` and `100%`, refer to the same frame — **do not write both `from` and `0%` (or both `to` and `100%`) in the same `timeline`**, or defining the same frame twice throws an error.
 - The 0.3s `duration` default does not apply here (it applies only to pure top-level `from` / `to` with no percentages); provide `duration` explicitly.
 
+### Option 4: per-keyframe independent timingFunction
+
+Besides a single global `timingFunction` at the top level of the config, you can also put `timingFunction` on an **individual keyframe**, as a sibling of that frame's `position` / `rotation` / `scale`. **A per-keyframe `timingFunction` applies to the segment "from this node to the next keyframe of the same property"**, and takes precedence over the top-level global `timingFunction`:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  duration: 1.2,
+  timingFunction: 'linear',        // global default: segments not otherwise specified use linear
+  timeline: {
+    '0%': {
+      position: { x: 0, y: 0, z: 0.8 },
+      timingFunction: 'easeIn',    // applies to position's 0% → 50% segment
+    },
+    '50%': {
+      position: { y: 0.25 },
+      timingFunction: 'easeOut',   // applies to position's 50% → 100% segment
+    },
+    '100%': {
+      position: { y: 0 },          // last frame has no next segment, no timingFunction needed
+    },
+  },
+})
+```
+
+A couple of notes:
+
+- **Sibling of the pose fields**: `timingFunction` sits inside a frame, alongside that frame's `position` / `rotation` / `scale`, and only describes the easing of the segment "from this frame to the same property's next frame".
+- **Allowed values**: `'linear'` / `'easeIn'` / `'easeOut'` / `'easeInOut'` (camelCase; there is no hyphenated form like `'ease-in'`).
+- **Precedence**: a segment's easing takes the `timingFunction` on its start frame; if absent it falls back to the top-level global `timingFunction`, and otherwise the default.
+- **Not needed on the last frame**: the last keyframe has no "next segment", so a `timingFunction` written on it has no effect.
+
 ### Which Fields You Can Write
 
 The config accepts only these fields (matching the Entity's own prop hierarchy):

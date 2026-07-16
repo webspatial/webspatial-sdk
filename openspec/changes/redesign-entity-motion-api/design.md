@@ -27,7 +27,7 @@ This design does not provide public seek, scrub, or progress-read APIs, and it d
 - **mirror**: React copies the transform the native layer has already confirmed and uses that copy for rendering. That copy is the mirror.
 - **`entityProps`**: the transform mirror the Hook returns to the user, of the form `{ position?, rotation?, scale? }`. Spread onto the component, it keeps the entity resting at the animation's end state.
 - **confirmed transform**: after the native layer finishes an action, it reads back the entity's real transform and reports it. React updates `entityProps` only from such values.
-- **track / channel**: a curve describing how a single property (e.g. `position.y`) changes over time. This document calls the form organized by transform sub-target (translation / rotation / scale) at compile time a "channel," and the normalized intermediate form a "track."
+- **track / channel**: a curve describing how a single property (e.g. `position.y`) changes over time; the two are interchangeable and both refer to the keyframe sequence of one single property. Note that compilation does not bind and play per channel; instead it slices at the union of channel keyframe times, samples a full pose at each slice point, and plays the whole transform (see 5.3).
 - **keyframe**: a time point on a curve and its value, e.g. "at 0.6s, `position.y` = 0.25."
 - **timingFunction**: a curve describing the pacing between two frames, e.g. constant-speed `linear`, slow-then-fast `easeIn`.
 - **baseline**: a channel's current native value at the moment playback starts; used as a fallback when the channel lacks a starting keyframe.
@@ -170,8 +170,8 @@ flowchart TB
 ### 4.4 Key Trade-offs
 
 - **Command names keep the `Element` wording.** The create and control commands contain `Element` in their names, with no parallel path. Their target-state semantics cover spatial objects, and `elementId` identifies a spatial object.
-- **Accept native compiler cost.** Concentrate multi-keyframe handling, sparse keyframes, rotation conversion, and per-channel compilation in the entity motion manager and compiler in exchange for native RealityKit playback, system compositing, and one execution model.
-- **Compile per channel.** Compile each channel independently and play them concurrently in an animation group to preserve per-channel easing; the cost is that they cannot be merged into one complete-transform animation.
+- **Accept native compiler cost.** Concentrate multi-keyframe handling, sparse keyframes, rotation conversion, and whole-transform serial compilation in the entity motion manager and compiler in exchange for native RealityKit playback, system compositing, and one execution model.
+- **Slice into a serial chain of full poses.** Cut the timeline into a set of nodes, each carrying a complete `position` / `rotation` / `scale`, then chain them in order into one whole-transform animation. Two reasons drive this trade-off: first, visionOS (RealityKit) can only bind the whole `.transform` and does not support per-channel binding (e.g. `.transform.translation`); second, there is currently no requirement to control `timingFunction` independently per channel. So we drop per-channel parallelism in favor of a serial chain of full poses, which naturally aligns visionOS and picoOS (both bind the whole transform natively); the cost is that all channels within one segment share a single `timingFunction`.
 - **Take over by component.** Once any field of a component appears in the animation, the animation owns that entire component. For example, animating only `position.y` freezes `position.x` / `position.z` at baseline during playback; components absent from the config remain driven by React props.
 - **Do not support functional `set`.** `api.set(prev => next)` cannot guarantee that `prev` is the live native transform, so v1 accepts sparse patch objects only; consumers read the latest confirmed transform through `entityProps`.
 - **Do not add a generic adapter layer yet.** v1 dispatches by runtime type inside `SpatialScene` to either the element or entity manager. Extract a shared protocol only after real duplication appears.
@@ -343,7 +343,7 @@ Whether `api.set` takes effect is decided solely by native: native does not buff
 Entity motion goes from public config to a playable object in two stages, which live in two layers with strictly separated responsibilities:
 
 1. **Normalization (JS / shared logic layer):** fold the three public authoring shapes (top-level `from` / `to`, `timeline.from` / `timeline.to`, percentage keyframes) into one platform-agnostic internal timeline data `EntityMotionTimelinePayload`. This step only expands, merges, and resolves values, producing platform-agnostic internal data entirely on the JS side.
-2. **Compilation (native / RealityKit):** the native entity motion manager takes the normalized internal timeline, reads the baseline transform, splits it into per-channel segments, compiles each segment into a `FromToByAnimation`, then chains via `sequence` and parallelizes via `group`, finally producing a playable object (animation resource / animation group + playback controller). This step is the actual **compilation**.
+2. **Compilation (native / RealityKit):** the native entity motion manager takes the normalized internal timeline, reads the baseline transform, slices it at the union of channel keyframe times into full-pose segments, compiles each into a full-pose `FromToByAnimation<Transform>`, then chains them via `sequence` into one whole-transform animation, finally producing a playable object (animation resource + playback controller). This step is the actual **compilation**.
 
 #### Normalization (JS layer)
 
@@ -415,7 +415,7 @@ Example:
 
 #### Compilation (native / RealityKit)
 
-Compilation is done by the native entity motion manager: it takes the normalized internal timeline, reads the baseline transform, organizes it by channel and compiles it segment by segment, finally producing a controllable playback object.
+Compilation is done by the native entity motion manager: it takes the normalized internal timeline, reads the baseline transform, slices the timeline into a set of full-pose nodes and compiles it segment by segment, finally producing a controllable playback object.
 
 ##### Input: internal timeline
 
@@ -428,157 +428,139 @@ flowchart TB
     Payload["timeline data<br/>canonical tracks"]
     Validate["fallback validation<br/>duration / property / keyframes / scale"]
     Snapshot["read native current transform<br/>as baseline for missing frames"]
-    Channels["organize by channel<br/>each keeps its keyframes and per-segment easing"]
-    Segment["compile each segment to a FromToByAnimation<br/>segment from/to = adjacent keyframes, timing = per-segment easing"]
-    Seq["chain the segments of a channel via sequence<br/>into one channel animation; convert rotation degrees to native representation"]
-    Group["combine channel animations via group in parallel<br/>bind translation / rotation / scale sub-targets"]
+    Slice["slice at every keyframe time<br/>each slice point samples a full position / rotation / scale"]
+    Segment["compile each segment to a full-pose FromToBy<br/>segment from/to = full pose at adjacent slice points, timing = per-segment easing"]
+    Seq["chain the full-pose segments via sequence<br/>into one whole-transform animation; convert rotation degrees to native representation"]
 
     Payload --> Validate
     Validate --> Snapshot
-    Snapshot --> Channels
-    Channels --> Segment
+    Snapshot --> Slice
+    Slice --> Segment
     Segment --> Seq
-    Seq --> Group
 ```
 
-##### Within-channel serial chaining and cross-channel parallel composition
+##### Slicing the timeline into full-pose nodes and chaining them
 
-One channel maps to one transform sub-target (translation / rotation / scale). Composing its segments and composing across channels happen at two layers.
+The whole timeline maps to a single bind target — the entire `transform`. Take the union of all channels' keyframe times as the slice points; adjacent slice points form a segment, and every slice point samples a complete `position` / `rotation` / `scale`, so each segment is a "full pose to full pose" transition.
 
-**Within a channel — chain with `sequence`.** A channel is split into adjacent intervals by its own keyframes, and each interval compiles into a `FromToByAnimation<Transform>`: `from` / `to` are the values of the first and last keyframes of the interval, `duration` is the interval length, and `timing` is the easing of that segment (easing priority is in compilation rule 9). These per-segment animations of one channel are chained in time order via `AnimationResource.sequence(with:)` into a single channel animation, so that each segment carries its own easing yet the segments play back-to-back continuously. A channel that has only a start frame and an end frame degenerates to a single segment — one `FromToByAnimation`, with no `sequence` needed.
+**Per segment — expressed with `FromToByAnimation<Transform>`.** Each segment's `from` / `to` are the full poses at the two adjacent slice points, `duration` is the segment length, `timing` is the segment's easing (easing priority is in compilation rule 9), and `bindTarget` is fixed to `.transform`. visionOS can only bind the whole `.transform` and does not support per-channel binding (e.g. `.transform.translation`), which is the root reason for choosing full-pose slicing.
 
-**Across channels — parallelize with `group`.** The chained channel animations are independent and play simultaneously; they are combined into an animation group via `AnimationResource.group(with:)`, each bound to the translation / rotation / scale sub-target (`bindTarget`). This is the concrete primitive behind the animation group mentioned earlier: `group` handles parallelism, `sequence` handles serialization, and together they express the full timeline of multiple channels in parallel with multiple segments serial within each channel.
+**Chaining — connect end to end with `sequence`.** The full-pose segment animations are chained in time order via `AnimationResource.sequence(with:)` into a single animation, so each segment carries its own easing yet plays continuously. A timeline with only a start and an end frame degenerates to a single segment — one `FromToByAnimation<Transform>`, with no `sequence` needed. `delay` / `speed` / `loop` act at the top of this chained animation.
 
-Consider an example with two channels (`position.y` has 3 keyframes = 2 segments, `rotation.y` has only start and end = 1 segment):
+Consider an example (`position.y` has 3 keyframes, `rotation.y` has only start and end, the slice-point union is `0 / 0.6s / 1.2s`, giving 2 segments):
 
 ```mermaid
 flowchart TB
-    subgraph PY["position.y channel (2 segments)"]
-        direction TB
-        PYs0["segment 0 FromToBy<br/>0 to 0.6s, easeOut"]
-        PYs1["segment 1 FromToBy<br/>0.6 to 1.2s, linear"]
-        PYs0 -->|sequence| PYs1
-    end
-    subgraph RY["rotation.y channel (single segment, no sequence)"]
-        direction TB
-        RYs0["segment 0 FromToBy<br/>0 to 1.2s, linear"]
-    end
-    PY -->|channel animation| G["group in parallel<br/>+ top-level delay / speed / loop"]
-    RY -->|channel animation| G
-    G --> T1["bind translation sub-target"]
-    G --> T2["bind rotation sub-target"]
+    Slice["slice times = union of channels' keyframe times<br/>{0, 0.6s, 1.2s} → 2 segments"]
+    S0["segment 0 FromToBy<br/>from=full pose@0, to=full pose@0.6s, easeOut"]
+    S1["segment 1 FromToBy<br/>from=full pose@0.6s, to=full pose@1.2s, linear"]
+    Clip["whole-transform animation<br/>+ top-level delay / speed / loop"]
+
+    Slice --> S0
+    S0 -->|sequence| S1
+    S1 --> Clip
 ```
 
-Horizontally it is parallel (channels via `group`); within each channel it is serial top-to-bottom (segments via `sequence`); `delay` / `speed` / `loop` act only at the `group` layer.
+Each segment carries a full pose, chained top-to-bottom in time order; there is no longer a "cross-channel parallel" layer, and `delay` / `speed` / `loop` act only at the top of the chained animation.
 
 ##### Output: the controllable playback object and sample code
 
-The final compilation output is the controllable playback object. Reusing the example above (`position.y` two segments, `rotation.y` single segment), the following shows the differences between the two platforms, visionOS and picoOS: chain multiple `FromToBy` segments into a channel animation via `sequence`, parallelize the channels into one animation resource via `group`, and hand it to the engine — obtaining a playback controller that can pause / resume / stop / change speed, i.e. a "controllable playback object."
+The final compilation output is the controllable playback object. Reusing the example above (2 full-pose segments), the following shows it on visionOS and picoOS: each segment compiles into a full-pose `FromToBy`, chained via `sequence` into one animation resource, then handed to the engine — obtaining a playback controller that can pause / resume / stop / change speed, i.e. a "controllable playback object." Both platforms bind the whole transform, so the code lines up.
 
 visionOS (RealityKit / Swift):
 
 ```swift
 import RealityKit
 
-// Reuse the example; x / z are frozen at the baseline, only y is animated
-let base = entity.transform.translation
+// Reuse the example; every slice point carries a full position / rotation / scale, only y and rotation-about-y change
+let base = entity.transform
 
-// position.y channel: two FromToBy segments, each with its own easing, chained via sequence
-let posSeg0 = FromToByAnimation<SIMD3<Float>>(
-    name: "pos.seg0",
-    from: SIMD3(base.x, 0,    base.z),
-    to:   SIMD3(base.x, 0.25, base.z),
+// Sample a slice point's full pose (x / z / scale frozen at baseline, only pos.y and rot.y move)
+func pose(y: Float, deg: Float) -> Transform {
+    var t = base
+    t.translation = SIMD3(base.translation.x, y, base.translation.z)
+    t.rotation = simd_quatf(angle: deg * .pi / 180, axis: SIMD3(0, 1, 0))
+    return t
+}
+
+// Segment 0: full pose from t=0 to t=0.6s
+let seg0 = FromToByAnimation<Transform>(
+    name: "seg0",
+    from: pose(y: 0,    deg: 0),
+    to:   pose(y: 0.25, deg: 90),
     duration: 0.6,
     timing: .easeOut,                 // segment 0 own easing
-    bindTarget: .transform.translation
+    bindTarget: .transform            // can only bind the whole transform
 )
-let posSeg1 = FromToByAnimation<SIMD3<Float>>(
-    name: "pos.seg1",
-    from: SIMD3(base.x, 0.25, base.z),
-    to:   SIMD3(base.x, 0,    base.z),
+// Segment 1: full pose from t=0.6s to t=1.2s
+let seg1 = FromToByAnimation<Transform>(
+    name: "seg1",
+    from: pose(y: 0.25, deg: 90),
+    to:   pose(y: 0,    deg: 180),
     duration: 0.6,
-    timing: .easeIn,                  // segment 1 own easing, different from segment 0
-    bindTarget: .transform.translation
+    timing: .linear,                  // segment 1 own easing, different from segment 0
+    bindTarget: .transform
 )
-let posChannel = try AnimationResource.sequence(with: [
-    try AnimationResource.generate(with: posSeg0),
-    try AnimationResource.generate(with: posSeg1),
+
+// Chain the full-pose segments in time order into one animation via sequence
+let clip = try AnimationResource.sequence(with: [
+    try AnimationResource.generate(with: seg0),
+    try AnimationResource.generate(with: seg1),
 ])
-
-// rotation.y channel: single segment, no sequence needed
-let rotSeg = FromToByAnimation<simd_quatf>(
-    name: "rot.seg0",
-    from: simd_quatf(angle: 0,   axis: SIMD3(0, 1, 0)),
-    to:   simd_quatf(angle: .pi, axis: SIMD3(0, 1, 0)),   // 180 degrees
-    duration: 1.2,
-    timing: .linear,
-    bindTarget: .transform.rotation
-)
-let rotChannel = try AnimationResource.generate(with: rotSeg)
-
-// Across channels in parallel: group into one animation resource
-let clip = try AnimationResource.group(with: [posChannel, rotChannel])
 
 // Controllable playback object: the controller supports pause / resume / stop / speed
 let controller = entity.playAnimation(clip, transitionDuration: 0, startsPaused: true)
 controller.resume()          // play
 // controller.pause()        // pause
 // controller.stop()         // stop
-// controller.speed = 2.0    // top-level playback rate acts on the whole group
+// controller.speed = 2.0    // top-level playback rate acts on the whole chained animation
 ```
 
 picoOS (Pico Spatial SDK / Kotlin):
 
 ```kotlin
-// Reuse the same example; x / z are frozen at the baseline
-val base = entity.getComponent(Transform::class.java)?.position ?: Vector3(0f, 0f, 0f)
+// Reuse the same example; every slice point carries a full Transform, x / z / scale frozen at baseline
+val base = entity.getComponent(Transform::class.java) ?: Transform()
 
-// position.y channel: two TweenAnimations, each generates an AnimationResource, then chained via sequence
-val posSeg0 = TweenAnimation.createTweenAnimation(
-    "pos.seg0",
-    AnimationBindTarget.bindPosition(),
-    Vector3(base.x, 0f,    base.z),   // from
-    Vector3(base.x, 0.25f, base.z),   // to
-    null,                             // by
-    0.6f, 0f, RepeatMode.None, 0,     // duration / delay / repeatMode / repeatCount
-    EaseType.EaseOut,                 // segment 0 easing
+// Sample a slice point's full pose (only pos.y and rotation-about-y change)
+fun pose(y: Float, deg: Float): Transform {
+    val q = Quaternion.fromAxisAngle(Vector3(0f, 1f, 0f), deg)
+    return Transform(Vector3(base.position.x, y, base.position.z), q, base.scale)
+}
+
+// Segment 0: full pose from t=0 to t=0.6s
+val seg0 = TweenAnimation.createTweenAnimation(
+    "seg0",
+    AnimationBindTarget.bindTransform(),   // can only bind the whole transform
+    pose(0f,    0f),                        // from (full pose)
+    pose(0.25f, 90f),                       // to (full pose)
+    null,                                   // by
+    0.6f, 0f, RepeatMode.None, 0,           // duration / delay / repeatMode / repeatCount
+    EaseType.EaseOut,                       // segment 0 easing
     0f, 1f, false, null, null, null
 )
-val posSeg1 = TweenAnimation.createTweenAnimation(
-    "pos.seg1",
-    AnimationBindTarget.bindPosition(),
-    Vector3(base.x, 0.25f, base.z),
-    Vector3(base.x, 0f,    base.z),
+// Segment 1: full pose from t=0.6s to t=1.2s
+val seg1 = TweenAnimation.createTweenAnimation(
+    "seg1",
+    AnimationBindTarget.bindTransform(),
+    pose(0.25f, 90f),
+    pose(0f,    180f),
     null,
     0.6f, 0f, RepeatMode.None, 0,
-    EaseType.EaseIn,                  // segment 1 easing, different from segment 0
+    EaseType.Linear,                        // segment 1 easing, different from segment 0
     0f, 1f, false, null, null, null
 )
-val posChannel = AnimationResource.sequence(with = listOf(
-    AnimationResource.generateWithTweenAnimation(posSeg0),
-    AnimationResource.generateWithTweenAnimation(posSeg1),
+
+// Chain the full-pose segments in time order into one animation via sequence
+val clip = AnimationResource.sequence(with = listOf(
+    AnimationResource.generateWithTweenAnimation(seg0),
+    AnimationResource.generateWithTweenAnimation(seg1),
 ))
-
-// rotation.y channel: single segment, using Euler angle degrees
-val rotSeg = TweenAnimation.createTweenAnimation(
-    "rot.seg0",
-    AnimationBindTarget.bindEulerAngles(),
-    EulerAngles(0f, 0f,   0f),        // from
-    EulerAngles(0f, 180f, 0f),        // to (180 degrees around the y axis)
-    null,
-    1.2f, 0f, RepeatMode.None, 0,
-    EaseType.Linear,
-    0f, 1f, false, null, null, null
-)
-val rotChannel = AnimationResource.generateWithTweenAnimation(rotSeg)
-
-// Across channels in parallel: group
-val clip = AnimationResource.group(with = listOf(posChannel, rotChannel))
 
 // Controllable playback object
 val controller = entity.playAnimation(clip)
 // controller.pause() / controller.resume() / controller.stop()
-// controller.speed = 2f     // top-level playback rate acts on the whole group
+// controller.speed = 2f     // top-level playback rate acts on the whole chained animation
 ```
 
 ##### Compilation rules
@@ -586,17 +568,14 @@ val controller = entity.playAnimation(clip)
 1. **Property allowlist:** accept only `position.*`, `rotation.*`, `scale.*`. `opacity`, material, component properties, etc. all fail explicitly.
 2. **Time range:** `duration` must be positive; each keyframe's `at` must fall within `[0, duration]`.
 3. **Ordering and duplicates:** each track's keyframes are sorted non-decreasing by `at`; multiple tracks for the same property are not allowed.
-4. **Independent intervals per channel:** each channel divides intervals by its own keyframe times and does not share global boundaries with other channels. For example a channel's `0, 0.6, 1.2` affects only its own `[0, 0.6]` and `[0.6, 1.2]` segments.
-5. **Missing frames and non-animated components, two cases:**
-   - If the first keyframe of a channel is not at time `0` (for example, the scalar of that channel first appears at `50%`), use the native current value at playback start as the baseline for that channel, and treat the `[0, first keyframe]` span as an **interpolation from the baseline value to the first keyframe value** — that is, the channel is in motion from the start rather than holding in place until the first keyframe. If a moment is later than the last keyframe of the channel, hold the last keyframe value. Missing frames only fall back downward to the native baseline value, and never borrow the value of a later keyframe. Channels do not share boundaries and do not interpolate against one another.
-   - (a) *A non-animated scalar within an animated component*: e.g. animating only `position.y` freezes `position.x` / `position.z` at the baseline, because the translation sub-target is bound as a whole.
-   - (b) *A component that never appears*: e.g. if the config has no `scale.*`, no animation is generated for the scale sub-target, scale is not held by the animation, and it is still driven by React props during the animation.
-6. **Per-segment serial, per-channel parallel:** the segments within a channel are chained via `sequence` into a single channel animation, and channels are combined via `group` to play in parallel, each bound to its sub-target (translation / rotation / scale); see "Within-channel serial chaining and cross-channel parallel composition." Do not merge into segments that share one easing.
+4. **Slice times are the union across channels:** take the union of all channels' keyframe times as the timeline's slice points; adjacent slice points form a segment. For example `position.y` at `0, 0.6, 1.2` and `rotation.y` at `0, 1.2` give the union `0, 0.6, 1.2`, cut into `[0, 0.6]` and `[0.6, 1.2]`.
+5. **Each slice point samples a full pose; missing frames fall back per channel:** every slice point must provide a complete `position` / `rotation` / `scale`. If a channel has no keyframe at that moment, its value is interpolated among its own keyframes; the span before the channel's first keyframe falls back to the native baseline at playback start, and the span after its last keyframe holds the last value. Because the whole transform is bound, a component that never appears in the config (e.g. no `scale.*`) is sampled at the baseline and held constant during playback — i.e. the entire transform is owned by the animation while it plays.
+6. **Serial chaining of full poses:** adjacent slice points form a full-pose `FromToByAnimation<Transform>`, and the segments are chained in time order via `sequence` into one whole-transform animation, all bound to the whole transform (`bindTarget: .transform`); see "Slicing the timeline into full-pose nodes and chaining them." There is no per-channel parallelism and no `group`.
 7. **Rotation:** `rotation.*` input is Euler degrees; at compile time it is converted to the rotation representation RealityKit requires, avoiding per-frame interpolation of Euler angles. RealityKit uses shortest-path spherical interpolation for orientation, so if a rotation channel's single-frame increment reaches or exceeds 180°, or spans multiple axes, the actual path may differ from per-axis intuition; when a specific multi-turn or multi-axis path is needed, add intermediate keyframes explicitly. The compiler does not densify keyframes automatically — that is the user's responsibility.
 8. **Scale:** `scale.*` must be non-negative; an invalid scale fails outright.
-9. **Easing priority:** keyframe-level easing takes priority over track-level, and track-level over the timeline default. Easing values are a closed enum `linear` / `easeIn` / `easeOut` / `easeInOut`, all mapping directly to RealityKit built-in curves; custom bezier easing is not supported, and there is no easing that requires a fallback.
-10. **Loop / playback rate / delay:** these playback parameters live at the top of the timeline and apply uniformly to the whole animation group, executed by the RealityKit playback layer.
-11. **Explicit failure:** if RealityKit cannot express a channel, it must report the error explicitly through command failure or an error event, and must not silently ignore it.
+9. **Easing priority:** keyframe-level easing takes priority over track-level, and track-level over the timeline default. Easing values are a closed enum `linear` / `easeIn` / `easeOut` / `easeInOut`, all mapping directly to RealityKit built-in curves; custom bezier easing is not supported, and there is no easing that requires a fallback. In addition, because each segment binds the whole transform, `position` / `rotation` / `scale` within one segment share that segment's easing.
+10. **Loop / playback rate / delay:** these playback parameters live at the top of the timeline and apply uniformly to the whole chained animation, executed by the RealityKit playback layer.
+11. **Explicit failure:** if RealityKit cannot express a segment, it must report the error explicitly through command failure or an error event, and must not silently ignore it.
 
 ### 5.4 Transform Decomposition and Reporting
 
@@ -645,7 +624,7 @@ The sub-token form `supports('useEntityAnimation', ['entity'])` is removed from 
   - **Inside a `timeline`, `from` = `0%` and `to` = `100%`**: `timeline.from` / `timeline.to` may be mixed with percentage keys in the same `timeline`; defining the same frame twice (`from` and `0%`, or `to` and `100%`) in one `timeline` is an error.
   - **`timeline` takes precedence**: when `timeline` and top-level `from` / `to` are both present, `timeline` is used, the top-level pair is ignored, and a warning is logged in development mode.
   - **For pure top-level `from` / `to` with no percentages, `duration` defaults to 0.3s**.
-  - **Every animation requires both boundaries**: every shape MUST have a start boundary (top-level `from`, `timeline.from`, or the `0%` frame) and an end boundary (top-level `to`, `timeline.to`, or the `100%` frame); supplying only one throws an error and does not fill the missing boundary frame from the entity's current baseline. This constraint applies to all three shapes. Distinguish two levels: what is required is the **existence of the boundary frames**; **fields** within a boundary frame MAY still be sparse — when a channel lacks a keyframe in a boundary frame, it still falls back to the native baseline under the per-channel missing-frame rule (see "missing frames and non-animated components" above).
+  - **Every animation requires both boundaries**: every shape MUST have a start boundary (top-level `from`, `timeline.from`, or the `0%` frame) and an end boundary (top-level `to`, `timeline.to`, or the `100%` frame); supplying only one throws an error and does not fill the missing boundary frame from the entity's current baseline. This constraint applies to all three shapes. Distinguish two levels: what is required is the **existence of the boundary frames**; **fields** within a boundary frame MAY still be sparse — when a channel lacks a keyframe in a boundary frame, it still falls back to the native baseline under the per-channel missing-frame rule (see "each slice point samples a full pose; missing frames fall back per channel" above).
 
 #### Native layer (RealityKit)
 
@@ -796,14 +775,14 @@ classDiagram
     EntityMotionAnimationObject --> EntityMotionTransformValues : decompose / merge patch
     EntityMotionAnimationObject --> EntityMotionBridgeTypes : encode confirmed value / error
     EntityMotionAnimationObject --> RealityKit : playback controller / entity animation
-    EntityMotionTimelineCompiler --> RealityKit : animation resources / animation group
+    EntityMotionTimelineCompiler --> RealityKit : whole-transform animation resource
 ```
 
 **Responsibilities per class:**
 
 - **Entity motion manager (`EntityMotionManager`):** the native entry for entity motion. It receives the create and control dispatched from `SpatialScene`, and manages the animation registry and lifecycle. On create it invokes the compiler, builds the animation object, registers it, and returns an `animationId`; on control it finds the object by `animationId` and calls the corresponding method. It handles command-failure receipts, destruction, and target invalidation, so `SpatialScene` does not hold entity animation state. Confirmed-value event reporting is done by the animation object; the manager reports errors only when the lookup / validation stage fails outright.
 - **Entity animation object (`EntityMotionAnimationObject`):** represents a single entity animation, holding the `animationId`, target entity, playback state, taken-over components, playback controller, and resources, and handling that single object's state transitions. After every start / end state / accepted `set`, it obtains the confirmed value via the decomposition helper, encodes it via the bridge helper, then emits a state-changed event.
-- **Timeline compiler (`EntityMotionTimelineCompiler`):** compiles the normalized timeline data into per-channel RealityKit animation resources and an animation group; it does not parse the public `from` / `to` or percentages.
+- **Timeline compiler (`EntityMotionTimelineCompiler`):** slices and compiles the normalized timeline data into one chained whole-transform RealityKit animation resource; it does not parse the public `from` / `to` or percentages.
 - **Bridge types (`EntityMotionBridgeTypes`):** carry the native bridge encode/decode structures, including timeline data, control values, confirmed values, and errors. If the command types are sufficient, this part may exist as a few scattered structs.
 - **Playback parameter mapping (`EntityMotionTiming`):** maps easing, delay, loop, and playback rate to the RealityKit representation; all four built-in easings map directly.
 - **Transform decomposition and merge (`EntityMotionTransformValues`):** responsible for decomposing the confirmed value from the entity transform, merging the sparse `api.set` patch onto the committed baseline, and converting between Euler degrees and the RealityKit rotation representation.
@@ -827,8 +806,8 @@ sequenceDiagram
         Manager->>Manager: fallback-validate timeline data
         Manager->>RK: read current transform as playback baseline
         Manager->>Compiler: compile(payload, baseline)
-        Compiler-->>Manager: animation resources + group + taken-over components
-        Manager->>Obj: init(animationId, target, group, taken-over components)
+        Compiler-->>Manager: whole-transform animation resource + taken-over components
+        Manager->>Obj: init(animationId, target, clip, taken-over components)
         Manager->>Manager: register object
         Manager-->>Scene: animationId
         Scene-->>JSB: success({ id })
@@ -840,7 +819,7 @@ sequenceDiagram
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
     Manager->>Obj: play()
-    Obj->>RK: play animation group
+    Obj->>RK: play whole-transform animation
     RK-->>Obj: playback controller
     Obj->>Event: emit start, with confirmed value
     RK-->>Obj: complete / end-state callback
@@ -848,7 +827,7 @@ sequenceDiagram
     Obj->>Event: emit complete / finish / stop / reset, with confirmed value
 ```
 
-Create only builds the native animation object and the compiled plan and returns an `animationId`; it does not additionally report an initial confirmed value. `entityProps` is still updated only on confirmation events like start, end state, and an accepted `set`. What the entity animation object holds is the animation group / controller compiled from the whole timeline, not a single track; single-channel granularity exists only inside the compiler.
+Create only builds the native animation object and the compiled plan and returns an `animationId`; it does not additionally report an initial confirmed value. `entityProps` is still updated only on confirmation events like start, end state, and an accepted `set`. What the entity animation object holds is the chained whole-transform animation / controller compiled from the whole timeline, not a single track; slicing and per-segment granularity exist only inside the compiler.
 
 **Pause sequence:**
 
@@ -931,6 +910,6 @@ sequenceDiagram
     end
 ```
 
-Pause only controls the current playback controller and does not recompile the animation group. Stop / reset / finish terminate the current playback and commit the end-state transform with zero duration. `set` uses no RealityKit animation resource; it only merges the sparse patch onto the committed transform and commits it while inactive.
+Pause only controls the current playback controller and does not recompile the chained whole-transform animation. Stop / reset / finish terminate the current playback and commit the end-state transform with zero duration. `set` uses no RealityKit animation resource; it only merges the sparse patch onto the committed transform and commits it while inactive.
 
 Boundary constraint: `SpatialScene` only does target lookup, type dispatch, and command receipts; entity-specific compilation and playback state do not scatter into its handling logic. v1 adds no forwarding-only entity layer; the registry, create / control orchestration, and lifecycle all belong to the entity motion manager. If the two paths later need a unified target boundary, extract a shared protocol or a thin wrapper then.
