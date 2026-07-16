@@ -175,6 +175,37 @@ const [animation, api, entityProps] = useEntityAnimation({
 - `from` 与 `0%`、`to` 与 `100%` 指的是同一帧,**不要在同一个 `timeline` 里同时写 `from` 和 `0%`(或 `to` 和 `100%`)**,否则重复定义同一帧会报错。
 - 混合写法下 `duration` 不再默认 0.3 秒(0.3 秒的默认只在纯顶层 `from` / `to` 且未用任何百分比时生效),请显式给出 `duration`。
 
+### 方式四:逐关键帧独立 timingFunction
+
+除了在 config 顶层写一个全局 `timingFunction`,你还可以在**单个关键帧**上写 `timingFunction`,让它和该帧的 `position` / `rotation` / `scale` 平级。**逐关键帧的 `timingFunction` 作用于「从这个节点到该属性下一个关键帧」的那一段区间**,优先级高于顶层的全局 `timingFunction`:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  duration: 1.2,
+  timingFunction: 'linear',        // 全局默认:未单独指定的区间用 linear
+  timeline: {
+    '0%': {
+      position: { x: 0, y: 0, z: 0.8 },
+      timingFunction: 'easeIn',    // 作用于 position 的 0% → 50% 这段
+    },
+    '50%': {
+      position: { y: 0.25 },
+      timingFunction: 'easeOut',   // 作用于 position 的 50% → 100% 这段
+    },
+    '100%': {
+      position: { y: 0 },          // 末帧没有下一段,无需写 timingFunction
+    },
+  },
+})
+```
+
+几点说明:
+
+- **平级于姿态字段**:`timingFunction` 写在某一帧内,和该帧的 `position` / `rotation` / `scale` 并列,只描述「从本帧到同属性下一帧」这一段区间的缓动。
+- **可选值**:`'linear'` / `'easeIn'` / `'easeOut'` / `'easeInOut'`(驼峰写法,没有 `'ease-in'` 这种带连字符的形式)。
+- **优先级**:某段区间的缓动取「起始帧上的 `timingFunction`」,没有则回退到顶层全局 `timingFunction`,再没有则用默认值。
+- **末帧无需写**:最后一个关键帧没有「下一段」,写在末帧上的 `timingFunction` 不会生效。
+
 ### 可写的字段范围
 
 config 里只能写以下这些字段(和 Entity 自身的属性层级保持一致):

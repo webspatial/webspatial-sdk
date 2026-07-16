@@ -27,7 +27,7 @@
 - **镜像(mirror)**:React 侧把原生层已确认的姿态复制一份出来供渲染使用,这份复制就叫镜像。
 - **`entityProps`**:Hook 返回给使用者的姿态镜像,形如 `{ position?, rotation?, scale? }`,展开到组件上可让物体停在动画终点。
 - **确认姿态(confirmed transform)**:原生层执行完一个动作后,回读物体真实姿态并回传的那份值。React 只用这种值更新 `entityProps`。
-- **轨道(track)/ 通道(channel)**:一条描述单个属性(如 `position.y`)随时间变化的曲线。本文把编译时按变换子目标(平移 / 旋转 / 缩放)组织的形态称"通道",把配置归一化后的中间形态称"轨道"。
+- **轨道(track)/ 通道(channel)**:一条描述单个属性(如 `position.y`)随时间变化的曲线;二者可互换,均指某单个属性的关键帧序列。注意编译时并不按通道分别绑定播放,而是把各通道关键帧时间取并集切片、每个切点采样出完整姿态后整体播放(见 5.3)。
 - **关键帧(keyframe)**:曲线上的一个时间点及其取值,例如"第 0.6 秒时 `position.y` = 0.25"。
 - **缓动函数(timingFunction)**:描述两帧之间快慢变化的曲线,如匀速 `linear`、先慢后快 `easeIn`。
 - **基准值(baseline)**:某通道开始播放时的原生当前值;当该通道缺少起始关键帧时用它兜底。
@@ -170,8 +170,8 @@ flowchart TB
 ### 4.4 关键折中
 
 - **命令名保留 `Element` 字样。** 创建和控制命令名含 `Element`,不新增平行链路;其目标态语义为空间对象,`elementId` 表示空间对象 id。
-- **承担原生编译成本。** 多关键帧、稀疏关键帧、旋转换算和逐通道编译集中在物体运动管理器与编译器,换取 RealityKit 原生播放、系统合成和统一播放语义。
-- **按通道编译。** 每个通道独立编译并在动画组中并行播放,以保留逐通道缓动;代价是不能合并为一条完整姿态动画。
+- **承担原生编译成本。** 多关键帧、稀疏关键帧、旋转换算和整姿态串联编译集中在物体运动管理器与编译器,换取 RealityKit 原生播放、系统合成和统一播放语义。
+- **切片为整姿态串联。** 把时间轴切成若干节点、每个节点携带完整的 `position` / `rotation` / `scale`,再按先后顺序串联成一条整姿态动画播放。这样取舍的原因有二:其一,visionOS(RealityKit)只能绑定整个 `.transform`,不支持按通道(如 `.transform.translation`)独立绑定;其二,当前并没有分通道独立控制 `timingFunction` 的需求。因此放弃逐通道并行,改用整姿态串联,天然对齐 visionOS 与 picoOS(两端原生都绑定整 transform);代价是同一区间内各通道只能共用一个 `timingFunction`。
 - **按分量接管。** 某分量出现任一动画字段后,整个分量由动画接管。例如只动画 `position.y` 时,`position.x` / `position.z` 在播放期间冻结在基准值;完全未出现的分量仍由 React 属性驱动。
 - **不提供函数式 `set`。** `api.set(prev => next)` 无法保证 `prev` 是实时原生姿态,因此 v1 只接受稀疏补丁对象;当前确认姿态通过 `entityProps` 读取。
 - **暂不抽象统一适配层。** v1 在 `SpatialScene` 中按运行时类型分发到元素或物体管理器;只有两条路径出现真实重复时才提取公共协议。
@@ -343,7 +343,7 @@ sequenceDiagram
 物体动画从对外配置到可播放对象要经过两个阶段,分属两层,职责严格分开:
 
 1. **归一化(JS / 公共逻辑层):** 把对外的三种书写形态(顶层 `from` / `to`、`timeline.from` / `timeline.to`、百分比关键帧)折叠成一套与平台无关的内部时间轴数据 `EntityMotionTimelinePayload`。这一步只做展开、合并、求值,产物是平台无关的内部数据,全程在 JS 侧完成。
-2. **编译(native / RealityKit):** 原生物体运动管理器拿到已归一化的内部时间轴,读取基准姿态,按通道切段,把每段编成 `FromToByAnimation`,再用 `sequence` 串联、`group` 并联,最终产出可播放对象(动画资源 / 动画组 + 播放控制器)。这一步才是**编译**。
+2. **编译(native / RealityKit):** 原生物体运动管理器拿到已归一化的内部时间轴,读取基准姿态,按各通道关键帧时间并集切成若干整姿态段,把每段编成整姿态 `FromToByAnimation<Transform>`,再用 `sequence` 串联成一条整姿态动画,最终产出可播放对象(动画资源 + 播放控制器)。这一步才是**编译**。
 
 #### 归一化(JS 层)
 
@@ -415,7 +415,7 @@ type EntityMotionKeyframe = {
 
 #### 编译(native / RealityKit)
 
-编译由原生物体运动管理器完成:拿到归一化的内部时间轴,读取基准姿态,按通道组织并逐段编译,最终产出可控播放对象。
+编译由原生物体运动管理器完成:拿到归一化的内部时间轴,读取基准姿态,把时间轴切成若干携带完整姿态的节点并逐段编译,最终产出可控播放对象。
 
 ##### 输入:内部时间轴
 
@@ -428,157 +428,139 @@ flowchart TB
     Payload["时间轴数据<br/>规范轨道"]
     Validate["兜底校验<br/>时长 / 属性 / 关键帧 / 缩放"]
     Snapshot["读取原生当前姿态<br/>作为缺帧基准"]
-    Channels["按通道组织<br/>各自保留关键帧与分段缓动"]
-    Segment["逐段编译 FromToByAnimation<br/>段内 from/to 取相邻关键帧,timing 取该段缓动"]
-    Seq["同通道多段用 sequence 串联<br/>合成单个通道动画;旋转的度数转为原生表示"]
-    Group["各通道动画用 group 并联<br/>绑定平移 / 旋转 / 缩放子目标"]
+    Slice["按所有关键帧时间切片<br/>每个切点采样出完整 position / rotation / scale"]
+    Segment["逐段编译整姿态 FromToBy<br/>段内 from/to 取相邻切点的完整姿态,timing 取该段缓动"]
+    Seq["用 sequence 把各段整姿态动画串联<br/>合成一条整姿态动画;旋转的度数转为原生表示"]
 
     Payload --> Validate
     Validate --> Snapshot
-    Snapshot --> Channels
-    Channels --> Segment
+    Snapshot --> Slice
+    Slice --> Segment
     Segment --> Seq
-    Seq --> Group
 ```
 
-##### 通道内多段串联与通道间并联
+##### 时间轴切片为整姿态节点并串联
 
-一个通道对应一个变换子目标(平移 / 旋转 / 缩放),它的多段以及通道之间的组合分两层完成。
+整条时间轴只对应一个绑定目标——整个 `transform`。把所有通道的关键帧时间取并集作为切点,相邻切点之间构成一段;每个切点都采样出完整的 `position` / `rotation` / `scale`,于是每段就是一次“整姿态到整姿态”的过渡。
 
-**通道内多段——用 `sequence` 串联。** 一个通道按自己的关键帧被切成若干相邻区间,每个区间编译成一个 `FromToByAnimation<Transform>`:`from` / `to` 取该区间首尾关键帧的值,`duration` 取区间时长,`timing` 取该段自己的缓动(缓动优先级见编译规则 9)。同一通道的这些分段动画按时间顺序用 `AnimationResource.sequence(with:)` 串成一个通道动画,从而让每一段各自带缓动、又首尾相接连续播放。只有起止两帧的通道退化为单段,直接是一个 `FromToByAnimation`,无需 `sequence`。
+**逐段——用 `FromToByAnimation<Transform>` 表达。** 每段的 `from` / `to` 取相邻两个切点的完整姿态,`duration` 取该段时长,`timing` 取该段缓动(缓动优先级见编译规则 9),`bindTarget` 固定为 `.transform`。visionOS 只能绑定整个 `.transform`,不支持按通道(如 `.transform.translation`)独立绑定,这也是选择整姿态切片的根本原因。
 
-**通道间——用 `group` 并联。** 各通道串好的通道动画彼此独立、同时播放,用 `AnimationResource.group(with:)` 合成一个动画组,再分别绑定到平移 / 旋转 / 缩放子目标(`bindTarget`)。这就是前面所说“动画组”的具体原语:`group` 负责并联,`sequence` 负责串联,两者组合表达“多通道并行、每通道内多段串行”的完整时间轴。
+**串联——用 `sequence` 首尾相接。** 各段整姿态动画按时间顺序用 `AnimationResource.sequence(with:)` 串成一条动画,让每段各自带缓动、又连续播放。只有起止两帧的时间轴退化为单段,直接是一个 `FromToByAnimation<Transform>`,无需 `sequence`。`delay` / `speed` / `loop` 作用在这条串联动画的顶层。
 
-以一个含两个通道的例子说明(`position.y` 有 3 帧 = 2 段,`rotation.y` 只有起止 2 帧 = 1 段):
+以一个例子说明(`position.y` 有 3 帧、`rotation.y` 只有起止 2 帧,切点并集为 `0 / 0.6s / 1.2s`,共 2 段):
 
 ```mermaid
 flowchart TB
-    subgraph PY["position.y 通道(2 段)"]
-        direction TB
-        PYs0["段0 FromToBy<br/>0 to 0.6s,easeOut"]
-        PYs1["段1 FromToBy<br/>0.6 to 1.2s,linear"]
-        PYs0 -->|sequence 串联| PYs1
-    end
-    subgraph RY["rotation.y 通道(单段,无需 sequence)"]
-        direction TB
-        RYs0["段0 FromToBy<br/>0 to 1.2s,linear"]
-    end
-    PY -->|通道动画| G["group 并联<br/>+ 顶层 delay / speed / loop"]
-    RY -->|通道动画| G
-    G --> T1["绑定 translation 子目标"]
-    G --> T2["绑定 rotation 子目标"]
+    Slice["切片时间 = 各通道关键帧时间并集<br/>{0, 0.6s, 1.2s} → 2 段"]
+    S0["段0 FromToBy<br/>from=整姿态@0,to=整姿态@0.6s,easeOut"]
+    S1["段1 FromToBy<br/>from=整姿态@0.6s,to=整姿态@1.2s,linear"]
+    Clip["整姿态动画<br/>+ 顶层 delay / speed / loop"]
+
+    Slice --> S0
+    S0 -->|sequence 串联| S1
+    S1 --> Clip
 ```
 
-横向是并联(通道间用 `group`),每个通道内纵向是串联(多段用 `sequence`);`delay` / `speed` / `loop` 只作用在 `group` 这一层。
+每段都携带完整姿态,纵向按时间顺序串联;不再有“通道间并联”这一层,`delay` / `speed` / `loop` 只作用在串联动画顶层。
 
 ##### 输出:可控播放对象与代码演示
 
-编译的最终输出是可控播放对象。沿用上文示例(`position.y` 两段、`rotation.y` 单段),下面分别用 visionOS 与 picoOS 演示两端差异:把多段 `FromToBy` 用 `sequence` 串成通道动画,再用 `group` 把各通道并联成一个动画资源,最后交给引擎播放,拿到可暂停 / 恢复 / 停止 / 变速的播放控制器——即“可控播放对象”。
+编译的最终输出是可控播放对象。沿用上文示例(2 段整姿态),下面分别用 visionOS 与 picoOS 演示:每段编成一个整姿态 `FromToBy`,用 `sequence` 串成一条动画资源,最后交给引擎播放,拿到可暂停 / 恢复 / 停止 / 变速的播放控制器——即“可控播放对象”。两端都绑定整个 transform,写法对齐。
 
 visionOS(RealityKit / Swift):
 
 ```swift
 import RealityKit
 
-// 沿用示例;x / z 冻结在基准值,只动画 y
-let base = entity.transform.translation
+// 沿用示例;每个切点携带完整 position / rotation / scale,只有 y 与绕 y 旋转在变
+let base = entity.transform
 
-// position.y 通道:两段 FromToBy,各带缓动,再用 sequence 串联
-let posSeg0 = FromToByAnimation<SIMD3<Float>>(
-    name: "pos.seg0",
-    from: SIMD3(base.x, 0,    base.z),
-    to:   SIMD3(base.x, 0.25, base.z),
+// 采样某切点的完整姿态(x / z / scale 冻结在基准,只有 pos.y 与 rot.y 在动)
+func pose(y: Float, deg: Float) -> Transform {
+    var t = base
+    t.translation = SIMD3(base.translation.x, y, base.translation.z)
+    t.rotation = simd_quatf(angle: deg * .pi / 180, axis: SIMD3(0, 1, 0))
+    return t
+}
+
+// 段0:整姿态从 t=0 到 t=0.6s
+let seg0 = FromToByAnimation<Transform>(
+    name: "seg0",
+    from: pose(y: 0,    deg: 0),
+    to:   pose(y: 0.25, deg: 90),
     duration: 0.6,
     timing: .easeOut,                 // 段0 自己的缓动
-    bindTarget: .transform.translation
+    bindTarget: .transform            // 只能绑定整个 transform
 )
-let posSeg1 = FromToByAnimation<SIMD3<Float>>(
-    name: "pos.seg1",
-    from: SIMD3(base.x, 0.25, base.z),
-    to:   SIMD3(base.x, 0,    base.z),
+// 段1:整姿态从 t=0.6s 到 t=1.2s
+let seg1 = FromToByAnimation<Transform>(
+    name: "seg1",
+    from: pose(y: 0.25, deg: 90),
+    to:   pose(y: 0,    deg: 180),
     duration: 0.6,
-    timing: .easeIn,                  // 段1 自己的缓动,与段0 不同
-    bindTarget: .transform.translation
+    timing: .linear,                  // 段1 自己的缓动,与段0 不同
+    bindTarget: .transform
 )
-let posChannel = try AnimationResource.sequence(with: [
-    try AnimationResource.generate(with: posSeg0),
-    try AnimationResource.generate(with: posSeg1),
+
+// 各段整姿态动画按时间顺序用 sequence 串成一条动画
+let clip = try AnimationResource.sequence(with: [
+    try AnimationResource.generate(with: seg0),
+    try AnimationResource.generate(with: seg1),
 ])
-
-// rotation.y 通道:单段,无需 sequence
-let rotSeg = FromToByAnimation<simd_quatf>(
-    name: "rot.seg0",
-    from: simd_quatf(angle: 0,   axis: SIMD3(0, 1, 0)),
-    to:   simd_quatf(angle: .pi, axis: SIMD3(0, 1, 0)),   // 180°
-    duration: 1.2,
-    timing: .linear,
-    bindTarget: .transform.rotation
-)
-let rotChannel = try AnimationResource.generate(with: rotSeg)
-
-// 通道间并联:group 合成一个动画资源
-let clip = try AnimationResource.group(with: [posChannel, rotChannel])
 
 // 得到可控播放对象:控制器支持暂停 / 恢复 / 停止 / 变速
 let controller = entity.playAnimation(clip, transitionDuration: 0, startsPaused: true)
 controller.resume()          // play
 // controller.pause()        // pause
 // controller.stop()         // stop
-// controller.speed = 2.0    // 顶层播放速率作用在整个 group
+// controller.speed = 2.0    // 顶层播放速率作用在整条串联动画
 ```
 
 picoOS(Pico Spatial SDK / Kotlin):
 
 ```kotlin
-// 沿用同一示例;x / z 冻结在基准值
-val base = entity.getComponent(Transform::class.java)?.position ?: Vector3(0f, 0f, 0f)
+// 沿用同一示例;每个切点携带完整 Transform,x / z / scale 冻结在基准
+val base = entity.getComponent(Transform::class.java) ?: Transform()
 
-// position.y 通道:两段 TweenAnimation,各自生成 AnimationResource,再 sequence 串联
-val posSeg0 = TweenAnimation.createTweenAnimation(
-    "pos.seg0",
-    AnimationBindTarget.bindPosition(),
-    Vector3(base.x, 0f,    base.z),   // from
-    Vector3(base.x, 0.25f, base.z),   // to
-    null,                             // by
-    0.6f, 0f, RepeatMode.None, 0,     // duration / delay / repeatMode / repeatCount
-    EaseType.EaseOut,                 // 段0 缓动
+// 采样某切点的完整姿态(只有 pos.y 与绕 y 旋转在变)
+fun pose(y: Float, deg: Float): Transform {
+    val q = Quaternion.fromAxisAngle(Vector3(0f, 1f, 0f), deg)
+    return Transform(Vector3(base.position.x, y, base.position.z), q, base.scale)
+}
+
+// 段0:整姿态从 t=0 到 t=0.6s
+val seg0 = TweenAnimation.createTweenAnimation(
+    "seg0",
+    AnimationBindTarget.bindTransform(),   // 只能绑定整个 transform
+    pose(0f,    0f),                        // from(完整姿态)
+    pose(0.25f, 90f),                       // to(完整姿态)
+    null,                                   // by
+    0.6f, 0f, RepeatMode.None, 0,           // duration / delay / repeatMode / repeatCount
+    EaseType.EaseOut,                       // 段0 缓动
     0f, 1f, false, null, null, null
 )
-val posSeg1 = TweenAnimation.createTweenAnimation(
-    "pos.seg1",
-    AnimationBindTarget.bindPosition(),
-    Vector3(base.x, 0.25f, base.z),
-    Vector3(base.x, 0f,    base.z),
+// 段1:整姿态从 t=0.6s 到 t=1.2s
+val seg1 = TweenAnimation.createTweenAnimation(
+    "seg1",
+    AnimationBindTarget.bindTransform(),
+    pose(0.25f, 90f),
+    pose(0f,    180f),
     null,
     0.6f, 0f, RepeatMode.None, 0,
-    EaseType.EaseIn,                  // 段1 缓动,与段0 不同
+    EaseType.Linear,                        // 段1 缓动,与段0 不同
     0f, 1f, false, null, null, null
 )
-val posChannel = AnimationResource.sequence(with = listOf(
-    AnimationResource.generateWithTweenAnimation(posSeg0),
-    AnimationResource.generateWithTweenAnimation(posSeg1),
+
+// 各段整姿态动画按时间顺序用 sequence 串成一条动画
+val clip = AnimationResource.sequence(with = listOf(
+    AnimationResource.generateWithTweenAnimation(seg0),
+    AnimationResource.generateWithTweenAnimation(seg1),
 ))
-
-// rotation.y 通道:单段,用欧拉角度数
-val rotSeg = TweenAnimation.createTweenAnimation(
-    "rot.seg0",
-    AnimationBindTarget.bindEulerAngles(),
-    EulerAngles(0f, 0f,   0f),        // from
-    EulerAngles(0f, 180f, 0f),        // to(绕 y 轴 180°)
-    null,
-    1.2f, 0f, RepeatMode.None, 0,
-    EaseType.Linear,
-    0f, 1f, false, null, null, null
-)
-val rotChannel = AnimationResource.generateWithTweenAnimation(rotSeg)
-
-// 通道间并联:group 合成
-val clip = AnimationResource.group(with = listOf(posChannel, rotChannel))
 
 // 得到可控播放对象
 val controller = entity.playAnimation(clip)
 // controller.pause() / controller.resume() / controller.stop()
-// controller.speed = 2f     // 顶层播放速率作用在整个 group
+// controller.speed = 2f     // 顶层播放速率作用在整条串联动画
 ```
 
 ##### 编译规则
@@ -586,17 +568,14 @@ val controller = entity.playAnimation(clip)
 1. **属性白名单:** 只接受 `position.*`、`rotation.*`、`scale.*`。`opacity`、材质、组件属性等一律显式失败。
 2. **时间范围:** `duration` 必须为正;每个关键帧的 `at` 必须落在 `[0, duration]` 内。
 3. **排序与重复:** 每条轨道的关键帧按 `at` 非递减排序;同一属性不允许出现多条轨道。
-4. **各通道独立区间:** 每个通道按自己的关键帧时间划分区间,不与其他通道共享全局边界。例如某通道的 `0, 0.6, 1.2` 只影响它自己的 `[0, 0.6]` 和 `[0.6, 1.2]` 两段。
-5. **缺帧与非动画分量,分两种情况:**
-   - 若某通道首帧不在 `0` 时刻(例如该通道的标量到 `50%` 才首次出现),用播放起点的原生当前值作该通道基准,并把 `[0, 首帧]` 这段按**从基准值到首帧值的插值**处理——即该通道从一开始就在运动,而非停在原地等到首帧才动;若某时刻晚于该通道最后一帧,则保持最后一帧的值。缺帧只向下回落到原生基准值,绝不向后借用后续关键帧的值。通道之间不共享边界、不互相插值。
-   - (a) *被动画分量内的非动画标量*:例如只动画 `position.y`,则 `position.x` / `position.z` 因平移子目标被整体绑定而冻结在基准值。
-   - (b) *完全没出现的分量*:例如配置里没有任何 `scale.*`,则不为缩放子目标生成动画,缩放不被动画持有,动画期间仍由 React 属性驱动。
-6. **逐段串联、逐通道并行:** 每个通道内的多段用 `sequence` 串成单个通道动画,通道之间用 `group` 并联播放并绑定到对应子目标(平移 / 旋转 / 缩放),详见“通道内多段串联与通道间并联”。不合并成共享缓动的时间段。
+4. **切片时间取各通道并集:** 把所有通道的关键帧时间取并集作为整条时间轴的切点,相邻切点之间构成一段。例如 `position.y` 在 `0, 0.6, 1.2`、`rotation.y` 在 `0, 1.2`,并集 `0, 0.6, 1.2` 切成 `[0, 0.6]` 与 `[0.6, 1.2]` 两段。
+5. **每个切点采样完整姿态,缺帧按通道回落:** 每个切点都要给出完整的 `position` / `rotation` / `scale`。某通道在该时刻若无关键帧,则在它自己的关键帧之间插值取值;早于该通道首帧的时段回落到播放起点的原生基准值,晚于末帧的时段保持末帧值。由于绑定的是整个 transform,配置里完全没出现的分量(如没写任何 `scale.*`)会被采样为基准值并在播放期间保持不变——即整个 transform 在动画期间都由动画持有。
+6. **逐段串联整姿态:** 相邻切点构成一段整姿态 `FromToByAnimation<Transform>`,各段按时间顺序用 `sequence` 串成一条整姿态动画,统一绑定到整个 transform(`bindTarget: .transform`),详见“时间轴切片为整姿态节点并串联”。不再逐通道并行,也不再用 `group` 并联。
 7. **旋转:** `rotation.*` 输入是欧拉角度数,编译时转成 RealityKit 所需的旋转表示,避免用欧拉角逐帧插值。RealityKit 对朝向用最短路径球面插值,因此某个旋转通道若单帧增量达到或超过 180°、或跨多轴,实际路径可能与逐轴直觉不同;需要特定的多圈或多轴路径时,应显式补中间关键帧。编译器不自动加密关键帧,这是使用者的责任。
 8. **缩放:** `scale.*` 必须非负,非法缩放直接失败。
-9. **缓动优先级:** 关键帧级缓动优先于轨道级,轨道级优先于时间轴默认值。缓动取值是封闭枚举 `linear` / `easeIn` / `easeOut` / `easeInOut`,全部直接映射到 RealityKit 内建曲线,不支持自定义贝塞尔,也不存在需要降级处理的缓动。
-10. **循环 / 播放速率 / 延迟:** 这些播放参数放在时间轴顶层,对整个动画组统一生效,由 RealityKit 播放层执行。
-11. **失败显式化:** 若 RealityKit 无法表达某个通道,必须通过命令失败或错误事件显式报错,不能悄悄忽略。
+9. **缓动优先级:** 关键帧级缓动优先于轨道级,轨道级优先于时间轴默认值。缓动取值是封闭枚举 `linear` / `easeIn` / `easeOut` / `easeInOut`,全部直接映射到 RealityKit 内建曲线,不支持自定义贝塞尔,也不存在需要降级处理的缓动。此外,由于每段绑定整个 transform,同一段内 `position` / `rotation` / `scale` 共用该段的缓动。
+10. **循环 / 播放速率 / 延迟:** 这些播放参数放在时间轴顶层,对整条串联动画统一生效,由 RealityKit 播放层执行。
+11. **失败显式化:** 若 RealityKit 无法表达某个段,必须通过命令失败或错误事件显式报错,不能悄悄忽略。
 
 ### 5.4 姿态拆解与回传
 
@@ -645,7 +624,7 @@ supports('useEntityAnimation')
   - **`timeline` 内 `from` = `0%`、`to` = `100%`**:`timeline.from` / `timeline.to` 可与百分比 key 混合在同一个 `timeline` 里;同一 `timeline` 内 `from` 与 `0%`(或 `to` 与 `100%`)重复定义同一帧时报错。
   - **`timeline` 优先**:当 `timeline` 与顶层 `from` / `to` 同时出现时,采用 `timeline`,忽略顶层 `from` / `to`,并在开发模式打印一条警告。
   - **纯顶层 `from` / `to` 且未使用百分比时,`duration` 默认 0.3 秒**。
-  - **每个动画都要求起止两端都提供**:任一形态都 MUST 同时具备起始边界(顶层 `from`、`timeline.from` 或 `0%` 帧)与结束边界(顶层 `to`、`timeline.to` 或 `100%` 帧),缺任一端直接报错,不会用物体当前基准或 baseline 补缺失的边界帧。此约束作用于全部三种形态。注意区分两个层级:被强制的是**边界帧的存在性**;边界帧内部的**字段**仍可稀疏,某通道在边界帧缺关键帧时,仍按逐通道缺帧规则回落到 native baseline(见上文"缺帧与非动画分量")。
+  - **每个动画都要求起止两端都提供**:任一形态都 MUST 同时具备起始边界(顶层 `from`、`timeline.from` 或 `0%` 帧)与结束边界(顶层 `to`、`timeline.to` 或 `100%` 帧),缺任一端直接报错,不会用物体当前基准或 baseline 补缺失的边界帧。此约束作用于全部三种形态。注意区分两个层级:被强制的是**边界帧的存在性**;边界帧内部的**字段**仍可稀疏,某通道在边界帧缺关键帧时,仍按逐通道缺帧规则回落到 native baseline(见上文"每个切点采样完整姿态,缺帧按通道回落")。
 
 #### 原生层(RealityKit)
 
@@ -796,14 +775,14 @@ classDiagram
     EntityMotionAnimationObject --> EntityMotionTransformValues : 拆解 / 合并补丁
     EntityMotionAnimationObject --> EntityMotionBridgeTypes : 编码确认值 / 错误
     EntityMotionAnimationObject --> RealityKit : 播放控制器 / 物体动画
-    EntityMotionTimelineCompiler --> RealityKit : 动画资源 / 动画组
+    EntityMotionTimelineCompiler --> RealityKit : 整姿态动画资源
 ```
 
 **各类职责:**
 
 - **物体运动管理器(`EntityMotionManager`):** 物体运动的原生入口。承接 `SpatialScene` 分发过来的创建与控制,管理动画注册表与生命周期。创建时调用编译器、生成动画对象、注册并返回 `animationId`;控制时按 `animationId` 找到对象并调用对应方法。负责命令失败的回执、销毁与目标失效处理,不让 `SpatialScene` 持有物体动画状态。确认值的事件回传由动画对象完成,管理器只在查找 / 校验阶段直接失败时上报错误。
 - **物体动画对象(`EntityMotionAnimationObject`):** 表示单个物体动画,保存 `animationId`、目标物体、播放状态、被接管分量、播放控制器与资源,负责单个对象的状态转换。每次开始 / 终态 / `set` 被接受后,借拆解辅助得到确认值、经桥接辅助编码,再发出状态变化事件。
-- **时间轴编译器(`EntityMotionTimelineCompiler`):** 把归一化后的时间轴数据编译为逐通道的 RealityKit 动画资源与动画组;它不解析对外的 `from` / `to` 或百分比。
+- **时间轴编译器(`EntityMotionTimelineCompiler`):** 把归一化后的时间轴数据切片编译为一条串联的整姿态 RealityKit 动画资源;它不解析对外的 `from` / `to` 或百分比。
 - **桥接类型(`EntityMotionBridgeTypes`):** 承载原生桥接的编解码结构,包括时间轴数据、控制值、确认值和错误。若命令类型已够用,这部分可作为若干结构体分散存在。
 - **播放参数映射(`EntityMotionTiming`):** 把缓动、延迟、循环、播放速率映射到 RealityKit 的表达;四种内建缓动全部直接映射。
 - **姿态拆解与合并(`EntityMotionTransformValues`):** 负责从物体姿态拆解确认值、把 `api.set` 的稀疏补丁合并到已提交基准上,以及欧拉角度数与 RealityKit 旋转表示之间的换算。
@@ -827,8 +806,8 @@ sequenceDiagram
         Manager->>Manager: 兜底校验时间轴数据
         Manager->>RK: 读取当前姿态作播放基准
         Manager->>Compiler: compile(payload, baseline)
-        Compiler-->>Manager: 动画资源 + 动画组 + 被接管分量
-        Manager->>Obj: 初始化(animationId, target, group, 被接管分量)
+        Compiler-->>Manager: 整姿态动画资源 + 被接管分量
+        Manager->>Obj: 初始化(animationId, target, clip, 被接管分量)
         Manager->>Manager: 注册对象
         Manager-->>Scene: animationId
         Scene-->>JSB: 成功({ id })
@@ -840,7 +819,7 @@ sequenceDiagram
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
     Manager->>Obj: play()
-    Obj->>RK: 播放动画组
+    Obj->>RK: 播放整姿态动画
     RK-->>Obj: 播放控制器
     Obj->>Event: 发出 start,携带确认值
     RK-->>Obj: 完成 / 终态回调
@@ -848,7 +827,7 @@ sequenceDiagram
     Obj->>Event: 发出 complete / finish / stop / reset,携带确认值
 ```
 
-创建只生成原生动画对象和编译好的计划、返回 `animationId`,不额外回传初始确认值。`entityProps` 仍只在开始、终态、被接受的 `set` 等确认事件时更新。物体动画对象持有的是整条时间轴编译后的动画组 / 控制器,不是单条轨道;单通道粒度只存在于编译器内部。
+创建只生成原生动画对象和编译好的计划、返回 `animationId`,不额外回传初始确认值。`entityProps` 仍只在开始、终态、被接受的 `set` 等确认事件时更新。物体动画对象持有的是整条时间轴编译后的整姿态串联动画 / 控制器,不是单条轨道;切片与单段粒度只存在于编译器内部。
 
 **暂停时序:**
 
@@ -931,6 +910,6 @@ sequenceDiagram
     end
 ```
 
-暂停只控制当前播放控制器,不重新编译动画组。停止 / 重置 / 结束会终止当前播放,并以零时长提交终态姿态。`set` 不使用 RealityKit 动画资源,只在非活跃状态下把稀疏补丁合并到已提交姿态后提交。
+暂停只控制当前播放控制器,不重新编译整姿态串联动画。停止 / 重置 / 结束会终止当前播放,并以零时长提交终态姿态。`set` 不使用 RealityKit 动画资源,只在非活跃状态下把稀疏补丁合并到已提交姿态后提交。
 
 边界约束:`SpatialScene` 只做目标查找、类型分发和命令回执,物体专属的编译与播放状态不散落在它的处理逻辑里。v1 不新增只做转发的物体层;注册表、创建 / 控制编排与生命周期都归物体运动管理器。将来若两条路径需要统一目标边界,再抽公共协议或薄封装。
