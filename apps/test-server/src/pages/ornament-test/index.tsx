@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useState } from 'react'
+import { type CSSProperties, useState } from 'react'
 import {
   Model,
   Ornament,
@@ -158,16 +158,14 @@ function NormalDomContent() {
   return (
     <div
       data-testid="ornament-content-dom"
-      className="ornament-demo-card rounded-xl border border-white/20 p-4 text-white shadow-xl"
+      className="rounded-xl border border-white/20 p-4 text-white shadow-xl"
     >
       <div className="text-xs uppercase tracking-[0.18em] text-white/60">
         Normal DOM
       </div>
-      <div className="mt-2 text-lg font-semibold">
-        CSS variable inherited from page
-      </div>
+      <div className="mt-2 text-lg font-semibold">Styled by Ornament</div>
       <div className="mt-3 rounded-lg bg-black/20 px-3 py-2 text-sm">
-        Accent swatch uses <code>--ornament-demo-accent</code>
+        Ordinary CSS is applied to the Ornament document root.
       </div>
     </div>
   )
@@ -275,27 +273,6 @@ function toCornerRadius(value: number): CornerRadius {
 export default function OrnamentTestPage() {
   const [items, setItems] = useState<OrnamentItem[]>([createOrnamentItem(1)])
   const [nextId, setNextId] = useState(2)
-
-  useEffect(() => {
-    document.documentElement.style.setProperty('--spa-bg-color', '#020617')
-    document.documentElement.style.setProperty(
-      '--ornament-demo-accent',
-      '#38bdf8',
-    )
-    const style = document.createElement('style')
-    style.setAttribute('data-ornament-demo-style', 'true')
-    style.textContent = `
-      .ornament-demo-card {
-        background: linear-gradient(135deg, var(--ornament-demo-accent), rgba(15, 23, 42, 0.92));
-      }
-    `
-    document.head.appendChild(style)
-    return () => {
-      document.documentElement.style.removeProperty('--spa-bg-color')
-      document.documentElement.style.removeProperty('--ornament-demo-accent')
-      style.remove()
-    }
-  }, [])
 
   const addOrnament = () => {
     setItems(currentItems => [...currentItems, createOrnamentItem(nextId)])
@@ -472,7 +449,10 @@ export default function OrnamentTestPage() {
           width={item.width}
           height={item.height}
           cornerRadius={toCornerRadius(item.cornerRadius)}
-          backgroundMaterial={item.backgroundMaterial}
+          style={{
+            '--xr-background-material': item.backgroundMaterial,
+            backgroundColor: '#38bdf8',
+          }}
         >
           <OrnamentContent mode={item.contentMode} />
         </Ornament>

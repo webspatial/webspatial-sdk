@@ -116,7 +116,7 @@ describe('Ornament', () => {
   it('creates, adds, syncs styles, portals children, updates, and destroys', async () => {
     setUserAgent('Mozilla/5.0 Chrome/120.0.0.0 Puppeteer Safari/537.36')
 
-    const { rerender, unmount } = render(
+    const { container, rerender, unmount } = render(
       <Ornament attachmentAnchor="bottom" width={240} height={120}>
         <div data-testid="ornament-child">content</div>
       </Ornament>,
@@ -140,14 +140,17 @@ describe('Ornament', () => {
       expect(mocks.addOrnament).toHaveBeenCalledWith('ornament-1')
       expect(mocks.syncParentHeadToChild).toHaveBeenCalledWith(childWindow)
       expect(childWindow.document.body.style.display).toBe('block')
+      expect(childWindow.document.body.style.margin).toBe('0px')
       expect(childWindow.document.body.style.minWidth).toBe('100%')
       expect(childWindow.document.body.style.maxWidth).toBe('100%')
       expect(childWindow.document.body.style.minHeight).toBe('100%')
+      expect(childWindow.document.documentElement.style.borderRadius).toBe('')
       expect(
         childWindow.document.body.querySelector(
           '[data-testid="ornament-child"]',
         ),
       ).not.toBeNull()
+      expect(container.children.length).toBe(0)
     })
 
     rerender(
@@ -175,6 +178,96 @@ describe('Ornament', () => {
 
     unmount()
     expect(destroy).toHaveBeenCalled()
+  })
+
+  it('applies style to child html, clears stale keys, and derives material updates', async () => {
+    setUserAgent('Mozilla/5.0 Chrome/120.0.0.0 Puppeteer Safari/537.36')
+    document.documentElement.style.borderRadius = '3%'
+    document.documentElement.style.setProperty('--parent-only-token', 'leak')
+
+    const { container, rerender } = render(
+      <Ornament
+        attachmentAnchor="bottom"
+        width={240}
+        style={{
+          '--xr-background-material': 'thin',
+          color: 'red',
+          padding: 12,
+          backgroundColor: 'blue',
+        }}
+      >
+        <div data-testid="ornament-child">content</div>
+      </Ornament>,
+    )
+
+    await waitFor(() => {
+      expect(mocks.createOrnament).toHaveBeenCalledWith({
+        attachmentAnchor: 'bottom',
+        contentAlignment: 'back',
+        visibility: 'visible',
+        width: 240,
+        height: 150,
+        cornerRadius: {
+          topLeading: 0,
+          bottomLeading: 0,
+          topTrailing: 0,
+          bottomTrailing: 0,
+        },
+        backgroundMaterial: 'thin',
+      })
+      const htmlStyle = childWindow.document.documentElement.style
+      expect(htmlStyle.getPropertyValue('--xr-background-material')).toBe(
+        'thin',
+      )
+      expect(htmlStyle.color).toBe('red')
+      expect(htmlStyle.padding).toBe('12px')
+      expect(htmlStyle.backgroundColor).toBe('blue')
+      expect(htmlStyle.borderRadius).toBe('')
+      expect(htmlStyle.getPropertyValue('--parent-only-token')).toBe('')
+      expect(container.children.length).toBe(0)
+    })
+
+    rerender(
+      <Ornament
+        attachmentAnchor="bottom"
+        width={240}
+        style={{
+          '--xr-background-material': 'regular',
+          color: 'green',
+        }}
+      >
+        <div data-testid="ornament-child">content</div>
+      </Ornament>,
+    )
+
+    await waitFor(() => {
+      expect(update).toHaveBeenCalledWith({
+        attachmentAnchor: 'bottom',
+        contentAlignment: 'back',
+        visibility: 'visible',
+        width: 240,
+        height: 150,
+        cornerRadius: {
+          topLeading: 0,
+          bottomLeading: 0,
+          topTrailing: 0,
+          bottomTrailing: 0,
+        },
+        backgroundMaterial: 'regular',
+      })
+      const htmlStyle = childWindow.document.documentElement.style
+      expect(htmlStyle.getPropertyValue('--xr-background-material')).toBe(
+        'regular',
+      )
+      expect(htmlStyle.color).toBe('green')
+      expect(htmlStyle.padding).toBe('')
+      expect(htmlStyle.backgroundColor).toBe('')
+    })
+
+    expect(mocks.createOrnament).toHaveBeenCalledTimes(1)
+    expect(destroy).not.toHaveBeenCalled()
+    document.documentElement.style.removeProperty('border-radius')
+    document.documentElement.style.removeProperty('--parent-only-token')
   })
 
   it('applies pending prop updates before adding after async setup', async () => {
@@ -207,7 +300,12 @@ describe('Ornament', () => {
     })
 
     rerender(
-      <Ornament attachmentAnchor="bottom" visibility="hidden" width={320}>
+      <Ornament
+        attachmentAnchor="bottom"
+        visibility="hidden"
+        width={320}
+        style={{ '--xr-background-material': 'thin' }}
+      >
         <div data-testid="ornament-child">content</div>
       </Ornament>,
     )
@@ -228,7 +326,7 @@ describe('Ornament', () => {
           topTrailing: 0,
           bottomTrailing: 0,
         },
-        backgroundMaterial: 'none',
+        backgroundMaterial: 'thin',
       })
       expect(mocks.addOrnament).toHaveBeenCalledWith('ornament-1')
       expect(

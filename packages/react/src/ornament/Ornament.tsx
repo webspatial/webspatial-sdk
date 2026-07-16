@@ -1,6 +1,13 @@
 'use client'
 
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  type CSSProperties,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { createPortal } from 'react-dom'
 import {
   Ornament as CoreOrnament,
@@ -12,10 +19,7 @@ import {
   type OrnamentVisibility,
 } from '@webspatial/core-sdk'
 
-import {
-  setOpenWindowStyle,
-  syncParentHeadToChild,
-} from '../utils/windowStyleSync'
+import { syncParentHeadToChild } from '../utils/windowStyleSync'
 import { useSyncHeadStyles } from '../utils/useSyncHeadStyles'
 import { getSession } from '../utils/getSession'
 import { WebSpatialRuntime } from '../webSpatialRuntime'
@@ -25,8 +29,130 @@ import {
   useInsideOrnament,
 } from './InsideOrnamentContext'
 
-export type OrnamentProps = OrnamentOptions & {
+const ORNAMENT_BACKGROUND_MATERIAL_STYLE_VAR = '--xr-background-material'
+
+type OrnamentStyle = CSSProperties & {
+  [ORNAMENT_BACKGROUND_MATERIAL_STYLE_VAR]?: BackgroundMaterialType
+}
+
+type OrnamentPublicOptions = Omit<OrnamentOptions, 'backgroundMaterial'>
+
+export type OrnamentProps = OrnamentPublicOptions & {
   children: ReactNode
+  style?: OrnamentStyle
+}
+
+const UNITLESS_STYLE_PROPERTIES = new Set([
+  'animationIterationCount',
+  'aspectRatio',
+  'borderImageOutset',
+  'borderImageSlice',
+  'borderImageWidth',
+  'boxFlex',
+  'boxFlexGroup',
+  'boxOrdinalGroup',
+  'columnCount',
+  'columns',
+  'flex',
+  'flexGrow',
+  'flexPositive',
+  'flexShrink',
+  'flexNegative',
+  'flexOrder',
+  'gridArea',
+  'gridRow',
+  'gridRowEnd',
+  'gridRowSpan',
+  'gridRowStart',
+  'gridColumn',
+  'gridColumnEnd',
+  'gridColumnSpan',
+  'gridColumnStart',
+  'fontWeight',
+  'lineClamp',
+  'lineHeight',
+  'opacity',
+  'order',
+  'orphans',
+  'tabSize',
+  'widows',
+  'zIndex',
+  'zoom',
+  'fillOpacity',
+  'floodOpacity',
+  'stopOpacity',
+  'strokeDasharray',
+  'strokeDashoffset',
+  'strokeMiterlimit',
+  'strokeOpacity',
+  'strokeWidth',
+])
+
+function getOrnamentStyleBackgroundMaterial(
+  style: OrnamentStyle | undefined,
+): OrnamentOptions['backgroundMaterial'] {
+  return style?.[ORNAMENT_BACKGROUND_MATERIAL_STYLE_VAR] as
+    | OrnamentOptions['backgroundMaterial']
+    | undefined
+}
+
+function hyphenateStyleName(name: string) {
+  if (name === 'cssFloat') return 'float'
+  return name.replace(/[A-Z]/g, '-$&').toLowerCase().replace(/^ms-/, '-ms-')
+}
+
+function serializeStyleValue(name: string, value: unknown) {
+  if (
+    value === null ||
+    value === undefined ||
+    typeof value === 'boolean' ||
+    value === ''
+  ) {
+    return undefined
+  }
+  if (
+    typeof value === 'number' &&
+    value !== 0 &&
+    !name.startsWith('--') &&
+    !UNITLESS_STYLE_PROPERTIES.has(name)
+  ) {
+    return `${value}px`
+  }
+  return String(value).trim()
+}
+
+function syncOrnamentDocumentStyle(
+  element: HTMLElement,
+  style: OrnamentStyle | undefined,
+  appliedStyleNames: Set<string>,
+) {
+  const nextStyleNames = new Set<string>()
+  const styleRecord = (style ?? {}) as Record<string, unknown>
+
+  for (const name of Object.keys(styleRecord)) {
+    const cssName = name.startsWith('--') ? name : hyphenateStyleName(name)
+    const cssValue = serializeStyleValue(name, styleRecord[name])
+    if (cssValue === undefined) {
+      continue
+    }
+    element.style.setProperty(cssName, cssValue)
+    nextStyleNames.add(name)
+  }
+
+  for (const name of appliedStyleNames) {
+    if (!nextStyleNames.has(name)) {
+      const cssName = name.startsWith('--') ? name : hyphenateStyleName(name)
+      element.style.removeProperty(cssName)
+      if (!name.startsWith('--')) {
+        ;(element.style as unknown as Record<string, string>)[name] = ''
+      }
+    }
+  }
+
+  appliedStyleNames.clear()
+  for (const name of nextStyleNames) {
+    appliedStyleNames.add(name)
+  }
 }
 
 function warnUnsupported(message: string) {
@@ -63,6 +189,8 @@ function ensureBaseHref(windowProxy: WindowProxy) {
 }
 
 function setOrnamentWindowFrameFillStyle(windowProxy: WindowProxy) {
+  windowProxy.document.documentElement.style.backgroundColor = 'transparent'
+  windowProxy.document.body.style.margin = '0px'
   windowProxy.document.body.style.display = 'block'
   windowProxy.document.body.style.minWidth = '100%'
   windowProxy.document.body.style.maxWidth = '100%'
@@ -70,7 +198,6 @@ function setOrnamentWindowFrameFillStyle(windowProxy: WindowProxy) {
 }
 
 async function prepareOrnamentWindow(windowProxy: WindowProxy) {
-  setOpenWindowStyle(windowProxy)
   setOrnamentWindowFrameFillStyle(windowProxy)
   ensureViewportMeta(windowProxy)
   ensureBaseHref(windowProxy)
@@ -84,7 +211,7 @@ export function Ornament({
   width,
   height,
   cornerRadius,
-  backgroundMaterial,
+  style,
   children,
 }: OrnamentProps): React.ReactElement | null {
   const insideOrnament = useInsideOrnament()
@@ -92,6 +219,8 @@ export function Ornament({
   const supported = WebSpatialRuntime.supports('Ornament')
   const [windowProxy, setWindowProxy] = useState<WindowProxy | null>(null)
   const ornamentRef = useRef<CoreOrnament | null>(null)
+  const appliedStyleNamesRef = useRef(new Set<string>())
+  const backgroundMaterial = getOrnamentStyleBackgroundMaterial(style)
 
   const normalizedOptions = useMemo(
     () =>
@@ -116,6 +245,11 @@ export function Ornament({
   )
 
   const latestOptionsRef = useRef(normalizedOptions)
+  const latestStyleRef = useRef(style)
+  useEffect(() => {
+    latestStyleRef.current = style
+  }, [style])
+
   useEffect(() => {
     latestOptionsRef.current = normalizedOptions
     const ornament = ornamentRef.current
@@ -123,6 +257,15 @@ export function Ornament({
       void ornament.update(normalizedOptions)
     }
   }, [normalizedOptions])
+
+  useEffect(() => {
+    if (!windowProxy) return
+    syncOrnamentDocumentStyle(
+      windowProxy.document.documentElement,
+      style,
+      appliedStyleNamesRef.current,
+    )
+  }, [windowProxy, style])
 
   useEffect(() => {
     if (insideOrnament) {
@@ -166,6 +309,11 @@ export function Ornament({
 
         const childWindow = ornament.getWindowProxy()
         await prepareOrnamentWindow(childWindow)
+        syncOrnamentDocumentStyle(
+          childWindow.document.documentElement,
+          latestStyleRef.current,
+          appliedStyleNamesRef.current,
+        )
         if (disposed) {
           await ornament.destroy()
           return
@@ -206,6 +354,7 @@ export function Ornament({
     return () => {
       disposed = true
       setWindowProxy(null)
+      appliedStyleNamesRef.current.clear()
       const ornament = ornamentRef.current
       ornamentRef.current = null
       if (ornament) {

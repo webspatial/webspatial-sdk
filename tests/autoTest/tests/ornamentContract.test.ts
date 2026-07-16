@@ -90,6 +90,10 @@ async function getPortalSnapshot(activeRunner: PuppeteerRunner) {
     ) as HTMLIFrameElement[]
     const frame = frames[0]
     const doc = frame?.contentDocument
+    const htmlStyle =
+      doc && doc.defaultView
+        ? doc.defaultView.getComputedStyle(doc.documentElement)
+        : null
     const domCard = doc?.querySelector(
       '[data-testid="ornament-content-dom"]',
     ) as HTMLElement | null
@@ -111,15 +115,10 @@ async function getPortalSnapshot(activeRunner: PuppeteerRunner) {
       hasModelFallback: Boolean(modelFallback),
       modelFallbackTag: modelFallback?.tagName.toLowerCase() ?? null,
       hasRealityChild: Boolean(realityChild),
-      accentVariable:
-        doc?.defaultView
-          ?.getComputedStyle(doc.documentElement)
-          .getPropertyValue('--ornament-demo-accent')
-          .trim() ?? '',
-      domBackground:
-        domCard && doc?.defaultView
-          ? doc.defaultView.getComputedStyle(domCard).backgroundImage
-          : '',
+      htmlMaterial:
+        htmlStyle?.getPropertyValue('--xr-background-material').trim() ?? '',
+      htmlBackgroundColor: htmlStyle?.backgroundColor ?? '',
+      htmlInlineBorderRadius: doc?.documentElement.style.borderRadius ?? '',
     }
   })
 }
@@ -222,8 +221,9 @@ describe('Ornament runtime contract via test-server demo', function () {
     let portal = await getPortalSnapshot(activeRunner)
     expect(portal.frameCount).to.equal(1)
     expect(portal.hasDomContent).to.equal(true)
-    expect(portal.accentVariable).to.equal('#38bdf8')
-    expect(portal.domBackground).to.contain('gradient')
+    expect(portal.htmlMaterial).to.equal('none')
+    expect(portal.htmlBackgroundColor).to.equal('rgb(56, 189, 248)')
+    expect(portal.htmlInlineBorderRadius).to.equal('')
 
     await setControlValue(
       activeRunner,
@@ -258,6 +258,8 @@ describe('Ornament runtime contract via test-server demo', function () {
         ornament.options.backgroundMaterial === 'thin'
       )
     }, 'Ornament options were not updated in the fake runtime scene')
+    portal = await getPortalSnapshot(activeRunner)
+    expect(portal.htmlMaterial).to.equal('thin')
 
     const firstItemState = await activeRunner.evaluate(() => ({
       attachment: (
