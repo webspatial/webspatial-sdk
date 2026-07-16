@@ -172,7 +172,7 @@ flowchart TB
 - **命令名保留 `Element` 字样。** 创建和控制命令名含 `Element`,不新增平行链路;其目标态语义为空间对象,`elementId` 表示空间对象 id。
 - **承担原生编译成本。** 多关键帧、稀疏关键帧、旋转换算和整姿态串联编译集中在物体运动管理器与编译器,换取 RealityKit 原生播放、系统合成和统一播放语义。
 - **切片为整姿态串联。** 把时间轴切成若干节点、每个节点携带完整的 `position` / `rotation` / `scale`,再按先后顺序串联成一条整姿态动画播放。这样取舍的原因有二:其一,visionOS(RealityKit)只能绑定整个 `.transform`,不支持按通道(如 `.transform.translation`)独立绑定;其二,当前并没有分通道独立控制 `timingFunction` 的需求。因此放弃逐通道并行,改用整姿态串联,天然对齐 visionOS 与 picoOS(两端原生都绑定整 transform);代价是同一区间内各通道只能共用一个 `timingFunction`。
-- **按分量接管。** 某分量出现任一动画字段后,整个分量由动画接管。例如只动画 `position.y` 时,`position.x` / `position.z` 在播放期间冻结在基准值;完全未出现的分量仍由 React 属性驱动。
+- **整 transform 接管。** 动画一旦活跃,整个 `.transform` 由动画接管。例如只动画 `position.y` 时,`position.x` / `position.z` 乃至 `rotation` / `scale` 在播放期间都冻结在基准值;动画结束后才可由 React 属性 / `api.set` 接管。
 - **不提供函数式 `set`。** `api.set(prev => next)` 无法保证 `prev` 是实时原生姿态,因此 v1 只接受稀疏补丁对象;当前确认姿态通过 `entityProps` 读取。
 - **暂不抽象统一适配层。** v1 在 `SpatialScene` 中按运行时类型分发到元素或物体管理器;只有两条路径出现真实重复时才提取公共协议。
 - **并发性能需要实测。** RealityKit 原生播放优于 JS 逐帧写入,但海量物体并发仍需专项性能验证。
