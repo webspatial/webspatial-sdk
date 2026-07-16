@@ -237,6 +237,8 @@ export type ModelSpatialMagnifyEvent =
 export type ModelSpatialMagnifyEndEvent =
   SpatialMagnifyEndEvent<SpatializedStatic3DElementRef>
 
-export type ModelLoadEvent = CustomEvent & {
-  target: SpatializedStatic3DElementRef
-}
+export type ModelLoadEvent<T extends EventTarget = EventTarget> =
+  CustomEvent & {
+    target: T
+    currentTarget: SpatializedStatic3DElementRef
+  }
