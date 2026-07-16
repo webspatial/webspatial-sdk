@@ -27,7 +27,7 @@ This design does not provide public seek, scrub, or progress-read APIs, and it d
 - **mirror**: React copies the transform the native layer has already confirmed and uses that copy for rendering. That copy is the mirror.
 - **`entityProps`**: the transform mirror the Hook returns to the user, of the form `{ position?, rotation?, scale? }`. Spread onto the component, it keeps the entity resting at the animation's end state.
 - **confirmed transform**: after the native layer finishes an action, it reads back the entity's real transform and reports it. React updates `entityProps` only from such values.
-- **track / channel**: a curve describing how a single property (e.g. `position.y`) changes over time. This document calls the compiled execution plan a "channel," and the normalized intermediate form a "track."
+- **track / channel**: a curve describing how a single property (e.g. `position.y`) changes over time. This document calls the form organized by transform sub-target (translation / rotation / scale) at compile time a "channel," and the normalized intermediate form a "track."
 - **keyframe**: a time point on a curve and its value, e.g. "at 0.6s, `position.y` = 0.25."
 - **timingFunction**: a curve describing the pacing between two frames, e.g. constant-speed `linear`, slow-then-fast `easeIn`.
 - **baseline**: a channel's current native value at the moment playback starts; used as a fallback when the channel lacks a starting keyframe.
@@ -345,19 +345,19 @@ Entity motion goes from public config to a playable object in two stages, which 
 1. **Normalization (JS / shared logic layer):** fold the three public authoring shapes (top-level `from` / `to`, `timeline.from` / `timeline.to`, percentage keyframes) into one platform-agnostic internal timeline data `EntityMotionTimelinePayload`. This step only expands, merges, and resolves values, producing platform-agnostic internal data entirely on the JS side.
 2. **Compilation (native / RealityKit):** the native entity motion manager takes the normalized internal timeline, reads the baseline transform, splits it into per-channel segments, compiles each segment into a `FromToByAnimation`, then chains via `sequence` and parallelizes via `group`, finally producing a playable object (animation resource / animation group + playback controller). This step is the actual **compilation**.
 
-#### Normalization (JS layer): config → internal timeline
+#### Normalization (JS layer)
 
-Normalization is done by the shared logic layer's `normalizeEntityMotionConfig`, folding the three public authoring shapes into one internal timeline data:
+Normalization is done by the shared logic layer's `normalizeEntityMotionConfig`, folding the three public authoring shapes into one internal timeline data.
+
+**Input:** the three public authoring shapes, folded by these rules:
 
 - **Top-level `from` / `to`** is equivalent to `timeline.from` / `timeline.to`, expanded into a start and an end frame.
 - **`timeline.from` / `timeline.to`** are the `0%` / `100%` frames and may be mixed with percentage keys.
 - **Percentage keyframes** `0% → 50% → 100%` are converted to seconds via `at = percentage × duration`.
 
-The output is a platform-agnostic `EntityMotionTimelinePayload` (see the next section); the full normalization rules (`timeline` precedence, mandatory boundaries, `duration` defaults, etc.) are in Section 5.6, "Changes per Layer · Shared logic layer."
+The full normalization rules (`timeline` precedence, mandatory boundaries, `duration` defaults, etc.) are in Section 5.6, "Changes per Layer · Shared logic layer."
 
-#### Compilation input: internal timeline (native layer)
-
-The compilation input is the normalization output whose target has already been resolved to an entity:
+**Output:** a platform-agnostic `EntityMotionTimelinePayload`, shown below:
 
 ```text
 type EntityMotionTimelinePayload = {
@@ -413,71 +413,22 @@ Example:
 }
 ```
 
-#### Compilation output: the playable object
+#### Compilation (native / RealityKit)
 
-The compilation output is a native executable plan, ultimately materialized as the animation resource / animation group (the playable object).
+Compilation is done by the native entity motion manager: it takes the normalized internal timeline, reads the baseline transform, organizes it by channel and compiles it segment by segment, finally producing a controllable playback object.
 
-The execution plan is organized by **transform channel**, each channel carrying its own keyframes and per-frame timing functions, rather than merging all channels into segments that share the same time boundaries:
+##### Input: internal timeline
 
-```text
-type EntityChannelAnimationPlan = {
-  duration: number
-  delay: number
-  playbackRate: number
-  loop?: boolean | { reverse?: boolean }
-  channels: EntityChannelPlan[]
-}
+The compilation input is exactly the normalization output `EntityMotionTimelinePayload` (structure in the section above), whose target has already been resolved to an entity.
 
-type EntityChannelPlan = {
-  channel: EntityMotionProperty   // position.x / rotation.y / scale.z ...
-  baseline: number                // native value of this channel at playback start, used when frames are missing
-  keyframes: EntityChannelKeyframe[]
-}
-
-type EntityChannelKeyframe = {
-  at: number
-  value: number
-  timingFunction: TimingFunction  // easing for the interval from this frame to the next
-}
-```
-
-The input above compiles into this execution plan (assuming the per-component native transform at playback start as shown, with track easing pushed down to each frame):
-
-```text
-{
-  duration: 1.2,
-  delay: 0,
-  playbackRate: 1,
-  channels: [
-    {
-      channel: 'position.y',
-      baseline: 0,
-      keyframes: [
-        { at: 0,   value: 0,    timingFunction: 'easeOut' },
-        { at: 0.6, value: 0.25, timingFunction: 'easeOut' },
-        { at: 1.2, value: 0,    timingFunction: 'easeOut' },
-      ],
-    },
-    {
-      channel: 'rotation.y',
-      baseline: 0,
-      keyframes: [
-        { at: 0,   value: 0,   timingFunction: 'linear' },
-        { at: 1.2, value: 180, timingFunction: 'linear' },
-      ],
-    },
-  ],
-}
-```
-
-#### Compilation flow
+##### Compilation flow
 
 ```mermaid
 flowchart TB
     Payload["timeline data<br/>canonical tracks"]
     Validate["fallback validation<br/>duration / property / keyframes / scale"]
     Snapshot["read native current transform<br/>as baseline for missing frames"]
-    Channels["organize execution plan by channel<br/>each keeps its keyframes and per-frame easing"]
+    Channels["organize by channel<br/>each keeps its keyframes and per-segment easing"]
     Segment["compile each segment to a FromToByAnimation<br/>segment from/to = adjacent keyframes, timing = per-segment easing"]
     Seq["chain the segments of a channel via sequence<br/>into one channel animation; convert rotation degrees to native representation"]
     Group["combine channel animations via group in parallel<br/>bind translation / rotation / scale sub-targets"]
@@ -490,7 +441,7 @@ flowchart TB
     Seq --> Group
 ```
 
-#### Within-channel serial chaining and cross-channel parallel composition
+##### Within-channel serial chaining and cross-channel parallel composition
 
 One channel maps to one transform sub-target (translation / rotation / scale). Composing its segments and composing across channels happen at two layers.
 
@@ -520,9 +471,9 @@ flowchart TB
 
 Horizontally it is parallel (channels via `group`); within each channel it is serial top-to-bottom (segments via `sequence`); `delay` / `speed` / `loop` act only at the `group` layer.
 
-#### Sample code: composing a controllable playback object via serial/parallel
+##### Output: the controllable playback object and sample code
 
-Reusing the example above (`position.y` two segments, `rotation.y` single segment), the following shows on visionOS and picoOS how to chain multiple `FromToBy` segments into a channel animation via `sequence`, parallelize the channels into one animation resource via `group`, and hand it to the engine — obtaining a playback controller that can pause / resume / stop / change speed, i.e. a "controllable playback object."
+The final compilation output is the controllable playback object. Reusing the example above (`position.y` two segments, `rotation.y` single segment), the following shows the differences between the two platforms, visionOS and picoOS: chain multiple `FromToBy` segments into a channel animation via `sequence`, parallelize the channels into one animation resource via `group`, and hand it to the engine — obtaining a playback controller that can pause / resume / stop / change speed, i.e. a "controllable playback object."
 
 visionOS (RealityKit / Swift):
 
@@ -630,7 +581,7 @@ val controller = entity.playAnimation(clip)
 // controller.speed = 2f     // top-level playback rate acts on the whole group
 ```
 
-#### Compilation rules
+##### Compilation rules
 
 1. **Property allowlist:** accept only `position.*`, `rotation.*`, `scale.*`. `opacity`, material, component properties, etc. all fail explicitly.
 2. **Time range:** `duration` must be positive; each keyframe's `at` must fall within `[0, duration]`.
@@ -644,8 +595,8 @@ val controller = entity.playAnimation(clip)
 7. **Rotation:** `rotation.*` input is Euler degrees; at compile time it is converted to the rotation representation RealityKit requires, avoiding per-frame interpolation of Euler angles. RealityKit uses shortest-path spherical interpolation for orientation, so if a rotation channel's single-frame increment reaches or exceeds 180°, or spans multiple axes, the actual path may differ from per-axis intuition; when a specific multi-turn or multi-axis path is needed, add intermediate keyframes explicitly. The compiler does not densify keyframes automatically — that is the user's responsibility.
 8. **Scale:** `scale.*` must be non-negative; an invalid scale fails outright.
 9. **Easing priority:** keyframe-level easing takes priority over track-level, and track-level over the timeline default. Easing values are a closed enum `linear` / `easeIn` / `easeOut` / `easeInOut`, all mapping directly to RealityKit built-in curves; custom bezier easing is not supported, and there is no easing that requires a fallback.
-10. **Loop / playback rate / delay:** these playback parameters live at the top of the execution plan and apply uniformly to the whole animation group, executed by the RealityKit playback layer.
-11. **Explicit failure:** if RealityKit cannot express a channel plan, it must report the error explicitly through command failure or an error event, and must not silently ignore it.
+10. **Loop / playback rate / delay:** these playback parameters live at the top of the timeline and apply uniformly to the whole animation group, executed by the RealityKit playback layer.
+11. **Explicit failure:** if RealityKit cannot express a channel, it must report the error explicitly through command failure or an error event, and must not silently ignore it.
 
 ### 5.4 Transform Decomposition and Reporting
 
@@ -852,7 +803,7 @@ classDiagram
 
 - **Entity motion manager (`EntityMotionManager`):** the native entry for entity motion. It receives the create and control dispatched from `SpatialScene`, and manages the animation registry and lifecycle. On create it invokes the compiler, builds the animation object, registers it, and returns an `animationId`; on control it finds the object by `animationId` and calls the corresponding method. It handles command-failure receipts, destruction, and target invalidation, so `SpatialScene` does not hold entity animation state. Confirmed-value event reporting is done by the animation object; the manager reports errors only when the lookup / validation stage fails outright.
 - **Entity animation object (`EntityMotionAnimationObject`):** represents a single entity animation, holding the `animationId`, target entity, playback state, taken-over components, playback controller, and resources, and handling that single object's state transitions. After every start / end state / accepted `set`, it obtains the confirmed value via the decomposition helper, encodes it via the bridge helper, then emits a state-changed event.
-- **Timeline compiler (`EntityMotionTimelineCompiler`):** compiles the normalized timeline data into a per-channel RealityKit executable plan, animation resources, and animation group; it does not parse the public `from` / `to` or percentages.
+- **Timeline compiler (`EntityMotionTimelineCompiler`):** compiles the normalized timeline data into per-channel RealityKit animation resources and an animation group; it does not parse the public `from` / `to` or percentages.
 - **Bridge types (`EntityMotionBridgeTypes`):** carry the native bridge encode/decode structures, including timeline data, control values, confirmed values, and errors. If the command types are sufficient, this part may exist as a few scattered structs.
 - **Playback parameter mapping (`EntityMotionTiming`):** maps easing, delay, loop, and playback rate to the RealityKit representation; all four built-in easings map directly.
 - **Transform decomposition and merge (`EntityMotionTransformValues`):** responsible for decomposing the confirmed value from the entity transform, merging the sparse `api.set` patch onto the committed baseline, and converting between Euler degrees and the RealityKit rotation representation.
