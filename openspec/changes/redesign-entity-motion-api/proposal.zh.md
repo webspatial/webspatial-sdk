@@ -20,13 +20,13 @@
 
 | 我想做的事 | 用什么 |
 |---|---|
-| 让物体从一个姿态移动/旋转/缩放到另一个姿态 | config 里写 `timeline.from` / `timeline.to` |
+| 让物体从一个姿态移动/旋转/缩放到另一个姿态 | config 里写顶层 `from` / `to`(最简写法),或 `timeline.from` / `timeline.to` |
 | 做多段关键帧动画(如 0% → 50% → 100%) | config 里写 `timeline` |
 | 让动画结束后物体停在终点、不弹回起点 | 把 `{...entityProps}` 展开到组件上 |
 | 动画结束后,用代码把物体挪到新姿态 | 调用 `api.set({ ... })` |
 | 只让动画控制位置,旋转仍由我手动控制 | config 里只写 `position`,`rotation` 照常用 props 传 |
 | 读取动画交回的最终姿态 | 读 `entityProps`(没有 `api.get`) |
-| 控制播放(开始/暂停/继续/停止/重置) | `api.play()` / `pause()` / `resume()` / `stop()` / `reset()` / `finish()` |
+| 控制播放(开始/暂停/停止/重置) | `api.play()` / `pause()` / `stop()` / `reset()` / `finish()` |
 | 判断运行环境是否支持动画 | `supports('useEntityAnimation')` |
 
 > **只支持 transform**:当前版本只能动画 `position` / `rotation` / `scale`,**不支持** `opacity`(透明度)、材质、颜色等。写了不支持的目标会直接报错,不会被悄悄忽略。
@@ -70,12 +70,32 @@ const [animation, api, entityProps] = useEntityAnimation(config)
 | 返回值 | 作用 |
 |---|---|
 | `animation` | 动画绑定对象,传给组件的 `animation` 属性 |
-| `api` | 播放控制器,提供 `play / pause / resume / stop / reset / finish` 和 `set` |
+| `api` | 播放控制器,提供 `play / pause / stop / reset / finish` 和 `set` |
 | `entityProps` | 动画在关键节点交回的最终姿态(非逐帧实时值),形如 `{ position?, rotation?, scale? }`,展开到组件上即可 |
 
 ---
 
 ## 怎么描述动画(config)
+
+### 最简写法:顶层 from / to(从一个姿态到另一个)
+
+如果只是“从一个姿态到另一个”,可以直接在 config 顶层写 `from` / `to`,不必嵌套进 `timeline`:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  from: { position: { x: 0, y: 0, z: 0.8 }, scale: { x: 1, y: 1, z: 1 } },
+  to:   { position: { y: 0.25 },            scale: { x: 1.1, y: 1.1, z: 1.1 } },
+  // 纯顶层 from/to 且没用百分比时,duration 默认 0.3 秒
+  autoStart: true,
+})
+```
+
+几条规则:
+
+1. **等价于 `timeline.from` / `timeline.to`**:顶层 `from` / `to` 只是它的简写,内部会归一化成同一条时间轴,行为完全一致。
+2. **两端都必须写**:顶层这一形态里,`from` 与 `to` 必须同时提供;只写其中一个会直接报错,不会用物体当前姿态去补另一端。
+3. **纯顶层 from/to 时 `duration` 默认 0.3 秒**(在没有用百分比关键帧的前提下)。
+4. **和 `timeline` 同时出现时,`timeline` 优先**:此时顶层 `from` / `to` 会被忽略,并在开发模式下打印一条警告。
 
 ### 方式一:timeline.from / timeline.to(从一个姿态到另一个)
 
@@ -97,7 +117,7 @@ const [animation, api, entityProps] = useEntityAnimation({
 })
 ```
 
-`timeline.from` / `timeline.to` 都可以只写你关心的字段,没写的字段保持不变。
+`timeline.from` / `timeline.to` 里都可以只写你关心的**字段**,没写的字段保持不变。但**起止两端必须都写**:`timeline.from`(或 `0%` 帧)与 `timeline.to`(或 `100%` 帧)必须同时存在,只写一端会直接报错,不会用物体当前姿态或 baseline 去补另一端。
 
 ### 方式二:timeline(多段关键帧)
 
@@ -124,6 +144,37 @@ const [animation, api, entityProps] = useEntityAnimation({
 })
 ```
 
+### 方式三:timeline 里混合 from / to 与百分比
+
+在同一个 `timeline` 里,`from` 就是 `0%` 帧、`to` 就是 `100%` 帧,所以可以把 `from` / `to` 和中间的百分比 key 混着写。适合"两端用 from/to 直观表达、中间再插几个百分比关键帧"的场景:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  duration: 1.2,
+  timingFunction: 'easeInOut',
+  timeline: {
+    from: {                              // 等价于 0%
+      position: { x: 0, y: 0, z: 0.8 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+    '50%': {
+      position: { y: 0.25 },
+      scale: { x: 1.1, y: 1.1, z: 1.1 },
+    },
+    to: {                                // 等价于 100%
+      position: { y: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+  },
+})
+```
+
+几点说明:
+
+- **起止两端都要有**:起点(`from` 或 `0%`)和终点(`to` 或 `100%`)必须都写,缺任一端会直接报错;这里用 `from` + `to` 表达两端,自然满足。
+- `from` 与 `0%`、`to` 与 `100%` 指的是同一帧,**不要在同一个 `timeline` 里同时写 `from` 和 `0%`(或 `to` 和 `100%`)**,否则重复定义同一帧会报错。
+- 混合写法下 `duration` 不再默认 0.3 秒(0.3 秒的默认只在纯顶层 `from` / `to` 且未用任何百分比时生效),请显式给出 `duration`。
+
 ### 可写的字段范围
 
 config 里只能写以下这些字段(和 Entity 自身的属性层级保持一致):
@@ -145,6 +196,11 @@ scale.x    / scale.y    / scale.z
 ```tsx
 const [animation, api, entityProps] = useEntityAnimation({
   timeline: {
+    from: {
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { y: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
     to: {
       position: { x: 0.1, y: 0, z: 0 },
       rotation: { y: 90 },
@@ -185,8 +241,7 @@ api.set({ position: { y: 0.3 } })
 
 ### api.set 之后再播放的起点
 
-- 如果 config 里声明了 `timeline.from`:从 `timeline.from` 开始播。
-- 如果没声明 `timeline.from`:从当前姿态(也就是 `api.set` 刚写入的值)开始播。
+- 从 config 声明的起始帧(顶层 `from`、`timeline.from` 或 `0%` 帧)开始播。由于每个动画都必须写起点,不存在"没声明起始帧"的情况——缺起点的 config 在校验阶段就会被拒绝。
 
 ---
 
@@ -228,7 +283,6 @@ api.set({ position: { y: 0.3 } })
 ```tsx
 api.play()     // 开始播放
 api.pause()    // 暂停
-api.resume()   // 从暂停处继续
 api.stop()     // 停止
 api.reset()    // 重置
 api.finish()   // 直接跳到终态
@@ -251,7 +305,7 @@ stateDiagram-v2
 
     [*] --> NotStarted
     NotStarted --> Playing: play() / autoStart
-    Playing --> Playing: pause() / resume()
+    Playing --> Playing: pause()
     Playing --> Ended: 播放到终点 / finish() / stop()
     Ended --> Playing: play() 重新播放
     Ended --> NotStarted: reset()
@@ -298,7 +352,7 @@ useEntityAnimation({
 })
 ```
 
-回调**只是通知**,它们的返回值会被忽略,不能用来决定物体最终停在哪里。要决定终点,请在播放前于 config 里声明(比如用 `timeline.to`),或在播放后通过 `entityProps` / `api.set` 接管。
+回调**只是通知**,它们的返回值会被忽略,不能用来决定物体最终停在哪里。要决定终点,请在播放前于 config 里声明(比如用顶层 `to` 或 `timeline.to`),或在播放后通过 `entityProps` / `api.set` 接管。
 
 回调收到的 `values` 只包含 Entity 支持的字段:
 
@@ -340,4 +394,4 @@ return <BoxEntity position={targetPosition} />
 
 ## 一句话总结
 
-`useEntityAnimation` 用 `position / rotation / scale` 描述动画,支持百分比 `timeline`、`entityProps` 结果回写和 `animation` 绑定;当前版本只支持 transform,不支持 opacity。
+`useEntityAnimation` 用 `position / rotation / scale` 描述动画,支持顶层 `from` / `to` 简写、百分比 `timeline`、`entityProps` 结果回写和 `animation` 绑定;当前版本只支持 transform,不支持 opacity。
