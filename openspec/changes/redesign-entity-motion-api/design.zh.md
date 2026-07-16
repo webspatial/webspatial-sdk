@@ -27,7 +27,7 @@
 - **镜像(mirror)**:React 侧把原生层已确认的姿态复制一份出来供渲染使用,这份复制就叫镜像。
 - **`entityProps`**:Hook 返回给使用者的姿态镜像,形如 `{ position?, rotation?, scale? }`,展开到组件上可让物体停在动画终点。
 - **确认姿态(confirmed transform)**:原生层执行完一个动作后,回读物体真实姿态并回传的那份值。React 只用这种值更新 `entityProps`。
-- **轨道(track)/ 通道(channel)**:一条描述单个属性(如 `position.y`)随时间变化的曲线。本文对编译后的执行计划称"通道",对配置归一化后的中间形态称"轨道"。
+- **轨道(track)/ 通道(channel)**:一条描述单个属性(如 `position.y`)随时间变化的曲线。本文把编译时按变换子目标(平移 / 旋转 / 缩放)组织的形态称"通道",把配置归一化后的中间形态称"轨道"。
 - **关键帧(keyframe)**:曲线上的一个时间点及其取值,例如"第 0.6 秒时 `position.y` = 0.25"。
 - **缓动函数(timingFunction)**:描述两帧之间快慢变化的曲线,如匀速 `linear`、先慢后快 `easeIn`。
 - **基准值(baseline)**:某通道开始播放时的原生当前值;当该通道缺少起始关键帧时用它兜底。
@@ -345,19 +345,19 @@ sequenceDiagram
 1. **归一化(JS / 公共逻辑层):** 把对外的三种书写形态(顶层 `from` / `to`、`timeline.from` / `timeline.to`、百分比关键帧)折叠成一套与平台无关的内部时间轴数据 `EntityMotionTimelinePayload`。这一步只做展开、合并、求值,产物是平台无关的内部数据,全程在 JS 侧完成。
 2. **编译(native / RealityKit):** 原生物体运动管理器拿到已归一化的内部时间轴,读取基准姿态,按通道切段,把每段编成 `FromToByAnimation`,再用 `sequence` 串联、`group` 并联,最终产出可播放对象(动画资源 / 动画组 + 播放控制器)。这一步才是**编译**。
 
-#### 归一化(JS 层):配置 → 内部时间轴
+#### 归一化(JS 层)
 
-归一化由公共逻辑层的 `normalizeEntityMotionConfig` 完成,把三种对外写法统一成同一套内部时间轴数据:
+归一化由公共逻辑层的 `normalizeEntityMotionConfig` 完成,把三种对外写法统一成同一套内部时间轴数据。
+
+**输入:** 对外的三种书写形态,折叠规则为:
 
 - **顶层 `from` / `to`** 等价于 `timeline.from` / `timeline.to`,展开成起止两帧。
 - **`timeline.from` / `timeline.to`** 即 `0%` / `100%` 帧,可与百分比 key 混写。
 - **百分比关键帧** `0% → 50% → 100%` 按 `at = 百分比 × duration` 折算成秒。
 
-产物是平台无关的 `EntityMotionTimelinePayload`(见下节),完整归一化规则(`timeline` 优先、边界必填、`duration` 默认值等)见“5.6 各层改动 · 公共逻辑层”。
+完整归一化规则(`timeline` 优先、边界必填、`duration` 默认值等)见“5.6 各层改动 · 公共逻辑层”。
 
-#### 编译输入:内部时间轴(native 层)
-
-编译的输入是归一化产物、且目标已解析为物体的内部时间轴数据:
+**输出:** 平台无关的 `EntityMotionTimelinePayload`,结构如下:
 
 ```text
 type EntityMotionTimelinePayload = {
@@ -413,71 +413,22 @@ type EntityMotionKeyframe = {
 }
 ```
 
-#### 编译输出:可播放对象
+#### 编译(native / RealityKit)
 
-编译的输出是原生可执行计划,最终落为动画资源 / 动画组这一可播放对象。
+编译由原生物体运动管理器完成:拿到归一化的内部时间轴,读取基准姿态,按通道组织并逐段编译,最终产出可控播放对象。
 
-执行计划按**姿态通道**组织,每个通道带自己的关键帧和逐帧缓动函数,而不是把所有通道合并成共享同一段时间边界的时间段:
+##### 输入:内部时间轴
 
-```text
-type EntityChannelAnimationPlan = {
-  duration: number
-  delay: number
-  playbackRate: number
-  loop?: boolean | { reverse?: boolean }
-  channels: EntityChannelPlan[]
-}
+编译的输入就是归一化的产物 `EntityMotionTimelinePayload`(结构见上节),且目标已解析为物体。
 
-type EntityChannelPlan = {
-  channel: EntityMotionProperty   // position.x / rotation.y / scale.z ...
-  baseline: number                // 播放起点该通道的原生值,缺帧时使用
-  keyframes: EntityChannelKeyframe[]
-}
-
-type EntityChannelKeyframe = {
-  at: number
-  value: number
-  timingFunction: TimingFunction  // 该帧到下一帧区间使用的缓动
-}
-```
-
-上文那份输入,编译后的执行计划(假设播放起点原生姿态各分量为示例值,轨道缓动下沉到每帧):
-
-```text
-{
-  duration: 1.2,
-  delay: 0,
-  playbackRate: 1,
-  channels: [
-    {
-      channel: 'position.y',
-      baseline: 0,
-      keyframes: [
-        { at: 0,   value: 0,    timingFunction: 'easeOut' },
-        { at: 0.6, value: 0.25, timingFunction: 'easeOut' },
-        { at: 1.2, value: 0,    timingFunction: 'easeOut' },
-      ],
-    },
-    {
-      channel: 'rotation.y',
-      baseline: 0,
-      keyframes: [
-        { at: 0,   value: 0,   timingFunction: 'linear' },
-        { at: 1.2, value: 180, timingFunction: 'linear' },
-      ],
-    },
-  ],
-}
-```
-
-#### 编译流程
+##### 编译流程
 
 ```mermaid
 flowchart TB
     Payload["时间轴数据<br/>规范轨道"]
     Validate["兜底校验<br/>时长 / 属性 / 关键帧 / 缩放"]
     Snapshot["读取原生当前姿态<br/>作为缺帧基准"]
-    Channels["按通道组织执行计划<br/>各自保留关键帧与逐帧缓动"]
+    Channels["按通道组织<br/>各自保留关键帧与分段缓动"]
     Segment["逐段编译 FromToByAnimation<br/>段内 from/to 取相邻关键帧,timing 取该段缓动"]
     Seq["同通道多段用 sequence 串联<br/>合成单个通道动画;旋转的度数转为原生表示"]
     Group["各通道动画用 group 并联<br/>绑定平移 / 旋转 / 缩放子目标"]
@@ -490,7 +441,7 @@ flowchart TB
     Seq --> Group
 ```
 
-#### 通道内多段串联与通道间并联
+##### 通道内多段串联与通道间并联
 
 一个通道对应一个变换子目标(平移 / 旋转 / 缩放),它的多段以及通道之间的组合分两层完成。
 
@@ -520,9 +471,9 @@ flowchart TB
 
 横向是并联(通道间用 `group`),每个通道内纵向是串联(多段用 `sequence`);`delay` / `speed` / `loop` 只作用在 `group` 这一层。
 
-#### 串并联组成可控播放对象的示例代码
+##### 输出:可控播放对象与代码演示
 
-沿用上文示例(`position.y` 两段、`rotation.y` 单段),下面分别用 visionOS 与 picoOS 演示:把多段 `FromToBy` 用 `sequence` 串成通道动画,再用 `group` 把各通道并联成一个动画资源,最后交给引擎播放,拿到可暂停 / 恢复 / 停止 / 变速的播放控制器——即“可控播放对象”。
+编译的最终输出是可控播放对象。沿用上文示例(`position.y` 两段、`rotation.y` 单段),下面分别用 visionOS 与 picoOS 演示两端差异:把多段 `FromToBy` 用 `sequence` 串成通道动画,再用 `group` 把各通道并联成一个动画资源,最后交给引擎播放,拿到可暂停 / 恢复 / 停止 / 变速的播放控制器——即“可控播放对象”。
 
 visionOS(RealityKit / Swift):
 
@@ -630,7 +581,7 @@ val controller = entity.playAnimation(clip)
 // controller.speed = 2f     // 顶层播放速率作用在整个 group
 ```
 
-#### 编译规则
+##### 编译规则
 
 1. **属性白名单:** 只接受 `position.*`、`rotation.*`、`scale.*`。`opacity`、材质、组件属性等一律显式失败。
 2. **时间范围:** `duration` 必须为正;每个关键帧的 `at` 必须落在 `[0, duration]` 内。
@@ -644,8 +595,8 @@ val controller = entity.playAnimation(clip)
 7. **旋转:** `rotation.*` 输入是欧拉角度数,编译时转成 RealityKit 所需的旋转表示,避免用欧拉角逐帧插值。RealityKit 对朝向用最短路径球面插值,因此某个旋转通道若单帧增量达到或超过 180°、或跨多轴,实际路径可能与逐轴直觉不同;需要特定的多圈或多轴路径时,应显式补中间关键帧。编译器不自动加密关键帧,这是使用者的责任。
 8. **缩放:** `scale.*` 必须非负,非法缩放直接失败。
 9. **缓动优先级:** 关键帧级缓动优先于轨道级,轨道级优先于时间轴默认值。缓动取值是封闭枚举 `linear` / `easeIn` / `easeOut` / `easeInOut`,全部直接映射到 RealityKit 内建曲线,不支持自定义贝塞尔,也不存在需要降级处理的缓动。
-10. **循环 / 播放速率 / 延迟:** 这些播放参数放在执行计划顶层,对整个动画组统一生效,由 RealityKit 播放层执行。
-11. **失败显式化:** 若 RealityKit 无法表达某个通道计划,必须通过命令失败或错误事件显式报错,不能悄悄忽略。
+10. **循环 / 播放速率 / 延迟:** 这些播放参数放在时间轴顶层,对整个动画组统一生效,由 RealityKit 播放层执行。
+11. **失败显式化:** 若 RealityKit 无法表达某个通道,必须通过命令失败或错误事件显式报错,不能悄悄忽略。
 
 ### 5.4 姿态拆解与回传
 
@@ -852,7 +803,7 @@ classDiagram
 
 - **物体运动管理器(`EntityMotionManager`):** 物体运动的原生入口。承接 `SpatialScene` 分发过来的创建与控制,管理动画注册表与生命周期。创建时调用编译器、生成动画对象、注册并返回 `animationId`;控制时按 `animationId` 找到对象并调用对应方法。负责命令失败的回执、销毁与目标失效处理,不让 `SpatialScene` 持有物体动画状态。确认值的事件回传由动画对象完成,管理器只在查找 / 校验阶段直接失败时上报错误。
 - **物体动画对象(`EntityMotionAnimationObject`):** 表示单个物体动画,保存 `animationId`、目标物体、播放状态、被接管分量、播放控制器与资源,负责单个对象的状态转换。每次开始 / 终态 / `set` 被接受后,借拆解辅助得到确认值、经桥接辅助编码,再发出状态变化事件。
-- **时间轴编译器(`EntityMotionTimelineCompiler`):** 把归一化后的时间轴数据编译为逐通道的 RealityKit 可执行计划、动画资源与动画组;它不解析对外的 `from` / `to` 或百分比。
+- **时间轴编译器(`EntityMotionTimelineCompiler`):** 把归一化后的时间轴数据编译为逐通道的 RealityKit 动画资源与动画组;它不解析对外的 `from` / `to` 或百分比。
 - **桥接类型(`EntityMotionBridgeTypes`):** 承载原生桥接的编解码结构,包括时间轴数据、控制值、确认值和错误。若命令类型已够用,这部分可作为若干结构体分散存在。
 - **播放参数映射(`EntityMotionTiming`):** 把缓动、延迟、循环、播放速率映射到 RealityKit 的表达;四种内建缓动全部直接映射。
 - **姿态拆解与合并(`EntityMotionTransformValues`):** 负责从物体姿态拆解确认值、把 `api.set` 的稀疏补丁合并到已提交基准上,以及欧拉角度数与 RealityKit 旋转表示之间的换算。
