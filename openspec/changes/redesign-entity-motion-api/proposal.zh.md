@@ -24,7 +24,7 @@
 | 做多段关键帧动画(如 0% → 50% → 100%) | config 里写 `timeline` |
 | 让动画结束后物体停在终点、不弹回起点 | 把 `{...entityProps}` 展开到组件上 |
 | 动画结束后,用代码把物体挪到新姿态 | 调用 `api.set({ ... })` |
-| 只让动画控制位置,旋转仍由我手动控制 | config 里只写 `position`,`rotation` 照常用 props 传 |
+| 只让动画控制位置,其它分量动画期间保持不变 | config 里只写 `position`;`rotation` / `scale` 播放期间冻结在基准值,结束后可由 props / `api.set` 接管 |
 | 读取动画交回的最终姿态 | 读 `entityProps`(没有 `api.get`) |
 | 控制播放(开始/暂停/停止/重置) | `api.play()` / `pause()` / `stop()` / `reset()` / `finish()` |
 | 判断运行环境是否支持动画 | `supports('useEntityAnimation')` |
@@ -278,19 +278,19 @@ api.set({ position: { y: 0.3 } })
 
 ## 动画和你的 props 谁说了算
 
-物体的姿态可能同时被两边影响:你手动传的 props(含 `entityProps`),以及正在播放的动画。规则**按分量(`position` / `rotation` / `scale`)分别独立判断**:
+物体的姿态可能同时被两边影响:你手动传的 props(含 `entityProps`),以及正在播放的动画。规则**按动画是否活跃、对整个 transform 统一判断**:动画一旦活跃,整个 transform 归动画所有:
 
 | 情况 | 谁说了算 |
 |---|---|
-| 该分量写在了动画 config 里,且动画正在播放(含延迟、暂停) | 动画 |
-| 其它情况(该分量没写进 config,或动画已结束 / 尚未开始) | 你的 props / `api.set` |
+| 动画正在播放(含延迟、暂停) | 动画接管整个 transform;config 里没写的分量冻结在基准值 |
+| 动画已结束 / 尚未开始 / 已停止 | 你的 props / `api.set` |
 
-这套规则和 CSS 动画一致:动画播放时按属性接管这些 transform 属性,没被动画覆盖的属性、以及动画结束后,都交回给你控制。
+这和 visionOS / picoOS 原生一致:底层只能绑定整个 transform,所以动画一活跃就接管整个 transform;config 里没写的分量会被冻结在基准值,直到动画结束后才交回给你控制。
 
 由此可得几个常见结论:
 
-- **动画正在播时**,写在 config 里的那些属性由动画接管,你此时用 props 改它们不会生效;没写进 config 的属性仍然照常由 props 控制。
-- **“只让动画控制位置,旋转继续由 props 控制”是支持的**——只要 config 里只写 `position`、不写 `rotation` 即可。
+- **动画正在播时**,整个 transform 都由动画接管,你此时用 props 或 `api.set` 改任何分量都不会生效;没写进 config 的分量会被冻结在基准值。
+- **“动画期间让旋转继续由 props 实时控制”是做不到的**——底层只能绑定整个 transform,播放期间旋转会被冻结在基准值,只能等动画结束后再用 props / `api.set` 接管。
 - **动画结束后**,这些 transform 属性都恢复为由 props(含 `entityProps`)控制,物体停在终点。
 
 ### 推荐写法

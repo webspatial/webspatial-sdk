@@ -24,7 +24,7 @@
 | Do a multi-step keyframe animation (e.g. 0% → 50% → 100%) | Write `timeline` in the config |
 | Keep the object at the end pose after the animation, no snap-back | Spread `{...entityProps}` onto the component |
 | Move the object to a new pose in code after the animation | Call `api.set({ ... })` |
-| Let the animation control position only, keep rotation manual | Put only `position` in the config; keep passing `rotation` via props |
+| Let the animation control position only, keep other components fixed during playback | Put only `position` in the config; `rotation` / `scale` freeze at baseline during playback and can be taken over via props / `api.set` after it ends |
 | Read the final pose the animation hands back | Read `entityProps` (there is no `api.get`) |
 | Control playback (start/pause/stop/reset) | `api.play()` / `pause()` / `stop()` / `reset()` / `finish()` |
 | Check whether the runtime supports animation | `supports('useEntityAnimation')` |
@@ -278,19 +278,19 @@ A few rules:
 
 ## Who Wins: Animation vs. Your Props
 
-The object's pose can be influenced from two sides at once: the props you pass manually (including `entityProps`), and the animation that is playing. The rule is decided **per component (`position` / `rotation` / `scale`), independently**:
+The object's pose can be influenced from two sides at once: the props you pass manually (including `entityProps`), and the animation that is playing. The rule is decided **for the whole transform, by whether the animation is active**: once the animation is active, the entire transform is owned by the animation:
 
 | Situation | Who wins |
 |---|---|
-| The component is written in the config AND the animation is playing (including delay, paused) | The animation |
-| Otherwise (the component is not in the config, or the animation has ended / not started) | Your props / `api.set` |
+| The animation is playing (including delay, paused) | The animation owns the whole transform; components not in the config are frozen at baseline |
+| The animation has ended / not started / stopped | Your props / `api.set` |
 
-This matches CSS animations: while playing, the animation takes over these transform properties per property; properties it does not cover — and these transform properties once the animation ends — are handed back to you.
+This matches visionOS / picoOS natively: the underlying runtime can only bind the whole transform, so once the animation is active it takes over the entire transform; components not in the config are frozen at baseline and are handed back to you only after the animation ends.
 
 A few practical takeaways follow:
 
-- **While the animation is playing**, the properties listed in the config are taken over by the animation, so writing them via props has no effect; properties not in the config are still controlled by props as usual.
-- **"Let the animation control position only, keep rotation on props" is supported** — just put only `position` in the config and leave out `rotation`.
+- **While the animation is playing**, the entire transform is taken over by the animation, so writing any component via props or `api.set` has no effect; components not in the config are frozen at baseline.
+- **"Keep rotation live-controlled by props during the animation" is not possible** — the runtime can only bind the whole transform, so rotation is frozen at baseline during playback and can only be taken over via props / `api.set` after the animation ends.
 - **After the animation ends**, these transform properties go back to being controlled by props (including `entityProps`), and the object stays at the end pose.
 
 ### Recommended Pattern
