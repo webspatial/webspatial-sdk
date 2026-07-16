@@ -1,92 +1,122 @@
-## Context
+# `useEntityAnimation` Redesign
 
-`proposal.md` is the single source of truth for the public API surface, and `specs/` is the source of truth for normative behavior. This document only describes the **implementation architecture** required to deliver that target state; it does not restate the public API contract or the behavioral requirements.
+## 1. Background
 
-The redesign turns `useEntityAnimation` into the Entity-specific surface over the shared `useAnimation` motion family (`useEntityAnimation = useAnimation config + Entity props outlet`). It adds percentage `timeline`, the `entityProps` outlet, `api.set`, and the `animation` binding. This is a non-breaking enhancement.
+`useEntityAnimation` is the WebSpatial SDK React Hook that drives transform animations for 3D entities in a scene. It supports percentage keyframes, animation-result write-back, and a unified imperative transform setter, and it unifies entity motion onto the generic animation binding, lifecycle, and cross-layer protocol.
 
-## Design Principles
+This redesign integrates entity motion into the generic animation architecture: the React layer provides the Hook, target binding, and result mirror; Core normalizes and validates configuration; and the visionOS native layer compiles and executes animations with RealityKit. The native transform is the single authoritative data source. Every transform change is confirmed by native before it is mirrored to React, structurally preventing the animation end state from conflicting with stale React base properties and snapping back.
 
-### Native is the only authoritative data source
+The goals are to:
 
-For Entity motion, native RealityKit backend state is the only authoritative source of transform truth. React does not maintain a separate committed cache, pending state, or second transform source that can compete with native.
+- Define the responsibility boundaries and data flow across React, Core, and native.
+- Define both the “config → canonical tracks → RealityKit animation” path and the “native confirmed transform → `entityProps`” path.
+- Reuse the create, control, and state-event protocol instead of adding a parallel entity command path.
+- Generalize animation objects from spatial-element-only objects into motion objects that can target different runtime object types.
 
-`entityProps` is a React mirror outlet for transform state that native has confirmed:
+This design does not provide public seek, scrub, or progress-read APIs, and it does not use an SDK-side per-frame sampler. It defines the API shape, behavior boundaries, cross-layer protocol, compilation rules, and module responsibilities required for a self-contained technical review.
+
+## 2. Glossary
+
+- **Entity**: a 3D object in the scene, e.g. a box. It has three groups of spatial properties, collectively called its "transform."
+- **transform**: an entity's state in space, made of position `position` (meters), rotation `rotation` (degrees), and scale `scale` (multiplier).
+- **component**: one of the three transform parts, i.e. `position`, `rotation`, or `scale`.
+- **native layer / RealityKit**: the low-level engine on Apple visionOS that actually drives 3D entity motion, implemented in Swift. "Native" in this document refers to this layer.
+- **React layer / shared logic layer (Core)**: respectively the user-facing Hook code, and the platform-agnostic logic shared by both ends.
+- **JS Bridge command / event**: the channel for sending and receiving messages between JavaScript and the native layer. Commands go from JS to native; events come back from native to JS.
+- **authoritative data source**: which side a given piece of data defers to. In this design, an entity's real transform defers only to the native layer.
+- **mirror**: React copies the transform the native layer has already confirmed and uses that copy for rendering. That copy is the mirror.
+- **`entityProps`**: the transform mirror the Hook returns to the user, of the form `{ position?, rotation?, scale? }`. Spread onto the component, it keeps the entity resting at the animation's end state.
+- **confirmed transform**: after the native layer finishes an action, it reads back the entity's real transform and reports it. React updates `entityProps` only from such values.
+- **track / channel**: a curve describing how a single property (e.g. `position.y`) changes over time. This document calls the compiled execution plan a "channel," and the normalized intermediate form a "track."
+- **keyframe**: a time point on a curve and its value, e.g. "at 0.6s, `position.y` = 0.25."
+- **timingFunction**: a curve describing the pacing between two frames, e.g. constant-speed `linear`, slow-then-fast `easeIn`.
+- **baseline**: a channel's current native value at the moment playback starts; used as a fallback when the channel lacks a starting keyframe.
+- **spherical linear interpolation (slerp)**: the interpolation RealityKit uses for rotation, always taking the shortest path between two orientations.
+- **no-op**: a command is received but produces no effect; neither the entity nor `entityProps` changes.
+- **registry**: the table the native layer uses to look up entities or animation objects by id.
+
+## 3. Functional Scope
+
+`useEntityAnimation` lets users describe animations with position, rotation, and scale, bind them to an entity, and receive the native-confirmed transform. The functional scope is:
+
+| Capability | Description |
+|---|---|
+| Transform animation | Supports only `position`, `rotation`, and `scale`; rejects non-transform properties such as `opacity`. |
+| Timeline forms | Supports top-level `from` / `to`, `timeline.from` / `timeline.to`, and percentage keyframes such as `0% → 50% → 100%`. |
+| Target binding | Returns `animation`, which binds through the entity component's `animation` property. |
+| Playback control | `api` provides `play`, `pause`, `stop`, `reset`, and `finish`. |
+| Result write-back | Native reports transforms at confirmed lifecycle points; React exposes them as `entityProps` so the entity does not snap back at the end state. |
+| Imperative set | In an inactive state, `api.set(patch)` merges a sparse patch onto the native committed transform. |
+| Lifecycle and errors | Reuses the generic animation create, control, destroy, target-invalidation, and error-event path. |
+| Capability detection | Detects the complete capability through `supports('useEntityAnimation')`. |
+
+## 4. Design Approach and Trade-offs
+
+### 4.1 Design Principles
+
+#### The native layer is the single authoritative data source
+
+An entity's transform defers only to native RealityKit. React does not keep a second transform that could conflict with native, and does not maintain a pending-commit cache or a predicted end state.
+
+`entityProps` is only a React-side mirror of the transform native has already confirmed. Data flows in one direction:
 
 ```text
 React config / api.set
-  -> native Entity motion backend (single authority)
-  -> confirmed transform state
-  -> entityProps mirror outlet
+  -> native animation engine (single authority)
+  -> confirmed transform
+  -> entityProps mirror
 ```
 
-This means:
+From this a few rules follow:
 
-- Playback, terminal commands, reset, finish, and `api.set` all enter native before they can change transform state.
-- If native rejects a command, the write is ineffective and `entityProps` does not update.
-- If native accepts a command, it emits the confirmed transform through the existing animation state event, and React updates `entityProps` from that event.
-- React mirrors native-confirmed state for users; it does not predict terminal values or queue replay writes made while animation is active.
-- Before the first confirmed state, `entityProps` may be empty; after confirmation it mirrors the transform components owned by the animation system (the animated components plus components written via `api.set`), limited to `position` / `rotation` / `scale`; components that are not owned do not enter `entityProps`.
+- Play, stop, reset, finish, `api.set` — every operation that changes the transform goes to the native layer first.
+- When native rejects a command, that write is void and `entityProps` is not updated.
+- When native accepts a command, it reports the confirmed transform through an animation state event, and React then updates `entityProps`.
+- React only mirrors the transform native has confirmed back to the user; while an animation is in progress, writes are never queued for replay.
+- `entityProps` may be empty before the first confirmed transform arrives. After confirmation, it contains only the components the animation has taken over plus the components written by `api.set`, with fields limited to `position` / `rotation` / `scale`; components that were not taken over never enter `entityProps`.
 
-### Reuse the `useAnimation` architecture
+#### Reuse the generic animation architecture
 
-`useEntityAnimation` should reuse the `useAnimation` binding / target resolution / `AnimationObject` lifecycle / create-control-event chain as much as possible. Entity-specific behavior is limited to the Entity-specific surface and native manager boundary:
+`useEntityAnimation` reuses the generic animation's binding, target resolution, animation-object lifecycle, and the "create — control — event" pipeline as much as possible. The entity path's differences are concentrated in only a few places:
 
-- authoring: `position` / `rotation` / `scale`
-- validation: transform-only, reject `opacity`
-- outlet: `entityProps`, not CSS `style`
-- target type: `SpatialEntity`
-- native execution: RealityKit Entity backend
+- Description: uses `position` / `rotation` / `scale`.
+- Validation: allows only transforms, rejects `opacity`.
+- Result exit: goes through `entityProps`, not CSS `style`.
+- Target type: `SpatialEntity`.
+- Execution engine: RealityKit.
 
-## Goals / Non-Goals
+### 4.2 Why RealityKit
 
-**Goals:**
-- Define the React / Core / Native architecture that realizes the proposal's target-state API on a RealityKit backend
-- Specify the data flow from config -> canonical tracks -> native transform
-- Specify the write-back flow from native confirmed transform -> `entityProps` mirror
-- Specify reuse of the existing `CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand`, with no parallel Entity JSB commands
-- Specify how `AnimationObject` generalizes from element-only to target-aware motion objects
+The native execution engine is chosen as **RealityKit**, because:
 
-**Non-Goals:**
-- Restating the public API definition that lives in `proposal.md`
-- Restating normative behavior that lives in `specs/`
-- Designing a CADisplayLink sampler backend (explicitly not chosen; see Backend Rationale)
-- A public seek / scrub / progress API (proposal Non-Goal)
-- Adding `CreateEntityAnimationJSBCommand` / `ControlEntityAnimationJSBCommand`
+1. **One execution engine.** Entity motion and generic animation share a single RealityKit engine, avoiding a separate execution path for entities.
+2. **It is inherently the execution engine for 3D entities.** With many entities animating concurrently, native engine playback scales better than per-frame writes from the SDK.
+3. **It meets both the playback and reporting needs.** It can control playback state, read an entity's current transform, and emit an event when playback completes — enough to implement stop, reset, and finish, and to report the confirmed transform to callbacks and `entityProps`.
 
-## Backend Rationale (RealityKit)
+The main added cost is a compiler: translating the normalized entity tracks into transform animations RealityKit can execute.
 
-Backend decision: native execution uses **RealityKit**.
+#### Why the per-frame sampling scheme was rejected
 
-RealityKit is retained because:
+An alternative is to drop RealityKit and instead drive the transform with a timer sampling frame by frame and hand-written interpolation. Setting aside its worse performance, the following problems alone are enough to reject it:
 
-1. **It already works for Entity.** The current `useEntityAnimation` path already animates entities through RealityKit, so this is continuation, not a rewrite.
-2. **It is the natural execution engine for a 3D entity.** Animating entity transform is exactly what RealityKit's animation system is for; engine-native playback scales better than an SDK-driven per-frame writer when many entities animate concurrently.
-3. **The proposal's playback + reporting requirements are reachable.** RealityKit controllers can control playback state, `entity.transform` can be read in native, and `AnimationEvents.PlaybackCompleted` provides completion. This is sufficient to implement `stop`, `reset`, `finish`, and report native-confirmed transform values to callbacks and `entityProps`.
+- **Out of sync with the render tick.** A transform written per frame and RealityKit's own render commit are not on the same beat, which easily causes jitter, tearing, or a one-frame lag.
+- **No system compositing semantics.** RealityKit animation can participate in visionOS system compositing and reprojection; discrete transforms produced by CPU sampling get no such treatment.
+- **Outside the scene system.** RealityKit transform animation naturally sits inside the scene graph, coordinate spaces, anchors, and the collision system; hand-written sampling floats outside it.
+- **Poor interpolation quality.** Rotation needs spherical linear interpolation; hand-written per-frame linear interpolation easily produces artifacts.
+- **Rebuilding playback semantics.** Easing, looping, delay, playback rate, pause, and completion events would all have to be implemented from scratch.
+- **Two execution semantics.** The element path uses native animation objects; sampling entities separately would give one animation API two execution models.
 
-The main incremental cost is the **canonical tracks -> RealityKit Entity timeline compiler**. It compiles JS/Core-normalized Entity tracks into RealityKit-executable transform animation.
+A hybrid that uses RealityKit for some shapes and a sampler for the rest is rejected too: one entity API can have only one execution semantics.
 
-### Why Plan B (full CADisplayLink sampler) is rejected
-
-Plan B would run the entire Entity path on a CADisplayLink per-frame sampler instead of RealityKit. Beyond worse per-frame performance and throwing away the existing RealityKit implementation, it is rejected for reasons that hold even if performance were equal:
-
-- **Frame desync with RealityKit's render loop.** CADisplayLink transform writes are not on the same beat as RealityKit's own render / commit loop, risking jitter, tearing, or one-frame lag.
-- **visionOS compositor semantics.** RealityKit animations can participate in system composition and reprojection; discrete poses from a CPU sampler cannot provide the same semantics.
-- **Detaches from the scene graph / anchoring / physics.** RealityKit transform animations live inside scene graph, coordinate space, anchor, and collision systems.
-- **Interpolation quality.** Rotation needs quaternion slerp; per-frame Euler lerp introduces interpolation artifacts.
-- **Reimplements playback semantics.** easing, loop, delay, playbackRate, pause/resume, and completion events would all need to be rebuilt.
-- **Splits from the motion family.** The spatialized-element path already uses native-backed animation objects; sampling only Entity would give one motion API two execution semantics.
-
-A mixed variant (some shapes via RealityKit, some via sampler) is also rejected: one Entity API must carry exactly one execution semantics.
-
-## Layered Architecture
+### 4.3 Overall Architecture
 
 ```mermaid
 flowchart TB
     subgraph React["React layer (packages/react)"]
         UseEntity["useEntityAnimation(config)<br/>returns [animation, api, entityProps]"]
-        ReactBinding["creates EntityMotionBinding / playback api"]
+        ReactBinding["create motion binding and playback api"]
         EntityProps["entityProps<br/>mirror of native confirmed transform"]
-        ApiSet["api.set(values patch)<br/>sends to native, no local cache write"]
+        ApiSet["api.set(patch)<br/>sends to native directly, no local cache"]
         BindTarget["useBindMotionTarget({ binding, target })<br/>animation binding"]
 
         UseEntity --> ReactBinding
@@ -95,12 +125,12 @@ flowchart TB
         ReactBinding --> BindTarget
     end
 
-    subgraph Core["Core layer (packages/core)"]
-        Normalize["normalizeEntityMotionConfig(config)<br/>timeline.from/to + percentage timeline + internal tracks"]
+    subgraph Core["shared logic layer (packages/core)"]
+        Normalize["normalizeEntityMotionConfig(config)<br/>unify top-level from/to, timeline.from/to and percentages into internal tracks"]
         Tracks["canonical tracks<br/>position.* / rotation.* / scale.*"]
-        Validate["validateEntityMotionConfig()<br/>reject opacity / unknown property"]
+        Validate["validateEntityMotionConfig()<br/>reject unsupported targets like opacity"]
         CreateObject["AnimationObject.create({ elementId, timeline })"]
-        ControlObject["ControlSpatializedElementAnimation({ animationId, type, values? })"]
+        ControlObject["control command({ animationId, type, values? })"]
 
         Normalize --> Tracks
         Tracks --> Validate
@@ -108,14 +138,14 @@ flowchart TB
         ControlObject --> CreateObject
     end
 
-    subgraph Native["Native layer (RealityKit backend)"]
-        Resolve["resolveSpatialObject(elementId)<br/>via spatialObjects"]
-        ElementAdapter["SpatializedElement<br/>existing element manager"]
-        EntityManager["SpatialEntity<br/>new Entity manager"]
-        NativeValidate["validate canonical tracks<br/>bottom guard"]
+    subgraph Native["native layer (RealityKit)"]
+        Resolve["look up entity by elementId"]
+        ElementAdapter["element manager"]
+        EntityManager["new entity motion manager"]
+        NativeValidate["fallback-validate canonical tracks"]
         Compile["tracks -> RealityKit transform animation"]
-        Authority["native transform state<br/>single authority"]
-        Event["spatialanimationstatechanged<br/>confirmed values"]
+        Authority["native transform<br/>single authority"]
+        Event["state-changed event<br/>reports confirmed value"]
 
         Resolve --> ElementAdapter
         Resolve --> EntityManager
@@ -126,30 +156,40 @@ flowchart TB
     end
 
     BindTarget -->|"target-agnostic binding"| Normalize
-    CreateObject -->|"CreateSpatializedElementAnimationJSBCommand"| Resolve
-    ControlObject -->|"ControlSpatializedElementAnimationJSBCommand"| Resolve
-    Event -->|"confirmed values"| EntityProps
+    CreateObject -->|"create animation command"| Resolve
+    ControlObject -->|"control animation command"| Resolve
+    Event -->|"confirmed value"| EntityProps
 ```
 
-**Layer responsibilities:**
+**Responsibilities per layer:**
 
-- **React** owns hook API, binding lifecycle, `entityProps` mirroring, callback dispatch, and rerender. React does not maintain a separate transform cache.
-- **Core** normalizes public `timeline` authoring shapes (`timeline.from` / `timeline.to` and percentage keyframes) and internal `tracks` into canonical Entity tracks. `AnimationObject` keeps the existing `elementId` wire field, whose target-state meaning is the spatial object id.
-- **Native** owns target resolution, bottom-guard validation, RealityKit compilation and execution, command accept/reject decisions, final transform decomposition, and event emission.
+- **React layer** handles the Hook API, binding lifecycle, the `entityProps` mirror, callback dispatch, and re-render; it keeps no independent transform cache.
+- **Shared logic layer** normalizes the three public authoring forms (top-level `from` / `to`, `timeline.from` / `timeline.to`, and percentage keyframes) into internal canonical entity tracks. Top-level `from` / `to` is equivalent shorthand for `timeline.from` / `timeline.to`, and both fold into the same internal track set; when both are present `timeline` wins, the top-level pair is ignored, and a warning is logged in development mode. The animation object's `elementId` field in this design means "spatial object id."
+- **Native layer** looks up the target, does fallback validation, compiles and executes with RealityKit, accepts or rejects commands, decomposes the final transform, and reports it back through events.
 
-## JSB Protocol
+### 4.4 Key Trade-offs
 
-The target state reuses existing JSB command types, with no parallel Entity JSB:
+- **Command names keep the `Element` wording.** The create and control commands contain `Element` in their names, with no parallel path. Their target-state semantics cover spatial objects, and `elementId` identifies a spatial object.
+- **Accept native compiler cost.** Concentrate multi-keyframe handling, sparse keyframes, rotation conversion, and per-channel compilation in the entity motion manager and compiler in exchange for native RealityKit playback, system compositing, and one execution model.
+- **Compile per channel.** Compile each channel independently and play them concurrently in an animation group to preserve per-channel easing; the cost is that they cannot be merged into one complete-transform animation.
+- **Take over by component.** Once any field of a component appears in the animation, the animation owns that entire component. For example, animating only `position.y` freezes `position.x` / `position.z` at baseline during playback; components absent from the config remain driven by React props.
+- **Do not support functional `set`.** `api.set(prev => next)` cannot guarantee that `prev` is the live native transform, so v1 accepts sparse patch objects only; consumers read the latest confirmed transform through `entityProps`.
+- **Do not add a generic adapter layer yet.** v1 dispatches by runtime type inside `SpatialScene` to either the element or entity manager. Extract a shared protocol only after real duplication appears.
+- **Measure large-scale concurrency.** Native RealityKit playback is preferable to per-frame JS writes, but high entity counts still require dedicated performance validation.
 
-- `CreateSpatializedElementAnimationJSBCommand`
-- `ControlSpatializedElementAnimationJSBCommand`
-- `spatialanimationstatechanged` event
+## 5. Module Design
 
-The old `AnimateTransformJSBCommand` is an internal implementation protocol, not a public compatibility promise. The target state deletes it; because it is not a public API, this is not a breaking change.
+### 5.1 Communication Protocol (JS Bridge)
 
-### CreateSpatializedElementAnimation
+Reuse the commands and events; do not add a parallel channel for entities:
 
-The command name and `elementId` field are retained for compatibility. In the target state, `elementId` is a historical wire name whose meaning is the spatial object id; it may identify either a `SpatializedElement` or a `SpatialEntity`.
+- Create animation: `CreateSpatializedElementAnimationJSBCommand`
+- Control animation: `ControlSpatializedElementAnimationJSBCommand`
+- State event: `spatialanimationstatechanged`
+
+#### Create animation command
+
+The command name and the `elementId` field carry a spatial object. `elementId` means a spatial object id, which can point to an element or an entity:
 
 ```text
 CreateSpatializedElementAnimation {
@@ -158,159 +198,166 @@ CreateSpatializedElementAnimation {
 }
 ```
 
-Native looks up `spatialObjects` by `elementId`, then dispatches by runtime type:
+Native looks up the registry by `elementId`, then dispatches by runtime type:
 
 ```text
-spatial object is SpatializedElement -> existing spatialized element manager
-spatial object is SpatialEntity      -> EntityMotionManager
-otherwise                           -> failure
+is element -> element manager
+is entity  -> entity motion manager
+otherwise  -> fail
 ```
 
-If `elementId` is not found in the `spatialObjects` registry, create MUST fail explicitly instead of silently queueing. If the resolved spatial object is neither `SpatializedElement` nor `SpatialEntity`, create MUST fail as an unsupported animation target. `ControlSpatializedElementAnimation` does not carry `elementId` again; it addresses an already-created animation object by `animationId`. If the target spatial object is destroyed, associated animations MUST be destroyed or invalidated, and later control commands MUST fail through command failure / error event instead of silently becoming no-ops.
+Rules:
 
-### ControlSpatializedElementAnimation
+- When `elementId` is not found in the registry, create must fail explicitly.
+- When the resolved object is neither an element nor an entity, create must fail with "unsupported target."
+- The control command no longer carries `elementId`; it locates the already-created animation solely by `animationId`.
+- When the target object is destroyed, its associated animation must be destroyed or invalidated; subsequent control must fail and be surfaced through an error event.
 
-Control continues to use the existing command type and adds `set`:
+#### Control animation command
+
+Reuse the command and add a `set` type:
 
 ```text
 ControlSpatializedElementAnimation {
   animationId: string
-  type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
+  type: 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
   values?: EntityMotionPatch
 }
 ```
 
-`api.set` does not add a JSB command. It only accepts an `EntityMotionPatch` object (the write-side patch type, same shape as the read-side `EntityMotionProps`) and does not support the `(prev) => next` updater form. It sends `type: 'set'` to native:
+`api.set` adds no command. It accepts only a sparse patch object `EntityMotionPatch` (the write-side type, same shape as the read-side `EntityMotionProps` but named distinctly), and does not support the `(prev) => next` function form. It is sent to native as `type: 'set'`:
 
-- native rejects: command failure or error event, `entityProps` does not update.
-- native accepts: native merges the patch over the current committed `entity.transform`, applies the transform, then emits confirmed values through `spatialanimationstatechanged`; React updates `entityProps`.
+- Native rejects: the command fails or triggers an error event, and `entityProps` is not updated.
+- Native accepts: native merges the patch onto the currently committed transform, applies it, then reports the confirmed value through a state event, and React then updates `entityProps`.
 
-### spatialanimationstatechanged
+#### State-changed event
 
-The event channel is reused:
+The state event carries a named detail type:
 
 ```text
-detail: {
+interface EntityMotionStateChangedDetail {
   animationId: string
-  action: 'start' | 'complete' | 'stop' | 'reset' | 'finish' | 'set' | 'failed' | ...
+  action:
+    | 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
+    | 'start' | 'complete' | 'error'
   playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
   finished: boolean
-  values?: SpatializedVisualValues | EntityMotionProps
+  values?: EntityMotionProps
   error?: SpatializedPlaybackError
+}
+
+interface EntityMotionStateChangedMsg {
+  type: 'spatialanimationstatechanged'
+  detail: EntityMotionStateChangedDetail
 }
 ```
 
-`values` is target-specific:
+`values` is the entity target's transform value `EntityMotionProps` (i.e. `position` / `rotation` / `scale`).
 
-- spatialized target: `SpatializedVisualValues`
-- Entity target: `EntityMotionProps` (`position` / `rotation` / `scale`)
+The `action` set native reports is larger than the public callback set. Its mapping to user callbacks and `entityProps` is:
 
-### Determining the `values` shape and discarding stale events
+| native action | mapped user callback | updates entityProps |
+|---|---|---|
+| `start` | `onStart` | yes (once, at the moment of start) |
+| `complete` | `onComplete` | yes (end state) |
+| `finish` | `onComplete` | yes (end state) |
+| `stop` | `onStop` | yes (current transform) |
+| `reset` | `onReset` | yes (starting transform) |
+| `set` | none (internal commit only) | yes (merged transform) |
+| `error` | `onError` | no |
+| `pause` | none (playback state change only) | no |
 
-Consumers MUST NOT rely on a new event field to decide whether `values` is `SpatializedVisualValues` or `EntityMotionProps`. The event carries `animationId`; the receiver reverse-looks-up the local animation object created for that `animationId` and uses that object's known target type to interpret `values`. If `animationId` matches no live local animation object (unknown or stale, e.g. after `destroy`), the event MUST be discarded without dispatch and MUST NOT update `entityProps`.
+#### Playback error classification
 
-### `SpatializedPlaybackError`
-
-`error` is present when `action` is `'failed'`. `SpatializedPlaybackError.code` is a closed classification set shared by both targets:
+When `action` is `error`, it carries `error`. The error codes are a closed set shared by both target types:
 
 ```text
 type SpatializedPlaybackError = {
   code:
-    | 'TARGET_NOT_FOUND'           // elementId not in the spatial object registry
-    | 'UNSUPPORTED_TARGET'         // resolved object is neither SpatializedElement nor SpatialEntity
-    | 'TARGET_DESTROYED'           // the spatial object was destroyed; the animation is invalid
+    | 'TARGET_NOT_FOUND'     // elementId not in the registry
+    | 'UNSUPPORTED_TARGET'   // resolved object is neither element nor entity
+    | 'TARGET_DESTROYED'     // target destroyed, animation invalidated
   message?: string
 }
 ```
 
-All of these reach the user through the `onError` callback. Rejected `api.set` writes (during an active animation, or before binding / native object creation) are the exception: they are no-ops that emit a console warning and are NOT routed to `onError`. The `code` MUST be distinguishable so application code can branch on the failure kind rather than parsing `message`.
+All three reach the user through `onError`. There is one exception: a rejected `api.set` write (while the animation is active, or before the binding / native object is created) is not an error. It is a no-op that only prints a console warning and does not go to `onError`. The error codes must be distinguishable so the app can branch by type rather than parsing the `message` text.
 
-## Data Flow
+### 5.2 Cross-layer Sequences
 
-### Authoring config -> native transform (play)
+#### From config to native transform (playback)
 
 ```mermaid
 sequenceDiagram
-    participant App
+    participant App as App
     participant Hook as useEntityAnimation
-    participant Core as Core normalizer / validator
-    participant Obj as AnimationObject
-    participant JSB as CreateSpatializedElementAnimationJSBCommand
-    participant Native as RealityKit Entity Manager
+    participant Core as normalize / validate
+    participant Obj as animation object
+    participant JSB as create animation command
+    participant Native as RealityKit entity manager
 
     App->>Hook: useEntityAnimation(config)
-    Hook->>Core: normalizeEntityMotionConfig(config)
-    Core-->>Hook: canonical tracks(position.* / rotation.* / scale.*)
-    Hook->>Core: validateEntityMotionConfig(tracks)
-    Core-->>Hook: transform-only config accepted
-    App->>Hook: BoxEntity animation binding
-    Hook->>Obj: AnimationObject.create({ elementId, timeline })
-    Obj->>JSB: execute({ elementId, timeline })
+    Hook->>Core: normalize config
+    Core-->>Hook: canonical tracks
+    Hook->>Core: validate (transform only)
+    Core-->>Hook: pass
+    App->>Hook: bind to entity via animation
+    Hook->>Obj: create animation object
+    Obj->>JSB: execute create
     JSB->>Native: create animation
-    Native->>Native: resolve elementId as SpatialEntity
-    Native->>Native: compile tracks -> RealityKit transform animation
-    Native-->>Obj: animationId
+    Native->>Native: resolve elementId to an entity
+    Native->>Native: compile tracks into RealityKit transform animation
+    Native-->>Obj: return animationId
     App->>Hook: api.play()
     Hook->>Obj: play()
-    Obj->>Native: ControlSpatializedElementAnimation(type=play)
-    Native->>Native: entity.playAnimation()
-    Note over Native: native transform state is the single authority
+    Obj->>Native: control command (play)
+    Native->>Native: play animation
+    Note over Native: native transform is the single authority
 ```
 
-### native confirmed transform -> React mirror
+#### From native confirmed transform to React mirror
 
 ```mermaid
 sequenceDiagram
-    participant App
+    participant App as App
     participant Hook as useEntityAnimation
-    participant Obj as AnimationObject
-    participant Event as spatialanimationstatechanged
-    participant Native as RealityKit Entity Manager
+    participant Obj as animation object
+    participant Event as state-changed event
+    participant Native as RealityKit entity manager
 
-    Native->>Native: RealityKit state changes<br/>start / complete / stop / reset / finish / set accepted
-    Native->>Native: read authoritative entity.transform
-    Native->>Native: decompose to position / rotation / scale
-    Native->>Event: emit(values)
-    Event->>Obj: onReceiveEvent(values)
+    Native->>Native: state change (start/complete/stop/reset/finish/set accepted)
+    Native->>Native: read authoritative transform
+    Native->>Native: decompose into position / rotation / scale
+    Native->>Native: keep only the taken-over components
+    Native->>Event: report confirmed value
+    Event->>Obj: receive event
     Obj-->>Hook: confirmed EntityMotionProps
-    Hook-->>App: entityProps mirror updated
-    App->>App: BoxEntity spreads entityProps<br/>to re-declare the native-confirmed pose
+    Hook-->>App: entityProps updated
+    App->>App: spread entityProps onto the entity, rest at confirmed transform
 ```
 
-### api.set
+Whether `api.set` takes effect is decided solely by native: native does not buffer the patch while the animation is active, and a write when unbound or before the native object exists is likewise void — these writes are no-ops that only log a console warning. Create / bind produces a confirmed value only at the first lifecycle commit (a playback end state or an accepted `set`), so `entityProps` may be empty before then.
 
-```mermaid
-sequenceDiagram
-    participant App
-    participant Hook as useEntityAnimation
-    participant Obj as AnimationObject
-    participant Native as RealityKit Entity Manager
+### 5.3 Timeline Normalization and Compilation
 
-    App->>Hook: api.set(values patch)
-    Hook->>Obj: set(values patch)
-    Obj->>Native: ControlSpatializedElementAnimation(type=set, values)
-    alt native rejects
-        Native-->>Obj: command failure or error event
-        Obj-->>Hook: onError
-        Hook-->>App: entityProps unchanged
-    else native accepts
-        Native->>Native: merge patch over current committed transform
-        Native->>Native: apply accepted transform
-        Native-->>Obj: spatialanimationstatechanged(values)
-        Obj-->>Hook: confirmed EntityMotionProps
-        Hook-->>App: entityProps mirror updated
-    end
-```
+Entity motion goes from public config to a playable object in two stages, which live in two layers with strictly separated responsibilities:
 
-`api.set` is not a playback command: it does not seek, start, or change playback progress. It also does not write local pending state; native is the only layer that decides whether the write takes effect. Native does not stash set patches during active animation, and set before binding or before native object creation is invalid; those failures are exposed through the existing command failure / error event path and do not update `entityProps`. `create` / bind does not emit an extra initial confirmed value, so `entityProps` may be empty until the first lifecycle commit (a play terminal or an accepted set) and is not promised readable at mount.
+1. **Normalization (JS / shared logic layer):** fold the three public authoring shapes (top-level `from` / `to`, `timeline.from` / `timeline.to`, percentage keyframes) into one platform-agnostic internal timeline data `EntityMotionTimelinePayload`. This step only expands, merges, and resolves values, producing platform-agnostic internal data entirely on the JS side.
+2. **Compilation (native / RealityKit):** the native entity motion manager takes the normalized internal timeline, reads the baseline transform, splits it into per-channel segments, compiles each segment into a `FromToByAnimation`, then chains via `sequence` and parallelizes via `group`, finally producing a playable object (animation resource / animation group + playback controller). This step is the actual **compilation**.
 
-## Entity Tracks and RealityKit Compilation
+#### Normalization (JS layer): config → internal timeline
 
-The Native Entity motion manager only accepts the canonical Entity timeline payload normalized by JS/Core. This payload is an internal shape, not public hook config. Native does not parse percentage keys and does not desugar `timeline.from` / `timeline.to`; those are JS/Core normalizer responsibilities.
+Normalization is done by the shared logic layer's `normalizeEntityMotionConfig`, folding the three public authoring shapes into one internal timeline data:
 
-### Input
+- **Top-level `from` / `to`** is equivalent to `timeline.from` / `timeline.to`, expanded into a start and an end frame.
+- **`timeline.from` / `timeline.to`** are the `0%` / `100%` frames and may be mixed with percentage keys.
+- **Percentage keyframes** `0% → 50% → 100%` are converted to seconds via `at = percentage × duration`.
 
-The input is a timeline payload whose target has already resolved to Entity:
+The output is a platform-agnostic `EntityMotionTimelinePayload` (see the next section); the full normalization rules (`timeline` precedence, mandatory boundaries, `duration` defaults, etc.) are in Section 5.6, "Changes per Layer · Shared logic layer."
+
+#### Compilation input: internal timeline (native layer)
+
+The compilation input is the normalization output whose target has already been resolved to an entity:
 
 ```text
 type EntityMotionTimelinePayload = {
@@ -339,7 +386,7 @@ type EntityMotionKeyframe = {
 }
 ```
 
-Example input:
+Example:
 
 ```text
 {
@@ -347,6 +394,7 @@ Example input:
   tracks: [
     {
       property: 'position.y',
+      timingFunction: 'easeOut',
       keyframes: [
         { at: 0, value: 0 },
         { at: 0.6, value: 0.25 },
@@ -355,6 +403,7 @@ Example input:
     },
     {
       property: 'rotation.y',
+      timingFunction: 'linear',
       keyframes: [
         { at: 0, value: 0 },
         { at: 1.2, value: 180 },
@@ -364,18 +413,11 @@ Example input:
 }
 ```
 
-### Output
+#### Compilation output: the playable object
 
-The output is not React state. It is a native executable plan plus confirmed values after execution:
+The compilation output is a native executable plan, ultimately materialized as the animation resource / animation group (the playable object).
 
-```text
-EntityMotionTimelinePayload
-  -> EntityChannelAnimationPlan (per-channel)
-  -> RealityKit AnimationResource[] + AnimationGroup
-  -> spatialanimationstatechanged(values)
-```
-
-`EntityChannelAnimationPlan` is an internal Native manager / compiler execution plan, not a public JS/Core type. It is organized by **transform channel**: each channel carries its own keyframes and per-keyframe timing function, rather than merging all channels into segments that share a single boundary:
+The execution plan is organized by **transform channel**, each channel carrying its own keyframes and per-frame timing functions, rather than merging all channels into segments that share the same time boundaries:
 
 ```text
 type EntityChannelAnimationPlan = {
@@ -388,101 +430,226 @@ type EntityChannelAnimationPlan = {
 
 type EntityChannelPlan = {
   channel: EntityMotionProperty   // position.x / rotation.y / scale.z ...
-  baseline: number                // the native value of this channel at playback start, used when a keyframe is missing
+  baseline: number                // native value of this channel at playback start, used when frames are missing
   keyframes: EntityChannelKeyframe[]
 }
 
 type EntityChannelKeyframe = {
   at: number
   value: number
-  timingFunction: TimingFunction  // the timing used from this keyframe to the next
+  timingFunction: TimingFunction  // easing for the interval from this frame to the next
 }
 ```
 
-**Why per-channel instead of per-segment:**
+The input above compiles into this execution plan (assuming the per-component native transform at playback start as shown, with track easing pushed down to each frame):
 
-If all channels are merged into shared time segments, each segment can carry only one `timingFunction`. But within the same time span, different channels may require different timing functions (for example `position.y` uses `easeOut` while `rotation.y` uses `linear`); a single slot cannot express two curves at once — once merged into segments, the per-channel timing information is already lost before it reaches RealityKit. The per-frame per-track sampling CADisplayLink element path does not have this problem, because each track independently takes its own timing.
+```text
+{
+  duration: 1.2,
+  delay: 0,
+  playbackRate: 1,
+  channels: [
+    {
+      channel: 'position.y',
+      baseline: 0,
+      keyframes: [
+        { at: 0,   value: 0,    timingFunction: 'easeOut' },
+        { at: 0.6, value: 0.25, timingFunction: 'easeOut' },
+        { at: 1.2, value: 0,    timingFunction: 'easeOut' },
+      ],
+    },
+    {
+      channel: 'rotation.y',
+      baseline: 0,
+      keyframes: [
+        { at: 0,   value: 0,   timingFunction: 'linear' },
+        { at: 1.2, value: 180, timingFunction: 'linear' },
+      ],
+    },
+  ],
+}
+```
 
-Therefore the per-channel structure is preserved: each channel is compiled into its own RealityKit animation (carrying its own timing function), then played in parallel through an `AnimationGroup` bound to the corresponding sub-target (translation / orientation / scale). This way per-channel timing is never lost along the whole path, consistent with the element-path semantics.
-
-### Compilation Flow
+#### Compilation flow
 
 ```mermaid
 flowchart TB
-    Payload["EntityMotionTimelinePayload<br/>canonical tracks"]
-    Validate["bottom-guard validation<br/>duration / property / keyframes / scale"]
-    Snapshot["read native current transform<br/>as missing-channel baseline"]
-    Baseline["read the native baseline of missing-keyframe channels"]
-    Channels["organize EntityChannelAnimationPlan by channel<br/>each channel keeps its own keyframes + per-keyframe timing"]
-    RKCompile["compile each channel into its own RealityKit animation<br/>carrying its own timing; rotation degrees -> native rotation"]
-    Group["AnimationGroup plays in parallel<br/>bound to translation / orientation / scale sub-target"]
-    Play["entity.playAnimation(group)"]
-    Confirm["after terminal / set accepted<br/>emit confirmed EntityMotionProps"]
+    Payload["timeline data<br/>canonical tracks"]
+    Validate["fallback validation<br/>duration / property / keyframes / scale"]
+    Snapshot["read native current transform<br/>as baseline for missing frames"]
+    Channels["organize execution plan by channel<br/>each keeps its keyframes and per-frame easing"]
+    Segment["compile each segment to a FromToByAnimation<br/>segment from/to = adjacent keyframes, timing = per-segment easing"]
+    Seq["chain the segments of a channel via sequence<br/>into one channel animation; convert rotation degrees to native representation"]
+    Group["combine channel animations via group in parallel<br/>bind translation / rotation / scale sub-targets"]
 
     Payload --> Validate
     Validate --> Snapshot
-    Snapshot --> Baseline
-    Baseline --> Channels
-    Channels --> RKCompile
-    RKCompile --> Group
-    Group --> Play
-    Play --> Confirm
+    Snapshot --> Channels
+    Channels --> Segment
+    Segment --> Seq
+    Seq --> Group
 ```
 
-### Compilation Rules
+#### Within-channel serial chaining and cross-channel parallel composition
 
-1. **Property whitelist:** Accept only `position.*`, `rotation.*`, and `scale.*`. `opacity`, `transform.translate.*`, material properties, and component properties MUST fail explicitly.
-2. **Time range:** `duration` MUST be positive. Each keyframe `at` MUST be within `[0, duration]`.
-3. **Ordering and duplicates:** Keyframes in each track MUST be sorted by non-decreasing `at`. Duplicate tracks for the same property are not allowed.
-4. **Timeline and keyframe intervals:** Each channel forms intervals from its own keyframe times and does not share global segment boundaries with other channels. For example, a channel's `0, 0.6, 1.2` only affects that channel's own `[0, 0.6]` and `[0.6, 1.2]` intervals.
-5. **Missing-keyframe baseline and non-animated components:** Each channel is compiled independently. If a channel has no explicit keyframe at time `0`, use that channel's native current transform value at playback start as the baseline; if it is later than the channel's last keyframe, hold the last keyframe value. Channels do not share boundaries and do not interpolate against each other. **Component granularity distinguishes two kinds of absence:** (a) *non-animated scalars within an animated component* — e.g. animating only `position.y` freezes `position.x` / `position.z` to baseline because the RealityKit translation sub-target is bound as a whole; (b) *entirely absent components* — e.g. if the config has no `scale.*`, no animation is generated for the scale sub-target, scale is not owned by the animation, and it is driven by React props during the animation.
-6. **Per-channel parallelism:** Each channel is compiled into its own RealityKit animation, played in parallel through an `AnimationGroup` and bound to the corresponding sub-target (translation / orientation / scale). Native does not merge multiple channels into a segment that shares timing, so that per-channel timing functions are not lost.
-7. **Rotation:** `rotation.*` inputs use Entity API Euler degrees. Native converts them to the rotation representation required by RealityKit during compilation, avoiding per-frame Euler interpolation. Because RealityKit interpolates orientation as a shortest-path quaternion slerp, a rotation channel whose keyframe delta is ≥180° or spans multiple axes may follow a path that differs from per-axis Euler intuition; author intermediate keyframes when a specific multi-turn or multi-axis path is required.
-8. **Scale:** `scale.*` MUST be non-negative. Invalid scale fails immediately.
-9. **Timing function (per-channel):** keyframe-level `timingFunction` takes precedence over track-level, which takes precedence over the timeline default. The resolved per-keyframe timing stays on each channel's keyframes and is carried by that channel's own RealityKit animation, not merged with other channels. Therefore different channels using different timing functions within the same time span is natively supported; segment merging is no longer needed, and there is no case that cannot be expressed and has to degrade. RealityKit built-in timing (linear / easeIn / easeOut / easeInOut) maps directly; a custom cubic-bezier with no matching built-in curve bakes that channel into a `SampledAnimation`.
-10. **Loop / playbackRate / delay:** These playback parameters remain at the top level of `EntityChannelAnimationPlan`, apply uniformly to the whole `AnimationGroup`, and are executed by the RealityKit playback/controller layer. A looping animation has no natural `complete` terminal, so `entityProps` is NOT updated at each loop boundary; it is only committed on `stop` / `finish` / native-accepted `api.set`.
-11. **Terminal fill:** `complete` / `finish` stop at terminal, `reset` stops at start, and `stop` freezes at the current native transform. These confirmed values are emitted back to React through events.
-12. **Explicit failure:** If RealityKit cannot express a channel plan (for example a timing that cannot be baked), the Native manager MUST fail through command failure or error event. It must not silently ignore the limitation.
+One channel maps to one transform sub-target (translation / rotation / scale). Composing its segments and composing across channels happen at two layers.
 
-### Example: Sparse Tracks to Per-Channel Plan
+**Within a channel — chain with `sequence`.** A channel is split into adjacent intervals by its own keyframes, and each interval compiles into a `FromToByAnimation<Transform>`: `from` / `to` are the values of the first and last keyframes of the interval, `duration` is the interval length, and `timing` is the easing of that segment (easing priority is in compilation rule 9). These per-segment animations of one channel are chained in time order via `AnimationResource.sequence(with:)` into a single channel animation, so that each segment carries its own easing yet the segments play back-to-back continuously. A channel that has only a start frame and an end frame degenerates to a single segment — one `FromToByAnimation`, with no `sequence` needed.
 
-Input tracks:
+**Across channels — parallelize with `group`.** The chained channel animations are independent and play simultaneously; they are combined into an animation group via `AnimationResource.group(with:)`, each bound to the translation / rotation / scale sub-target (`bindTarget`). This is the concrete primitive behind the animation group mentioned earlier: `group` handles parallelism, `sequence` handles serialization, and together they express the full timeline of multiple channels in parallel with multiple segments serial within each channel.
 
-```text
-position.y: (0 -> 0), (0.6 -> 0.25), (1.2 -> 0)   timing: easeOut
-rotation.y: (0 -> 0), (1.2 -> 180)                timing: linear
+Consider an example with two channels (`position.y` has 3 keyframes = 2 segments, `rotation.y` has only start and end = 1 segment):
+
+```mermaid
+flowchart TB
+    subgraph PY["position.y channel (2 segments)"]
+        direction TB
+        PYs0["segment 0 FromToBy<br/>0 to 0.6s, easeOut"]
+        PYs1["segment 1 FromToBy<br/>0.6 to 1.2s, linear"]
+        PYs0 -->|sequence| PYs1
+    end
+    subgraph RY["rotation.y channel (single segment, no sequence)"]
+        direction TB
+        RYs0["segment 0 FromToBy<br/>0 to 1.2s, linear"]
+    end
+    PY -->|channel animation| G["group in parallel<br/>+ top-level delay / speed / loop"]
+    RY -->|channel animation| G
+    G --> T1["bind translation sub-target"]
+    G --> T2["bind rotation sub-target"]
 ```
 
-Assume the native current transform is:
+Horizontally it is parallel (channels via `group`); within each channel it is serial top-to-bottom (segments via `sequence`); `delay` / `speed` / `loop` act only at the `group` layer.
 
-```text
-position: { x: 0, y: 0, z: 0.8 }
-rotation: { x: 0, y: 0, z: 0 }
-scale:    { x: 1, y: 1, z: 1 }
+#### Sample code: composing a controllable playback object via serial/parallel
+
+Reusing the example above (`position.y` two segments, `rotation.y` single segment), the following shows on visionOS and picoOS how to chain multiple `FromToBy` segments into a channel animation via `sequence`, parallelize the channels into one animation resource via `group`, and hand it to the engine — obtaining a playback controller that can pause / resume / stop / change speed, i.e. a "controllable playback object."
+
+visionOS (RealityKit / Swift):
+
+```swift
+import RealityKit
+
+// Reuse the example; x / z are frozen at the baseline, only y is animated
+let base = entity.transform.translation
+
+// position.y channel: two FromToBy segments, each with its own easing, chained via sequence
+let posSeg0 = FromToByAnimation<SIMD3<Float>>(
+    name: "pos.seg0",
+    from: SIMD3(base.x, 0,    base.z),
+    to:   SIMD3(base.x, 0.25, base.z),
+    duration: 0.6,
+    timing: .easeOut,                 // segment 0 own easing
+    bindTarget: .transform.translation
+)
+let posSeg1 = FromToByAnimation<SIMD3<Float>>(
+    name: "pos.seg1",
+    from: SIMD3(base.x, 0.25, base.z),
+    to:   SIMD3(base.x, 0,    base.z),
+    duration: 0.6,
+    timing: .easeIn,                  // segment 1 own easing, different from segment 0
+    bindTarget: .transform.translation
+)
+let posChannel = try AnimationResource.sequence(with: [
+    try AnimationResource.generate(with: posSeg0),
+    try AnimationResource.generate(with: posSeg1),
+])
+
+// rotation.y channel: single segment, no sequence needed
+let rotSeg = FromToByAnimation<simd_quatf>(
+    name: "rot.seg0",
+    from: simd_quatf(angle: 0,   axis: SIMD3(0, 1, 0)),
+    to:   simd_quatf(angle: .pi, axis: SIMD3(0, 1, 0)),   // 180 degrees
+    duration: 1.2,
+    timing: .linear,
+    bindTarget: .transform.rotation
+)
+let rotChannel = try AnimationResource.generate(with: rotSeg)
+
+// Across channels in parallel: group into one animation resource
+let clip = try AnimationResource.group(with: [posChannel, rotChannel])
+
+// Controllable playback object: the controller supports pause / resume / stop / speed
+let controller = entity.playAnimation(clip, transitionDuration: 0, startsPaused: true)
+controller.resume()          // play
+// controller.pause()        // pause
+// controller.stop()         // stop
+// controller.speed = 2.0    // top-level playback rate acts on the whole group
 ```
 
-Compiled result (each channel is independent and shares no boundaries):
+picoOS (Pico Spatial SDK / Kotlin):
 
-```text
-channels:
-  position.y  baseline 0
-    keyframes: (0, 0, easeOut) (0.6, 0.25, easeOut) (1.2, 0, easeOut)
-    -> RealityKit animation(easeOut), bound to translation.y
-  rotation.y  baseline 0
-    keyframes: (0, 0, linear) (1.2, 180, linear)
-    -> RealityKit animation(linear), bound to orientation (about y)
+```kotlin
+// Reuse the same example; x / z are frozen at the baseline
+val base = entity.getComponent(Transform::class.java)?.position ?: Vector3(0f, 0f, 0f)
 
-Undeclared scalars within the same component (position.x/z, rotation.x/z)
-are bound with their sub-target and frozen to the native baseline at playback start.
-Entirely absent components (scale.*) generate no animation, are not owned by
-the animation, and are driven by React props during the animation.
+// position.y channel: two TweenAnimations, each generates an AnimationResource, then chained via sequence
+val posSeg0 = TweenAnimation.createTweenAnimation(
+    "pos.seg0",
+    AnimationBindTarget.bindPosition(),
+    Vector3(base.x, 0f,    base.z),   // from
+    Vector3(base.x, 0.25f, base.z),   // to
+    null,                             // by
+    0.6f, 0f, RepeatMode.None, 0,     // duration / delay / repeatMode / repeatCount
+    EaseType.EaseOut,                 // segment 0 easing
+    0f, 1f, false, null, null, null
+)
+val posSeg1 = TweenAnimation.createTweenAnimation(
+    "pos.seg1",
+    AnimationBindTarget.bindPosition(),
+    Vector3(base.x, 0.25f, base.z),
+    Vector3(base.x, 0f,    base.z),
+    null,
+    0.6f, 0f, RepeatMode.None, 0,
+    EaseType.EaseIn,                  // segment 1 easing, different from segment 0
+    0f, 1f, false, null, null, null
+)
+val posChannel = AnimationResource.sequence(with = listOf(
+    AnimationResource.generateWithTweenAnimation(posSeg0),
+    AnimationResource.generateWithTweenAnimation(posSeg1),
+))
+
+// rotation.y channel: single segment, using Euler angle degrees
+val rotSeg = TweenAnimation.createTweenAnimation(
+    "rot.seg0",
+    AnimationBindTarget.bindEulerAngles(),
+    EulerAngles(0f, 0f,   0f),        // from
+    EulerAngles(0f, 180f, 0f),        // to (180 degrees around the y axis)
+    null,
+    1.2f, 0f, RepeatMode.None, 0,
+    EaseType.Linear,
+    0f, 1f, false, null, null, null
+)
+val rotChannel = AnimationResource.generateWithTweenAnimation(rotSeg)
+
+// Across channels in parallel: group
+val clip = AnimationResource.group(with = listOf(posChannel, rotChannel))
+
+// Controllable playback object
+val controller = entity.playAnimation(clip)
+// controller.pause() / controller.resume() / controller.stop()
+// controller.speed = 2f     // top-level playback rate acts on the whole group
 ```
 
-Compared to the old segment approach: `position.y`'s `easeOut` and `rotation.y`'s `linear` are no longer squeezed into one segment sharing a single `timingFunction`, and `rotation.y` no longer needs an artificial intermediate boundary value at `0.6` — it plays with just its own `(0, 1.2)` two keyframes + `linear`. This is the key difference of per-channel compilation over segment merging.
+#### Compilation rules
 
-## Transform Decomposition and Values
+1. **Property allowlist:** accept only `position.*`, `rotation.*`, `scale.*`. `opacity`, material, component properties, etc. all fail explicitly.
+2. **Time range:** `duration` must be positive; each keyframe's `at` must fall within `[0, duration]`.
+3. **Ordering and duplicates:** each track's keyframes are sorted non-decreasing by `at`; multiple tracks for the same property are not allowed.
+4. **Independent intervals per channel:** each channel divides intervals by its own keyframe times and does not share global boundaries with other channels. For example a channel's `0, 0.6, 1.2` affects only its own `[0, 0.6]` and `[0.6, 1.2]` segments.
+5. **Missing frames and non-animated components, two cases:**
+   - If the first keyframe of a channel is not at time `0` (for example, the scalar of that channel first appears at `50%`), use the native current value at playback start as the baseline for that channel, and treat the `[0, first keyframe]` span as an **interpolation from the baseline value to the first keyframe value** — that is, the channel is in motion from the start rather than holding in place until the first keyframe. If a moment is later than the last keyframe of the channel, hold the last keyframe value. Missing frames only fall back downward to the native baseline value, and never borrow the value of a later keyframe. Channels do not share boundaries and do not interpolate against one another.
+   - (a) *A non-animated scalar within an animated component*: e.g. animating only `position.y` freezes `position.x` / `position.z` at the baseline, because the translation sub-target is bound as a whole.
+   - (b) *A component that never appears*: e.g. if the config has no `scale.*`, no animation is generated for the scale sub-target, scale is not held by the animation, and it is still driven by React props during the animation.
+6. **Per-segment serial, per-channel parallel:** the segments within a channel are chained via `sequence` into a single channel animation, and channels are combined via `group` to play in parallel, each bound to its sub-target (translation / rotation / scale); see "Within-channel serial chaining and cross-channel parallel composition." Do not merge into segments that share one easing.
+7. **Rotation:** `rotation.*` input is Euler degrees; at compile time it is converted to the rotation representation RealityKit requires, avoiding per-frame interpolation of Euler angles. RealityKit uses shortest-path spherical interpolation for orientation, so if a rotation channel's single-frame increment reaches or exceeds 180°, or spans multiple axes, the actual path may differ from per-axis intuition; when a specific multi-turn or multi-axis path is needed, add intermediate keyframes explicitly. The compiler does not densify keyframes automatically — that is the user's responsibility.
+8. **Scale:** `scale.*` must be non-negative; an invalid scale fails outright.
+9. **Easing priority:** keyframe-level easing takes priority over track-level, and track-level over the timeline default. Easing values are a closed enum `linear` / `easeIn` / `easeOut` / `easeInOut`, all mapping directly to RealityKit built-in curves; custom bezier easing is not supported, and there is no easing that requires a fallback.
+10. **Loop / playback rate / delay:** these playback parameters live at the top of the execution plan and apply uniformly to the whole animation group, executed by the RealityKit playback layer.
+11. **Explicit failure:** if RealityKit cannot express a channel plan, it must report the error explicitly through command failure or an error event, and must not silently ignore it.
 
-Native values sent back to React must use the Entity API shape:
+### 5.4 Transform Decomposition and Reporting
+
+The values native reports back to React must be in the entity API shape:
 
 ```text
 type EntityMotionProps = {
@@ -494,42 +661,48 @@ type EntityMotionProps = {
 
 Decomposition rules:
 
-- `position` comes from native transform translation.
-- `scale` comes from native transform scale.
-- `rotation` uses Euler degrees, consistent with Entity props / config.
-- callback values and `entityProps` use this `EntityMotionProps` shape; `api.set(values)` takes the same-shaped `EntityMotionPatch`, named distinctly to separate the write side from the read side.
+- `position` comes from the translation part of the native transform.
+- `scale` comes from the scale part of the native transform.
+- `rotation` uses Euler degrees, consistent with the entity property.
+- After decomposition it must be trimmed by the components this animation object currently takes over: report only the components the animation took over plus the components written by `api.set`; components not taken over do not enter the reported value, so that spreading them does not overwrite components the user is still driving live via React props. If `api.set` writes a component that the config did not animate, that component is merged into the taken-over set and thereafter also appears in `entityProps`.
+- Both the callback value and `entityProps` use the `EntityMotionProps` shape; `api.set(values)` accepts the same-shaped write-side `EntityMotionPatch`, naming the read and write sides distinctly.
 
-## Capability
+### 5.5 Capability Detection
 
-Target-state docs and demos use the top-level capability:
+Docs and examples use top-level capability detection uniformly:
 
 ```text
 supports('useEntityAnimation')
 ```
 
-`supports('useEntityAnimation', ['entity'])` is removed from the documented contract; only the top-level `supports('useEntityAnimation')` key is used, and no `entity` sub-token is reserved.
+The sub-token form `supports('useEntityAnimation', ['entity'])` is removed from the public contract; only the top-level form remains, and no `entity` sub-token is kept.
 
-## Key Changes per Layer
+### 5.6 Responsibilities per Layer
 
-### React layer (`packages/react`)
+#### React layer (`packages/react`)
 
-- **Reuse / mostly reuse:** Keep `useEntityAnimation` as the public Entity motion hook name, keep the existing Entity `animation` compatible binding entry, and reuse the Entity props hierarchy for `position` / `rotation` / `scale`.
-- **Generalize / replace:** Change `useEntityAnimation` from the old `[AnimatedProps, AnimationApi]` shape to `[animation, api, entityProps]`; `api` exposes `play/pause/resume/stop/reset/finish` and `set`; `api.set` sends `ControlSpatializedElementAnimation(type: 'set')` and does not write a local cache. The legacy entity-transform-animation leftovers are deleted, including the JS-side suppression mechanism (`animation.__getSuppressedFields` and the suppression-release base-props re-sync path). The final transform is composed only through Source A (static/base props + `entityProps`) and Source B (`animation`) per-component arbitration; after a terminal state, `entityProps` overrides stale base props (fill-forwards, no snap-back). Deleting this path is what makes the old snap-back conflict structurally impossible.
-- **Add:** Add `EntityMotionBinding`, `EntityPlaybackApi.set(values)`, and the `EntityMotionProps` mirror outlet. Entity components support the `animation` binding; the binder adds or generalizes to `useBindMotionTarget({ binding, target })` while preserving the single-binding single-target invariant.
+- **Public interface:** `useEntityAnimation` is the public Hook name; the entity component provides the `animation` binding entry; entity props include the `position` / `rotation` / `scale` hierarchy.
+- **Return value:** the return value is `[animation, api, entityProps]`; `api` provides `play` / `pause` / `stop` / `reset` / `finish` and `set`; `api.set` sends the `set` control command and writes no local cache.
+- **Binding:** provide the motion binding, `api.set(values)`, and the `entityProps` result exit. The entity component supports `animation` binding; the binder is `useBindMotionTarget({ binding, target })`, keeping the "one binding per target" constraint.
 
-### Core layer (`packages/core`)
+#### Shared logic layer (`packages/core`)
 
-- **Reuse / mostly reuse:** Reuse the `AnimationObject` lifecycle model, the `CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand` command classes, and the `spatialanimationstatechanged` event channel.
-- **Generalize / replace:** Widen `AnimationObject` from spatialized-only to target-specific timeline / values; keep `AnimationObjectCreateOptions.elementId` as the wire field and document it as the historical name for spatial object id; `CreateSpatializedElementAnimationJSBCommand` payload continues to use `elementId` and resolves it through the spatial object registry; `ControlSpatializedElementAnimationJSBCommand` supports `set` and optional `values`.
-- **Add:** Add Entity motion types, `EntityMotionPatch`, property whitelist, `normalizeEntityMotionConfig`, `validateEntityMotionConfig`, and the canonical `EntityMotionTimelinePayload` / tracks shape. Public authoring still exposes only `timeline` authoring forms (`timeline.from` / `timeline.to` and percentage keyframes); `tracks` remains an internal execution shape.
+- **Depends on:** the animation object's lifecycle model, the create / control command classes, and the state-changed event channel.
+- **Animation object:** distinguishes timeline and reported values by target type; `elementId` is a transport field meaning a spatial object id; the create command uses `elementId` and resolves through the registry; the control command supports `set` and optional `values`.
+- **Types and functions:** the entity-motion types, `EntityMotionPatch`, the property allowlist, the normalization function, the validation function, and the internal timeline data and track shape. Three authoring forms are exposed publicly: top-level `from` / `to`, `timeline.from` / `timeline.to`, and percentage keyframes; the internal track is not a public form. `normalizeEntityMotionConfig` folds all three into the same internal track set, with these rules:
+  - **Top-level `from` / `to` is equivalent to `timeline.from` / `timeline.to`**: both normalize down the exact same internal track path.
+  - **Inside a `timeline`, `from` = `0%` and `to` = `100%`**: `timeline.from` / `timeline.to` may be mixed with percentage keys in the same `timeline`; defining the same frame twice (`from` and `0%`, or `to` and `100%`) in one `timeline` is an error.
+  - **`timeline` takes precedence**: when `timeline` and top-level `from` / `to` are both present, `timeline` is used, the top-level pair is ignored, and a warning is logged in development mode.
+  - **For pure top-level `from` / `to` with no percentages, `duration` defaults to 0.3s**.
+  - **Every animation requires both boundaries**: every shape MUST have a start boundary (top-level `from`, `timeline.from`, or the `0%` frame) and an end boundary (top-level `to`, `timeline.to`, or the `100%` frame); supplying only one throws an error and does not fill the missing boundary frame from the entity's current baseline. This constraint applies to all three shapes. Distinguish two levels: what is required is the **existence of the boundary frames**; **fields** within a boundary frame MAY still be sparse — when a channel lacks a keyframe in a boundary frame, it still falls back to the native baseline under the per-channel missing-frame rule (see "missing frames and non-animated components" above).
 
-### Native layer (RealityKit)
+#### Native layer (RealityKit)
 
-- **Reuse / mostly reuse:** Reuse the `spatialObjects` registry, the existing spatialized element motion manager path, the RealityKit execution environment, and the existing create / control / event cross-boundary protocol.
-- **Generalize / replace:** `onCreateSpatializedElementAnimation` looks up the spatial object by `elementId` and changes from accepting only `SpatializedElement` to dispatching by runtime type to the spatialized element manager or Entity motion manager; `onControlSpatializedElementAnimation` supports Entity animation object `play/pause/resume/stop/reset/finish/destroy/set`; every accepted start / terminal / set operation emits confirmed Entity values. Delete the old `AnimateTransform` Entity-specific path outright (not merely stop using it), including the legacy entity-transform-animation leftovers on the JS side: the suppression mechanism `animation.__getSuppressedFields` and the suppression-release base-props re-sync path. Do not leave a second native execution path.
-- **Add:** Add the Entity native motion subsystem. `EntityMotionManager` is the native entry for SpatialEntity create / control and owns bottom-guard validation for canonical Entity tracks, timeline compilation orchestration, the animation registry, Entity control / set routing, lifecycle, and target invalidation; native confirmed transform decomposition and `spatialanimationstatechanged` emission are split across the manager / object / bridge helpers by responsibility. `MotionTargetAdapter` remains only a conceptual boundary; v1 does not require a new Entity forwarding layer.
+- **Depends on:** the object registry, the element motion manager path, the RealityKit execution environment, and the create / control / event cross-end protocol.
+- **Dispatch and reporting:** on create, look up the object by `elementId` and dispatch by runtime type to the element manager or the entity manager; on control, support all commands for entity animation; report the confirmed value on every start / end state / accepted `set`; keep a single native execution path.
+- **Entity motion subsystem:** the entity native motion subsystem, with the entity motion manager as the native entry for entity create / control, responsible for fallback-validating canonical tracks, compile scheduling, animation registration, control and `set` routing, lifecycle, and target invalidation; transform decomposition and event reporting are done by the manager / animation object / bridge helpers per responsibility. The target adapter layer is kept only as a conceptual boundary; v1 does not add an entity forwarding layer.
 
-## Class Diagram
+### 5.7 Class Diagram and Native Subsystem
 
 ```mermaid
 classDiagram
@@ -542,7 +715,6 @@ classDiagram
         class EntityPlaybackApi {
             +play()
             +pause()
-            +resume()
             +stop()
             +reset()
             +finish()
@@ -569,7 +741,6 @@ classDiagram
             +timeline MotionTimeline
             +play()
             +pause()
-            +resume()
             +stop()
             +reset()
             +finish()
@@ -602,18 +773,18 @@ classDiagram
     EntityPlaybackApi --> AnimationObject : delegate commands
     AnimationObject --> CreateSpatializedElementAnimationJSBCommand
     AnimationObject --> ControlSpatializedElementAnimationJSBCommand
-    CreateSpatializedElementAnimationJSBCommand --> SpatialScene : JSB handler
-    ControlSpatializedElementAnimationJSBCommand --> SpatialScene : JSB handler
-    SpatialScene --> SpatializedElementAnimationManager : SpatializedElement target
-    SpatialScene --> EntityMotionManager : SpatialEntity target
+    CreateSpatializedElementAnimationJSBCommand --> SpatialScene : JSB handling
+    ControlSpatializedElementAnimationJSBCommand --> SpatialScene : JSB handling
+    SpatialScene --> SpatializedElementAnimationManager : target is element
+    SpatialScene --> EntityMotionManager : target is entity
     EntityMotionManager --> RealityKit
 ```
 
-This is a conceptual class diagram: it groups React hooks, the Core `AnimationObject`, and Native handlers / managers for readability, not as one uniform class layer. Native target resolution is not a new `TargetResolver` class; it is the lookup performed by the existing `SpatialScene.onCreateSpatializedElementAnimation` / `onControlSpatializedElementAnimation` handlers through `findSpatialObject` / the `spatialObjects` registry, followed by runtime target-type dispatch to the existing `SpatializedElementAnimationManager` or the new `EntityMotionManager`. `MotionTargetAdapter` remains only a conceptual boundary: if real duplication appears between the element and Entity paths later, the implementation can extract a Swift protocol or adapter then; v1 does not add a new Entity forwarding layer. The main Entity native motion state and orchestration live in `EntityMotionManager` and its object / compiler / bridge / timing / values helpers.
+The diagram above is conceptual: for readability it draws the React, shared logic, and native classes together, which does not mean they are on the same layer. Native target resolution happens inside `SpatialScene` create / control handling: `findSpatialObject` looks up the registry and dispatches by runtime type to the element manager or the entity manager. The target adapter layer is only a conceptual boundary: if real duplication appears between the element and entity paths later, extract a shared protocol or adapter layer then; v1 does not add an entity forwarding layer. The main state and orchestration of the entity native motion subsystem are concentrated in the entity motion manager and its helpers.
 
-### RealityKit Entity Motion Subsystem
+#### RealityKit entity motion subsystem
 
-The Entity native motion subsystem should be split for readability and testability, not to mirror the element path's file count. The following boundaries are recommended design responsibilities; implementation may merge manager-internal helpers and only split them when complexity or reuse makes the split pay for itself.
+How the subsystem is split is driven by readability and testability, not by matching the element path's file count. Below are recommended responsibility boundaries; in implementation the manager's internal helpers may be merged, and split only when the logic is complex or clearly reusable.
 
 ```mermaid
 classDiagram
@@ -639,7 +810,6 @@ classDiagram
         +controller
         +play()
         +pause()
-        +resume()
         +stop()
         +reset()
         +finish()
@@ -665,7 +835,7 @@ classDiagram
     }
     class RealityKit
 
-    SpatialScene --> EntityMotionManager : resolved SpatialEntity target
+    SpatialScene --> EntityMotionManager : target is entity
     EntityMotionManager --> EntityMotionAnimationObject
     EntityMotionManager --> EntityMotionTimelineCompiler
     EntityMotionTimelineCompiler --> EntityMotionTiming
@@ -673,111 +843,110 @@ classDiagram
     EntityMotionManager --> EntityMotionBridgeTypes
     EntityMotionManager --> RealityKit : read baseline transform
     EntityMotionAnimationObject --> EntityMotionTransformValues : decompose / merge patch
-    EntityMotionAnimationObject --> EntityMotionBridgeTypes : encode confirmed values / error
+    EntityMotionAnimationObject --> EntityMotionBridgeTypes : encode confirmed value / error
     EntityMotionAnimationObject --> RealityKit : playback controller / entity animation
-    EntityMotionTimelineCompiler --> RealityKit : AnimationResource / AnimationGroup
+    EntityMotionTimelineCompiler --> RealityKit : animation resources / animation group
 ```
 
-**Recommended responsibilities:**
+**Responsibilities per class:**
 
-- `EntityMotionManager`: Native entry for SpatialEntity motion. It receives create / control after `SpatialScene` dispatches the target, owns the animation registry and lifecycle, and handles create / control routing. On create, it calls the compiler, creates the `EntityMotionAnimationObject`, registers it, and returns `animationId`; on control, it looks up the object by `animationId` and invokes play / pause / resume / stop / reset / finish / set. It also handles JSB resolution for command failures, destroy, and target-destroyed invalidation so `SpatialScene` does not hold Entity animation state. The `spatialanimationstatechanged` emit of confirmed values is done by the object (see below); the manager only reports errors when it fails outright during the lookup / validation stage.
-- `EntityMotionAnimationObject`: Represents one Entity animation object. It stores `animationId`, target `SpatialEntity`, playState, owned components, RealityKit playback controller / resources, and handles per-object play / pause / resume / stop / reset / finish / set state transitions; after each start / terminal / accepted set it decomposes confirmed values via `EntityMotionTransformValues`, encodes them via `EntityMotionBridgeTypes`, and emits `spatialanimationstatechanged`.
-- `EntityMotionTimelineCompiler`: Compiles the JS/Core-normalized `EntityMotionTimelinePayload` into a per-channel RealityKit execution plan, `AnimationResource`, and `AnimationGroup`. It does not parse public `timeline.from` / `timeline.to` or percentage keys.
-- `EntityMotionBridgeTypes`: Holds native bridge decode / encode structures, including canonical payloads, control `values`, confirmed `EntityMotionProps`, and `SpatializedPlaybackError`. If the existing command types are sufficient, this responsibility may live as several structs instead of one file.
-- `EntityMotionTiming`: Maps timingFunction, delay, loop, and playbackRate to RealityKit playback / timing representations. When a cubic-bezier cannot map directly, the compiler decides whether to bake the channel into sampled animation.
-- `EntityMotionTransformValues`: Reads confirmed values from `entity.transform`, merges `api.set` sparse patches over the native committed baseline, and converts between Entity API Euler degrees and RealityKit rotation representation.
+- **Entity motion manager (`EntityMotionManager`):** the native entry for entity motion. It receives the create and control dispatched from `SpatialScene`, and manages the animation registry and lifecycle. On create it invokes the compiler, builds the animation object, registers it, and returns an `animationId`; on control it finds the object by `animationId` and calls the corresponding method. It handles command-failure receipts, destruction, and target invalidation, so `SpatialScene` does not hold entity animation state. Confirmed-value event reporting is done by the animation object; the manager reports errors only when the lookup / validation stage fails outright.
+- **Entity animation object (`EntityMotionAnimationObject`):** represents a single entity animation, holding the `animationId`, target entity, playback state, taken-over components, playback controller, and resources, and handling that single object's state transitions. After every start / end state / accepted `set`, it obtains the confirmed value via the decomposition helper, encodes it via the bridge helper, then emits a state-changed event.
+- **Timeline compiler (`EntityMotionTimelineCompiler`):** compiles the normalized timeline data into a per-channel RealityKit executable plan, animation resources, and animation group; it does not parse the public `from` / `to` or percentages.
+- **Bridge types (`EntityMotionBridgeTypes`):** carry the native bridge encode/decode structures, including timeline data, control values, confirmed values, and errors. If the command types are sufficient, this part may exist as a few scattered structs.
+- **Playback parameter mapping (`EntityMotionTiming`):** maps easing, delay, loop, and playback rate to the RealityKit representation; all four built-in easings map directly.
+- **Transform decomposition and merge (`EntityMotionTransformValues`):** responsible for decomposing the confirmed value from the entity transform, merging the sparse `api.set` patch onto the committed baseline, and converting between Euler degrees and the RealityKit rotation representation.
 
-**create + play sequence:**
+**Create-and-play sequence:**
 
 ```mermaid
 sequenceDiagram
-    participant JSB as Create/Control JSB
+    participant JSB as create/control command
     participant Scene as SpatialScene
-    participant Manager as EntityMotionManager
-    participant Compiler as EntityMotionTimelineCompiler
-    participant Obj as EntityMotionAnimationObject
+    participant Manager as entity motion manager
+    participant Compiler as timeline compiler
+    participant Obj as entity animation object
     participant RK as RealityKit
-    participant Event as spatialanimationstatechanged
+    participant Event as state-changed event
 
-    JSB->>Scene: CreateSpatializedElementAnimation(elementId, timeline)
+    JSB->>Scene: create animation(elementId, timeline)
     Scene->>Scene: findSpatialObject(elementId)
-    alt resolved target is SpatialEntity
+    alt resolved to an entity
         Scene->>Manager: create(command, target)
-        Manager->>Manager: bottom-guard validate canonical payload
-        Manager->>RK: read target.transform as playback baseline
+        Manager->>Manager: fallback-validate timeline data
+        Manager->>RK: read current transform as playback baseline
         Manager->>Compiler: compile(payload, baseline)
-        Compiler-->>Manager: AnimationResource[] + AnimationGroup + ownedComponents
-        Manager->>Obj: init(animationId, target, group, ownedComponents)
-        Manager->>Manager: register(object)
+        Compiler-->>Manager: animation resources + group + taken-over components
+        Manager->>Obj: init(animationId, target, group, taken-over components)
+        Manager->>Manager: register object
         Manager-->>Scene: animationId
-        Scene-->>JSB: success({ id: animationId })
+        Scene-->>JSB: success({ id })
     else target missing / unsupported
-        Scene-->>JSB: failure(TARGET_NOT_FOUND / UNSUPPORTED_TARGET)
+        Scene-->>JSB: fail(TARGET_NOT_FOUND / UNSUPPORTED_TARGET)
     end
 
-    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=play)
+    JSB->>Scene: control animation(animationId, type=play)
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
     Manager->>Obj: play()
-    Obj->>RK: entity.playAnimation(group)
+    Obj->>RK: play animation group
     RK-->>Obj: playback controller
-    Obj->>Event: emit action=start, confirmed values
-    RK-->>Obj: completion / terminal callback
-    Obj->>Obj: read target.transform and decompose confirmed values
-    Obj->>Event: emit action=complete / finish / stop / reset, confirmed values
+    Obj->>Event: emit start, with confirmed value
+    RK-->>Obj: complete / end-state callback
+    Obj->>Obj: read transform and decompose confirmed value
+    Obj->>Event: emit complete / finish / stop / reset, with confirmed value
 ```
 
-`create` only creates the native animation object and compiled plan, then returns `animationId`; it does not emit an extra initial confirmed value. `entityProps` still updates only from native confirmed events such as start, terminal lifecycle, and accepted `set`. `EntityMotionAnimationObject` owns the group/controller compiled from the whole `EntityMotionTimelinePayload`, not a single track; single-track / channel granularity only exists inside the compiler's `EntityChannelPlan`.
+Create only builds the native animation object and the compiled plan and returns an `animationId`; it does not additionally report an initial confirmed value. `entityProps` is still updated only on confirmation events like start, end state, and an accepted `set`. What the entity animation object holds is the animation group / controller compiled from the whole timeline, not a single track; single-channel granularity exists only inside the compiler.
 
-**pause / resume sequence:**
+**Pause sequence:**
 
 ```mermaid
 sequenceDiagram
-    participant JSB as Control JSB
+    participant JSB as control command
     participant Scene as SpatialScene
-    participant Manager as EntityMotionManager
-    participant Obj as EntityMotionAnimationObject
+    participant Manager as entity motion manager
+    participant Obj as entity animation object
     participant RK as RealityKit
-    participant Event as spatialanimationstatechanged
+    participant Event as state-changed event
 
-    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=pause/resume)
+    JSB->>Scene: control animation(animationId, type=pause)
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
-    alt animation found and state allows control
-        Manager->>Obj: pause() / resume()
-        Obj->>RK: controller.pause() / controller.resume()
-        Obj->>Event: emit action=pause/resume, playState
-        Scene-->>JSB: success(nil)
-    else animation missing / invalid state
-        Scene-->>JSB: failure(animation not found / invalid state)
+    alt found and state allows
+        Manager->>Obj: pause()
+        Obj->>RK: controller pause
+        Obj->>Event: emit pause, with playback state
+        Scene-->>JSB: success
+    else not found / illegal state
+        Scene-->>JSB: fail
     end
 ```
 
-**stop / reset / finish sequence:**
+**Stop, reset, finish sequence:**
 
 ```mermaid
 sequenceDiagram
-    participant JSB as Control JSB
+    participant JSB as control command
     participant Scene as SpatialScene
-    participant Manager as EntityMotionManager
-    participant Obj as EntityMotionAnimationObject
+    participant Manager as entity motion manager
+    participant Obj as entity animation object
     participant RK as RealityKit
-    participant Event as spatialanimationstatechanged
+    participant Event as state-changed event
 
-    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=stop/reset/finish)
+    JSB->>Scene: control animation(animationId, type=stop/reset/finish)
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
-    alt animation found
+    alt found
         Manager->>Obj: stop() / reset() / finish()
-        Obj->>RK: read target.transform or compute terminal transform
-        Obj->>RK: controller.stop()
-        Obj->>RK: entity.stopAllAnimations()
-        Obj->>RK: entity.move(to: committedTransform, duration: 0)
-        Obj->>Obj: read target.transform and decompose confirmed values
-        Obj->>Event: emit action=stop/reset/finish, confirmed values
-        Scene-->>JSB: success(nil)
-    else animation missing / target destroyed
-        Scene-->>JSB: failure(animation not found / TARGET_DESTROYED)
+        Obj->>RK: read current transform or compute end-state transform
+        Obj->>RK: stop the controller and all animations
+        Obj->>RK: commit the target transform with zero duration
+        Obj->>Obj: read transform and decompose confirmed value
+        Obj->>Event: emit stop/reset/finish, with confirmed value
+        Scene-->>JSB: success
+    else not found / target destroyed
+        Scene-->>JSB: fail(TARGET_DESTROYED)
     end
 ```
 
@@ -785,52 +954,32 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant JSB as Control JSB
+    participant JSB as control command
     participant Scene as SpatialScene
-    participant Manager as EntityMotionManager
-    participant Obj as EntityMotionAnimationObject
+    participant Manager as entity motion manager
+    participant Obj as entity animation object
     participant RK as RealityKit
-    participant Event as spatialanimationstatechanged
+    participant Event as state-changed event
 
-    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=set, values)
+    JSB->>Scene: control animation(animationId, type=set, values)
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
-    alt animation missing / target destroyed
-        Scene-->>JSB: failure(animation not found / TARGET_DESTROYED)
-    else animation is delay / running / paused
-        Note over Obj: no-op + console warning (not routed to onError)
-        Scene-->>JSB: rejected(no-op)
-    else animation is idle / terminal
+    alt not found / target destroyed
+        Scene-->>JSB: fail(TARGET_DESTROYED)
+    else animation delayed / playing / paused
+        Note over Obj: no-op + console warning (not onError)
+        Scene-->>JSB: reject (no-op)
+    else animation not started / at end state
         Manager->>Obj: set(values)
-        Obj->>RK: read target.transform as committed baseline
-        Obj->>Obj: merge sparse patch over committed transform
-        Obj->>RK: entity.move(to: mergedTransform, duration: 0)
-        Obj->>Obj: read target.transform and decompose confirmed values
-        Obj->>Event: emit action=set, confirmed values
-        Scene-->>JSB: success(nil)
+        Obj->>RK: read current transform as committed baseline
+        Obj->>Obj: merge sparse patch onto baseline
+        Obj->>RK: commit merged transform with zero duration
+        Obj->>Obj: read transform and decompose confirmed value
+        Obj->>Event: emit set, with confirmed value
+        Scene-->>JSB: success
     end
 ```
 
-`pause` / `resume` only control the current RealityKit playback controller and do not recompile the `AnimationGroup`. `stop` / `reset` / `finish` terminate the current playback and commit the terminal transform through `entity.move(duration: 0)`. `set` does not use a RealityKit animation resource; it only commits a sparse patch merged over the native committed transform while the animation is inactive.
+Pause only controls the current playback controller and does not recompile the animation group. Stop / reset / finish terminate the current playback and commit the end-state transform with zero duration. `set` uses no RealityKit animation resource; it only merges the sparse patch onto the committed transform and commits it while inactive.
 
-Boundary rule: `SpatialScene` should only perform target lookup / runtime type dispatch / JSB resolve; Entity-specific compilation and playback state should not spread through `SpatialScene` handlers. v1 does not add an Entity forwarding layer that only forwards calls; registry, create/control orchestration, and lifecycle belong to `EntityMotionManager`. If the element and Entity paths later need a uniform target boundary, extract a Swift protocol or thin facade then.
-
-## Risks / Trade-offs
-
-- **Historical naming confusion.** Reusing `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` keeps "element" in the command names. Documentation must make clear that target-state semantics generalize them into the motion animation object protocol.
-- **Timeline compiler is the main new cost.** Multi-keyframes, sparse keyframes, rotation conversion, and per-channel compilation are all concentrated in the native Entity motion manager / compiler.
-- **Two costs of per-channel compilation.** To let different channels keep their own timing function within the same time span, multiple channels cannot be merged into a single complete-Transform animation: (1) each channel must be compiled into its own RealityKit animation bound to a sub-target (translation / orientation / scale) and played in parallel through an `AnimationGroup`, rather than one whole-Transform animation; (2) custom timing (when there is no matching RealityKit built-in curve) may require baking that channel into a `SampledAnimation`.
-- **Per-component ownership and sub-target binding granularity.** Ownership granularity is the transform component (`position` / `rotation` / `scale`), because RealityKit sub-target binding is itself per component (translation / orientation / scale), not per scalar (`position.x` vs `position.y`). A component is owned entirely by the animation as soon as any of its channels appear in the config; a component that does not appear at all stays with React props and is driven normally during the animation. Note the scalar sub-granularity: if only `position.y` is animated, that channel's RealityKit animation binds the whole translation sub-target, so `position.x` / `position.z` are frozen to the playback-start native baseline during the animation rather than flowing through props — this is dictated by sub-target binding granularity, not by the ownership model. Cross-component composition (position animated while rotation flows through props) is fully supported.
-- **No updater form.** Because native is the single authority, `api.set(prev => next)` would imply React `setState` semantics, but `prev` cannot be promised as a real-time native transform. v1 only supports patch objects; reads of the current confirmed state go through `entityProps`.
-- **Large concurrent animations still need profiling.** RealityKit native playback is better than JS per-frame writes, but scale should still be measured.
-
-## Decisions
-
-- Native RealityKit backend is the only authoritative data source for Entity motion.
-- `entityProps` is a React mirror outlet for native-confirmed transform, not a local source of truth.
-- Reuse `CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand` and the existing event channel; do not add parallel Entity JSB.
-- JS/Core normalizes `timeline.from` / `timeline.to` and percentage `timeline` keyframes into canonical Entity tracks; Native executes canonical payload and performs bottom-guard validation.
-- **Native uses per-channel timing compilation.** Each transform channel is compiled into its own RealityKit animation carrying its own timing function, bound in parallel to the translation / orientation / scale sub-targets through an `AnimationGroup`, rather than merging all channels into a segment that shares a single `timingFunction`. Reason: after segment merging each segment can carry only one timing function, so different curves for different channels within the same time span cannot be expressed and are lost before reaching native; per-channel is consistent with the per-frame per-track sampling semantics of the CADisplayLink element path. Costs are in Risks.
-- **The Entity compilation output does not reuse `SpatializedMotionConfig` / `SpatializedMotionTrack`.** Three reasons: (1) **Different stage** — `SpatializedMotion*Config` is a public authoring config (with `onStart`/`onComplete`/`autoStart` callbacks, `timeline` authoring input, and an optional `timingFunction` with three-level fallback), whereas `EntityChannelAnimationPlan` is a native-compiled executable plan (percentages resolved, `timeline.from` / `timeline.to` desugared, missing-keyframe `baseline` solved, timing collapsed onto each keyframe); the config has nowhere to place `baseline` / resolved timing, and the callback fields are noise. (2) **Different domain** — `SpatializedMotionTrack.property` is the CSS/element visual domain (`opacity` / `transform.translate.*` / `transform.rotate.*` / `transform.scale.*`), while Entity is the pose domain (`position.*` / `rotation.*` / `scale.*`) and explicitly rejects `opacity`; the value domain also differs (`SpatializedVisualValues` vs `EntityMotionProps`, the latter using Euler degrees for rotation). Reuse would mix `opacity`/`transform.translate` into Entity channels and degrade structural constraints into runtime validation. (3) **Avoid cross-path coupling** — this redesign only reuses the cross-boundary protocol (JSB command / events); internal data types are not reused. The element path (CADisplayLink per-track sampler) and the Entity path (RealityKit per-channel plan) each hold their own compilation output, so that element-side property whitelist or `SpatializedVisualValues` changes do not ripple into Entity. If a "normalized timeline" counterpart is needed, the element side is `SpatializedMotionTimeline` and the Entity side is `EntityMotionTimelinePayload`, and those are independent as well.
-- **Ownership granularity is per-component, not the whole transform.** A transform component (`position` / `rotation` / `scale`) is owned entirely by the animation during an active animation as soon as any of its fields appear in the config; a component that does not appear in the config at all stays with React props and is driven normally during the animation. Rationale: (1) the old entity transform animation API this proposal replaces was already per-component (per-field suppression cache, non-animated fields keep updating), so per-component keeps the replacement non-breaking; (2) the whole-transform rationale (element path sends DOMMatrix whole, splitting needs matrix decompose/recompose) does not apply to Entity — Entity props are already component-structured and per-channel compilation provides the execution foundation; (3) the ownership decision is pushed to native (based on components declared in config), with no dual-authority React-side cache. Boundary: granularity stops at the component, not the scalar (`position.x` vs `position.y`), because RealityKit sub-target binding is per-component; non-animated scalars within an animated component are frozen to baseline via their sub-target (see Risks).
-- The old `AnimateTransformJSBCommand` is an internal implementation protocol and is removed, not merely left unused.
+Boundary constraint: `SpatialScene` only does target lookup, type dispatch, and command receipts; entity-specific compilation and playback state do not scatter into its handling logic. v1 adds no forwarding-only entity layer; the registry, create / control orchestration, and lifecycle all belong to the entity motion manager. If the two paths later need a unified target boundary, extract a shared protocol or a thin wrapper then.

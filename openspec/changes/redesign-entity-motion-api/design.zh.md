@@ -1,92 +1,122 @@
-## 背景
+# `useEntityAnimation` 重设计
 
-`proposal.md` 是公共 API surface 的唯一主来源,`specs/` 是规范性行为的唯一主来源。本文档只描述实现目标态所需的**实现架构**,不重复公共 API 契约,也不重复行为需求。
+## 1. 背景
 
-本次重设计把 `useEntityAnimation` 变成共享 `useAnimation` 运动家族之上的 Entity 适配器(`useEntityAnimation = useAnimation 配置 + Entity props outlet`)。它新增百分比 `timeline`、`entityProps` outlet、`api.set`,以及 `animation` 绑定。这是一次非破坏性增强。
+`useEntityAnimation` 是 WebSpatial SDK 中驱动场景内 3D 物体姿态动画的 React Hook。它支持百分比关键帧、动画结果回写和统一的命令式姿态设置,并把物体动画统一到通用动画的绑定、生命周期和跨端协议上。
 
-## 设计原则
+本次重设计将物体动画接入通用动画架构:React 层提供 Hook、绑定和结果镜像,Core 层完成配置归一化与校验,visionOS 原生层使用 RealityKit 编译和执行动画。原生姿态是唯一权威数据源,所有姿态变更经原生确认后再回传 React,从结构上避免动画终态与 React 基础属性冲突导致的回弹。
 
-### Native 是唯一权威数据源
+本设计的目标是:
 
-Entity motion 的 transform 状态以 native RealityKit backend 为唯一权威数据源。React 不维护独立的 committed cache、pending state 或第二份可竞争的 transform source。
+- 给出 React、Core、原生三层的职责边界和数据流。
+- 明确“配置 → 规范轨道 → RealityKit 动画”和“原生确认姿态 → `entityProps`”两条链路。
+- 复用创建、控制和状态事件协议,不为物体新增平行命令。
+- 将动画对象从只服务空间元素泛化为可面向不同目标类型的运动对象。
 
-`entityProps` 是 native 已确认 transform 状态的 React mirror outlet:
+本设计不提供公开的进度跳转、拖拽或进度读取 API,也不采用 SDK 逐帧采样方案。API 形态、行为边界、跨端协议、编译规则和模块职责均在本文定义,无需依赖其他设计文档即可完成技术评审。
+
+## 2. 名词解释
+
+- **物体(Entity)**:场景里的一个 3D 对象,例如一个盒子。它有三组空间属性,合称"姿态"。
+- **姿态(transform)**:物体在空间中的状态,由位置 `position`(米)、旋转 `rotation`(度)、缩放 `scale`(倍数)三部分组成。
+- **分量**:指姿态三部分之一,即 `position`、`rotation` 或 `scale`。
+- **原生层 / RealityKit**:苹果 visionOS 上真正驱动 3D 物体运动的底层引擎,由 Swift 实现。本文说"原生"即指这一层。
+- **React 层 / 公共逻辑层(Core)**:分别是面向使用者的 Hook 代码,和两端共用的、与平台无关的逻辑代码。
+- **JS Bridge 命令 / 事件**:JavaScript 与原生层之间收发消息的通道。命令由 JS 发往原生,事件由原生回传给 JS。
+- **权威数据源**:某份数据以谁为准。本设计中物体的真实姿态只以原生层为准。
+- **镜像(mirror)**:React 侧把原生层已确认的姿态复制一份出来供渲染使用,这份复制就叫镜像。
+- **`entityProps`**:Hook 返回给使用者的姿态镜像,形如 `{ position?, rotation?, scale? }`,展开到组件上可让物体停在动画终点。
+- **确认姿态(confirmed transform)**:原生层执行完一个动作后,回读物体真实姿态并回传的那份值。React 只用这种值更新 `entityProps`。
+- **轨道(track)/ 通道(channel)**:一条描述单个属性(如 `position.y`)随时间变化的曲线。本文对编译后的执行计划称"通道",对配置归一化后的中间形态称"轨道"。
+- **关键帧(keyframe)**:曲线上的一个时间点及其取值,例如"第 0.6 秒时 `position.y` = 0.25"。
+- **缓动函数(timingFunction)**:描述两帧之间快慢变化的曲线,如匀速 `linear`、先慢后快 `easeIn`。
+- **基准值(baseline)**:某通道开始播放时的原生当前值;当该通道缺少起始关键帧时用它兜底。
+- **球面线性插值(slerp)**:RealityKit 对旋转采用的插值方式,总是走两个朝向之间的最短路径。
+- **空操作(no-op)**:命令被接收但不产生任何效果,物体和 `entityProps` 都不变。
+- **注册表(registry)**:原生层用来按 id 查找物体或动画对象的表。
+
+## 3. 要实现的功能
+
+`useEntityAnimation` 让使用者用位置、旋转、缩放描述动画,将动画绑定到物体,并在原生确认后获得物体姿态。功能清单如下:
+
+| 功能 | 说明 |
+|---|---|
+| 姿态动画 | 仅支持 `position`、`rotation`、`scale`,拒绝 `opacity` 等非姿态属性。 |
+| 多种时间轴写法 | 支持顶层 `from` / `to`、`timeline.from` / `timeline.to` 和 `0% → 50% → 100%` 百分比关键帧。 |
+| 动画绑定 | Hook 返回 `animation`,通过物体组件的 `animation` 属性绑定目标。 |
+| 播放控制 | `api` 提供 `play`、`pause`、`stop`、`reset`、`finish`。 |
+| 结果回写 | 原生在开始、完成、停止、重置、结束等确认节点回传姿态,React 以 `entityProps` 暴露结果,避免终态回弹。 |
+| 命令式设置 | 非活跃状态下通过 `api.set(patch)` 在原生已提交姿态上合并稀疏补丁。 |
+| 生命周期与错误 | 复用通用动画的创建、控制、销毁、目标失效和错误事件链路。 |
+| 能力检测 | 通过 `supports('useEntityAnimation')` 检测整体能力。 |
+
+## 4. 设计思路及折中
+
+### 4.1 设计原则
+
+#### 原生层是唯一权威数据源
+
+物体姿态只以原生 RealityKit 为准。React 不保存第二份可能与原生冲突的姿态,也不维护待提交缓存或预测终态。
+
+`entityProps` 只是原生已确认姿态在 React 侧的镜像,数据只朝一个方向流动:
 
 ```text
-React config / api.set
-  -> native Entity motion backend(唯一权威)
-  -> confirmed transform state
-  -> entityProps mirror outlet
+React 配置 / api.set
+  -> 原生动画引擎(唯一权威)
+  -> 确认后的姿态
+  -> entityProps 镜像
 ```
 
-这意味着:
+由此得到几条规则:
 
-- 播放、终止、reset、finish、`api.set` 等会改变 transform 的操作都必须先进入 native。
-- native 拒绝命令时,对应写入无效,`entityProps` 不更新。
-- native 接受命令时,通过现有 animation state event 回传确认后的 transform,React 再更新 `entityProps`。
-- React 侧只负责把 native 确认过的状态镜像给用户,不自行预测终态、不排队 replay 活跃期间的写入。
-- 首个 confirmed state 之前 `entityProps` 可能为空;confirmed 之后它镜像动画系统已接管的 transform 分量(被动画的分量,加上 `api.set` 写入的分量),字段范围限定在 `position` / `rotation` / `scale` 之内,未被接管的分量不进入 `entityProps`。
+- 播放、停止、重置、结束、`api.set` 等一切会改变姿态的操作,都要先进原生层。
+- 原生拒绝命令时,该次写入无效,`entityProps` 不更新。
+- 原生接受命令时,通过动画状态事件回传确认姿态,React 再更新 `entityProps`。
+- React 只负责把原生确认过的姿态镜像给使用者,动画进行中的写入一律不排队补播。
+- 首个确认姿态到来前 `entityProps` 可能为空。确认之后,它只包含被动画接管的分量,以及被 `api.set` 写入的分量,字段范围限定在 `position` / `rotation` / `scale` 之内;没被接管的分量不会进入 `entityProps`。
 
-### 复用 `useAnimation` 架构
+#### 复用通用动画架构
 
-`useEntityAnimation` 应尽可能复用 `useAnimation` 的 binding / target resolution / `AnimationObject` lifecycle / create-control-event 链路。Entity 差异被限制在 Entity-specific surface 与 native manager 边界:
+`useEntityAnimation` 尽量复用通用动画的绑定、目标解析、动画对象生命周期和"创建—控制—事件"链路。物体路径的差异只集中在以下几处:
 
-- authoring: `position` / `rotation` / `scale`
-- validation: transform-only,拒绝 `opacity`
-- outlet: `entityProps`,不是 CSS `style`
-- target type: `SpatialEntity`
-- native execution: RealityKit Entity backend
+- 描述方式:用 `position` / `rotation` / `scale`。
+- 校验:只允许姿态,拒绝 `opacity`。
+- 结果出口:走 `entityProps`,而非 CSS 的 `style`。
+- 目标类型:`SpatialEntity`。
+- 执行引擎:RealityKit。
 
-## Goals / Non-Goals
+### 4.2 RealityKit 选型
 
-**Goals:**
-- 定义在 RealityKit backend 上实现 proposal 目标态 API 的 React / Core / Native 三层架构
-- 明确 config -> canonical tracks -> native transform 的数据流
-- 明确 native confirmed transform -> `entityProps` mirror 的写回流
-- 明确复用现有 `CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand`,不新增平行 Entity JSB
-- 明确 `AnimationObject` 从 element-only 泛化为 target-aware motion object 模型
+原生执行引擎选定为 **RealityKit**,原因:
 
-**Non-Goals:**
-- 重复 `proposal.md` 中的公共 API 定义
-- 重复 `specs/` 中的规范性行为
-- 设计 CADisplayLink 采样器 backend(明确未采用,见 Backend 理由)
-- 提供公共 seek / scrub / progress API(proposal Non-Goal)
-- 新增 `CreateEntityAnimationJSBCommand` / `ControlEntityAnimationJSBCommand`
+1. **统一执行引擎。** 物体动画与通用动画共用 RealityKit 一套引擎,避免为物体单开一套执行路径。
+2. **它天生就是 3D 物体的执行引擎。** 大量物体并发动画时,引擎原生播放比 SDK 逐帧写入扩展性更好。
+3. **播放和上报需求它都能满足。** 它能控制播放状态,能读到物体当前姿态,能在播放完成时给出事件,足以实现停止、重置、结束,并把确认姿态上报给回调和 `entityProps`。
 
-## Backend 理由(RealityKit)
+主要新增成本是一个编译器:把归一化后的物体轨道翻译成 RealityKit 能执行的姿态动画。
 
-Backend 决策:原生执行 backend 为 **RealityKit**。
+#### 为什么否决逐帧采样方案
 
-保留 RealityKit 的原因:
+另一种方案是放弃 RealityKit,改用定时器逐帧采样、手写插值来驱动姿态。撇开性能更差这一点,以下问题就足以否决它:
 
-1. **Entity 路径本来就能用。** 现有 `useEntityAnimation` 已经通过 RealityKit 驱动实体动画,所以这是延续,不是重写。
-2. **它天生就是 3D 实体的执行引擎。** 驱动实体 transform 正是 RealityKit 动画系统的本职;当大量实体并发动画时,引擎原生播放比 SDK 逐帧写入扩展性更好。
-3. **proposal 的播放 + 上报需求都能达到。** RealityKit controller 可控制播放状态,`entity.transform` 可在 native 侧读取,`AnimationEvents.PlaybackCompleted` 提供完成事件。这足以实现 `stop`、`reset`、`finish`,并把 native 确认后的 transform 上报给 callbacks 和 `entityProps`。
+- **与渲染节拍不同步。** 逐帧写入的姿态和 RealityKit 自己的渲染提交不在同一拍上,容易抖动、撕裂或延迟一帧。
+- **拿不到系统合成语义。** RealityKit 动画能参与 visionOS 的系统合成与重投影,CPU 采样产出的离散姿态得不到同等待遇。
+- **脱离场景体系。** RealityKit 姿态动画天然处在场景图、坐标空间、锚点、碰撞体系之内,手写采样则游离在外。
+- **插值质量差。** 旋转需要球面线性插值,手写逐帧线性插值容易出现伪影。
+- **要重造播放语义。** 缓动、循环、延迟、播放速率、暂停、完成事件全得自己实现一遍。
+- **两套执行语义。** 元素路径使用原生动画对象,物体单独采样会让同一套动画 API 出现两种执行方式。
 
-主要新增成本是 **canonical tracks -> RealityKit Entity timeline 编译器**。它负责把 JS/Core 归一化后的 Entity tracks 编译成 RealityKit 可执行的 transform animation。
+只对部分形态用 RealityKit、其余用采样器的混合方案同样否决:一套物体 API 只能有一种执行语义。
 
-### 为什么否决 Plan B(全 CADisplayLink 采样器)
-
-Plan B 是把整条 Entity 路径改用 CADisplayLink 逐帧采样器而非 RealityKit。除了逐帧性能更差、要放弃现有 RealityKit 实现之外,以下理由即使性能打平也仍成立:
-
-- **与 RealityKit 渲染帧不同步。** CADisplayLink 写入的 transform 与 RealityKit 自己的 render / commit loop 不在同一节拍上,容易出现抖动、撕裂或单帧延迟。
-- **visionOS 合成器语义。** RealityKit 动画可参与系统合成与 reprojection;CPU 采样器产出的离散姿态无法获得同等语义。
-- **脱离场景图 / anchoring / 物理体系。** RealityKit transform 动画天然处于场景图、坐标空间、anchor、碰撞体系内。
-- **插值质量。** 旋转需要四元数 slerp;手写 Euler 逐帧 lerp 容易出现插值伪影。
-- **重复实现播放语义。** easing、loop、delay、playbackRate、pause/resume、完成事件都要重新实现。
-- **与 motion family 分裂。** spatialized element 路径已使用 native-backed animation object;Entity 单独采样会让同一 motion API 出现两套执行语义。
-
-混合变体(部分形态走 RealityKit、部分走采样器)同样不采用:一套 Entity API 必须只承载一种执行语义。
-
-## 分层架构
+### 4.3 整体架构
 
 ```mermaid
 flowchart TB
     subgraph React["React 层 (packages/react)"]
         UseEntity["useEntityAnimation(config)<br/>返回 [animation, api, entityProps]"]
-        ReactBinding["创建 EntityMotionBinding / playback api"]
-        EntityProps["entityProps<br/>native confirmed transform 的 mirror"]
-        ApiSet["api.set(values patch)<br/>直接发 native,不写本地 cache"]
+        ReactBinding["创建运动绑定与播放 api"]
+        EntityProps["entityProps<br/>原生确认姿态的镜像"]
+        ApiSet["api.set(patch)<br/>直接发原生,不写本地缓存"]
         BindTarget["useBindMotionTarget({ binding, target })<br/>animation 绑定"]
 
         UseEntity --> ReactBinding
@@ -95,12 +125,12 @@ flowchart TB
         ReactBinding --> BindTarget
     end
 
-    subgraph Core["Core 层 (packages/core)"]
-        Normalize["normalizeEntityMotionConfig(config)<br/>timeline.from/to + percentage timeline + internal tracks"]
-        Tracks["canonical tracks<br/>position.* / rotation.* / scale.*"]
-        Validate["validateEntityMotionConfig()<br/>拒绝 opacity / 未知属性"]
+    subgraph Core["公共逻辑层 (packages/core)"]
+        Normalize["normalizeEntityMotionConfig(config)<br/>把顶层 from/to、timeline.from/to 与百分比统一成内部轨道"]
+        Tracks["规范轨道<br/>position.* / rotation.* / scale.*"]
+        Validate["validateEntityMotionConfig()<br/>拒绝 opacity 等不支持目标"]
         CreateObject["AnimationObject.create({ elementId, timeline })"]
-        ControlObject["ControlSpatializedElementAnimation({ animationId, type, values? })"]
+        ControlObject["控制命令({ animationId, type, values? })"]
 
         Normalize --> Tracks
         Tracks --> Validate
@@ -108,14 +138,14 @@ flowchart TB
         ControlObject --> CreateObject
     end
 
-    subgraph Native["Native 层 (RealityKit backend)"]
-        Resolve["resolveSpatialObject(elementId)<br/>via spatialObjects"]
-        ElementAdapter["SpatializedElement<br/>现有 element manager"]
-        EntityManager["SpatialEntity<br/>新 Entity manager"]
-        NativeValidate["validate canonical tracks<br/>兜底校验"]
-        Compile["tracks -> RealityKit transform animation"]
-        Authority["native transform state<br/>唯一权威"]
-        Event["spatialanimationstatechanged<br/>回传 confirmed values"]
+    subgraph Native["原生层 (RealityKit)"]
+        Resolve["按 elementId 查物体"]
+        ElementAdapter["元素管理器"]
+        EntityManager["新的物体运动管理器"]
+        NativeValidate["兜底校验规范轨道"]
+        Compile["轨道 -> RealityKit 姿态动画"]
+        Authority["原生姿态<br/>唯一权威"]
+        Event["状态变化事件<br/>回传确认值"]
 
         Resolve --> ElementAdapter
         Resolve --> EntityManager
@@ -125,31 +155,41 @@ flowchart TB
         Authority --> Event
     end
 
-    BindTarget -->|"target-agnostic binding"| Normalize
-    CreateObject -->|"CreateSpatializedElementAnimationJSBCommand"| Resolve
-    ControlObject -->|"ControlSpatializedElementAnimationJSBCommand"| Resolve
-    Event -->|"confirmed values"| EntityProps
+    BindTarget -->|"与目标无关的绑定"| Normalize
+    CreateObject -->|"创建动画命令"| Resolve
+    ControlObject -->|"控制动画命令"| Resolve
+    Event -->|"确认值"| EntityProps
 ```
 
 **各层职责:**
 
-- **React** 负责 hook API、binding 生命周期、`entityProps` mirror、callback 分发和 rerender。React 不维护独立 transform cache。
-- **Core** 负责把公共 `timeline` 编写形态(`timeline.from` / `timeline.to` 与百分比关键帧)和内部 `tracks` 归一化为 canonical Entity tracks。`AnimationObject` 保留现有 wire 字段 `elementId`,其目标态含义是 spatial object id。
-- **Native** 负责 target resolution、兜底校验、RealityKit 编译与执行、命令接受/拒绝、最终 transform 拆解与事件回传。
+- **React 层**负责 Hook API、绑定生命周期、`entityProps` 镜像、回调分发和重渲染,不保存独立姿态缓存。
+- **公共逻辑层**负责把对外的三种书写形态(顶层 `from` / `to`、`timeline.from` / `timeline.to`、百分比关键帧)归一化成内部的规范物体轨道。顶层 `from` / `to` 是 `timeline.from` / `timeline.to` 的等价简写,两者折叠到同一套内部轨道;当两者同时出现时以 `timeline` 为准,顶层被忽略并在开发模式打印警告。动画对象的 `elementId` 字段在本设计中含义是"空间对象 id"。
+- **原生层**负责查找目标、兜底校验、用 RealityKit 编译并执行、接受或拒绝命令、拆解最终姿态并通过事件回传。
 
-## JSB 协议
+### 4.4 关键折中
 
-目标态复用现有 JSB command type,不新增平行 Entity JSB:
+- **命令名保留 `Element` 字样。** 创建和控制命令名含 `Element`,不新增平行链路;其目标态语义为空间对象,`elementId` 表示空间对象 id。
+- **承担原生编译成本。** 多关键帧、稀疏关键帧、旋转换算和逐通道编译集中在物体运动管理器与编译器,换取 RealityKit 原生播放、系统合成和统一播放语义。
+- **按通道编译。** 每个通道独立编译并在动画组中并行播放,以保留逐通道缓动;代价是不能合并为一条完整姿态动画。
+- **按分量接管。** 某分量出现任一动画字段后,整个分量由动画接管。例如只动画 `position.y` 时,`position.x` / `position.z` 在播放期间冻结在基准值;完全未出现的分量仍由 React 属性驱动。
+- **不提供函数式 `set`。** `api.set(prev => next)` 无法保证 `prev` 是实时原生姿态,因此 v1 只接受稀疏补丁对象;当前确认姿态通过 `entityProps` 读取。
+- **暂不抽象统一适配层。** v1 在 `SpatialScene` 中按运行时类型分发到元素或物体管理器;只有两条路径出现真实重复时才提取公共协议。
+- **并发性能需要实测。** RealityKit 原生播放优于 JS 逐帧写入,但海量物体并发仍需专项性能验证。
 
-- `CreateSpatializedElementAnimationJSBCommand`
-- `ControlSpatializedElementAnimationJSBCommand`
-- `spatialanimationstatechanged` event
+## 5. 模块设计
 
-旧 `AnimateTransformJSBCommand` 是内部实现协议,不是公开承诺 API。目标态直接删除它;因其非公开 API,不构成 public breaking change。
+### 5.1 通信协议(JS Bridge)
 
-### CreateSpatializedElementAnimation
+复用命令与事件,不为物体新增平行通道:
 
-命令名与 `elementId` 字段都保留以兼容现有链路。目标态里,`elementId` 是历史 wire 字段名,实际含义是 spatial object id;它可以指向 `SpatializedElement`,也可以指向 `SpatialEntity`。
+- 创建动画:`CreateSpatializedElementAnimationJSBCommand`
+- 控制动画:`ControlSpatializedElementAnimationJSBCommand`
+- 状态事件:`spatialanimationstatechanged`
+
+#### 创建动画命令
+
+命令名与 `elementId` 字段承载空间对象。`elementId` 实际含义是空间对象 id,既可指向元素,也可指向物体:
 
 ```text
 CreateSpatializedElementAnimation {
@@ -158,159 +198,166 @@ CreateSpatializedElementAnimation {
 }
 ```
 
-Native 通过 `elementId` 查 `spatialObjects`,再按运行时类型分发:
+原生按 `elementId` 查注册表,再按运行时类型分发:
 
 ```text
-spatial object is SpatializedElement -> existing spatialized element manager
-spatial object is SpatialEntity      -> EntityMotionManager
-otherwise                           -> failure
+是元素   -> 元素管理器
+是物体   -> 物体运动管理器
+其它     -> 失败
 ```
 
-如果 `elementId` 在 `spatialObjects` registry 中找不到,create MUST 显式失败,不能静默排队。若查到的 spatial object 类型不是 `SpatializedElement` 或 `SpatialEntity`,create MUST 以 unsupported animation target 失败。`ControlSpatializedElementAnimation` 不重复携带 `elementId`;它只通过 `animationId` 找已创建的 animation object。若目标 spatial object 已销毁,关联 animation MUST 被销毁或失效,后续 control MUST 失败并通过 command failure / error event 暴露,不能 silent no-op。
+规则:
 
-### ControlSpatializedElementAnimation
+- `elementId` 在注册表中查不到时,创建必须显式失败。
+- 查到的对象既不是元素也不是物体时,创建必须以"不支持的目标"失败。
+- 控制命令不再携带 `elementId`,只靠 `animationId` 找到已创建的动画。
+- 目标对象已销毁时,关联动画必须被销毁或失效;后续控制必须失败并通过错误事件暴露。
 
-控制命令继续复用现有 command type,并增加 `set` 控制类型:
+#### 控制动画命令
+
+复用命令,并新增 `set` 类型:
 
 ```text
 ControlSpatializedElementAnimation {
   animationId: string
-  type: 'play' | 'pause' | 'resume' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
+  type: 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
   values?: EntityMotionPatch
 }
 ```
 
-`api.set` 不新增 JSB。它只接受 `EntityMotionPatch` object(写入侧 patch 类型，与读取侧 `EntityMotionProps` 同形态),不支持 `(prev) => next` updater 形式。它发送 `type: 'set'` 到 native:
+`api.set` 不新增命令。它只接受一个稀疏补丁对象 `EntityMotionPatch`(写入侧类型,与读取侧的 `EntityMotionProps` 同形态,但命名区分),不支持 `(prev) => next` 这种函数写法。它以 `type: 'set'` 发往原生:
 
-- native 拒绝:命令失败或 error event,`entityProps` 不更新。
-- native 接受:native 基于当前 committed `entity.transform` 合并 patch、应用 transform 后,通过 `spatialanimationstatechanged` 回传 confirmed values,React 再更新 `entityProps`。
+- 原生拒绝:命令失败或触发错误事件,`entityProps` 不更新。
+- 原生接受:原生在当前已提交姿态上合并补丁、应用后,通过状态事件回传确认值,React 再更新 `entityProps`。
 
-### spatialanimationstatechanged
+#### 状态变化事件
 
-事件通道继续复用:
+状态事件携带一个具名的 detail 类型:
 
 ```text
-detail: {
+interface EntityMotionStateChangedDetail {
   animationId: string
-  action: 'start' | 'complete' | 'stop' | 'reset' | 'finish' | 'set' | 'failed' | ...
+  action:
+    | 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
+    | 'start' | 'complete' | 'error'
   playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
   finished: boolean
-  values?: SpatializedVisualValues | EntityMotionProps
+  values?: EntityMotionProps
   error?: SpatializedPlaybackError
+}
+
+interface EntityMotionStateChangedMsg {
+  type: 'spatialanimationstatechanged'
+  detail: EntityMotionStateChangedDetail
 }
 ```
 
-`values` 是 target-specific:
+`values` 为物体目标的姿态值 `EntityMotionProps`(即 `position` / `rotation` / `scale`)。
 
-- spatialized target: `SpatializedVisualValues`
-- Entity target: `EntityMotionProps`(`position` / `rotation` / `scale`)
+原生回传的 `action` 集合比对外回调多。它与用户回调、`entityProps` 的对应关系如下:
 
-### `values` 判型与丢弃过期事件
+| 原生 action | 对应用户回调 | 是否更新 entityProps |
+|---|---|---|
+| `start` | `onStart` | 是(开始那一刻一次) |
+| `complete` | `onComplete` | 是(终态) |
+| `finish` | `onComplete` | 是(终态) |
+| `stop` | `onStop` | 是(当前姿态) |
+| `reset` | `onReset` | 是(起点姿态) |
+| `set` | 无(仅内部提交) | 是(合并后的姿态) |
+| `error` | `onError` | 否 |
+| `pause` | 无(仅播放状态变更) | 否 |
 
-消费方 MUST NOT 依赖事件上的新字段来判断 `values` 是 `SpatializedVisualValues` 还是 `EntityMotionProps`。事件携带 `animationId`;接收方以 `animationId` 反查本地为该 id 创建的 animation object,用该对象已知的 target 类型来解释 `values`。若 `animationId` 匹配不到任何存活的本地 animation object(未知或过期,例如 `destroy` 之后),该事件 MUST 被丢弃、不分发,且 MUST NOT 更新 `entityProps`。
+#### 播放错误分类
 
-### `SpatializedPlaybackError`
-
-`action` 为 `'failed'` 时携带 `error`。`SpatializedPlaybackError.code` 是两类 target 共享的封闭分类集合:
+`action` 为 `error` 时携带 `error`。错误码是两类目标共享的封闭集合:
 
 ```text
 type SpatializedPlaybackError = {
   code:
-    | 'TARGET_NOT_FOUND'           // elementId 不在 spatial object registry 中
-    | 'UNSUPPORTED_TARGET'         // 解析到的对象既不是 SpatializedElement 也不是 SpatialEntity
-    | 'TARGET_DESTROYED'           // spatial object 已销毁,动画失效
+    | 'TARGET_NOT_FOUND'     // elementId 不在注册表中
+    | 'UNSUPPORTED_TARGET'   // 解析到的对象既不是元素也不是物体
+    | 'TARGET_DESTROYED'     // 目标已销毁,动画失效
   message?: string
 }
 ```
 
-以上都会通过 `onError` 回调抵达用户。被拒绝的 `api.set` 写入(活跃动画期间,或绑定 / native object 创建之前)是例外:它们是 no-op,只输出 console warning,不路由到 `onError`。`code` MUST 可区分,以便应用代码按失败类型分支,而不是解析 `message`。
+以上三类都会通过 `onError` 抵达用户。有一个例外:被拒绝的 `api.set` 写入(动画活跃期间,或绑定 / 原生对象创建之前)不算错误,它是空操作,只打印一条控制台警告,不进 `onError`。错误码必须能区分,好让应用按类型分支处理,而不是去解析 `message` 文本。
 
-## 数据流
+### 5.2 跨层时序
 
-### 编写配置 -> native transform(play)
+#### 从配置到原生姿态(播放)
 
 ```mermaid
 sequenceDiagram
-    participant App
+    participant App as 应用
     participant Hook as useEntityAnimation
-    participant Core as Core normalizer / validator
-    participant Obj as AnimationObject
-    participant JSB as CreateSpatializedElementAnimationJSBCommand
-    participant Native as RealityKit Entity Manager
+    participant Core as 归一化 / 校验
+    participant Obj as 动画对象
+    participant JSB as 创建动画命令
+    participant Native as RealityKit 物体管理器
 
     App->>Hook: useEntityAnimation(config)
-    Hook->>Core: normalizeEntityMotionConfig(config)
-    Core-->>Hook: canonical tracks(position.* / rotation.* / scale.*)
-    Hook->>Core: validateEntityMotionConfig(tracks)
-    Core-->>Hook: transform-only config accepted
-    App->>Hook: BoxEntity animation binding
-    Hook->>Obj: AnimationObject.create({ elementId, timeline })
-    Obj->>JSB: execute({ elementId, timeline })
-    JSB->>Native: create animation
-    Native->>Native: resolve elementId as SpatialEntity
-    Native->>Native: compile tracks -> RealityKit transform animation
-    Native-->>Obj: animationId
+    Hook->>Core: 归一化配置
+    Core-->>Hook: 规范轨道
+    Hook->>Core: 校验(只允许姿态)
+    Core-->>Hook: 通过
+    App->>Hook: 通过 animation 绑定到物体
+    Hook->>Obj: 创建动画对象
+    Obj->>JSB: 执行创建
+    JSB->>Native: 创建动画
+    Native->>Native: 把 elementId 解析为物体
+    Native->>Native: 编译轨道为 RealityKit 姿态动画
+    Native-->>Obj: 返回 animationId
     App->>Hook: api.play()
     Hook->>Obj: play()
-    Obj->>Native: ControlSpatializedElementAnimation(type=play)
-    Native->>Native: entity.playAnimation()
-    Note over Native: native transform state 是唯一权威
+    Obj->>Native: 控制命令(play)
+    Native->>Native: 播放动画
+    Note over Native: 原生姿态是唯一权威
 ```
 
-### native confirmed transform -> React mirror
+#### 从原生确认姿态到 React 镜像
 
 ```mermaid
 sequenceDiagram
-    participant App
+    participant App as 应用
     participant Hook as useEntityAnimation
-    participant Obj as AnimationObject
-    participant Event as spatialanimationstatechanged
-    participant Native as RealityKit Entity Manager
+    participant Obj as 动画对象
+    participant Event as 状态变化事件
+    participant Native as RealityKit 物体管理器
 
-    Native->>Native: RealityKit 状态变化<br/>start / complete / stop / reset / finish / set accepted
-    Native->>Native: 读取 authoritative entity.transform
+    Native->>Native: 状态变化(开始/完成/停止/重置/结束/set 被接受)
+    Native->>Native: 读取权威姿态
     Native->>Native: 拆解为 position / rotation / scale
-    Native->>Event: emit(values)
-    Event->>Obj: onReceiveEvent(values)
-    Obj-->>Hook: confirmed EntityMotionProps
-    Hook-->>App: entityProps mirror updated
-    App->>App: BoxEntity spread entityProps<br/>重新声明 native 确认后的姿态
+    Native->>Native: 只保留被接管的分量
+    Native->>Event: 回传确认值
+    Event->>Obj: 收到事件
+    Obj-->>Hook: 确认后的 EntityMotionProps
+    Hook-->>App: entityProps 更新
+    App->>App: 把 entityProps 展开到物体上,停在确认姿态
 ```
 
-### api.set
+`api.set` 是否生效只由原生决定:动画活跃期间原生不暂存补丁,未绑定或原生对象尚未创建时的写入同样无效——这些写入是空操作,仅打印控制台警告。创建 / 绑定只在首次生命周期提交(一次播放终态或一次被接受的 `set`)时才产出确认值,因此在此之前 `entityProps` 可能为空。
 
-```mermaid
-sequenceDiagram
-    participant App
-    participant Hook as useEntityAnimation
-    participant Obj as AnimationObject
-    participant Native as RealityKit Entity Manager
+### 5.3 时间轴归一化与编译
 
-    App->>Hook: api.set(values patch)
-    Hook->>Obj: set(values patch)
-    Obj->>Native: ControlSpatializedElementAnimation(type=set, values)
-    alt native rejects
-        Native-->>Obj: command failure or error event
-        Obj-->>Hook: onError
-        Hook-->>App: entityProps unchanged
-    else native accepts
-        Native->>Native: merge patch over current committed transform
-        Native->>Native: apply accepted transform
-        Native-->>Obj: spatialanimationstatechanged(values)
-        Obj-->>Hook: confirmed EntityMotionProps
-        Hook-->>App: entityProps mirror updated
-    end
-```
+物体动画从对外配置到可播放对象要经过两个阶段,分属两层,职责严格分开:
 
-`api.set` 不是 playback 命令,不 seek、不 start、不改变播放进度。它也不写本地 pending state;native 是唯一决定该写入是否生效的地方。活跃动画期间 native 不暂存 set patch,未绑定或 native object 尚未创建前的 set 也无效;这些失败通过既有 command failure / error event 暴露,且不会更新 `entityProps`。`create` / bind 不会额外 emit 初始 confirmed value,因此首个 lifecycle 提交(一次 play 终态或被接受的 set)之前 `entityProps` 可能为空,也不承诺 mount 时即可读。
+1. **归一化(JS / 公共逻辑层):** 把对外的三种书写形态(顶层 `from` / `to`、`timeline.from` / `timeline.to`、百分比关键帧)折叠成一套与平台无关的内部时间轴数据 `EntityMotionTimelinePayload`。这一步只做展开、合并、求值,产物是平台无关的内部数据,全程在 JS 侧完成。
+2. **编译(native / RealityKit):** 原生物体运动管理器拿到已归一化的内部时间轴,读取基准姿态,按通道切段,把每段编成 `FromToByAnimation`,再用 `sequence` 串联、`group` 并联,最终产出可播放对象(动画资源 / 动画组 + 播放控制器)。这一步才是**编译**。
 
-## Entity tracks 与 RealityKit 编译
+#### 归一化(JS 层):配置 → 内部时间轴
 
-Native Entity motion manager 只接受 JS/Core 已归一化的 canonical Entity timeline payload。该 payload 是内部形态,不是 public hook config。Native 不解析百分比 key,也不把 `timeline.from` / `timeline.to` 再次脱糖;这些都属于 JS/Core normalizer 的职责。
+归一化由公共逻辑层的 `normalizeEntityMotionConfig` 完成,把三种对外写法统一成同一套内部时间轴数据:
 
-### 输入
+- **顶层 `from` / `to`** 等价于 `timeline.from` / `timeline.to`,展开成起止两帧。
+- **`timeline.from` / `timeline.to`** 即 `0%` / `100%` 帧,可与百分比 key 混写。
+- **百分比关键帧** `0% → 50% → 100%` 按 `at = 百分比 × duration` 折算成秒。
 
-输入是一份 target 已经解析为 Entity 的 timeline payload:
+产物是平台无关的 `EntityMotionTimelinePayload`(见下节),完整归一化规则(`timeline` 优先、边界必填、`duration` 默认值等)见“5.6 各层改动 · 公共逻辑层”。
+
+#### 编译输入:内部时间轴(native 层)
+
+编译的输入是归一化产物、且目标已解析为物体的内部时间轴数据:
 
 ```text
 type EntityMotionTimelinePayload = {
@@ -339,7 +386,7 @@ type EntityMotionKeyframe = {
 }
 ```
 
-示例输入:
+示例:
 
 ```text
 {
@@ -347,6 +394,7 @@ type EntityMotionKeyframe = {
   tracks: [
     {
       property: 'position.y',
+      timingFunction: 'easeOut',
       keyframes: [
         { at: 0, value: 0 },
         { at: 0.6, value: 0.25 },
@@ -355,6 +403,7 @@ type EntityMotionKeyframe = {
     },
     {
       property: 'rotation.y',
+      timingFunction: 'linear',
       keyframes: [
         { at: 0, value: 0 },
         { at: 1.2, value: 180 },
@@ -364,18 +413,11 @@ type EntityMotionKeyframe = {
 }
 ```
 
-### 输出
+#### 编译输出:可播放对象
 
-输出不是 React state,而是 native 可执行计划和执行后的 confirmed values:
+编译的输出是原生可执行计划,最终落为动画资源 / 动画组这一可播放对象。
 
-```text
-EntityMotionTimelinePayload
-  -> EntityChannelAnimationPlan(per-channel)
-  -> RealityKit AnimationResource[] + AnimationGroup
-  -> spatialanimationstatechanged(values)
-```
-
-`EntityChannelAnimationPlan` 是 Native manager / compiler 内部执行计划,不作为 JS/Core 公共类型。它按 **transform channel** 组织,每个 channel 携带自己的 keyframes 和 per-keyframe timing function,而不是把所有 channel 合并成共享同一段边界的 segment:
+执行计划按**姿态通道**组织,每个通道带自己的关键帧和逐帧缓动函数,而不是把所有通道合并成共享同一段时间边界的时间段:
 
 ```text
 type EntityChannelAnimationPlan = {
@@ -388,101 +430,226 @@ type EntityChannelAnimationPlan = {
 
 type EntityChannelPlan = {
   channel: EntityMotionProperty   // position.x / rotation.y / scale.z ...
-  baseline: number                // 播放起点该 channel 的 native 值,缺帧时使用
+  baseline: number                // 播放起点该通道的原生值,缺帧时使用
   keyframes: EntityChannelKeyframe[]
 }
 
 type EntityChannelKeyframe = {
   at: number
   value: number
-  timingFunction: TimingFunction  // 该关键帧到下一关键帧区间使用的 timing
+  timingFunction: TimingFunction  // 该帧到下一帧区间使用的缓动
 }
 ```
 
-**为什么按 channel 而不是按 segment:**
+上文那份输入,编译后的执行计划(假设播放起点原生姿态各分量为示例值,轨道缓动下沉到每帧):
 
-如果把所有 channel 合并到共享的时间段(segment),每段只能携带一个 `timingFunction`。但同一时间段内不同 channel 可能需要不同 timing function(例如 `position.y` 用 `easeOut`、`rotation.y` 用 `linear`),单一 slot 无法同时表达两条曲线——一旦按 segment 合并,per-channel 的 timing 信息在进入 RealityKit 前就已经丢失。逐帧 per-track 采样的 CADisplayLink element 路径不存在这个问题,因为每条 track 独立取自己的 timing。
+```text
+{
+  duration: 1.2,
+  delay: 0,
+  playbackRate: 1,
+  channels: [
+    {
+      channel: 'position.y',
+      baseline: 0,
+      keyframes: [
+        { at: 0,   value: 0,    timingFunction: 'easeOut' },
+        { at: 0.6, value: 0.25, timingFunction: 'easeOut' },
+        { at: 1.2, value: 0,    timingFunction: 'easeOut' },
+      ],
+    },
+    {
+      channel: 'rotation.y',
+      baseline: 0,
+      keyframes: [
+        { at: 0,   value: 0,   timingFunction: 'linear' },
+        { at: 1.2, value: 180, timingFunction: 'linear' },
+      ],
+    },
+  ],
+}
+```
 
-因此保留 per-channel 结构:每个 channel 单独编译成一个 RealityKit animation(携带自己的 timing function),再通过 `AnimationGroup` 并行播放,并绑定到对应 sub-target(translation / orientation / scale)。这样 per-channel timing 在整条链路上都不丢失,与 element 路径语义一致。
-
-### 编译流程
+#### 编译流程
 
 ```mermaid
 flowchart TB
-    Payload["EntityMotionTimelinePayload<br/>canonical tracks"]
-    Validate["兜底校验<br/>duration / property / keyframes / scale"]
-    Snapshot["读取 native current transform<br/>作为缺失通道基准"]
-    Baseline["读取缺帧 channel 的 native baseline"]
-    Channels["按 channel 组织 EntityChannelAnimationPlan<br/>每个 channel 保留自己的 keyframes + per-keyframe timing"]
-    RKCompile["每个 channel 编译为独立 RealityKit animation<br/>携带自身 timing;rotation degrees -> native rotation"]
-    Group["AnimationGroup 并行播放<br/>绑定 translation / orientation / scale sub-target"]
-    Play["entity.playAnimation(group)"]
-    Confirm["terminal / set accepted 后<br/>回传 confirmed EntityMotionProps"]
+    Payload["时间轴数据<br/>规范轨道"]
+    Validate["兜底校验<br/>时长 / 属性 / 关键帧 / 缩放"]
+    Snapshot["读取原生当前姿态<br/>作为缺帧基准"]
+    Channels["按通道组织执行计划<br/>各自保留关键帧与逐帧缓动"]
+    Segment["逐段编译 FromToByAnimation<br/>段内 from/to 取相邻关键帧,timing 取该段缓动"]
+    Seq["同通道多段用 sequence 串联<br/>合成单个通道动画;旋转的度数转为原生表示"]
+    Group["各通道动画用 group 并联<br/>绑定平移 / 旋转 / 缩放子目标"]
 
     Payload --> Validate
     Validate --> Snapshot
-    Snapshot --> Baseline
-    Baseline --> Channels
-    Channels --> RKCompile
-    RKCompile --> Group
-    Group --> Play
-    Play --> Confirm
+    Snapshot --> Channels
+    Channels --> Segment
+    Segment --> Seq
+    Seq --> Group
 ```
 
-### 编译规则
+#### 通道内多段串联与通道间并联
 
-1. **Property whitelist:** 只接受 `position.*`、`rotation.*`、`scale.*`。`opacity`、`transform.translate.*`、material / component property 等都必须显式失败。
-2. **时间范围:** `duration` 必须为正数;每个 keyframe 的 `at` 必须在 `[0, duration]` 内。
-3. **排序与重复:** 每条 track 的 keyframes 必须按 `at` 非递减排序;同一 property 不允许重复 track。
-4. **时间轴与 keyframe 区间:** 每个 channel 按自己的 keyframe times 形成区间,不与其它 channel 共享全局 segment 边界。例如某 channel 的 `0, 0.6, 1.2` 只影响该 channel 自己的 `[0, 0.6]` 与 `[0.6, 1.2]` 两个区间。
-5. **缺帧 baseline 与非动画分量:** 每个 channel 独立编译。若某 channel 在 `0` 时刻没有显式 keyframe,使用播放起点该 channel 的 native current transform 值作为 baseline;若晚于该 channel 最后一个 keyframe,保持最后一个 keyframe 值。channel 之间不共享边界,也不互相插值。**分量粒度区分两种缺帧:**(a)*被动画分量内的非动画标量*——例如只动画 `position.y`,则 `position.x` / `position.z` 因 RealityKit translation sub-target 被整体绑定而以 baseline 冻结;(b)*完全未出现的分量*——例如 config 没有任何 `scale.*`,则不为 scale sub-target 生成 animation,scale 不被动画持有,动画期间仍由 React props 驱动。
-6. **Per-channel 并行:** 每个 channel 编译为独立的 RealityKit animation,通过 `AnimationGroup` 并行播放并绑定到对应 sub-target(translation / orientation / scale)。Native 不把多个 channel 合并成共享 timing 的 segment,以保证 per-channel timing function 不丢失。
-7. **Rotation:** `rotation.*` 输入单位是 Entity API 的 Euler degrees。Native 编译时转换为 RealityKit transform 所需的旋转表示,避免用 Euler 做逐帧插值。由于 RealityKit 以最短路径四元数 slerp 插值 orientation,某个 rotation channel 若关键帧增量 ≥180° 或跨多轴,其路径可能与逐轴 Euler 直觉不同;需要特定的多圈或多轴路径时,应显式补充中间关键帧。
-8. **Scale:** `scale.*` 必须为非负数。非法 scale 直接失败。
-9. **Timing function(per-channel):** keyframe 级 `timingFunction` 优先于 track 级,track 级优先于 timeline 默认值。解析后的 per-keyframe timing 保留在各 channel 的 keyframe 上,由该 channel 自己的 RealityKit animation 携带,不与其它 channel 合并。因此同一时间段内不同 channel 使用不同 timing function 是原生支持的,不再需要 segment 合并,也不会出现无法表达而降级的情况。对于 RealityKit 内建 timing(linear / easeIn / easeOut / easeInOut)直接映射;自定义 cubic-bezier 若无对应内建曲线,则将该 channel bake 成 `SampledAnimation`。
-10. **Loop / playbackRate / delay:** 这些 playback 参数保留在 `EntityChannelAnimationPlan` 顶层,对整个 `AnimationGroup` 统一生效,由 RealityKit playback/controller 层执行。循环动画没有自然的 `complete` 终态,因此 `entityProps` 不在每个 loop 边界更新,只在 `stop` / `finish` / native 接受的 `api.set` 时提交。
-11. **Terminal fill:** `complete` / `finish` 停在终态,`reset` 停在起点,`stop` 停在当前 native transform;这些 confirmed values 通过事件回传给 React。
-12. **失败显式化:** 如果 RealityKit 无法表达某个 channel plan(例如无法 bake 的 timing),Native manager 必须通过 command failure 或 error event 显式失败,不能 silent ignore。
+一个通道对应一个变换子目标(平移 / 旋转 / 缩放),它的多段以及通道之间的组合分两层完成。
 
-### 示例:稀疏 tracks 到 per-channel plan
+**通道内多段——用 `sequence` 串联。** 一个通道按自己的关键帧被切成若干相邻区间,每个区间编译成一个 `FromToByAnimation<Transform>`:`from` / `to` 取该区间首尾关键帧的值,`duration` 取区间时长,`timing` 取该段自己的缓动(缓动优先级见编译规则 9)。同一通道的这些分段动画按时间顺序用 `AnimationResource.sequence(with:)` 串成一个通道动画,从而让每一段各自带缓动、又首尾相接连续播放。只有起止两帧的通道退化为单段,直接是一个 `FromToByAnimation`,无需 `sequence`。
 
-输入 tracks:
+**通道间——用 `group` 并联。** 各通道串好的通道动画彼此独立、同时播放,用 `AnimationResource.group(with:)` 合成一个动画组,再分别绑定到平移 / 旋转 / 缩放子目标(`bindTarget`)。这就是前面所说“动画组”的具体原语:`group` 负责并联,`sequence` 负责串联,两者组合表达“多通道并行、每通道内多段串行”的完整时间轴。
 
-```text
-position.y: (0 -> 0), (0.6 -> 0.25), (1.2 -> 0)   timing: easeOut
-rotation.y: (0 -> 0), (1.2 -> 180)                timing: linear
+以一个含两个通道的例子说明(`position.y` 有 3 帧 = 2 段,`rotation.y` 只有起止 2 帧 = 1 段):
+
+```mermaid
+flowchart TB
+    subgraph PY["position.y 通道(2 段)"]
+        direction TB
+        PYs0["段0 FromToBy<br/>0 to 0.6s,easeOut"]
+        PYs1["段1 FromToBy<br/>0.6 to 1.2s,linear"]
+        PYs0 -->|sequence 串联| PYs1
+    end
+    subgraph RY["rotation.y 通道(单段,无需 sequence)"]
+        direction TB
+        RYs0["段0 FromToBy<br/>0 to 1.2s,linear"]
+    end
+    PY -->|通道动画| G["group 并联<br/>+ 顶层 delay / speed / loop"]
+    RY -->|通道动画| G
+    G --> T1["绑定 translation 子目标"]
+    G --> T2["绑定 rotation 子目标"]
 ```
 
-假设 native current transform 为:
+横向是并联(通道间用 `group`),每个通道内纵向是串联(多段用 `sequence`);`delay` / `speed` / `loop` 只作用在 `group` 这一层。
 
-```text
-position: { x: 0, y: 0, z: 0.8 }
-rotation: { x: 0, y: 0, z: 0 }
-scale:    { x: 1, y: 1, z: 1 }
+#### 串并联组成可控播放对象的示例代码
+
+沿用上文示例(`position.y` 两段、`rotation.y` 单段),下面分别用 visionOS 与 picoOS 演示:把多段 `FromToBy` 用 `sequence` 串成通道动画,再用 `group` 把各通道并联成一个动画资源,最后交给引擎播放,拿到可暂停 / 恢复 / 停止 / 变速的播放控制器——即“可控播放对象”。
+
+visionOS(RealityKit / Swift):
+
+```swift
+import RealityKit
+
+// 沿用示例;x / z 冻结在基准值,只动画 y
+let base = entity.transform.translation
+
+// position.y 通道:两段 FromToBy,各带缓动,再用 sequence 串联
+let posSeg0 = FromToByAnimation<SIMD3<Float>>(
+    name: "pos.seg0",
+    from: SIMD3(base.x, 0,    base.z),
+    to:   SIMD3(base.x, 0.25, base.z),
+    duration: 0.6,
+    timing: .easeOut,                 // 段0 自己的缓动
+    bindTarget: .transform.translation
+)
+let posSeg1 = FromToByAnimation<SIMD3<Float>>(
+    name: "pos.seg1",
+    from: SIMD3(base.x, 0.25, base.z),
+    to:   SIMD3(base.x, 0,    base.z),
+    duration: 0.6,
+    timing: .easeIn,                  // 段1 自己的缓动,与段0 不同
+    bindTarget: .transform.translation
+)
+let posChannel = try AnimationResource.sequence(with: [
+    try AnimationResource.generate(with: posSeg0),
+    try AnimationResource.generate(with: posSeg1),
+])
+
+// rotation.y 通道:单段,无需 sequence
+let rotSeg = FromToByAnimation<simd_quatf>(
+    name: "rot.seg0",
+    from: simd_quatf(angle: 0,   axis: SIMD3(0, 1, 0)),
+    to:   simd_quatf(angle: .pi, axis: SIMD3(0, 1, 0)),   // 180°
+    duration: 1.2,
+    timing: .linear,
+    bindTarget: .transform.rotation
+)
+let rotChannel = try AnimationResource.generate(with: rotSeg)
+
+// 通道间并联:group 合成一个动画资源
+let clip = try AnimationResource.group(with: [posChannel, rotChannel])
+
+// 得到可控播放对象:控制器支持暂停 / 恢复 / 停止 / 变速
+let controller = entity.playAnimation(clip, transitionDuration: 0, startsPaused: true)
+controller.resume()          // play
+// controller.pause()        // pause
+// controller.stop()         // stop
+// controller.speed = 2.0    // 顶层播放速率作用在整个 group
 ```
 
-编译结果(每个 channel 独立,不共享边界):
+picoOS(Pico Spatial SDK / Kotlin):
 
-```text
-channels:
-  position.y  baseline 0
-    keyframes: (0, 0, easeOut) (0.6, 0.25, easeOut) (1.2, 0, easeOut)
-    -> RealityKit animation(easeOut),绑定 translation.y
-  rotation.y  baseline 0
-    keyframes: (0, 0, linear) (1.2, 180, linear)
-    -> RealityKit animation(linear),绑定 orientation(绕 y)
+```kotlin
+// 沿用同一示例;x / z 冻结在基准值
+val base = entity.getComponent(Transform::class.java)?.position ?: Vector3(0f, 0f, 0f)
 
-同一分量内未声明的标量(position.x/z、rotation.x/z)随所属 sub-target
-被绑定,以播放起点的 native baseline 冻结。
-完全未出现的分量(scale.*)不生成 animation,不被动画持有,
-动画期间仍由 React props 驱动。
+// position.y 通道:两段 TweenAnimation,各自生成 AnimationResource,再 sequence 串联
+val posSeg0 = TweenAnimation.createTweenAnimation(
+    "pos.seg0",
+    AnimationBindTarget.bindPosition(),
+    Vector3(base.x, 0f,    base.z),   // from
+    Vector3(base.x, 0.25f, base.z),   // to
+    null,                             // by
+    0.6f, 0f, RepeatMode.None, 0,     // duration / delay / repeatMode / repeatCount
+    EaseType.EaseOut,                 // 段0 缓动
+    0f, 1f, false, null, null, null
+)
+val posSeg1 = TweenAnimation.createTweenAnimation(
+    "pos.seg1",
+    AnimationBindTarget.bindPosition(),
+    Vector3(base.x, 0.25f, base.z),
+    Vector3(base.x, 0f,    base.z),
+    null,
+    0.6f, 0f, RepeatMode.None, 0,
+    EaseType.EaseIn,                  // 段1 缓动,与段0 不同
+    0f, 1f, false, null, null, null
+)
+val posChannel = AnimationResource.sequence(with = listOf(
+    AnimationResource.generateWithTweenAnimation(posSeg0),
+    AnimationResource.generateWithTweenAnimation(posSeg1),
+))
+
+// rotation.y 通道:单段,用欧拉角度数
+val rotSeg = TweenAnimation.createTweenAnimation(
+    "rot.seg0",
+    AnimationBindTarget.bindEulerAngles(),
+    EulerAngles(0f, 0f,   0f),        // from
+    EulerAngles(0f, 180f, 0f),        // to(绕 y 轴 180°)
+    null,
+    1.2f, 0f, RepeatMode.None, 0,
+    EaseType.Linear,
+    0f, 1f, false, null, null, null
+)
+val rotChannel = AnimationResource.generateWithTweenAnimation(rotSeg)
+
+// 通道间并联:group 合成
+val clip = AnimationResource.group(with = listOf(posChannel, rotChannel))
+
+// 得到可控播放对象
+val controller = entity.playAnimation(clip)
+// controller.pause() / controller.resume() / controller.stop()
+// controller.speed = 2f     // 顶层播放速率作用在整个 group
 ```
 
-对比旧的 segment 方案:`position.y` 的 `easeOut` 与 `rotation.y` 的 `linear` 不再被压进同一段共享一个 `timingFunction`,`rotation.y` 也不需要在 `0.6` 处求一个人为的中间边界值——它只按自己的 `(0, 1.2)` 两帧 + `linear` 播放。这就是 per-channel 编译相对 segment 合并的关键区别。
+#### 编译规则
 
-## Transform 拆解与 values
+1. **属性白名单:** 只接受 `position.*`、`rotation.*`、`scale.*`。`opacity`、材质、组件属性等一律显式失败。
+2. **时间范围:** `duration` 必须为正;每个关键帧的 `at` 必须落在 `[0, duration]` 内。
+3. **排序与重复:** 每条轨道的关键帧按 `at` 非递减排序;同一属性不允许出现多条轨道。
+4. **各通道独立区间:** 每个通道按自己的关键帧时间划分区间,不与其他通道共享全局边界。例如某通道的 `0, 0.6, 1.2` 只影响它自己的 `[0, 0.6]` 和 `[0.6, 1.2]` 两段。
+5. **缺帧与非动画分量,分两种情况:**
+   - 若某通道首帧不在 `0` 时刻(例如该通道的标量到 `50%` 才首次出现),用播放起点的原生当前值作该通道基准,并把 `[0, 首帧]` 这段按**从基准值到首帧值的插值**处理——即该通道从一开始就在运动,而非停在原地等到首帧才动;若某时刻晚于该通道最后一帧,则保持最后一帧的值。缺帧只向下回落到原生基准值,绝不向后借用后续关键帧的值。通道之间不共享边界、不互相插值。
+   - (a) *被动画分量内的非动画标量*:例如只动画 `position.y`,则 `position.x` / `position.z` 因平移子目标被整体绑定而冻结在基准值。
+   - (b) *完全没出现的分量*:例如配置里没有任何 `scale.*`,则不为缩放子目标生成动画,缩放不被动画持有,动画期间仍由 React 属性驱动。
+6. **逐段串联、逐通道并行:** 每个通道内的多段用 `sequence` 串成单个通道动画,通道之间用 `group` 并联播放并绑定到对应子目标(平移 / 旋转 / 缩放),详见“通道内多段串联与通道间并联”。不合并成共享缓动的时间段。
+7. **旋转:** `rotation.*` 输入是欧拉角度数,编译时转成 RealityKit 所需的旋转表示,避免用欧拉角逐帧插值。RealityKit 对朝向用最短路径球面插值,因此某个旋转通道若单帧增量达到或超过 180°、或跨多轴,实际路径可能与逐轴直觉不同;需要特定的多圈或多轴路径时,应显式补中间关键帧。编译器不自动加密关键帧,这是使用者的责任。
+8. **缩放:** `scale.*` 必须非负,非法缩放直接失败。
+9. **缓动优先级:** 关键帧级缓动优先于轨道级,轨道级优先于时间轴默认值。缓动取值是封闭枚举 `linear` / `easeIn` / `easeOut` / `easeInOut`,全部直接映射到 RealityKit 内建曲线,不支持自定义贝塞尔,也不存在需要降级处理的缓动。
+10. **循环 / 播放速率 / 延迟:** 这些播放参数放在执行计划顶层,对整个动画组统一生效,由 RealityKit 播放层执行。
+11. **失败显式化:** 若 RealityKit 无法表达某个通道计划,必须通过命令失败或错误事件显式报错,不能悄悄忽略。
 
-Native 回传给 React 的 Entity values 必须是 Entity API 形态:
+### 5.4 姿态拆解与回传
+
+原生回传给 React 的值必须是物体 API 的形态:
 
 ```text
 type EntityMotionProps = {
@@ -494,42 +661,48 @@ type EntityMotionProps = {
 
 拆解规则:
 
-- `position` 来自 native transform translation。
-- `scale` 来自 native transform scale。
-- `rotation` 使用 Entity props / config 一致的 Euler degrees。
-- callback values 和 `entityProps` 使用这个 `EntityMotionProps` shape；`api.set(values)` 接受同形态的 `EntityMotionPatch`，命名区分写入侧与读取侧。
+- `position` 来自原生姿态的平移部分。
+- `scale` 来自原生姿态的缩放部分。
+- `rotation` 用与物体属性一致的欧拉角度数。
+- 拆解后必须按该动画对象当前接管的分量裁剪:只回传被动画接管的分量,以及被 `api.set` 写入的分量;没被接管的分量不进入回传值,以免展开时覆盖使用者仍在用 React 属性实时控制的分量。若 `api.set` 写入了一个配置里没动画的分量,该分量并入被接管集合,后续也出现在 `entityProps` 中。
+- 回调值和 `entityProps` 都用 `EntityMotionProps` 形态;`api.set(values)` 接受同形态的写入侧 `EntityMotionPatch`,命名区分读写两侧。
 
-## Capability
+### 5.5 能力检测
 
-目标态文档和 demo 使用顶层 capability:
+文档和示例统一用顶层能力检测:
 
 ```text
 supports('useEntityAnimation')
 ```
 
-`supports('useEntityAnimation', ['entity'])` 从文档化契约中移除;仅使用顶层 `supports('useEntityAnimation')` key,不保留任何 `entity` sub-token。
+带子标记的 `supports('useEntityAnimation', ['entity'])` 从对外契约中移除,只保留顶层写法,不再保留任何 `entity` 子标记。
 
-## 各层关键改动
+### 5.6 各层职责
 
-### React 层 (`packages/react`)
+#### React 层(`packages/react`)
 
-- **复用 / 基本复用:** 保留 `useEntityAnimation` 作为公开 Entity motion hook 名称,保留 Entity 组件现有 `animation` 兼容绑定入口,并复用现有 Entity props 的 `position` / `rotation` / `scale` 层级。
-- **改造 / 替换:** `useEntityAnimation` 从旧的 `[AnimatedProps, AnimationApi]` 形态改为 `[animation, api, entityProps]`;`api` 暴露 `play/pause/resume/stop/reset/finish` 和 `set`;`api.set` 发送 `ControlSpatializedElementAnimation(type: 'set')`,不写本地 cache。删除旧 entity-transform-animation 遗留,包括 JS 侧 suppression 机制(`animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径)。最终 transform 只由 Source A(static/base props + `entityProps`)与 Source B(`animation`)的分量级仲裁组合;terminal 后由 `entityProps` 覆盖 stale base props(fill-forwards,不 snap-back)。删除这条路径,正是让旧的 snap-back 冲突结构上不可能发生的原因。
-- **新增:** 新增 `EntityMotionBinding`、`EntityPlaybackApi.set(values)`、`EntityMotionProps` mirror outlet。Entity 组件支持 `animation` 绑定;绑定器新增/泛化为 `useBindMotionTarget({ binding, target })`,保留单 binding 单 target 不变量。
+- **公开接口:** `useEntityAnimation` 作为公开 Hook 名,物体组件提供 `animation` 绑定入口,物体属性含 `position` / `rotation` / `scale` 层级。
+- **返回值:** 返回值为 `[animation, api, entityProps]`;`api` 提供 `play` / `pause` / `stop` / `reset` / `finish` 和 `set`;`api.set` 发送 `set` 控制命令,不写本地缓存。
+- **绑定:** 提供运动绑定、`api.set(values)`、`entityProps` 结果出口。物体组件支持 `animation` 绑定;绑定器为 `useBindMotionTarget({ binding, target })`,保持"一个绑定对应一个目标"的约束。
 
-### Core 层 (`packages/core`)
+#### 公共逻辑层(`packages/core`)
 
-- **复用 / 基本复用:** 复用 `AnimationObject` 的生命周期模型、`CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand` 命令类,以及 `spatialanimationstatechanged` 事件通道。
-- **改造 / 替换:** `AnimationObject` 从 spatialized-only 扩展为 target-specific timeline / values;`AnimationObjectCreateOptions.elementId` 保持为 wire 字段,并文档化为 spatial object id 的历史字段名;`CreateSpatializedElementAnimationJSBCommand` payload 继续使用 `elementId`,并通过 spatial object registry 解析;`ControlSpatializedElementAnimationJSBCommand` 支持 `set` 和 optional `values`。
-- **新增:** 新增 Entity motion 类型、`EntityMotionPatch`、property whitelist、`normalizeEntityMotionConfig`、`validateEntityMotionConfig`,以及 canonical `EntityMotionTimelinePayload` / tracks 形态。公开 authoring 仍只暴露 `timeline` 编写形态(`timeline.from` / `timeline.to` 与百分比关键帧),`tracks` 只作为内部执行形态。
+- **依赖:** 动画对象的生命周期模型、创建 / 控制命令类,以及状态变化事件通道。
+- **动画对象:** 按目标类型区分时间轴与回传值;`elementId` 为传输字段,表示空间对象 id;创建命令用 `elementId` 通过注册表解析;控制命令支持 `set` 和可选 `values`。
+- **类型与函数:** 物体运动相关类型、`EntityMotionPatch`、属性白名单、归一化函数、校验函数,以及内部的时间轴数据与轨道形态。对外暴露三种书写形态:顶层 `from` / `to`、`timeline.from` / `timeline.to`、百分比关键帧;内部轨道不作为对外写法。`normalizeEntityMotionConfig` 负责把这三种形态折叠成同一套内部轨道,规则为:
+  - **顶层 `from` / `to` 等价于 `timeline.from` / `timeline.to`**:两者归一化后走完全相同的内部轨道路径。
+  - **`timeline` 内 `from` = `0%`、`to` = `100%`**:`timeline.from` / `timeline.to` 可与百分比 key 混合在同一个 `timeline` 里;同一 `timeline` 内 `from` 与 `0%`(或 `to` 与 `100%`)重复定义同一帧时报错。
+  - **`timeline` 优先**:当 `timeline` 与顶层 `from` / `to` 同时出现时,采用 `timeline`,忽略顶层 `from` / `to`,并在开发模式打印一条警告。
+  - **纯顶层 `from` / `to` 且未使用百分比时,`duration` 默认 0.3 秒**。
+  - **每个动画都要求起止两端都提供**:任一形态都 MUST 同时具备起始边界(顶层 `from`、`timeline.from` 或 `0%` 帧)与结束边界(顶层 `to`、`timeline.to` 或 `100%` 帧),缺任一端直接报错,不会用物体当前基准或 baseline 补缺失的边界帧。此约束作用于全部三种形态。注意区分两个层级:被强制的是**边界帧的存在性**;边界帧内部的**字段**仍可稀疏,某通道在边界帧缺关键帧时,仍按逐通道缺帧规则回落到 native baseline(见上文"缺帧与非动画分量")。
 
-### Native 层 (RealityKit)
+#### 原生层(RealityKit)
 
-- **复用 / 基本复用:** 复用 `spatialObjects` registry、现有 spatialized element motion manager 路径、RealityKit 执行环境,以及现有 create / control / event 的跨边界协议。
-- **改造 / 替换:** `onCreateSpatializedElementAnimation` 按 `elementId` 查找 spatial object,并从只接受 `SpatializedElement` 改为按 runtime type 分发到 spatialized element manager 或 Entity motion manager;`onControlSpatializedElementAnimation` 支持 Entity animation object 的 `play/pause/resume/stop/reset/finish/destroy/set`;每个 accepted start / terminal / set 操作都回传 confirmed Entity values。直接删除旧 `AnimateTransform` Entity 专用链路(不是仅停止使用),包括 JS 侧旧 entity-transform-animation 遗留:suppression 机制 `animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径,不保留第二条 native 执行路径。
-- **新增:** 新增 Entity native motion 子系统,由 `EntityMotionManager` 作为 SpatialEntity create / control 的 native 入口,负责 canonical Entity tracks 兜底校验、timeline 编译调度、animation registry、Entity control / set routing、lifecycle 与 target invalidation;native confirmed transform 拆解与 `spatialanimationstatechanged` 回传由 manager / object / bridge helper 按职责完成。`MotionTargetAdapter` 只保留为 conceptual boundary,不要求 v1 新增 Entity 转发层。
+- **依赖:** 对象注册表、元素运动管理器路径、RealityKit 执行环境,以及创建 / 控制 / 事件跨端协议。
+- **分发与回传:** 创建动画时按 `elementId` 查对象,按运行时类型分发到元素管理器或物体管理器;控制动画时支持物体动画的全部命令;每次开始 / 终态 / `set` 被接受都回传确认值;只保留一条原生执行路径。
+- **物体运动子系统:** 物体原生运动子系统,由物体运动管理器作为物体创建 / 控制的原生入口,负责规范轨道兜底校验、编译调度、动画注册、控制与 `set` 路由、生命周期与目标失效;姿态拆解与事件回传由管理器 / 动画对象 / 桥接辅助按职责完成。
 
-## 类图
+### 5.7 类图与原生子系统
 
 ```mermaid
 classDiagram
@@ -542,7 +715,6 @@ classDiagram
         class EntityPlaybackApi {
             +play()
             +pause()
-            +resume()
             +stop()
             +reset()
             +finish()
@@ -569,7 +741,6 @@ classDiagram
             +timeline MotionTimeline
             +play()
             +pause()
-            +resume()
             +stop()
             +reset()
             +finish()
@@ -593,27 +764,27 @@ classDiagram
         }
         class RealityKit
     }
-    useEntityAnimation --> EntityMotionBinding : returns animation
-    useEntityAnimation --> EntityPlaybackApi : returns api
-    useEntityAnimation --> EntityMotionProps : returns entityProps
-    useEntityAnimation --> EntityMotionNormalizer : normalize config
-    EntityMotionBinding --> useBindMotionTarget : bind target
-    useBindMotionTarget --> AnimationObject : attach elementId
-    EntityPlaybackApi --> AnimationObject : delegate commands
+    useEntityAnimation --> EntityMotionBinding : 返回 animation
+    useEntityAnimation --> EntityPlaybackApi : 返回 api
+    useEntityAnimation --> EntityMotionProps : 返回 entityProps
+    useEntityAnimation --> EntityMotionNormalizer : 归一化配置
+    EntityMotionBinding --> useBindMotionTarget : 绑定目标
+    useBindMotionTarget --> AnimationObject : 附加 elementId
+    EntityPlaybackApi --> AnimationObject : 委派命令
     AnimationObject --> CreateSpatializedElementAnimationJSBCommand
     AnimationObject --> ControlSpatializedElementAnimationJSBCommand
-    CreateSpatializedElementAnimationJSBCommand --> SpatialScene : JSB handler
-    ControlSpatializedElementAnimationJSBCommand --> SpatialScene : JSB handler
-    SpatialScene --> SpatializedElementAnimationManager : SpatializedElement target
-    SpatialScene --> EntityMotionManager : SpatialEntity target
+    CreateSpatializedElementAnimationJSBCommand --> SpatialScene : JSB 处理
+    ControlSpatializedElementAnimationJSBCommand --> SpatialScene : JSB 处理
+    SpatialScene --> SpatializedElementAnimationManager : 目标是元素
+    SpatialScene --> EntityMotionManager : 目标是物体
     EntityMotionManager --> RealityKit
 ```
 
-本图是 conceptual class diagram:为便于阅读把 React hook、Core `AnimationObject`、Native handler / manager 归在一起,并非表示它们是同一层 class。Native 的 target resolution 不是新增 `TargetResolver` 类,而是已有 `SpatialScene.onCreateSpatializedElementAnimation` / `onControlSpatializedElementAnimation` handler 中通过 `findSpatialObject` / `spatialObjects` registry 完成 lookup,再按 runtime target type 分发到现有 `SpatializedElementAnimationManager` 或新的 `EntityMotionManager`。`MotionTargetAdapter` 只作为 conceptual boundary 存在:如果未来 element / Entity 两条路径出现真实重复,可以再抽 Swift protocol 或 adapter;v1 不新增 Entity 转发层。Entity native motion 子系统的主要状态与 orchestration 在 `EntityMotionManager` 及其 object / compiler / bridge / timing / values helpers 中。
+上图是概念图:为便于阅读把 React、公共逻辑、原生三层的类画在一起,并不表示它们同层。原生的目标解析在 `SpatialScene` 的创建 / 控制处理里进行:通过 `findSpatialObject` 查注册表,再按运行时类型分发到元素管理器或物体管理器。物体原生运动子系统的主要状态与编排集中在物体运动管理器及其辅助里(边界约束见本节末尾)。
 
-### RealityKit Entity motion 子系统
+#### RealityKit 物体运动子系统
 
-Entity native motion 子系统的拆分应服务于可读性与测试性,不是为了和 element path 文件数量对齐。以下是推荐职责边界;实现时可以合并 manager 内部 helper,只在逻辑复杂或复用明显时拆分。
+子系统怎么拆,以可读性和可测试性为准,不追求和元素路径文件数对齐。以下是推荐职责边界;实现时可把管理器内部的辅助合并,只在逻辑复杂或明显可复用时才拆分。
 
 ```mermaid
 classDiagram
@@ -639,7 +810,6 @@ classDiagram
         +controller
         +play()
         +pause()
-        +resume()
         +stop()
         +reset()
         +finish()
@@ -665,119 +835,118 @@ classDiagram
     }
     class RealityKit
 
-    SpatialScene --> EntityMotionManager : resolved SpatialEntity target
+    SpatialScene --> EntityMotionManager : 目标是物体
     EntityMotionManager --> EntityMotionAnimationObject
     EntityMotionManager --> EntityMotionTimelineCompiler
     EntityMotionTimelineCompiler --> EntityMotionTiming
     EntityMotionTimelineCompiler --> EntityMotionTransformValues
     EntityMotionManager --> EntityMotionBridgeTypes
-    EntityMotionManager --> RealityKit : read baseline transform
-    EntityMotionAnimationObject --> EntityMotionTransformValues : decompose / merge patch
-    EntityMotionAnimationObject --> EntityMotionBridgeTypes : encode confirmed values / error
-    EntityMotionAnimationObject --> RealityKit : playback controller / entity animation
-    EntityMotionTimelineCompiler --> RealityKit : AnimationResource / AnimationGroup
+    EntityMotionManager --> RealityKit : 读取基准姿态
+    EntityMotionAnimationObject --> EntityMotionTransformValues : 拆解 / 合并补丁
+    EntityMotionAnimationObject --> EntityMotionBridgeTypes : 编码确认值 / 错误
+    EntityMotionAnimationObject --> RealityKit : 播放控制器 / 物体动画
+    EntityMotionTimelineCompiler --> RealityKit : 动画资源 / 动画组
 ```
 
-**建议职责:**
+**各类职责:**
 
-- `EntityMotionManager`: 作为 SpatialEntity motion 的 native 入口,承接 `SpatialScene` 分发后的 create / control,管理 animation registry 与 lifecycle,负责 create / control routing:create 时调用 compiler、创建 `EntityMotionAnimationObject`、register 并返回 `animationId`;control 时按 `animationId` 找 object 并调用 play / pause / resume / stop / reset / finish / set;负责 command failure 的 JSB resolve、destroy / target destroyed invalidation,避免 `SpatialScene` 持有 Entity animation 状态。confirmed values 的 `spatialanimationstatechanged` emit 由 object 完成(见下),manager 只在 lookup / 校验阶段直接失败时负责 error 上报。
-- `EntityMotionAnimationObject`: 表示单个 Entity animation object,保存 `animationId`、目标 `SpatialEntity`、playState、owned components、RealityKit playback controller / resources,并负责单对象的 play / pause / resume / stop / reset / finish / set 状态转换;每次 start / terminal / accepted set 后借 `EntityMotionTransformValues` 拆解 confirmed values、经 `EntityMotionBridgeTypes` 编码,并 emit `spatialanimationstatechanged`。
-- `EntityMotionTimelineCompiler`: 把 JS/Core 归一化后的 `EntityMotionTimelinePayload` 编译为 per-channel RealityKit 可执行计划、`AnimationResource` 与 `AnimationGroup`;它不解析 public `timeline.from` / `timeline.to` 或百分比 key。
-- `EntityMotionBridgeTypes`: 承载 native bridge 的 decode / encode 结构,包括 canonical payload、control `values`、confirmed `EntityMotionProps` 与 `SpatializedPlaybackError`。如果现有 command types 已足够,该职责可作为若干 struct 分散存在。
-- `EntityMotionTiming`: 负责 timingFunction、delay、loop、playbackRate 到 RealityKit playback / timing 表达的映射;无法直接映射的 cubic-bezier 由 compiler 决定是否 bake 成 sampled animation。
-- `EntityMotionTransformValues`: 负责从 `entity.transform` 拆解 confirmed values、把 `api.set` sparse patch 合并到 native committed baseline、以及 Entity API Euler degrees 与 RealityKit rotation 表达之间的转换。
+- **物体运动管理器(`EntityMotionManager`):** 物体运动的原生入口。承接 `SpatialScene` 分发过来的创建与控制,管理动画注册表与生命周期。创建时调用编译器、生成动画对象、注册并返回 `animationId`;控制时按 `animationId` 找到对象并调用对应方法。负责命令失败的回执、销毁与目标失效处理,不让 `SpatialScene` 持有物体动画状态。确认值的事件回传由动画对象完成,管理器只在查找 / 校验阶段直接失败时上报错误。
+- **物体动画对象(`EntityMotionAnimationObject`):** 表示单个物体动画,保存 `animationId`、目标物体、播放状态、被接管分量、播放控制器与资源,负责单个对象的状态转换。每次开始 / 终态 / `set` 被接受后,借拆解辅助得到确认值、经桥接辅助编码,再发出状态变化事件。
+- **时间轴编译器(`EntityMotionTimelineCompiler`):** 把归一化后的时间轴数据编译为逐通道的 RealityKit 可执行计划、动画资源与动画组;它不解析对外的 `from` / `to` 或百分比。
+- **桥接类型(`EntityMotionBridgeTypes`):** 承载原生桥接的编解码结构,包括时间轴数据、控制值、确认值和错误。若命令类型已够用,这部分可作为若干结构体分散存在。
+- **播放参数映射(`EntityMotionTiming`):** 把缓动、延迟、循环、播放速率映射到 RealityKit 的表达;四种内建缓动全部直接映射。
+- **姿态拆解与合并(`EntityMotionTransformValues`):** 负责从物体姿态拆解确认值、把 `api.set` 的稀疏补丁合并到已提交基准上,以及欧拉角度数与 RealityKit 旋转表示之间的换算。
 
-**create + play 时序:**
+**创建加播放时序:**
 
 ```mermaid
 sequenceDiagram
-    participant JSB as Create/Control JSB
+    participant JSB as 创建/控制命令
     participant Scene as SpatialScene
-    participant Manager as EntityMotionManager
-    participant Compiler as EntityMotionTimelineCompiler
-    participant Obj as EntityMotionAnimationObject
+    participant Manager as 物体运动管理器
+    participant Compiler as 时间轴编译器
+    participant Obj as 物体动画对象
     participant RK as RealityKit
-    participant Event as spatialanimationstatechanged
+    participant Event as 状态变化事件
 
-    JSB->>Scene: CreateSpatializedElementAnimation(elementId, timeline)
-    Scene->>Scene: findSpatialObject(elementId)
-    alt resolved target is SpatialEntity
+    JSB->>Scene: 创建动画(elementId, timeline)
+    Scene->>Scene: 查找对象(elementId)
+    alt 解析到物体
         Scene->>Manager: create(command, target)
-        Manager->>Manager: bottom-guard validate canonical payload
-        Manager->>RK: read target.transform as playback baseline
+        Manager->>Manager: 兜底校验时间轴数据
+        Manager->>RK: 读取当前姿态作播放基准
         Manager->>Compiler: compile(payload, baseline)
-        Compiler-->>Manager: AnimationResource[] + AnimationGroup + ownedComponents
-        Manager->>Obj: init(animationId, target, group, ownedComponents)
-        Manager->>Manager: register(object)
+        Compiler-->>Manager: 动画资源 + 动画组 + 被接管分量
+        Manager->>Obj: 初始化(animationId, target, group, 被接管分量)
+        Manager->>Manager: 注册对象
         Manager-->>Scene: animationId
-        Scene-->>JSB: success({ id: animationId })
-    else target missing / unsupported
-        Scene-->>JSB: failure(TARGET_NOT_FOUND / UNSUPPORTED_TARGET)
+        Scene-->>JSB: 成功({ id })
+    else 目标不存在 / 不支持
+        Scene-->>JSB: 失败(TARGET_NOT_FOUND / UNSUPPORTED_TARGET)
     end
 
-    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=play)
+    JSB->>Scene: 控制动画(animationId, type=play)
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
     Manager->>Obj: play()
-    Obj->>RK: entity.playAnimation(group)
-    RK-->>Obj: playback controller
-    Obj->>Event: emit action=start, confirmed values
-    RK-->>Obj: completion / terminal callback
-    Obj->>Obj: read target.transform and decompose confirmed values
-    Obj->>Event: emit action=complete / finish / stop / reset, confirmed values
+    Obj->>RK: 播放动画组
+    RK-->>Obj: 播放控制器
+    Obj->>Event: 发出 start,携带确认值
+    RK-->>Obj: 完成 / 终态回调
+    Obj->>Obj: 读取姿态并拆解确认值
+    Obj->>Event: 发出 complete / finish / stop / reset,携带确认值
 ```
 
-`create` 只创建 native animation object 与 compiled plan,并返回 `animationId`;它不会额外 emit initial confirmed value。`entityProps` 仍只从 start、terminal lifecycle、accepted `set` 等 native confirmed event 更新。`EntityMotionAnimationObject` 持有的是整条 `EntityMotionTimelinePayload` 编译后的 group/controller,不是单个 track;单 track / channel 粒度只存在于 compiler 的 `EntityChannelPlan` 内部。
+创建只生成原生动画对象和编译好的计划、返回 `animationId`,不额外回传初始确认值。`entityProps` 仍只在开始、终态、被接受的 `set` 等确认事件时更新。物体动画对象持有的是整条时间轴编译后的动画组 / 控制器,不是单条轨道;单通道粒度只存在于编译器内部。
 
-**pause / resume 时序:**
+**暂停时序:**
 
 ```mermaid
 sequenceDiagram
-    participant JSB as Control JSB
+    participant JSB as 控制命令
     participant Scene as SpatialScene
-    participant Manager as EntityMotionManager
-    participant Obj as EntityMotionAnimationObject
+    participant Manager as 物体运动管理器
+    participant Obj as 物体动画对象
     participant RK as RealityKit
-    participant Event as spatialanimationstatechanged
+    participant Event as 状态变化事件
 
-    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=pause/resume)
+    JSB->>Scene: 控制动画(animationId, type=pause)
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
-    alt animation found and state allows control
-        Manager->>Obj: pause() / resume()
-        Obj->>RK: controller.pause() / controller.resume()
-        Obj->>Event: emit action=pause/resume, playState
-        Scene-->>JSB: success(nil)
-    else animation missing / invalid state
-        Scene-->>JSB: failure(animation not found / invalid state)
+    alt 找到且状态允许
+        Manager->>Obj: pause()
+        Obj->>RK: 控制器暂停
+        Obj->>Event: 发出 pause,携带播放状态
+        Scene-->>JSB: 成功
+    else 未找到 / 状态非法
+        Scene-->>JSB: 失败
     end
 ```
 
-**stop / reset / finish 时序:**
+**停止、重置、结束时序:**
 
 ```mermaid
 sequenceDiagram
-    participant JSB as Control JSB
+    participant JSB as 控制命令
     participant Scene as SpatialScene
-    participant Manager as EntityMotionManager
-    participant Obj as EntityMotionAnimationObject
+    participant Manager as 物体运动管理器
+    participant Obj as 物体动画对象
     participant RK as RealityKit
-    participant Event as spatialanimationstatechanged
+    participant Event as 状态变化事件
 
-    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=stop/reset/finish)
+    JSB->>Scene: 控制动画(animationId, type=stop/reset/finish)
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
-    alt animation found
+    alt 找到
         Manager->>Obj: stop() / reset() / finish()
-        Obj->>RK: read target.transform or compute terminal transform
-        Obj->>RK: controller.stop()
-        Obj->>RK: entity.stopAllAnimations()
-        Obj->>RK: entity.move(to: committedTransform, duration: 0)
-        Obj->>Obj: read target.transform and decompose confirmed values
-        Obj->>Event: emit action=stop/reset/finish, confirmed values
-        Scene-->>JSB: success(nil)
-    else animation missing / target destroyed
-        Scene-->>JSB: failure(animation not found / TARGET_DESTROYED)
+        Obj->>RK: 读取当前姿态或计算终态姿态
+        Obj->>RK: 停止控制器与全部动画
+        Obj->>RK: 以零时长提交目标姿态
+        Obj->>Obj: 读取姿态并拆解确认值
+        Obj->>Event: 发出 stop/reset/finish,携带确认值
+        Scene-->>JSB: 成功
+    else 未找到 / 目标已销毁
+        Scene-->>JSB: 失败(TARGET_DESTROYED)
     end
 ```
 
@@ -785,52 +954,32 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant JSB as Control JSB
+    participant JSB as 控制命令
     participant Scene as SpatialScene
-    participant Manager as EntityMotionManager
-    participant Obj as EntityMotionAnimationObject
+    participant Manager as 物体运动管理器
+    participant Obj as 物体动画对象
     participant RK as RealityKit
-    participant Event as spatialanimationstatechanged
+    participant Event as 状态变化事件
 
-    JSB->>Scene: ControlSpatializedElementAnimation(animationId, type=set, values)
+    JSB->>Scene: 控制动画(animationId, type=set, values)
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
-    alt animation missing / target destroyed
-        Scene-->>JSB: failure(animation not found / TARGET_DESTROYED)
-    else animation is delay / running / paused
-        Note over Obj: no-op + console warning(不路由到 onError)
-        Scene-->>JSB: rejected(no-op)
-    else animation is idle / terminal
+    alt 未找到 / 目标已销毁
+        Scene-->>JSB: 失败(TARGET_DESTROYED)
+    else 动画处于延迟 / 播放中 / 暂停
+        Note over Obj: 空操作 + 控制台警告(不进 onError)
+        Scene-->>JSB: 拒绝(空操作)
+    else 动画处于未开始 / 终态
         Manager->>Obj: set(values)
-        Obj->>RK: read target.transform as committed baseline
-        Obj->>Obj: merge sparse patch over committed transform
-        Obj->>RK: entity.move(to: mergedTransform, duration: 0)
-        Obj->>Obj: read target.transform and decompose confirmed values
-        Obj->>Event: emit action=set, confirmed values
-        Scene-->>JSB: success(nil)
+        Obj->>RK: 读取当前姿态作已提交基准
+        Obj->>Obj: 在基准上合并稀疏补丁
+        Obj->>RK: 以零时长提交合并后姿态
+        Obj->>Obj: 读取姿态并拆解确认值
+        Obj->>Event: 发出 set,携带确认值
+        Scene-->>JSB: 成功
     end
 ```
 
-`pause` / `resume` 只控制当前 RealityKit playback controller,不重新编译 `AnimationGroup`。`stop` / `reset` / `finish` 终止当前 playback,并通过 `entity.move(duration: 0)` 提交 terminal transform。`set` 不使用 RealityKit animation resource,只在非活跃状态下把 sparse patch 合并到 native committed transform 后提交。
+暂停只控制当前播放控制器,不重新编译动画组。停止 / 重置 / 结束会终止当前播放,并以零时长提交终态姿态。`set` 不使用 RealityKit 动画资源,只在非活跃状态下把稀疏补丁合并到已提交姿态后提交。
 
-边界约束: `SpatialScene` 只做 target lookup / runtime type dispatch / JSB resolve;Entity-specific 编译与播放状态不要散落在 `SpatialScene` handler 中。v1 不新增只负责转发的 Entity forwarding layer;registry、create/control orchestration 与 lifecycle 归 `EntityMotionManager`。如果未来 element / Entity 路径需要统一 target boundary,再抽 Swift protocol 或 thin facade。
-
-## Risks / Trade-offs
-
-- **历史命名误导。** 复用 `CreateSpatializedElementAnimation` / `ControlSpatializedElementAnimation` 会保留 element 字样。文档必须明确其目标态语义已泛化为 motion animation object 协议。
-- **Timeline 编译器是主要新增成本。** 多关键帧、稀疏关键帧、rotation 转换和 per-channel 编译都集中在 native Entity motion manager / compiler。
-- **Per-channel 编译的两项代价。** 为了让同一时间段内不同 channel 能各自保留 timing function,不能把多 channel 合并成一个完整 Transform 动画:(1) 必须把每个 channel 编译为独立 RealityKit animation 并绑定到 sub-target(translation / orientation / scale),再用 `AnimationGroup` 并行播放,而不是一条整 Transform 动画;(2) 自定义 timing(无对应 RealityKit 内建曲线时)可能需要把该 channel bake 成 `SampledAnimation`。
-- **分量级 ownership 与 sub-target 绑定粒度。** Ownership 粒度是 transform 分量(`position` / `rotation` / `scale`),因为 RealityKit 的 sub-target 绑定就是分量级的(translation / orientation / scale),不是标量级(`position.x` vs `position.y`)。某个分量只要有任一 channel 出现在 config,整个分量归动画;完全没出现的分量归 React props,动画期间照常驱动。注意标量子粒度:若只动画 `position.y`,该 channel 的 RealityKit animation 绑定整个 translation sub-target,因此 `position.x` / `position.z` 在动画期间以播放起点的 native baseline 冻结,而不是走 props——这是 sub-target 绑定粒度决定的,不是 ownership 模型的选择。跨分量组合(position 动画 + rotation 走 props)则完全支持。
-- **不提供 updater form。** 因为 native 是唯一权威,`api.set(prev => next)` 会暗示 React `setState` 语义,但 `prev` 无法承诺为实时 native transform。v1 只支持 patch object;读当前 confirmed 状态通过 `entityProps` 完成。
-- **大量并发动画仍需 profiling。** RealityKit 原生播放优于 JS 逐帧写入,但规模并发仍应实测。
-
-## Decisions
-
-- Native RealityKit backend 是 Entity motion 的唯一权威数据源。
-- `entityProps` 是 native confirmed transform 的 React mirror outlet,不是本地 source of truth。
-- 复用 `CreateSpatializedElementAnimationJSBCommand` / `ControlSpatializedElementAnimationJSBCommand` 和现有事件通道,不新增 Entity 平行 JSB。
-- JS/Core 负责把 `timeline.from` / `timeline.to` 与百分比 `timeline` 关键帧归一化为 canonical Entity tracks;Native 只执行 canonical payload 并做兜底校验。
-- **Native 采用 per-channel timing 编译。** 每个 transform channel 单独编译为携带自身 timing function 的 RealityKit animation,经 `AnimationGroup` 并行绑定到 translation / orientation / scale sub-target,而不是把所有 channel 合并成共享单一 `timingFunction` 的 segment。原因:segment 合并后每段只能带一个 timing function,同一时间段内不同 channel 的不同曲线无法表达,在进入 native 前就丢失;per-channel 则与 CADisplayLink element 路径的逐帧 per-track 采样语义一致。代价见 Risks。
-- **Entity 编译产出不复用 `SpatializedMotionConfig` / `SpatializedMotionTrack`。** 理由有三:(1) **阶段不同**——`SpatializedMotion*Config` 是 public authoring 配置(带 `onStart`/`onComplete`/`autoStart` 回调、`timeline` 编写输入、三级 fallback 的可选 `timingFunction`),而 `EntityChannelAnimationPlan` 是 native 编译后的可执行计划(已解百分比、已脱糖 `timeline.from` / `timeline.to`、已求缺帧 `baseline`、timing 已塔缩到每个 keyframe);config 里无处安放 `baseline`/已解析 timing,回调字段又是噪声。(2) **域不同**——`SpatializedMotionTrack.property` 是 CSS/element 视觉域(`opacity` / `transform.translate.*` / `transform.rotate.*` / `transform.scale.*`),Entity 是 pose 域(`position.*` / `rotation.*` / `scale.*`)且显式拒绝 `opacity`;value 域也不同(`SpatializedVisualValues` vs `EntityMotionProps`,后者 rotation 是 Euler degrees)。复用会把 `opacity`/`transform.translate` 混进 Entity 通道,并把结构约束降级成运行时校验。(3) **避免跨路径耦合**——本次重设计只复用跨边界协议(JSB command / 事件),内部数据类型不复用;element 路径(CADisplayLink per-track sampler)与 Entity 路径(RealityKit per-channel plan)各自持有编译产出,以免 element 侧 property 白名单或 `SpatializedVisualValues` 变动波及 Entity。若需对标“归一化 timeline”,element 侧是 `SpatializedMotionTimeline`、Entity 侧是 `EntityMotionTimelinePayload`,两者也各自独立。
-- **Ownership 粒度采用分量级(per-component),而不是整个 transform。** 某个 transform 分量(`position` / `rotation` / `scale`)只要有任一字段出现在 config,该分量在 active animation 期间整体归动画;完全没出现在 config 的分量归 React props,动画期间照常驱动。理由:(1) 本提案替换的旧 entity transform animation API 本身就是分量级 ownership(按字段维护抑制缓存、非动画字段照常更新),采用分量级可保持非破坏性替换;(2) 整体抑制的理由(element 路径 DOMMatrix 整体下发、拆分需矩阵分解/重组)不适用于 Entity——Entity props 本就是分量结构,per-channel 编译已提供分量级执行基础;(3) ownership 判定下推到 native(以 config 声明的分量为准),不引入 React 侧双权威缓存。边界:粒度止于分量,不做标量级(`position.x` vs `position.y`),因为 RealityKit sub-target 绑定就是分量级的;被动画分量内的非动画标量随 sub-target 冻结到 baseline(见 Risks)。
-- 旧 `AnimateTransformJSBCommand` 是内部实现协议,已删除,而非仅停止使用。
+边界约束:`SpatialScene` 只做目标查找、类型分发和命令回执,物体专属的编译与播放状态不散落在它的处理逻辑里。v1 不新增只做转发的物体层;注册表、创建 / 控制编排与生命周期都归物体运动管理器。将来若两条路径需要统一目标边界,再抽公共协议或薄封装。

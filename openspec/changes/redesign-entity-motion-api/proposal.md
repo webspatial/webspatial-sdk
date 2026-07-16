@@ -20,13 +20,13 @@
 
 | What I want to do | What to use |
 |---|---|
-| Move/rotate/scale an object from one pose to another | Write `timeline.from` / `timeline.to` in the config |
+| Move/rotate/scale an object from one pose to another | Write top-level `from` / `to` (simplest form), or `timeline.from` / `timeline.to`, in the config |
 | Do a multi-step keyframe animation (e.g. 0% → 50% → 100%) | Write `timeline` in the config |
 | Keep the object at the end pose after the animation, no snap-back | Spread `{...entityProps}` onto the component |
 | Move the object to a new pose in code after the animation | Call `api.set({ ... })` |
 | Let the animation control position only, keep rotation manual | Put only `position` in the config; keep passing `rotation` via props |
 | Read the final pose the animation hands back | Read `entityProps` (there is no `api.get`) |
-| Control playback (start/pause/resume/stop/reset) | `api.play()` / `pause()` / `resume()` / `stop()` / `reset()` / `finish()` |
+| Control playback (start/pause/stop/reset) | `api.play()` / `pause()` / `stop()` / `reset()` / `finish()` |
 | Check whether the runtime supports animation | `supports('useEntityAnimation')` |
 
 > **Transform only**: this version can animate `position` / `rotation` / `scale` only. It does **not** support `opacity`, material, color, etc. Targeting something unsupported throws an error rather than being silently ignored.
@@ -70,12 +70,32 @@ const [animation, api, entityProps] = useEntityAnimation(config)
 | Return value | What it does |
 |---|---|
 | `animation` | The animation binding; pass it to the component's `animation` prop |
-| `api` | The playback controller; provides `play / pause / resume / stop / reset / finish` and `set` |
+| `api` | The playback controller; provides `play / pause / stop / reset / finish` and `set` |
 | `entityProps` | The final pose handed back at key moments (not a live per-frame value), shaped like `{ position?, rotation?, scale? }`; spread it onto the component |
 
 ---
 
 ## Describing the Animation (config)
+
+### Option 0: top-level from / to (simplest form)
+
+If you only need "from one pose to another", write `from` / `to` at the top level of the config, without nesting them under `timeline`:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  from: { position: { x: 0, y: 0, z: 0.8 }, scale: { x: 1, y: 1, z: 1 } },
+  to:   { position: { y: 0.25 },            scale: { x: 1.1, y: 1.1, z: 1.1 } },
+  // With pure top-level from/to and no percentages, duration defaults to 0.3s
+  autoStart: true,
+})
+```
+
+A few rules:
+
+1. **Equivalent to `timeline.from` / `timeline.to`**: top-level `from` / `to` is just shorthand; it normalizes to the same single timeline internally and behaves identically.
+2. **Both boundaries are required**: in this top-level shape, `from` and `to` must both be provided; supplying only one throws an error and is not filled from the object's current pose.
+3. **`duration` defaults to 0.3s for pure top-level from/to** (as long as no percentage keyframes are used).
+4. **When `timeline` is also present, `timeline` wins**: the top-level `from` / `to` is then ignored, with a warning logged in development mode.
 
 ### Option 1: timeline.from / timeline.to (from one pose to another)
 
@@ -97,7 +117,7 @@ const [animation, api, entityProps] = useEntityAnimation({
 })
 ```
 
-Both `timeline.from` and `timeline.to` can list only the fields you care about; unlisted fields stay unchanged.
+Both `timeline.from` and `timeline.to` can list only the **fields** you care about; unlisted fields stay unchanged. But **both ends are required**: `timeline.from` (or the `0%` frame) and `timeline.to` (or the `100%` frame) must both be present; supplying only one throws an error and does not fill the other end from the object's current pose or the baseline.
 
 ### Option 2: timeline (multi-step keyframes)
 
@@ -124,6 +144,37 @@ const [animation, api, entityProps] = useEntityAnimation({
 })
 ```
 
+### Option 3: mixing from / to with percentages in timeline
+
+Inside a single `timeline`, `from` is the `0%` frame and `to` is the `100%` frame, so you can mix `from` / `to` with intermediate percentage keys. This fits the "express the two ends with from/to, then insert a few percentage keyframes in between" case:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  duration: 1.2,
+  timingFunction: 'easeInOut',
+  timeline: {
+    from: {                              // equivalent to 0%
+      position: { x: 0, y: 0, z: 0.8 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+    '50%': {
+      position: { y: 0.25 },
+      scale: { x: 1.1, y: 1.1, z: 1.1 },
+    },
+    to: {                                // equivalent to 100%
+      position: { y: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+  },
+})
+```
+
+A couple of notes:
+
+- **Both ends are required**: the start (`from` or `0%`) and the end (`to` or `100%`) must both be written, and omitting either throws an error; using `from` + `to` here naturally satisfies this.
+- `from` and `0%`, `to` and `100%`, refer to the same frame — **do not write both `from` and `0%` (or both `to` and `100%`) in the same `timeline`**, or defining the same frame twice throws an error.
+- The 0.3s `duration` default does not apply here (it applies only to pure top-level `from` / `to` with no percentages); provide `duration` explicitly.
+
 ### Which Fields You Can Write
 
 The config accepts only these fields (matching the Entity's own prop hierarchy):
@@ -145,6 +196,11 @@ Targeting something unsupported like `opacity` throws an error or triggers `onEr
 ```tsx
 const [animation, api, entityProps] = useEntityAnimation({
   timeline: {
+    from: {
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { y: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
     to: {
       position: { x: 0.1, y: 0, z: 0 },
       rotation: { y: 90 },
@@ -185,8 +241,7 @@ A few rules:
 
 ### Where Playback Starts After api.set
 
-- If the config declares `timeline.from`: playback starts from `timeline.from`.
-- If `timeline.from` is not declared: playback starts from the current pose (the value `api.set` just wrote).
+- Playback starts from the start frame declared by the config (top-level `from`, `timeline.from`, or the `0%` frame). Because every animation must declare a start, there is no "no start frame" case — a config missing the start is rejected during validation.
 
 ---
 
@@ -228,7 +283,6 @@ Put `entityProps` **after** your other props, so the object correctly stays at t
 ```tsx
 api.play()      // start playing
 api.pause()     // pause
-api.resume()    // resume from pause
 api.stop()      // stop
 api.reset()     // reset
 api.finish()    // jump straight to the end state
@@ -251,7 +305,7 @@ stateDiagram-v2
 
     [*] --> NotStarted
     NotStarted --> Playing: play() / autoStart
-    Playing --> Playing: pause() / resume()
+    Playing --> Playing: pause()
     Playing --> Ended: reaches end / finish() / stop()
     Ended --> Playing: play() (replay)
     Ended --> NotStarted: reset()
@@ -298,7 +352,7 @@ useEntityAnimation({
 })
 ```
 
-Callbacks are **notifications only**. Their return values are ignored and cannot decide where the object ends up. To decide the end pose, declare it in the config before playback (e.g. via `timeline.to`), or take over after playback through `entityProps` / `api.set`.
+Callbacks are **notifications only**. Their return values are ignored and cannot decide where the object ends up. To decide the end pose, declare it in the config before playback (e.g. via top-level `to` or `timeline.to`), or take over after playback through `entityProps` / `api.set`.
 
 The `values` passed to callbacks contain only the fields Entity supports:
 
@@ -340,4 +394,4 @@ This version can **animate transform only** (`position` / `rotation` / `scale`);
 
 ## One-Line Summary
 
-`useEntityAnimation` describes animation with `position / rotation / scale`, and supports percentage `timeline`, `entityProps` result write-back, and the `animation` binding; this version supports transform only, not opacity.
+`useEntityAnimation` describes animation with `position / rotation / scale`, and supports top-level `from` / `to` shorthand, percentage `timeline`, `entityProps` result write-back, and the `animation` binding; this version supports transform only, not opacity.
