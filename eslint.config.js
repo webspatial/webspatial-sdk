@@ -1,4 +1,3 @@
-const js = require('@eslint/js')
 const globals = require('globals')
 const reactHooks = require('eslint-plugin-react-hooks')
 const reactRefresh = require('eslint-plugin-react-refresh')
@@ -18,30 +17,22 @@ module.exports = tseslint.config(
       '**/node_modules/**',
     ],
   },
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
   {
     files: lintedSourceFiles,
+    languageOptions: {
+      ecmaVersion: 'latest',
+    },
     plugins: {
       'unused-imports': unusedImports,
     },
     rules: {
-      'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/ban-ts-comment': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/no-unsafe-function-type': 'off',
-      '@typescript-eslint/no-wrapper-object-types': 'off',
-      'no-var': 'off',
-      'prefer-const': 'off',
       'unused-imports/no-unused-imports': 'error',
-      'unused-imports/no-unused-vars': 'off',
     },
   },
   {
     files: typedSourceFiles,
     languageOptions: {
+      parser: tseslint.parser,
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
@@ -55,7 +46,6 @@ module.exports = tseslint.config(
       'tests/ci-test/src/**/*.{ts,tsx}',
     ],
     languageOptions: {
-      ecmaVersion: 2020,
       globals: globals.browser,
     },
     plugins: {
@@ -90,20 +80,7 @@ module.exports = tseslint.config(
       noInlineConfig: true,
       reportUnusedDisableDirectives: 'off',
     },
-    rules: {
-      'no-empty': 'off',
-      'no-useless-escape': 'off',
-    },
   },
-  {
-    files: ['tests/ci-test/**/*.{ts,tsx}'],
-    rules: {
-      '@typescript-eslint/no-unused-expressions': 'off',
-    },
-  },
-  // packages/core: SDK runtime library. Enforce only unused-imports
-  // (from the base override); disable historical TS shapes so no source
-  // is rewritten.
   {
     files: ['packages/core/src/**/*.{ts,tsx}'],
     languageOptions: {
@@ -112,14 +89,7 @@ module.exports = tseslint.config(
         ...globals.node,
       },
     },
-    rules: {
-      '@typescript-eslint/no-empty-object-type': 'off',
-    },
   },
-  // packages/react: React SDK. Conservative adoption -- enforce only
-  // unused-imports. React Hooks rules are intentionally NOT enabled to
-  // avoid introducing new exhaustive-deps findings. Stale eslint-disable
-  // directives are preserved by turning off unused-disable reporting.
   {
     files: ['packages/react/src/**/*.{ts,tsx}'],
     linterOptions: {
@@ -130,13 +100,6 @@ module.exports = tseslint.config(
         ...globals.browser,
         ...globals.node,
       },
-    },
-    rules: {
-      '@typescript-eslint/no-empty-object-type': 'off',
-      '@typescript-eslint/no-namespace': 'off',
-      '@typescript-eslint/no-unused-expressions': 'off',
-      '@typescript-eslint/no-this-alias': 'off',
-      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
     },
   },
 )
