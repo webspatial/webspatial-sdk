@@ -40,25 +40,8 @@
     "pre-commit": "pnpm lint-staged"
   },
   "lint-staged": {
-    "apps/test-server/**/*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "tests/ci-test/**/*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "packages/cli/src/**/*.{js,ts}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "packages/core/src/**/*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "packages/react/src/**/*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
+    "{apps/test-server,tests/ci-test,packages/cli/src,packages/core/src,packages/react/src}/**/*.{js,jsx,ts,tsx}": [
+      "eslint --cache --cache-location node_modules/.cache/eslint/ --fix"
     ],
     "*.{js,json}": [
       "prettier --write"
