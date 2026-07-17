@@ -71,14 +71,7 @@ export const routes = [
     label: 'Scene',
     children: [
       { path: '/scene', label: 'Scene Landing' },
-      { href: '/pages/scene/hook.html', label: 'Hook', external: true },
-      { href: '/pages/scene/loading.html', label: 'Loading', external: true },
       { path: '/scene/volume', label: 'Volume' },
-      {
-        href: '/pages/scene/volumeHook.html',
-        label: 'Volume Hook',
-        external: true,
-      },
       { path: '/scene/xrapp', label: 'XR App' },
       { path: '/scene/nosdk', label: 'No SDK' },
     ],

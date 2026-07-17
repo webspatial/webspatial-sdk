@@ -157,13 +157,6 @@ export default function SceneTest() {
             >
               Open Volume (sv)
             </button>
-
-            <button
-              className={btnCls}
-              onClick={() => window.open('/pages/scene/volumeHook.html', 'sv')}
-            >
-              Open Volume Hook (sv)
-            </button>
           </div>
         </section>
 
@@ -240,25 +233,6 @@ export default function SceneTest() {
               }}
             >
               Open B (sb)
-            </button>
-            <button
-              className={btnCls}
-              onClick={() => {
-                startlog('open')
-                winARef.current = window.open('/pages/scene/hook.html')
-              }}
-            >
-              Open Window Hook
-            </button>
-            <button
-              className={btnCls}
-              onClick={() => {
-                // Open loading demo page in window
-                startlog('open')
-                winARef.current = window.open('/pages/scene/loading.html')
-              }}
-            >
-              Open Loading
             </button>
 
             <button
