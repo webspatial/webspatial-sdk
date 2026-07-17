@@ -15,7 +15,9 @@
 ## 3. Entity Binding Migration
 
 - [ ] 3.1 Add failing tests proving Entity motion binds through the `animation` prop
+- [ ] 3.1a Add failing tests proving that, once binding completes, the React Binding calls `SpatialEntity.createAnimation(config)` without directly calling `AnimationObject.create(...)` or constructing the internal canonical timeline payload
 - [ ] 3.2 Update Entity prop contracts and binding lifecycle to use the new Entity motion binding path
+- [ ] 3.2a Implement `SpatialEntity.createAnimation(config)` in Core so it encapsulates its own spatial-object id plus Entity-specific normalization and validation, then delegates the canonical timeline to the shared `AnimationObject` creation flow
 - [ ] 3.3 Preserve the single-binding invariant so one animation object cannot drive multiple Entity instances
 - [ ] 3.4 Document `animation` as the Entity motion binding
 - [ ] 3.5 Delete the legacy entity-transform-animation leftovers on the JS side, including the suppression mechanism `animation.__getSuppressedFields` and the suppression-release base-props re-sync path, so there is no second transform source competing with native
