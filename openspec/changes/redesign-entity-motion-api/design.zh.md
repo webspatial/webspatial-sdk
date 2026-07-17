@@ -30,7 +30,8 @@
 - **轨道(track)/ 通道(channel)**:一条描述单个属性(如 `position.y`)随时间变化的曲线;二者可互换,均指某单个属性的关键帧序列。编译时把各通道关键帧时间取并集切片、每个切点采样出完整姿态后整体播放(见 5.3)。
 - **关键帧(keyframe)**:曲线上的一个时间点及其取值,例如"第 0.6 秒时 `position.y` = 0.25"。
 - **缓动函数(timingFunction)**:描述两帧之间快慢变化的曲线,如匀速 `linear`、先慢后快 `easeIn`。
-- **基准值(baseline)**:某通道开始播放时的原生当前值;当该通道缺少起始关键帧时用它兜底。
+- **基准值(baseline)**:每次 fresh play 被接受时的原生当前值;当某个字段未写入 config 时,用它补全本轮播放的完整姿态。
+- **fresh play**:创建后的首次播放,或动画在 `complete` / `finish` / `stop` / `reset` 后重新开始播放;`autoStart` 也属于 fresh play。`pause` 后继续 `play` 是恢复当前播放,不属于 fresh play。
 - **球面线性插值(slerp)**:RealityKit 对旋转采用的插值方式,总是走两个朝向之间的最短路径。
 - **空操作(no-op)**:命令被接收后,物体和 `entityProps` 保持原值。
 - **注册表(registry)**:原生层用来按 id 查找物体或动画对象的表。
@@ -144,15 +145,15 @@ flowchart TB
         Resolve["按 elementId 查物体"]
         ElementAdapter["元素管理器"]
         EntityManager["新的物体运动管理器"]
-        NativeValidate["兜底校验规范轨道"]
-        Compile["轨道 -> RealityKit 姿态动画"]
+        NativeValidate["创建时兜底校验<br/>保存规范轨道"]
+        Compile["每次 fresh play<br/>轨道 + 当前 baseline -> RealityKit 姿态动画"]
         Authority["原生姿态<br/>唯一权威"]
         Event["状态变化事件<br/>回传确认值"]
 
         Resolve --> ElementAdapter
         Resolve --> EntityManager
         EntityManager --> NativeValidate
-        NativeValidate --> Compile
+        EntityManager --> Compile
         Compile --> Authority
         Authority --> Event
     end
@@ -253,109 +254,13 @@ classDiagram
 
 上图集中展示 React、公共逻辑和原生三层的类,各类归属图中标注的层级。原生的目标解析在 `SpatialScene` 的创建 / 控制处理里进行:通过 `findSpatialObject` 查注册表,再按运行时类型分发到元素管理器或物体管理器。
 
-#### 跨层协议
+#### 跨层通信概览
 
-物体复用以下命令与事件:
+- Core 通过 `CreateSpatializedElementAnimationJSBCommand` 和 `ControlSpatializedElementAnimationJSBCommand` 向 Native 发送创建与控制命令。
+- Native 通过 `spatialanimationstatechanged` 向 Core 回传播放状态、确认姿态和分类错误。
+- React 消费 Core 转发的状态事件,更新 callback 与 `entityProps`。
 
-- 创建动画:`CreateSpatializedElementAnimationJSBCommand`
-- 控制动画:`ControlSpatializedElementAnimationJSBCommand`
-- 状态事件:`spatialanimationstatechanged`
-
-##### 创建动画命令
-
-命令名与 `elementId` 字段承载空间对象。`elementId` 实际含义是空间对象 id,既可指向元素,也可指向物体:
-
-```text
-CreateSpatializedElementAnimation {
-  elementId: string
-  timeline: EntityMotionTimeline | SpatializedMotionTimeline
-}
-```
-
-原生按 `elementId` 查注册表,再按运行时类型分发:
-
-```text
-是元素   -> 元素管理器
-是物体   -> 物体运动管理器
-其它     -> 失败
-```
-
-规则:
-
-- `elementId` 的注册表查询结果为空时,创建必须显式失败。
-- 元素和物体是合法的动画目标;其它对象类型以 `UNSUPPORTED_TARGET` 失败。
-- 控制命令通过 `animationId` 查找已创建的动画。
-- 目标对象已销毁时,关联动画必须被销毁或失效;后续控制必须失败并通过错误事件暴露。
-
-##### 控制动画命令
-
-复用命令,并新增 `set` 类型:
-
-```text
-ControlSpatializedElementAnimation {
-  animationId: string
-  type: 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
-  values?: EntityMotionPatch
-}
-```
-
-`api.set` 复用控制命令,接受稀疏补丁对象 `EntityMotionPatch`(写入侧类型,与读取侧的 `EntityMotionProps` 同形态,但命名区分),并以 `type: 'set'` 发往原生:
-
-- 原生返回失败:命令失败或触发错误事件,`entityProps` 保持原值。
-- 原生接受:原生在当前已提交姿态上合并补丁、应用后,通过状态事件回传确认值,React 再更新 `entityProps`。
-
-##### 状态变化事件
-
-状态事件携带一个具名的 detail 类型:
-
-```text
-interface EntityMotionStateChangedDetail {
-  animationId: string
-  action:
-    | 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
-    | 'start' | 'complete' | 'error'
-  playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
-  finished: boolean
-  values?: EntityMotionProps
-  error?: SpatializedPlaybackError
-}
-
-interface EntityMotionStateChangedMsg {
-  type: 'spatialanimationstatechanged'
-  detail: EntityMotionStateChangedDetail
-}
-```
-
-`values` 为物体目标的姿态值 `EntityMotionProps`(即 `position` / `rotation` / `scale`)。
-
-原生回传的 `action` 集合比对外回调多。它与用户回调、`entityProps` 的对应关系如下:
-
-| 原生 action | 对应用户回调 | 是否更新 entityProps |
-|---|---|---|
-| `start` | `onStart` | 是(开始那一刻一次) |
-| `complete` | `onComplete` | 是(终态) |
-| `finish` | `onComplete` | 是(终态) |
-| `stop` | `onStop` | 是(当前姿态) |
-| `reset` | `onReset` | 是(起点姿态) |
-| `set` | 无(仅内部提交) | 是(合并后的姿态) |
-| `error` | `onError` | 否 |
-| `pause` | 无(仅播放状态变更) | 否 |
-
-##### 播放错误分类
-
-`action` 为 `error` 时携带 `error`。错误码是两类目标共享的封闭集合:
-
-```text
-type SpatializedPlaybackError = {
-  code:
-    | 'TARGET_NOT_FOUND'     // 注册表缺少 elementId
-    | 'UNSUPPORTED_TARGET'   // 目标类型超出元素和物体集合
-    | 'TARGET_DESTROYED'     // 目标已销毁,动画失效
-  message?: string
-}
-```
-
-以上三类错误都会通过 `onError` 抵达用户。动画活跃期间、绑定前或原生对象创建前的 `api.set` 写入归类为空操作并打印控制台警告。错误码提供稳定的应用分支依据。
+JSB payload 与错误类型由 5.2 Core SDK 定义,命令处理规则由 5.3 Native 定义,状态事件到 React 的映射由 5.1 React SDK 定义。
 
 #### 跨层时序
 
@@ -387,8 +292,7 @@ sequenceDiagram
     Bridge->>Scene: CreateSpatializedElementAnimation
     Scene->>Scene: findSpatialObject(elementId)
     Scene->>Manager: create(command, target)
-    Manager->>Manager: 编译轨道为 RealityKit 姿态动画
-    Manager->>NativeObj: 创建原生动画对象
+    Manager->>NativeObj: 创建原生动画对象并保存规范时间轴
     Manager-->>Scene: animationId
     Scene-->>Bridge: success({ id })
     Bridge-->>Obj: { id }
@@ -398,8 +302,9 @@ sequenceDiagram
     Obj->>Bridge: ControlSpatializedElementAnimationJSBCommand.execute(play)
     Bridge->>Scene: ControlSpatializedElementAnimation(play)
     Scene->>Manager: control(command)
-    Manager->>NativeObj: play()
-    NativeObj->>NativeObj: 播放动画
+    Manager->>Manager: fresh play 读取当前 baseline 并编译 RealityKit 资源
+    Manager->>NativeObj: play(resource)
+    NativeObj->>NativeObj: 创建控制器并播放动画
     Manager-->>Scene: success
     Scene-->>Bridge: success
     Bridge-->>Obj: success
@@ -438,7 +343,7 @@ sequenceDiagram
 ### 4.4 关键折中
 
 - **命令名保留 `Element` 字样。** 物体复用现有创建和控制命令;其目标态语义为空间对象,`elementId` 表示空间对象 id。
-- **承担原生编译成本。** 多关键帧、稀疏关键帧、旋转换算和整姿态串联编译集中在物体运动管理器与编译器,换取 RealityKit 原生播放、系统合成和统一播放语义。
+- **承担 fresh play 的原生编译成本。** 每次 fresh play 都读取当前 baseline,再由物体运动管理器与编译器完成多关键帧、稀疏关键帧、旋转换算和整姿态串联编译,换取最新 baseline、RealityKit 原生播放、系统合成和统一播放语义。
 - **切片为整姿态串联。** 把时间轴切成若干节点、每个节点携带完整的 `position` / `rotation` / `scale`,再按先后顺序串联成一条整姿态动画播放。visionOS(RealityKit)的动画绑定粒度是整个 `.transform`,当前缓动需求也以整段为单位。因此采用整姿态串联,天然对齐 visionOS 与 picoOS(两端原生都绑定整 transform);同一区间内各通道共用一个 `timingFunction`。
 - **整 transform 接管。** 动画一旦活跃,整个 `.transform` 由动画接管。例如只动画 `position.y` 时,`position.x` / `position.z` 乃至 `rotation` / `scale` 在播放期间都冻结在基准值;动画结束后才可由 React 属性 / `api.set` 接管。
 - **`set` 使用稀疏补丁对象。** v1 的 `api.set` 接受稀疏补丁对象,当前确认姿态通过 `entityProps` 读取。
@@ -498,6 +403,23 @@ classDiagram
     EntityPlaybackApi --> AnimationObject : 委派播放命令
 ```
 
+#### 状态事件映射
+
+React 消费 Core 转发的 `EntityMotionStateChangedMsg`,将 Native action 映射为用户 callback 和 `entityProps` 更新:
+
+| Native action | 对应用户 callback | 是否更新 entityProps |
+|---|---|---|
+| `start` | `onStart` | 是(开始那一刻一次) |
+| `complete` | `onComplete` | 是(终态) |
+| `finish` | `onComplete` | 是(终态) |
+| `stop` | `onStop` | 是(当前姿态) |
+| `reset` | `onReset` | 是(起点姿态) |
+| `set` | 内部提交 | 是(合并后的姿态) |
+| `error` | `onError` | 否 |
+| `pause` | 播放状态变化 | 否 |
+
+事件中的 `values` 使用 `EntityMotionProps` 形态,包含 `position`、`rotation`、`scale`。分类错误通过 `onError` 抵达用户,`entityProps` 保持当前值。
+
 ### 5.2 Core SDK
 
 - **目标创建入口:** `SpatialEntity.createAnimation(config)` 使用自身 id,执行 Entity 专属归一化与校验,再把规范时间轴委托给通用 `AnimationObject` 创建流程。
@@ -543,6 +465,71 @@ classDiagram
     AnimationObject --> CreateSpatializedElementAnimationJSBCommand : 发送创建命令
     AnimationObject --> ControlSpatializedElementAnimationJSBCommand : 发送控制命令
 ```
+
+#### JSB 协议
+
+Core 定义创建命令、控制命令、状态事件和分类错误的 wire contract。
+
+##### 创建动画命令
+
+`elementId` 表示空间对象 id,可指向元素或物体:
+
+```text
+CreateSpatializedElementAnimation {
+  elementId: string
+  timeline: EntityMotionTimeline | SpatializedMotionTimeline
+}
+```
+
+##### 控制动画命令
+
+```text
+ControlSpatializedElementAnimation {
+  animationId: string
+  type: 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
+  values?: EntityMotionPatch
+}
+```
+
+`api.set` 复用控制命令,接受稀疏补丁对象 `EntityMotionPatch`,并以 `type: 'set'` 发往 Native。`EntityMotionPatch` 与读取侧 `EntityMotionProps` 形态相同,命名区分写入与读取语义。绑定前或原生动画对象创建前的调用归类为空操作并打印控制台警告,也不会暂存为后续命令。
+
+##### 状态变化事件
+
+```text
+interface EntityMotionStateChangedDetail {
+  animationId: string
+  action:
+    | 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
+    | 'start' | 'complete' | 'error'
+  playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
+  finished: boolean
+  values?: EntityMotionProps
+  error?: SpatializedPlaybackError
+}
+
+interface EntityMotionStateChangedMsg {
+  type: 'spatialanimationstatechanged'
+  detail: EntityMotionStateChangedDetail
+}
+```
+
+`values` 使用物体目标的 `EntityMotionProps`,包含 `position`、`rotation`、`scale`。
+
+##### 播放错误类型
+
+两类目标共享封闭的错误码集合:
+
+```text
+type SpatializedPlaybackError = {
+  code:
+    | 'TARGET_NOT_FOUND'
+    | 'UNSUPPORTED_TARGET'
+    | 'TARGET_DESTROYED'
+  message?: string
+}
+```
+
+错误码为应用提供稳定的分支契约。
 
 #### 类型、归一化与校验
 
@@ -657,10 +644,12 @@ classDiagram
     class EntityMotionAnimationObject {
         +animationId
         +target SpatialEntity
+        +timeline EntityMotionTimelinePayload
         +playState
         +ownedComponents
         +controller
-        +play()
+        +play(resource)
+        +resume()
         +pause()
         +stop()
         +reset()
@@ -702,16 +691,36 @@ classDiagram
 
 **各类职责:**
 
-- **物体运动管理器(`EntityMotionManager`):** 物体运动的原生入口。承接 `SpatialScene` 分发过来的创建与控制,集中管理动画注册表与生命周期。创建时调用编译器、生成动画对象、注册并返回 `animationId`;控制时按 `animationId` 找到对象并调用对应方法。负责命令失败的回执、销毁、目标失效处理,并在查找 / 校验阶段直接失败时上报错误。确认值的事件回传由动画对象完成。
-- **物体动画对象(`EntityMotionAnimationObject`):** 表示单个物体动画,保存 `animationId`、目标物体、播放状态、被接管分量、播放控制器与资源,负责单个对象的状态转换。每次开始 / 终态 / `set` 被接受后,借拆解辅助得到确认值、经桥接辅助编码,再发出状态变化事件。
-- **时间轴编译器(`EntityMotionTimelineCompiler`):** 接受归一化后的时间轴数据,将其切片编译为一条串联的整姿态 RealityKit 动画资源。
+- **物体运动管理器(`EntityMotionManager`):** 物体运动的原生入口。承接 `SpatialScene` 分发过来的创建与控制,集中管理动画注册表与生命周期。创建时生成保存规范时间轴的动画对象、注册并返回 `animationId`;fresh play 时读取当前 baseline、调用编译器生成本轮资源,再启动播放。`pause` 后的 `play` 直接恢复当前控制器。管理器还负责命令失败回执、销毁和目标失效处理。确认值的事件回传由动画对象完成。
+- **物体动画对象(`EntityMotionAnimationObject`):** 表示单个物体动画,保存 `animationId`、目标物体、规范时间轴、播放状态、被接管分量、当前播放控制器与资源,负责单个对象的状态转换。每次开始 / 终态 / `set` 被接受后,借拆解辅助得到确认值、经桥接辅助编码,再发出状态变化事件。
+- **时间轴编译器(`EntityMotionTimelineCompiler`):** 在每次 fresh play 时接受规范时间轴和本轮 baseline,将其切片编译为一条串联的整姿态 RealityKit 动画资源。
 - **桥接类型(`EntityMotionBridgeTypes`):** 承载原生桥接的编解码结构,包括时间轴数据、控制值、确认值和错误。若命令类型已够用,这部分可作为若干结构体分散存在。
 - **播放参数映射(`EntityMotionTiming`):** 把缓动、延迟、循环、播放速率映射到 RealityKit 的表达;四种内建缓动全部直接映射。
 - **姿态拆解与合并(`EntityMotionTransformValues`):** 负责从物体姿态拆解确认值、把 `api.set` 的稀疏补丁合并到已提交基准上,以及欧拉角度数与 RealityKit 旋转表示之间的换算。
 
+#### JSB 命令处理
+
+`SpatialScene` 按 `elementId` 查询空间对象注册表,再按运行时类型分发创建命令:
+
+```text
+是元素   -> 元素管理器
+是物体   -> EntityMotionManager
+其它     -> UNSUPPORTED_TARGET
+```
+
+处理规则:
+
+- 注册表缺少 `elementId` 时,创建以 `TARGET_NOT_FOUND` 失败。
+- 控制命令通过 `animationId` 查找已注册的动画对象。
+- 目标销毁时,关联动画被销毁或失效;后续控制以 `TARGET_DESTROYED` 失败。
+- 分类错误通过 `spatialanimationstatechanged` 回传。
+- fresh play 编译失败时,控制命令失败,动画保持非活跃。
+
+Native 在动画非活跃且原生动画对象存在时接受 `api.set`:在当前已提交姿态上合并稀疏补丁、应用姿态,再通过状态事件回传确认值。动画处于 delay / running / paused 时,`api.set` 作为空操作处理并打印控制台警告,`entityProps` 保持当前值,`onError` 保持静默。
+
 #### 时间轴编译
 
-编译由原生物体运动管理器完成:拿到归一化的内部时间轴,读取基准姿态,把时间轴切成若干携带完整姿态的节点并逐段编译,最终产出可控播放对象。
+编译在每次 fresh play 时由原生物体运动管理器触发:命令被接受后、进入 delay / running 前读取当前姿态作为本轮 baseline,再把规范时间轴切成若干携带完整姿态的节点并逐段编译,最终产出本轮播放资源。创建动画只校验并保存规范时间轴。`pause` 后继续 `play` 直接恢复当前控制器,单次播放内部的 loop 复用本轮资源。
 
 ##### 输入:内部时间轴
 
@@ -870,8 +879,8 @@ val controller = entity.playAnimation(clip)
 7. **旋转:** `rotation.*` 输入是欧拉角度数,编译时转成 RealityKit 所需的旋转表示,由 RealityKit 使用最短路径球面插值处理。某个旋转通道若单帧增量达到或超过 180°、或跨多轴,实际路径可能区别于逐轴直觉;特定的多圈或多轴路径由使用者通过中间关键帧显式定义。
 8. **缩放:** `scale.*` 必须非负,非法缩放直接失败。
 9. **缓动优先级:** 关键帧级缓动优先于轨道级,轨道级优先于时间轴默认值。缓动取值是封闭枚举 `linear` / `easeIn` / `easeOut` / `easeInOut`,全部直接映射到 RealityKit 内建曲线。此外,由于每段绑定整个 transform,同一段内 `position` / `rotation` / `scale` 共用该段的缓动。
-10. **循环 / 播放速率 / 延迟:** 这些播放参数放在时间轴顶层,对整条串联动画统一生效,由 RealityKit 播放层执行。
-11. **失败显式化:** RealityKit 无法表达某个段时,必须通过命令失败或错误事件显式报错。
+10. **循环 / 播放速率 / 延迟:** 这些播放参数放在时间轴顶层,对整条串联动画统一生效,由 RealityKit 播放层执行。同一次 fresh play 内的 loop 复用本轮资源,每圈不重新读取 baseline 或编译。
+11. **失败显式化:** RealityKit 无法表达某个段时,fresh play 的控制命令必须失败,动画保持非活跃。
 
 #### 姿态拆解与确认值回传
 
@@ -895,24 +904,19 @@ type EntityMotionProps = {
 
 #### Native 内部时序
 
-**创建与编译时序:**
+**创建时序:**
 
 ```mermaid
 sequenceDiagram
     participant Scene as SpatialScene
     participant Manager as EntityMotionManager
-    participant Compiler as EntityMotionTimelineCompiler
     participant Obj as EntityMotionAnimationObject
-    participant RK as RealityKit
 
     Scene->>Scene: 查找对象(elementId)
     alt 解析到物体
         Scene->>Manager: create(command, target)
         Manager->>Manager: 兜底校验时间轴数据
-        Manager->>RK: 读取当前姿态作播放基准
-        Manager->>Compiler: compile(payload, baseline)
-        Compiler-->>Manager: 整姿态动画资源 + 被接管分量
-        Manager->>Obj: 初始化(animationId, target, clip, 被接管分量)
+        Manager->>Obj: 初始化(animationId, target, timeline)
         Manager->>Manager: 注册对象
         Manager-->>Scene: animationId
     else 目标查询失败 / 目标类型超出支持范围
@@ -926,22 +930,31 @@ sequenceDiagram
 sequenceDiagram
     participant Scene as SpatialScene
     participant Manager as EntityMotionManager
+    participant Compiler as EntityMotionTimelineCompiler
     participant Obj as EntityMotionAnimationObject
     participant RK as RealityKit
     participant Event as EntityMotionStateChangedMsg
 
     Scene->>Manager: control(command)
     Manager->>Manager: get(animationId)
-    Manager->>Obj: play()
-    Obj->>RK: 播放整姿态动画
-    RK-->>Obj: 播放控制器
-    Obj->>Event: 发出 start,携带确认值
+    alt fresh play
+        Manager->>RK: 读取当前姿态作本轮 baseline
+        Manager->>Compiler: compile(timeline, baseline)
+        Compiler-->>Manager: 整姿态动画资源 + 被接管分量
+        Manager->>Obj: play(resource)
+        Obj->>RK: 创建控制器并播放
+        RK-->>Obj: 播放控制器
+        Obj->>Event: 发出 start,携带确认值
+    else paused 后恢复
+        Manager->>Obj: resume()
+        Obj->>RK: 恢复当前控制器
+    end
     RK-->>Obj: 完成 / 终态回调
     Obj->>Obj: 读取姿态并拆解确认值
     Obj->>Event: 发出 complete,携带确认值
 ```
 
-创建与编译阶段生成原生动画对象和编译计划并返回 `animationId`。播放阶段取得 RealityKit 控制器,开始和完成回调产出确认值。物体动画对象持有整条时间轴编译后的整姿态串联动画 / 控制器;轨道切片与单段粒度属于编译器内部实现。
+创建阶段只保存规范时间轴并返回 `animationId`。每次 fresh play 读取最新 baseline 并编译本轮 RealityKit 资源;paused 后恢复直接复用当前资源和控制器。开始和完成回调产出确认值,轨道切片与单段粒度属于编译器内部实现。
 
 **暂停时序:**
 

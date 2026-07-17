@@ -136,6 +136,41 @@ callback values MUST 只包含受支持的 Entity transform 字段。
 - **THEN** `onError` MUST 接收到失败信息
 - **AND** Entity motion API 的任何 callback value payload 都 MUST NOT 包含 `opacity` 这类不支持字段
 
+### Requirement: 每次 fresh play 使用最新 native baseline 编译
+
+Native 创建动画时 MUST 兜底校验并保存规范时间轴、注册动画对象并返回 `animationId`,MUST NOT 在创建阶段读取播放 baseline 或生成 RealityKit 播放资源。fresh play 定义为创建后的首次 `play` / `autoStart`,以及动画在 `complete`、`finish`、`stop` 或 `reset` 后重新开始的 `play`。每次 fresh play 被接受后、进入 `delay` / `running` 前,Native MUST 读取当前 `entity.transform` 作为本轮 baseline,并用规范时间轴与该 baseline 编译本轮 RealityKit 播放资源。config 明确声明的字段 MUST 使用 config 值,config 未声明的字段 MUST 使用本轮 baseline 补全。
+
+`pause` 后的 `play` MUST 恢复当前播放控制器和进度,MUST NOT 读取新 baseline 或重新编译。单次 fresh play 内的 loop MUST 复用本轮播放资源,MUST NOT 在每个 loop 边界重新读取 baseline 或编译。
+
+#### Scenario: 首次播放在 play 时读取 baseline
+- **GIVEN** Native 已创建并注册动画对象
+- **WHEN** 应用首次调用 `play` 或触发 `autoStart`
+- **THEN** Native MUST 在 fresh play 被接受后读取当前 `entity.transform`
+- **AND** Native MUST 使用该 transform 作为本轮 baseline 编译并开始播放
+
+#### Scenario: terminal 后重新播放使用最新 baseline
+- **GIVEN** 动画已通过 `complete`、`finish`、`stop` 或 `reset` 进入非活跃状态,且当前 native transform 已改变
+- **WHEN** 应用再次调用 `play`
+- **THEN** Native MUST 将该调用作为 fresh play
+- **AND** Native MUST 读取最新 native transform 并重新编译本轮播放资源
+
+#### Scenario: pause 后 play 恢复当前播放
+- **GIVEN** 动画已暂停并持有当前播放控制器与资源
+- **WHEN** 应用调用 `play`
+- **THEN** Native MUST 恢复当前播放进度
+- **AND** Native MUST NOT 读取新 baseline 或重新编译
+
+#### Scenario: loop 复用本轮播放资源
+- **GIVEN** 当前 fresh play 配置了循环
+- **WHEN** 播放到达 loop 边界
+- **THEN** Native MUST 复用当前播放资源进入下一圈
+- **AND** Native MUST NOT 在该边界读取新 baseline 或重新编译
+
+#### Scenario: fresh play 编译失败
+- **WHEN** Native 无法从规范时间轴与本轮 baseline 生成 RealityKit 播放资源
+- **THEN** fresh play 的控制命令 MUST 显式失败
+- **AND** 动画 MUST 保持非活跃
+
 ### Requirement: 动画 alive 期间由动画系统持有整个 Entity transform
 
 在动画处于活跃播放状态时,动画系统 MUST 持有整个 Entity transform 的 ownership:底层平台(visionOS / picoOS)只能绑定整个 `.transform`,因此只要 config 中出现任一动画字段,活跃播放期间整个 transform 归动画所有。config 中未写的分量 MUST 冻结在基准值。此期间对任何分量的 React 直接 props 写入或 `api.set` 写入 MUST NOT 打断播放,MUST NOT 立即覆盖活动动画,也 MUST NOT 在完成后自动 replay;这些写入 MUST 在动画进入非活跃状态后才生效。
@@ -225,6 +260,8 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 #### Scenario: set 之后 play 的起点
 - **WHEN** 应用先调用 `api.set` 再调用 `api.play()`
 - **THEN** 播放 MUST 从 config 声明的起始边界（顶层 `from`、`timeline.from` 或 `0%` 帧）开始
+- **AND** 本次 `api.play()` MUST 作为 fresh play 读取 `api.set` 后的最新 native transform
+- **AND** config 未声明的字段 MUST 使用该最新 transform 作为本轮 baseline
 - **AND** 由于起始边界是必填项，不存在“未声明起始帧”的合法 config；缺少起始边界的 config 在归一化阶段已被拒绝
 
 #### Scenario: 终态填充不 snap 回退

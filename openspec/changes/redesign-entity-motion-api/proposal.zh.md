@@ -273,6 +273,8 @@ api.set({ position: { y: 0.3 } })
 ### api.set 之后再播放的起点
 
 - 从 config 声明的起始帧(顶层 `from`、`timeline.from` 或 `0%` 帧)开始播。由于每个动画都必须写起点,不存在"没声明起始帧"的情况——缺起点的 config 在校验阶段就会被拒绝。
+- 每次 fresh play 都在开始时读取物体的最新原生姿态。config 明确声明的字段从起始帧开始,config 未声明的字段以该最新姿态为本轮 baseline。因此在非活跃状态成功调用 `api.set` 后,下一次 fresh play 会采用修改后的值补全未声明字段。
+- fresh play 包括创建后的首次 `play` / `autoStart`,以及动画完成、结束、停止或重置后再次 `play`。`pause` 后的 `play` 只是从当前进度恢复,不会读取新的 baseline;同一次播放里的循环也持续使用该轮 baseline。
 
 ---
 
@@ -361,10 +363,10 @@ stateDiagram-v2
 | 状态 | 怎么进入 | `api.set` 能用吗 | `entityProps` 会更新吗 | transform 归谁控制 |
 |---|---|---|---|---|
 | **尚未开始** | 初始状态;或 `reset()` 之后 | ✅ 能用 | 否(可能为空,别在挂载时就依赖它) | 你的 props |
-| **播放中**(含延迟、暂停) | `play()` / `autoStart`;`pause()` 后仍属此类 | ❌ 被拒绝(noop + 警告) | 仅在开始播放那一刻更新一次 | 动画(config 里出现的属性);其余归你的 props |
+| **播放中**(含延迟、暂停) | `play()` / `autoStart`;`pause()` 后仍属此类 | ❌ 被拒绝(noop + 警告) | 仅在开始播放那一刻更新一次 | 动画接管整个 transform;config 未声明的字段冻结在本轮 fresh-play baseline |
 | **已结束** | 播放到终点、`complete` / `stop` / `finish` | ✅ 能用 | ✅ 更新为最终姿态(`stop` 停在当前、`finish`/`complete` 停在终点) | 你的 props / `api.set` |
 
-> **提示**:循环动画没有自然的“播放到终点”,所以循环期间 `entityProps` 不会在每圈结束时更新,只有 `stop()` / `finish()` 或成功的 `api.set` 才会更新它。
+> **提示**:循环动画没有自然的“播放到终点”,所以循环期间 `entityProps` 不会在每圈结束时更新,也不会在每圈重新读取 baseline;只有 `stop()` / `finish()` 或成功的 `api.set` 才会更新它。
 
 ---
 
