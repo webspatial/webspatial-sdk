@@ -273,6 +273,8 @@ A few rules:
 ### Where Playback Starts After api.set
 
 - Playback starts from the start frame declared by the config (top-level `from`, `timeline.from`, or the `0%` frame). Because every animation must declare a start, there is no "no start frame" case — a config missing the start is rejected during validation.
+- Every fresh play reads the entity's latest native transform at the start. Fields declared by the config start from the configured start frame, while omitted fields use that latest transform as the run's baseline. Therefore, after a successful inactive `api.set`, the next fresh play uses the updated values to fill omitted fields.
+- A fresh play is the first `play` / `autoStart` after creation, or a new `play` after completion, finish, stop, or reset. A `play` after `pause` only resumes from the current progress and does not read a new baseline; loops within one run also keep using that run's baseline.
 
 ---
 
@@ -361,10 +363,10 @@ stateDiagram-v2
 | State | How to enter | Is `api.set` usable | Does `entityProps` update | Who controls the transform |
 |---|---|---|---|---|
 | **Not started** | Initial state; or after `reset()` | ✅ Usable | No (may be empty — do not rely on it at mount) | Your props |
-| **Playing** (incl. delay, paused) | `play()` / `autoStart`; still counts after `pause()` | ❌ Rejected (noop + warning) | Only once, at the moment playback starts | The animation (properties present in the config); the rest by your props |
+| **Playing** (incl. delay, paused) | `play()` / `autoStart`; still counts after `pause()` | ❌ Rejected (noop + warning) | Only once, at the moment playback starts | The animation owns the whole transform; fields omitted from the config freeze at this run's fresh-play baseline |
 | **Ended** | Reaches the end, `complete` / `stop` / `finish` | ✅ Usable | ✅ Updates to the final pose (`stop` freezes at current, `finish`/`complete` at the end) | Your props / `api.set` |
 
-> **Note**: a looping animation has no natural "reaches end", so `entityProps` does not update at each loop boundary during looping; only `stop()` / `finish()` or a successful `api.set` updates it.
+> **Note**: a looping animation has no natural "reaches end", so `entityProps` does not update and the baseline is not reread at each loop boundary; only `stop()` / `finish()` or a successful `api.set` updates it.
 
 ---
 

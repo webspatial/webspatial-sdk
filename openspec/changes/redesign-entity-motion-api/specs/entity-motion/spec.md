@@ -136,6 +136,41 @@ Callback values MUST only include supported Entity transform fields.
 - **THEN** `onError` MUST receive the failure information
 - **AND** no callback value payload in the Entity motion API may include unsupported fields such as `opacity`
 
+### Requirement: Every fresh play compiles against the latest native baseline
+
+When native creates an animation, it MUST fallback-validate and store the canonical timeline, register the animation object, and return an `animationId`; it MUST NOT read the playback baseline or generate a RealityKit playback resource during creation. A fresh play is the first `play` / `autoStart` after creation, or a `play` that starts again after `complete`, `finish`, `stop`, or `reset`. After each fresh play is accepted and before entering `delay` / `running`, native MUST read the current `entity.transform` as that run's baseline and compile the RealityKit playback resource from the canonical timeline and that baseline. Fields explicitly declared by the config MUST use config values, while fields omitted from the config MUST be filled from that run's baseline.
+
+A `play` after `pause` MUST resume the current playback controller and progress and MUST NOT read a new baseline or recompile. Loops within one fresh play MUST reuse that run's playback resource and MUST NOT read a new baseline or recompile at each loop boundary.
+
+#### Scenario: First playback reads baseline at play time
+- **GIVEN** native has created and registered the animation object
+- **WHEN** application code calls `play` for the first time or triggers `autoStart`
+- **THEN** native MUST read the current `entity.transform` after accepting the fresh play
+- **AND** native MUST compile and start that run using the transform as its baseline
+
+#### Scenario: Replay after a terminal state uses the latest baseline
+- **GIVEN** the animation became inactive through `complete`, `finish`, `stop`, or `reset`, and the current native transform has changed
+- **WHEN** application code calls `play` again
+- **THEN** native MUST treat the call as a fresh play
+- **AND** native MUST read the latest native transform and recompile that run's playback resource
+
+#### Scenario: Play after pause resumes the current run
+- **GIVEN** the animation is paused and retains its current playback controller and resource
+- **WHEN** application code calls `play`
+- **THEN** native MUST resume the current playback progress
+- **AND** native MUST NOT read a new baseline or recompile
+
+#### Scenario: Loop reuses the current run's resource
+- **GIVEN** the current fresh play is configured to loop
+- **WHEN** playback reaches a loop boundary
+- **THEN** native MUST reuse the current playback resource for the next iteration
+- **AND** native MUST NOT read a new baseline or recompile at that boundary
+
+#### Scenario: Fresh-play compilation fails
+- **WHEN** native cannot generate a RealityKit playback resource from the canonical timeline and that run's baseline
+- **THEN** the fresh-play control command MUST fail explicitly
+- **AND** the animation MUST remain inactive
+
 ### Requirement: Active animation owns the entire Entity transform
 
 During active playback states, the animation system MUST own the entire Entity transform: the underlying platforms (visionOS / picoOS) can only bind the whole `.transform`, so as soon as any animation field appears in the config the entire transform is owned by the animation during active playback. Components not written in the config MUST be frozen at baseline. During this period, direct React prop writes or `api.set` writes to any component MUST NOT interrupt playback, MUST NOT immediately override the active animation, and MUST NOT be replayed automatically after completion; such writes MUST take effect only once the animation becomes inactive.
@@ -225,6 +260,8 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 #### Scenario: Start point after set then play
 - **WHEN** application code calls `api.set` and then `api.play()`
 - **THEN** playback MUST start from the start boundary declared by the config (top-level `from`, `timeline.from`, or the `0%` frame)
+- **AND** this `api.play()` MUST act as a fresh play and read the latest native transform after `api.set`
+- **AND** fields omitted from the config MUST use that latest transform as this run's baseline
 - **AND** because the start boundary is required, there is no valid config with "no start frame"; a config missing the start boundary has already been rejected during normalization
 
 #### Scenario: Terminal fill does not snap back
