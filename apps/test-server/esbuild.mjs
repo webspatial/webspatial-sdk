@@ -87,6 +87,9 @@ const buildOptions = {
     '@webspatial/react-sdk/eager': path.resolve(
       `${packagesBasePath}/react/src/eager.ts`,
     ),
+    '@webspatial/react-sdk/experimental': path.resolve(
+      `${packagesBasePath}/react/src/experimental.ts`,
+    ),
     '@webspatial/react-sdk': path.resolve(
       `${packagesBasePath}/react/src/index.ts`,
     ),
