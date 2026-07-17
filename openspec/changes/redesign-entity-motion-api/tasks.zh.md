@@ -15,7 +15,9 @@
 ## 3. Entity 绑定迁移
 
 - [ ] 3.1 先编写失败测试，证明 Entity motion 通过 `animation` 属性绑定
+- [ ] 3.1a 先编写失败测试，证明绑定完成后 React Binding 调用 `SpatialEntity.createAnimation(config)`，且不直接调用 `AnimationObject.create(...)` 或构造内部规范时间轴 payload
 - [ ] 3.2 更新 Entity props 契约与 binding 生命周期，切换到新的 Entity motion 绑定路径
+- [ ] 3.2a 在 Core 为 `SpatialEntity` 实现 `createAnimation(config)`，由它封装自身空间对象 id、Entity 专属归一化与校验，并把规范时间轴委托给通用 `AnimationObject` 创建流程
 - [ ] 3.3 保留单绑定不变量，保证同一个 animation object 不能驱动多个 Entity 实例
 - [ ] 3.4 在文档中把 `animation` 作为 Entity motion 的绑定方式
 - [ ] 3.5 删除 JS 侧旧 entity-transform-animation 遗留，包括 suppression 机制 `animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径，确保不存在能与 native 竞争的第二个 transform 源
