@@ -699,3 +699,32 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     }
   }
 }
+
+export interface TransferModelBlobDataParams {
+  /** Which blob these bytes belong to; correlates with the `modelblobrequest`. */
+  src: string
+  /** Base64-encoded chunk. Omitted when `isError` is set. */
+  data?: string
+  /** Raw `Blob.type`; sent on every chunk. */
+  type?: string
+  /** Total blob size in bytes; sent on every chunk. */
+  size?: number
+  /** Set instead of `data` when the blob could not be read (e.g. revoked URL). */
+  isError?: boolean
+}
+
+/** Ships one base64 blob chunk (or a fetch error) to native. */
+export class TransferModelBlobDataCommand extends SpatializedElementCommand {
+  commandType = 'TransferModelBlobData'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: TransferModelBlobDataParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}

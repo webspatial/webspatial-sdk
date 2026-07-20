@@ -30,6 +30,9 @@ export enum SpatialWebMsgType {
   animationfailed = 'animationfailed',
 
   objectdestroy = 'objectdestroy',
+
+  // Native asks JS to ship a `blob:` source's bytes (native cannot fetch blobs).
+  modelblobrequest = 'modelblobrequest',
 }
 
 export interface ObjectDestroyMsg {
@@ -84,6 +87,17 @@ export interface ModelLoadSuccess {
 
 export interface ModelLoadFailure {
   type: SpatialWebMsgType.modelloadfailed
+}
+
+export interface ModelBlobRequestDetail {
+  /** The `blob:` URL native wants the bytes for. The element loads one blob at a
+   * time, so `src` also correlates the `TransferModelBlobData` chunks JS sends back. */
+  src: string
+}
+
+export interface ModelBlobRequestMsg {
+  type: SpatialWebMsgType.modelblobrequest
+  detail: ModelBlobRequestDetail
 }
 
 export interface AnimationStateChangeDetail {

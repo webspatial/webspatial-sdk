@@ -9,11 +9,13 @@ import {
 import {
   ModelLoadSuccess,
   ModelLoadFailure,
+  ModelBlobRequestMsg,
   SpatialWebMsgType,
   AnimationStateChangeDetail,
   AnimationStateChangeMsg,
   EntityTransformChangeMsg,
 } from './WebMsgCommand'
+import { transferBlob } from './blob/blobTransfer'
 
 /**
  * Represents a static 3D model element in the spatial environment.
@@ -304,6 +306,15 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       this._onAnimationStateChangeCallback?.(data.detail)
     } else if (data.type === SpatialWebMsgType.entitytransformchange) {
       this._entityTransform = new DOMMatrixReadOnly(data.detail.transform)
+    } else if (data.type === SpatialWebMsgType.modelblobrequest) {
+      // Ship the blob bytes to native on demand. Fire-and-forget: the transfer
+      // reports progress and errors over its own JSB channel. Stop pumping once
+      // the element is destroyed.
+      transferBlob({
+        element: this,
+        src: data.detail.src,
+        isAborted: () => this.isDestroyed,
+      })
     } else {
       // Handle other spatial events using the base class implementation
       super.onReceiveEvent(data)
@@ -410,6 +421,7 @@ function clamp(num: number, min: number, max: number) {
 type Static3DReceiveEventData =
   | ModelLoadSuccess
   | ModelLoadFailure
+  | ModelBlobRequestMsg
   | ReceiveEventData
   | AnimationStateChangeMsg
   | EntityTransformChangeMsg
