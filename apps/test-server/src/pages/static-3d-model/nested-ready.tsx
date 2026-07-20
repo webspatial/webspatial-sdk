@@ -143,6 +143,49 @@ export default function NestedStatic3DModelReady() {
       </div>
 
       <Logger logs={logs} clearLog={clearLog} />
+      <BlobModel
+        src="/modelasset/cone.usdz"
+        poster="/modelasset/cone.png"
+        type="model/vnd.usdz+zip"
+      />
     </div>
+  )
+}
+
+type BlobModelProps = {
+  src: string
+  poster?: string
+  type: string
+}
+function BlobModel({ src, poster, type }: BlobModelProps) {
+  const [blobSrc, setBlobSrc] = useState<string>()
+  useEffect(() => {
+    let objectURL: string | undefined
+    let cancelled = false
+    fetch(src)
+      .then(res => res.blob())
+      .then(blob => {
+        if (cancelled) return
+        objectURL = URL.createObjectURL(blob)
+        setBlobSrc(objectURL)
+      })
+    return () => {
+      cancelled = true
+      if (objectURL) URL.revokeObjectURL(objectURL)
+    }
+  }, [])
+  return (
+    <Model
+      poster={poster}
+      enable-xr
+      style={{
+        height: '200px',
+        '--xr-depth': '100px',
+        '--xr-back': '50px',
+        marginBottom: '20px',
+      }}
+    >
+      <source src={blobSrc} type={type} />
+    </Model>
   )
 }

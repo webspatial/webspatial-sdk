@@ -203,6 +203,11 @@ function App() {
           marginBottom: '20px',
         }}
       />
+      <BlobModel
+        src="/modelasset/Soul_Capture_Potion.usdz"
+        poster="/modelasset/cone.png"
+        type="model/vnd.usdz+zip"
+      />
     </div>
   )
 }
