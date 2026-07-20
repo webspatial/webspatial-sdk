@@ -48,6 +48,62 @@ class SpatializedStatic3DElement: SpatializedElement {
         stagemode == .orbit || super.enableGesture
     }
 
+    /// In-flight blob transfers keyed by source URL (the element loads one blob
+    /// at a time, so `src` uniquely identifies the transfer). See `BlobTransfer`.
+    @ObservationIgnored private var activeTransfers: [String: BlobTransfer] = [:]
+    /// Temp files produced by completed transfers, deleted on destroy.
+    @ObservationIgnored private var tempFileURLs: Set<URL> = []
+
+    /// Ships a `blob:` source's bytes from JS into a local file and returns its
+    /// URL. Sends the `modelblobrequest`, then awaits reassembly of the streamed
+    /// chunks. `sourceType` is the `<source type>` mime, preferred when resolving
+    /// the file extension. Cancellation (element reload) aborts the transfer.
+    func fetchBlob(src: String, sourceType: String?, scene: SpatialScene) async throws -> URL {
+        let transfer = BlobTransfer(sourceType: sourceType)
+        activeTransfers[src] = transfer
+        // Only clear our own entry: a same-src reload may already have replaced it.
+        defer { if activeTransfers[src] === transfer { activeTransfers[src] = nil } }
+
+        scene.sendWebMsg(id, ModelBlobRequestEvent(
+            detail: ModelBlobRequestDetail(src: src)
+        ))
+
+        return try await withTaskCancellationHandler {
+            let url = try await transfer.result()
+            tempFileURLs.insert(url)
+            return url
+        } onCancel: {
+            Task { @MainActor in transfer.cancel() }
+        }
+    }
+
+    /// Feeds an incoming `TransferModelBlobData` chunk to its transfer. Throws
+    /// when the chunk should be nacked (unknown source, decode/size/type error),
+    /// which tells JS to abort the stream.
+    func receiveBlobChunk(_ command: TransferModelBlobData) throws {
+        guard let transfer = activeTransfers[command.src] else {
+            throw BlobTransfer.TransferError.cancelled
+        }
+        try transfer.append(
+            base64Data: command.data,
+            type: command.type,
+            size: command.size,
+            isError: command.isError ?? false
+        )
+    }
+
+    override func onDestroy() {
+        for transfer in activeTransfers.values {
+            transfer.cancel()
+        }
+        activeTransfers.removeAll()
+        for url in tempFileURLs {
+            try? FileManager.default.removeItem(at: url)
+        }
+        tempFileURLs.removeAll()
+        super.onDestroy()
+    }
+
     enum CodingKeys: String, CodingKey {
         case modelURL, type
     }

@@ -418,3 +418,15 @@ struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     let width: Double?
     let height: Double?
 }
+
+/// One base64 blob chunk (or a fetch error) streamed from JS. All payload fields
+/// are optional for version-skew safety; `type`/`size` arrive on the first chunk.
+struct TransferModelBlobData: CommandDataProtocol {
+    static let commandType = "TransferModelBlobData"
+    let id: String
+    let src: String
+    let data: String?
+    let type: String?
+    let size: Int?
+    let isError: Bool?
+}

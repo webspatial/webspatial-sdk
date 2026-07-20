@@ -73,6 +73,7 @@
 				dynamic3d/SpatialModelResource.swift,
 				dynamic3d/SpatialRootEntity.swift,
 				dynamic3d/SpatialTextureResource.swift,
+				blob/BlobTransfer.swift,
 				MaterialSceneRefresh.swift,
 				SpatialApp.swift,
 				Spatialized2DElement.swift,

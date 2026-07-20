@@ -27,6 +27,7 @@ enum SpatialWebMsgType: String, Encodable {
     case animationstatechange
     case entitytransformchange
     case objectdestroy
+    case modelblobrequest
 }
 
 struct WebSpatialTapGuestureEventDetail: Encodable {
@@ -155,4 +156,16 @@ struct EntityTransformChangeEvent: Encodable {
 
 struct SpatialObjectDestroiedEvent: Encodable {
     let type: SpatialWebMsgType = .objectdestroy
+}
+
+struct ModelBlobRequestDetail: Encodable {
+    /// The `blob:` URL whose bytes JS should ship over. The element loads one blob
+    /// at a time, so `src` also correlates the `TransferModelBlobData` chunks back.
+    let src: String
+}
+
+/// Asks JS to stream a `blob:` source's bytes (native cannot fetch blobs).
+struct ModelBlobRequestEvent: Encodable {
+    let type: SpatialWebMsgType = .modelblobrequest
+    let detail: ModelBlobRequestDetail
 }

@@ -193,10 +193,21 @@ struct SpatializedStatic3DView: View {
     }
 
     /// Attempts to load from each source in order, returning the first success.
+    /// The returned `url` is what `currentSrc`/`onLoadSuccess` report, so `blob:`
+    /// sources report the original blob URL even though they load from a temp file.
     private func loadSources(_ sources: [ModelSource]) async -> (url: URL, asset: Model3DAsset)? {
         for source in sources {
-            guard let url = localOrRemoteURL(url: source.src) else { continue }
             do {
+                if source.src.hasPrefix("blob:") {
+                    // Native cannot fetch blobs; have JS stream the bytes into a
+                    // temp file, then load that but report the original blob URL.
+                    let fileURL = try await spatializedStatic3DElement.fetchBlob(
+                        src: source.src, sourceType: source.type, scene: spatialScene
+                    )
+                    guard let blobURL = URL(string: source.src) else { continue }
+                    return try (blobURL, await loadAsset(from: fileURL))
+                }
+                guard let url = localOrRemoteURL(url: source.src) else { continue }
                 return try (url, await loadAsset(from: url))
             } catch {
                 continue

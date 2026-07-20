@@ -307,6 +307,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
 
+        spatialWebViewModel.addJSBListener(TransferModelBlobData.self, onTransferModelBlobData)
+
         spatialWebViewModel.addJSBListener(CreateSpatializedDynamic3DElement.self, onCreateSpatializedDynamic3DElement)
         spatialWebViewModel.addJSBListener(UpdateSpatializedDynamic3DElementProperties.self, onUpdateSpatializedDynamic3DElementProperties)
         spatialWebViewModel.addJSBListener(CreateSpatialEntity.self, onCreateEntity)
@@ -599,6 +601,21 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
 
         resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
+    }
+
+    /// Routes a streamed blob chunk to its element (by id) and acks it. A failed
+    /// ack tells JS to abort the stream (unknown request, decode/size/type error).
+    private func onTransferModelBlobData(command: TransferModelBlobData, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let element: SpatializedStatic3DElement = findSpatialObject(command.id) else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid TransferModelBlobData spatial object id not exsit!")))
+            return
+        }
+        do {
+            try element.receiveBlobChunk(command)
+            resolve(.success(nil))
+        } catch {
+            resolve(.failure(JsbError(code: .CommandError, message: "TransferModelBlobData failed: \(error)")))
+        }
     }
 
     private func onCreateSpatializedDynamic3DElement(command: CreateSpatializedDynamic3DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
