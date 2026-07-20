@@ -10,6 +10,7 @@ import {
 import { buildSpatialSceneQuery } from '../spatialSceneQuery'
 import type { SpatialSceneCreationOptionsInternal } from '../../types/internal'
 import type { AttachmentEntityOptions } from '../../types/types'
+import type { OrnamentProtocolOptions } from '../../Ornament'
 import {
   buildSpatialRequestQuery,
   createSpatialRequestId,
@@ -64,13 +65,23 @@ export class VisionOSPlatform implements PlatformAbility {
     return this.openProtocolAsync('createAttachment')
   }
 
+  createNativeOrnament(
+    options?: OrnamentProtocolOptions,
+  ): Promise<WebSpatialProtocolResult> {
+    return this.openProtocolAsync('createOrnament', options)
+  }
+
   private async openProtocolAsync(
     command: string,
+    params: Record<string, string | number | boolean | null | undefined> = {},
   ): Promise<WebSpatialProtocolResult> {
     const requestId = createSpatialRequestId()
     const { spatialId: id = '', windowProxy } = this.openWindow(
       command,
-      buildSpatialRequestQuery(requestId),
+      buildSpatialRequestQuery(requestId, undefined, {
+        command,
+        ...params,
+      }),
       undefined,
       undefined,
     )

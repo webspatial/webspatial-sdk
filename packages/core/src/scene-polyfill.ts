@@ -39,6 +39,26 @@ let xr_volume_defaults: SpatialSceneCreationOptions = {
 }
 
 const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
+const SPATIAL_CONTENT_COMMANDS = new Set([
+  'createSpatialized2DElement',
+  'createAttachment',
+  'createOrnament',
+])
+
+function getSpatialContentCommand(url: string): string | undefined {
+  try {
+    const parsed = new URL(url)
+    const queryCommand = parsed.searchParams.get('command') || undefined
+    const hostCommand =
+      parsed.protocol === 'webspatial:' ? parsed.host || undefined : undefined
+    const command = queryCommand || hostCommand
+    return command && SPATIAL_CONTENT_COMMANDS.has(command)
+      ? command
+      : undefined
+  } catch {
+    return [...SPATIAL_CONTENT_COMMANDS].find(command => url.includes(command))
+  }
+}
 
 /**
  * Deep-merge two plain object trees (no arrays, no special classes).
@@ -266,25 +286,20 @@ class SceneManager {
   private open = (url?: string, target?: string, features?: string) => {
     // bypass internal
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
-      if (
-        url.includes('createSpatialized2DElement') ||
-        url.includes('createAttachment')
-      ) {
+      const spatialContentCommand = getSpatialContentCommand(url)
+      if (spatialContentCommand) {
         const token = //@ts-ignore
           (window.webSpatial || window.__webspatialShell__)?.genToken?.()
         if (token) {
-          const command = url.includes('createAttachment')
-            ? 'createAttachment'
-            : 'createSpatialized2DElement'
           const host = window.location.host
           const protocol = window.location.protocol
-          const finalURL = `${protocol}//${host}/${token}/?command=${command}`
+          const finalURL = `${protocol}//${host}/${token}/`
           const sourceParams = new URL(url).searchParams
           const final = new URL(finalURL)
-          for (const key of ['rid', 'wsepoch']) {
-            const value = sourceParams.get(key)
-            if (value) final.searchParams.set(key, value)
-          }
+          sourceParams.forEach((value, key) => {
+            final.searchParams.set(key, value)
+          })
+          final.searchParams.set('command', spatialContentCommand)
           return this.originalOpen(final.toString(), target, features)
         }
       }

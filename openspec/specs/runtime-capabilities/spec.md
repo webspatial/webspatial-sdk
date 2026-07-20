@@ -174,4 +174,3 @@ In a non-WebSpatial browser (internal runtime `type === null`) the SDK MUST reso
 - **THEN** a non-spatial runtime (snapshot `type === null`) MUST cause the bridge to skip the dynamic import
 - **AND** any spatial-equivalent runtime (`'visionos'`, `'picoos'`, OR `'puppeteer'`) MUST cause the bridge to schedule the dynamic import
 - **AND** the decision MUST be reachable synchronously without scheduling network requests
-

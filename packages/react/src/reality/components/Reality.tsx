@@ -8,6 +8,7 @@ import React, {
 import { SpatializedContainer } from '../../spatialized-container/SpatializedContainer'
 import { RealityContext, RealityContextValue } from '../context'
 import { useInsideAttachment } from '../context/InsideAttachmentContext'
+import { useInsideOrnament } from '../../ornament/InsideOrnamentContext'
 import { getSession } from '../../utils/getSession'
 import { ResourceRegistry } from '../utils'
 import { AttachmentRegistry } from '../context/AttachmentContext'
@@ -26,9 +27,16 @@ export type RealityProps = Omit<
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
   function RealityBase({ children, ...inProps }, ref) {
     const insideAttachment = useInsideAttachment()
+    const insideOrnament = useInsideOrnament()
     if (insideAttachment) {
       console.warn(
         '[WebSpatial] Reality cannot be used inside AttachmentAsset.',
+      )
+      return null
+    }
+    if (insideOrnament) {
+      console.warn(
+        '[WebSpatial] Reality cannot be used inside Ornament content.',
       )
       return null
     }

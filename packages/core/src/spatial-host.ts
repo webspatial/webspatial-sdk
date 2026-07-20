@@ -2,6 +2,7 @@ import type { WebSpatialProtocolResult } from './platform-adapter/interface'
 import { getPlatform, getPlatformSync } from './platform-runtime'
 import type { SpatialSceneCreationOptionsInternal } from './types/internal'
 import type { AttachmentEntityOptions } from './types/types'
+import type { OrnamentProtocolOptions } from './Ornament'
 
 export async function createNativeSpatialDiv(): Promise<WebSpatialProtocolResult> {
   const platform = await getPlatform()
@@ -13,6 +14,13 @@ export async function createNativeAttachment(
 ): Promise<WebSpatialProtocolResult> {
   const platform = await getPlatform()
   return platform.createNativeAttachment(options)
+}
+
+export async function createNativeOrnament(
+  options: OrnamentProtocolOptions,
+): Promise<WebSpatialProtocolResult> {
+  const platform = await getPlatform()
+  return platform.createNativeOrnament(options)
 }
 
 export function openSpatialSceneSync(

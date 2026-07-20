@@ -41,6 +41,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     var parent: (any ScrollAbleSpatialElementContainer)?
 
     var attachmentManager = AttachmentManager()
+    var ornamentManager = OrnamentManager()
     /// NOTE: `@Observable` + `lazy` 在新版本 Swift 宏展开下会触发编译器报错（init accessor 访问 backing storage）。
     /// 这里不需要让动画管理器参与 Observation，避免生成 `@ObservationTracked` 相关访问器即可。
     @ObservationIgnored
@@ -296,6 +297,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(UpdateSpatialSceneProperties.self, onUpdateSpatialSceneProperties)
 
         spatialWebViewModel.addJSBListener(AddSpatializedElementToSpatialScene.self, onAddSpatializedElement)
+        spatialWebViewModel.addJSBListener(AddOrnamentToSceneCommand.self, onAddOrnamentToScene)
 
         spatialWebViewModel.addJSBListener(UpdateSpatialized2DElementProperties.self, onUpdateSpatialized2DElementProperties)
 
@@ -335,6 +337,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(SetMaterialsOnEntity.self, onSetMaterialsOnEntity)
 
         spatialWebViewModel.addJSBListener(UpdateAttachmentEntityCommand.self, onUpdateAttachmentEntity)
+        spatialWebViewModel.addJSBListener(UpdateOrnamentCommand.self, onUpdateOrnament)
 
         spatialWebViewModel.addJSBListener(AnimateTransformCommand.self, onAnimateTransform)
 
@@ -414,6 +417,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return handleWindowOpenCustom(url)
         } else if host == "createAttachment" {
             return handleCreateAttachment(url)
+        } else if host == "createOrnament" {
+            return handleOrnamentWindowOpen(url)
         } else if host == "createSpatialized2DElement" {
             guard shouldAcceptSpatialRequest(url, command: host) else {
                 return nil
@@ -426,6 +431,24 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             logger.warning("Unknown webspatial open-window command: \(host)")
             return nil
         }
+    }
+
+    private func handleOrnamentWindowOpen(_ url: URL) -> WebViewElementInfo? {
+        guard shouldAcceptSpatialRequest(url, command: "createOrnament") else {
+            return nil
+        }
+
+        let id = UUID().uuidString
+        let webViewModel = SpatialWebViewModel(url: nil)
+        webViewModel.setBackgroundTransparent(true)
+        let ornament = OrnamentElement(
+            id: id,
+            webViewModel: webViewModel,
+            options: OrnamentOptions.from(url: url)
+        )
+        ornamentManager.register(ornament)
+        addSpatialObject(ornament)
+        return WebViewElementInfo(id: id, element: webViewModel)
     }
 
     /// Temporary storage for webview models awaiting JSB initialization
@@ -481,6 +504,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         logger.debug("SpatialScene page generation advanced to \(currentPageGeneration)")
         // Clean up all animation sessions
         animationManager.removeAll()
+        ornamentManager.destroyAll()
         // destroy all SpatialObject asset
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
@@ -571,6 +595,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         // Check if it's an attachment first
         if attachmentManager.get(id: command.id) != nil {
             attachmentManager.remove(id: command.id)
+            resolve(.success(nil))
+            return
+        }
+        if ornamentManager.get(id: command.id) != nil {
+            ornamentManager.remove(id: command.id)
             resolve(.success(nil))
             return
         }
@@ -887,6 +916,35 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
 
         spatializedElement.setParent(self)
+        resolve(.success(baseReplyData))
+    }
+
+    private func onAddOrnamentToScene(command: AddOrnamentToSceneCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard ornamentManager.add(id: command.ornamentId) else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid AddOrnamentToScene ornament id not exist!")))
+            return
+        }
+        resolve(.success(baseReplyData))
+    }
+
+    private func onUpdateOrnament(command: UpdateOrnamentCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let ornament = ornamentManager.get(id: command.id) else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid UpdateOrnament ornament id not exist!")))
+            return
+        }
+
+        let options = OrnamentOptions.normalized(
+            attachmentAnchor: command.attachmentAnchor,
+            contentAlignment: command.contentAlignment,
+            visibility: command.visibility,
+            width: command.width,
+            height: command.height,
+            cornerRadius: command.cornerRadius,
+            backgroundMaterial: command.backgroundMaterial,
+            previous: ornament.options
+        )
+
+        ornament.update(options)
         resolve(.success(baseReplyData))
     }
 
@@ -1489,6 +1547,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     override func onDestroy() {
         animationManager.removeAll()
+        ornamentManager.destroyAll()
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()
@@ -1498,7 +1557,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     enum CodingKeys: String, CodingKey {
-        case children, url, backgroundMaterial, cornerRadius, scrollOffset, currentPageGeneration, childrenIds, sceneSpatialObjectIds, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount, spatialObjectList
+        case children, url, backgroundMaterial, cornerRadius, scrollOffset, currentPageGeneration, childrenIds, sceneSpatialObjectIds, webviewIsOpaque, spatialObjectCount, spatialObjectRefCount, spatialObjectList, ornaments
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -1516,6 +1575,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         try container.encode(childrenIds, forKey: .childrenIds)
         let sceneSpatialObjectIds = spatialObjects.map { $0.key }
         try container.encode(sceneSpatialObjectIds, forKey: .sceneSpatialObjectIds)
+        try container.encode(ornamentManager.ornaments, forKey: .ornaments)
         try container.encode(spatialWebViewModel.getController().webview?.isOpaque, forKey: .webviewIsOpaque)
         try container.encode(SpatialObject.objects.count, forKey: .spatialObjectCount)
 

@@ -209,4 +209,3 @@ Automated tests SHALL cover at minimum:
 
 - **WHEN** the React package test suite runs for this change
 - **THEN** it SHALL include tests that satisfy the acceptance matrix above
-

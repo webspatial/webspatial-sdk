@@ -27,6 +27,7 @@ import {
   ModelSource,
   SpatialTextureResourceOptions,
 } from './types/types'
+import type { OrnamentOptions } from './Ornament'
 import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
 
@@ -283,6 +284,38 @@ export class AddSpatializedElementToSpatialScene extends JSBCommand {
   protected getParams() {
     return {
       spatializedElementId: this.spatializedElement.id,
+    }
+  }
+}
+
+export class AddOrnamentToSceneCommand extends JSBCommand {
+  commandType = 'AddOrnamentToScene'
+
+  constructor(readonly ornamentId: string) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      ornamentId: this.ornamentId,
+    }
+  }
+}
+
+export class UpdateOrnamentCommand extends JSBCommand {
+  commandType = 'UpdateOrnament'
+
+  constructor(
+    readonly id: string,
+    readonly options: OrnamentOptions,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      id: this.id,
+      ...this.options,
     }
   }
 }
