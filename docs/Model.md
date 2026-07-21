@@ -77,9 +77,9 @@ In addition to the DOM API relating to the source, animation, and environment ma
 
 `entityTransform` a read-write `DOMMatrixReadOnly` that expresses the current mapping of the view of the model contents to the view displayed in the browser.
 
-`boundingBoxCenter` a read-only `DOMPoint` that indicates the center of the axis-aligned bounding box (AABB) of the model contents. If there is an animation present, the bounding box is computed based on the bind pose of the animation and remains static for the lifetime of the model. It does not update based on a change of the `entityTransform`.
+`boundingBoxCenter` a read-only `DOMPointReadOnly` that indicates the center of the axis-aligned bounding box (AABB) of the model contents. If there is an animation present, the bounding box is computed based on the bind pose of the animation and remains static for the lifetime of the model. It does not update based on a change of the `entityTransform`.
 
-`boundingBoxExtents` a read-only `DOMPoint` that indicates the extents of the bounding box of the model contents.
+`boundingBoxExtents` a read-only `DOMPointReadOnly` that indicates the extents of the axis-aligned bounding box of the model contents. Like `boundingBoxCenter`, it is computed once when the model loads and remains static for the lifetime of the model.
 
 `duration` a read-only `double` reflecting the un-scaled total duration of the animation in seconds. If there is no animation on this model, the value is 0.
 
@@ -97,7 +97,7 @@ In addition to the DOM API relating to the source, animation, and environment ma
 
 The <source> HTML element specifies one or more media resources for the <Model> element. It is a void element, which means that it has no content and does not require a closing tag. Browsers don't all support the same 3D model formats; you can provide multiple sources and the browser will then use the first one it understands. The browser attempts to load each source sequentially, if a source fails the next source is attempted. An `error` event fires on the `<Model>` element after all sources have failed; `error` events are not fired on each individual `<source>` element.
 
-`src` The URL of the 3D model. This attribute has the highest priority when multiple sources are provided. If `src` is specified, it will be the first source attempted for loading.
+`src` The URL of the 3D model.
 
 `type` Specifies the MIME media type of the Model. Currently supported [MIME model types](https://www.iana.org/assignments/media-types/media-types.xhtml#model) are `model/vnd.usdz+zip` and `model/gltf-binary`.
 
@@ -278,6 +278,26 @@ This feature provides a built-in, intuitive way for users to inspect a 3D model 
 - **Interaction with&nbsp;entityTransform**: `entityTransform` will not be updated when the model is rotated using the orbit gesture. Similarly updates to `entityTransform` will not affect the model's orientation.
 
 - **Gesture Conflict Resolution**: `onSpatial*` will be disabled when stagemode is set to orbit. This restriction can be loosened in the future based if there are no gesture conflicts.
+
+### 6. Bounding Box Geometry (`boundingBoxCenter` / `boundingBoxExtents`)
+
+These read-only properties expose the axis-aligned bounding box (AABB) of the loaded model contents. Both are `DOMPointReadOnly` values expressed in the model's local right-handed, Y-up space. The box is computed once when the model loads — from the animation bind pose if the model is animated — and is **static for the lifetime of the model**. It is unaffected by `entityTransform` changes.
+
+#### 6.1. Native visionOS Layer (`packages/visionOS`)
+
+1. `Model3DAsset` does not expose its underlying entity, so the bounds are computed by **loading the same model file twice** as a RealityKit `Entity` (`try await Entity(contentsOf: localURL)`) and reading `entity.visualBounds(relativeTo: nil)` (`BoundingBox.center` and `.extents`). The view already resolves a local file URL during load.
+2. Extend `ModelLoadSuccessDetail` in `WebMsgCommand.swift` with `boundingBoxCenter` and `boundingBoxExtents` (each `{ x, y, z }`), and populate them when constructing `ModelLoadSuccess`.
+
+#### 6.2. Core SDK (`@webspatial/core-sdk`)
+
+1. Extend the `ModelLoadSuccess.detail` interface in `WebMsgCommand.ts` with optional `boundingBoxCenter?: { x, y, z }` and `boundingBoxExtents?: { x, y, z }` (optional for back-compat with older native runtimes that do not send them).
+2. In `SpatializedStatic3DElement.onReceiveEvent`, in the `modelloaded` branch, cache the two values into private fields as `DOMPointReadOnly` instances (mirroring how `_currentSrc` is cached).
+3. Add read-only `boundingBoxCenter` / `boundingBoxExtents` getters (mirroring the `currentSrc` getter — no setter). Default to a zero `DOMPointReadOnly` before the model has loaded.
+
+#### 6.3. React SDK (`@webspatial/react-sdk`)
+
+1. Add `readonly boundingBoxCenter: DOMPointReadOnly` and `readonly boundingBoxExtents: DOMPointReadOnly` to `SpatializedStatic3DElementRef` in `spatialized-container/types.ts`.
+2. Expose them as getters in `extraRefProps` in `SpatializedStatic3DElementContainer.tsx`, delegating to the core element getters (mirroring the existing `duration` getters).
 
 ## Risks
 
