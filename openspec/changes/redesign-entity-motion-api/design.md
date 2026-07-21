@@ -791,7 +791,7 @@ Processing rules:
 - Synchronous command errors return through the JSB reply; only asynchronous playback failures after command acceptance return through one `spatialanimationstatechanged` error event.
 - When fresh-play compilation fails, the control command fails and the animation remains inactive.
 
-Native accepts `api.set` while the animation is inactive and the native animation object exists: it merges the sparse patch onto the current committed transform, applies the transform, and reports the confirmed value through a state event. During delay / running / paused, native handles `api.set` as a no-op and logs a console warning; `entityProps` retains its current value and `onError` remains silent.
+Native accepts and commits `api.set` while inactive. While active, it keeps the transform unchanged and returns `INVALID_CONTROL_STATE`; Core maps that `set` result to warning + no-op without triggering `onError`. The JSB shape remains unchanged.
 
 #### Timeline compilation
 
@@ -1107,8 +1107,8 @@ sequenceDiagram
     alt animationId is absent
         Scene-->>JSB: fail(ANIMATION_NOT_FOUND)
     else animation delayed / playing / paused
-        Note over Obj: no-op + console warning, while onError handles classified errors
-        Scene-->>JSB: return no-op
+        Scene-->>JSB: fail(INVALID_CONTROL_STATE)
+        Note over JSB: Core maps to warning + no-op; no onError
     else animation idle / at end state
         Scene->>Obj: set(values)
         Obj->>RK: read current transform as committed baseline

@@ -791,7 +791,7 @@ classDiagram
 - 同步命令错误通过 JSB reply 回传;仅命令接受后发生的异步播放错误通过一次 `spatialanimationstatechanged` error event 回传。
 - fresh play 编译失败时,控制命令失败,动画保持非活跃。
 
-Native 在动画非活跃且原生动画对象存在时接受 `api.set`:在当前已提交姿态上合并稀疏补丁、应用姿态,再通过状态事件回传确认值。动画处于 delay / running / paused 时,`api.set` 作为空操作处理并打印控制台警告,`entityProps` 保持当前值,`onError` 保持静默。
+Native 在非活跃时接受并提交 `api.set`;活跃时保持姿态不变并返回 `INVALID_CONTROL_STATE`,Core 将该 `set` 结果转为 warning + no-op,不触发 `onError`。JSB 结构不变。
 
 #### 时间轴编译
 
@@ -1107,8 +1107,8 @@ sequenceDiagram
     alt animationId 不存在
         Scene-->>JSB: 失败(ANIMATION_NOT_FOUND)
     else 动画处于延迟 / 播放中 / 暂停
-        Note over Obj: 空操作 + 控制台警告，onError 专用于分类错误
-        Scene-->>JSB: 返回空操作
+        Scene-->>JSB: 失败(INVALID_CONTROL_STATE)
+        Note over JSB: Core 转为 warning + no-op,不触发 onError
     else 动画处于 idle / 终态
         Scene->>Obj: set(values)
         Obj->>RK: 读取当前姿态作已提交基准
