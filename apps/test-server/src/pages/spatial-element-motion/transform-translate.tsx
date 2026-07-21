@@ -98,11 +98,12 @@ export default function TransformTranslatePage() {
       title="Transform Translate"
       description={
         <>
-          Translate (0,0,0)→(100, 10, 100)px over 2s. The spatial element moves
-          in 3D space using pixel-based translate values. Restart proves play
-          re-entry semantics. The Suppression Test rapidly re-renders the
-          component during animation — if transform suppression works, motion
-          stays smooth.
+          Translate (0,0,0)→(100, 10, 100)px over 2s from a compound
+          rotateX(30deg) + rotateY(40deg) baseline. Playback should preserve the
+          initial tilt; an orientation snap on the first frame reproduces the
+          transform decomposition bug. Restart proves play re-entry semantics.
+          The Suppression Test rapidly re-renders the component during animation
+          — if transform suppression works, motion stays smooth.
         </>
       }
     >
@@ -114,6 +115,8 @@ export default function TransformTranslatePage() {
           enable-xr
           xr-animation={motion}
           style={{
+            // Keep a compound baseline so translate-only playback exposes transform round-trip errors.
+            transform: 'rotateY(40deg) rotateX(30deg)',
             ...style,
             width: 200,
             height: 150,

@@ -188,7 +188,7 @@ final class SpatializedElementAnimationManager: NSObject {
         let col1 = SIMD3<Double>(m.columns.1.x, m.columns.1.y, m.columns.1.z)
         let col2 = SIMD3<Double>(m.columns.2.x, m.columns.2.y, m.columns.2.z)
 
-        let sx = simd_length(col0)
+        var sx = simd_length(col0)
         let sy = simd_length(col1)
         let sz = simd_length(col2)
 
@@ -200,19 +200,26 @@ final class SpatializedElementAnimationManager: NSObject {
             )
         }
 
-        let r00 = col0.x / sx; let r10 = col0.y / sx; let r20 = col0.z / sx
-        let r01 = col1.x / sy; let r11 = col1.y / sy; let r21 = col1.z / sy
-        let r02 = col2.x / sz; let r12 = col2.y / sz; let r22 = col2.z / sz
+        // Preserve an odd reflection on the X scale so the normalized rotation remains proper.
+        let determinant = simd_determinant(simd_double3x3(columns: (col0, col1, col2)))
+        if determinant < 0 {
+            sx = -sx
+        }
 
-        let rotY = asin(max(-1, min(1, r02)))
+        let r00 = col0.x / sx; let r10 = col0.y / sx; let r20 = col0.z / sx
+        let r11 = col1.y / sy; let r21 = col1.z / sy
+        let r12 = col2.y / sz; let r22 = col2.z / sz
+
+        let cosY = sqrt(r00 * r00 + r10 * r10)
+        let rotY = atan2(-r20, cosY)
         let rotX: Double
         let rotZ: Double
 
-        if cos(rotY) > 1e-6 {
-            rotX = atan2(-r12, r22)
-            rotZ = atan2(-r01, r00)
+        if cosY > 1e-6 {
+            rotX = atan2(r21, r22)
+            rotZ = atan2(r10, r00)
         } else {
-            rotX = atan2(r21, r11)
+            rotX = atan2(-r12, r11)
             rotZ = 0
         }
 

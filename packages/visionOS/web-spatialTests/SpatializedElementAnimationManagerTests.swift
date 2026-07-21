@@ -3,6 +3,80 @@ import Spatial
 import XCTest
 
 final class SpatializedElementAnimationManagerTests: XCTestCase {
+    /// Verifies compound rotation, translation, and non-uniform scale survive transform decomposition.
+    func test_compoundTransformRoundTripsThroughDecomposition() {
+        let source = SpatializedMotionTransformComponents(
+            translateX: 12, translateY: -8, translateZ: 24,
+            rotateX: 30, rotateY: 40, rotateZ: 15,
+            scaleX: 1.25, scaleY: 0.75, scaleZ: 2
+        )
+
+        let original = SpatializedElementAnimationManager.composeTransform(source)
+        let decomposed = SpatializedElementAnimationManager.decomposeTransform(from: original)
+        let roundTrip = SpatializedElementAnimationManager.composeTransform(decomposed)
+
+        for column in 0 ..< 4 {
+            for row in 0 ..< 3 {
+                XCTAssertEqual(
+                    original.matrix[column][row],
+                    roundTrip.matrix[column][row],
+                    accuracy: 1e-9,
+                    "Mismatch at matrix column \(column), row \(row)"
+                )
+            }
+        }
+    }
+
+    /// Verifies an odd negative scale keeps the source transform's reflection.
+    func test_reflectedTransformRoundTripsThroughDecomposition() {
+        let source = SpatializedMotionTransformComponents(
+            translateX: 3, translateY: 5, translateZ: -7,
+            rotateX: 20, rotateY: -35, rotateZ: 10,
+            scaleX: -1.5, scaleY: 0.5, scaleZ: 2
+        )
+
+        let original = SpatializedElementAnimationManager.composeTransform(source)
+        let decomposed = SpatializedElementAnimationManager.decomposeTransform(from: original)
+        let roundTrip = SpatializedElementAnimationManager.composeTransform(decomposed)
+
+        for column in 0 ..< 4 {
+            for row in 0 ..< 3 {
+                XCTAssertEqual(
+                    original.matrix[column][row],
+                    roundTrip.matrix[column][row],
+                    accuracy: 1e-9,
+                    "Mismatch at matrix column \(column), row \(row)"
+                )
+            }
+        }
+    }
+
+    /// Verifies both Y-axis gimbal-lock limits preserve the represented transform matrix.
+    func test_gimbalLockTransformsRoundTripThroughDecomposition() {
+        for rotateY in [-90.0, 90.0] {
+            let source = SpatializedMotionTransformComponents(
+                translateX: 4, translateY: -2, translateZ: 6,
+                rotateX: 20, rotateY: rotateY, rotateZ: -35,
+                scaleX: 1, scaleY: 1.5, scaleZ: 0.75
+            )
+
+            let original = SpatializedElementAnimationManager.composeTransform(source)
+            let decomposed = SpatializedElementAnimationManager.decomposeTransform(from: original)
+            let roundTrip = SpatializedElementAnimationManager.composeTransform(decomposed)
+
+            for column in 0 ..< 4 {
+                for row in 0 ..< 3 {
+                    XCTAssertEqual(
+                        original.matrix[column][row],
+                        roundTrip.matrix[column][row],
+                        accuracy: 1e-9,
+                        "Mismatch at Y=\(rotateY), matrix column \(column), row \(row)"
+                    )
+                }
+            }
+        }
+    }
+
     func test_createAnimationReturnsNativeUuidAndRegistersObject() throws {
         let element = Spatialized2DElement()
         let manager = SpatializedElementAnimationManager()
