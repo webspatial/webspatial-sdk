@@ -214,6 +214,7 @@ final class SpatializedElementAnimationObject: SpatialObject {
         finished = false
         hasEmittedStartEvent = false
         guard lockMask() else {
+            playState = .idle
             emitStateChanged(
                 action: "error",
                 playState: .idle,

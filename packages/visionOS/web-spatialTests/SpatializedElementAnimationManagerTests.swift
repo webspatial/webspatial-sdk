@@ -543,6 +543,59 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertEqual(events.filter { $0.action == "complete" }.count, 1)
     }
 
+    /// Verifies a mask-conflict error leaves native state aligned with its emitted idle state.
+    func test_maskConflictResetsFinishedNativeStateToIdle() throws {
+        let element = Spatialized2DElement()
+        var events: [SpatialAnimationStateChanged] = []
+        let manager = SpatializedElementAnimationManager(sendWebMsg: { _, msg in
+            if let event = msg as? SpatialAnimationStateChanged {
+                events.append(event)
+            }
+        })
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 1,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "opacity",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 1, value: 1, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+        let firstAnimation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
+        )
+        let secondAnimation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        firstAnimation.finish(at: 0)
+        secondAnimation.play(at: 1)
+        firstAnimation.play(at: 2)
+
+        let firstAnimationEvents = events.filter { $0.animationId == firstAnimation.uuid }
+        XCTAssertEqual(firstAnimationEvents.map(\.action), ["finish", "error"])
+        XCTAssertEqual(firstAnimationEvents.last?.playState, .idle)
+        XCTAssertEqual(firstAnimationEvents.last?.finished, false)
+        XCTAssertEqual(firstAnimation.playState, .idle)
+        XCTAssertFalse(firstAnimation.finished)
+        XCTAssertEqual(element.animatingMask.opacityAnimationId, secondAnimation.uuid)
+    }
+
     func test_stopIsIdempotentAfterAnimationBecomesIdle() throws {
         let element = Spatialized2DElement()
         let manager = SpatializedElementAnimationManager()
