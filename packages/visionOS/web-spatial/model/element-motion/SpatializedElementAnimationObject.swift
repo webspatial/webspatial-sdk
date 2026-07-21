@@ -137,6 +137,11 @@ final class SpatializedElementAnimationObject: SpatialObject {
     }
 
     func finish(at timestamp: CFTimeInterval = CACurrentMediaTime()) {
+        // A finished session has already emitted its terminal event.
+        guard playState != .finished else {
+            return
+        }
+
         let values = sampleValues(at: duration)
         resetTimingState()
         playState = .finished

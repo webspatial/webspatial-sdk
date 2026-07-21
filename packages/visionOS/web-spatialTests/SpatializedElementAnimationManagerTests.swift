@@ -449,6 +449,56 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertTrue(animation.finished)
     }
 
+    /// Verifies finish emits once per session and remains available after replay.
+    func test_finishIsIdempotentWithinEachPlaybackSession() throws {
+        let element = Spatialized2DElement()
+        var events: [SpatialAnimationStateChanged] = []
+        let manager = SpatializedElementAnimationManager(sendWebMsg: { _, msg in
+            if let event = msg as? SpatialAnimationStateChanged {
+                events.append(event)
+            }
+        })
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 1,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "opacity",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 1, value: 1, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.finish(at: 0)
+        animation.finish(at: 0.1)
+        XCTAssertEqual(events.filter { $0.action == "finish" }.count, 1)
+
+        animation.play(at: 1)
+        animation.finish(at: 1.5)
+        XCTAssertEqual(events.filter { $0.action == "finish" }.count, 2)
+
+        animation.play(at: 2)
+        animation.tick(at: 3.1)
+        XCTAssertEqual(events.filter { $0.action == "complete" }.count, 1)
+
+        animation.finish(at: 3.2)
+        XCTAssertEqual(events.filter { $0.action == "finish" }.count, 2)
+        XCTAssertEqual(events.filter { $0.action == "complete" }.count, 1)
+    }
+
     func test_stopIsIdempotentAfterAnimationBecomesIdle() throws {
         let element = Spatialized2DElement()
         let manager = SpatializedElementAnimationManager()
