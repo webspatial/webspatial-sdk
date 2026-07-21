@@ -31,10 +31,10 @@
 
 ## 5. Native and Bridge Implementation
 
-- [ ] 5.1 Add failing Bridge contract tests for create/control payloads, `set` values, `EntityMotionStateChangedMsg` detail/action/playState/values/error, the three error codes, and encode/decode parity across Core and both native platforms
+- [ ] 5.1 Add failing Bridge contract tests for create/control payloads, `set` values, `EntityMotionStateChangedMsg` detail/action/playState/values/error, the closed error-code set defined by Design, and encode/decode parity across Core and both native platforms
 - [ ] 5.2 Implement Core/native Bridge types, `EntityMotionBridgeTypes` codecs, and handler registration, reusing `CreateSpatializedElementAnimationJSBCommand`, `ControlSpatializedElementAnimationJSBCommand`, and `spatialanimationstatechanged`
-- [ ] 5.3 Add failing target-dispatch and lifecycle tests for `elementId` lookup; element/entity/unsupported dispatch; `TARGET_NOT_FOUND`; `UNSUPPORTED_TARGET`; animation registration/lookup/explicit destroy; target invalidation; `TARGET_DESTROYED`; controller/resource release; and registry cleanup
-- [ ] 5.4 Implement `SpatialScene` Entity dispatch, the `EntityMotionManager` registry and command orchestration, `EntityMotionAnimationObject` state/resource ownership, and teardown on both native platforms
+- [ ] 5.3 Add failing target-dispatch and lifecycle tests for `elementId` lookup; element/entity/unsupported dispatch; `TARGET_NOT_FOUND`; `UNSUPPORTED_TARGET`; animation registration/lookup/explicit destroy; target-first Entity destruction; cleanup; post-destroy no-ops; and teardown races returning `ANIMATION_NOT_FOUND`
+- [ ] 5.4 On both native platforms, implement `SpatialScene` Entity dispatch and lifecycle cascade through global spatial objects; keep `EntityMotionManager` create-only, and make `EntityMotionAnimationObject` own state, resources, and cleanup
 - [ ] 5.5 Add failing timeline-compiler unit tests for property/time/scale validation, union of keyframe times, sparse-channel completion from the run baseline, channel interpolation, full poses at every slice point, per-segment easing precedence, rotation-input conversion, taken-over component calculation, and explicit failure for unrepresentable segments
 - [ ] 5.6 Implement `EntityMotionTimelineCompiler`, `EntityMotionTiming`, and `EntityMotionTransformValues` on both native platforms, producing time-ordered full-pose segments plus confirmed-transform decomposition and sparse-patch merging
 - [ ] 5.7 Add failing visionOS integration tests for RealityKit whole-`.transform` binding, multi-segment full-pose resources, `AnimationResource.sequence`, rotation conversion, all four easing modes, delay, playback rate, loop, and compilation failure
@@ -66,7 +66,7 @@
 - [ ] 8.4 On visionOS, accept percentage multi-keyframes, sparse fields, full-pose sequence, fresh play, delay, loop, pause/resume, stop/reset/finish/set, terminal commit, and teardown
 - [ ] 8.5 Run the same fixtures and acceptance matrix from 8.4 on picoOS
 - [ ] 8.6 Compare action ordering, confirmed values, terminal transforms, error results, and replay behavior across both platforms, recording and resolving differences
-- [ ] 8.7 Run end-to-end regressions proving terminal transforms do not snap back to pre-animation/base props, active set is not stashed, control fails after target destruction, and resources and registries are cleaned up
+- [ ] 8.7 Run end-to-end regressions for terminal transforms, active set, and the target-destruction lifecycle and error behavior defined by the Entity motion spec
 - [ ] 8.8 On visionOS and picoOS, measure fresh-play compilation time, playback frame stability, memory use, and teardown recovery at increasing Entity concurrency, recording representative-scale results and the release acceptance conclusion
 - [ ] 8.9 Build a Design-to-Tasks traceability table confirming every native class, JSB protocol, compilation rule, control sequence, error path, and performance trade-off has an implementation and verification task
 - [ ] 8.10 After proposal-to-implementation review is complete, archive or formally supersede `add-entity-transform-animation`

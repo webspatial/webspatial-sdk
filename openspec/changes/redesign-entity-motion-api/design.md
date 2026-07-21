@@ -598,7 +598,6 @@ type SpatializedPlaybackError = {
   code:
     | 'TARGET_NOT_FOUND'
     | 'UNSUPPORTED_TARGET'
-    | 'TARGET_DESTROYED'
     | 'ANIMATION_NOT_FOUND'
     | 'INVALID_TIMELINE'
     | 'COMPILATION_FAILED'
@@ -607,8 +606,6 @@ type SpatializedPlaybackError = {
   message?: string
 }
 ```
-
-The error codes provide a stable branching contract for applications. Command decoding, object lookup, and synchronous validation failures return through the JSB reply; playback failures that occur only after a command has been accepted return through one `error` state event. Core must preserve the native error code and ensure one failure triggers `onError` only once. A rejected active-state `set` remains a no-op plus warning; it is not `INVALID_CONTROL_STATE` and does not trigger `onError`.
 
 #### Types, normalization, and validation
 
@@ -791,7 +788,6 @@ Processing rules:
 - When the registry lacks `elementId`, create fails with `TARGET_NOT_FOUND`.
 - After create succeeds, `SpatialScene` adds the animation object to global `spatialObjects` as a `SpatialObject`; `animationId` is its spatial id.
 - Control commands look up an animation object by `animationId` in global `spatialObjects`, then enter the Element or Entity control path by animation-object runtime type. Only `EntityMotionAnimationObject` handles Entity-only `set`.
-- Animation destroy reuses the `SpatialObject` lifecycle, removes the object from the global table, and releases its controller / resource / event subscriptions. Target destroy uses the same lifecycle to destroy or invalidate associated animations; later control returns `TARGET_DESTROYED`.
 - Synchronous command errors return through the JSB reply; only asynchronous playback failures after command acceptance return through one `spatialanimationstatechanged` error event.
 - When fresh-play compilation fails, the control command fails and the animation remains inactive.
 
@@ -1093,8 +1089,6 @@ sequenceDiagram
         Scene-->>JSB: success
     else animationId is absent
         Scene-->>JSB: fail(ANIMATION_NOT_FOUND)
-    else target is destroyed
-        Scene-->>JSB: fail(TARGET_DESTROYED)
     end
 ```
 
@@ -1112,8 +1106,6 @@ sequenceDiagram
     Scene->>Scene: findSpatialObject(animationId)
     alt animationId is absent
         Scene-->>JSB: fail(ANIMATION_NOT_FOUND)
-    else target is destroyed
-        Scene-->>JSB: fail(TARGET_DESTROYED)
     else animation delayed / playing / paused
         Note over Obj: no-op + console warning, while onError handles classified errors
         Scene-->>JSB: return no-op
@@ -1130,6 +1122,6 @@ sequenceDiagram
 
 Pause reuses the compiled whole-transform chain and controls the current playback controller. Stop / reset / finish terminate the current playback and commit the end-state transform with zero duration. While inactive, `set` merges the sparse patch onto the committed transform and commits it directly.
 
-Animation destroy directly invokes the existing `SpatialObject` lifecycle: `SpatialScene` removes the animation object from `spatialObjects`, and the object's destroy callback stops its controller, releases its resource, and removes event subscriptions. Target destroy cascades destruction or invalidation to associated animation objects through the same lifecycle, with no manager registry or two-table cleanup order.
+A native Entity animation object has the same lifecycle as one target binding. When the target is destroyed, `SpatialScene` cascades destruction to associated animations through the global `SpatialObject` lifecycle and retains no invalid object.
 
 Boundary constraint: `SpatialScene` owns global `spatialObjects`, create-target lookup, control-animation lookup, runtime-type dispatch, command receipts, and the `SpatialObject` lifecycle. `EntityMotionManager` only provides Entity animation-object creation; `EntityMotionAnimationObject` owns per-object compilation, playback state, controls, confirmed values, and resource release. Extract a shared protocol only after real duplication appears; do not introduce a second registry in advance.
