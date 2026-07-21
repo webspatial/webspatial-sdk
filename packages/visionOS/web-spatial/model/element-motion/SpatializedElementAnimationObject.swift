@@ -196,7 +196,7 @@ final class SpatializedElementAnimationObject: SpatialObject {
         playState = .idle
         finished = false
         releaseMask()
-        emitStateChanged(action: "destroy", playState: .idle, values: currentValues(at: CACurrentMediaTime()))
+        emitStateChanged(action: "destroy", playState: .idle)
     }
 
     private func startFreshPlayback(at timestamp: CFTimeInterval) {

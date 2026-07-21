@@ -1089,6 +1089,93 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertEqual(events.last?.finished, false)
     }
 
+    /// Verifies destroy does not replace an explicitly finished value with a resampled start value.
+    func test_destroyAfterFinishDoesNotEmitResampledValues() throws {
+        let element = Spatialized2DElement()
+        var events: [SpatialAnimationStateChanged] = []
+        let manager = SpatializedElementAnimationManager(sendWebMsg: { _, msg in
+            if let event = msg as? SpatialAnimationStateChanged {
+                events.append(event)
+            }
+        })
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 1,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "opacity",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 1, value: 1, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.finish(at: 1)
+        XCTAssertEqual(element.opacity, 1, accuracy: 0.0001)
+
+        animation.destroy()
+
+        XCTAssertEqual(element.opacity, 1, accuracy: 0.0001)
+        XCTAssertEqual(events.last?.action, "destroy")
+        XCTAssertNil(events.last?.values)
+    }
+
+    /// Verifies destroy does not resample a paused animation after changing its state to idle.
+    func test_destroyWhilePausedDoesNotEmitResampledValues() throws {
+        let element = Spatialized2DElement()
+        var events: [SpatialAnimationStateChanged] = []
+        let manager = SpatializedElementAnimationManager(sendWebMsg: { _, msg in
+            if let event = msg as? SpatialAnimationStateChanged {
+                events.append(event)
+            }
+        })
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 2,
+            delay: nil,
+            playbackRate: nil,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "opacity",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 2, value: 1, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+        animation.pause(at: 1)
+        XCTAssertEqual(element.opacity, 0.5, accuracy: 0.0001)
+
+        animation.destroy()
+
+        XCTAssertEqual(element.opacity, 0.5, accuracy: 0.0001)
+        XCTAssertEqual(events.last?.action, "destroy")
+        XCTAssertNil(events.last?.values)
+    }
+
     func test_tickAllAllowsAnimationRemovalFromStateCallback() throws {
         let firstElement = Spatialized2DElement()
         let secondElement = Spatialized2DElement()
