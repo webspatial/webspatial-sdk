@@ -381,10 +381,10 @@ describe('AnimationObject', () => {
 })
 
 describe('Core exports', () => {
-  it('does not require bridge architecture objects in the public Core export surface', async () => {
+  it('keeps internal motion architecture objects out of the public Core export surface', async () => {
     const mod = await import('../index')
 
-    expect(mod.AnimationObject).toBeDefined()
+    expect((mod as any).AnimationObject).toBeUndefined()
     expect((mod as any).AnimationObjectChannel).toBeUndefined()
     expect((mod as any).AnimationObjectBridge).toBeUndefined()
     expect((mod as any).SpatialObjectBridge).toBeUndefined()
@@ -394,13 +394,6 @@ describe('Core exports', () => {
     const mod = await import('./index')
 
     expect(mod.AnimationObject).toBeDefined()
-  })
-
-  it('keeps the top-level AnimationObject export aligned with the motion entrypoint', async () => {
-    const root = await import('../index')
-    const motion = await import('./index')
-
-    expect(root.AnimationObject).toBe(motion.AnimationObject)
   })
 
   it('removes legacy animateMotion entry points from spatialized elements', async () => {

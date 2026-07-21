@@ -1,5 +1,4 @@
 import type {
-  AnimationObject,
   SpatializedElement,
   SpatializedMotionConfig,
   SpatializedMotionKind,
@@ -10,6 +9,11 @@ import type {
 } from '@webspatial/core-sdk'
 import { supports, validateSpatializedMotionConfig } from '@webspatial/core-sdk'
 import { getMotionConfigSignature } from './motionConfigSignature'
+
+/** Internal animation object returned by a spatialized element. */
+type AnimationObject = Awaited<
+  ReturnType<SpatializedElement['createAnimation']>
+>
 
 type AnimationCommandType = 'play' | 'pause' | 'stop' | 'reset' | 'finish'
 

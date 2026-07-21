@@ -4,6 +4,15 @@ import type { SpatializedPlaybackApi } from '@webspatial/core-sdk'
 // @ts-expect-error canonical tracks are not part of the stable Core type surface
 import type { SpatializedMotionTrack } from '@webspatial/core-sdk'
 
+// @ts-expect-error native AnimationObject construction is not part of the stable Core type surface
+import type { AnimationObject } from '@webspatial/core-sdk'
+
+// @ts-expect-error native AnimationObject callbacks are not part of the stable Core type surface
+import type { AnimationObjectCallbacks } from '@webspatial/core-sdk'
+
+// @ts-expect-error native AnimationObject creation options are not part of the stable Core type surface
+import type { AnimationObjectCreateOptions } from '@webspatial/core-sdk'
+
 const validSegment: SpatializedMotionConfig = {
   from: { opacity: 0 },
   to: { opacity: 1 },
@@ -60,6 +69,11 @@ void badSegmentWithoutFrom
 void badSegmentWithoutTo
 void badTracks
 void (null as SpatializedMotionTrack | null)
+void (null as
+  | AnimationObject
+  | AnimationObjectCallbacks
+  | AnimationObjectCreateOptions
+  | null)
 
 declare const playbackApi: SpatializedPlaybackApi
 
