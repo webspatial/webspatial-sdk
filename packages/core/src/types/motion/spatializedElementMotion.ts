@@ -1,6 +1,7 @@
 import type { SpatializedMotionTimeline } from './spatializedMotion'
 import type { SpatializedMotionPlayState } from './spatializedMotion'
 import type { SpatializedVisualValues } from './spatializedVisual'
+import type { SpatialWebMsgType } from '../../WebMsgCommand'
 
 /** Native playback error payload carried by the bridge event. */
 interface SpatializedElementAnimationErrorDetail {
@@ -43,6 +44,6 @@ export interface SpatialAnimationStateChangedDetail {
 }
 
 export interface SpatialAnimationStateChangedMsg {
-  type: 'spatialanimationstatechanged'
+  type: SpatialWebMsgType.animationstatechange
   detail: SpatialAnimationStateChangedDetail
 }

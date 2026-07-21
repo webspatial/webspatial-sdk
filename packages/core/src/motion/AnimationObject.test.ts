@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { SpatialWebMsgType } from '../WebMsgCommand'
 import { SpatialWebEvent } from '../SpatialWebEvent'
+import type { SpatialAnimationStateChangedMsg } from '../types/motion/spatializedElementMotion'
+
+const spatialAnimationStateChangedType: SpatialAnimationStateChangedMsg['type'] =
+  SpatialWebMsgType.animationstatechange
 
 const spies = vi.hoisted(() => ({
   createCommandSpy: vi.fn(),
@@ -98,6 +103,12 @@ describe('AnimationObject', () => {
       },
     })
   }
+
+  it('types native state events with the shared animationstatechange discriminant', () => {
+    expect(spatialAnimationStateChangedType).toBe(
+      SpatialWebMsgType.animationstatechange,
+    )
+  })
 
   it('creates from the native create command and tracks native state directly', async () => {
     const { AnimationObject } = await import('./AnimationObject')
