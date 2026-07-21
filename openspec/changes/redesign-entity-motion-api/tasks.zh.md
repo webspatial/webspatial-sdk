@@ -27,7 +27,7 @@
 - [ ] 4.3 先编写失败测试,覆盖公开 playback API 与整 transform ownership:`api.set` 只接受 sparse patch object,未绑定或原生动画对象创建前的 set 为 no-op,动画活跃期间的 React transform 写入 / set 不暂存、不覆盖动画且不更新 `entityProps`,终态填充不 snap 回退
 - [ ] 4.4 实现 React/Core playback API、JSB 命令发起和 outlet ownership 路由;Native 的 set 合并、状态机与终态提交由第 5 节实现
 - [ ] 4.5 先编写失败测试,覆盖 `normalizeEntityMotionConfig` 对顶层 `from` / `to`、`timeline.from` / `timeline.to` 和百分比关键帧的等价折叠、`timeline` 优先告警、默认 0.3 秒 duration、起止边界必填、同帧重复拒绝、属性白名单与字段级稀疏保留
-- [ ] 4.6 在 Core 实现归一化与校验,保持现有 `EntityMotionTimelinePayload` 和创建命令 wire shape 兼容;Native 对该 payload 的编译与执行由第 5 节实现
+- [ ] 4.6 在 Core 实现归一化与校验,保持现有 `EntityMotionTimelinePayload` 和创建命令传输结构兼容;Native 对该 payload 的编译与执行由第 5 节实现
 
 ## 5. Native 与 Bridge 实现
 

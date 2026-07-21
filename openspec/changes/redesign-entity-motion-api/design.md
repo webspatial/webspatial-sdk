@@ -656,7 +656,7 @@ Example:
   tracks: [
     {
       property: 'position.y',
-      timingFunction: 'easeOut',
+      timingFunction: 'linear',
       keyframes: [
         { at: 0, value: 0 },
         { at: 0.6, value: 0.25 },
