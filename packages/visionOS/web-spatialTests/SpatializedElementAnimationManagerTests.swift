@@ -348,6 +348,50 @@ final class SpatializedElementAnimationManagerTests: XCTestCase {
         XCTAssertEqual(events.last?.finished, false)
     }
 
+    func test_playbackRateDoesNotScaleDelayDuration() throws {
+        let element = Spatialized2DElement()
+        var events: [SpatialAnimationStateChanged] = []
+        let manager = SpatializedElementAnimationManager(sendWebMsg: { _, msg in
+            if let event = msg as? SpatialAnimationStateChanged {
+                events.append(event)
+            }
+        })
+        let timeline = SpatializedMotionTimelinePayload(
+            duration: 2,
+            delay: 2,
+            playbackRate: 2,
+            loop: nil,
+            tracks: [
+                SpatializedMotionTrackPayload(
+                    property: "transform.translate.x",
+                    keyframes: [
+                        SpatializedMotionKeyframePayload(at: 0, value: 0, timingFunction: "linear"),
+                        SpatializedMotionKeyframePayload(at: 2, value: 20, timingFunction: nil),
+                    ],
+                    timingFunction: "linear"
+                ),
+            ]
+        )
+
+        let animation = try manager.createAnimation(
+            command: CreateSpatializedElementAnimationCommand(
+                elementId: element.id,
+                timeline: timeline
+            ),
+            target: element
+        )
+
+        animation.play(at: 0)
+        animation.tick(at: 1)
+        XCTAssertEqual(events.map(\.action), ["play"])
+
+        animation.tick(at: 2)
+        XCTAssertEqual(events.map(\.action), ["play", "start"])
+
+        animation.tick(at: 2.5)
+        XCTAssertEqual(element.transform.matrix.columns.3.x, 10, accuracy: 0.0001)
+    }
+
     func test_pauseDuringDelayDoesNotDelayActiveProgress() throws {
         let element = Spatialized2DElement()
         var events: [SpatialAnimationStateChanged] = []

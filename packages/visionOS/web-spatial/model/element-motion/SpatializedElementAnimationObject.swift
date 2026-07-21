@@ -339,7 +339,7 @@ final class SpatializedElementAnimationObject: SpatialObject {
         if delayCompleted {
             return true
         }
-        let elapsed = (timestamp - createdTime - pausedDuration) * speed
+        let elapsed = timestamp - createdTime - pausedDuration
         if elapsed >= delay {
             delayCompleted = true
             startTime = timestamp
