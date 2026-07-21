@@ -87,6 +87,8 @@ function createMockAnimationObject(id = 'animation-object-1') {
     }),
     emitState: (patch: Partial<typeof state>) => setState(patch),
     emitValues: (values: any) => callbacks.onValuesChange?.(values),
+    /** Emits a mocked asynchronous native playback error. */
+    emitError: (error: any) => callbacks.onError?.(error),
     emitComplete: (values: any) => {
       callbacks.onValuesChange?.(values)
       callbacks.onComplete?.(values)
@@ -532,6 +534,63 @@ describe('useAnimation tuple api native backend', () => {
     })
 
     expect(secondAnimation.setCallbacks).toHaveBeenCalled()
+  })
+
+  test('ignores callbacks from the replaced Core AnimationObject', async () => {
+    const firstAnimation = createMockAnimationObject('stale-config-first')
+    const secondAnimation = createMockAnimationObject('stale-config-second')
+    const onComplete = vi.fn()
+    const onError = vi.fn()
+    const element = {
+      id: 'stale-config-element',
+      kind: 'spatialized2d' as const,
+      createAnimation: vi
+        .fn()
+        .mockResolvedValueOnce(firstAnimation)
+        .mockResolvedValueOnce(secondAnimation),
+    }
+
+    const { result, rerender } = renderHook(
+      ({ duration }) =>
+        useAnimation({
+          duration,
+          autoStart: false,
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+          onComplete,
+          onError,
+        }),
+      { initialProps: { duration: 1 } },
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any)
+    })
+    await waitFor(() => expect(firstAnimation.setCallbacks).toHaveBeenCalled())
+
+    rerender({ duration: 2 })
+    await waitFor(() => expect(secondAnimation.setCallbacks).toHaveBeenCalled())
+
+    act(() => {
+      firstAnimation.emitComplete({ opacity: 0.25 })
+      firstAnimation.emitError({ command: 'play', reason: 'stale error' })
+    })
+
+    expect(result.current[2].opacity).toBeUndefined()
+    expect(onComplete).not.toHaveBeenCalled()
+    expect(onError).not.toHaveBeenCalled()
+
+    act(() => {
+      secondAnimation.emitComplete({ opacity: 1 })
+      secondAnimation.emitError({ command: 'play', reason: 'current error' })
+    })
+
+    expect(result.current[2].opacity).toBe(1)
+    expect(onComplete).toHaveBeenCalledWith({ opacity: 1 })
+    expect(onError).toHaveBeenCalledWith({
+      command: 'play',
+      reason: 'current error',
+    })
   })
 
   test('__onUnbind destroys the active Core AnimationObject without invoking onReset', async () => {

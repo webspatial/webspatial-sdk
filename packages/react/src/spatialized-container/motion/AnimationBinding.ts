@@ -128,7 +128,9 @@ export class AnimationBinding implements SpatializedPlaybackApi {
       this.configSignature = nextSignature
       this.recreateAnimationObject()
     } else if (this.animationObject) {
-      this.animationObject.setCallbacks(this.createAnimationObjectCallbacks())
+      this.animationObject.setCallbacks(
+        this.createAnimationObjectCallbacks(this.animationObject),
+      )
     }
   }
 
@@ -224,7 +226,9 @@ export class AnimationBinding implements SpatializedPlaybackApi {
 
         this.animationObject = animationObject
         this.creating = false
-        animationObject.setCallbacks(this.createAnimationObjectCallbacks())
+        animationObject.setCallbacks(
+          this.createAnimationObjectCallbacks(animationObject),
+        )
         this.syncStateFromAnimationObject()
         void this.flushPendingCommands()
         this.maybeAutoPlay(!hadPendingCommands)
@@ -246,35 +250,38 @@ export class AnimationBinding implements SpatializedPlaybackApi {
       })
   }
 
-  private createAnimationObjectCallbacks() {
+  private createAnimationObjectCallbacks(animationObject: AnimationObject) {
+    // Ignore delayed callbacks after unbind or animation object replacement.
+    const isCurrent = () =>
+      !this.destroyed && this.animationObject === animationObject
     return {
       onStart: () => {
-        if (this.destroyed) return
+        if (!isCurrent()) return
         this.config.onStart?.()
       },
       onComplete: (values: SpatializedVisualValues) => {
-        if (this.destroyed) return
+        if (!isCurrent()) return
         this.config.onComplete?.(values)
       },
       onStop: (values: SpatializedVisualValues) => {
-        if (this.destroyed) return
+        if (!isCurrent()) return
         this.config.onStop?.(values)
       },
       onReset: (values: SpatializedVisualValues) => {
-        if (this.destroyed) return
+        if (!isCurrent()) return
         this.config.onReset?.(values)
       },
       onError: (error: SpatializedPlaybackError) => {
-        if (this.destroyed) return
+        if (!isCurrent()) return
         this.config.onError?.(error)
       },
       onValuesChange: (values: SpatializedVisualValues) => {
-        if (this.destroyed) return
+        if (!isCurrent()) return
         this.values = values
         this.options.onValuesChange?.(values)
       },
       onStateChange: () => {
-        if (this.destroyed) return
+        if (!isCurrent()) return
         this.syncStateFromAnimationObject()
         this.options.onStateChange?.()
       },
