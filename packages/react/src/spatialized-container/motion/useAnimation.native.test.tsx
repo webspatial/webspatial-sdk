@@ -992,6 +992,66 @@ describe('useAnimation tuple api native backend', () => {
     await waitFor(() => expect(animation.stop).toHaveBeenCalledTimes(1))
   })
 
+  test('runs autoStart before commands queued during Core AnimationObject creation', async () => {
+    let resolveCreate:
+      | ((animation: ReturnType<typeof createMockAnimationObject>) => void)
+      | undefined
+    let resolvePlay: (() => void) | undefined
+    const animation = createMockAnimationObject('autostart-queue-animation')
+    animation.play.mockImplementation(
+      () =>
+        new Promise<void>(resolve => {
+          resolvePlay = resolve
+        }),
+    )
+    const element = {
+      id: 'autostart-queue-element',
+      kind: 'spatialized2d' as const,
+      animation,
+      createAnimation: vi.fn(
+        () =>
+          new Promise<ReturnType<typeof createMockAnimationObject>>(resolve => {
+            resolveCreate = resolve
+          }),
+      ),
+    }
+
+    const { result } = renderHook(() =>
+      useAnimation({
+        duration: 1,
+        from: { opacity: 0 },
+        to: { opacity: 1 },
+      }),
+    )
+
+    act(() => {
+      result.current[0].__setElement?.(element as any)
+    })
+    await waitFor(() =>
+      expect(element.createAnimation).toHaveBeenCalledTimes(1),
+    )
+
+    act(() => {
+      result.current[1].finish()
+    })
+
+    await act(async () => {
+      resolveCreate?.(animation)
+      await Promise.resolve()
+    })
+
+    await waitFor(() => expect(animation.play).toHaveBeenCalledTimes(1))
+    expect(animation.finish).not.toHaveBeenCalled()
+
+    await act(async () => {
+      resolvePlay?.()
+      await Promise.resolve()
+    })
+
+    await waitFor(() => expect(animation.finish).toHaveBeenCalledTimes(1))
+    expect(result.current[1].playState).toBe('finished')
+  })
+
   test('static3d opacity creates a Core AnimationObject and forwards the track', () => {
     const element = createMockElement('static-opacity', 'static3d')
 

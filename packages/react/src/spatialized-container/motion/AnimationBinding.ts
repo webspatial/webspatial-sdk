@@ -209,7 +209,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     if (!supportsAnimation()) {
       return
     }
-    const hadPendingCommands = this.pendingCommands.length > 0
     const token = ++this.createToken
     const element = this.element
     const kind = element.kind
@@ -217,7 +216,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.creating = true
     element
       .createAnimation(this.config)
-      .then(animationObject => {
+      .then(async animationObject => {
         if (
           this.destroyed ||
           token !== this.createToken ||
@@ -234,8 +233,19 @@ export class AnimationBinding implements SpatializedPlaybackApi {
           this.createAnimationObjectCallbacks(animationObject),
         )
         this.syncStateFromAnimationObject()
-        void this.flushPendingCommands()
-        this.maybeAutoPlay(!hadPendingCommands)
+        if (this.config.autoStart !== false) {
+          this.pendingCommands.unshift({ type: 'play' })
+        }
+        await this.flushPendingCommands()
+        if (
+          this.destroyed ||
+          token !== this.createToken ||
+          this.animationObject !== animationObject ||
+          this.element !== element ||
+          this.element.kind !== kind
+        ) {
+          return
+        }
         this.options.onStateChange?.()
       })
       .catch(error => {
@@ -364,19 +374,6 @@ export class AnimationBinding implements SpatializedPlaybackApi {
         return
       }
     }
-    this.syncStateFromAnimationObject()
-  }
-
-  private maybeAutoPlay(allowImplicitPlay: boolean): void {
-    if (!this.animationObject || !this.element) return
-    if (!allowImplicitPlay) return
-    if (this.config.autoStart === false) return
-    this.animationObject.play().catch(error => {
-      this.config.onError?.({
-        command: 'play',
-        reason: error instanceof Error ? error.message : 'Play failed',
-      })
-    })
     this.syncStateFromAnimationObject()
   }
 }

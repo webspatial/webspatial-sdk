@@ -212,6 +212,14 @@ Playback controls MUST operate on the same object. A config signature change or 
 - **WHEN** explicit `api.play()` is called before bind
 - **THEN** the command MUST still run after bind
 
+#### Scenario: Auto-start precedes queued explicit commands
+
+- **GIVEN** `autoStart` is enabled or omitted
+- **AND** explicit playback commands are queued before native object creation completes
+- **WHEN** the native-backed object is created
+- **THEN** the binding MUST enqueue the implicit `play` before the explicit commands
+- **AND** it MUST execute the complete queue sequentially
+
 #### Scenario: Config change recreates playback object
 
 - **WHEN** the normalized config signature changes
