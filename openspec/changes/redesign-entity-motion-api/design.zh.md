@@ -598,7 +598,6 @@ type SpatializedPlaybackError = {
   code:
     | 'TARGET_NOT_FOUND'
     | 'UNSUPPORTED_TARGET'
-    | 'TARGET_DESTROYED'
     | 'ANIMATION_NOT_FOUND'
     | 'INVALID_TIMELINE'
     | 'COMPILATION_FAILED'
@@ -607,8 +606,6 @@ type SpatializedPlaybackError = {
   message?: string
 }
 ```
-
-错误码为应用提供稳定的分支契约。命令解码、对象查找和同步校验失败通过 JSB reply 返回;命令已经接受后才发生的播放失败通过一次 `error` state event 返回。Core 必须保留 Native error code 并保证同一次失败只触发一次 `onError`。active 状态下被拒绝的 `set` 仍是 no-op + warning,不属于 `INVALID_CONTROL_STATE`,也不触发 `onError`。
 
 #### 类型、归一化与校验
 
@@ -791,7 +788,6 @@ classDiagram
 - 注册表缺少 `elementId` 时,创建以 `TARGET_NOT_FOUND` 失败。
 - 创建成功后,`SpatialScene` 把 animation object 作为 `SpatialObject` 加入全局 `spatialObjects`;`animationId` 就是其 spatial id。
 - 控制命令通过 `animationId` 在全局 `spatialObjects` 查找动画对象,再按动画对象运行时类型进入 Element 或 Entity 控制路径。Entity-only `set` 只由 `EntityMotionAnimationObject` 处理。
-- animation destroy 复用 `SpatialObject` lifecycle,从全局表移除对象并释放 controller / resource / 事件订阅。目标销毁时,关联动画随相同 lifecycle 销毁或失效;后续控制返回 `TARGET_DESTROYED`。
 - 同步命令错误通过 JSB reply 回传;仅命令接受后发生的异步播放错误通过一次 `spatialanimationstatechanged` error event 回传。
 - fresh play 编译失败时,控制命令失败,动画保持非活跃。
 
@@ -1093,8 +1089,6 @@ sequenceDiagram
         Scene-->>JSB: 成功
     else animationId 不存在
         Scene-->>JSB: 失败(ANIMATION_NOT_FOUND)
-    else 目标已销毁
-        Scene-->>JSB: 失败(TARGET_DESTROYED)
     end
 ```
 
@@ -1112,8 +1106,6 @@ sequenceDiagram
     Scene->>Scene: findSpatialObject(animationId)
     alt animationId 不存在
         Scene-->>JSB: 失败(ANIMATION_NOT_FOUND)
-    else 目标已销毁
-        Scene-->>JSB: 失败(TARGET_DESTROYED)
     else 动画处于延迟 / 播放中 / 暂停
         Note over Obj: 空操作 + 控制台警告，onError 专用于分类错误
         Scene-->>JSB: 返回空操作
@@ -1130,6 +1122,6 @@ sequenceDiagram
 
 暂停复用已编译的整姿态串联动画并控制当前播放控制器。停止 / 重置 / 结束会终止当前播放,并以零时长提交终态姿态。`set` 在非活跃状态下把稀疏补丁合并到已提交姿态后直接提交。
 
-animation destroy 直接调用既有 `SpatialObject` lifecycle:`SpatialScene` 从 `spatialObjects` 移除 animation object,对象在销毁回调中停止 controller、释放 resource 并取消事件订阅。target destroy 通过同一 lifecycle 级联销毁或失效关联 animation object,不需要 Manager registry 或双表清理顺序。
+Native Entity animation object 与一次 target binding 同生命周期;target 销毁时,`SpatialScene` 通过全局 `SpatialObject` lifecycle 级联销毁关联动画,不保留失效对象。
 
 边界约束:`SpatialScene` 负责全局 `spatialObjects`、创建目标查找、控制动画对象查找、运行时类型分发、命令回执和 `SpatialObject` lifecycle。`EntityMotionManager` 只提供 Entity 动画对象创建服务;`EntityMotionAnimationObject` 内聚单对象编译、播放状态、控制、确认值和资源释放。两条路径出现真实重复时再提取公共协议,不预先引入第二张 registry。

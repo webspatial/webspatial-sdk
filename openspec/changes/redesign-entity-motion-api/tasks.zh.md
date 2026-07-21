@@ -31,10 +31,10 @@
 
 ## 5. Native 与 Bridge 实现
 
-- [ ] 5.1 先编写失败的 Bridge contract 测试,覆盖创建/控制命令 payload、`set` values、`EntityMotionStateChangedMsg` detail/action/playState/values/error、三类错误码以及 Core 与两端 Native 编解码一致性
+- [ ] 5.1 先编写失败的 Bridge contract 测试,覆盖创建/控制命令 payload、`set` values、`EntityMotionStateChangedMsg` detail/action/playState/values/error、Design 定义的封闭错误码集合以及 Core 与两端 Native 编解码一致性
 - [ ] 5.2 实现 Core/Native Bridge 类型、`EntityMotionBridgeTypes` 编解码和 handler 注册,复用 `CreateSpatializedElementAnimationJSBCommand`、`ControlSpatializedElementAnimationJSBCommand` 与 `spatialanimationstatechanged`
-- [ ] 5.3 先编写失败的目标分发与生命周期测试,覆盖 `elementId` 查询、element/entity/unsupported 分发、`TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、动画注册/查找/显式 destroy、target invalidation、`TARGET_DESTROYED`、controller/resource 释放和注册表清理
-- [ ] 5.4 在两端 Native 实现 `SpatialScene` Entity 分发、`EntityMotionManager` 注册表与命令编排、`EntityMotionAnimationObject` 状态/资源持有以及销毁清理
+- [ ] 5.3 先编写失败的目标分发与生命周期测试,覆盖 `elementId` 查询、element/entity/unsupported 分发、`TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、动画注册/查找/显式 destroy、Entity target 先销毁、清理、销毁后 no-op 以及竞态返回 `ANIMATION_NOT_FOUND`
+- [ ] 5.4 在两端 Native 实现 `SpatialScene` Entity 分发及通过全局 spatial objects 完成生命周期级联,保持 `EntityMotionManager` 只负责创建,由 `EntityMotionAnimationObject` 持有状态、资源并完成清理
 - [ ] 5.5 先编写失败的 timeline compiler 单元测试,覆盖属性/时间/缩放校验、关键帧时间并集、稀疏通道按本轮 baseline 补全、通道插值、每个切点完整姿态、逐段缓动优先级、旋转输入转换、被接管分量计算和无法表达段的显式失败
 - [ ] 5.6 在两端 Native 实现 `EntityMotionTimelineCompiler`、`EntityMotionTiming` 与 `EntityMotionTransformValues`,产出按时间排序的完整姿态段及 confirmed transform 拆解/稀疏补丁合并能力
 - [ ] 5.7 先编写失败的 visionOS 集成测试,覆盖 RealityKit 整 `.transform` 绑定、多段完整姿态资源、`AnimationResource.sequence`、旋转转换、四种缓动、delay、playback rate、loop 和编译失败
@@ -66,7 +66,7 @@
 - [ ] 8.4 在 visionOS 运行百分比多关键帧、稀疏字段、完整姿态 sequence、fresh play、delay、loop、pause/resume、stop/reset/finish/set、终态提交和销毁清理验收
 - [ ] 8.5 在 picoOS 运行与 8.4 相同的 fixtures 和验收矩阵
 - [ ] 8.6 对照两端的 action 顺序、confirmed values、终态 transform、错误结果和 replay 行为,记录并解决跨端差异
-- [ ] 8.7 执行端到端回归,验证动画终态不 snap 回 pre-animation/base props,active set 不暂存,目标销毁后控制失败,资源与注册表完成清理
+- [ ] 8.7 执行端到端回归,覆盖动画终态、active set 以及 Entity motion Spec 定义的 target 销毁生命周期和错误行为
 - [ ] 8.8 在 visionOS/picoOS 分别测量递增 Entity 并发下的 fresh-play 编译耗时、播放帧稳定性、内存占用和销毁回收,记录代表性规模结果与发布验收结论
 - [ ] 8.9 建立 Design-to-Tasks 对照表,确认每个 Native 类、JSB 协议、编译规则、控制时序、错误路径和性能折中都有实现与验证任务
 - [ ] 8.10 完成提案与实现对照复核后,归档或正式替代 `add-entity-transform-animation`

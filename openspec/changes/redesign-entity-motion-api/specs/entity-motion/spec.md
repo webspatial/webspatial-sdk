@@ -271,9 +271,22 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 
 ### Requirement: Playback errors are classified
 
-The SDK MUST expose a closed `SpatializedPlaybackError.code` classification for Entity motion failures, covering at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, and `TARGET_DESTROYED`. All classified failures MUST be delivered to the user through `onError`. Rejected `api.set` writes — during an active animation, or before binding / native object creation — MUST NOT be delivered through `onError`; they MUST be no-ops that emit a console warning.
+The SDK MUST expose a closed `SpatializedPlaybackError.code` classification for Entity motion failures, covering at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, and `ANIMATION_NOT_FOUND`. All classified failures MUST be delivered to the user through `onError`. Rejected `api.set` writes — during an active animation, or before binding / native object creation — MUST NOT be delivered through `onError`; they MUST be no-ops that emit a console warning.
 
 #### Scenario: Error code is distinguishable
 - **WHEN** an Entity motion operation fails
 - **THEN** `onError` MUST receive a `SpatializedPlaybackError` whose `code` identifies the failure kind
 - **AND** application code MUST be able to branch on `code` without parsing `message`
+
+### Requirement: Entity target destruction invalidates associated animations
+
+If an Entity target is destroyed first, the SDK MUST destroy its associated animation objects. After that destruction has synchronized to Core, playback commands MUST be no-ops and `api.set` MUST be a warning plus no-op without triggering `onError`. A command racing with teardown MAY fail with `ANIMATION_NOT_FOUND`.
+
+#### Scenario: Target-first destruction cascades animation cleanup
+- **WHEN** an Entity target is destroyed before its associated native animation objects
+- **THEN** Native MUST destroy every Entity animation object associated with that target
+- **AND** after destruction synchronizes to Core, playback MUST be a no-op and `api.set` MUST be a warning plus no-op without triggering `onError`
+
+#### Scenario: Control command races teardown
+- **WHEN** a control command races with animation-object teardown
+- **THEN** it MAY fail with `ANIMATION_NOT_FOUND`

@@ -271,9 +271,22 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 
 ### Requirement: 播放错误可分类
 
-SDK MUST 为 Entity motion 失败暴露一个封闭的 `SpatializedPlaybackError.code` 分类,至少覆盖 `TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、`TARGET_DESTROYED`。所有已分类失败 MUST 通过 `onError` 抵达用户。被拒绝的 `api.set` 写入——发生在活跃动画期间,或在绑定 / native object 创建之前——MUST NOT 通过 `onError` 抵达用户;它们 MUST 是 no-op,并输出一条 console warning。
+SDK MUST 为 Entity motion 失败暴露一个封闭的 `SpatializedPlaybackError.code` 分类,至少覆盖 `TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、`ANIMATION_NOT_FOUND`。所有已分类失败 MUST 通过 `onError` 抵达用户。被拒绝的 `api.set` 写入——发生在活跃动画期间,或在绑定 / native object 创建之前——MUST NOT 通过 `onError` 抵达用户;它们 MUST 是 no-op,并输出一条 console warning。
 
 #### Scenario: 错误码可区分
 - **WHEN** 某个 Entity motion 操作失败
 - **THEN** `onError` MUST 收到一个 `SpatializedPlaybackError`,其 `code` 标识失败类型
 - **AND** 应用代码 MUST 能够按 `code` 分支,而无需解析 `message`
+
+### Requirement: Entity target 销毁会使关联动画失效
+
+若 Entity target 先销毁,SDK MUST 销毁其关联 animation objects。销毁同步到 Core 后,playback 命令 MUST 是 no-op,`api.set` MUST 是 warning + no-op 且不触发 `onError`;与销毁竞态的命令 MAY 以 `ANIMATION_NOT_FOUND` 失败。
+
+#### Scenario: target 先销毁时级联清理动画
+- **WHEN** Entity target 在关联 native animation object 之前销毁
+- **THEN** Native MUST 销毁该 target 的所有关联 Entity animation objects
+- **AND** 销毁同步到 Core 后,playback MUST 是 no-op,`api.set` MUST 是 warning + no-op 且不触发 `onError`
+
+#### Scenario: 控制命令与销毁竞态
+- **WHEN** 控制命令与 animation object 销毁发生竞态
+- **THEN** 它 MAY 以 `ANIMATION_NOT_FOUND` 失败
