@@ -44,7 +44,11 @@ export type { SpatialBootProps } from './runtime/SpatialBoot'
 // --- Runtime capability infrastructure (from @webspatial/core-sdk/runtime) ----
 export { WebSpatialRuntime } from './webSpatialRuntime'
 export { WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
-export type { CapabilityKey } from '@webspatial/core-sdk/runtime'
+export type {
+  CapabilityKey,
+  WebSpatialRuntimeSnapshot,
+  WebSpatialRuntimeType,
+} from '@webspatial/core-sdk/runtime'
 
 // --- Core-sdk type re-exports (zero runtime cost) ---------------------------
 // `@webspatial/core-sdk` remains a regular dependency of this package because
