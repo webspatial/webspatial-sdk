@@ -31,7 +31,7 @@
 
 ## 5. Native and Bridge Implementation
 
-- [ ] 5.1 Add failing Bridge contract tests for create/control payloads, `set` values, `EntityMotionStateChangedMsg` detail/action/playState/values/error, the closed error-code set defined by Design, and encode/decode parity across Core and both native platforms
+- [ ] 5.1 Add failing Bridge contract tests for create/control payloads, `set` values, active `set` returning the existing `INVALID_CONTROL_STATE` failure without a new reply shape, `EntityMotionStateChangedMsg` detail/action/playState/values/error, the closed error-code set defined by Design, and encode/decode parity across Core and both native platforms
 - [ ] 5.2 Implement Core/native Bridge types, `EntityMotionBridgeTypes` codecs, and handler registration, reusing `CreateSpatializedElementAnimationJSBCommand`, `ControlSpatializedElementAnimationJSBCommand`, and `spatialanimationstatechanged`
 - [ ] 5.3 Add failing target-dispatch and lifecycle tests for `elementId` lookup; element/entity/unsupported dispatch; `TARGET_NOT_FOUND`; `UNSUPPORTED_TARGET`; animation registration/lookup/explicit destroy; target-first Entity destruction; cleanup; post-destroy no-ops; and teardown races returning `ANIMATION_NOT_FOUND`
 - [ ] 5.4 On both native platforms, implement `SpatialScene` Entity dispatch and lifecycle cascade through global spatial objects; keep `EntityMotionManager` create-only, and make `EntityMotionAnimationObject` own state, resources, and cleanup
@@ -44,7 +44,7 @@
 - [ ] 5.11 Add failing fresh-play state tests for first `play` / `autoStart`; replay after complete/finish/stop/reset reading the latest baseline and recompiling; play after pause resuming the current controller; loop within one run reusing the current resource; and compilation failure remaining inactive
 - [ ] 5.12 Implement fresh play, delay/running/paused transitions, resume, loop-resource reuse, and command-failure receipts in `EntityMotionManager` and `EntityMotionAnimationObject`
 - [ ] 5.13 Add failing control-and-event tests for play/start/complete/pause/stop/reset/finish/destroy/set/error actions; stop committing the current pose; reset committing the start pose; finish/complete committing the end pose; inactive set sparse merge; active set no-op + warning; confirmed-value trimming; and `entityProps`/callback mapping
-- [ ] 5.14 Implement the complete control state machine, zero-duration terminal commits, confirmed-transform read/decomposition, and state-event encoding/emission, ensuring active set does not trigger `onError` and failed commands do not change the transform
+- [ ] 5.14 Implement the complete control state machine, zero-duration terminal commits, confirmed-transform read/decomposition, and state-event encoding/emission; map only `set` with `INVALID_CONTROL_STATE` to one console warning plus normal return, with no throw, `onError`, pose change, or `entityProps` update
 
 ## 6. Capability and Validation
 

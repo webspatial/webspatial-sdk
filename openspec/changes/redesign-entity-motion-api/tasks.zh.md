@@ -31,7 +31,7 @@
 
 ## 5. Native 与 Bridge 实现
 
-- [ ] 5.1 先编写失败的 Bridge contract 测试,覆盖创建/控制命令 payload、`set` values、`EntityMotionStateChangedMsg` detail/action/playState/values/error、Design 定义的封闭错误码集合以及 Core 与两端 Native 编解码一致性
+- [ ] 5.1 先编写失败的 Bridge contract 测试,覆盖创建/控制命令 payload、`set` values、活跃期 `set` 在不新增回执结构的前提下返回现有 `INVALID_CONTROL_STATE` 失败、`EntityMotionStateChangedMsg` detail/action/playState/values/error、Design 定义的封闭错误码集合以及 Core 与两端 Native 编解码一致性
 - [ ] 5.2 实现 Core/Native Bridge 类型、`EntityMotionBridgeTypes` 编解码和 handler 注册,复用 `CreateSpatializedElementAnimationJSBCommand`、`ControlSpatializedElementAnimationJSBCommand` 与 `spatialanimationstatechanged`
 - [ ] 5.3 先编写失败的目标分发与生命周期测试,覆盖 `elementId` 查询、element/entity/unsupported 分发、`TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、动画注册/查找/显式 destroy、Entity target 先销毁、清理、销毁后 no-op 以及竞态返回 `ANIMATION_NOT_FOUND`
 - [ ] 5.4 在两端 Native 实现 `SpatialScene` Entity 分发及通过全局 spatial objects 完成生命周期级联,保持 `EntityMotionManager` 只负责创建,由 `EntityMotionAnimationObject` 持有状态、资源并完成清理
@@ -44,7 +44,7 @@
 - [ ] 5.11 先编写失败的 fresh-play 状态测试,覆盖首次 `play` / `autoStart`、complete/finish/stop/reset 后 replay 读取最新 baseline 并重新编译,pause 后 play 恢复当前控制器,单次播放内 loop 复用当前资源,编译失败保持非活跃
 - [ ] 5.12 在 `EntityMotionManager` 与 `EntityMotionAnimationObject` 中实现 fresh play、delay/running/paused 状态转换、resume、loop 资源复用和命令失败回执
 - [ ] 5.13 先编写失败的控制与事件测试,覆盖 play/start/complete/pause/stop/reset/finish/destroy/set/error action、stop 当前姿态、reset 起始姿态、finish/complete 终态、非活跃 set 稀疏合并、活跃 set no-op + warning、confirmed values 裁剪以及 `entityProps`/callback 映射
-- [ ] 5.14 实现完整控制状态机、终态零时长提交、confirmed transform 读取/拆解、状态事件编码与发送,确保 active set 不触发 `onError` 且失败命令不改变姿态
+- [ ] 5.14 实现完整控制状态机、终态零时长提交、确认姿态读取/拆解、状态事件编码与发送;仅将 `set` 命令的 `INVALID_CONTROL_STATE` 转换为一次控制台警告和正常返回,不抛出异常、不触发 `onError`、不改变姿态也不更新 `entityProps`
 
 ## 6. Capability 与校验
 
