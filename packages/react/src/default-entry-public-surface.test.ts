@@ -46,7 +46,6 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       'Entity',
       'Model',
       'ModelEntity',
-      'Ornament',
       'Plane',
       'PlaneEntity',
       'Reality',

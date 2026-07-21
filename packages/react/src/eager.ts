@@ -87,7 +87,6 @@ __internalSetSpatialImpl(SpatialImpl, eagerEntryRegistered)
 // migration guide for the recipe.
 export {
   Model,
-  Ornament,
   Reality,
   Entity,
   AttachmentEntity,

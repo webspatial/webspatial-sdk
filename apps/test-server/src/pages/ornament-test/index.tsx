@@ -1,13 +1,13 @@
 import { type CSSProperties, useState } from 'react'
 import {
   Model,
-  Ornament,
   Reality,
   type BackgroundMaterialType,
   type CornerRadius,
   type OrnamentPoint3D,
   type OrnamentVisibility,
 } from '@webspatial/react-sdk'
+import { Ornament } from '@webspatial/react-sdk/experimental'
 
 const POINTS: OrnamentPoint3D[] = [
   'topLeadingFront',

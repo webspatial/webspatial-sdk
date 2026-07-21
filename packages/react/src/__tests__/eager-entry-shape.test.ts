@@ -67,7 +67,6 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
 
   const EXPECTED_SPATIAL_PRIMITIVES = [
     'Model',
-    'Ornament',
     'Reality',
     'Entity',
     'BoxEntity',
