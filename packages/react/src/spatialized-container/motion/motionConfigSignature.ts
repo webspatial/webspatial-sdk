@@ -5,7 +5,7 @@ export function getMotionConfigSignature(
   config: SpatializedMotionConfig,
 ): string {
   const effectiveConfig =
-    'timeline' in config
+    config.timeline !== undefined
       ? { ...config, from: undefined, to: undefined }
       : config
   return JSON.stringify(effectiveConfig, (_key, value) =>

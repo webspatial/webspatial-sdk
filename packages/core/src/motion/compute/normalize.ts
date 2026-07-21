@@ -282,7 +282,7 @@ export function desugarTimelineConfig(
 export function normalizeMotionConfig(
   config: SpatializedMotionConfig,
 ): NormalizedSpatializedMotionConfig {
-  if ('timeline' in config) {
+  if (config.timeline !== undefined) {
     return desugarTimelineConfig(config as SpatializedMotionTimelineConfig)
   }
   return segmentConfigToMotionConfig(config as SpatializedMotionSegmentConfig)

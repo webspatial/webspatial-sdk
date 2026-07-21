@@ -26,7 +26,7 @@ const FORBIDDEN_PREFIXES = [
 export function validateSpatializedMotionConfig(
   config: SpatializedMotionConfig,
 ): void {
-  if ('tracks' in config) {
+  if (config.tracks !== undefined) {
     throw new Error('[SpatializedMotion] tracks authoring is internal')
   }
   const normalized = normalizeMotionConfig(config)
