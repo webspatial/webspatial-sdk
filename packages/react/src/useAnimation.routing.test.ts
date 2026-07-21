@@ -1,18 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
-import { renderHook } from '@testing-library/react'
-
-vi.mock('@webspatial/core-sdk', async () => {
-  const actual = await vi.importActual('@webspatial/core-sdk')
-  return {
-    ...actual,
-    supports: (name: string, tokens?: readonly string[]) => {
-      if (name === 'useAnimation' && tokens?.includes('entity')) {
-        return true
-      }
-      return false
-    },
-  }
-})
+import { act, renderHook } from '@testing-library/react'
+import { supports } from '@webspatial/core-sdk'
 
 const { useEntityAnimation } = await import('./reality/hooks/useAnimation')
 
@@ -41,6 +29,24 @@ describe('useEntityAnimation hook', () => {
     expect(api).toHaveProperty('play')
     expect(api).toHaveProperty('pause')
     expect(api).toHaveProperty('cancel')
+  })
+
+  test('play remains native-driven without an entity capability token', async () => {
+    expect(supports('useAnimation', ['entity'])).toBe(false)
+    const { result } = renderHook(() =>
+      useEntityAnimation({
+        to: { position: { x: 1, y: 0, z: 0 } },
+        autoStart: false,
+      } as any),
+    )
+
+    await act(async () => {
+      result.current[1].play()
+      await Promise.resolve()
+    })
+
+    expect(result.current[1].playState).toBe('queued')
+    expect(result.current[1].isAnimating).toBe(true)
   })
 
   test('spatialized visual keys are rejected by entity validation', () => {

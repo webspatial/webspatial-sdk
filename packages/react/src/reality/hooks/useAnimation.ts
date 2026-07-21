@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useReducer } from 'react'
-import { SpatialEntity, supports, composeSRT } from '@webspatial/core-sdk'
+import { SpatialEntity, composeSRT } from '@webspatial/core-sdk'
 import type {
   AnimatedPropsInternal,
   AnimationConfig,
@@ -88,7 +88,6 @@ export function useEntityAnimation(
   const sessionRef = useRef<AnimationSession | null>(null)
   const entityRef = useRef<SpatialEntity | null>(null)
   const unmountedRef = useRef(false)
-  const warnedRef = useRef(false)
   const finishedRef = useRef(false)
 
   // Trigger a re-render when a session ends so that useEntityTransform
@@ -259,17 +258,6 @@ export function useEntityAnimation(
   // ---- AnimationApi methods ----
 
   const play = useCallback(() => {
-    // Unsupported runtime check
-    if (!supports('useAnimation', ['entity'])) {
-      if (!warnedRef.current) {
-        warnedRef.current = true
-        console.warn(
-          '[useEntityAnimation] Entity transform animation is not supported in the current runtime.',
-        )
-      }
-      return
-    }
-
     const currentSession = sessionRef.current
     const entity = entityRef.current
 
