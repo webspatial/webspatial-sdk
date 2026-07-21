@@ -29,9 +29,8 @@ export default function SpatialElementMotionCapabilityCheckPage() {
 
         <p className="text-xs text-gray-500">
           When <code>supports('useAnimation')</code> is <code>false</code>,
-          calling <code>useAnimation</code> logs a one-time warning and returns
-          a no-op API; <code>play()</code> becomes a no-op and{' '}
-          <code>isAnimating</code> stays <code>false</code>.
+          render a static alternative instead of mounting a component that calls{' '}
+          <code>useAnimation</code>.
         </p>
       </section>
     </SpatialElementMotionPageShell>
