@@ -173,6 +173,43 @@ describe('validateSpatializedMotionConfig', () => {
     )
   })
 
+  test.each([
+    ['0%', '00%'],
+    ['0%', '0.0%'],
+    ['50%', '050.0%'],
+  ])(
+    'rejects equivalent percentage keys %s and %s for the same property',
+    (firstKey, secondKey) => {
+      expect(() =>
+        validateSpatializedMotionConfig({
+          duration: 1,
+          timeline: {
+            '0%': { opacity: 0 },
+            [firstKey]: { opacity: 0.25 },
+            [secondKey]: { opacity: 0.25 },
+            '100%': { opacity: 1 },
+          },
+        }),
+      ).toThrow(/keyframe times must be strictly increasing.*opacity/)
+    },
+  )
+
+  test('accepts equivalent percentage keys for different properties', () => {
+    expect(() =>
+      validateSpatializedMotionConfig({
+        duration: 1,
+        timeline: {
+          '0%': { opacity: 0 },
+          '0.0%': { transform: { translate: { x: 0 } } },
+          '100%': {
+            opacity: 1,
+            transform: { translate: { x: 1 } },
+          },
+        },
+      }),
+    ).not.toThrow()
+  })
+
   test('rejects public tracks authoring', () => {
     expect(() =>
       validateSpatializedMotionConfig({

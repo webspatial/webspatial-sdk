@@ -124,9 +124,9 @@ function validateTrack(
         `[SpatializedMotion] keyframe.at must be within [0, duration] for "${prop}"`,
       )
     }
-    if (frame.at < prevAt) {
+    if (frame.at <= prevAt) {
       throw new Error(
-        `[SpatializedMotion] keyframes must be sorted by at for "${prop}"`,
+        `[SpatializedMotion] keyframe times must be strictly increasing for "${prop}"`,
       )
     }
     prevAt = frame.at
