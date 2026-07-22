@@ -37,16 +37,16 @@
 - [ ] 5.2 实现 Core/Native Bridge 类型、`EntityMotionBridgeTypes` 编解码和 handler 注册,复用 `CreateSpatializedElementAnimationJSBCommand`、`ControlSpatializedElementAnimationJSBCommand` 与 `spatialanimationstatechanged`
 - [ ] 5.3 先编写失败的目标分发与生命周期测试,覆盖 `elementId` 查询、element/entity/unsupported 分发、`TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、动画注册/查找/显式 destroy、Entity target 先销毁、清理、销毁后 no-op 以及竞态返回 `ANIMATION_NOT_FOUND`
 - [ ] 5.4 在两端 Native 实现 `SpatialScene` Entity 分发及通过全局 spatial objects 完成生命周期级联,保持 `EntityMotionManager` 只负责创建,由 `EntityMotionAnimationObject` 持有状态、资源并完成清理
-- [ ] 5.5 先编写时间轴编译器红灯单元测试,覆盖属性、时间、缩放校验,关键帧时间并集,稀疏通道按本轮基准姿态补全,通道插值,每个切点的完整姿态,逐段缓动优先级,旋转输入转换,完整已确认变换输出和区间表达能力校验
-- [ ] 5.6 在两端 Native 实现 `EntityMotionTimelineCompiler`、`EntityMotionTiming` 与 `EntityMotionTransformValues`,产出按时间排序的完整姿态段及 confirmed transform 拆解/稀疏补丁合并能力
+- [ ] 5.5 先编写时间轴编译器红灯单元测试,覆盖属性、时间、缩放校验,关键帧时间并集,稀疏通道按本轮基准姿态补全,通道插值,每个切点的完整姿态,逐段缓动优先级,包含等价 quaternion 和 gimbal lock 的确定性欧拉角组合/拆解,完整已确认变换输出和区间表达能力校验
+- [ ] 5.6 在两端 Native 实现 `EntityMotionTimelineCompiler`、`EntityMotionTiming` 与 `EntityMotionTransformValues`,产出按时间排序的完整姿态段及规范化欧拉角 confirmed transform 拆解/稀疏补丁合并能力
 - [ ] 5.7 先编写失败的 visionOS 集成测试,覆盖 RealityKit 整 `.transform` 绑定、多段完整姿态资源、`AnimationResource.sequence`、旋转转换、四种缓动、delay、playback rate、loop 和编译失败
 - [ ] 5.8 实现 visionOS RealityKit 完整姿态分段 sequence 编译、播放控制器接入和平台参数映射
 - [ ] 5.9 先编写失败的 picoOS 集成测试,使用与 visionOS 相同的规范时间轴 fixtures 覆盖整 transform 绑定、多段完整姿态 sequence、旋转转换、四种缓动、delay、playback rate、loop 和编译失败
 - [ ] 5.10 实现 picoOS 完整姿态分段 sequence 编译、播放控制器接入和平台参数映射
 - [ ] 5.11 先编写失败的 fresh-play 状态测试,覆盖首次 `play` / `autoStart`、complete/finish/stop/reset 后 replay 读取最新基准姿态并重新编译,pause 后 play 恢复当前控制器,单次播放内 loop 复用当前资源,编译失败保持非活跃、React 专用 `queued` 与原生层四种状态的映射,以及 `finished` 根据 `playState` 精确派生
 - [ ] 5.12 在 `EntityMotionManager` 与 `EntityMotionAnimationObject` 中实现 fresh play、首次运行前按需读取基准姿态、delay/running/paused 状态转换、resume、loop 资源复用和命令失败回执
-- [ ] 5.13 先编写控制与事件红灯测试,覆盖完整状态命令矩阵和 `play`、`start`、`complete`、`pause`、`stop`、`reset`、`finish`、`destroy`、`set`、`error` 动作,首次 play 前的 `reset` / `finish`,终态命令重复执行,`stop` 提交当前姿态,`reset` 提交起始姿态,`finish` 在普通播放、reset loop 和 reverse loop 中提交 `to` / `100%`,`complete` 提交本次运行结果,非活跃状态下的 `set` 稀疏合并,活跃状态下的 `set` 保持状态并输出警告,命令与完成事件串行处理,业务控制器身份隔离、零时长提交动作分类、保持其它动画运行、生命周期回调单次触发、确认姿态事件先于回执、独立于配置字段的完整已确认 `position`、`rotation`、`scale`,以及包含 loop reset 提交的 `entityProps` 与回调映射
-- [ ] 5.14 实现完整状态命令矩阵、控制器级清理、零时长终态提交、确认姿态读取/拆解、状态事件编码与发送、业务控制器身份过滤、零时长提交动作分类、命令与完成事件串行处理和生命周期回调单次触发门控;将 `set` 命令的 `INVALID_CONTROL_STATE` 转换为一次控制台警告和正常返回,同时保持当前姿态、状态与 `entityProps`
+- [ ] 5.13 先编写控制与事件红灯测试,覆盖完整状态命令矩阵和 `play`、`start`、`complete`、`pause`、`stop`、`reset`、`finish`、`destroy`、`set`、`error` 动作,首次 play 前的 `reset` / `finish`,终态命令重复执行,`stop` 提交当前姿态,`reset` 提交起始姿态,`finish` 在普通播放、reset loop 和 reverse loop 中提交 `to` / `100%`,`complete` 提交本次运行结果,非活跃状态下的 `set` 稀疏合并及基于规范化欧拉角基准的单轴 rotation patch,活跃状态下的 `set` 保持状态并输出警告,命令与完成事件串行处理,业务控制器身份隔离、零时长提交动作分类、保持其它动画运行、生命周期回调单次触发、确认姿态事件先于回执、独立于配置字段的完整已确认 `position`、`rotation`、`scale`,以及包含 loop reset 提交的 `entityProps` 与回调映射
+- [ ] 5.14 实现完整状态命令矩阵、控制器级清理、零时长终态提交、规范化欧拉角确认姿态读取/拆解及稀疏 rotation 合并、状态事件编码与发送、业务控制器身份过滤、零时长提交动作分类、命令与完成事件串行处理和生命周期回调单次触发门控;将 `set` 命令的 `INVALID_CONTROL_STATE` 转换为一次控制台警告和正常返回,同时保持当前姿态、状态与 `entityProps`
 
 ## 6. Capability 与校验
 
