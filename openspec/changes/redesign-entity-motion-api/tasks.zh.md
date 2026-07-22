@@ -45,8 +45,8 @@
 - [ ] 5.10 实现 picoOS 完整姿态分段 sequence 编译、播放控制器接入和平台参数映射
 - [ ] 5.11 先编写失败的 fresh-play 状态测试,覆盖首次 `play` / `autoStart`、complete/finish/stop/reset 后 replay 读取最新基准姿态并重新编译,pause 后 play 恢复当前控制器,单次播放内 loop 复用当前资源,编译失败保持非活跃、React 专用 `queued` 与原生层四种状态的映射,以及 `finished` 根据 `playState` 精确派生
 - [ ] 5.12 在 `EntityMotionManager` 与 `EntityMotionAnimationObject` 中实现 fresh play、首次运行前按需读取基准姿态、delay/running/paused 状态转换、resume、loop 资源复用和命令失败回执
-- [ ] 5.13 先编写控制与事件红灯测试,覆盖完整状态命令矩阵和 `play`、`start`、`complete`、`pause`、`stop`、`reset`、`finish`、`destroy`、`set`、`error` 动作,首次 play 前的 `reset` / `finish`,终态命令重复执行,`stop` 提交当前姿态,`reset` 提交起始姿态,`finish` 在普通播放、reset loop 和 reverse loop 中提交 `to` / `100%`,`complete` 提交本次运行结果,非活跃状态下的 `set` 稀疏合并,活跃状态下的 `set` 保持状态并输出警告,命令与完成事件串行处理,旧控制器事件隔离,生命周期回调单次触发,独立于配置字段的完整已确认 `position`、`rotation`、`scale`,以及包含 loop reset 提交的 `entityProps` 与回调映射
-- [ ] 5.14 实现完整状态命令矩阵、终态零时长提交、确认姿态读取/拆解、状态事件编码与发送、`runId` 加控制器身份事件过滤、命令与完成事件串行处理和生命周期回调单次触发门控;将 `set` 命令的 `INVALID_CONTROL_STATE` 转换为一次控制台警告和正常返回,同时保持当前姿态、状态与 `entityProps`
+- [ ] 5.13 先编写控制与事件红灯测试,覆盖完整状态命令矩阵和 `play`、`start`、`complete`、`pause`、`stop`、`reset`、`finish`、`destroy`、`set`、`error` 动作,首次 play 前的 `reset` / `finish`,终态命令重复执行,`stop` 提交当前姿态,`reset` 提交起始姿态,`finish` 在普通播放、reset loop 和 reverse loop 中提交 `to` / `100%`,`complete` 提交本次运行结果,非活跃状态下的 `set` 稀疏合并,活跃状态下的 `set` 保持状态并输出警告,命令与完成事件串行处理,业务控制器身份隔离、零时长提交动作分类、保持其它动画运行、生命周期回调单次触发、确认姿态事件先于回执、独立于配置字段的完整已确认 `position`、`rotation`、`scale`,以及包含 loop reset 提交的 `entityProps` 与回调映射
+- [ ] 5.14 实现完整状态命令矩阵、控制器级清理、零时长终态提交、确认姿态读取/拆解、状态事件编码与发送、业务控制器身份过滤、零时长提交动作分类、命令与完成事件串行处理和生命周期回调单次触发门控;将 `set` 命令的 `INVALID_CONTROL_STATE` 转换为一次控制台警告和正常返回,同时保持当前姿态、状态与 `entityProps`
 
 ## 6. Capability 与校验
 
@@ -65,7 +65,7 @@
 - [ ] 8.1 严格按 TDD 顺序执行实现：每组行为先写失败测试，再做最小实现使其通过，最后在测试持续通过前提下重构
 - [ ] 8.2 运行 React/Core 定向单测,覆盖 tuple、binding、归一化、能力检测、callback、`entityProps`、ownership 和 `api.set` 命令发起
 - [ ] 8.3 运行 Bridge contract 与集成测试,确认 Core、visionOS、picoOS 对创建/控制 payload、状态事件和错误码的编解码一致
-- [ ] 8.4 在 visionOS 运行百分比多关键帧、稀疏字段、完整姿态 sequence、fresh play、delay、loop、pause/resume、stop/reset/finish/set、终态提交和销毁清理验收
+- [ ] 8.4 在 visionOS 运行百分比多关键帧、稀疏字段、完整姿态 sequence、fresh play、delay、loop、pause/resume、stop/reset/finish/set、控制器级清理、保持其它 Entity 和子节点动画运行、终态提交和销毁清理验收
 - [ ] 8.5 在 picoOS 运行与 8.4 相同的 fixtures 和验收矩阵
 - [ ] 8.6 对照两端的 action 顺序、confirmed values、终态 transform、错误结果和 replay 行为,记录并解决跨端差异
 - [ ] 8.7 执行端到端回归,覆盖动画终态、active set 以及 Entity motion Spec 定义的 target 销毁生命周期和错误行为
