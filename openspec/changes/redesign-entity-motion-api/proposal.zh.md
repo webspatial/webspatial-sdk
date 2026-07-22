@@ -77,6 +77,64 @@ const [animation, api, entityProps] = useEntityAnimation(config)
 
 ## 怎么描述动画(config)
 
+公开 config 契约如下:
+
+```ts
+type TimingFunction = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+
+type EntityMotionProps = {
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+}
+
+type EntityMotionPatch = {
+  position?: Partial<Vec3>
+  rotation?: Partial<Vec3>
+  scale?: Partial<Vec3>
+}
+
+type EntityMotionFrame = EntityMotionPatch & {
+  timingFunction?: TimingFunction
+}
+
+type EntityMotionTimeline = {
+  from?: EntityMotionFrame
+  to?: EntityMotionFrame
+} & Partial<Record<`${number}%`, EntityMotionFrame>>
+
+type SpatializedPlaybackError = {
+  code:
+    | 'TARGET_NOT_FOUND'
+    | 'UNSUPPORTED_TARGET'
+    | 'ANIMATION_NOT_FOUND'
+    | 'INVALID_TIMELINE'
+    | 'COMPILATION_FAILED'
+    | 'INVALID_CONTROL_STATE'
+    | 'INVALID_SET_VALUES'
+  message?: string
+}
+
+type EntityMotionConfig = {
+  from?: EntityMotionPatch
+  to?: EntityMotionPatch
+  timeline?: EntityMotionTimeline
+  duration?: number
+  timingFunction?: TimingFunction
+  delay?: number
+  playbackRate?: number
+  loop?: boolean | { reverse?: boolean }
+  autoStart?: boolean
+  onStart?: (values: EntityMotionProps) => void
+  onComplete?: (values: EntityMotionProps) => void
+  onStop?: (values: EntityMotionProps) => void
+  onReset?: (values: EntityMotionProps) => void
+  onError?: (error: SpatializedPlaybackError) => void
+}
+```
+
+默认值为 `autoStart: true`、`timingFunction: 'easeInOut'`、`delay: 0`、`playbackRate: 1` 和 `loop: false`。包含 `timeline` 的 config 必须提供 `duration`;只有纯顶层 `from` / `to` 使用 0.3 秒默认值。非法 config 属于 programmer error,并同步抛错。
+
 ### 最简写法:顶层 from / to(从一个姿态到另一个)
 
 如果只是“从一个姿态到另一个”,可以直接在 config 顶层写 `from` / `to`,不必嵌套进 `timeline`:
@@ -216,7 +274,7 @@ rotation.x / rotation.y / rotation.z
 scale.x    / scale.y    / scale.z
 ```
 
-写 `opacity` 等不支持的目标会报错或触发 `onError`,不会被悄悄忽略。
+写 `opacity` 等不支持的目标会在 config 校验阶段同步抛错。
 
 ---
 
@@ -226,6 +284,7 @@ scale.x    / scale.y    / scale.z
 
 ```tsx
 const [animation, api, entityProps] = useEntityAnimation({
+  duration: 0.8,
   timeline: {
     from: {
       position: { x: 0, y: 0, z: 0 },

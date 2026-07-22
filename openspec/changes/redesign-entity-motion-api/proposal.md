@@ -77,6 +77,64 @@ const [animation, api, entityProps] = useEntityAnimation(config)
 
 ## Describing the Animation (config)
 
+The public config contract is:
+
+```ts
+type TimingFunction = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+
+type EntityMotionProps = {
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+}
+
+type EntityMotionPatch = {
+  position?: Partial<Vec3>
+  rotation?: Partial<Vec3>
+  scale?: Partial<Vec3>
+}
+
+type EntityMotionFrame = EntityMotionPatch & {
+  timingFunction?: TimingFunction
+}
+
+type EntityMotionTimeline = {
+  from?: EntityMotionFrame
+  to?: EntityMotionFrame
+} & Partial<Record<`${number}%`, EntityMotionFrame>>
+
+type SpatializedPlaybackError = {
+  code:
+    | 'TARGET_NOT_FOUND'
+    | 'UNSUPPORTED_TARGET'
+    | 'ANIMATION_NOT_FOUND'
+    | 'INVALID_TIMELINE'
+    | 'COMPILATION_FAILED'
+    | 'INVALID_CONTROL_STATE'
+    | 'INVALID_SET_VALUES'
+  message?: string
+}
+
+type EntityMotionConfig = {
+  from?: EntityMotionPatch
+  to?: EntityMotionPatch
+  timeline?: EntityMotionTimeline
+  duration?: number
+  timingFunction?: TimingFunction
+  delay?: number
+  playbackRate?: number
+  loop?: boolean | { reverse?: boolean }
+  autoStart?: boolean
+  onStart?: (values: EntityMotionProps) => void
+  onComplete?: (values: EntityMotionProps) => void
+  onStop?: (values: EntityMotionProps) => void
+  onReset?: (values: EntityMotionProps) => void
+  onError?: (error: SpatializedPlaybackError) => void
+}
+```
+
+Defaults are `autoStart: true`, `timingFunction: 'easeInOut'`, `delay: 0`, `playbackRate: 1`, and `loop: false`. Every config containing `timeline` must provide `duration`; only pure top-level `from` / `to` uses the 0.3-second default. Invalid config is a programmer error and throws synchronously.
+
 ### Option 0: top-level from / to (simplest form)
 
 If you only need "from one pose to another", write `from` / `to` at the top level of the config, without nesting them under `timeline`:
@@ -216,7 +274,7 @@ rotation.x / rotation.y / rotation.z
 scale.x    / scale.y    / scale.z
 ```
 
-Targeting something unsupported like `opacity` throws an error or triggers `onError`; it is never silently ignored.
+Targeting something unsupported like `opacity` throws synchronously during config validation.
 
 ---
 
@@ -226,6 +284,7 @@ Targeting something unsupported like `opacity` throws an error or triggers `onEr
 
 ```tsx
 const [animation, api, entityProps] = useEntityAnimation({
+  duration: 0.8,
   timeline: {
     from: {
       position: { x: 0, y: 0, z: 0 },

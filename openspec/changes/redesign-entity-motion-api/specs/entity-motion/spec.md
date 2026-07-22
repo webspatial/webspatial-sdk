@@ -31,9 +31,11 @@ The public Entity motion config MUST use fields aligned with Entity props:
 
 The public v1 authoring surface MUST support three shapes: top-level `from` / `to`, segment-style `timeline.from` / `timeline.to`, and percentage keyframes. Top-level `from` / `to` MUST be equivalent authoring sugar for `timeline.from` / `timeline.to`: Core MUST normalize both into the same single internal track set. `tracks` MUST remain an internal, non-public execution shape and MUST NOT be documented as a public authoring surface. Unsupported targets MUST fail explicitly.
 
-Every animation MUST have both a start boundary and an end boundary: the start is one of top-level `from`, `timeline.from`, or the `0%` frame, and the end is one of top-level `to`, `timeline.to`, or the `100%` frame; a configuration missing either boundary MUST be rejected explicitly (through validation or `onError`) and MUST NOT fill the missing boundary frame from the native baseline or the object's current pose. This constraint applies to all three authoring shapes (top-level `from` / `to`, `timeline.from` / `timeline.to`, and percentage keyframes). Fields *within* a boundary frame MAY still be sparse: scalars omitted in a boundary frame (e.g. writing only `position` and not `rotation`) still fall back to the native baseline under the per-channel missing-frame rule; what is required is that the boundary frames themselves exist, not that every field inside a frame be written.
+Every animation MUST have both a start boundary and an end boundary: the start is one of top-level `from`, `timeline.from`, or the `0%` frame, and the end is one of top-level `to`, `timeline.to`, or the `100%` frame. Core MUST synchronously throw for a configuration missing either boundary. This constraint applies to all three authoring shapes (top-level `from` / `to`, `timeline.from` / `timeline.to`, and percentage keyframes). Fields *within* a boundary frame MAY still be sparse: scalars omitted in a boundary frame (e.g. writing only `position` and not `rotation`) still fall back to the native baseline under the per-channel missing-frame rule.
 
 Inside a `timeline`, `from` MUST be equivalent to the `0%` frame and `to` MUST be equivalent to the `100%` frame; therefore `timeline.from` / `timeline.to` MAY be mixed with percentage keys in the same `timeline`. Within one `timeline`, `from` and `0%` (or `to` and `100%`) MUST NOT both appear, and defining the same frame twice MUST be rejected explicitly.
+
+The default values MUST be `autoStart: true`, `timingFunction: 'easeInOut'`, `delay: 0`, `playbackRate: 1`, and `loop: false`. A config containing `timeline` MUST provide `duration`; pure top-level `from` / `to` MUST default `duration` to 0.3 seconds. Every transform scalar and percentage MUST be finite, `duration` MUST be positive and finite, `delay` MUST be non-negative and finite, `playbackRate` MUST be positive and finite, `scale` MUST be non-negative, and percentages MUST fall within `[0%, 100%]`. Each timeline frame MUST contain at least one transform scalar. Core MUST synchronously throw for an empty timeline, an empty frame, or percentage keys such as `50%` and `50.0%` that normalize to the same frame.
 
 #### Scenario: Segment config uses Entity props fields
 - **WHEN** application code defines `timeline.from` or `timeline.to` for Entity motion
@@ -48,12 +50,12 @@ Inside a `timeline`, `from` MUST be equivalent to the `0%` frame and `to` MUST b
 
 #### Scenario: Top-level from/to require both boundaries
 - **WHEN** application code supplies only top-level `from` or only top-level `to`
-- **THEN** Core MUST reject the configuration explicitly through validation or `onError`
+- **THEN** Core MUST synchronously throw a configuration error
 - **AND** the missing boundary MUST NOT be filled from the native baseline or the object's current pose
 
 #### Scenario: A timeline requires both start and end boundaries
 - **WHEN** application code defines a `timeline` that lacks a start boundary (neither `timeline.from` nor a `0%` frame) or lacks an end boundary (neither `timeline.to` nor a `100%` frame)
-- **THEN** Core MUST reject the configuration explicitly through validation or `onError`
+- **THEN** Core MUST synchronously throw a configuration error
 - **AND** the missing boundary frame MUST NOT be implicitly filled from the native baseline or the object's current pose
 - **AND** this constraint targets only the existence of the boundary frames; scalar fields omitted inside a boundary frame MUST still fall back to the native baseline under the per-channel missing-frame rule
 
@@ -71,7 +73,7 @@ Inside a `timeline`, `from` MUST be equivalent to the `0%` frame and `to` MUST b
 #### Scenario: Mixing from/to with percentages in a timeline
 - **WHEN** application code defines both `from` / `to` and percentage keys (such as `50%`) in the same `timeline`
 - **THEN** Core MUST treat `from` as the `0%` frame and `to` as the `100%` frame and normalize them into the same internal track set
-- **AND** if `from` and `0%` (or `to` and `100%`) both appear in the same `timeline`, Core MUST reject it explicitly through validation or `onError`
+- **AND** if `from` and `0%` (or `to` and `100%`) both appear in the same `timeline`, Core MUST synchronously throw a configuration error
 
 #### Scenario: Tracks property uses Entity-style paths
 - **WHEN** the SDK internally handles Entity motion `tracks`
@@ -80,7 +82,7 @@ Inside a `timeline`, `from` MUST be equivalent to the `0%` frame and `to` MUST b
 
 #### Scenario: Unsupported target fails explicitly
 - **WHEN** Entity motion config includes an unsupported target such as `opacity`
-- **THEN** the SDK MUST report an explicit failure through validation or `onError`
+- **THEN** Core MUST synchronously throw a configuration error
 - **AND** the unsupported target MUST NOT be silently ignored
 
 ### Requirement: Entity rotation has deterministic cross-platform Euler semantics
@@ -123,14 +125,7 @@ The SDK MUST use `entityProps` as the React-side persistence outlet for the comp
 
 Entity motion MUST align with the newer motion-family playback surface and lifecycle semantics while remaining transform-only.
 
-The target callback surface MUST include:
-- `onStart`
-- `onComplete`
-- `onStop`
-- `onReset`
-- `onError`
-
-Callback values MUST only include supported Entity transform fields.
+The target callback signatures MUST be `onStart(values: EntityMotionProps)`, `onComplete(values: EntityMotionProps)`, `onStop(values: EntityMotionProps)`, `onReset(values: EntityMotionProps)`, and `onError(error: SpatializedPlaybackError)`. Each lifecycle `values` argument MUST contain the complete confirmed `position`, `rotation`, and `scale`. Callback return values MUST be ignored.
 
 `api.set` is a settled requirement. It is the imperative write entry for committed transform state and is specified in the dedicated `api.set` requirement below. It MUST NOT be treated as a playback command.
 
@@ -369,7 +364,7 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 
 ### Requirement: `api.set` is the imperative write entry for committed transform state
 
-The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST only accept a sparse `EntityMotionPatch` object (the write-side patch type; the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly) and MUST NOT support the updater function form `(prev) => next`. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
+The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST only accept a sparse `EntityMotionPatch` object (the write-side patch type; the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly) and MUST NOT support the updater function form `(prev) => next`. A valid patch MUST contain at least one transform scalar; `api.set({})` and patches containing only empty nested objects MUST synchronously throw. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
 
 Entity transform ownership MUST be arbitrated as one whole. Before the first confirmed state, static/base React props are authoritative. While the animation is active (`delay` / `running` / `paused`), the `animation` binding is authoritative for the entire transform; configured fields animate and the remaining fields hold their baseline values. Once native emits a confirmed state and while the binding remains attached, `entityProps` is authoritative for the complete inactive transform. During inactive states, `api.set` updates the native committed transform. Removing the binding returns authority to React props.
 
@@ -424,7 +419,7 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 
 ### Requirement: Playback errors are classified
 
-The SDK MUST expose a closed `SpatializedPlaybackError.code` classification for Entity motion failures, covering at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, and `ANIMATION_NOT_FOUND`. All classified failures MUST be delivered to the user through `onError`. Rejected `api.set` writes — during an active animation, or before binding / native object creation — MUST NOT be delivered through `onError`; they MUST be no-ops that emit a console warning.
+The SDK MUST synchronously throw programmer errors detectable from public config or method arguments. Failures discovered after a Bridge or Native operation begins MUST be delivered through `onError` as a classified `SpatializedPlaybackError`, covering at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, and `ANIMATION_NOT_FOUND`. Rejected `api.set` writes during an active animation or before binding / native object creation MUST remain no-ops that emit a console warning.
 
 #### Scenario: Error code is distinguishable
 - **WHEN** an Entity motion operation fails
