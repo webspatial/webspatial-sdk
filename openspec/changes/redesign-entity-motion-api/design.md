@@ -586,12 +586,15 @@ type EntityMotionPatch = {
 ##### State-changed event
 
 ```text
+type EntityMotionNativePlayState = 'idle' | 'running' | 'paused' | 'finished'
+type EntityMotionPlayState = 'queued' | EntityMotionNativePlayState
+
 interface EntityMotionStateChangedDetail {
   animationId: string
   action:
     | 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
     | 'start' | 'complete' | 'error'
-  playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
+  playState: EntityMotionNativePlayState
   finished: boolean
   values?: EntityMotionProps
   error?: SpatializedPlaybackError
@@ -604,6 +607,8 @@ interface EntityMotionStateChangedMsg {
 ```
 
 `values` use the entity target's `EntityMotionProps`, containing `position`, `rotation`, and `scale`.
+
+`queued` is a React binding state while commands await native animation-object creation. Native state events carry `idle`, `running`, `paused`, or `finished`. The public `finished` flag is derived from `playState === 'finished'`; every other state reports `finished: false`.
 
 ##### Playback error type
 
@@ -1054,14 +1059,20 @@ sequenceDiagram
 
 Create only stores the canonical timeline; `SpatialScene` registers the animation object and returns its `animationId`. Each fresh play reads the latest baseline and compiles that run's RealityKit resource, then commits and confirms the complete start pose. `start` and the first `entityProps` update happen after that confirmation without waiting for delay to end. A `play` after pause reuses the current resource and controller without reading the baseline, compiling, or producing another `start`.
 
-State rules:
+State-command matrix:
 
-| phase | `playState` | visible pose | `entityProps` | `set` | `play` |
-|---|---|---|---|---|---|
-| fresh-play start confirmation | `running` | Native-confirmed complete `from` / `0%` pose | updates once | no-op + warning | this run proceeds to delay / running |
-| delay | `running` | holds the confirmed start pose | no per-frame updates | no-op + warning | no-op |
-| running | `running` | Native animation sample | no per-frame updates | no-op + warning | no-op |
-| paused | `paused` | current paused pose | keeps latest confirmed values | no-op + warning | resumes current controller without `start` |
+| Native state | `play` | `pause` | `stop` | `reset` | `finish` | `set` |
+|---|---|---|---|---|---|---|
+| `idle` | fresh play → `running`; emit `start` once after start-pose confirmation | keep `idle` | keep `idle` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | commit patch; keep `idle` |
+| `running` (including delay) | keep current run | → `paused`; emit `pause` | commit current pose → `idle`; emit `stop` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | keep current run; warning receipt |
+| `paused` | resume current controller → `running` | keep `paused` | commit current pose → `idle`; emit `stop` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | keep paused run; warning receipt |
+| `finished` | fresh play → `running`; emit `start` once after start-pose confirmation | keep `finished` | keep `finished` | commit start pose → `idle`; emit `reset` | keep `finished` | commit patch; keep `finished` |
+
+For `reset` and `finish`, an existing run supplies its confirmed start and end poses. Before the first run, the compiler reads the current native transform as the baseline on demand and computes the configured start or end pose. `finish` always commits the configured `to` / `100%` pose for ordinary, reset-loop, and reverse-loop playback.
+
+Each fresh play allocates a monotonically increasing `runId`, stores the current controller identity, and initializes one-shot lifecycle gates. A controller completion event belongs to the active run when both its controller identity and captured `runId` match. `stop`, `reset`, `finish`, and `destroy` advance the run generation and retire the current controller identity. Native serializes controller callbacks and command handlers; the first processed action commits its transition, and each later action evaluates the resulting state through the matrix above.
+
+Lifecycle gates provide these callback counts: one `onStart` for each accepted fresh play, one `onComplete` from either natural completion or `finish` for that run, one `onStop` for each accepted transition from `running` / `paused` to `idle`, and one `onReset` for each accepted `reset`. Repeated commands that keep the current state also keep the existing callback counts.
 
 **Pause sequence:**
 

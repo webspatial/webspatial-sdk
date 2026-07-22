@@ -107,7 +107,7 @@ The SDK MUST use `entityProps` as the React-side persistence outlet for the comp
 - **GIVEN** an Entity animation with `loop: true`
 - **WHEN** the animation crosses a loop boundary
 - **THEN** the SDK MUST NOT update `entityProps` at that boundary
-- **AND** `entityProps` MUST only be committed on `stop`, `finish`, or a native-accepted `api.set(values)`
+- **AND** `entityProps` MUST only be committed on `stop`, `reset`, `finish`, or a native-accepted `api.set(values)`
 
 ### Requirement: Playback and callbacks align with the new motion model
 
@@ -140,6 +140,56 @@ Callback values MUST only include supported Entity transform fields.
 - **WHEN** playback or validation fails for Entity motion
 - **THEN** `onError` MUST receive the failure information
 - **AND** no callback value payload in the Entity motion API may include unsupported fields such as `opacity`
+
+### Requirement: Entity motion has deterministic state and lifecycle transitions
+
+The public Entity motion state MUST use `queued`, `idle`, `running`, `paused`, and `finished`. `queued` MUST represent the React binding period before native animation-object creation. Native state events MUST use `idle`, `running`, `paused`, and `finished`. The public `finished` flag MUST equal the result of `playState === 'finished'`.
+
+Each fresh play MUST allocate a monotonically increasing `runId` and associate it with the active native controller identity. Native MUST serialize command handlers and controller completion callbacks. A completion event whose controller identity and captured `runId` match the active run MUST be eligible to complete that run. `stop`, `reset`, `finish`, and `destroy` MUST advance the run generation and retire the active controller identity.
+
+#### Scenario: Commands preserve idle and finished states deterministically
+- **GIVEN** the native animation state is `idle` or `finished`
+- **WHEN** application code calls `pause` or `stop`
+- **THEN** the current state and callback counts MUST remain stable
+- **AND** `play` MUST start a fresh run
+- **AND** `reset` MUST commit the configured start pose and enter `idle`
+- **AND** `finish` from `idle` MUST commit the configured end pose and enter `finished`
+- **AND** `finish` from `finished` MUST preserve the finished state and callback counts
+
+#### Scenario: Active commands follow one transition table
+- **GIVEN** the native animation state is `running` or `paused`
+- **WHEN** application code calls a playback command
+- **THEN** `play` MUST preserve `running` or resume `paused` to `running`
+- **AND** `pause` MUST move `running` to `paused` and preserve `paused`
+- **AND** `stop` MUST commit the current pose and enter `idle`
+- **AND** `reset` MUST commit the run's start pose and enter `idle`
+- **AND** `finish` MUST commit the configured end pose and enter `finished`
+
+#### Scenario: Reset and finish before first play resolve poses on demand
+- **GIVEN** the native animation object has no prior run
+- **WHEN** application code calls `reset` or `finish`
+- **THEN** Native MUST read the current transform as the baseline
+- **AND** Native MUST compute and commit the configured start pose for `reset` or end pose for `finish`
+
+#### Scenario: Finish uses the configured terminal pose for every loop mode
+- **GIVEN** an ordinary, reset-loop, or reverse-loop Entity animation
+- **WHEN** application code calls `finish`
+- **THEN** Native MUST commit the configured `to` / `100%` pose
+- **AND** the animation MUST enter `finished`
+
+#### Scenario: Controller completion and a control command are serialized
+- **GIVEN** a controller completion callback and `stop`, `reset`, or `finish` become ready concurrently
+- **WHEN** Native processes them
+- **THEN** the first processed action MUST commit its transition
+- **AND** each later action MUST evaluate the resulting state through the same transition table
+- **AND** a completion event matching a retired controller generation MUST preserve the current state and callback counts
+
+#### Scenario: Lifecycle callbacks have one-shot counts
+- **WHEN** one fresh run and its control commands are processed
+- **THEN** `onStart` MUST fire exactly once for the accepted fresh play
+- **AND** natural completion or `finish` MUST fire `onComplete` exactly once for that run
+- **AND** each accepted `stop` transition MUST fire `onStop` exactly once
+- **AND** each accepted `reset` MUST fire `onReset` exactly once
 
 ### Requirement: Entity motion commands preserve per-binding FIFO order
 

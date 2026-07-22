@@ -586,12 +586,15 @@ type EntityMotionPatch = {
 ##### 状态变化事件
 
 ```text
+type EntityMotionNativePlayState = 'idle' | 'running' | 'paused' | 'finished'
+type EntityMotionPlayState = 'queued' | EntityMotionNativePlayState
+
 interface EntityMotionStateChangedDetail {
   animationId: string
   action:
     | 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
     | 'start' | 'complete' | 'error'
-  playState: 'idle' | 'queued' | 'running' | 'paused' | 'finished'
+  playState: EntityMotionNativePlayState
   finished: boolean
   values?: EntityMotionProps
   error?: SpatializedPlaybackError
@@ -604,6 +607,8 @@ interface EntityMotionStateChangedMsg {
 ```
 
 `values` 使用物体目标的 `EntityMotionProps`,包含 `position`、`rotation`、`scale`。
+
+`queued` 是命令等待原生动画对象创建期间的 React 绑定状态。原生层状态事件携带 `idle`、`running`、`paused` 或 `finished`。公开 `finished` 标记由 `playState === 'finished'` 派生;其它状态统一携带 `finished: false`。
 
 ##### 播放错误类型
 
@@ -1054,14 +1059,20 @@ sequenceDiagram
 
 创建阶段只保存规范时间轴,由 `SpatialScene` 注册 animation object 并返回 `animationId`。每次 fresh play 读取最新 baseline 并编译本轮 RealityKit 资源,随后提交并确认完整起始姿态;`start` 和首个 `entityProps` 更新发生在确认成功后,不等待 delay 结束。paused 后的 `play` 直接复用当前资源和控制器,不读取 baseline、不编译、不产生新的 `start`。
 
-状态规则:
+状态命令矩阵:
 
-| 阶段 | `playState` | 可见姿态 | `entityProps` | `set` | `play` |
-|---|---|---|---|---|---|
-| fresh play 起始姿态确认 | `running` | Native 已确认的 `from` / `0%` 完整姿态 | 更新一次 | no-op + warning | 本轮继续进入 delay / running |
-| delay | `running` | 保持已确认起始姿态 | 不逐帧更新 | no-op + warning | no-op |
-| running | `running` | Native 动画采样姿态 | 不逐帧更新 | no-op + warning | no-op |
-| paused | `paused` | 当前暂停姿态 | 保持最近 confirmed values | no-op + warning | 恢复当前 controller,不产生 `start` |
+| 原生层状态 | `play` | `pause` | `stop` | `reset` | `finish` | `set` |
+|---|---|---|---|---|---|---|
+| `idle` | fresh play → `running`;起始姿态确认后发出一次 `start` | 保持 `idle` | 保持 `idle` | 提交起始姿态 → `idle`;发出 `reset` | 提交终点姿态 → `finished`;发出 `finish` | 提交补丁;保持 `idle` |
+| `running`(包含 delay) | 保持当前运行 | → `paused`;发出 `pause` | 提交当前姿态 → `idle`;发出 `stop` | 提交起始姿态 → `idle`;发出 `reset` | 提交终点姿态 → `finished`;发出 `finish` | 保持当前运行;返回警告回执 |
+| `paused` | 恢复当前控制器 → `running` | 保持 `paused` | 提交当前姿态 → `idle`;发出 `stop` | 提交起始姿态 → `idle`;发出 `reset` | 提交终点姿态 → `finished`;发出 `finish` | 保持暂停运行;返回警告回执 |
+| `finished` | fresh play → `running`;起始姿态确认后发出一次 `start` | 保持 `finished` | 保持 `finished` | 提交起始姿态 → `idle`;发出 `reset` | 保持 `finished` | 提交补丁;保持 `finished` |
+
+`reset` 和 `finish` 优先使用当前运行的已确认起始姿态和终点姿态。首次运行之前调用时,编译器按需读取当前原生层 transform 作为基准姿态,并计算配置声明的起始姿态或终点姿态。普通播放、reset loop 和 reverse loop 的 `finish` 统一提交配置声明的 `to` / `100%` 姿态。
+
+每次 fresh play 分配单调递增的 `runId`,保存当前控制器身份,并初始化一次性生命周期门闩。控制器完成事件的控制器身份和捕获的 `runId` 同时匹配时,该事件归属当前运行。`stop`、`reset`、`finish` 和 `destroy` 推进运行代次,并注销当前控制器身份。原生层串行处理控制器回调与控制命令;最先处理的动作提交状态转换,后续动作基于更新后的状态继续查询上表。
+
+生命周期门闩保证以下回调次数:每次接受 fresh play 时触发一次 `onStart`;同一次运行的自然完成或 `finish` 共同触发一次 `onComplete`;每次从 `running` / `paused` 转到 `idle` 的已接受 `stop` 触发一次 `onStop`;每次接受 `reset` 时触发一次 `onReset`。保持当前状态的重复命令同时保持现有回调次数。
 
 **暂停时序:**
 
