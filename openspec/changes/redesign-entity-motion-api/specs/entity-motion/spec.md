@@ -146,7 +146,7 @@ Callback values MUST only include supported Entity transform fields.
 
 The public Entity motion state MUST use `queued`, `idle`, `running`, `paused`, and `finished`. `queued` MUST represent the React binding period before native animation-object creation. Native state events MUST use `idle`, `running`, `paused`, and `finished`. The public `finished` flag MUST equal the result of `playState === 'finished'`.
 
-Each fresh play MUST allocate a monotonically increasing `runId` and associate it with the active native controller identity. Native MUST serialize command handlers and controller completion callbacks. A completion event whose controller identity and captured `runId` match the active run MUST be eligible to complete that run. `stop`, `reset`, `finish`, and `destroy` MUST advance the run generation and retire the active controller identity.
+Each fresh play MUST store its active native business-controller identity. Native MUST serialize command handlers and controller completion callbacks. A completion event whose controller identity matches the current business controller MUST be eligible to complete that run.
 
 #### Scenario: Commands preserve idle and finished states deterministically
 - **GIVEN** the native animation state is `idle` or `finished`
@@ -183,7 +183,7 @@ Each fresh play MUST allocate a monotonically increasing `runId` and associate i
 - **WHEN** Native processes them
 - **THEN** the first processed action MUST commit its transition
 - **AND** each later action MUST evaluate the resulting state through the same transition table
-- **AND** a completion event matching a retired controller generation MUST preserve the current state and callback counts
+- **AND** a completion event from a controller other than the current business controller MUST preserve the current state and callback counts
 
 #### Scenario: Lifecycle callbacks have one-shot counts
 - **WHEN** one fresh run and its control commands are processed
@@ -191,6 +191,22 @@ Each fresh play MUST allocate a monotonically increasing `runId` and associate i
 - **AND** natural completion or `finish` MUST fire `onComplete` exactly once for that run
 - **AND** each accepted `stop` transition MUST fire `onStop` exactly once
 - **AND** each accepted `reset` MUST fire `onReset` exactly once
+
+### Requirement: Entity motion cleanup is controller-scoped and internal commits are isolated
+
+Each `EntityMotionAnimationObject` MUST scope cleanup to the animation controllers it owns. Other animation controllers on the same Entity and its descendants MUST preserve their playback state. A zero-duration pose commit MUST produce the requested command action, while natural `complete` MUST remain exclusive to the current business playback controller.
+
+#### Scenario: Playback control preserves unrelated animations
+- **GIVEN** an Entity motion run and unrelated Entity or descendant animations are active
+- **WHEN** Entity motion processes `stop`, `reset`, `finish`, replacement, or destruction
+- **THEN** Native MUST stop and release the controllers owned by that Entity motion object
+- **AND** the unrelated Entity and descendant animation controllers MUST preserve their playback state
+
+#### Scenario: Zero-duration pose commit produces the command action
+- **GIVEN** accepted `stop`, `reset`, `finish`, or `set` requires a zero-duration pose commit
+- **WHEN** Native confirms that pose
+- **THEN** Native MUST emit the requested command action with the confirmed transform
+- **AND** natural `complete` MUST remain exclusive to the current business playback controller
 
 ### Requirement: Entity motion commands preserve per-binding FIFO order
 

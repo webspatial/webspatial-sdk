@@ -146,7 +146,7 @@ callback values MUST 只包含受支持的 Entity transform 字段。
 
 公开 Entity motion 状态 MUST 使用 `queued`、`idle`、`running`、`paused` 和 `finished`。`queued` MUST 表示原生动画对象创建前的 React 绑定阶段。原生层状态事件 MUST 使用 `idle`、`running`、`paused` 和 `finished`。公开 `finished` 标记 MUST 等于 `playState === 'finished'` 的结果。
 
-每次 fresh play MUST 分配单调递增的 `runId`,并把它与当前原生层控制器身份关联。原生层 MUST 串行处理控制命令与控制器完成回调。控制器身份和捕获的 `runId` 与当前运行匹配的完成事件 MUST 具备完成该次运行的资格。`stop`、`reset`、`finish` 和 `destroy` MUST 推进运行代次,并注销当前控制器身份。
+每次 fresh play MUST 保存当前原生层业务控制器身份。原生层 MUST 串行处理控制命令与控制器完成回调。控制器身份匹配当前业务控制器的完成事件 MUST 具备完成该次运行的资格。
 
 #### Scenario: 命令以确定方式保持 idle 和 finished 状态
 - **GIVEN** 原生层动画状态是 `idle` 或 `finished`
@@ -183,7 +183,7 @@ callback values MUST 只包含受支持的 Entity transform 字段。
 - **WHEN** 原生层处理这些动作
 - **THEN** 最先处理的动作 MUST 提交其状态转换
 - **AND** 每个后续动作 MUST 根据转换后的状态查询同一份转换表
-- **AND** 匹配已注销控制器代次的完成事件 MUST 保持当前状态和回调次数
+- **AND** 来自当前业务控制器之外的完成事件 MUST 保持当前状态和回调次数
 
 #### Scenario: 生命周期回调具有一次性触发次数
 - **WHEN** 一次全新运行及其控制命令被处理
@@ -191,6 +191,22 @@ callback values MUST 只包含受支持的 Entity transform 字段。
 - **AND** 自然完成或 `finish` MUST 为该次运行恰好触发一次 `onComplete`
 - **AND** 每个已接受的 `stop` 转换 MUST 恰好触发一次 `onStop`
 - **AND** 每个已接受的 `reset` MUST 恰好触发一次 `onReset`
+
+### Requirement: Entity motion 清理限定控制器范围并隔离内部提交
+
+每个 `EntityMotionAnimationObject` MUST 把清理范围限定为自身持有的动画控制器。同一 Entity 及其子节点上的其它动画控制器 MUST 保持原有播放状态。零时长姿态提交 MUST 产生请求的命令动作,自然 `complete` MUST 由当前业务播放控制器唯一产生。
+
+#### Scenario: 播放控制保持其它动画运行
+- **GIVEN** Entity motion 运行和其它 Entity 或子节点动画处于活跃状态
+- **WHEN** Entity motion 处理 `stop`、`reset`、`finish`、替换或销毁
+- **THEN** 原生层 MUST 停止并释放该 Entity motion 对象持有的控制器
+- **AND** 其它 Entity 和子节点动画控制器 MUST 保持原有播放状态
+
+#### Scenario: 零时长姿态提交产生命令动作
+- **GIVEN** 已接受的 `stop`、`reset`、`finish` 或 `set` 需要零时长姿态提交
+- **WHEN** 原生层确认该姿态
+- **THEN** 原生层 MUST 发出携带确认姿态的请求命令动作
+- **AND** 自然 `complete` MUST 由当前业务播放控制器唯一产生
 
 ### Requirement: Entity motion 命令保持 binding 级 FIFO 顺序
 

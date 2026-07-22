@@ -1081,8 +1081,6 @@ sequenceDiagram
 
 `reset` 和 `finish` 优先使用当前运行的已确认起始姿态和终点姿态。首次运行之前调用时,编译器按需读取当前原生层 transform 作为基准姿态,并计算配置声明的起始姿态或终点姿态。普通播放、reset loop 和 reverse loop 的 `finish` 统一提交配置声明的 `to` / `100%` 姿态。
 
-每次 fresh play 分配单调递增的 `runId`,保存当前控制器身份,并初始化一次性生命周期门闩。控制器完成事件的控制器身份和捕获的 `runId` 同时匹配时,该事件归属当前运行。`stop`、`reset`、`finish` 和 `destroy` 推进运行代次,并注销当前控制器身份。原生层串行处理控制器回调与控制命令;最先处理的动作提交状态转换,后续动作基于更新后的状态继续查询上表。
-
 生命周期门闩保证以下回调次数:每次接受 fresh play 时触发一次 `onStart`;同一次运行的自然完成或 `finish` 共同触发一次 `onComplete`;每次从 `running` / `paused` 转到 `idle` 的已接受 `stop` 触发一次 `onStop`;每次接受 `reset` 时触发一次 `onReset`。保持当前状态的重复命令同时保持现有回调次数。
 
 **暂停时序:**
@@ -1122,7 +1120,8 @@ sequenceDiagram
     alt 找到
         Scene->>Obj: stop() / reset() / finish()
         Obj->>RK: 读取当前姿态或计算终态姿态
-        Obj->>RK: 停止控制器与全部动画
+        Obj->>RK: 停止当前业务播放控制器
+        Note over RK: Entity 及其子节点上的其它动画继续播放
         Obj->>RK: 以零时长提交目标姿态
         Obj->>Obj: 读取姿态并拆解确认值
         Obj->>Event: 发出 stop/reset/finish,携带确认值
@@ -1160,7 +1159,7 @@ sequenceDiagram
     end
 ```
 
-暂停复用已编译的整姿态串联动画并控制当前播放控制器。停止 / 重置 / 结束会终止当前播放,并以零时长提交终态姿态。`set` 在非活跃状态下把稀疏补丁合并到已提交姿态后直接提交。
+暂停复用已编译的整姿态串联动画并控制当前播放控制器。停止 / 重置 / 结束会停止该控制器,并以零时长提交目标姿态。`set` 在非活跃状态下把稀疏补丁合并到已提交姿态后以零时长提交。
 
 Native Entity animation object 与一次 target binding 同生命周期;target 销毁时,`SpatialScene` 通过全局 `SpatialObject` lifecycle 级联销毁关联动画,不保留失效对象。
 

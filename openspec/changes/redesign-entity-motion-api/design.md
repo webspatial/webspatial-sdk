@@ -1081,8 +1081,6 @@ State-command matrix:
 
 For `reset` and `finish`, an existing run supplies its confirmed start and end poses. Before the first run, the compiler reads the current native transform as the baseline on demand and computes the configured start or end pose. `finish` always commits the configured `to` / `100%` pose for ordinary, reset-loop, and reverse-loop playback.
 
-Each fresh play allocates a monotonically increasing `runId`, stores the current controller identity, and initializes one-shot lifecycle gates. A controller completion event belongs to the active run when both its controller identity and captured `runId` match. `stop`, `reset`, `finish`, and `destroy` advance the run generation and retire the current controller identity. Native serializes controller callbacks and command handlers; the first processed action commits its transition, and each later action evaluates the resulting state through the matrix above.
-
 Lifecycle gates provide these callback counts: one `onStart` for each accepted fresh play, one `onComplete` from either natural completion or `finish` for that run, one `onStop` for each accepted transition from `running` / `paused` to `idle`, and one `onReset` for each accepted `reset`. Repeated commands that keep the current state also keep the existing callback counts.
 
 **Pause sequence:**
@@ -1122,8 +1120,9 @@ sequenceDiagram
     alt found
         Scene->>Obj: stop() / reset() / finish()
         Obj->>RK: read current transform or compute end-state transform
-        Obj->>RK: stop the controller and all animations
-        Obj->>RK: commit the target transform with zero duration
+        Obj->>RK: stop current business playback controller
+        Note over RK: unrelated Entity and descendant animations keep playing
+        Obj->>RK: commit target transform with zero duration
         Obj->>Obj: read transform and decompose confirmed value
         Obj->>Event: emit stop/reset/finish, with confirmed value
         Scene-->>JSB: success
@@ -1160,7 +1159,7 @@ sequenceDiagram
     end
 ```
 
-Pause reuses the compiled whole-transform chain and controls the current playback controller. Stop / reset / finish terminate the current playback and commit the end-state transform with zero duration. While inactive, `set` merges the sparse patch onto the committed transform and commits it directly.
+Pause reuses the compiled whole-transform chain and controls the current playback controller. Stop / reset / finish stop that controller and commit the target pose with zero duration. While inactive, `set` merges the sparse patch onto the committed transform and commits it with zero duration.
 
 A native Entity animation object has the same lifecycle as one target binding. When the target is destroyed, `SpatialScene` cascades destruction to associated animations through the global `SpatialObject` lifecycle and retains no invalid object.
 
