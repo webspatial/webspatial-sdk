@@ -24,7 +24,7 @@
 | Do a multi-step keyframe animation (e.g. 0% → 50% → 100%) | Write `timeline` in the config |
 | Keep the object at the end pose after the animation, no snap-back | Spread `{...entityProps}` onto the component |
 | Move the object to a new pose in code after the animation | Call `api.set({ ... })` |
-| Let the animation control position only, keep other components fixed during playback | Put only `position` in the config; `rotation` / `scale` freeze at baseline during playback and can be taken over via props / `api.set` after it ends |
+| Animate position only while preserving the other components | Put only `position` in the config; native fills `rotation` / `scale` from the baseline, owns the whole transform during playback, and returns the complete committed transform through `entityProps` |
 | Read the final pose the animation hands back | Read `entityProps` (there is no `api.get`) |
 | Control playback (start/pause/stop/reset) | `api.play()` / `pause()` / `stop()` / `reset()` / `finish()` |
 | Check whether the runtime supports animation | `supports('useEntityAnimation')` |
@@ -71,7 +71,7 @@ const [animation, api, entityProps] = useEntityAnimation(config)
 |---|---|
 | `animation` | The animation binding; pass it to the component's `animation` prop |
 | `api` | The playback controller; provides `play / pause / stop / reset / finish` and `set` |
-| `entityProps` | The final pose handed back at key moments (not a live per-frame value), shaped like `{ position?, rotation?, scale? }`; spread it onto the component |
+| `entityProps` | A committed-pose snapshot updated at key moments; after the first confirmation it contains complete `position`, `rotation`, and `scale` values and should be spread onto the component |
 
 ---
 
@@ -245,7 +245,7 @@ return (
 )
 ```
 
-**After the animation completes**, `entityProps` updates to the end pose (position, rotation, scale); the object stays on its last frame and **does not snap back to the start**.
+**After the animation completes**, `entityProps` updates to the complete end pose (`position`, `rotation`, and `scale`), and the object remains on that committed pose. While the animation binding remains attached, this complete mirror owns the transform even while playback is inactive.
 
 **When it updates**: `entityProps` does not update every frame. It only updates at key moments: when playback starts, completes, stops, resets, finishes, and when an `api.set` write succeeds.
 
@@ -280,20 +280,23 @@ A few rules:
 
 ## Who Wins: Animation vs. Your Props
 
-The object's pose can be influenced from two sides at once: the props you pass manually (including `entityProps`), and the animation that is playing. The rule is decided **for the whole transform, by whether the animation is active**: once the animation is active, the entire transform is owned by the animation:
+The object's pose can be influenced by static/base props, the `entityProps` committed mirror, and the active animation. Ownership is always decided for the **whole transform**:
 
 | Situation | Who wins |
 |---|---|
-| The animation is playing (including delay, paused) | The animation owns the whole transform; components not in the config are frozen at baseline |
-| The animation has ended / not started / stopped | Your props / `api.set` |
+| Before the first native-confirmed state | Static/base React props |
+| The animation is playing (including delay and paused) | The animation owns the whole transform; the remaining components hold their baseline values |
+| A confirmed state exists and playback is inactive | The complete `entityProps` mirror; dynamic writes use `api.set` |
+| The animation binding is removed | React props regain control |
 
-This matches visionOS / picoOS natively: the underlying runtime can only bind the whole transform, so once the animation is active it takes over the entire transform; components not in the config are frozen at baseline and are handed back to you only after the animation ends.
+This matches visionOS / picoOS natively: the underlying runtime binds the whole transform. During active animation, configured components animate and the remaining components hold their baseline values. Native reports the complete committed transform at confirmed lifecycle points, and `entityProps` persists that complete value while the binding remains attached.
 
 A few practical takeaways follow:
 
 - **While the animation is playing**, the entire transform is taken over by the animation, so writing any component via props or `api.set` has no effect; components not in the config are frozen at baseline.
-- **"Keep rotation live-controlled by props during the animation" is not possible** — the runtime can only bind the whole transform, so rotation is frozen at baseline during playback and can only be taken over via props / `api.set` after the animation ends.
-- **After the animation ends**, these transform properties go back to being controlled by props (including `entityProps`), and the object stays at the end pose.
+- **During animation**, the runtime binds the whole transform and rotation holds its baseline value.
+- **After the first confirmed state**, ordinary transform props remain static/base inputs while the binding is attached. Use `api.set` for inactive dynamic changes.
+- **After the binding is removed**, `entityProps` ownership is cleared and ordinary React transform props regain control.
 
 ### Recommended Pattern
 
@@ -306,6 +309,8 @@ Put `entityProps` **after** your other props, so the object correctly stays at t
   animation={animation}
 />
 ```
+
+Once `entityProps` has a confirmed value, it remains authoritative when `basePosition` changes. Call `api.set` to change the committed transform, or remove the animation binding to return control to ordinary React props.
 
 ---
 
@@ -351,8 +356,8 @@ stateDiagram-v2
     end note
     note right of Ended
         complete / stop / finish stops at the matching pose
-        entityProps updates to that pose
-        properties are handed back to your props / api.set
+        entityProps updates to the complete pose
+        entityProps owns the transform; dynamic writes use api.set
     end note
 ```
 
@@ -362,9 +367,9 @@ stateDiagram-v2
 
 | State | How to enter | Is `api.set` usable | Does `entityProps` update | Who controls the transform |
 |---|---|---|---|---|
-| **Not started** | Initial state; or after `reset()` | ✅ Usable | No (may be empty — do not rely on it at mount) | Your props |
+| **Initial** | Before the first confirmed value | ✅ Usable after native object creation | Filled at the first confirmation | Static/base React props |
 | **Playing** (incl. delay, paused) | `play()` / `autoStart`; still counts after `pause()` | ❌ Rejected (noop + warning) | Only once, at the moment playback starts | The animation owns the whole transform; fields omitted from the config freeze at this run's fresh-play baseline |
-| **Ended** | Reaches the end, `complete` / `stop` / `finish` | ✅ Usable | ✅ Updates to the final pose (`stop` freezes at current, `finish`/`complete` at the end) | Your props / `api.set` |
+| **Inactive with confirmed state** | `complete` / `stop` / `reset` / `finish`, or successful `api.set` | ✅ Usable | ✅ Contains the complete committed transform | `entityProps`; dynamic writes use `api.set` |
 
 > **Note**: a looping animation has no natural "reaches end", so `entityProps` does not update and the baseline is not reread at each loop boundary; only `stop()` / `finish()` or a successful `api.set` updates it.
 

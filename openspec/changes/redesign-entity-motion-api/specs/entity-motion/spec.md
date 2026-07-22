@@ -4,14 +4,14 @@
 
 The SDK MUST provide `useEntityAnimation(config)` as the public Entity motion hook. The hook MUST return a 3-tuple `[animation, api, entityProps]`.
 
-The returned `animation` object MUST be bindable through the `animation` prop on Entity components. The returned `entityProps` object MAY be empty before the first native-confirmed state; once native returns a confirmed state, `entityProps` MUST represent the transform components committed by the animation system (the end values of animated components plus components written via `api.set`), limited to the `position`, `rotation`, and `scale` fields and no other properties; components never written by an animation or `api.set` MUST NOT appear in `entityProps`.
+The returned `animation` object MUST be bindable through the `animation` prop on Entity components. An empty `entityProps` object MUST be valid before the first native-confirmed state. Once native returns a confirmed state, `entityProps` MUST represent the complete committed transform with exactly three complete fields: `position`, `rotation`, and `scale`. While the binding remains attached, this complete mirror owns the inactive transform; removing the binding MUST return transform control to React props.
 
 #### Scenario: Hook return shape
 - **WHEN** application code calls `useEntityAnimation(config)`
 - **THEN** the hook MUST return `[animation, api, entityProps]`
 - **AND** `api` MUST expose `play`, `pause`, `stop`, `reset`, `finish`, and `set`
 - **AND** `set` MUST be documented as a state setter for committed transform values rather than a playback command
-- **AND** `entityProps` MUST only contain `position`, `rotation`, and `scale`
+- **AND** after the first native-confirmed state, `entityProps` MUST contain complete `position`, `rotation`, and `scale` values
 
 #### Scenario: Entity binding uses `animation`
 - **WHEN** the returned `animation` object is passed to an Entity component through the `animation` prop
@@ -85,14 +85,19 @@ Inside a `timeline`, `from` MUST be equivalent to the `0%` frame and `to` MUST b
 
 ### Requirement: `entityProps` persists committed transform state
 
-The SDK MUST use `entityProps` as the React-side persistence outlet for committed Entity transform values owned by the animation system.
+The SDK MUST use `entityProps` as the React-side persistence outlet for the complete committed Entity transform owned by the animation system.
 
-`entityProps` MUST NOT update every frame. It MUST only update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, and native-accepted `api.set(values)` writes. Before the first confirmed state, `entityProps` MAY be empty; once native returns a confirmed state, it MUST mirror the transform components committed by the animation system (the end values of animated components plus components written via `api.set`), limited to the `position` / `rotation` / `scale` fields; components never written by an animation or `api.set` MUST NOT appear in `entityProps`, so spreading it does not override components the user controls through React props.
+`entityProps` MUST update only when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, and native-accepted `api.set(values)` writes. An empty `entityProps` object MUST be valid before the first confirmed state. Once native returns a confirmed state, `entityProps` MUST mirror the complete committed transform with complete `position`, `rotation`, and `scale` values. The complete mirror MUST be independent of the fields present in the animation config or an `api.set` patch. While the animation binding remains attached, spreading `entityProps` after static/base props MUST keep that complete committed transform authoritative.
 
 #### Scenario: Complete writes terminal transform to `entityProps`
 - **WHEN** a non-looping Entity animation completes naturally
-- **THEN** `entityProps` MUST reflect the completed transform state
+- **THEN** `entityProps` MUST reflect the complete completed transform state, including `position`, `rotation`, and `scale`
 - **AND** subsequent React renders can preserve that terminal state by spreading `entityProps` onto the Entity component
+
+#### Scenario: Removing the binding returns control to React props
+- **GIVEN** `entityProps` contains a native-confirmed transform
+- **WHEN** the Entity animation binding is removed or unbound
+- **THEN** ordinary React transform props MUST become authoritative again
 
 #### Scenario: No per-frame React outlet updates
 - **WHEN** native playback is actively interpolating between keyframes
@@ -173,7 +178,7 @@ A `play` after `pause` MUST resume the current playback controller and progress 
 
 ### Requirement: Active animation owns the entire Entity transform
 
-During active playback states, the animation system MUST own the entire Entity transform: the underlying platforms (visionOS / picoOS) can only bind the whole `.transform`, so as soon as any animation field appears in the config the entire transform is owned by the animation during active playback. Components not written in the config MUST be frozen at baseline. During this period, direct React prop writes or `api.set` writes to any component MUST NOT interrupt playback, MUST NOT immediately override the active animation, and MUST NOT be replayed automatically after completion; such writes MUST take effect only once the animation becomes inactive.
+During active playback states, the animation system MUST own the entire Entity transform. The underlying platforms (visionOS / picoOS) bind the whole `.transform`; configured components animate and the remaining components MUST hold their baseline values. During this period, the active animation MUST remain authoritative, the latest confirmed `entityProps` values MUST remain stable, and the SDK MUST discard direct React prop writes and `api.set` writes immediately. After a confirmed state exists, inactive dynamic writes MUST use `api.set`; ordinary React transform props remain static/base inputs until the binding is removed.
 
 #### Scenario: React props do not override the active animation
 - **GIVEN** an Entity animation is in `delay`, `running`, or `paused`
@@ -183,18 +188,19 @@ During active playback states, the animation system MUST own the entire Entity t
 #### Scenario: Components not in the config freeze at baseline during animation
 - **GIVEN** an Entity animation is in `delay`, `running`, or `paused`, and the config does not animate some component (e.g. it only animates `position`)
 - **WHEN** application code updates that **component not written in the config** (e.g. `rotation`) while the animation is active
-- **THEN** the prop write MUST NOT take effect immediately, the component MUST stay frozen at baseline, and it MUST only be taken over by props / `api.set` once the animation becomes inactive
+- **THEN** the component MUST remain at baseline and the SDK MUST discard the prop write immediately
+- **AND** after the animation becomes inactive, a dynamic transform change MUST be expressed through `api.set`
 
 #### Scenario: Terminal state wins over stale base props
 - **GIVEN** an Entity component composes static props and spread `entityProps`
 - **WHEN** the animation reaches a terminal state
-- **THEN** the committed values in `entityProps` MUST represent the authoritative terminal transform
+- **THEN** the complete committed `position`, `rotation`, and `scale` values in `entityProps` MUST represent the authoritative terminal transform
 - **AND** the recommended composition order is for `entityProps` to be applied after stale base props
 
 
 ### Requirement: Dynamic take-over uses `api.set`
 
-While no animation is active (`idle` or terminal), Source A is authoritative. Application code that needs to dynamically take over the committed Entity transform after animation MUST use `api.set`. Ordinary Entity props remain static/base inputs in the recommended composition pattern and MUST NOT be treated as a second dynamic take-over channel that competes with `entityProps`.
+Before the first confirmed state, ordinary Entity transform props are authoritative static/base inputs. Once a confirmed state exists and the animation binding remains attached, `entityProps` is authoritative for the complete inactive transform. `api.set` MUST be the sole dynamic write channel for that committed transform.
 
 #### Scenario: Inactive dynamic take-over uses set
 - **GIVEN** no Entity animation is active (`idle` or terminal)
@@ -220,14 +226,14 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 
 The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST only accept a sparse `EntityMotionPatch` object (the write-side patch type; the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly) and MUST NOT support the updater function form `(prev) => next`. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
 
-Entity transform is composed from two sources: Source A is static/base React props plus `entityProps` (the committed state mirrored by the SDK; dynamic take-over is written through `api.set`), and Source B is the `animation` binding (per-frame sampled values). Arbitration MUST be over the whole transform uniformly: while the animation is active (`delay` / `running` / `paused`) Source B is authoritative for the entire transform (components not written in the config are frozen at baseline by Source B), and while it is inactive (`idle` / terminal) Source A is authoritative. `api.set` always writes Source A and is reflected on the transform only while the animation is inactive.
+Entity transform ownership MUST be arbitrated as one whole. Before the first confirmed state, static/base React props are authoritative. While the animation is active (`delay` / `running` / `paused`), the `animation` binding is authoritative for the entire transform; configured fields animate and the remaining fields hold their baseline values. Once native emits a confirmed state and while the binding remains attached, `entityProps` is authoritative for the complete inactive transform. During inactive states, `api.set` updates the native committed transform. Removing the binding returns authority to React props.
 
 The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST read declarative `entityProps`, and compute its own patch before calling `api.set(values)` when it needs to write. `entityProps` MAY be empty before the first native-confirmed state and MUST NOT be promised readable at mount: creating or binding the animation MUST NOT emit an extra initial confirmed value. To read a meaningful native pose, application code MUST first trigger a lifecycle that commits a confirmed value (a `play` that reaches a terminal / lifecycle node, or an accepted `api.set`).
 
 #### Scenario: set updates committed state and entityProps
 - **WHEN** application code calls `api.set(values)` with Entity transform values
 - **THEN** the SDK MUST send the write to native, which decides whether to accept it
-- **AND** when native accepts, `entityProps` MUST update to the confirmed transform values emitted by native
+- **AND** when native accepts, `entityProps` MUST update to the complete confirmed `position`, `rotation`, and `scale` values emitted by native
 - **AND** when native rejects, `entityProps` MUST NOT update, and the rejection MUST surface a console warning rather than an `onError` event
 
 #### Scenario: set performs a sparse merge
