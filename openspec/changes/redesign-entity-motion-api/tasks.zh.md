@@ -22,7 +22,7 @@
 
 ## 4. Playback、Outlet 与 Core 归一化
 
-- [ ] 4.1 先编写红灯测试,覆盖 `entityProps` 在 `start`、`complete`、`stop`、`reset`、`finish` 和原生层接受 `api.set(values)` 后包含完整的 `position`、`rotation`、`scale`,React 更新时机限定为生命周期节点,`onStart` / `onComplete` / `onStop` / `onReset` 接收精确的 `EntityMotionProps` 参数、`onError` 接收精确的 `SpatializedPlaybackError` 参数、callback 返回值被忽略,以及终态由配置或 `api.set` 决定
+- [ ] 4.1 先编写红灯测试,覆盖 `entityProps` 在 `start`、`complete`、`stop`、`reset`、`finish` 和原生层接受 `api.set(values)` 后包含完整的 `position`、`rotation`、`scale`,React 更新时机限定为生命周期节点,`onStart` / `onComplete` / `onStop` / `onReset` 接收精确的 `EntityMotionProps` 参数、`onError` 接收精确的 `SpatializedPlaybackError` 参数、callback 返回值被忽略,`idle → finish → finished` 触发一次 `onComplete` 并保持现有 `onStart` 次数,以及终态由配置或 `api.set` 决定
 - [ ] 4.2 实现 React/Core 状态事件消费、回调分发和 `entityProps` 完整已提交变换持久化,保持原生层已确认状态的单向流动
 - [ ] 4.3 先编写红灯测试,覆盖公开播放接口、每个绑定对象独立的 FIFO 命令链与完整变换控制权:原生动画对象创建前的播放命令按顺序执行,`autoStart` 产生的 `play` 排在已有待执行命令之前;创建前的 `set` 保持控制台警告与空操作且不进入队列;创建后的 `set → play`、`stop → play`、`play → pause` 等待前一条内部 JSB 回执后再执行;命令失败不阻塞后续队列;解绑、替换和销毁使尚未发送的命令失效;动画活跃期间的写入保持动画和最新 `entityProps`;确认后完整 `entityProps` 镜像在绑定存续期间保持控制权;解绑后 React 属性恢复控制;终态填充保持已提交终点姿态
 - [ ] 4.3a 先编写绑定生命周期红灯测试,覆盖解绑和目标替换清空 `entityProps`、同一目标的执行签名变化停止旧控制器并在替换动画对象期间保持镜像、仅更新回调时保持当前对象与状态、替换代次的命令排队、每个新对象执行一次隐式 `autoStart`,以及按当前绑定代次和动画对象身份接受回执与事件

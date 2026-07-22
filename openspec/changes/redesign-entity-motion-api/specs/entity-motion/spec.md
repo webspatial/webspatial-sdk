@@ -159,6 +159,7 @@ Each fresh play MUST store its active native business-controller identity. Nativ
 - **AND** `play` MUST start a fresh run
 - **AND** `reset` MUST commit the configured start pose and enter `idle`
 - **AND** `finish` from `idle` MUST commit the configured end pose and enter `finished`
+- **AND** that `idle → finished` transition MUST fire `onComplete` once and preserve the existing `onStart` count
 - **AND** `finish` from `finished` MUST preserve the finished state and callback counts
 
 #### Scenario: Active commands follow one transition table
@@ -192,7 +193,7 @@ Each fresh play MUST store its active native business-controller identity. Nativ
 #### Scenario: Lifecycle callbacks have one-shot counts
 - **WHEN** one fresh run and its control commands are processed
 - **THEN** `onStart` MUST fire exactly once for the accepted fresh play
-- **AND** natural completion or `finish` MUST fire `onComplete` exactly once for that run
+- **AND** `onComplete` MUST fire exactly once when the animation naturally enters `finished`, or when `finish()` moves it from `idle`, `running`, or `paused` to `finished`
 - **AND** each accepted `stop` transition MUST fire `onStop` exactly once
 - **AND** each accepted `reset` MUST fire `onReset` exactly once
 
