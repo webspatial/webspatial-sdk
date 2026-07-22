@@ -22,10 +22,10 @@
 
 ## 4. Playback、Outlet 与 Core 归一化
 
-- [ ] 4.1 先编写失败测试,覆盖 `entityProps` 在 start、complete、stop、reset、finish 和 Native 接受 `api.set(values)` 后的更新,无逐帧 React 更新,callback values 只含 Entity transform 字段,且 callback 返回值不驱动终态
-- [ ] 4.2 实现 React/Core 状态事件消费、callback 分发和 `entityProps` 已提交 transform 持久化,保持 Native confirmed state 单向流动
-- [ ] 4.3 先编写失败测试,覆盖公开 playback API 与整 transform ownership:`api.set` 只接受 sparse patch object,未绑定或原生动画对象创建前的 set 为 no-op,动画活跃期间的 React transform 写入 / set 不暂存、不覆盖动画且不更新 `entityProps`,终态填充不 snap 回退
-- [ ] 4.4 实现 React/Core playback API、JSB 命令发起和 outlet ownership 路由;Native 的 set 合并、状态机与终态提交由第 5 节实现
+- [ ] 4.1 先编写红灯测试,覆盖 `entityProps` 在 `start`、`complete`、`stop`、`reset`、`finish` 和原生层接受 `api.set(values)` 后包含完整的 `position`、`rotation`、`scale`,React 更新时机限定为生命周期节点,回调值包含完整变换字段,终态由配置或 `api.set` 决定
+- [ ] 4.2 实现 React/Core 状态事件消费、回调分发和 `entityProps` 完整已提交变换持久化,保持原生层已确认状态的单向流动
+- [ ] 4.3 先编写红灯测试,覆盖公开播放接口与完整变换控制权:`api.set` 的输入类型为稀疏补丁对象;绑定完成前以及原生动画对象创建前的调用保持当前状态;动画活跃期间的 React 变换属性写入与 `set` 保持动画和最新 `entityProps`;确认后完整 `entityProps` 镜像在绑定存续期间保持控制权;解绑后 React 属性恢复控制;终态填充保持已提交终点姿态
+- [ ] 4.4 实现 React/Core 播放接口、JSB 命令发起、完整变换出口控制权和解绑后的控制权交还;原生层的 `set` 合并、状态机与终态提交由第 5 节实现
 - [ ] 4.5 先编写失败测试,覆盖 `normalizeEntityMotionConfig` 对顶层 `from` / `to`、`timeline.from` / `timeline.to` 和百分比关键帧的等价折叠、`timeline` 优先告警、默认 0.3 秒 duration、起止边界必填、同帧重复拒绝、属性白名单与字段级稀疏保留
 - [ ] 4.6 在 Core 实现归一化与校验,保持现有 `EntityMotionTimelinePayload` 和创建命令传输结构兼容;Native 对该 payload 的编译与执行由第 5 节实现
 
@@ -35,7 +35,7 @@
 - [ ] 5.2 实现 Core/Native Bridge 类型、`EntityMotionBridgeTypes` 编解码和 handler 注册,复用 `CreateSpatializedElementAnimationJSBCommand`、`ControlSpatializedElementAnimationJSBCommand` 与 `spatialanimationstatechanged`
 - [ ] 5.3 先编写失败的目标分发与生命周期测试,覆盖 `elementId` 查询、element/entity/unsupported 分发、`TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、动画注册/查找/显式 destroy、Entity target 先销毁、清理、销毁后 no-op 以及竞态返回 `ANIMATION_NOT_FOUND`
 - [ ] 5.4 在两端 Native 实现 `SpatialScene` Entity 分发及通过全局 spatial objects 完成生命周期级联,保持 `EntityMotionManager` 只负责创建,由 `EntityMotionAnimationObject` 持有状态、资源并完成清理
-- [ ] 5.5 先编写失败的 timeline compiler 单元测试,覆盖属性/时间/缩放校验、关键帧时间并集、稀疏通道按本轮 baseline 补全、通道插值、每个切点完整姿态、逐段缓动优先级、旋转输入转换、被接管分量计算和无法表达段的显式失败
+- [ ] 5.5 先编写时间轴编译器红灯单元测试,覆盖属性、时间、缩放校验,关键帧时间并集,稀疏通道按本轮基准姿态补全,通道插值,每个切点的完整姿态,逐段缓动优先级,旋转输入转换,完整已确认变换输出和区间表达能力校验
 - [ ] 5.6 在两端 Native 实现 `EntityMotionTimelineCompiler`、`EntityMotionTiming` 与 `EntityMotionTransformValues`,产出按时间排序的完整姿态段及 confirmed transform 拆解/稀疏补丁合并能力
 - [ ] 5.7 先编写失败的 visionOS 集成测试,覆盖 RealityKit 整 `.transform` 绑定、多段完整姿态资源、`AnimationResource.sequence`、旋转转换、四种缓动、delay、playback rate、loop 和编译失败
 - [ ] 5.8 实现 visionOS RealityKit 完整姿态分段 sequence 编译、播放控制器接入和平台参数映射
@@ -43,7 +43,7 @@
 - [ ] 5.10 实现 picoOS 完整姿态分段 sequence 编译、播放控制器接入和平台参数映射
 - [ ] 5.11 先编写失败的 fresh-play 状态测试,覆盖首次 `play` / `autoStart`、complete/finish/stop/reset 后 replay 读取最新 baseline 并重新编译,pause 后 play 恢复当前控制器,单次播放内 loop 复用当前资源,编译失败保持非活跃
 - [ ] 5.12 在 `EntityMotionManager` 与 `EntityMotionAnimationObject` 中实现 fresh play、delay/running/paused 状态转换、resume、loop 资源复用和命令失败回执
-- [ ] 5.13 先编写失败的控制与事件测试,覆盖 play/start/complete/pause/stop/reset/finish/destroy/set/error action、stop 当前姿态、reset 起始姿态、finish/complete 终态、非活跃 set 稀疏合并、活跃 set no-op + warning、confirmed values 裁剪以及 `entityProps`/callback 映射
+- [ ] 5.13 先编写控制与事件红灯测试,覆盖 `play`、`start`、`complete`、`pause`、`stop`、`reset`、`finish`、`destroy`、`set`、`error` 动作,`stop` 提交当前姿态,`reset` 提交起始姿态,`finish` 和 `complete` 提交终态,非活跃状态下的 `set` 稀疏合并,活跃状态下的 `set` 保持状态并输出警告,独立于配置字段的完整已确认 `position`、`rotation`、`scale`,以及 `entityProps` 与回调映射
 - [ ] 5.14 实现完整控制状态机、终态零时长提交、确认姿态读取/拆解、状态事件编码与发送;仅将 `set` 命令的 `INVALID_CONTROL_STATE` 转换为一次控制台警告和正常返回,不抛出异常、不触发 `onError`、不改变姿态也不更新 `entityProps`
 
 ## 6. Capability 与校验
@@ -54,7 +54,7 @@
 
 ## 7. 文档、Demo 与迁移
 
-- [ ] 7.1 更新 Entity motion 文档与示例，统一使用 `position` / `rotation` / `scale` config、`animation`、`entityProps` 和只接受 patch object 的 `api.set`,并说明不提供裸 `api.get`:读取通过 `entityProps`,写入通过 `api.set(values)`;补充顶层 `from` / `to` 最简写法及其规则(与 `timeline.from` / `timeline.to` 等价、`timeline` 优先、纯顶层默认 0.3 秒);并说明每个动画都必须写起止两端(起点 `from`/`0%`、终点 `to`/`100%`,缺端报错,不再从当前姿态隐式起播)
+- [ ] 7.1 更新物体运动文档与示例,统一使用 `position`、`rotation`、`scale` 配置、`animation`、完整变换 `entityProps` 和补丁对象 `api.set`;说明通过 `entityProps` 读取、通过 `api.set(values)` 写入、绑定生命周期内的完整变换控制权和解绑后的控制权交还;补充顶层 `from`、`to` 简写及其规则(`timeline.from`、`timeline.to` 等价,`timeline` 优先,纯顶层配置默认 0.3 秒);说明每个动画显式声明起点 `from`/`0%` 和终点 `to`/`100%`,缺少边界时产生校验错误
 - [ ] 7.2 更新 `apps/test-server` 中的 Entity animation demo 与 capability 页面到新的目标态 API
 - [ ] 7.3 补充迁移说明，覆盖旧顶层 transform config 的移除，Entity motion 绑定统一使用 `animation`
 

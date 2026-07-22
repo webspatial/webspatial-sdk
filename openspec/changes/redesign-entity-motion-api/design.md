@@ -75,7 +75,7 @@ From this a few rules follow:
 - When native returns a failed command result, the entity transform and `entityProps` retain their current values.
 - When native accepts a command, it reports the confirmed transform through an animation state event, and React then updates `entityProps`.
 - React mirrors native-confirmed transforms back to the user; writes during active animation are handled as no-ops.
-- `entityProps` may be empty before the first confirmed transform arrives. After confirmation, it contains the components the animation has taken over plus the components written by `api.set`, with fields limited to `position` / `rotation` / `scale`.
+- `entityProps` starts empty. The first confirmation fills it with the complete committed `position`, `rotation`, and `scale` values. While the binding remains attached, this complete mirror owns the inactive transform; unbinding returns control to React props.
 
 #### Reuse the generic animation architecture
 
@@ -333,7 +333,7 @@ sequenceDiagram
     alt fresh play
         NativeObj->>NativeObj: read latest native baseline
         NativeObj->>Compiler: compile(timeline payload, baseline)
-        Compiler-->>NativeObj: resource + ownedComponents
+        Compiler-->>NativeObj: whole-transform resource
         NativeObj->>NativeObj: commit and confirm start pose, emit start
         NativeObj->>NativeObj: create controller and enter delay / running
     else play after pause
@@ -365,7 +365,7 @@ sequenceDiagram
     NativeObj->>NativeObj: state change (start/complete/stop/reset/finish/set accepted)
     NativeObj->>NativeObj: read authoritative transform
     NativeObj->>NativeObj: decompose into position / rotation / scale
-    NativeObj->>NativeObj: keep only the taken-over components
+    NativeObj->>NativeObj: encode complete position / rotation / scale
     NativeObj->>Event: report confirmed value
     Event->>Obj: receive event
     Obj-->>Hook: confirmed EntityMotionProps
@@ -380,7 +380,7 @@ Native decides whether `api.set` takes effect: it accepts patches while playback
 - **Command names keep the `Element` wording.** Entities reuse the existing create and control commands. Their target-state semantics cover spatial objects, and `elementId` identifies a spatial object.
 - **Accept native compilation cost on fresh play.** Each fresh play makes the entity animation object read the current baseline and invoke the compiler for multi-keyframe handling, sparse keyframes, rotation conversion, and whole-transform serial compilation in exchange for an up-to-date baseline, native RealityKit playback, system compositing, and one execution model.
 - **Slice into a serial chain of full poses.** Cut the timeline into a set of nodes, each carrying a complete `position` / `rotation` / `scale`, then chain them in order into one whole-transform animation. The visionOS RealityKit animation binding granularity is the whole `.transform`, and current easing requirements apply per segment. A serial chain of full poses therefore aligns visionOS and picoOS, where native animation binds the whole transform; all channels within one segment share a single `timingFunction`.
-- **Take over the whole transform.** Once the animation is active, the entire `.transform` is owned by the animation. For example, animating only `position.y` freezes `position.x` / `position.z` — and `rotation` / `scale` too — at baseline during playback; they can be taken over by React props / `api.set` only after the animation ends.
+- **Own the whole transform through the binding lifecycle.** Once the animation is active, the entire `.transform` is owned by the animation. For example, animating only `position.y` freezes `position.x` / `position.z` — and `rotation` / `scale` too — at baseline during playback. After native produces the first confirmed state, `entityProps` persists the complete committed transform while the binding remains attached; inactive dynamic writes use `api.set`, and unbinding returns control to React props.
 - **`set` uses sparse patch objects.** In v1, `api.set` accepts a sparse patch object and consumers read the latest confirmed transform through `entityProps`.
 - **Dispatch directly by runtime type.** In v1, `SpatialScene` dispatches elements and entities to their respective managers; real duplication between the two paths is the trigger for extracting a shared protocol.
 - **Measure large-scale concurrency.** Native RealityKit playback is preferable to per-frame JS writes, but high entity counts still require dedicated performance validation.
@@ -391,7 +391,7 @@ Native decides whether `api.set` takes effect: it accepts patches while playback
 
 - **Public interface:** `useEntityAnimation` returns `[animation, api, entityProps]`; the entity component receives `EntityMotionBinding` through its `animation` property.
 - **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`; `api.set(values)` submits a sparse state patch to native.
-- **Target binding:** `useBindMotionTarget({ binding, target })` maintains one binding per `SpatialEntity` and calls `target.createAnimation(config)` after binding.
+- **Target binding:** `useBindMotionTarget({ binding, target })` maintains one binding per `SpatialEntity` and calls `target.createAnimation(config)` after binding. Unbinding clears the binding-owned `entityProps` mirror so ordinary React transform props become authoritative again.
 - **Result mirror:** `entityProps` mirrors native-confirmed `position`, `rotation`, and `scale`, driving React re-render and lifecycle callbacks.
 
 #### Class Diagram
@@ -565,7 +565,7 @@ type EntityMotionPatch = {
 }
 ```
 
-`EntityMotionPatch` is a deep subset of `EntityMotionProps`: both top-level components and nested axes may be omitted. Native merges the patch axis by axis; once a top-level component appears in a confirmed event, it must contain a complete `Vec3`.
+`EntityMotionPatch` represents any deep subset of `EntityMotionProps`. Native merges the supplied axes and reports complete `position`, `rotation`, and `scale` values in every confirmed event, each as a complete `Vec3`.
 
 ##### State-changed event
 
@@ -718,7 +718,6 @@ classDiagram
         +target SpatialEntity
         +timeline EntityMotionTimelinePayload
         +playState
-        +ownedComponents
         +controller
         +play()
         -startFresh(resource)
@@ -767,7 +766,7 @@ classDiagram
 **Responsibilities per class:**
 
 - **Entity motion manager (`EntityMotionManager`):** provides Entity animation-object creation: it fallback-validates the create payload, constructs an animation object that stores the canonical timeline, and hands it to `SpatialScene` for registration. It owns no private registry, handles no per-object controls, and stores no playback state.
-- **Entity animation object (`EntityMotionAnimationObject`):** represents a single entity animation, holding the `animationId`, target entity, canonical timeline, playback state, taken-over components, current playback controller, and resource, and handling all of that object's state transitions. `play()` calls private `resumeCurrent()` while paused; in another fresh-play-eligible state it reads the baseline, invokes the compiler, and starts through private `startFresh(resource)`. After every start-pose confirmation / end state / accepted `set`, it obtains the confirmed value via the decomposition helper, encodes it via the bridge helper, then emits a state-changed event.
+- **Entity animation object (`EntityMotionAnimationObject`):** represents a single entity animation, holding the `animationId`, target entity, canonical timeline, playback state, current playback controller, and resource, and handling all of that object's state transitions. `play()` calls private `resumeCurrent()` while paused; in another fresh-play-eligible state it reads the baseline, invokes the compiler, and starts through private `startFresh(resource)`. After every start-pose confirmation / end state / accepted `set`, it obtains the complete confirmed transform via the decomposition helper, encodes it via the bridge helper, then emits a state-changed event.
 - **Timeline compiler (`EntityMotionTimelineCompiler`):** on each fresh play, accepts the canonical timeline and that run's baseline and slices and compiles them into one chained whole-transform RealityKit animation resource.
 - **Bridge types (`EntityMotionBridgeTypes`):** carry the native bridge encode/decode structures, including timeline data, control values, confirmed values, and errors. If the command types are sufficient, this part may exist as a few scattered structs.
 - **Playback parameter mapping (`EntityMotionTiming`):** maps the single easing already resolved for each segment, plus delay, loop, and playback rate, to the RealityKit representation; all four built-in easings map directly.
@@ -978,8 +977,8 @@ Decomposition rules:
 - `position` comes from the translation part of the native transform.
 - `scale` comes from the scale part of the native transform.
 - `rotation` uses Euler degrees, consistent with the entity property.
-- After decomposition, trim by the top-level components this animation object currently takes over: report the animation-owned `position` / `rotation` / `scale` components plus top-level components written by `api.set`. If `api.set` writes a component outside the animated config, that component joins the taken-over set and thereafter also appears in `entityProps`.
-- Both callback values and `entityProps` use `EntityMotionProps`, where every present top-level component is a complete `Vec3`; `api.set(values)` accepts a deeply sparse `EntityMotionPatch`. For example, after axis-wise merging `set({ position: { y: 0.3 } })`, the confirmed `position` contains complete `x / y / z` values.
+- After decomposition, report the complete committed transform independently of the animation config and the fields written by `api.set`.
+- Both callback values and `entityProps` use `EntityMotionProps`; every confirmed value contains complete `position`, `rotation`, and `scale` values, each as a complete `Vec3`. `api.set(values)` accepts a deeply sparse `EntityMotionPatch`. For example, after axis-wise merging `set({ position: { y: 0.3 } })`, the confirmed result contains the complete position, rotation, and scale.
 
 #### Native Internal Sequences
 
@@ -1019,7 +1018,7 @@ sequenceDiagram
     alt fresh play
         Obj->>RK: read current transform as this run's baseline
         Obj->>Compiler: compile(timeline, baseline)
-        Compiler-->>Obj: whole-transform animation resource + taken-over components
+        Compiler-->>Obj: whole-transform animation resource
         Obj->>RK: commit complete from / 0% start pose
         Obj->>RK: read back confirmed transform
         Obj->>Event: emit start with confirmed values

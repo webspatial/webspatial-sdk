@@ -75,7 +75,7 @@ React 配置 / api.set
 - 原生命令结果为失败时,物体姿态与 `entityProps` 保持原值。
 - 原生接受命令时,通过动画状态事件回传确认姿态,React 再更新 `entityProps`。
 - React 把原生确认过的姿态镜像给使用者;动画进行中的写入按空操作处理。
-- 首个确认姿态到来前 `entityProps` 可能为空。确认之后,它包含被动画接管的分量和被 `api.set` 写入的分量,字段范围限定在 `position` / `rotation` / `scale` 之内。
+- `entityProps` 初始为空。首次确认后,它包含完整的已提交 `position`、`rotation`、`scale` 值。绑定存续期间,播放空闲状态下的变换由这份完整镜像控制;解绑后由 React 属性控制。
 
 #### 复用通用动画架构
 
@@ -333,7 +333,7 @@ sequenceDiagram
     alt fresh play
         NativeObj->>NativeObj: 读取最新 native baseline
         NativeObj->>Compiler: compile(timeline payload, baseline)
-        Compiler-->>NativeObj: resource + ownedComponents
+        Compiler-->>NativeObj: 完整变换动画资源
         NativeObj->>NativeObj: 提交并确认起始姿态,发出 start
         NativeObj->>NativeObj: 创建 controller 并进入 delay / running
     else paused 后 play
@@ -365,7 +365,7 @@ sequenceDiagram
     NativeObj->>NativeObj: 状态变化(开始/完成/停止/重置/结束/set 被接受)
     NativeObj->>NativeObj: 读取权威姿态
     NativeObj->>NativeObj: 拆解为 position / rotation / scale
-    NativeObj->>NativeObj: 只保留被接管的分量
+    NativeObj->>NativeObj: 编码完整 position、rotation、scale
     NativeObj->>Event: 回传确认值
     Event->>Obj: 收到事件
     Obj-->>Hook: 确认后的 EntityMotionProps
@@ -380,7 +380,7 @@ sequenceDiagram
 - **命令名保留 `Element` 字样。** 物体复用现有创建和控制命令;其目标态语义为空间对象,`elementId` 表示空间对象 id。
 - **承担 fresh play 的原生编译成本。** 每次 fresh play 都由物体动画对象读取当前 baseline,再调用编译器完成多关键帧、稀疏关键帧、旋转换算和整姿态串联编译,换取最新 baseline、RealityKit 原生播放、系统合成和统一播放语义。
 - **切片为整姿态串联。** 把时间轴切成若干节点、每个节点携带完整的 `position` / `rotation` / `scale`,再按先后顺序串联成一条整姿态动画播放。visionOS(RealityKit)的动画绑定粒度是整个 `.transform`,当前缓动需求也以整段为单位。因此采用整姿态串联,天然对齐 visionOS 与 picoOS(两端原生都绑定整 transform);同一区间内各通道共用一个 `timingFunction`。
-- **整 transform 接管。** 动画一旦活跃,整个 `.transform` 由动画接管。例如只动画 `position.y` 时,`position.x` / `position.z` 乃至 `rotation` / `scale` 在播放期间都冻结在基准值;动画结束后才可由 React 属性 / `api.set` 接管。
+- **绑定生命周期内持有完整变换。** 动画进入活跃状态后,整个 `.transform` 由动画控制。例如只动画 `position.y` 时,`position.x`、`position.z`、`rotation`、`scale` 在播放期间都保持本轮基准姿态。原生层产生首个已确认状态后,`entityProps` 在绑定存续期间持久化完整的已提交变换;播放空闲时的动态写入使用 `api.set`,解绑后由 React 属性控制。
 - **`set` 使用稀疏补丁对象。** v1 的 `api.set` 接受稀疏补丁对象,当前确认姿态通过 `entityProps` 读取。
 - **按运行时类型直接分发。** v1 在 `SpatialScene` 中把元素和物体分别分发到对应管理器;两条路径出现真实重复时再提取公共协议。
 - **并发性能需要实测。** RealityKit 原生播放优于 JS 逐帧写入,但海量物体并发仍需专项性能验证。
@@ -391,7 +391,7 @@ sequenceDiagram
 
 - **公开接口:** `useEntityAnimation` 返回 `[animation, api, entityProps]`;物体组件通过 `animation` 属性接收 `EntityMotionBinding`。
 - **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`;`api.set(values)` 把稀疏状态补丁提交给原生。
-- **目标绑定:** `useBindMotionTarget({ binding, target })` 维护一个 binding 对应一个 `SpatialEntity` 的约束,绑定完成后调用 `target.createAnimation(config)`。
+- **目标绑定:** `useBindMotionTarget({ binding, target })` 维护一个绑定对应一个 `SpatialEntity` 的约束,绑定完成后调用 `target.createAnimation(config)`。解绑后由普通 React 变换属性控制。
 - **结果镜像:** `entityProps` 镜像原生确认的 `position`、`rotation`、`scale`,并驱动 React 重渲染与生命周期回调。
 
 #### 类图
@@ -565,7 +565,7 @@ type EntityMotionPatch = {
 }
 ```
 
-`EntityMotionPatch` 是 `EntityMotionProps` 的深度子集:顶层分量和内部轴都可省略。Native 按轴合并 patch;确认事件中的顶层分量一旦出现,必须回传完整 `Vec3`。
+`EntityMotionPatch` 表示 `EntityMotionProps` 的任意深度子集。原生层按轴合并补丁;每个确认事件都携带完整的 `position`、`rotation`、`scale` 值,且每项都是完整的 `Vec3`。
 
 ##### 状态变化事件
 
@@ -718,7 +718,6 @@ classDiagram
         +target SpatialEntity
         +timeline EntityMotionTimelinePayload
         +playState
-        +ownedComponents
         +controller
         +play()
         -startFresh(resource)
@@ -767,7 +766,7 @@ classDiagram
 **各类职责:**
 
 - **物体运动管理器(`EntityMotionManager`):** 提供 Entity 动画对象的创建服务:兜底校验创建 payload,构造保存规范时间轴的动画对象并交给 `SpatialScene` 注册。它不维护私有 registry,不处理单对象控制,也不持有播放状态。
-- **物体动画对象(`EntityMotionAnimationObject`):** 表示单个物体动画,保存 `animationId`、目标物体、规范时间轴、播放状态、被接管分量、当前播放控制器与资源,负责全部单对象状态转换。`play()` 在 paused 时调用 private `resumeCurrent()`,其它可 fresh play 的状态下读取 baseline、调用编译器并通过 private `startFresh(resource)` 启动。每次起始姿态确认 / 终态 / `set` 被接受后,借拆解辅助得到确认值、经桥接辅助编码,再发出状态变化事件。
+- **物体动画对象(`EntityMotionAnimationObject`):** 表示单个物体动画,保存 `animationId`、目标物体、规范时间轴、播放状态、当前播放控制器与资源,负责全部单对象状态转换。`play()` 在 `paused` 状态下调用私有方法 `resumeCurrent()`,其它可开始新一轮播放的状态读取基准姿态、调用编译器并通过私有方法 `startFresh(resource)` 启动。每次起始姿态确认、终态或 `set` 被接受后,借拆解辅助得到完整确认变换、经桥接辅助编码,再发出状态变化事件。
 - **时间轴编译器(`EntityMotionTimelineCompiler`):** 在每次 fresh play 时接受规范时间轴和本轮 baseline,将其切片编译为一条串联的整姿态 RealityKit 动画资源。
 - **桥接类型(`EntityMotionBridgeTypes`):** 承载原生桥接的编解码结构,包括时间轴数据、控制值、确认值和错误。若命令类型已够用,这部分可作为若干结构体分散存在。
 - **播放参数映射(`EntityMotionTiming`):** 把已经按全局时间段解析完成的唯一缓动函数、延迟、循环、播放速率映射到 RealityKit 的表达;四种内建缓动函数全部直接映射。
@@ -978,8 +977,8 @@ type EntityMotionProps = {
 - `position` 来自原生姿态的平移部分。
 - `scale` 来自原生姿态的缩放部分。
 - `rotation` 用与物体属性一致的欧拉角度数。
-- 拆解后必须按该动画对象当前接管的顶层分量裁剪:回传被动画接管的 `position` / `rotation` / `scale`,以及被 `api.set` 写入的顶层分量。若 `api.set` 写入了一个配置里没动画的分量,该分量并入被接管集合,后续也出现在 `entityProps` 中。
-- 回调值和 `entityProps` 都用 `EntityMotionProps` 形态,其中出现的顶层分量必须是完整 `Vec3`;`api.set(values)` 接受深度稀疏的 `EntityMotionPatch`。例如 `set({ position: { y: 0.3 } })` 按轴合并后,确认值中的 `position` 包含完整 `x / y / z`。
+- 拆解结果始终包含完整的已提交变换,其范围独立于动画配置和 `api.set` 写入字段。
+- 回调值和 `entityProps` 都采用 `EntityMotionProps` 形态;每个已确认值都包含完整的 `position`、`rotation`、`scale`,且每项都是完整的 `Vec3`。`api.set(values)` 接受深度稀疏的 `EntityMotionPatch`。例如 `set({ position: { y: 0.3 } })` 按轴合并后,确认结果包含完整的位置、旋转和缩放。
 
 #### Native 内部时序
 
@@ -1019,7 +1018,7 @@ sequenceDiagram
     alt fresh play
         Obj->>RK: 读取当前姿态作本轮 baseline
         Obj->>Compiler: compile(timeline, baseline)
-        Compiler-->>Obj: 整姿态动画资源 + 被接管分量
+        Compiler-->>Obj: 整姿态动画资源
         Obj->>RK: 提交 from / 0% 完整起始姿态
         Obj->>RK: 回读确认姿态
         Obj->>Event: 发出 start,携带确认值

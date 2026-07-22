@@ -24,7 +24,7 @@
 | 做多段关键帧动画(如 0% → 50% → 100%) | config 里写 `timeline` |
 | 让动画结束后物体停在终点、不弹回起点 | 把 `{...entityProps}` 展开到组件上 |
 | 动画结束后,用代码把物体挪到新姿态 | 调用 `api.set({ ... })` |
-| 只让动画控制位置,其它分量动画期间保持不变 | config 里只写 `position`;`rotation` / `scale` 播放期间冻结在基准值,结束后可由 props / `api.set` 接管 |
+| 只动画位置并保留其它分量 | 配置中只写 `position`;原生层从基准姿态补全 `rotation`、`scale`,播放期间接管完整变换,并通过 `entityProps` 回传完整的已提交变换 |
 | 读取动画交回的最终姿态 | 读 `entityProps`(没有 `api.get`) |
 | 控制播放(开始/暂停/停止/重置) | `api.play()` / `pause()` / `stop()` / `reset()` / `finish()` |
 | 判断运行环境是否支持动画 | `supports('useEntityAnimation')` |
@@ -71,7 +71,7 @@ const [animation, api, entityProps] = useEntityAnimation(config)
 |---|---|
 | `animation` | 动画绑定对象,传给组件的 `animation` 属性 |
 | `api` | 播放控制器,提供 `play / pause / stop / reset / finish` 和 `set` |
-| `entityProps` | 动画在关键节点交回的最终姿态(非逐帧实时值),形如 `{ position?, rotation?, scale? }`,展开到组件上即可 |
+| `entityProps` | 动画在关键节点交回的已提交姿态快照;首个已确认状态后包含完整的 `position`、`rotation`、`scale`,应展开到组件上 |
 
 ---
 
@@ -245,7 +245,7 @@ return (
 )
 ```
 
-**动画完成后**,`entityProps` 会更新为终点姿态(位置、旋转、缩放),物体停在最后一帧,**不会弹回起点**。
+**动画完成后**,`entityProps` 会更新为完整的终点姿态(`position`、`rotation`、`scale`),物体保持在该已提交姿态。动画绑定存续期间,这份完整镜像始终持有变换控制权。
 
 **更新时机**:`entityProps` 不是每一帧都更新,只在这些关键节点更新:动画开始播放、完成、停止、重置、结束,以及 `api.set` 写入成功时。
 
@@ -280,20 +280,23 @@ api.set({ position: { y: 0.3 } })
 
 ## 动画和你的 props 谁说了算
 
-物体的姿态可能同时被两边影响:你手动传的 props(含 `entityProps`),以及正在播放的动画。规则**按动画是否活跃、对整个 transform 统一判断**:动画一旦活跃,整个 transform 归动画所有:
+物体姿态可能同时受到基础属性、`entityProps` 已提交镜像和活动动画影响。系统始终为**完整变换**选择一个控制来源:
 
 | 情况 | 谁说了算 |
 |---|---|
-| 动画正在播放(含延迟、暂停) | 动画接管整个 transform;config 里没写的分量冻结在基准值 |
-| 动画已结束 / 尚未开始 / 已停止 | 你的 props / `api.set` |
+| 首个原生已确认状态之前 | 基础 React 属性控制 |
+| 动画正在播放(含延迟、暂停) | 动画控制完整变换;配置中的其余分量保持基准姿态 |
+| 已有已确认状态且播放空闲 | 完整 `entityProps` 镜像控制;动态写入使用 `api.set` |
+| 动画解绑 | React 属性控制 |
 
-这和 visionOS / picoOS 原生一致:底层只能绑定整个 transform,所以动画一活跃就接管整个 transform;config 里没写的分量会被冻结在基准值,直到动画结束后才交回给你控制。
+这和 visionOS / picoOS 原生一致:底层绑定完整变换。动画活跃期间,配置字段执行动画,其余字段保持基准姿态。原生层在生命周期确认节点回传完整的已提交变换,`entityProps` 在绑定存续期间持久化该完整值。
 
 由此可得几个常见结论:
 
 - **动画正在播时**,整个 transform 都由动画接管,你此时用 props 或 `api.set` 改任何分量都不会生效;没写进 config 的分量会被冻结在基准值。
-- **“动画期间让旋转继续由 props 实时控制”是做不到的**——底层只能绑定整个 transform,播放期间旋转会被冻结在基准值,只能等动画结束后再用 props / `api.set` 接管。
-- **动画结束后**,这些 transform 属性都恢复为由 props(含 `entityProps`)控制,物体停在终点。
+- **动画播放期间**,底层绑定完整变换,旋转保持本轮基准值。
+- **首个已确认状态之后**,绑定存续期间普通变换属性保持为基础输入;播放空闲时的动态修改使用 `api.set`。
+- **动画解绑后**,普通 React 变换属性恢复控制。
 
 ### 推荐写法
 
@@ -306,6 +309,8 @@ api.set({ position: { y: 0.3 } })
   animation={animation}
 />
 ```
+
+`entityProps` 获得已确认值后,`basePosition` 变化时它继续持有控制权。修改已提交变换时调用 `api.set`;交还普通 React 属性控制时解除动画绑定。
 
 ---
 
@@ -351,8 +356,8 @@ stateDiagram-v2
     end note
     note right of Ended
         complete / stop / finish 停在对应姿态
-        entityProps 更新为该姿态
-        属性交回给你的 props / api.set
+        entityProps 更新为完整姿态
+        entityProps 持有变换控制权;动态写入使用 api.set
     end note
 ```
 
@@ -362,9 +367,9 @@ stateDiagram-v2
 
 | 状态 | 怎么进入 | `api.set` 能用吗 | `entityProps` 会更新吗 | transform 归谁控制 |
 |---|---|---|---|---|
-| **尚未开始** | 初始状态;或 `reset()` 之后 | ✅ 能用 | 否(可能为空,别在挂载时就依赖它) | 你的 props |
+| **初始状态** | 首个已确认值产生之前 | 原生动画对象创建后 ✅ 能用 | 首次确认时填充 | 基础 React 属性控制 |
 | **播放中**(含延迟、暂停) | `play()` / `autoStart`;`pause()` 后仍属此类 | ❌ 被拒绝(noop + 警告) | 仅在开始播放那一刻更新一次 | 动画接管整个 transform;config 未声明的字段冻结在本轮 fresh-play baseline |
-| **已结束** | 播放到终点、`complete` / `stop` / `finish` | ✅ 能用 | ✅ 更新为最终姿态(`stop` 停在当前、`finish`/`complete` 停在终点) | 你的 props / `api.set` |
+| **已有确认值的播放空闲状态** | `complete`、`stop`、`reset`、`finish`,或成功的 `api.set` | ✅ 能用 | ✅ 包含完整的已提交变换 | `entityProps` 控制;动态写入使用 `api.set` |
 
 > **提示**:循环动画没有自然的“播放到终点”,所以循环期间 `entityProps` 不会在每圈结束时更新,也不会在每圈重新读取 baseline;只有 `stop()` / `finish()` 或成功的 `api.set` 才会更新它。
 
