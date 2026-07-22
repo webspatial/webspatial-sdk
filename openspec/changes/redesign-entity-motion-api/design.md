@@ -883,7 +883,7 @@ Each segment carries a full pose and joins the chain in time order; `delay` / `s
 
 The final compilation output is the controllable playback object. Reusing the example above (2 full-pose segments), the following shows it on visionOS and picoOS: each segment compiles into a full-pose `FromToBy`, chained via `sequence` into one animation resource, then handed to the engine — obtaining a playback controller that can pause / resume / stop / change speed, i.e. a "controllable playback object." Both platforms bind the whole transform, so the code lines up.
 
-Platform verification has passed on visionOS and picoOS for whole-transform binding, multi-segment sequence, per-segment easing, top-level delay / speed / loop, controller pause / internal resume / stop, and completion. The snippets below show resource construction and controller shape only; before handing the resource to the engine, `EntityMotionTiming` applies the verified top-level delay / speed / loop settings once to the whole sequence rather than repeating them on each segment.
+Platform capability validation on visionOS and picoOS is recorded through the Section 8 acceptance tasks, covering whole-transform binding, multi-segment sequence, per-segment easing, top-level delay / speed / loop, controller pause / internal resume / stop, and completion. The snippets below show resource construction and controller shape only; before handing the resource to the engine, `EntityMotionTiming` applies the top-level delay / speed / loop settings once to the whole sequence rather than repeating them on each segment.
 
 visionOS (RealityKit / Swift):
 
@@ -995,7 +995,7 @@ val controller = entity.playAnimation(clip)
 10. **Loop / playback rate / delay:** these playback parameters live at the top of the timeline and apply uniformly to the whole chained animation, executed by the RealityKit playback layer. Loops within one fresh play reuse that run's resource without reading a new baseline or recompiling on every iteration.
 11. **Explicit failure:** when a segment is outside RealityKit's expression range, the fresh-play control command must fail and leave the animation inactive.
 
-The cross-platform capability combinations above have been verified and passed; this design does not introduce an SDK-managed segment-queue fallback. Future integration tests guard against regressions from platform upgrades or implementation changes rather than treating these capabilities as open assumptions.
+The cross-platform capability combinations above depend on the Section 8 acceptance records; this design does not introduce an SDK-managed segment-queue fallback. Acceptance records include platform versions, SDK versions, fixtures, executed commands, and results.
 
 #### Transform decomposition and confirmed-value reporting
 
@@ -1166,3 +1166,13 @@ Pause reuses the compiled whole-transform chain and controls the current playbac
 A native Entity animation object has the same lifecycle as one target binding. When the target is destroyed, `SpatialScene` cascades destruction to associated animations through the global `SpatialObject` lifecycle and retains no invalid object.
 
 Boundary constraint: `SpatialScene` owns global `spatialObjects`, create-target lookup, control-animation lookup, runtime-type dispatch, command receipts, and the `SpatialObject` lifecycle. `EntityMotionManager` only provides Entity animation-object creation; `EntityMotionAnimationObject` owns per-object compilation, playback state, controls, confirmed values, and resource release. Extract a shared protocol only after real duplication appears; do not introduce a second registry in advance.
+
+## 6. Risk Assessment
+
+| Risk | Mitigation |
+|---|---|
+| Platform capability validation lacks traceable records | Section 8 acceptance tasks record platform versions, SDK versions, fixtures, executed commands, and results |
+| Controller-scoped stop affects unrelated animations on the same Entity or descendants | Native cleanup stops only the controller held by the current `EntityMotionAnimationObject`; 8.4/8.5 cover unrelated animations remaining active |
+| Zero-duration pose commits affect unrelated animations or terminal state | The command matrix bounds commits for `stop` / `reset` / `finish` / `set`; 8.4/8.5 cover terminal commits |
+| Missing transform-owner arbitration lets React writes override animation | `SpatialScene` checks the owner at the ordinary Entity transform update entry; 4.3/8.2 cover ownership |
+| Same-target config replacement lets the old object keep writing transform | Same-target replacement waits for old-object `destroy()` success before creating the new object; 4.3a covers the destroy barrier |

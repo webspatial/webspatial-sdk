@@ -883,7 +883,7 @@ flowchart TB
 
 编译的最终输出是可控播放对象。沿用上文示例(2 段整姿态),下面分别用 visionOS 与 picoOS 演示:每段编成一个整姿态 `FromToBy`,用 `sequence` 串成一条动画资源,最后交给引擎播放,拿到可暂停 / 恢复 / 停止 / 变速的播放控制器——即“可控播放对象”。两端都绑定整个 transform,写法对齐。
 
-visionOS 与 picoOS 的平台验证已经通过,覆盖整 transform 绑定、多段动画序列、每段独立缓动函数、顶层 delay / speed / loop、controller pause / internal resume / stop 以及 completion。以下代码只展示资源构造和 controller 形态;`EntityMotionTiming` 在交给引擎前把已经验证的顶层 delay / speed / loop 统一应用到整条动画序列,不由单个时间段重复设置。
+visionOS 与 picoOS 的平台能力按第 8 节验收任务留痕验证,覆盖整 transform 绑定、多段动画序列、每段独立缓动函数、顶层 delay / speed / loop、controller pause / internal resume / stop 以及 completion。以下代码只展示资源构造和 controller 形态;`EntityMotionTiming` 在交给引擎前把顶层 delay / speed / loop 统一应用到整条动画序列,不由单个时间段重复设置。
 
 visionOS(RealityKit / Swift):
 
@@ -995,7 +995,7 @@ val controller = entity.playAnimation(clip)
 10. **循环 / 播放速率 / 延迟:** 这些播放参数放在时间轴顶层,对整条串联动画统一生效,由 RealityKit 播放层执行。同一次 fresh play 内的 loop 复用本轮资源,每圈不重新读取 baseline 或编译。
 11. **失败显式化:** RealityKit 无法表达某个段时,fresh play 的控制命令必须失败,动画保持非活跃。
 
-上述跨端能力组合已经完成验证并通过;本设计不引入 SDK 自行调度分段队列的降级方案。后续集成测试用于防止平台升级或实现调整造成回归,不再把这些能力列为未决假设。
+上述跨端能力组合以第 8 节验收记录为准;本设计不引入 SDK 自行调度分段队列的降级方案。验收记录包含平台版本、SDK 版本、fixtures、执行命令和结果。
 
 #### 姿态拆解与确认值回传
 
@@ -1166,3 +1166,13 @@ sequenceDiagram
 Native Entity animation object 与一次 target binding 同生命周期;target 销毁时,`SpatialScene` 通过全局 `SpatialObject` lifecycle 级联销毁关联动画,不保留失效对象。
 
 边界约束:`SpatialScene` 负责全局 `spatialObjects`、创建目标查找、控制动画对象查找、运行时类型分发、命令回执和 `SpatialObject` lifecycle。`EntityMotionManager` 只提供 Entity 动画对象创建服务;`EntityMotionAnimationObject` 内聚单对象编译、播放状态、控制、确认值和资源释放。两条路径出现真实重复时再提取公共协议,不预先引入第二张 registry。
+
+## 6. 风险评估
+
+| 风险 | 缓解 |
+|---|---|
+| 平台能力验证缺少可追溯记录 | 第 8 节验收任务记录平台版本、SDK 版本、fixtures、执行命令和结果 |
+| 控制器级停止影响同一 Entity 或子节点上的其它动画 | 原生清理只停止当前 `EntityMotionAnimationObject` 持有的控制器,8.4/8.5 覆盖其它动画保持运行 |
+| 零时长姿态提交影响其它动画或终态 | 状态命令矩阵限定 `stop` / `reset` / `finish` / `set` 的提交动作,8.4/8.5 覆盖终态提交 |
+| transform owner 仲裁遗漏导致 React 写入覆盖动画 | `SpatialScene` 在普通 Entity transform 更新入口检查 owner,4.3/8.2 覆盖 ownership |
+| 同目标配置替换期间旧对象继续写 transform | 同目标替换等待旧对象 `destroy()` 成功后再创建新对象,4.3a 覆盖 destroy 屏障 |

@@ -66,8 +66,8 @@
 - [ ] 8.1 严格按 TDD 顺序执行实现：每组行为先写失败测试，再做最小实现使其通过，最后在测试持续通过前提下重构
 - [ ] 8.2 运行 React/Core 定向单测,覆盖 tuple、binding、归一化、能力检测、callback、`entityProps`、ownership 和 `api.set` 命令发起
 - [ ] 8.3 运行 Bridge contract 与集成测试,确认 Core、visionOS、picoOS 对创建/控制 payload、状态事件和错误码的编解码一致
-- [ ] 8.4 在 visionOS 运行百分比多关键帧、稀疏字段、完整姿态 sequence、fresh play、delay、loop、pause/resume、stop/reset/finish/set、控制器级清理、保持其它 Entity 和子节点动画运行、终态提交和销毁清理验收
-- [ ] 8.5 在 picoOS 运行与 8.4 相同的 fixtures 和验收矩阵
+- [ ] 8.4 在 visionOS 运行百分比多关键帧、稀疏字段、完整姿态 sequence、fresh play、delay、loop、pause/resume、stop/reset/finish/set、控制器级清理、保持其它 Entity 和子节点动画运行、终态提交和销毁清理验收,并记录平台版本、SDK 版本、fixtures、执行命令和结果
+- [ ] 8.5 在 picoOS 运行与 8.4 相同的 fixtures 和验收矩阵,并记录平台版本、SDK 版本、fixtures、执行命令和结果
 - [ ] 8.6 对照两端的 action 顺序、confirmed values、终态 transform、错误结果和 replay 行为,记录并解决跨端差异
 - [ ] 8.7 执行端到端回归,覆盖动画终态、active set 以及 Entity motion Spec 定义的 target 销毁生命周期和错误行为
 - [ ] 8.8 在 visionOS/picoOS 分别测量递增 Entity 并发下的 fresh-play 编译耗时、播放帧稳定性、内存占用和销毁回收,记录代表性规模结果与发布验收结论

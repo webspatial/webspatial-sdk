@@ -66,8 +66,8 @@
 - [ ] 8.1 Execute implementation in strict TDD order: for each behavior group, write failing tests first, implement the minimum change to pass, then refactor with tests still green
 - [ ] 8.2 Run targeted React/Core tests for the tuple, binding, normalization, capability detection, callbacks, `entityProps`, ownership, and `api.set` command initiation
 - [ ] 8.3 Run Bridge contract and integration tests to confirm Core, visionOS, and picoOS encode/decode parity for create/control payloads, state events, and error codes
-- [ ] 8.4 On visionOS, accept percentage multi-keyframes, sparse fields, full-pose sequence, fresh play, delay, loop, pause/resume, stop/reset/finish/set, controller-scoped cleanup, unrelated Entity and descendant animation preservation, terminal commit, and teardown
-- [ ] 8.5 Run the same fixtures and acceptance matrix from 8.4 on picoOS
+- [ ] 8.4 On visionOS, accept percentage multi-keyframes, sparse fields, full-pose sequence, fresh play, delay, loop, pause/resume, stop/reset/finish/set, controller-scoped cleanup, unrelated Entity and descendant animation preservation, terminal commit, and teardown, recording platform version, SDK version, fixtures, executed commands, and results
+- [ ] 8.5 Run the same fixtures and acceptance matrix from 8.4 on picoOS, recording platform version, SDK version, fixtures, executed commands, and results
 - [ ] 8.6 Compare action ordering, confirmed values, terminal transforms, error results, and replay behavior across both platforms, recording and resolving differences
 - [ ] 8.7 Run end-to-end regressions for terminal transforms, active set, and the target-destruction lifecycle and error behavior defined by the Entity motion spec
 - [ ] 8.8 On visionOS and picoOS, measure fresh-play compilation time, playback frame stability, memory use, and teardown recovery at increasing Entity concurrency, recording representative-scale results and the release acceptance conclusion
