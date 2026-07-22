@@ -141,6 +141,37 @@ Callback values MUST only include supported Entity transform fields.
 - **THEN** `onError` MUST receive the failure information
 - **AND** no callback value payload in the Entity motion API may include unsupported fields such as `opacity`
 
+### Requirement: Entity motion commands preserve per-binding FIFO order
+
+The public Entity playback methods MAY return `void`, but the SDK MUST preserve call order through one FIFO command chain per Entity motion binding. Once a native animation object exists, the binding MUST NOT send the next playback or `set` command until the previous command's internal JSB reply has settled. A failed command or a `set` mapped to warning plus no-op MUST settle its queue item and MUST NOT block or reorder later commands.
+
+A successful JSB reply MUST mean Native has completed the command's synchronous state transition and any required transform commit. When a command produces a state event, Native MUST emit that event before returning the success reply. A natural asynchronous `complete` event is not part of the earlier `play` reply.
+
+#### Scenario: Playback commands before native object creation are flushed in order
+- **GIVEN** an Entity motion binding whose native animation object has not been created
+- **WHEN** application code calls `play`, `pause`, `stop`, `reset`, or `finish`
+- **THEN** the binding MUST append those playback commands to its pending queue in call order
+- **AND** after creation succeeds, it MUST send them one at a time in FIFO order
+- **AND** when `autoStart` is enabled, its generated `play` MUST precede the playback commands already pending at creation time
+
+#### Scenario: Commands after native object creation are serialized
+- **GIVEN** the native animation object exists
+- **WHEN** application code calls multiple playback or `set` commands without waiting between calls
+- **THEN** the binding MUST append them to one FIFO command chain
+- **AND** it MUST wait for each internal JSB reply to settle before sending the next command
+
+#### Scenario: Consecutive set then play uses the committed set result
+- **GIVEN** the native animation object exists and playback is inactive
+- **WHEN** application code calls `api.set(values)` and immediately calls `api.play()`
+- **THEN** the binding MUST wait for the `set` reply before sending `play`
+- **AND** fresh play MUST read the native transform committed by that `set` as its latest baseline
+
+#### Scenario: Unbind or destruction invalidates pending commands
+- **GIVEN** a binding has an in-flight command or commands that have not been sent
+- **WHEN** the binding is removed, its target or animation object is replaced, or it is destroyed
+- **THEN** the SDK MUST discard all commands that have not been sent from that queue generation
+- **AND** settlement of an in-flight command MUST NOT dispatch another command from the invalidated generation
+
 ### Requirement: Every fresh play compiles against the latest native baseline
 
 When native creates an animation, it MUST fallback-validate and store the canonical timeline, register the animation object, and return an `animationId`; it MUST NOT read the playback baseline or generate a RealityKit playback resource during creation. A fresh play is the first `play` / `autoStart` after creation, or a `play` that starts again after `complete`, `finish`, `stop`, or `reset`. After each fresh play is accepted and before entering `delay` / `running`, native MUST read the current `entity.transform` as that run's baseline and compile the RealityKit playback resource from the canonical timeline and that baseline. Fields explicitly declared by the config MUST use config values, while fields omitted from the config MUST be filled from that run's baseline.
@@ -264,8 +295,10 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 - **AND** the rejected write MUST be a no-op that surfaces a console warning, and MUST NOT be delivered through `onError`
 
 #### Scenario: Start point after set then play
+- **GIVEN** the native animation object exists and playback is inactive
 - **WHEN** application code calls `api.set` and then `api.play()`
 - **THEN** playback MUST start from the start boundary declared by the config (top-level `from`, `timeline.from`, or the `0%` frame)
+- **AND** the binding MUST wait for the `api.set` JSB reply before sending `api.play()`
 - **AND** this `api.play()` MUST act as a fresh play and read the latest native transform after `api.set`
 - **AND** fields omitted from the config MUST use that latest transform as this run's baseline
 - **AND** because the start boundary is required, there is no valid config with "no start frame"; a config missing the start boundary has already been rejected during normalization

@@ -36,6 +36,8 @@ The public API surface covers animation binding, playback control, and confirmed
 - **spherical linear interpolation (slerp)**: the interpolation RealityKit uses for rotation, always taking the shortest path between two orientations.
 - **no-op**: after the command is received, the entity and `entityProps` retain their current values.
 - **registry**: the table the native layer uses to look up entities or animation objects by id.
+- **binding command queue**: the per-binding FIFO that serializes playback commands and `set` before they enter the JS Bridge. It is a React/Core ordering mechanism, not a second native animation queue.
+- **command reply**: the JSB success or failure receipt returned after Native has finished the command's synchronous state and transform commit work. When a command emits a state event, Native emits that event before returning the success reply.
 
 ## 3. Functional Scope
 
@@ -392,7 +394,21 @@ Native decides whether `api.set` takes effect: it accepts patches while playback
 - **Public interface:** `useEntityAnimation` returns `[animation, api, entityProps]`; the entity component receives `EntityMotionBinding` through its `animation` property.
 - **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`; `api.set(values)` submits a sparse state patch to native.
 - **Target binding:** `useBindMotionTarget({ binding, target })` maintains one binding per `SpatialEntity` and calls `target.createAnimation(config)` after binding. Unbinding clears the binding-owned `entityProps` mirror so ordinary React transform props become authoritative again.
+- **Command sequencing:** `EntityMotionBinding` reuses the Element animation binding's pending-command and sequential-flush model. It serializes commands per binding and does not send the next command until the current JSB reply settles.
 - **Result mirror:** `entityProps` mirrors native-confirmed `position`, `rotation`, and `scale`, driving React re-render and lifecycle callbacks.
+
+#### Binding command queue and completion semantics
+
+The public `EntityPlaybackApi` remains a `void` command surface. Internally, each `EntityMotionBinding` owns one FIFO command chain so call order is preserved without exposing bridge promises to application code.
+
+- Before the target binding and native animation-object creation complete, `play`, `pause`, `stop`, `reset`, and `finish` enter the pending-command queue in call order. After creation succeeds, the binding flushes them sequentially and awaits each internal `EntityAnimationObject` command promise before sending the next command.
+- When `autoStart` is enabled, its generated `play` command is inserted at the front of the pending playback commands when creation succeeds, matching the existing Element animation behavior.
+- `api.set` before binding or native animation-object creation never enters the queue. It remains a console warning plus no-op and is never replayed later.
+- After the native animation object exists, all playback commands and `set` enter the same per-binding FIFO. A failure or a warning-plus-no-op settles that queue item and allows the next item to run; it does not poison or reorder the queue.
+- A JSB success reply means Native has completed the command's synchronous state transition and any required transform commit. If the command produces `start`, `pause`, `stop`, `reset`, `finish`, or `set`, Native emits the corresponding state event before returning that success reply. A natural asynchronous `complete` event remains independent of the earlier `play` reply.
+- Unbinding, target replacement, config-driven object replacement, or destruction invalidates the current queue generation and drops every command that has not been sent. The in-flight command may settle under the documented teardown race, but its reply cannot dispatch another command from the invalidated generation.
+
+This ordering makes consecutive calls deterministic. In particular, `set → play` waits for the accepted `set` reply before fresh play reads its baseline; `stop → play` waits for the stopped transform commit; and `play → pause` waits until Native has accepted the play command.
 
 #### Class Diagram
 
@@ -788,6 +804,7 @@ Processing rules:
 - After create succeeds, `SpatialScene` adds the animation object to global `spatialObjects` as a `SpatialObject`; `animationId` is its spatial id.
 - Control commands look up an animation object by `animationId` in global `spatialObjects`, then enter the Element or Entity control path by animation-object runtime type. Only `EntityMotionAnimationObject` handles Entity-only `set`.
 - Synchronous command errors return through the JSB reply; only asynchronous playback failures after command acceptance return through one `spatialanimationstatechanged` error event.
+- A successful JSB reply is returned only after the command's synchronous native state transition and transform commit have completed. When that command emits a state event, Native emits the event before resolving the success reply; the binding queue uses reply settlement as the boundary for dispatching the next command.
 - When fresh-play compilation fails, the control command fails and the animation remains inactive.
 
 Native accepts and commits `api.set` while inactive. While active, it keeps the transform unchanged and returns `INVALID_CONTROL_STATE`; Core maps that `set` result to warning + no-op without triggering `onError`. The JSB shape remains unchanged.

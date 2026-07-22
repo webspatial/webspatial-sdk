@@ -36,6 +36,8 @@
 - **球面线性插值(slerp)**:RealityKit 对旋转采用的插值方式,总是走两个朝向之间的最短路径。
 - **空操作(no-op)**:命令被接收后,物体和 `entityProps` 保持原值。
 - **注册表(registry)**:原生层用来按 id 查找物体或动画对象的表。
+- **绑定命令队列(binding command queue)**:每个绑定对象独立持有的 FIFO 队列。该队列在命令进入 JS Bridge 前,依次执行播放命令和 `set`。它属于 React/Core 的顺序控制机制,不是第二套原生动画队列。
+- **命令回执(command reply)**:原生层完成命令的同步状态变更和姿态提交后,通过 JSB 返回的成功或失败结果。命令需要产生状态事件时,原生层先发出事件,再返回成功回执。
 
 ## 3. 要实现的功能
 
@@ -392,7 +394,21 @@ sequenceDiagram
 - **公开接口:** `useEntityAnimation` 返回 `[animation, api, entityProps]`;物体组件通过 `animation` 属性接收 `EntityMotionBinding`。
 - **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`;`api.set(values)` 把稀疏状态补丁提交给原生。
 - **目标绑定:** `useBindMotionTarget({ binding, target })` 维护一个绑定对应一个 `SpatialEntity` 的约束,绑定完成后调用 `target.createAnimation(config)`。解绑后由普通 React 变换属性控制。
+- **命令顺序:** `EntityMotionBinding` 复用 Element 动画绑定在对象创建前暂存命令、创建后逐条执行的机制。每个绑定对象独立串行执行命令,当前命令收到 JSB 回执后才发送下一条命令。
 - **结果镜像:** `entityProps` 镜像原生确认的 `position`、`rotation`、`scale`,并驱动 React 重渲染与生命周期回调。
+
+#### 绑定命令队列与完成语义
+
+公开的 `EntityPlaybackApi` 保持 `void` 命令接口。内部由每个 `EntityMotionBinding` 持有一条 FIFO 命令链,在不向应用暴露 JSB Promise 的前提下保持调用顺序。
+
+- 目标绑定或原生动画对象创建完成前,`play`、`pause`、`stop`、`reset`、`finish` 按调用顺序进入待执行命令队列。创建成功后,绑定对象逐条执行队列中的命令。当前 `EntityAnimationObject` 的内部命令 Promise 完成后,才发送下一条命令。
+- `autoStart` 开启时,创建成功后生成的 `play` 命令插入待执行播放命令的队首。该行为与现有 Element 动画一致。
+- 绑定或原生动画对象创建前调用 `api.set` 时,该命令不进入队列。SDK 输出控制台警告并执行空操作,后续也不会补执行该命令。
+- 原生动画对象创建后,所有播放命令和 `set` 进入同一条绑定命令队列。命令失败或 `set` 被转换为“警告并执行空操作”时,SDK 结束当前队列项并继续执行下一项。失败不会阻塞队列,也不会改变后续命令的顺序。
+- JSB 成功回执表示原生层已完成该命令的同步状态转换和所需姿态提交。命令产生 `start`、`pause`、`stop`、`reset`、`finish` 或 `set` 状态事件时,原生层先发出对应事件,再返回成功回执。自然完成产生的异步 `complete` 事件不属于此前 `play` 命令的回执。
+- 解绑、目标替换、配置变更导致动画对象替换或销毁时,绑定对象使当前队列批次失效,并丢弃所有尚未发送的命令。正在执行的命令可以按既有销毁竞态规则完成,但其回执不得继续触发已失效队列中的下一条命令。
+
+该顺序保证连续调用具有确定行为。`set → play` 会等待已接受的 `set` 返回回执,再由 fresh play 读取基准值;`stop → play` 会等待停止后的姿态提交完成;`play → pause` 会等待原生层接受 `play` 命令。
 
 #### 类图
 
@@ -788,6 +804,7 @@ classDiagram
 - 创建成功后,`SpatialScene` 把 animation object 作为 `SpatialObject` 加入全局 `spatialObjects`;`animationId` 就是其 spatial id。
 - 控制命令通过 `animationId` 在全局 `spatialObjects` 查找动画对象,再按动画对象运行时类型进入 Element 或 Entity 控制路径。Entity-only `set` 只由 `EntityMotionAnimationObject` 处理。
 - 同步命令错误通过 JSB reply 回传;仅命令接受后发生的异步播放错误通过一次 `spatialanimationstatechanged` error event 回传。
+- JSB 成功回执只在原生层完成命令的同步状态转换和姿态提交后返回。命令需要产生状态事件时,原生层先发出事件,再返回成功回执。绑定命令队列收到回执后,才发送下一条命令。
 - fresh play 编译失败时,控制命令失败,动画保持非活跃。
 
 Native 在非活跃时接受并提交 `api.set`;活跃时保持姿态不变并返回 `INVALID_CONTROL_STATE`,Core 将该 `set` 结果转为 warning + no-op,不触发 `onError`。JSB 结构不变。

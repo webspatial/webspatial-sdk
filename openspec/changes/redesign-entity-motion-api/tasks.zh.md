@@ -24,14 +24,14 @@
 
 - [ ] 4.1 先编写红灯测试,覆盖 `entityProps` 在 `start`、`complete`、`stop`、`reset`、`finish` 和原生层接受 `api.set(values)` 后包含完整的 `position`、`rotation`、`scale`,React 更新时机限定为生命周期节点,回调值包含完整变换字段,终态由配置或 `api.set` 决定
 - [ ] 4.2 实现 React/Core 状态事件消费、回调分发和 `entityProps` 完整已提交变换持久化,保持原生层已确认状态的单向流动
-- [ ] 4.3 先编写红灯测试,覆盖公开播放接口与完整变换控制权:`api.set` 的输入类型为稀疏补丁对象;绑定完成前以及原生动画对象创建前的调用保持当前状态;动画活跃期间的 React 变换属性写入与 `set` 保持动画和最新 `entityProps`;确认后完整 `entityProps` 镜像在绑定存续期间保持控制权;解绑后 React 属性恢复控制;终态填充保持已提交终点姿态
-- [ ] 4.4 实现 React/Core 播放接口、JSB 命令发起、完整变换出口控制权和解绑后的控制权交还;原生层的 `set` 合并、状态机与终态提交由第 5 节实现
+- [ ] 4.3 先编写红灯测试,覆盖公开播放接口、每个绑定对象独立的 FIFO 命令链与完整变换控制权:原生动画对象创建前的播放命令按顺序执行,`autoStart` 产生的 `play` 排在已有待执行命令之前;创建前的 `set` 保持控制台警告与空操作且不进入队列;创建后的 `set → play`、`stop → play`、`play → pause` 等待前一条内部 JSB 回执后再执行;命令失败不阻塞后续队列;解绑、替换和销毁使尚未发送的命令失效;动画活跃期间的写入保持动画和最新 `entityProps`;确认后完整 `entityProps` 镜像在绑定存续期间保持控制权;解绑后 React 属性恢复控制;终态填充保持已提交终点姿态
+- [ ] 4.4 复用 Element 动画在对象创建前暂存命令、创建后逐条执行的机制,为每个 Entity motion 绑定对象实现带队列批次失效保护的 FIFO 命令链;创建前的 `set` 不进入队列,创建后所有命令串行执行;同时实现 React/Core 播放接口、JSB 命令发起、完整变换出口控制权和解绑后的控制权交还;原生层的 `set` 合并、状态机与终态提交由第 5 节实现
 - [ ] 4.5 先编写失败测试,覆盖 `normalizeEntityMotionConfig` 对顶层 `from` / `to`、`timeline.from` / `timeline.to` 和百分比关键帧的等价折叠、`timeline` 优先告警、默认 0.3 秒 duration、起止边界必填、同帧重复拒绝、属性白名单与字段级稀疏保留
 - [ ] 4.6 在 Core 实现归一化与校验,保持现有 `EntityMotionTimelinePayload` 和创建命令传输结构兼容;Native 对该 payload 的编译与执行由第 5 节实现
 
 ## 5. Native 与 Bridge 实现
 
-- [ ] 5.1 先编写失败的 Bridge contract 测试,覆盖创建/控制命令 payload、`set` values、活跃期 `set` 在不新增回执结构的前提下返回现有 `INVALID_CONTROL_STATE` 失败、`EntityMotionStateChangedMsg` detail/action/playState/values/error、Design 定义的封闭错误码集合以及 Core 与两端 Native 编解码一致性
+- [ ] 5.1 先编写失败的 Bridge contract 测试,覆盖创建/控制命令 payload、`set` values、成功回执只在原生层完成同步状态转换和姿态提交并发出对应状态事件后返回、活跃期 `set` 在不新增回执结构的前提下返回现有 `INVALID_CONTROL_STATE` 失败、`EntityMotionStateChangedMsg` detail/action/playState/values/error、Design 定义的封闭错误码集合以及 Core 与两端 Native 编解码一致性
 - [ ] 5.2 实现 Core/Native Bridge 类型、`EntityMotionBridgeTypes` 编解码和 handler 注册,复用 `CreateSpatializedElementAnimationJSBCommand`、`ControlSpatializedElementAnimationJSBCommand` 与 `spatialanimationstatechanged`
 - [ ] 5.3 先编写失败的目标分发与生命周期测试,覆盖 `elementId` 查询、element/entity/unsupported 分发、`TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、动画注册/查找/显式 destroy、Entity target 先销毁、清理、销毁后 no-op 以及竞态返回 `ANIMATION_NOT_FOUND`
 - [ ] 5.4 在两端 Native 实现 `SpatialScene` Entity 分发及通过全局 spatial objects 完成生命周期级联,保持 `EntityMotionManager` 只负责创建,由 `EntityMotionAnimationObject` 持有状态、资源并完成清理
