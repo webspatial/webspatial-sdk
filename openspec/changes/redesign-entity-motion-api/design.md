@@ -639,6 +639,8 @@ type SpatializedPlaybackError = {
 }
 ```
 
+The layer that discovers an error determines its delivery path. Synchronous Core validation of public config and method arguments throws the built-in `Error` and preserves the existing `onError` count. Native fallback validation of a creation payload or `set` payload maps its asynchronous JSB result to `INVALID_TIMELINE` or `INVALID_SET_VALUES`, respectively; Bridge or Native execution failures reach the user through `onError(SpatializedPlaybackError)`. Expected `api.set` state rejection remains warning + no-op.
+
 #### Types, normalization, and validation
 
 Normalization is done by the shared logic layer's `normalizeEntityMotionConfig`, folding the three public authoring shapes into one internal timeline data.

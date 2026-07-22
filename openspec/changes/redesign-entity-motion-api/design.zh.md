@@ -639,6 +639,8 @@ type SpatializedPlaybackError = {
 }
 ```
 
+错误出口由发现错误的层级决定。Core 对公开 config 和方法参数执行的同步校验失败抛出内置 `Error`,并保持现有 `onError` 次数。Native 对创建 payload 或 `set` payload 的兜底校验失败通过异步 JSB 结果分别映射为 `INVALID_TIMELINE` 或 `INVALID_SET_VALUES`;Bridge 或 Native 执行阶段失败通过 `onError(SpatializedPlaybackError)` 抵达用户。`api.set` 的预期状态拒绝保持 warning + no-op。
+
 #### 类型、归一化与校验
 
 归一化由公共逻辑层的 `normalizeEntityMotionConfig` 完成,把三种对外写法统一成同一套内部时间轴数据。

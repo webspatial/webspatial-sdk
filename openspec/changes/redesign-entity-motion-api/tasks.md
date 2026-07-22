@@ -8,6 +8,7 @@
 
 - [ ] 2.1 Add failing tests for the new `useEntityAnimation` tuple `[animation, api, entityProps]`, the public playback surface (`play`, `pause`, `stop`, `reset`, `finish`), and `api.set` accepting only an `EntityMotionPatch` object
 - [ ] 2.2 Add failing tests for the complete public config contract; `position` / `rotation` / `scale` authoring; top-level `from` / `to`; `timeline.from` / `timeline.to`; percentage keyframes; public defaults; finite and range validation; required start/end boundaries; empty timeline, frame, and `api.set` patch rejection; sparse fields inside boundary frames; legacy-config rejection; and unsupported targets such as `opacity`
+- [ ] 2.2a Add failing tests covering built-in `Error` throws with stable `onError` counts for Core-detectable public config and method-argument errors; `onError(SpatializedPlaybackError)` delivery for Native fallback validation and Bridge/Native execution failures; and warning + no-op behavior for `api.set` state rejection
 - [ ] 2.3 Redesign Core and React type surfaces to implement the Entity motion config above, transform-only callback values, playback API, and write-side `EntityMotionPatch`
 
 ## 3. Entity Binding Migration

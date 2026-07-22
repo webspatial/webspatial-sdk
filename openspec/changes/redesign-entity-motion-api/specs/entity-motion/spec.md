@@ -142,7 +142,7 @@ The target callback signatures MUST be `onStart(values: EntityMotionProps)`, `on
 - **AND** `entityProps` MUST be updated to the reset committed transform state
 
 #### Scenario: Error callback does not expose unsupported fields
-- **WHEN** playback or validation fails for Entity motion
+- **WHEN** Entity motion has an asynchronous playback or fallback-validation failure in Bridge or Native
 - **THEN** `onError` MUST receive the failure information
 - **AND** no callback value payload in the Entity motion API may include unsupported fields such as `opacity`
 
@@ -420,10 +420,10 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 
 ### Requirement: Playback errors are classified
 
-The SDK MUST synchronously throw programmer errors detectable from public config or method arguments. Failures discovered after a Bridge or Native operation begins MUST be delivered through `onError` as a classified `SpatializedPlaybackError`, covering at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, and `ANIMATION_NOT_FOUND`. Rejected `api.set` writes during an active animation or before binding / native object creation MUST remain no-ops that emit a console warning.
+The SDK MUST synchronously throw the built-in `Error` for programmer errors detectable from public config or method arguments and MUST preserve the existing `onError` count. Native fallback-validation failures for creation payloads or `set` payloads MUST trigger `onError` through an asynchronous JSB result using `INVALID_TIMELINE` or `INVALID_SET_VALUES`, respectively. Failures discovered during Bridge or Native execution MUST be delivered through `onError` as a classified `SpatializedPlaybackError`, covering at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, `ANIMATION_NOT_FOUND`, and `COMPILATION_FAILED`. Rejected `api.set` writes during an active animation or before binding / native object creation MUST remain no-ops that emit a console warning.
 
 #### Scenario: Error code is distinguishable
-- **WHEN** an Entity motion operation fails
+- **WHEN** an Entity motion operation fails asynchronously in Bridge or Native
 - **THEN** `onError` MUST receive a `SpatializedPlaybackError` whose `code` identifies the failure kind
 - **AND** application code MUST be able to branch on `code` without parsing `message`
 
