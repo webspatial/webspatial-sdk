@@ -1081,7 +1081,7 @@ State-command matrix:
 
 For `reset` and `finish`, an existing run supplies its confirmed start and end poses. Before the first run, the compiler reads the current native transform as the baseline on demand and computes the configured start or end pose. `finish` always commits the configured `to` / `100%` pose for ordinary, reset-loop, and reverse-loop playback.
 
-Lifecycle gates provide these callback counts: one `onStart` for each accepted fresh play, one `onComplete` from either natural completion or `finish` for that run, one `onStop` for each accepted transition from `running` / `paused` to `idle`, and one `onReset` for each accepted `reset`. Repeated commands that keep the current state also keep the existing callback counts.
+Lifecycle gates provide these callback counts: one `onStart` for each accepted fresh play; one `onComplete` when the animation naturally enters `finished`, or when `finish()` moves it from `idle`, `running`, or `paused` to `finished`; one `onStop` for each accepted transition from `running` / `paused` to `idle`; and one `onReset` for each accepted `reset`. An accepted `finish` in `idle` preserves the existing `onStart` count. Repeated commands that keep the current state also keep the existing callback counts.
 
 **Pause sequence:**
 

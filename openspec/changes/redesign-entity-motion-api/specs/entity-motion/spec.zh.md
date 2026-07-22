@@ -159,6 +159,7 @@ Entity motion MUST 在保持 transform-only 约束的前提下，对齐新的 mo
 - **AND** `play` MUST 启动全新运行
 - **AND** `reset` MUST 提交配置声明的起始姿态并进入 `idle`
 - **AND** `idle` 状态下的 `finish` MUST 提交配置声明的终点姿态并进入 `finished`
+- **AND** 该 `idle → finished` 转换 MUST 触发一次 `onComplete` 并保持现有 `onStart` 次数
 - **AND** `finished` 状态下的 `finish` MUST 保持 finished 状态和回调次数
 
 #### Scenario: 活跃命令遵循同一份转换表
@@ -192,7 +193,7 @@ Entity motion MUST 在保持 transform-only 约束的前提下，对齐新的 mo
 #### Scenario: 生命周期回调具有一次性触发次数
 - **WHEN** 一次全新运行及其控制命令被处理
 - **THEN** 已接受的 fresh play MUST 恰好触发一次 `onStart`
-- **AND** 自然完成或 `finish` MUST 为该次运行恰好触发一次 `onComplete`
+- **AND** 动画自然进入 `finished`,或 `finish()` 使动画从 `idle`、`running`、`paused` 进入 `finished` 时 MUST 恰好触发一次 `onComplete`
 - **AND** 每个已接受的 `stop` 转换 MUST 恰好触发一次 `onStop`
 - **AND** 每个已接受的 `reset` MUST 恰好触发一次 `onReset`
 
