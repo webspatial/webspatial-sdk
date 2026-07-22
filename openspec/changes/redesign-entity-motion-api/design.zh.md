@@ -393,7 +393,7 @@ sequenceDiagram
 
 - **公开接口:** `useEntityAnimation` 返回 `[animation, api, entityProps]`;物体组件通过 `animation` 属性接收 `EntityMotionBinding`。
 - **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`;`api.set(values)` 把稀疏状态补丁提交给原生。
-- **目标绑定:** `useBindMotionTarget({ binding, target })` 维护一个绑定对应一个 `SpatialEntity` 的约束,绑定完成后调用 `target.createAnimation(config)`。解绑后由普通 React 变换属性控制。
+- **目标绑定:** `useBindMotionTarget({ binding, target })` 维护一个绑定对应一个 `SpatialEntity` 的约束,绑定完成后调用 `target.createAnimation(config)`。解绑和目标替换会把绑定持有的 `entityProps` 镜像清空为 `{}`,继续展开返回对象时由普通 React 变换属性控制。
 - **命令顺序:** `EntityMotionBinding` 复用 Element 动画绑定在对象创建前暂存命令、创建后逐条执行的机制。每个绑定对象独立串行执行命令,当前命令收到 JSB 回执后才发送下一条命令。
 - **结果镜像:** `entityProps` 镜像原生确认的 `position`、`rotation`、`scale`,并驱动 React 重渲染与生命周期回调。
 
@@ -409,6 +409,17 @@ sequenceDiagram
 - 解绑、目标替换、配置变更导致动画对象替换或销毁时,绑定对象使当前队列批次失效,并丢弃所有尚未发送的命令。正在执行的命令可以按既有销毁竞态规则完成,但其回执不得继续触发已失效队列中的下一条命令。
 
 该顺序保证连续调用具有确定行为。`set → play` 会等待已接受的 `set` 返回回执,再由 fresh play 读取基准值;`stop → play` 会等待停止后的姿态提交完成;`play → pause` 会等待原生层接受 `play` 命令。
+
+#### 解绑、重新绑定与配置更新
+
+`EntityMotionBinding` 沿用 Element 动画的销毁并重建生命周期。绑定对象根据生效的时间轴、时长、缓动、延迟、播放速率、循环和 `autoStart` 计算归一化执行签名。等价的公开配置写法生成同一个签名。生命周期回调引用独立于执行签名存储和刷新。
+
+- 解绑时,绑定对象推进绑定代次、注销当前 `EntityAnimationObject`、销毁对应原生对象、把 `entityProps` 清空为 `{}`,并触发 React 渲染。返回的空对象可以继续安全地展开在基础属性之后。
+- 重新绑定不同目标时,绑定对象先完成同一套清理,再为新目标创建动画对象。新目标从空镜像开始,并建立自身的确认值。
+- 同一目标的归一化执行签名发生变化时,绑定对象推进绑定代次、注销并销毁旧动画对象,再使用最新配置创建新对象。旧对象的销毁生命周期先停止并释放控制器,随后新对象成为当前对象。该同目标替换过程保持当前 `entityProps` 镜像,使其继续表示当前目标最近一次确认的已提交姿态。替换对象的首次 fresh play 读取当前原生姿态作为基准姿态。
+- 仅更新回调时,绑定对象保持当前动画对象、控制器、队列、状态和 `entityProps`,并替换后续已接受事件使用的回调引用。
+- 替换开始后发出的命令归属新的绑定代次,并等待该代次的动画对象。创建完成后,`autoStart: true` 在该代次待执行命令的队首加入一次隐式 `play`;`autoStart: false` 直接执行显式待执行命令。
+- 绑定代次和动画对象身份同时匹配当前对象的命令回执或状态事件会更新绑定。当前代次是状态、`entityProps` 和公开生命周期回调更新的唯一来源。替换清理由销毁生命周期完成。
 
 #### 类图
 

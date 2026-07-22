@@ -97,7 +97,8 @@ The SDK MUST use `entityProps` as the React-side persistence outlet for the comp
 #### Scenario: Removing the binding returns control to React props
 - **GIVEN** `entityProps` contains a native-confirmed transform
 - **WHEN** the Entity animation binding is removed or unbound
-- **THEN** ordinary React transform props MUST become authoritative again
+- **THEN** the SDK MUST reset the returned `entityProps` to `{}` and schedule a React render
+- **AND** spreading that empty object after ordinary React transform props MUST leave those props authoritative
 
 #### Scenario: No per-frame React outlet updates
 - **WHEN** native playback is actively interpolating between keyframes
@@ -221,6 +222,44 @@ A successful JSB reply MUST mean Native has completed the command's synchronous 
 - **WHEN** the binding is removed, its target or animation object is replaced, or it is destroyed
 - **THEN** the SDK MUST discard all commands that have not been sent from that queue generation
 - **AND** settlement of an in-flight command MUST NOT dispatch another command from the invalidated generation
+
+### Requirement: Binding replacement and config updates have a deterministic lifecycle
+
+The Entity motion binding MUST compute a normalized execution signature from the effective timeline, duration, timing, delay, playback rate, loop, and `autoStart`. Equivalent public authoring forms MUST produce the same signature. Lifecycle callback identities MUST be handled independently from the execution signature.
+
+Unbinding and target replacement MUST advance the binding generation, retire the current animation object, destroy its native object, and reset `entityProps` to `{}`. A normalized execution-signature change on the same target MUST advance the binding generation and replace the animation object while preserving the current `entityProps` mirror. Commands, replies, and events MUST be associated with one binding generation and animation-object identity.
+
+#### Scenario: Rebinding starts the new target with an empty mirror
+- **GIVEN** the current target has produced confirmed `entityProps`
+- **WHEN** the binding moves to a different target
+- **THEN** the SDK MUST retire and destroy the old target's animation object
+- **AND** the SDK MUST reset `entityProps` to `{}` before establishing confirmed values for the new target
+
+#### Scenario: Execution config change replaces the object on the same target
+- **GIVEN** an Entity motion binding remains attached to the same target
+- **WHEN** its normalized execution signature changes
+- **THEN** the SDK MUST retire and destroy the current animation object and create a new object with the latest config
+- **AND** the old object's destroy lifecycle MUST stop and release its controller before the new object becomes current
+- **AND** the current `entityProps` MUST remain the last confirmed committed pose for that target during replacement
+- **AND** the replacement object's first fresh play MUST read the current native transform as its baseline
+
+#### Scenario: Callback-only update keeps the current playback object
+- **GIVEN** the normalized execution signature remains equal
+- **WHEN** one or more lifecycle callback references change
+- **THEN** the binding MUST keep the current animation object, controller, command queue, playback state, and `entityProps`
+- **AND** subsequent accepted events MUST use the latest callback references
+
+#### Scenario: Commands and autoStart use the replacement generation
+- **GIVEN** an execution config change has started animation-object replacement
+- **WHEN** application code issues commands before the replacement object is ready
+- **THEN** those commands MUST enter the replacement generation's pending queue
+- **AND** after creation, `autoStart: true` MUST contribute exactly one implicit `play` before those commands
+- **AND** `autoStart: false` MUST begin with the explicit pending commands
+
+#### Scenario: Replacement accepts only current-generation results
+- **GIVEN** a previous animation object has been retired
+- **WHEN** command replies or state events arrive
+- **THEN** results whose binding generation and animation-object identity match the current object MUST be the exclusive source of state, `entityProps`, and callback updates
 
 ### Requirement: Every fresh play compiles against the latest native baseline
 
