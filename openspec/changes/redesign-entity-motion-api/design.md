@@ -393,7 +393,7 @@ Native decides whether `api.set` takes effect: it accepts patches while playback
 
 - **Public interface:** `useEntityAnimation` returns `[animation, api, entityProps]`; the entity component receives `EntityMotionBinding` through its `animation` property.
 - **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`; `api.set(values)` submits a sparse state patch to native.
-- **Target binding:** `useBindMotionTarget({ binding, target })` maintains one binding per `SpatialEntity` and calls `target.createAnimation(config)` after binding. Unbinding clears the binding-owned `entityProps` mirror so ordinary React transform props become authoritative again.
+- **Target binding:** `useBindMotionTarget({ binding, target })` maintains one binding per `SpatialEntity` and calls `target.createAnimation(config)` after binding. Unbinding and target replacement clear the binding-owned `entityProps` mirror to `{}`, so spreading the returned object leaves ordinary React transform props authoritative.
 - **Command sequencing:** `EntityMotionBinding` reuses the Element animation binding's pending-command and sequential-flush model. It serializes commands per binding and does not send the next command until the current JSB reply settles.
 - **Result mirror:** `entityProps` mirrors native-confirmed `position`, `rotation`, and `scale`, driving React re-render and lifecycle callbacks.
 
@@ -409,6 +409,17 @@ The public `EntityPlaybackApi` remains a `void` command surface. Internally, eac
 - Unbinding, target replacement, config-driven object replacement, or destruction invalidates the current queue generation and drops every command that has not been sent. The in-flight command may settle under the documented teardown race, but its reply cannot dispatch another command from the invalidated generation.
 
 This ordering makes consecutive calls deterministic. In particular, `set → play` waits for the accepted `set` reply before fresh play reads its baseline; `stop → play` waits for the stopped transform commit; and `play → pause` waits until Native has accepted the play command.
+
+#### Unbinding, rebinding, and config updates
+
+`EntityMotionBinding` follows the Element animation destroy-and-recreate lifecycle. It computes a normalized execution signature from the effective timeline, duration, timing, delay, playback rate, loop, and `autoStart`. Equivalent public authoring forms produce the same signature. Lifecycle callback references are stored and refreshed separately from the execution signature.
+
+- Unbinding increments the binding generation, retires the current `EntityAnimationObject`, destroys its native object, clears `entityProps` to `{}`, and schedules a React render. The returned empty object remains safe to spread after static/base props.
+- Rebinding to a different target performs the same cleanup before creating the new target's animation object. The new target begins with an empty mirror and establishes its own confirmed values.
+- A normalized execution-signature change on the same target increments the binding generation, retires and destroys the old animation object, and creates a new object with the latest config. The old object's destroy lifecycle stops and releases its controller before the new object becomes current. The current `entityProps` mirror remains stable across this same-target replacement, matching the current target's last confirmed committed pose. The replacement object's first fresh play reads the current native transform as its baseline.
+- A callback-only config update keeps the current animation object, controller, queue, state, and `entityProps`, and replaces the callback references used by subsequent accepted events.
+- Commands issued after replacement begins belong to the new binding generation and wait for its animation object. After creation, `autoStart: true` contributes exactly one implicit `play` at the front of that generation's pending commands; `autoStart: false` begins with the explicit pending commands.
+- A command reply or state event with the current binding generation and animation-object identity updates the binding. The current generation is the exclusive source of state, `entityProps`, and public lifecycle callback updates. Replacement teardown is handled by the destroy lifecycle.
 
 #### Class Diagram
 
