@@ -127,10 +127,12 @@ export class AnimationBinding implements SpatializedPlaybackApi {
   updateConfig(config: SpatializedMotionConfig): void {
     validateSpatializedMotionConfig(config)
     const nextSignature = getMotionConfigSignature(config)
+    // Preserve callback ownership for the AnimationObject being replaced.
+    const previousConfig = this.config
     this.config = config
     if (nextSignature !== this.configSignature) {
       this.configSignature = nextSignature
-      this.recreateAnimationObject()
+      this.recreateAnimationObject(previousConfig)
     } else if (this.animationObject) {
       this.animationObject.setCallbacks(
         this.createAnimationObjectCallbacks(this.animationObject),
@@ -172,13 +174,14 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.options.onStateChange?.()
   }
 
-  private detachAnimationObject(): void {
+  private detachAnimationObject(config = this.config): void {
     const object = this.animationObject
+    const onError = config.onError
     this.animationObject = null
     this.createToken += 1
     this.creating = false
     object?.destroy().catch(error => {
-      this.config.onError?.({
+      onError?.({
         command: 'destroy',
         reason: error instanceof Error ? error.message : 'Destroy failed',
       })
@@ -189,9 +192,9 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.finishedState = false
   }
 
-  private recreateAnimationObject(): void {
+  private recreateAnimationObject(detachedConfig = this.config): void {
     const element = this.element
-    this.detachAnimationObject()
+    this.detachAnimationObject(detachedConfig)
     if (element && supportsAnimation()) {
       this.ensureAnimationObject()
       return

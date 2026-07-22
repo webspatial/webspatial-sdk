@@ -593,6 +593,51 @@ describe('useAnimation tuple api native backend', () => {
     })
   })
 
+  test('routes replaced Core AnimationObject destroy errors to the previous config', async () => {
+    const firstAnimation = createMockAnimationObject('destroy-error-first')
+    const secondAnimation = createMockAnimationObject('destroy-error-second')
+    const oldOnError = vi.fn()
+    const newOnError = vi.fn()
+    const element = {
+      id: 'destroy-error-element',
+      kind: 'spatialized2d' as const,
+      createAnimation: vi
+        .fn()
+        .mockResolvedValueOnce(firstAnimation)
+        .mockResolvedValueOnce(secondAnimation),
+    }
+
+    const { result, rerender } = renderHook(
+      ({ duration, onError }) =>
+        useAnimation({
+          duration,
+          autoStart: false,
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+          onError,
+        }),
+      { initialProps: { duration: 1, onError: oldOnError } },
+    )
+
+    await act(async () => {
+      result.current[0].__setElement?.(element as any)
+    })
+    await waitFor(() => expect(firstAnimation.setCallbacks).toHaveBeenCalled())
+
+    // Reject the old object's asynchronous cleanup after the replacement begins.
+    firstAnimation.destroy.mockRejectedValueOnce(new Error('destroy failed'))
+    rerender({ duration: 2, onError: newOnError })
+
+    await waitFor(() => {
+      expect(secondAnimation.setCallbacks).toHaveBeenCalled()
+      expect(oldOnError).toHaveBeenCalledWith({
+        command: 'destroy',
+        reason: 'destroy failed',
+      })
+    })
+    expect(newOnError).not.toHaveBeenCalled()
+  })
+
   test('__onUnbind destroys the active Core AnimationObject without invoking onReset', async () => {
     const element = createMockElement()
     const onReset = vi.fn()
