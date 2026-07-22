@@ -259,8 +259,8 @@ Unbinding and target replacement MUST advance the binding generation, retire the
 #### Scenario: Execution config change replaces the object on the same target
 - **GIVEN** an Entity motion binding remains attached to the same target
 - **WHEN** its normalized execution signature changes
-- **THEN** the SDK MUST retire and destroy the current animation object and create a new object with the latest config
-- **AND** the old object's destroy lifecycle MUST stop and release its controller before the new object becomes current
+- **THEN** the SDK MUST retire the current animation object and wait for its `destroy()` to succeed before creating a new object with the latest config
+- **AND** successful `destroy()` of the old object MUST mean its held controller has stopped, its transform owner has been released, and the old object will not write that target transform again
 - **AND** the current `entityProps` MUST remain the last confirmed committed pose for that target during replacement
 - **AND** the replacement object's first fresh play MUST read the current native transform as its baseline
 
