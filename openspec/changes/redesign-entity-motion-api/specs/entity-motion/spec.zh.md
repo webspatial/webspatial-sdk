@@ -142,7 +142,7 @@ Entity motion MUST 在保持 transform-only 约束的前提下，对齐新的 mo
 - **AND** `entityProps` MUST 更新为 reset 后已提交的 transform 状态
 
 #### Scenario: 错误回调不暴露不支持字段
-- **WHEN** Entity motion 的播放或校验失败
+- **WHEN** Entity motion 在 Bridge 或 Native 阶段发生异步播放失败或兜底校验失败
 - **THEN** `onError` MUST 接收到失败信息
 - **AND** Entity motion API 的任何 callback value payload 都 MUST NOT 包含 `opacity` 这类不支持字段
 
@@ -420,10 +420,10 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 
 ### Requirement: 播放错误可分类
 
-SDK MUST 对公开 config 或方法参数中可直接检测的 programmer error 同步抛错。Bridge 或 Native 操作开始后发现的失败 MUST 通过 `onError` 以分类后的 `SpatializedPlaybackError` 抵达用户，错误码至少覆盖 `TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET` 和 `ANIMATION_NOT_FOUND`。动画活跃期间或 binding / native object 创建前被拒绝的 `api.set` MUST 保持为 no-op，并输出一条 console warning。
+SDK MUST 对公开 config 或方法参数中可直接检测的 programmer error 同步抛出内置 `Error`,并保持现有 `onError` 次数。Native 对创建 payload 或 `set` payload 的兜底校验失败 MUST 通过异步 JSB 结果触发 `onError`,并分别使用 `INVALID_TIMELINE` 或 `INVALID_SET_VALUES`。Bridge 或 Native 执行阶段发现的失败 MUST 通过 `onError` 以分类后的 `SpatializedPlaybackError` 抵达用户,错误码至少覆盖 `TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、`ANIMATION_NOT_FOUND` 和 `COMPILATION_FAILED`。动画活跃期间或 binding / native object 创建前被拒绝的 `api.set` MUST 保持为 no-op,并输出一条 console warning。
 
 #### Scenario: 错误码可区分
-- **WHEN** 某个 Entity motion 操作失败
+- **WHEN** 某个 Entity motion 操作在 Bridge 或 Native 阶段异步失败
 - **THEN** `onError` MUST 收到一个 `SpatializedPlaybackError`,其 `code` 标识失败类型
 - **AND** 应用代码 MUST 能够按 `code` 分支,而无需解析 `message`
 
