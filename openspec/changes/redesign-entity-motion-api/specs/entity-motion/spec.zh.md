@@ -141,6 +141,37 @@ callback values MUST 只包含受支持的 Entity transform 字段。
 - **THEN** `onError` MUST 接收到失败信息
 - **AND** Entity motion API 的任何 callback value payload 都 MUST NOT 包含 `opacity` 这类不支持字段
 
+### Requirement: Entity motion 命令保持 binding 级 FIFO 顺序
+
+公开 Entity playback 方法 MAY 返回 `void`,但 SDK MUST 通过每个 Entity motion binding 独立的一条 FIFO 命令链保持调用顺序。Native animation object 创建后,binding MUST 等待前一条命令的内部 JSB reply settled,再发送下一条 playback 或 `set` 命令。失败命令或映射为 warning + no-op 的 `set` MUST 结束当前队列项,且 MUST NOT 阻塞或改变后续命令顺序。
+
+JSB 成功回执 MUST 表示 Native 已完成命令的同步状态转换和所需姿态提交。命令产生状态事件时,Native MUST 先发出事件,再返回成功回执。自然完成产生的异步 `complete` 事件不属于此前的 `play` 回执。
+
+#### Scenario: Native object 创建前的 playback 命令按顺序 flush
+- **GIVEN** Entity motion binding 的 Native animation object 尚未创建
+- **WHEN** 应用调用 `play`、`pause`、`stop`、`reset` 或 `finish`
+- **THEN** binding MUST 按调用顺序把这些 playback 命令追加到 pending 队列
+- **AND** 创建成功后 MUST 按 FIFO 每次只发送一条命令
+- **AND** `autoStart` 开启时,其生成的 `play` MUST 排在创建完成时已有的 pending playback 命令之前
+
+#### Scenario: Native object 创建后的命令串行执行
+- **GIVEN** Native animation object 已创建
+- **WHEN** 应用不等待地连续调用多个 playback 或 `set` 命令
+- **THEN** binding MUST 把这些命令追加到同一条 FIFO 命令链
+- **AND** MUST 等待每条命令的内部 JSB reply settled 后再发送下一条命令
+
+#### Scenario: 连续 set 后 play 使用已提交的 set 结果
+- **GIVEN** Native animation object 已创建且播放处于非活跃状态
+- **WHEN** 应用调用 `api.set(values)` 后立即调用 `api.play()`
+- **THEN** binding MUST 等待 `set` 回执后再发送 `play`
+- **AND** fresh play MUST 把该 `set` 已提交的 Native transform 作为最新 baseline
+
+#### Scenario: 解绑或销毁使 pending 命令失效
+- **GIVEN** binding 存在 in-flight 命令或尚未发送的命令
+- **WHEN** binding 被移除、target 或 animation object 被替换,或 binding 被销毁
+- **THEN** SDK MUST 丢弃该队列 generation 中所有尚未发送的命令
+- **AND** in-flight 命令 settled 后 MUST NOT 派发失效 generation 中的下一条命令
+
 ### Requirement: 每次 fresh play 使用最新 native baseline 编译
 
 Native 创建动画时 MUST 兜底校验并保存规范时间轴、注册动画对象并返回 `animationId`,MUST NOT 在创建阶段读取播放 baseline 或生成 RealityKit 播放资源。fresh play 定义为创建后的首次 `play` / `autoStart`,以及动画在 `complete`、`finish`、`stop` 或 `reset` 后重新开始的 `play`。每次 fresh play 被接受后、进入 `delay` / `running` 前,Native MUST 读取当前 `entity.transform` 作为本轮 baseline,并用规范时间轴与该 baseline 编译本轮 RealityKit 播放资源。config 明确声明的字段 MUST 使用 config 值,config 未声明的字段 MUST 使用本轮 baseline 补全。
@@ -264,8 +295,10 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 - **AND** 被拒绝的写入 MUST 是一次 no-op,并输出一条 console warning,MUST NOT 通过 `onError` 抵达用户
 
 #### Scenario: set 之后 play 的起点
+- **GIVEN** Native animation object 已创建且播放处于非活跃状态
 - **WHEN** 应用先调用 `api.set` 再调用 `api.play()`
 - **THEN** 播放 MUST 从 config 声明的起始边界（顶层 `from`、`timeline.from` 或 `0%` 帧）开始
+- **AND** binding MUST 等待 `api.set` 的 JSB reply 后再发送 `api.play()`
 - **AND** 本次 `api.play()` MUST 作为 fresh play 读取 `api.set` 后的最新 native transform
 - **AND** config 未声明的字段 MUST 使用该最新 transform 作为本轮 baseline
 - **AND** 由于起始边界是必填项，不存在“未声明起始帧”的合法 config；缺少起始边界的 config 在归一化阶段已被拒绝
