@@ -378,15 +378,21 @@ api.set({ position: { y: 0.3 } })
 `api` 提供以下方法:
 
 ```tsx
-api.play()     // 开始播放
-api.pause()    // 暂停
-api.stop()     // 停止
-api.reset()    // 重置
-api.finish()   // 直接跳到终态
-api.set(values) // 设置姿态(见上文“动画结束后手动挪动物体”)
+interface EntityPlaybackApi {
+  play(): void
+  pause(): void
+  stop(): void
+  reset(): void
+  finish(): void
+  set(values: EntityMotionPatch): void
+  readonly playState: 'queued' | 'idle' | 'running' | 'paused' | 'finished'
+  readonly isAnimating: boolean
+  readonly isPaused: boolean
+  readonly finished: boolean
+}
 ```
 
-前六个是**播放控制**,操作动画的播放进度;`api.set` 是**设置姿态**,直接改物体的静止姿态,不影响播放进度。两者都是 `api` 上的方法,用途不同:需要控制动画时用前六个,需要在动画结束后手动摆放物体时用 `api.set`。
+前五个是**播放控制**,操作动画的播放进度;`api.set` 是**设置姿态**,直接改物体的静止姿态,不影响播放进度。两者都是 `api` 上的方法,用途不同:需要控制动画时用前五个,需要在动画结束后手动摆放物体时用 `api.set`。
 
 ---
 
@@ -396,31 +402,33 @@ api.set(values) // 设置姿态(见上文“动画结束后手动挪动物体”
 
 ```mermaid
 stateDiagram-v2
-    state "尚未开始" as NotStarted
-    state "播放中（含延迟、暂停）" as Playing
-    state "已结束" as Ended
-
-    [*] --> NotStarted
-    NotStarted --> Playing: play() / autoStart
-    Playing --> Playing: pause()
-    Playing --> Ended: 播放到终点 / finish() / stop()
-    Ended --> Playing: play() 重新播放
-    Ended --> NotStarted: reset()
-    Playing --> NotStarted: reset()
-
-    note right of Playing
-        动画“活跃”状态，含起播前的延迟与暂停
-        config 里出现的属性归动画控制
-        此时 api.set 会被拒绝:noop + 控制台警告
-    end note
-    note right of Ended
-        complete / stop / finish 停在对应姿态
-        entityProps 更新为完整姿态
-        entityProps 持有变换控制权;动态写入使用 api.set
-    end note
+    [*] --> idle
+    idle --> queued: 原生对象创建前收到播放命令
+    queued --> idle: stop() / reset()
+    queued --> running: play() / autoStart
+    queued --> paused: play() 后 pause()
+    queued --> finished: finish()
+    idle --> running: play() / autoStart
+    idle --> finished: finish()
+    running --> paused: pause()
+    paused --> running: play()
+    running --> idle: stop() / reset()
+    paused --> idle: stop() / reset()
+    running --> finished: 播放到终点 / finish()
+    paused --> finished: finish()
+    finished --> running: play()
+    finished --> idle: reset()
 ```
 
-> 图里的“播放中”涵盖了起播前的**延迟等待**和**暂停**——只要动画还没结束、也没被重置,都算“活跃”,`api.set` 都会被拒绝。
+`running` 包含起播前的延迟等待。`queued` 的布尔状态由当前等待执行的播放命令决定:
+
+| `playState` | `isAnimating` | `isPaused` | `finished` |
+|---|---|---|---|
+| `queued` | 等待 `play` / `autoStart` 时为 `true` | 等待 `pause` 时为 `true` | `false` |
+| `idle` | `false` | `false` | `false` |
+| `running` | `true` | `false` | `false` |
+| `paused` | `false` | `true` | `false` |
+| `finished` | `false` | `false` | `true` |
 
 ### 每种状态下的行为
 
@@ -430,7 +438,7 @@ stateDiagram-v2
 | **播放中**(含延迟、暂停) | `play()` / `autoStart`;`pause()` 后仍属此类 | ❌ 被拒绝(noop + 警告) | 仅在开始播放那一刻更新一次 | 动画接管整个 transform;config 未声明的字段冻结在本轮 fresh-play baseline |
 | **已有确认值的播放空闲状态** | `complete`、`stop`、`reset`、`finish`,或成功的 `api.set` | ✅ 能用 | ✅ 包含完整的已提交变换 | `entityProps` 控制;动态写入使用 `api.set` |
 
-> **提示**:循环动画没有自然的“播放到终点”,所以循环期间 `entityProps` 不会在每圈结束时更新,也不会在每圈重新读取 baseline;只有 `stop()` / `finish()` 或成功的 `api.set` 才会更新它。
+> **提示**:循环动画没有自然的“播放到终点”,所以循环期间 `entityProps` 不会在每圈结束时更新,也不会在每圈重新读取 baseline。`stop()`、`reset()` 或 `finish()` 会更新 `entityProps`;动画进入非活跃状态后,成功的 `api.set()` 也会更新 `entityProps`。
 
 ---
 

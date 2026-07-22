@@ -378,15 +378,21 @@ Once `entityProps` has a confirmed value, it remains authoritative when `basePos
 `api` provides the following methods:
 
 ```tsx
-api.play()      // start playing
-api.pause()     // pause
-api.stop()      // stop
-api.reset()     // reset
-api.finish()    // jump straight to the end state
-api.set(values) // set a pose (see "Moving the Object in Code After the Animation" above)
+interface EntityPlaybackApi {
+  play(): void
+  pause(): void
+  stop(): void
+  reset(): void
+  finish(): void
+  set(values: EntityMotionPatch): void
+  readonly playState: 'queued' | 'idle' | 'running' | 'paused' | 'finished'
+  readonly isAnimating: boolean
+  readonly isPaused: boolean
+  readonly finished: boolean
+}
 ```
 
-The first six are **playback controls** that operate the animation's playback progress; `api.set` is a **pose setter** that changes the object's static pose directly and does not affect playback progress. All of them live on `api` but serve different purposes: use the first six to control the animation, and use `api.set` to place the object by hand after the animation ends.
+The first five are **playback controls** that operate the animation's playback progress; `api.set` is a **pose setter** that changes the object's static pose directly and does not affect playback progress. All of them live on `api` but serve different purposes: use the first five to control the animation, and use `api.set` to place the object by hand after the animation ends.
 
 ---
 
@@ -396,31 +402,33 @@ During its lifecycle an animation moves through the states below. Reading this d
 
 ```mermaid
 stateDiagram-v2
-    state "NotStarted" as NotStarted
-    state "Playing (incl. delay, paused)" as Playing
-    state "Ended" as Ended
-
-    [*] --> NotStarted
-    NotStarted --> Playing: play() / autoStart
-    Playing --> Playing: pause()
-    Playing --> Ended: reaches end / finish() / stop()
-    Ended --> Playing: play() (replay)
-    Ended --> NotStarted: reset()
-    Playing --> NotStarted: reset()
-
-    note right of Playing
-        The "active" state, incl. the start delay and paused
-        Properties present in the config are owned by the animation
-        api.set is rejected here: noop + console warning
-    end note
-    note right of Ended
-        complete / stop / finish stops at the matching pose
-        entityProps updates to the complete pose
-        entityProps owns the transform; dynamic writes use api.set
-    end note
+    [*] --> idle
+    idle --> queued: playback command before native creation
+    queued --> idle: stop() / reset()
+    queued --> running: play() / autoStart
+    queued --> paused: play() then pause()
+    queued --> finished: finish()
+    idle --> running: play() / autoStart
+    idle --> finished: finish()
+    running --> paused: pause()
+    paused --> running: play()
+    running --> idle: stop() / reset()
+    paused --> idle: stop() / reset()
+    running --> finished: reaches end / finish()
+    paused --> finished: finish()
+    finished --> running: play()
+    finished --> idle: reset()
 ```
 
-> "Playing" in the diagram covers the **start delay** and **paused** as well — as long as the animation has not ended and has not been reset, it counts as "active", and `api.set` is rejected.
+`running` includes the start delay. Boolean state in `queued` depends on the playback command waiting to run:
+
+| `playState` | `isAnimating` | `isPaused` | `finished` |
+|---|---|---|---|
+| `queued` | `true` while `play` / `autoStart` waits | `true` while `pause` waits | `false` |
+| `idle` | `false` | `false` | `false` |
+| `running` | `true` | `false` | `false` |
+| `paused` | `false` | `true` | `false` |
+| `finished` | `false` | `false` | `true` |
 
 ### Behavior in Each State
 
@@ -430,7 +438,7 @@ stateDiagram-v2
 | **Playing** (incl. delay, paused) | `play()` / `autoStart`; still counts after `pause()` | ❌ Rejected (noop + warning) | Only once, at the moment playback starts | The animation owns the whole transform; fields omitted from the config freeze at this run's fresh-play baseline |
 | **Inactive with confirmed state** | `complete` / `stop` / `reset` / `finish`, or successful `api.set` | ✅ Usable | ✅ Contains the complete committed transform | `entityProps`; dynamic writes use `api.set` |
 
-> **Note**: a looping animation has no natural "reaches end", so `entityProps` does not update and the baseline is not reread at each loop boundary; only `stop()` / `finish()` or a successful `api.set` updates it.
+> **Note**: a looping animation has no natural "reaches end", so `entityProps` does not update and the baseline is not reread at each loop boundary. `stop()`, `reset()`, or `finish()` updates `entityProps`; after the animation becomes inactive, a successful `api.set()` also updates `entityProps`.
 
 ---
 
