@@ -1011,7 +1011,7 @@ Decomposition rules:
 
 - `position` comes from the translation part of the native transform.
 - `scale` comes from the scale part of the native transform.
-- `rotation` uses Euler degrees, consistent with the entity property.
+- `rotation` uses Euler degrees in the Entity's parent-relative local, right-handed coordinate system, where +X points right, +Y points up, and +Z points toward the viewer. Composition uses ZYX intrinsic rotation, equivalent to XYZ extrinsic rotation, with matrix order `Rz × Ry × Rx`. Confirmed native rotation is decomposed from its rotation matrix with `y` in `[-90°, 90°]` and `x` / `z` in `(-180°, 180°]`; at gimbal lock, `z` is fixed to `0°` and `x` is derived from the matrix. Equivalent quaternions therefore produce the same Euler result. A sparse `api.set` rotation patch merges onto this canonical complete Euler baseline before recomposition.
 - After decomposition, report the complete committed transform independently of the animation config and the fields written by `api.set`.
 - Both callback values and `entityProps` use `EntityMotionProps`; every confirmed value contains complete `position`, `rotation`, and `scale` values, each as a complete `Vec3`. `api.set(values)` accepts a deeply sparse `EntityMotionPatch`. For example, after axis-wise merging `set({ position: { y: 0.3 } })`, the confirmed result contains the complete position, rotation, and scale.
 

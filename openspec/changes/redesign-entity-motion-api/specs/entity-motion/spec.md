@@ -83,6 +83,15 @@ Inside a `timeline`, `from` MUST be equivalent to the `0%` frame and `to` MUST b
 - **THEN** the SDK MUST report an explicit failure through validation or `onError`
 - **AND** the unsupported target MUST NOT be silently ignored
 
+### Requirement: Entity rotation has deterministic cross-platform Euler semantics
+
+Entity motion MUST use the Entity's parent-relative local, right-handed coordinate system and Euler degrees. Rotation composition MUST use ZYX intrinsic order, equivalent to XYZ extrinsic order, with matrix order `Rz × Ry × Rx`. Rotation decomposition MUST use the rotation matrix and return `y` in `[-90°, 90°]` and `x` / `z` in `(-180°, 180°]`; at gimbal lock it MUST return `z = 0°` and derive `x` from the matrix. Sparse rotation patches MUST merge onto this canonical complete Euler value before recomposition.
+
+#### Scenario: Equivalent rotations and sparse patches produce canonical Euler values
+- **WHEN** visionOS or picoOS confirms an Entity rotation or applies a sparse `api.set` rotation patch
+- **THEN** equivalent quaternion representations MUST produce the same canonical Euler value
+- **AND** omitted rotation axes MUST retain their values from the canonical complete Euler baseline
+
 ### Requirement: `entityProps` persists committed transform state
 
 The SDK MUST use `entityProps` as the React-side persistence outlet for the complete committed Entity transform owned by the animation system.

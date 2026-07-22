@@ -1011,7 +1011,7 @@ type EntityMotionProps = {
 
 - `position` 来自原生姿态的平移部分。
 - `scale` 来自原生姿态的缩放部分。
-- `rotation` 用与物体属性一致的欧拉角度数。
+- `rotation` 使用角度制欧拉角和 Entity 相对父节点的局部右手坐标系，其中 +X 向右、+Y 向上、+Z 朝向观察者。旋转按 ZYX intrinsic 顺序组合，等价于 XYZ extrinsic，矩阵顺序为 `Rz × Ry × Rx`。原生层确认的旋转通过旋转矩阵拆解，`y` 位于 `[-90°, 90°]`，`x` 和 `z` 位于 `(-180°, 180°]`；gimbal lock 时固定 `z = 0°`，并从矩阵计算 `x`。等价 quaternion 因此产生相同的欧拉角结果。`api.set` 的稀疏 rotation patch 先合并到这份规范化完整欧拉角基准，再重新组合姿态。
 - 拆解结果始终包含完整的已提交变换,其范围独立于动画配置和 `api.set` 写入字段。
 - 回调值和 `entityProps` 都采用 `EntityMotionProps` 形态;每个已确认值都包含完整的 `position`、`rotation`、`scale`,且每项都是完整的 `Vec3`。`api.set(values)` 接受深度稀疏的 `EntityMotionPatch`。例如 `set({ position: { y: 0.3 } })` 按轴合并后,确认结果包含完整的位置、旋转和缩放。
 
