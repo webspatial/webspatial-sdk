@@ -18,7 +18,7 @@
 - [ ] 3.2a 在 Core 为 `SpatialEntity` 实现 `createAnimation(config)`，由它封装自身空间对象 id、Entity 专属归一化与校验，并把规范时间轴委托给通用 `AnimationObject` 创建流程
 - [ ] 3.3 保留单绑定不变量，保证同一个 animation object 不能驱动多个 Entity 实例
 - [ ] 3.4 在文档中把 `animation` 作为 Entity motion 的绑定方式
-- [ ] 3.5 删除 JS 侧旧 entity-transform-animation 遗留，包括 suppression 机制 `animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径，确保不存在能与 native 竞争的第二个 transform 源
+- [ ] 3.5 删除 JS 侧旧 entity-transform-animation 遗留,包括 suppression 机制 `animation.__getSuppressedFields` 与 suppression 释放后 base props 重同步路径;复用 Element 动画的 Native animating mask,由目标 Entity 保存完整 transform owner,由 `SpatialScene` 在普通 Entity transform 更新入口执行仲裁,并在解绑或销毁动画对象时释放 owner
 
 ## 4. Playback、Outlet 与 Core 归一化
 
