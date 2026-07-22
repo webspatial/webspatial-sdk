@@ -382,7 +382,7 @@ sequenceDiagram
 - **命令名保留 `Element` 字样。** 物体复用现有创建和控制命令;其目标态语义为空间对象,`elementId` 表示空间对象 id。
 - **承担 fresh play 的原生编译成本。** 每次 fresh play 都由物体动画对象读取当前 baseline,再调用编译器完成多关键帧、稀疏关键帧、旋转换算和整姿态串联编译,换取最新 baseline、RealityKit 原生播放、系统合成和统一播放语义。
 - **切片为整姿态串联。** 把时间轴切成若干节点、每个节点携带完整的 `position` / `rotation` / `scale`,再按先后顺序串联成一条整姿态动画播放。visionOS(RealityKit)的动画绑定粒度是整个 `.transform`,当前缓动需求也以整段为单位。因此采用整姿态串联,天然对齐 visionOS 与 picoOS(两端原生都绑定整 transform);同一区间内各通道共用一个 `timingFunction`。
-- **绑定生命周期内持有完整变换。** 动画进入活跃状态后,整个 `.transform` 由动画控制。例如只动画 `position.y` 时,`position.x`、`position.z`、`rotation`、`scale` 在播放期间都保持本轮基准姿态。原生层产生首个已确认状态后,`entityProps` 在绑定存续期间持久化完整的已提交变换;播放空闲时的动态写入使用 `api.set`,解绑后由 React 属性控制。
+- **绑定生命周期内持有完整变换。** 动画进入活跃状态后,整个 `.transform` 由动画控制。例如只动画 `position.y` 时,`position.x`、`position.z`、`rotation`、`scale` 在播放期间都保持本轮基准姿态。原生层产生首个已确认状态后,`entityProps` 在绑定存续期间持久化完整的已提交变换;播放空闲时的动态写入使用 `api.set`,解绑后由 React 属性控制。Entity motion 复用 Element 动画的 Native animating mask 仲裁机制:目标 Entity 保存完整 transform 的动画 owner,`EntityMotionAnimationObject` 在提交首个已确认状态时获取 owner,`SpatialScene` 在普通 Entity transform 更新入口检查 owner。owner 存续期间,普通更新返回成功并保持当前原生 transform;解绑或销毁动画对象时释放 owner。
 - **`set` 使用稀疏补丁对象。** v1 的 `api.set` 接受稀疏补丁对象,当前确认姿态通过 `entityProps` 读取。
 - **按运行时类型直接分发。** v1 在 `SpatialScene` 中把元素和物体分别分发到对应管理器;两条路径出现真实重复时再提取公共协议。
 - **并发性能需要实测。** RealityKit 原生播放优于 JS 逐帧写入,但海量物体并发仍需专项性能验证。
