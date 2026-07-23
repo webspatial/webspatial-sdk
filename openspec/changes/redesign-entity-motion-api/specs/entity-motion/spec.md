@@ -259,10 +259,20 @@ Unbinding and target replacement MUST advance the binding generation, retire the
 #### Scenario: Execution config change replaces the object on the same target
 - **GIVEN** an Entity motion binding remains attached to the same target
 - **WHEN** its normalized execution signature changes
-- **THEN** the SDK MUST retire the current animation object and wait for its `destroy()` to succeed before creating a new object with the latest config
+- **THEN** the SDK MUST keep the current animation object and binding generation while waiting for its `destroy()` to succeed
 - **AND** successful `destroy()` of the old object MUST mean its held controller has stopped, its transform owner has been released, and the old object will not write that target transform again
 - **AND** the current `entityProps` MUST remain the last confirmed committed pose for that target during replacement
-- **AND** the replacement object's first fresh play MUST read the current native transform as its baseline
+- **AND** after `destroy()` succeeds, the SDK MUST submit the complete pose in the current `entityProps` through the ordinary Entity transform update entry and wait for that update to succeed
+- **AND** after the pose update succeeds, the SDK MUST advance the binding generation and create the new object from the latest config
+- **AND** the replacement object's first fresh play MUST read that confirmed pose as its baseline
+- **AND** this pose restoration MUST preserve the existing `entityProps` and lifecycle callback counts
+
+#### Scenario: Destroy fails during same-target replacement
+- **GIVEN** Entity motion is replacing an animation object for the same target
+- **WHEN** destruction of the old object fails
+- **THEN** the SDK MUST retain the old object and binding generation
+- **AND** the SDK MUST clear commands pending for the attempted replacement
+- **AND** `onError` MUST fire once
 
 #### Scenario: Callback-only update keeps the current playback object
 - **GIVEN** the normalized execution signature remains equal
