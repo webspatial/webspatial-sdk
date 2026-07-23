@@ -37,6 +37,7 @@ export const routes = [
         path: '/reality/textured-unlit-box',
         label: 'Textures',
       },
+      { path: '/texture-concurrency', label: 'Texture Concurrency' },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
   },
