@@ -297,6 +297,7 @@ describe('lazy-load facades', () => {
             id="x"
             url="u"
             src="s"
+            name="n"
             attachment="a"
             size={{ width: 0, height: 0 }}
           >

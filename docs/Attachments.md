@@ -13,13 +13,13 @@ This enables a 1→N pattern: one content template can be rendered into multiple
 
 ## `<AttachmentAsset>`
 
-Declares an attachment content template by asset id. When one or more `<AttachmentEntity>` components register containers for that id, `<AttachmentAsset>` uses `createPortal` to render its children into each container.
+Declares an attachment content template by name. When one or more `<AttachmentEntity>` components register containers for that name, `<AttachmentAsset>` uses `createPortal` to render its children into each container.
 
 ### Attributes
 
-`id`
+`name`
 
-**Required.** A string identifier that links this content template to one or more `<AttachmentEntity>` instances. Must match the `attachment` prop on the corresponding entities. This aligns attachment asset declarations with other asset declarations such as `<ModelAsset id="...">`.
+**Required.** A string identifier that links this content template to one or more `<AttachmentEntity>` instances. Must match the `attachment` prop on the corresponding entities.
 
 `children`
 
@@ -28,8 +28,8 @@ The React content to render inside the attachment. This can be any valid React J
 ### Usage Notes
 
 - `<AttachmentAsset>` must be a direct child of `<Reality>`, placed **outside** `<SceneGraph>`.
-- If no `<AttachmentEntity>` has registered for the given `id`, the asset renders nothing.
-- Multiple `<AttachmentEntity>` components with the same `attachment` id will each receive a portal of the same children.
+- If no `<AttachmentEntity>` has registered for the given `name`, the asset renders nothing.
+- Multiple `<AttachmentEntity>` components with the same `attachment` name will each receive a portal of the same children.
 - Spatial components (`<SpatialDiv>`, `<Reality>`, `<Model>`) inside an `<AttachmentAsset>` will gracefully degrade to plain HTML with a console warning. Attachments are 2D surfaces only.
 
 ## `<AttachmentEntity>`
@@ -40,7 +40,7 @@ Creates a native attachment (a child WKWebView on visionOS) parented under a 3D 
 
 `attachment`
 
-**Required.** A string matching the `id` prop on the corresponding `<AttachmentAsset>`. This is how the entity knows which content template to display.
+**Required.** A string matching the `name` prop on the corresponding `<AttachmentAsset>`. This is how the entity knows which content template to display.
 
 `position`
 
