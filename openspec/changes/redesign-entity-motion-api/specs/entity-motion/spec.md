@@ -148,9 +148,16 @@ The target callback signatures MUST be `onStart(values: EntityMotionProps)`, `on
 
 ### Requirement: Entity motion has deterministic state and lifecycle transitions
 
-The public Entity motion state MUST use `queued`, `idle`, `running`, `paused`, and `finished`. `queued` MUST represent the React binding period before native animation-object creation. During `queued`, `isAnimating`, `isPaused`, and `finished` MUST remain `false`, and queued commands MUST preserve those booleans. Native state events MUST use `idle`, `running`, `paused`, and `finished` and MUST be the sole data source for public playback state and booleans. The public `finished` flag MUST equal the result of `playState === 'finished'`.
+The public Entity motion state MUST use `queued`, `idle`, `running`, `paused`, and `finished`. `queued` MUST represent the React binding period before native animation-object creation. During `queued`, `isAnimating`, `isPaused`, and `finished` MUST remain `false`, and queued commands MUST preserve those booleans. Native creation and control replies plus native state events MUST be the sole data sources for public playback state and booleans. Native states MUST use `idle`, `running`, `paused`, and `finished`. A successful native creation reply MUST confirm the initial `idle` state before pending commands are flushed. A failed native creation reply MUST also settle the public state to `idle`, clear pending commands, and enter the classified error path. The public `finished` flag MUST equal the result of `playState === 'finished'`.
 
 Each fresh play MUST store its active native business-controller identity. Native MUST serialize command handlers and controller completion callbacks. A completion event whose controller identity matches the current business controller MUST be eligible to complete that run.
+
+#### Scenario: Native creation reply exits queued
+- **GIVEN** playback commands entered the pending queue before native animation-object creation
+- **WHEN** the native creation reply arrives
+- **THEN** a successful reply MUST confirm public `idle` before the binding flushes pending commands
+- **AND** a queued `pause` or `stop` executed against native `idle` MUST preserve public `idle` even when that no-op emits no state event
+- **AND** a failed reply MUST confirm public `idle`, clear pending commands, and dispatch the classified error
 
 #### Scenario: Commands preserve idle and finished states deterministically
 - **GIVEN** the native animation state is `idle` or `finished`
@@ -223,7 +230,8 @@ A successful JSB reply MUST mean Native has completed the command's synchronous 
 - **GIVEN** an Entity motion binding whose native animation object has not been created
 - **WHEN** application code calls `play`, `pause`, `stop`, `reset`, or `finish`
 - **THEN** the binding MUST append those playback commands to its pending queue in call order
-- **AND** after creation succeeds, it MUST send them one at a time in FIFO order
+- **AND** after creation succeeds, the native creation reply MUST first confirm public `idle`
+- **AND** the binding MUST then send them one at a time in FIFO order
 - **AND** when `autoStart` is enabled, its generated `play` MUST precede the playback commands already pending at creation time
 
 #### Scenario: Commands after native object creation are serialized

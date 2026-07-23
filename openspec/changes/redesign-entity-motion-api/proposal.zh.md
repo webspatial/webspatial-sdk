@@ -404,10 +404,7 @@ interface EntityPlaybackApi {
 stateDiagram-v2
     [*] --> idle
     idle --> queued: 原生对象创建前收到播放命令
-    queued --> idle: stop() / reset()
-    queued --> running: play() / autoStart
-    queued --> paused: play() 后 pause()
-    queued --> finished: finish()
+    queued --> idle: 原生层创建回执
     idle --> running: play() / autoStart
     idle --> finished: finish()
     running --> paused: pause()
@@ -420,7 +417,7 @@ stateDiagram-v2
     finished --> idle: reset()
 ```
 
-`running` 包含起播前的延迟等待。`queued` 只表示播放命令正在等待原生动画对象创建。排队期间三个布尔值保持 `false`;原生动画对象执行命令并发出状态事件后,公开状态同步为原生确认值。
+`running` 包含起播前的延迟等待。`queued` 表示播放命令正在等待原生动画对象创建。排队期间三个布尔值保持 `false`。原生层创建回执在绑定对象执行待处理命令前确认 `idle`;后续控制回执和状态事件持续同步公开状态与原生确认值。
 
 | `playState` | `isAnimating` | `isPaused` | `finished` |
 |---|---|---|---|

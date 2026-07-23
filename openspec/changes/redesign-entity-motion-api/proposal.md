@@ -404,10 +404,7 @@ During its lifecycle an animation moves through the states below. Reading this d
 stateDiagram-v2
     [*] --> idle
     idle --> queued: playback command before native creation
-    queued --> idle: stop() / reset()
-    queued --> running: play() / autoStart
-    queued --> paused: play() then pause()
-    queued --> finished: finish()
+    queued --> idle: native creation reply
     idle --> running: play() / autoStart
     idle --> finished: finish()
     running --> paused: pause()
@@ -420,7 +417,7 @@ stateDiagram-v2
     finished --> idle: reset()
 ```
 
-`running` includes the start delay. `queued` only means playback commands are waiting for native animation-object creation. All three booleans remain `false` while commands are queued; after the native object executes a command and emits a state event, the public state synchronizes to the native-confirmed values.
+`running` includes the start delay. `queued` only means playback commands are waiting for native animation-object creation. All three booleans remain `false` while commands are queued. The native creation reply confirms `idle` before the binding flushes pending commands; subsequent control replies and state events keep the public state synchronized to native-confirmed values.
 
 | `playState` | `isAnimating` | `isPaused` | `finished` |
 |---|---|---|---|

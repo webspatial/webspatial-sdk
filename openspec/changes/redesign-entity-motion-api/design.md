@@ -401,7 +401,7 @@ Native decides whether `api.set` takes effect: it accepts patches while playback
 
 The public `EntityPlaybackApi` remains a `void` command surface. Internally, each `EntityMotionBinding` owns one FIFO command chain so call order is preserved without exposing bridge promises to application code.
 
-- Before the target binding and native animation-object creation complete, `play`, `pause`, `stop`, `reset`, and `finish` enter the pending-command queue in call order. After creation succeeds, the binding flushes them sequentially and awaits each internal `EntityAnimationObject` command promise before sending the next command.
+- Before the target binding and native animation-object creation complete, `play`, `pause`, `stop`, `reset`, and `finish` enter the pending-command queue in call order. The native creation reply first confirms the initial `idle` state. After a successful creation reply, the binding flushes pending commands sequentially and awaits each internal `EntityAnimationObject` command promise before sending the next command. A failed creation reply also settles the public state to `idle`, clears the pending queue, and enters the existing error path.
 - When `autoStart` is enabled, its generated `play` command is inserted at the front of the pending playback commands when creation succeeds, matching the existing Element animation behavior.
 - `api.set` before binding or native animation-object creation never enters the queue. It remains a console warning plus no-op and is never replayed later.
 - After the native animation object exists, all playback commands and `set` enter the same per-binding FIFO. A failure or a warning-plus-no-op settles that queue item and allows the next item to run; it does not poison or reorder the queue.
@@ -619,7 +619,7 @@ interface EntityMotionStateChangedMsg {
 
 `values` use the entity target's `EntityMotionProps`, containing `position`, `rotation`, and `scale`.
 
-`queued` is a React binding state while commands await native animation-object creation. Native state events carry `idle`, `running`, `paused`, or `finished`. The public `finished` flag is derived from `playState === 'finished'`; every other state reports `finished: false`.
+`queued` is a React binding state while commands await native animation-object creation. The existing native creation reply confirms the initial `idle` state without adding a protocol field. Native control replies and state events then confirm `idle`, `running`, `paused`, or `finished`. Native replies and state events are the exclusive source of public playback state. The public `finished` flag is derived from `playState === 'finished'`; every other state reports `finished: false`.
 
 ##### Playback error type
 
@@ -821,11 +821,13 @@ otherwise  -> UNSUPPORTED_TARGET
 Processing rules:
 
 - When the registry lacks `elementId`, create fails with `TARGET_NOT_FOUND`.
-- After create succeeds, `SpatialScene` adds the animation object to global `spatialObjects` as a `SpatialObject`; `animationId` is its spatial id.
+- After create succeeds, `SpatialScene` adds the animation object to global `spatialObjects` as a `SpatialObject`; `animationId` is its spatial id, and the existing success reply confirms the object's initial `idle` state.
 - Control commands look up an animation object by `animationId` in global `spatialObjects`, then enter the Element or Entity control path by animation-object runtime type. Only `EntityMotionAnimationObject` handles Entity-only `set`.
 - Synchronous command errors return through the JSB reply; only asynchronous playback failures after command acceptance return through one `spatialanimationstatechanged` error event.
 - A successful JSB reply is returned only after the command's synchronous native state transition and transform commit have completed. When that command emits a state event, Native emits the event before resolving the success reply; the binding queue uses reply settlement as the boundary for dispatching the next command.
 - When fresh-play compilation fails, the control command fails and the animation remains inactive.
+
+The create reply shape remains unchanged. A successful reply carrying `animationId` confirms an existing object in `idle`; a failed reply confirms that no object was created and lets the binding settle to `idle`, clear pending commands, and dispatch the classified error.
 
 Native accepts and commits `api.set` while inactive. While active, it keeps the transform unchanged and returns `INVALID_CONTROL_STATE`; Core maps that `set` result to warning + no-op without triggering `onError`. The JSB shape remains unchanged.
 
