@@ -420,11 +420,11 @@ stateDiagram-v2
     finished --> idle: reset()
 ```
 
-`running` 包含起播前的延迟等待。`queued` 的布尔状态由当前等待执行的播放命令决定:
+`running` 包含起播前的延迟等待。`queued` 只表示播放命令正在等待原生动画对象创建。排队期间三个布尔值保持 `false`;原生动画对象执行命令并发出状态事件后,公开状态同步为原生确认值。
 
 | `playState` | `isAnimating` | `isPaused` | `finished` |
 |---|---|---|---|
-| `queued` | 等待 `play` / `autoStart` 时为 `true` | 等待 `pause` 时为 `true` | `false` |
+| `queued` | `false` | `false` | `false` |
 | `idle` | `false` | `false` | `false` |
 | `running` | `true` | `false` | `false` |
 | `paused` | `false` | `true` | `false` |

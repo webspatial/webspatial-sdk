@@ -420,11 +420,11 @@ stateDiagram-v2
     finished --> idle: reset()
 ```
 
-`running` includes the start delay. Boolean state in `queued` depends on the playback command waiting to run:
+`running` includes the start delay. `queued` only means playback commands are waiting for native animation-object creation. All three booleans remain `false` while commands are queued; after the native object executes a command and emits a state event, the public state synchronizes to the native-confirmed values.
 
 | `playState` | `isAnimating` | `isPaused` | `finished` |
 |---|---|---|---|
-| `queued` | `true` while `play` / `autoStart` waits | `true` while `pause` waits | `false` |
+| `queued` | `false` | `false` | `false` |
 | `idle` | `false` | `false` | `false` |
 | `running` | `true` | `false` | `false` |
 | `paused` | `false` | `true` | `false` |

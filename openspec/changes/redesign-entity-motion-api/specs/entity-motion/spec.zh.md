@@ -148,7 +148,7 @@ Entity motion MUST 在保持 transform-only 约束的前提下，对齐新的 mo
 
 ### Requirement: Entity motion 具有确定的状态与生命周期转换
 
-公开 Entity motion 状态 MUST 使用 `queued`、`idle`、`running`、`paused` 和 `finished`。`queued` MUST 表示原生动画对象创建前的 React 绑定阶段。原生层状态事件 MUST 使用 `idle`、`running`、`paused` 和 `finished`。公开 `finished` 标记 MUST 等于 `playState === 'finished'` 的结果。
+公开 Entity motion 状态 MUST 使用 `queued`、`idle`、`running`、`paused` 和 `finished`。`queued` MUST 表示原生动画对象创建前的 React 绑定阶段。`queued` 期间 `isAnimating`、`isPaused` 和 `finished` MUST 保持 `false`,排队命令 MUST 保持这些布尔值。原生层状态事件 MUST 使用 `idle`、`running`、`paused` 和 `finished`,并作为公开播放状态和布尔值的唯一数据源。公开 `finished` 标记 MUST 等于 `playState === 'finished'` 的结果。
 
 每次 fresh play MUST 保存当前原生层业务控制器身份。原生层 MUST 串行处理控制命令与控制器完成回调。控制器身份匹配当前业务控制器的完成事件 MUST 具备完成该次运行的资格。
 

@@ -148,7 +148,7 @@ The target callback signatures MUST be `onStart(values: EntityMotionProps)`, `on
 
 ### Requirement: Entity motion has deterministic state and lifecycle transitions
 
-The public Entity motion state MUST use `queued`, `idle`, `running`, `paused`, and `finished`. `queued` MUST represent the React binding period before native animation-object creation. Native state events MUST use `idle`, `running`, `paused`, and `finished`. The public `finished` flag MUST equal the result of `playState === 'finished'`.
+The public Entity motion state MUST use `queued`, `idle`, `running`, `paused`, and `finished`. `queued` MUST represent the React binding period before native animation-object creation. During `queued`, `isAnimating`, `isPaused`, and `finished` MUST remain `false`, and queued commands MUST preserve those booleans. Native state events MUST use `idle`, `running`, `paused`, and `finished` and MUST be the sole data source for public playback state and booleans. The public `finished` flag MUST equal the result of `playState === 'finished'`.
 
 Each fresh play MUST store its active native business-controller identity. Native MUST serialize command handlers and controller completion callbacks. A completion event whose controller identity matches the current business controller MUST be eligible to complete that run.
 
