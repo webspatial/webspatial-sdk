@@ -3,11 +3,9 @@ import SwiftUI
 
 struct AttachmentInfo: Identifiable, Equatable {
     let id: String
-    var placementId: String
+    var parentEntityId: String
     var position: SIMD3<Float>
-    var rotation: SIMD3<Float>
-    var scale: SIMD3<Float>
-    var frameSize: CGSize
+    var size: CGSize
     var webViewModel: SpatialWebViewModel
 
     static func == (lhs: AttachmentInfo, rhs: AttachmentInfo) -> Bool {
@@ -29,11 +27,9 @@ class AttachmentManager {
     // SpatialWebViewModel's lazy re-init.
     func create(
         id: String,
-        placementId: String,
+        parentEntityId: String,
         position: SIMD3<Float>,
-        rotation: SIMD3<Float>,
-        scale: SIMD3<Float>,
-        frameSize: CGSize,
+        size: CGSize,
         webViewModel: SpatialWebViewModel
     ) -> AttachmentInfo {
         webViewModel.setBackgroundTransparent(true)
@@ -41,37 +37,23 @@ class AttachmentManager {
 
         let info = AttachmentInfo(
             id: id,
-            placementId: placementId,
+            parentEntityId: parentEntityId,
             position: position,
-            rotation: rotation,
-            scale: scale,
-            frameSize: frameSize,
+            size: size,
             webViewModel: webViewModel
         )
         attachments[id] = info
         return info
     }
 
-    func update(
-        id: String,
-        position: SIMD3<Float>?,
-        rotation: SIMD3<Float>?,
-        scale: SIMD3<Float>?,
-        frameSize: CGSize?
-    ) {
+    func update(id: String, position: SIMD3<Float>?, size: CGSize?) {
         guard var info = attachments[id] else { return }
 
         if let position = position {
             info.position = position
         }
-        if let rotation = rotation {
-            info.rotation = rotation
-        }
-        if let scale = scale {
-            info.scale = scale
-        }
-        if let frameSize = frameSize {
-            info.frameSize = frameSize
+        if let size = size {
+            info.size = size
         }
 
         attachments[id] = info

@@ -422,26 +422,16 @@ export type SpatialMagnifyEndEvent = CustomEvent<SpatialMagnifyEndEventDetail>
 
 export type SpatialEntityOrReality = SpatialEntity | SpatializedDynamic3DElement
 
-export interface AttachmentEntityPlacement {
-  id: string
-}
-
 export interface AttachmentEntityOptions {
-  placement: AttachmentEntityPlacement
-  position?: Vec3
-  rotation?: Vec3
-  scale?: Vec3
-  width?: number
-  height?: number
+  parentEntityId: string
+  position?: [number, number, number]
+  size: { width: number; height: number }
   ownerViewId: string
 }
 
 export interface AttachmentEntityUpdateOptions {
-  position?: Vec3
-  rotation?: Vec3
-  scale?: Vec3
-  width?: number
-  height?: number
+  position?: [number, number, number]
+  size?: { width: number; height: number }
 }
 
 // manifest

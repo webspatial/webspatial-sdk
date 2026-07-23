@@ -16,13 +16,9 @@ import React, { useRef } from 'react'
 gsap.registerPlugin(useGSAP)
 enableDebugTool()
 
-const REALITY_FRAME = {
-  width: '480px',
-  height: '420px',
-  border: '1px solid #ccc',
-} as const
-
-const attachmentDivStyle = { '--xr-back': 66 }
+const attachmentDivStyle = {
+  '--xr-back': 66,
+}
 
 function TestCase({
   title,
@@ -39,146 +35,23 @@ function TestCase({
   )
 }
 
-function SliderRow({
-  label,
-  value,
-  min,
-  max,
-  step,
-  onChange,
-  unit,
-}: {
-  label: string
-  value: number
-  min: number
-  max: number
-  step: number
-  onChange: (v: number) => void
-  unit: string
-}) {
+function TestBasicAttachment() {
   return (
-    <label className="flex items-center gap-3 text-sm">
-      <span className="w-28 shrink-0 text-gray-700">{label}</span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        className="flex-1 min-w-0"
-      />
-      <span className="w-20 shrink-0 tabular-nums text-gray-600 text-right">
-        {unit === ' m' || unit === ' deg' ? value.toFixed(2) : value}
-        {unit}
-      </span>
-    </label>
-  )
-}
-
-/** 1. Canonical API — Vec3 transforms + meter width/height with live sliders. */
-function TestTransformApi() {
-  const [posX, setPosX] = React.useState(0)
-  const [posY, setPosY] = React.useState(0.14)
-  const [posZ, setPosZ] = React.useState(0)
-  const [rotY, setRotY] = React.useState(20)
-  const [scale, setScale] = React.useState(1)
-  const [widthM, setWidthM] = React.useState(0.35)
-  const [heightM, setHeightM] = React.useState(0.2)
-
-  const position = { x: posX, y: posY, z: posZ }
-  const rotation = { x: 0, y: rotY, z: 0 }
-  const scaleVec = { x: scale, y: scale, z: scale }
-
-  return (
-    <TestCase title="1. Transform API (position, rotation, scale, width, height)">
-      <p className="text-sm text-gray-600 mb-3">
-        Drag sliders to update <code className="text-xs">AttachmentEntity</code>{' '}
-        transforms and meter dimensions without remounting.
-      </p>
-      <div className="mb-4 max-w-md space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
-        <SliderRow
-          label="Position X"
-          value={posX}
-          min={-0.25}
-          max={0.25}
-          step={0.01}
-          onChange={setPosX}
-          unit=" m"
-        />
-        <SliderRow
-          label="Position Y"
-          value={posY}
-          min={-0.05}
-          max={0.35}
-          step={0.01}
-          onChange={setPosY}
-          unit=" m"
-        />
-        <SliderRow
-          label="Position Z"
-          value={posZ}
-          min={-0.1}
-          max={0.25}
-          step={0.01}
-          onChange={setPosZ}
-          unit=" m"
-        />
-        <SliderRow
-          label="Rotation Y"
-          value={rotY}
-          min={-45}
-          max={45}
-          step={1}
-          onChange={setRotY}
-          unit=" deg"
-        />
-        <SliderRow
-          label="Scale"
-          value={scale}
-          min={0.5}
-          max={1.5}
-          step={0.05}
-          onChange={setScale}
-          unit=""
-        />
-        <SliderRow
-          label="Width"
-          value={widthM}
-          min={0.1}
-          max={0.5}
-          step={0.01}
-          onChange={setWidthM}
-          unit=" m"
-        />
-        <SliderRow
-          label="Height"
-          value={heightM}
-          min={0.08}
-          max={0.35}
-          step={0.01}
-          onChange={setHeightM}
-          unit=" m"
-        />
-      </div>
-      <Reality style={{ ...REALITY_FRAME, border: '1px solid #0d9488' }}>
-        <UnlitMaterial id="matTransform" color="#0d9488" />
-        <AttachmentAsset id="profile-card">
+    <TestCase title="1. Basic Attachment">
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid black' }}
+      >
+        <UnlitMaterial id="matBasic" color="#ff0000" />
+        <AttachmentAsset id="basic-attachment">
           <div
             style={{
-              background: 'rgba(15,23,42,0.92)',
+              background: 'black',
               color: 'white',
-              padding: 12,
+              padding: 10,
               borderRadius: 8,
-              minHeight: '100%',
-              boxSizing: 'border-box',
             }}
           >
-            <p style={{ margin: 0, fontWeight: 600 }}>Profile card</p>
-            <p style={{ margin: '6px 0 0', fontSize: 12, opacity: 0.85 }}>
-              {widthM.toFixed(2)}×{heightM.toFixed(2)} m · rotY{' '}
-              {rotY.toFixed(0)}°
-            </p>
+            <p>Basic Attachment Content</p>
           </div>
         </AttachmentAsset>
         <SceneGraph>
@@ -187,15 +60,12 @@ function TestTransformApi() {
               width={0.1}
               height={0.1}
               depth={0.1}
-              materials={['matTransform']}
+              materials={['matBasic']}
             />
             <AttachmentEntity
-              attachment="profile-card"
-              position={position}
-              rotation={rotation}
-              scale={scaleVec}
-              width={widthM}
-              height={heightM}
+              attachment="basic-attachment"
+              position={[0, 0.1, 0]}
+              size={{ width: 200, height: 100 }}
             />
           </Entity>
         </SceneGraph>
@@ -204,20 +74,220 @@ function TestTransformApi() {
   )
 }
 
-/** 2. One asset → many placements with shared React state. */
-function TestSharedAsset() {
+function TestNestedRealityInSpatialDiv() {
+  return (
+    <TestCase title="2. Attachment inside SpatialDiv > Reality">
+      <p className="text-sm text-gray-600 mb-2">
+        Testing that AttachmentEntity works normally when Reality is nested
+        inside a SpatialDiv.
+      </p>
+      <div
+        enable-xr
+        style={{
+          ...attachmentDivStyle,
+          width: '400px',
+          height: '400px',
+          border: '1px solid blue',
+        }}
+      >
+        <Reality style={{ width: '100%', height: '100%' }}>
+          <UnlitMaterial id="matDiv" color="#0000ff" />
+          <AttachmentAsset id="nested-spatialdiv-attachment">
+            <div
+              style={{
+                background: 'rgba(0,0,100,0.8)',
+                color: 'white',
+                padding: 10,
+                borderRadius: 8,
+              }}
+            >
+              <p>Attachment inside SpatialDiv</p>
+            </div>
+          </AttachmentAsset>
+          <SceneGraph>
+            <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+              <BoxEntity
+                width={0.1}
+                height={0.1}
+                depth={0.1}
+                materials={['matDiv']}
+              />
+              <AttachmentEntity
+                attachment="nested-spatialdiv-attachment"
+                position={[0, 0.1, 0]}
+                size={{ width: 220, height: 100 }}
+              />
+            </Entity>
+          </SceneGraph>
+        </Reality>
+      </div>
+    </TestCase>
+  )
+}
+
+function TestModelFallback() {
+  return (
+    <TestCase title="3. Model Fallback inside Attachment">
+      <p className="text-sm text-gray-600 mb-2">
+        Models nested inside an AttachmentAsset should degrade to 2D models
+        gracefully.
+      </p>
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid green' }}
+      >
+        {/* <p> Testing html</p>
+        <Model
+          // enable-xr
+          src="/modelasset/cone.usdz"
+          style={{ width: 100, height: 100, background: '#fff' }}
+        /> */}
+        <AttachmentAsset id="model-fallback-attachment">
+          <div
+            style={{
+              background: 'rgba(0,100,0,0.8)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <p className="mb-2">Model Fallback below:</p>
+            <div style={{ background: '#fff', padding: 10, borderRadius: 8 }}>
+              <Model
+                enable-xr
+                src="/modelasset/cone.usdz"
+                style={{ width: 150, height: 150, display: 'block' }}
+              />
+            </div>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0 }}>
+            <AttachmentEntity
+              attachment="model-fallback-attachment"
+              position={[0, 0, 0]}
+              size={{ width: 300, height: 250 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestRealityFallback() {
+  return (
+    <TestCase title="4. Reality Fallback inside Attachment">
+      <p className="text-sm text-gray-600 mb-2">
+        Reality nested inside an AttachmentAsset should warn and render nothing.
+      </p>
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid red' }}
+      >
+        <AttachmentAsset id="reality-fallback-attachment">
+          <div
+            style={{
+              background: 'rgba(100,0,0,0.8)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+            }}
+          >
+            <p className="mb-2">Nested Reality below:</p>
+            <div enable-xr>
+              <Reality
+                style={{
+                  width: '100px',
+                  height: '100px',
+                  border: '1px solid white',
+                }}
+              >
+                <div style={{ color: 'white' }}>Should not render in 3D</div>
+              </Reality>
+            </div>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0 }}>
+            <AttachmentEntity
+              attachment="reality-fallback-attachment"
+              position={[0, 0, 0]}
+              size={{ width: 250, height: 200 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestSpatialDivFallback() {
+  return (
+    <TestCase title="5. SpatialDiv Fallback inside Attachment">
+      <p className="text-sm text-gray-600 mb-2">
+        SpatialDiv nested inside an AttachmentAsset should degrade safely into
+        the attachment.
+      </p>
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid purple' }}
+      >
+        <AttachmentAsset id="spatialdiv-fallback-attachment">
+          <div
+            style={{
+              background: 'rgba(50,0,100,0.8)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+            }}
+          >
+            <p className="mb-2">SpatialDiv Fallback below:</p>
+            <div
+              enable-xr
+              style={{
+                background: '#fff',
+                color: '#000',
+                padding: 10,
+                borderRadius: 8,
+                width: 100,
+                height: 100,
+              }}
+            >
+              <span>Spatial Content</span>
+            </div>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+            <AttachmentEntity
+              attachment="spatialdiv-fallback-attachment"
+              position={[0, 0, 0]}
+              size={{ width: 250, height: 200 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestSharedAttachmentState() {
   const [count, setCount] = React.useState(0)
 
   return (
-    <TestCase title="2. Shared asset (1→N portals + React state)">
+    <TestCase title="6. Shared State — Multiple AttachmentEntities referencing same AttachmentAsset">
       <p className="text-sm text-gray-600 mb-2">
-        Two <code className="text-xs">AttachmentEntity</code> instances
-        reference the same asset. Clicking +1 in either portal updates both and
-        the host page mirror.
+        Two AttachmentEntities reference the same "shared-counter" asset.
+        Clicking +1 in either portal should update the count in both, proving
+        React state is shared across instances.
       </p>
-      <Reality style={{ ...REALITY_FRAME, border: '1px solid orange' }}>
+      <Reality
+        style={{ width: '500px', height: '400px', border: '1px solid orange' }}
+      >
         <UnlitMaterial id="matSharedA" color="#ff8800" />
         <UnlitMaterial id="matSharedB" color="#ffaa00" />
+
         <AttachmentAsset id="shared-counter">
           <div
             style={{
@@ -248,7 +318,9 @@ function TestSharedAsset() {
             </button>
           </div>
         </AttachmentAsset>
+
         <SceneGraph>
+          {/* First entity — left box */}
           <Entity position={{ x: -0.15, y: 0, z: 0.1 }}>
             <BoxEntity
               width={0.1}
@@ -258,11 +330,12 @@ function TestSharedAsset() {
             />
             <AttachmentEntity
               attachment="shared-counter"
-              position={{ x: 0, y: 0.15, z: 0 }}
-              width={0.16}
-              height={0.08}
+              position={[0, 0.15, 0]}
+              size={{ width: 160, height: 80 }}
             />
           </Entity>
+
+          {/* Second entity — right box, same attachment name */}
           <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
             <BoxEntity
               width={0.1}
@@ -272,98 +345,68 @@ function TestSharedAsset() {
             />
             <AttachmentEntity
               attachment="shared-counter"
-              position={{ x: 0, y: 0.15, z: 0 }}
-              rotation={{ x: 0, y: -12, z: 0 }}
-              width={0.16}
-              height={0.08}
+              position={[0, 0.15, 0]}
+              size={{ width: 160, height: 80 }}
             />
           </Entity>
         </SceneGraph>
       </Reality>
+
+      {/* Host-page mirror — proves the same React state drives both portals and the 2D page */}
       <p className="text-sm text-gray-500 mt-2">
-        Host page count: <strong>{count}</strong>
+        Host page count mirror: <strong>{count}</strong> — should always match
+        both portals.
       </p>
     </TestCase>
   )
 }
 
-/** 3. Spatial components inside AttachmentAsset degrade to plain HTML. */
-function TestNestingGuards() {
+function TestAttachmentAnimation() {
+  const [y, setY] = React.useState(0)
+
+  React.useEffect(() => {
+    let raf: number
+    const animate = () => {
+      setY(Math.sin(Date.now() / 800) * 0.08)
+      raf = requestAnimationFrame(animate)
+    }
+    raf = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
   return (
-    <TestCase title="3. Nesting guards (Model / Reality / SpatialDiv)">
+    <TestCase title="7. Attachment Follows Animated Entity">
       <p className="text-sm text-gray-600 mb-2">
-        Spatial components inside{' '}
-        <code className="text-xs">AttachmentAsset</code> degrade gracefully.
-        Nested <code className="text-xs">Reality</code> renders nothing with a
-        console warning.
+        Attachment should follow its parent entity as it animates up and down.
       </p>
-      <Reality style={{ ...REALITY_FRAME, border: '1px solid purple' }}>
-        <AttachmentAsset id="nesting-guards">
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid teal' }}
+      >
+        <UnlitMaterial id="matAnim" color="#00aaaa" />
+        <AttachmentAsset id="anim-attachment">
           <div
             style={{
-              background: 'rgba(30,20,60,0.9)',
+              background: 'rgba(0,80,80,0.85)',
               color: 'white',
-              padding: 12,
+              padding: 10,
               borderRadius: 8,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-              fontSize: 13,
             }}
           >
-            <section>
-              <strong>Model</strong> — degrades to 2D:
-              <div
-                style={{
-                  background: '#fff',
-                  padding: 8,
-                  borderRadius: 6,
-                  marginTop: 4,
-                }}
-              >
-                <Model
-                  enable-xr
-                  src="/modelasset/cone.usdz"
-                  style={{ width: 80, height: 80, display: 'block' }}
-                />
-              </div>
-            </section>
-            <section>
-              <strong>Reality</strong> — blocked:
-              <div enable-xr style={{ marginTop: 4 }}>
-                <Reality
-                  style={{ width: 80, height: 80, border: '1px solid white' }}
-                >
-                  <div>Should not render</div>
-                </Reality>
-              </div>
-            </section>
-            <section>
-              <strong>SpatialDiv</strong> — plain HTML:
-              <div
-                enable-xr
-                style={{
-                  background: '#fff',
-                  color: '#000',
-                  padding: 8,
-                  borderRadius: 6,
-                  marginTop: 4,
-                  width: 80,
-                  height: 40,
-                }}
-              >
-                Spatial content
-              </div>
-            </section>
+            <p style={{ margin: 0, fontSize: 14 }}>Following parent</p>
           </div>
         </AttachmentAsset>
         <SceneGraph>
-          <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+          <Entity position={{ x: 0, y, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matAnim']}
+            />
             <AttachmentEntity
-              attachment="nesting-guards"
-              position={{ x: 0, y: 0, z: 0 }}
-              width={0.3}
-              height={0.38}
+              attachment="anim-attachment"
+              position={[0, 0.12, 0]}
+              size={{ width: 180, height: 60 }}
             />
           </Entity>
         </SceneGraph>
@@ -372,47 +415,53 @@ function TestNestingGuards() {
   )
 }
 
-/** 4. Runtime attachment prop swap on nested entities (QA reproduction). */
-function TestAttachmentSwap() {
-  const [parentAttachment, setParentAttachment] = React.useState('hud-a')
-  const [childAttachment, setChildAttachment] = React.useState('hud-b')
+function TestNestedAttachmentSwap() {
+  const [parentAttachment, setParentAttachment] = React.useState('hud')
+  const [childAttachment, setChildAttachment] = React.useState('hudChild')
 
   return (
-    <TestCase title="4. Runtime attachment swap (nested entities)">
-      <div className="mb-4 flex flex-wrap gap-3">
+    <TestCase title="8. Nested Attachment Swap (QA Reproduction)">
+      <div className="mb-4 flex gap-4">
         <button
-          className="bg-blue-500 text-white px-3 py-2 rounded text-sm"
+          className="bg-blue-500 text-white p-2 rounded"
           onClick={() =>
-            setParentAttachment(
-              parentAttachment === 'hud-a' ? 'hud-b' : 'hud-a',
-            )
+            setParentAttachment(parentAttachment === 'hud' ? 'hudChild' : 'hud')
           }
         >
-          Toggle parent ({parentAttachment})
+          Toggle Parent (Current: {parentAttachment})
         </button>
         <button
-          className="bg-green-500 text-white px-3 py-2 rounded text-sm"
+          className="bg-green-500 text-white p-2 rounded"
           onClick={() =>
-            setChildAttachment(childAttachment === 'hud-a' ? 'hud-b' : 'hud-a')
+            setChildAttachment(childAttachment === 'hud' ? 'hudChild' : 'hud')
           }
         >
-          Toggle child ({childAttachment})
+          Toggle Child (Current: {childAttachment})
         </button>
       </div>
-      <Reality style={{ ...REALITY_FRAME, border: '1px solid black' }}>
+
+      <Reality
+        style={{ width: '500px', height: '500px', border: '1px solid black' }}
+      >
         <UnlitMaterial id="matParent" color="#4444ff" />
         <UnlitMaterial id="matChild" color="#44ff44" />
-        <AttachmentAsset id="hud-a">
+
+        {/* Asset 1: HUD */}
+        <AttachmentAsset id="hud">
           <div style={{ background: 'blue', color: 'white', padding: 10 }}>
-            Asset A
+            <strong>HUD ASSET</strong>
           </div>
         </AttachmentAsset>
-        <AttachmentAsset id="hud-b">
+
+        {/* Asset 2: HUD Child */}
+        <AttachmentAsset id="hudChild">
           <div style={{ background: 'green', color: 'white', padding: 10 }}>
-            Asset B
+            <strong>HUD CHILD ASSET</strong>
           </div>
         </AttachmentAsset>
+
         <SceneGraph>
+          {/* Parent Box */}
           <Entity position={{ x: 0, y: 0, z: 0 }}>
             <BoxEntity
               width={0.2}
@@ -422,10 +471,11 @@ function TestAttachmentSwap() {
             />
             <AttachmentEntity
               attachment={parentAttachment}
-              position={{ x: 0, y: 0.2, z: 0 }}
-              width={0.15}
-              height={0.05}
+              position={[0, 0.2, 0]}
+              size={{ width: 150, height: 50 }}
             />
+
+            {/* Nested Child Box */}
             <Entity position={{ x: 0.3, y: 0, z: 0 }}>
               <BoxEntity
                 width={0.1}
@@ -435,92 +485,25 @@ function TestAttachmentSwap() {
               />
               <AttachmentEntity
                 attachment={childAttachment}
-                position={{ x: 0, y: 0.15, z: 0 }}
-                width={0.15}
-                height={0.05}
+                position={[0, 0.15, 0]}
+                size={{ width: 150, height: 50 }}
               />
             </Entity>
           </Entity>
         </SceneGraph>
       </Reality>
-    </TestCase>
-  )
-}
 
-/** 5. Duplicate AttachmentAsset id — last definition wins. */
-function TestDuplicateAssetId() {
-  return (
-    <TestCase title="5. Duplicate AttachmentAsset id (last wins)">
-      <p className="text-sm text-gray-600 mb-2">
-        Both placements should show &quot;SECOND&quot; — only the last{' '}
-        <code className="text-xs">AttachmentAsset</code> with a given id
-        renders.
+      <p className="mt-2 text-sm text-gray-600">
+        <strong>Validation:</strong> Change Parent to "hudChild". Then change
+        Child to "hud". If the Parent jumps back to "hud" automatically, the bug
+        is confirmed.
       </p>
-      <Reality style={{ ...REALITY_FRAME, border: '1px solid #555' }}>
-        <UnlitMaterial id="matDupA" color="#5555ff" />
-        <UnlitMaterial id="matDupB" color="#55ff55" />
-        <AttachmentAsset id="dup-asset">
-          <div
-            style={{
-              background: 'rgba(180,0,0,0.85)',
-              color: 'white',
-              padding: 10,
-              borderRadius: 8,
-              fontWeight: 700,
-            }}
-          >
-            FIRST
-          </div>
-        </AttachmentAsset>
-        <AttachmentAsset id="dup-asset">
-          <div
-            style={{
-              background: 'rgba(0,150,0,0.85)',
-              color: 'white',
-              padding: 10,
-              borderRadius: 8,
-              fontWeight: 700,
-            }}
-          >
-            SECOND
-          </div>
-        </AttachmentAsset>
-        <SceneGraph>
-          <Entity position={{ x: -0.15, y: 0, z: 0.1 }}>
-            <BoxEntity
-              width={0.1}
-              height={0.1}
-              depth={0.1}
-              materials={['matDupA']}
-            />
-            <AttachmentEntity
-              attachment="dup-asset"
-              position={{ x: 0, y: 0.15, z: 0 }}
-              width={0.16}
-              height={0.08}
-            />
-          </Entity>
-          <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
-            <BoxEntity
-              width={0.1}
-              height={0.1}
-              depth={0.1}
-              materials={['matDupB']}
-            />
-            <AttachmentEntity
-              attachment="dup-asset"
-              position={{ x: 0, y: 0.15, z: 0 }}
-              width={0.16}
-              height={0.08}
-            />
-          </Entity>
-        </SceneGraph>
-      </Reality>
     </TestCase>
   )
 }
 
-function GsapPulseContent() {
+/** GSAP-driven scale pulse; used inside AttachmentAsset portals. */
+function GsapPulseAttachmentContent() {
   const rootRef = useRef<HTMLDivElement>(null)
   useGSAP(
     () => {
@@ -555,52 +538,39 @@ function GsapPulseContent() {
       >
         GSAP pulse
       </div>
+      <p style={{ margin: '8px 0 0', fontSize: 12, opacity: 0.9 }}>
+        Scale should loop on this panel.
+      </p>
     </div>
   )
 }
 
-/** 6. GSAP animation inside shared attachment portals. */
-function TestGsapInAttachment() {
+function TestGSAPSingleAttachment() {
   return (
-    <TestCase title="6. GSAP inside shared attachment">
+    <TestCase title="10. GSAP inside a single AttachmentEntity">
       <p className="text-sm text-gray-600 mb-2">
-        GSAP animates content inside{' '}
-        <code className="text-xs">AttachmentAsset</code> portals. Both
-        placements share the same asset subtree.
+        Baseline: one AttachmentEntity and one AttachmentAsset. GSAP should
+        animate the attachment content (continuous scale pulse).
       </p>
-      <Reality style={{ ...REALITY_FRAME, border: '1px solid #077' }}>
-        <UnlitMaterial id="matGsapA" color="#006666" />
-        <UnlitMaterial id="matGsapB" color="#008888" />
-        <AttachmentAsset id="gsap-pulse">
-          <GsapPulseContent />
+      <Reality
+        style={{ width: '400px', height: '400px', border: '1px solid #0a7' }}
+      >
+        <UnlitMaterial id="matGsapSingle" color="#008877" />
+        <AttachmentAsset id="gsap-single-pulse">
+          <GsapPulseAttachmentContent />
         </AttachmentAsset>
         <SceneGraph>
-          <Entity position={{ x: -0.15, y: 0, z: 0.1 }}>
+          <Entity position={{ x: 0, y: 0, z: 0.1 }}>
             <BoxEntity
               width={0.1}
               height={0.1}
               depth={0.1}
-              materials={['matGsapA']}
+              materials={['matGsapSingle']}
             />
             <AttachmentEntity
-              attachment="gsap-pulse"
-              position={{ x: 0, y: 0.15, z: 0 }}
-              width={0.2}
-              height={0.13}
-            />
-          </Entity>
-          <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
-            <BoxEntity
-              width={0.1}
-              height={0.1}
-              depth={0.1}
-              materials={['matGsapB']}
-            />
-            <AttachmentEntity
-              attachment="gsap-pulse"
-              position={{ x: 0, y: 0.15, z: 0 }}
-              width={0.2}
-              height={0.13}
+              attachment="gsap-single-pulse"
+              position={[0, 0.12, 0]}
+              size={{ width: 220, height: 120 }}
             />
           </Entity>
         </SceneGraph>
@@ -609,54 +579,266 @@ function TestGsapInAttachment() {
   )
 }
 
-/** 7. Attachment inside SpatialDiv > Reality (host layout edge case). */
-function TestSpatialDivHost() {
+function TestGSAPSharedAttachmentAsset() {
   return (
-    <TestCase title="7. SpatialDiv host wrapper">
+    <TestCase title="11. Shared AttachmentAsset + GSAP">
       <p className="text-sm text-gray-600 mb-2">
-        Attachments work when <code className="text-xs">Reality</code> is nested
-        inside a <code className="text-xs">SpatialDiv</code>.
+        Two AttachmentEntities use the same AttachmentAsset. React portals the
+        same subtree into each container; Expect both to show the same text, but
+        the scale pulse may appear on only one side.
       </p>
-      <div
-        enable-xr
-        style={{
-          ...attachmentDivStyle,
-          ...REALITY_FRAME,
-          border: '1px solid blue',
-        }}
+      <Reality
+        style={{ width: '500px', height: '400px', border: '1px solid #077' }}
       >
-        <Reality style={{ width: '100%', height: '100%' }}>
-          <UnlitMaterial id="matDivHost" color="#0000ff" />
-          <AttachmentAsset id="spatialdiv-host">
-            <div
-              style={{
-                background: 'rgba(0,0,100,0.8)',
-                color: 'white',
-                padding: 10,
-                borderRadius: 8,
-              }}
-            >
-              Inside SpatialDiv
-            </div>
-          </AttachmentAsset>
-          <SceneGraph>
-            <Entity position={{ x: 0, y: 0, z: 0.1 }}>
-              <BoxEntity
-                width={0.1}
-                height={0.1}
-                depth={0.1}
-                materials={['matDivHost']}
-              />
-              <AttachmentEntity
-                attachment="spatialdiv-host"
-                position={{ x: 0, y: 0.12, z: 0 }}
-                width={0.22}
-                height={0.1}
-              />
-            </Entity>
-          </SceneGraph>
-        </Reality>
+        <UnlitMaterial id="matGsapSharedA" color="#006666" />
+        <UnlitMaterial id="matGsapSharedB" color="#008888" />
+        <AttachmentAsset id="gsap-shared-pulse">
+          <GsapPulseAttachmentContent />
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: -0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matGsapSharedA']}
+            />
+            <AttachmentEntity
+              attachment="gsap-shared-pulse"
+              position={[0, 0.15, 0]}
+              size={{ width: 200, height: 130 }}
+            />
+          </Entity>
+          <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matGsapSharedB']}
+            />
+            <AttachmentEntity
+              attachment="gsap-shared-pulse"
+              position={[0, 0.15, 0]}
+              size={{ width: 200, height: 130 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function SliderRow({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  unit,
+}: {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  onChange: (v: number) => void
+  unit: string
+}) {
+  return (
+    <label className="flex items-center gap-3 text-sm">
+      <span className="w-28 shrink-0 text-gray-700">{label}</span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        className="flex-1 min-w-0"
+      />
+      <span className="w-20 shrink-0 tabular-nums text-gray-600 text-right">
+        {unit === ' m' ? value.toFixed(2) : value}
+        {unit}
+      </span>
+    </label>
+  )
+}
+
+function TestAttachmentPositionSizeSliders() {
+  const [posX, setPosX] = React.useState(0)
+  const [posY, setPosY] = React.useState(0.12)
+  const [posZ, setPosZ] = React.useState(0)
+  const [sizeW, setSizeW] = React.useState(220)
+  const [sizeH, setSizeH] = React.useState(120)
+
+  const position: [number, number, number] = [posX, posY, posZ]
+  const size = { width: sizeW, height: sizeH }
+
+  return (
+    <TestCase title="12. Dynamic position & size (sliders)">
+      <p className="text-sm text-gray-600 mb-3">
+        Drag sliders to update <code className="text-xs">AttachmentEntity</code>{' '}
+        position (meters, relative to parent) and size (pixels). The native
+        attachment should follow without remounting.
+      </p>
+      <div className="mb-4 max-w-md space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
+        <SliderRow
+          label="Position X"
+          value={posX}
+          min={-0.25}
+          max={0.25}
+          step={0.01}
+          onChange={setPosX}
+          unit=" m"
+        />
+        <SliderRow
+          label="Position Y"
+          value={posY}
+          min={-0.05}
+          max={0.35}
+          step={0.01}
+          onChange={setPosY}
+          unit=" m"
+        />
+        <SliderRow
+          label="Position Z"
+          value={posZ}
+          min={-0.1}
+          max={0.25}
+          step={0.01}
+          onChange={setPosZ}
+          unit=" m"
+        />
+        <SliderRow
+          label="Width"
+          value={sizeW}
+          min={100}
+          max={400}
+          step={10}
+          onChange={setSizeW}
+          unit=" px"
+        />
+        <SliderRow
+          label="Height"
+          value={sizeH}
+          min={60}
+          max={280}
+          step={10}
+          onChange={setSizeH}
+          unit=" px"
+        />
       </div>
+      <Reality
+        style={{ width: '480px', height: '420px', border: '1px solid #6366f1' }}
+      >
+        <UnlitMaterial id="matSliderAtt" color="#6366f1" />
+        <AttachmentAsset id="slider-dynamic-attachment">
+          <div
+            style={{
+              background: 'rgba(40,40,90,0.92)',
+              color: 'white',
+              padding: 12,
+              borderRadius: 8,
+              minHeight: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: 600 }}>Resizable panel</p>
+            <p style={{ margin: '8px 0 0', fontSize: 12, opacity: 0.85 }}>
+              {sizeW}×{sizeH}px · offset ({posX.toFixed(2)}, {posY.toFixed(2)},{' '}
+              {posZ.toFixed(2)}) m
+            </p>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matSliderAtt']}
+            />
+            <AttachmentEntity
+              attachment="slider-dynamic-attachment"
+              position={position}
+              size={size}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
+function TestLastDefinitionWins() {
+  return (
+    <TestCase title="9. Last Definition Wins — Duplicate AttachmentAsset id">
+      <p className="text-sm text-gray-600 mb-2">
+        Only the second asset with the same id should render.
+      </p>
+      <Reality
+        style={{ width: '500px', height: '400px', border: '1px solid #555' }}
+      >
+        <UnlitMaterial id="matLWLeft" color="#5555ff" />
+        <UnlitMaterial id="matLWRight" color="#55ff55" />
+
+        <AttachmentAsset id="dup-asset">
+          <div
+            style={{
+              background: 'rgba(180,0,0,0.85)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+              fontWeight: 700,
+            }}
+          >
+            FIRST
+          </div>
+        </AttachmentAsset>
+        <AttachmentAsset id="dup-asset">
+          <div
+            style={{
+              background: 'rgba(0,150,0,0.85)',
+              color: 'white',
+              padding: 10,
+              borderRadius: 8,
+              fontWeight: 700,
+            }}
+          >
+            SECOND
+          </div>
+        </AttachmentAsset>
+
+        <SceneGraph>
+          <Entity position={{ x: -0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matLWLeft']}
+            />
+            <AttachmentEntity
+              attachment="dup-asset"
+              position={[0, 0.15, 0]}
+              size={{ width: 160, height: 80 }}
+            />
+          </Entity>
+          <Entity position={{ x: 0.15, y: 0, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matLWRight']}
+            />
+            <AttachmentEntity
+              attachment="dup-asset"
+              position={[0, 0.15, 0]}
+              size={{ width: 160, height: 80 }}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
     </TestCase>
   )
 }
@@ -665,14 +847,20 @@ function App() {
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-6">Attachment Tests</h1>
+
       <div className="flex flex-wrap gap-8">
-        <TestTransformApi />
-        <TestSharedAsset />
-        <TestNestingGuards />
-        <TestAttachmentSwap />
-        <TestDuplicateAssetId />
-        <TestGsapInAttachment />
-        <TestSpatialDivHost />
+        <TestBasicAttachment />
+        <TestNestedRealityInSpatialDiv />
+        <TestModelFallback />
+        <TestRealityFallback />
+        <TestSpatialDivFallback />
+        <TestSharedAttachmentState />
+        <TestAttachmentAnimation />
+        <TestNestedAttachmentSwap />
+        <TestLastDefinitionWins />
+        <TestGSAPSingleAttachment />
+        <TestGSAPSharedAttachmentAsset />
+        <TestAttachmentPositionSizeSliders />
       </div>
     </div>
   )
