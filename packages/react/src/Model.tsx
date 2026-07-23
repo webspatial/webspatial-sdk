@@ -34,8 +34,10 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
       onSpatialMagnify,
       onSpatialMagnifyEnd,
       spatialEventOptions: _spatialEventOptions,
+      'xr-animation': _xrAnimation,
       ...modelProps
     } = restProps
+    void _xrAnimation
     // map to VisionOS26 model tag outside attachments
     // @ts-ignore
     return <model ref={ref} {...modelProps} />

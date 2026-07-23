@@ -164,10 +164,11 @@ The full normative contract lives in [`openspec/changes/lazy-load-spatial-runtim
 
 ### Spatial hooks
 
-Import public spatial hooks from the default entry:
+Import stable hooks from the default entry and experimental animation hooks from the experimental entry:
 
 ```ts
-import { useAnimation, useMetrics } from '@webspatial/react-sdk'
+import { useMetrics } from '@webspatial/react-sdk'
+import { useAnimation } from '@webspatial/react-sdk/experimental'
 ```
 
 `useMetrics()` has a stable web placeholder. A component instance that first
@@ -282,4 +283,3 @@ Recommended practice: initialize imperative renderers from each container's own 
 ## SpatialDiv CSS and transforms
 
 Spatial transforms are sampled from an off-screen **probe** DOM node, not from the visible portal surface. Tag/class selectors, probe vs. host split, and workarounds are documented in [WebSpatial Quirks — SpatialDiv / `enable-xr` and CSS](../../docs/webspatial-quirks.md). Maintainer architecture notes live in [`src/spatialized-container/ARCHITECTURE.md`](src/spatialized-container/ARCHITECTURE.md).
-

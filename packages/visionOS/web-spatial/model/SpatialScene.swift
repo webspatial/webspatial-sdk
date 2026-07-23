@@ -46,6 +46,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     @ObservationIgnored
     lazy var animationManager: EntityAnimationManager = .init(scene: self)
 
+    @ObservationIgnored
+    lazy var elementAnimationManager: SpatializedElementAnimationManager = .init(sendWebMsg: { [weak self] id, msg in
+        self?.sendWebMsg(id, msg)
+    })
+
     /// Enum
     enum WindowStyle: String, Codable, CaseIterable {
         case window
@@ -338,6 +343,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addJSBListener(AnimateTransformCommand.self, onAnimateTransform)
 
+        spatialWebViewModel.addJSBListener(CreateSpatializedElementAnimationCommand.self, onCreateSpatializedElementAnimation)
+        spatialWebViewModel.addJSBListener(ControlSpatializedElementAnimationCommand.self, onControlSpatializedElementAnimation)
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
 
         spatialWebViewModel
@@ -484,6 +491,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         logger.debug("SpatialScene page generation advanced to \(currentPageGeneration)")
         // Clean up all animation sessions
         animationManager.removeAll()
+        elementAnimationManager.removeAll()
         // destroy all SpatialObject asset
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
@@ -662,7 +670,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             let column3 = simd_double4(array[12], array[13], array[14], array[15])
             let simd_double4x4 = simd_double4x4(columns: (column0, column1, column2, column3))
             let affineTransform3D = AffineTransform3D(truncating: simd_double4x4)
-            spatializedElement.entityTransform = affineTransform3D
+            if !spatializedElement.animatingMask.locksTransform {
+                spatializedElement.entityTransform = affineTransform3D
+            }
         }
 
         if let autoplay = command.autoplay {
@@ -806,7 +816,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
 
         if let opacity = command.opacity {
-            spatializedElement.opacity = opacity
+            if !spatializedElement.animatingMask.locksOpacity {
+                spatializedElement.opacity = opacity
+            }
         }
 
         if let scrollWithParent = command.scrollWithParent {
@@ -870,6 +882,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         guard array.count == 16 else {
             print("Received matrix array does not have 16 elements.")
             return resolve(.failure(JsbError(code: .InvalidMatrix, message: "invalid UpdateSpatializedElementTransform matrix should have length 16!")))
+        }
+
+        if spatializedElement.animatingMask.locksTransform {
+            resolve(.success(baseReplyData))
+            return
         }
 
         let column0 = simd_double4(array[0], array[1], array[2], array[3])
@@ -1371,6 +1388,36 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    private func onCreateSpatializedElementAnimation(command: CreateSpatializedElementAnimationCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let element: SpatializedElement = findSpatialObject(command.elementId) else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "CreateSpatializedElementAnimation play: element \(command.elementId) not found")))
+            return
+        }
+
+        do {
+            let animation = try elementAnimationManager.createAnimation(command: command, target: element)
+            addSpatialObject(animation)
+            resolve(.success(AddSpatializedElementReply(id: animation.id)))
+        } catch let SpatializedElementAnimationManagerError.invalidTarget(reason) {
+            resolve(.failure(JsbError(code: .CommandError, message: reason)))
+        } catch {
+            resolve(.failure(JsbError(code: .CommandError, message: error.localizedDescription)))
+        }
+    }
+
+    private func onControlSpatializedElementAnimation(command: ControlSpatializedElementAnimationCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        do {
+            try elementAnimationManager.controlAnimation(command)
+            resolve(.success(nil))
+        } catch let SpatializedElementAnimationManagerError.animationNotFound(animationId) {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Animation \(animationId) not found")))
+        } catch let SpatializedElementAnimationManagerError.invalidTarget(reason) {
+            resolve(.failure(JsbError(code: .CommandError, message: reason)))
+        } catch {
+            resolve(.failure(JsbError(code: .CommandError, message: error.localizedDescription)))
+        }
+    }
+
     private func onUpdateUnlitMaterialProperties(command: UpdateUnlitMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let material = spatialObjects[command.id] as? SpatialUnlitMaterial else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(command.id) not found")))
@@ -1441,6 +1488,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 event: SpatialObject.Events.BeforeDestroyed.rawValue,
                 listener: onSptatialObjectDestroyed
             )
+        if let element = spatialObject as? SpatializedElement {
+            elementAnimationManager.destroyAnimationsForElement(element.spatialId)
+        }
         spatialObjects.removeValue(forKey: spatialObject.spatialId)
 
         // notify web side, spatialObject is destroyed
@@ -1476,6 +1526,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     override func onDestroy() {
         animationManager.removeAll()
+        elementAnimationManager.removeAll()
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()

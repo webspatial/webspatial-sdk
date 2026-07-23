@@ -1,14 +1,19 @@
 # Entity Transform Animation
 
-The `useAnimation` hook enables declarative transform animations (position, rotation, scale) on spatial entities within a `Reality`/`SceneGraph` tree.
+The `useEntityAnimation` hook enables declarative transform animations (position, rotation, scale) on spatial entities within a `Reality`/`SceneGraph` tree.
 
 ## Quick Start
 
-```tsx
-import { BoxEntity, Reality, SceneGraph, useAnimation } from '@webspatial/react-sdk'
+```text
+import {
+  BoxEntity,
+  Reality,
+  SceneGraph,
+} from '@webspatial/react-sdk'
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 
 function AnimatedBox() {
-  const [animation, api] = useAnimation({
+  const [animation, api] = useEntityAnimation({
     from: { position: { x: 0, y: 0, z: 0 } },
     to: { position: { x: 1, y: 0, z: 0 } },
     duration: 1.0,
@@ -28,7 +33,7 @@ function AnimatedBox() {
 
 ## API Reference
 
-### `useAnimation(config: AnimationConfig)`
+### `useEntityAnimation(config: AnimationConfig)`
 
 Returns `[AnimatedProps, AnimationApi]`.
 
@@ -105,7 +110,7 @@ Follows the Web Animation API contract:
 
 To restart an animation that is already running, explicitly cancel it first:
 
-```tsx
+```text
 api.cancel()
 api.play()
 ```
@@ -119,15 +124,15 @@ Controls animation speed. Applied at session start and maps to `AnimationView.sp
 - `playbackRate < 0` — reverse playback (animates from `to` back to `from`)
 - `playbackRate = 0` — **invalid** (throws)
 
-```tsx
-const [animation, api] = useAnimation({
+```text
+const [animation, api] = useEntityAnimation({
   to: { position: { x: 1, y: 0, z: 0 } },
   duration: 2.0,
   playbackRate: 2.0, // completes in 1 second
 })
 
 // Reverse playback
-const [reverseAnim, reverseApi] = useAnimation({
+const [reverseAnim, reverseApi] = useEntityAnimation({
   from: { position: { x: 0, y: 0, z: 0 } },
   to: { position: { x: 1, y: 0, z: 0 } },
   duration: 2.0,
@@ -137,15 +142,15 @@ const [reverseAnim, reverseApi] = useAnimation({
 
 ### Capability Detection
 
-```tsx
+```text
 import { supports } from '@webspatial/core-sdk'
 
 if (supports('useAnimation', ['entity'])) {
-  // Safe to use useAnimation
+  // Safe to use useEntityAnimation
 }
 ```
 
-On unsupported runtimes, `useAnimation` logs a console warning and returns a no-op API.
+On unsupported runtimes, `useEntityAnimation` logs a console warning and returns a no-op API.
 
 ### Transform Suppression
 

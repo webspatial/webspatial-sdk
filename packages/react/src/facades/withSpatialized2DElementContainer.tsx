@@ -20,6 +20,7 @@ const SPATIAL_EVENT_PROPS = [
   'onSpatialMagnifyEnd',
   'spatialEventOptions',
   'onSpatialContentReady',
+  'xr-animation',
 ] as const
 
 const facadeCache = new Map<ElementType, ComponentType<any>>()
@@ -59,6 +60,7 @@ export function withSpatialized2DElementContainer<P extends ElementType>(
     ref: ForwardedRef<SpatializedElementRef>,
   ) {
     const ready = useSpatialReady()
+
     if (!ready) {
       warnBootForgotten('withSpatialized2DElementContainer')
       const { component: _component, ...rest } = givenProps as Record<

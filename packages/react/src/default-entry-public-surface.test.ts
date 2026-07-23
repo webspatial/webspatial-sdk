@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import * as experimentalSdk from './experimental'
 import * as sdk from './index'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -68,7 +69,6 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       // `src/internal/facades-client.ts`.
       // Hooks
       'useMetrics',
-      'useAnimation',
       // Deprecated v1 export
       'createElement',
       // Constants
@@ -79,6 +79,13 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       expect(name in sdk).toBe(true)
       expect((sdk as Record<string, unknown>)[name]).toBeDefined()
     })
+
+    it.each(['useAnimation', 'useEntityAnimation'] as const)(
+      'does NOT export experimental hook `%s`',
+      name => {
+        expect(name in sdk).toBe(false)
+      },
+    )
   })
 
   describe('Removed internals (per proposal BREAKING bullet + spec tasks.md §3.3)', () => {
@@ -227,7 +234,7 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
     })
   })
 
-  describe('Facade vs real-impl identity (PR 4 wires facades into default entry)', () => {
+  describe('Facade vs real-impl identity', () => {
     it('the default-entry `Model` is the facade exported from `./facades`, not the real spatial Model', async () => {
       const facadeMod = await import('./facades/Model')
       expect((sdk as Record<string, unknown>).Model).toBe(facadeMod.Model)
@@ -248,11 +255,18 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       )
     })
 
-    it('the default-entry `useAnimation` is the ready-gated facade', async () => {
+    it('the experimental-entry `useAnimation` is the ready-gated facade', async () => {
       const facadeMod = await import('./hooks-web/useAnimation')
-      expect((sdk as Record<string, unknown>).useAnimation).toBe(
+      expect((experimentalSdk as Record<string, unknown>).useAnimation).toBe(
         facadeMod.useAnimation,
       )
+    })
+
+    it('the experimental-entry `useEntityAnimation` comes from the dedicated facade file', async () => {
+      const facadeMod = await import('./hooks-web/useEntityAnimation')
+      expect(
+        (experimentalSdk as Record<string, unknown>).useEntityAnimation,
+      ).toBe(facadeMod.useEntityAnimation)
     })
   })
 })
