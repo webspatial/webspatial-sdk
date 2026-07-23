@@ -940,48 +940,86 @@ controller.resume()          // native-object internal start / resume; not a JSB
 picoOS (Pico Spatial SDK / Kotlin):
 
 ```kotlin
-// Reuse the same example; every slice point carries a full Transform, x / z / scale frozen at baseline
-val base = entity.getComponent(Transform::class.java) ?: Transform()
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.TransformComponent
+import com.pico.spatial.core.ecs.animation.AnimationBindTarget
+import com.pico.spatial.core.ecs.animation.AnimationPlaybackController
+import com.pico.spatial.core.ecs.animation.EaseType
+import com.pico.spatial.core.ecs.animation.RepeatMode
+import com.pico.spatial.core.ecs.animation.TweenAnimation
+import com.pico.spatial.core.ecs.resource.AnimationResource
+import com.pico.spatial.core.math.Quat
+import com.pico.spatial.core.math.Transform
+import com.pico.spatial.core.math.Vector3
 
-// Sample a slice point's full pose (only pos.y and rotation-about-y change)
-fun pose(y: Float, deg: Float): Transform {
-    val q = Quaternion.fromAxisAngle(Vector3(0f, 1f, 0f), deg)
-    return Transform(Vector3(base.position.x, y, base.position.z), q, base.scale)
+fun playSequencedTransformAnimation(entity: Entity): AnimationPlaybackController {
+    val transformComponent = entity.components.get(TransformComponent::class.java)
+    val base = transformComponent?.let {
+        Transform(it.position, it.quaternion, it.scaleVector)
+    } ?: Transform()
+
+    // Sample a slice point's full pose; x / z / scale remain at the baseline.
+    fun pose(y: Float, deg: Float): Transform {
+        val radians = Math.toRadians(deg.toDouble()).toFloat()
+        val q = Quat(Vector3(0f, 1f, 0f), radians)
+        return Transform(
+            Vector3(base.position.x, y, base.position.z),
+            q,
+            base.scale,
+        )
+    }
+
+    val seg0 = TweenAnimation.createTweenAnimation(
+        name = "seg0",
+        bindTarget = AnimationBindTarget.bindTransform(),
+        from = pose(0f, 0f),
+        to = pose(0.25f, 90f),
+        by = null,
+        duration = 0.6f,
+        delay = 0f,
+        repeatMode = RepeatMode.NONE,
+        repeatCount = 0,
+        easeType = EaseType.EASE_OUT,
+        offset = 0f,
+        speed = 1f,
+        additive = false,
+        trimStart = null,
+        trimEnd = null,
+        trimDuration = null,
+    )
+
+    val seg1 = TweenAnimation.createTweenAnimation(
+        name = "seg1",
+        bindTarget = AnimationBindTarget.bindTransform(),
+        from = pose(0.25f, 90f),
+        to = pose(0f, 180f),
+        by = null,
+        duration = 0.6f,
+        delay = 0f,
+        repeatMode = RepeatMode.NONE,
+        repeatCount = 0,
+        easeType = EaseType.LINEAR,
+        offset = 0f,
+        speed = 1f,
+        additive = false,
+        trimStart = null,
+        trimEnd = null,
+        trimDuration = null,
+    )
+
+    val clip = AnimationResource.sequence(
+        with = listOf(
+            AnimationResource.generateWithTweenAnimation(seg0),
+            AnimationResource.generateWithTweenAnimation(seg1),
+        )
+    )
+
+    val controller = entity.playAnimation(clip)
+    controller.setSpeed(2f)
+    return controller
 }
 
-// Segment 0: full pose from t=0 to t=0.6s
-val seg0 = TweenAnimation.createTweenAnimation(
-    "seg0",
-    AnimationBindTarget.bindTransform(),   // can only bind the whole transform
-    pose(0f,    0f),                        // from (full pose)
-    pose(0.25f, 90f),                       // to (full pose)
-    null,                                   // by
-    0.6f, 0f, RepeatMode.NONE, 0,           // duration / delay / repeatMode / repeatCount
-    EaseType.EASE_OUT,                      // segment 0 easing
-    0f, 1f, false, null, null, null
-)
-// Segment 1: full pose from t=0.6s to t=1.2s
-val seg1 = TweenAnimation.createTweenAnimation(
-    "seg1",
-    AnimationBindTarget.bindTransform(),
-    pose(0.25f, 90f),
-    pose(0f,    180f),
-    null,
-    0.6f, 0f, RepeatMode.NONE, 0,
-    EaseType.LINEAR,                        // segment 1 easing, different from segment 0
-    0f, 1f, false, null, null, null
-)
-
-// Chain the full-pose segments in time order into one animation via sequence
-val clip = AnimationResource.sequence(with = listOf(
-    AnimationResource.generateWithTweenAnimation(seg0),
-    AnimationResource.generateWithTweenAnimation(seg1),
-))
-
-// Controllable playback object
-val controller = entity.playAnimation(clip)
-// controller.pause() / controller.resume() / controller.stop() // native-object internal control
-// controller.speed = 2f     // top-level playback rate acts on the whole chained animation
+// Use controller.pause(), controller.resume(), and controller.stop() for playback control.
 ```
 
 ##### Compilation rules

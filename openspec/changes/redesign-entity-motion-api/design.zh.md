@@ -940,48 +940,86 @@ controller.resume()          // Native object 内部开始 / 恢复;不是 JSB r
 picoOS(Pico Spatial SDK / Kotlin):
 
 ```kotlin
-// 沿用同一示例;每个切点携带完整 Transform,x / z / scale 冻结在基准
-val base = entity.getComponent(Transform::class.java) ?: Transform()
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.TransformComponent
+import com.pico.spatial.core.ecs.animation.AnimationBindTarget
+import com.pico.spatial.core.ecs.animation.AnimationPlaybackController
+import com.pico.spatial.core.ecs.animation.EaseType
+import com.pico.spatial.core.ecs.animation.RepeatMode
+import com.pico.spatial.core.ecs.animation.TweenAnimation
+import com.pico.spatial.core.ecs.resource.AnimationResource
+import com.pico.spatial.core.math.Quat
+import com.pico.spatial.core.math.Transform
+import com.pico.spatial.core.math.Vector3
 
-// 采样某切点的完整姿态(只有 pos.y 与绕 y 旋转在变)
-fun pose(y: Float, deg: Float): Transform {
-    val q = Quaternion.fromAxisAngle(Vector3(0f, 1f, 0f), deg)
-    return Transform(Vector3(base.position.x, y, base.position.z), q, base.scale)
+fun playSequencedTransformAnimation(entity: Entity): AnimationPlaybackController {
+    val transformComponent = entity.components.get(TransformComponent::class.java)
+    val base = transformComponent?.let {
+        Transform(it.position, it.quaternion, it.scaleVector)
+    } ?: Transform()
+
+    // 采样切点的完整姿态,x / z / scale 保持基准值。
+    fun pose(y: Float, deg: Float): Transform {
+        val radians = Math.toRadians(deg.toDouble()).toFloat()
+        val q = Quat(Vector3(0f, 1f, 0f), radians)
+        return Transform(
+            Vector3(base.position.x, y, base.position.z),
+            q,
+            base.scale,
+        )
+    }
+
+    val seg0 = TweenAnimation.createTweenAnimation(
+        name = "seg0",
+        bindTarget = AnimationBindTarget.bindTransform(),
+        from = pose(0f, 0f),
+        to = pose(0.25f, 90f),
+        by = null,
+        duration = 0.6f,
+        delay = 0f,
+        repeatMode = RepeatMode.NONE,
+        repeatCount = 0,
+        easeType = EaseType.EASE_OUT,
+        offset = 0f,
+        speed = 1f,
+        additive = false,
+        trimStart = null,
+        trimEnd = null,
+        trimDuration = null,
+    )
+
+    val seg1 = TweenAnimation.createTweenAnimation(
+        name = "seg1",
+        bindTarget = AnimationBindTarget.bindTransform(),
+        from = pose(0.25f, 90f),
+        to = pose(0f, 180f),
+        by = null,
+        duration = 0.6f,
+        delay = 0f,
+        repeatMode = RepeatMode.NONE,
+        repeatCount = 0,
+        easeType = EaseType.LINEAR,
+        offset = 0f,
+        speed = 1f,
+        additive = false,
+        trimStart = null,
+        trimEnd = null,
+        trimDuration = null,
+    )
+
+    val clip = AnimationResource.sequence(
+        with = listOf(
+            AnimationResource.generateWithTweenAnimation(seg0),
+            AnimationResource.generateWithTweenAnimation(seg1),
+        )
+    )
+
+    val controller = entity.playAnimation(clip)
+    controller.setSpeed(2f)
+    return controller
 }
 
-// 段0:整姿态从 t=0 到 t=0.6s
-val seg0 = TweenAnimation.createTweenAnimation(
-    "seg0",
-    AnimationBindTarget.bindTransform(),   // 只能绑定整个 transform
-    pose(0f,    0f),                        // from(完整姿态)
-    pose(0.25f, 90f),                       // to(完整姿态)
-    null,                                   // by
-    0.6f, 0f, RepeatMode.NONE, 0,           // duration / delay / repeatMode / repeatCount
-    EaseType.EASE_OUT,                      // 段0 缓动
-    0f, 1f, false, null, null, null
-)
-// 段1:整姿态从 t=0.6s 到 t=1.2s
-val seg1 = TweenAnimation.createTweenAnimation(
-    "seg1",
-    AnimationBindTarget.bindTransform(),
-    pose(0.25f, 90f),
-    pose(0f,    180f),
-    null,
-    0.6f, 0f, RepeatMode.NONE, 0,
-    EaseType.LINEAR,                        // 段1 与段0 分别采用各自缓动
-    0f, 1f, false, null, null, null
-)
-
-// 各段整姿态动画按时间顺序用 sequence 串成一条动画
-val clip = AnimationResource.sequence(with = listOf(
-    AnimationResource.generateWithTweenAnimation(seg0),
-    AnimationResource.generateWithTweenAnimation(seg1),
-))
-
-// 得到可控播放对象
-val controller = entity.playAnimation(clip)
-// controller.pause() / controller.resume() / controller.stop() // Native object 内部控制
-// controller.speed = 2f     // 顶层播放速率作用在整条串联动画
+// 使用 controller.pause()、controller.resume() 和 controller.stop() 控制播放。
 ```
 
 ##### 编译规则
