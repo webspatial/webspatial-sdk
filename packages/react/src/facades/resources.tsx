@@ -61,7 +61,7 @@ export type ModelAssetProps = {
 }
 
 export type AttachmentAssetProps = {
-  name: string
+  id: string
   children?: ReactNode
 }
 
