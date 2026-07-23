@@ -5,7 +5,7 @@ import type { ModelProps, ModelRef } from '../Model'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { markWebSpatialPrimitive } from '../jsx/primitive-marker'
-import { warnBootForgotten } from './shared/warnBootForgotten'
+import { getBootForgottenDiagnostic } from './shared/warnBootForgotten'
 
 export type { ModelProps, ModelRef }
 
@@ -22,8 +22,12 @@ export type { ModelProps, ModelRef }
 function ModelFacadeImpl(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const ready = useSpatialReady()
   if (!ready) {
-    warnBootForgotten('Model')
-    return renderModelFallback(props, ref)
+    return (
+      <>
+        {getBootForgottenDiagnostic('Model')}
+        {renderModelFallback(props, ref)}
+      </>
+    )
   }
   const RealModel = requireSpatialImpl().Model
   return <RealModel {...props} ref={ref} />

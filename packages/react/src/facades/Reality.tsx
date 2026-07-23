@@ -6,7 +6,7 @@ import type { SpatializedElementRef } from '../spatialized-container/types'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { markWebSpatialPrimitive } from '../jsx/primitive-marker'
-import { warnBootForgotten } from './shared/warnBootForgotten'
+import { getBootForgottenDiagnostic } from './shared/warnBootForgotten'
 
 export type { RealityProps }
 
@@ -32,8 +32,12 @@ function RealityFacadeImpl(
 ) {
   const ready = useSpatialReady()
   if (!ready) {
-    warnBootForgotten('Reality')
-    return renderRealityFallback(props, ref)
+    return (
+      <>
+        {getBootForgottenDiagnostic('Reality')}
+        {renderRealityFallback(props, ref)}
+      </>
+    )
   }
   const RealReality = requireSpatialImpl().Reality
   return <RealReality {...props} ref={ref} />

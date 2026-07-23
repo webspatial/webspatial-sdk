@@ -447,6 +447,24 @@ describe('lazy-load facades', () => {
       expect(warnSpy.mock.calls[0][0]).toMatch(/bootSpatial\(\)/)
     })
 
+    it('shows a page-visible diagnostic in a WebSpatial runtime when a facade renders before bootSpatial() is called', () => {
+      setPuppeteerUserAgent()
+      render(
+        <>
+          <Model src="x" />
+          <Model src="y" />
+        </>,
+      )
+
+      const diagnostics = document.querySelectorAll(
+        '[data-webspatial-boot-forgotten]',
+      )
+      expect(diagnostics).toHaveLength(1)
+      expect(diagnostics[0].textContent).toMatch(/WebSpatial/)
+      expect(diagnostics[0].textContent).toMatch(/SpatialBoot/)
+      expect(diagnostics[0].textContent).toMatch(/bootSpatial\(\)/)
+    })
+
     it('does NOT warn in a WebSpatial runtime once bootSpatial() has been called', async () => {
       setPuppeteerUserAgent()
       __setSpatialImplLoaderForTests(() => new Promise(() => {})) // hang
@@ -455,6 +473,9 @@ describe('lazy-load facades', () => {
       })
       render(<Model src="x" />)
       expect(warnSpy).not.toHaveBeenCalled()
+      expect(
+        document.querySelector('[data-webspatial-boot-forgotten]'),
+      ).toBeNull()
     })
   })
 
@@ -507,7 +528,9 @@ describe('lazy-load facades', () => {
       __setSpatialImplLoaderForTests(() => Promise.resolve(sentinel))
 
       const { container, rerender } = render(<Entity />)
-      expect(container.children.length).toBe(0)
+      expect(
+        container.querySelector('[data-webspatial-boot-forgotten]'),
+      ).not.toBeNull()
 
       await act(async () => {
         await bootSpatial()

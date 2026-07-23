@@ -3,7 +3,7 @@
 import { ComponentType, ElementType, Ref, forwardRef } from 'react'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
-import { warnBootForgotten } from './shared/warnBootForgotten'
+import { getBootForgottenDiagnostic } from './shared/warnBootForgotten'
 
 const facadeCache = new Map<ElementType, ComponentType<any>>()
 
@@ -34,10 +34,14 @@ export function withSpatialMonitor(El: ElementType): ElementType {
   ) {
     const ready = useSpatialReady()
     if (!ready) {
-      warnBootForgotten('withSpatialMonitor')
       const { El: _ignoredEl, ...passthrough } = givenProps
       const Element = El
-      return <Element {...(passthrough as any)} ref={ref as any} />
+      return (
+        <>
+          {getBootForgottenDiagnostic('withSpatialMonitor')}
+          <Element {...(passthrough as any)} ref={ref as any} />
+        </>
+      )
     }
     const RealHOC = requireSpatialImpl()
       .withSpatialMonitor as typeof withSpatialMonitor

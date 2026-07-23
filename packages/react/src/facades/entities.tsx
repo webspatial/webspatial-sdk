@@ -12,7 +12,7 @@ import type { EntityRefShape } from '../reality/hooks/useEntityRef'
 import type { EntityEventHandler, EntityProps } from '../reality/type'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
-import { warnBootForgotten } from './shared/warnBootForgotten'
+import { getBootForgottenDiagnostic } from './shared/warnBootForgotten'
 
 export type { EntityRefShape }
 
@@ -42,8 +42,7 @@ function createEntityRefFacade<P>(
   function Impl(props: P, ref: ForwardedRef<EntityRefShape>) {
     const ready = useSpatialReady()
     if (!ready) {
-      warnBootForgotten(componentName)
-      return null
+      return getBootForgottenDiagnostic(componentName)
     }
     const RealComponent = pickReal(requireSpatialImpl()) as ComponentType<
       P & { ref?: unknown }
@@ -63,8 +62,7 @@ function createNullFacade<P>(
   function Facade(props: P) {
     const ready = useSpatialReady()
     if (!ready) {
-      warnBootForgotten(componentName)
-      return null
+      return getBootForgottenDiagnostic(componentName)
     }
     const RealComponent = pickReal(requireSpatialImpl()) as ComponentType<any>
     return <RealComponent {...(props as any)} />

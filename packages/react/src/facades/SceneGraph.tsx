@@ -3,7 +3,7 @@
 import { ReactNode } from 'react'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
-import { warnBootForgotten } from './shared/warnBootForgotten'
+import { getBootForgottenDiagnostic } from './shared/warnBootForgotten'
 
 export type SceneGraphProps = {
   children?: ReactNode
@@ -24,8 +24,7 @@ export type SceneGraphProps = {
 export function SceneGraph({ children }: SceneGraphProps) {
   const ready = useSpatialReady()
   if (!ready) {
-    warnBootForgotten('SceneGraph')
-    return null
+    return getBootForgottenDiagnostic('SceneGraph')
   }
   const RealSceneGraph = requireSpatialImpl().SceneGraph
   return <RealSceneGraph>{children}</RealSceneGraph>
