@@ -7,7 +7,6 @@ import type {
   SpatialCylinderGeometryOptions,
   SpatialPlaneGeometryOptions,
   SpatialSphereGeometryOptions,
-  Vec3,
 } from '@webspatial/core-sdk'
 import type { EntityRefShape } from '../reality/hooks/useEntityRef'
 import type { EntityEventHandler, EntityProps } from '../reality/type'
@@ -100,11 +99,8 @@ export type ModelEntityProps = WithChildren<
 >
 export type AttachmentEntityProps = {
   attachment: string
-  position?: Vec3
-  rotation?: Vec3
-  scale?: Vec3
-  width?: number
-  height?: number
+  position?: [number, number, number]
+  size: { width: number; height: number }
 }
 
 // `/* @__PURE__ */` annotations on each factory call: tells the consumer

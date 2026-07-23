@@ -5,12 +5,12 @@ import type { ContainerEntry } from '../context/AttachmentContext'
 import { InsideAttachmentContext } from '../context/InsideAttachmentContext'
 
 type AttachmentAssetProps = {
-  id: string
+  name: string
   children?: React.ReactNode
 }
 
 export const AttachmentAsset: React.FC<AttachmentAssetProps> = ({
-  id,
+  name,
   children,
 }) => {
   const ctx = useRealityContext()
@@ -18,8 +18,8 @@ export const AttachmentAsset: React.FC<AttachmentAssetProps> = ({
 
   useEffect(() => {
     if (!ctx) return
-    return ctx.attachmentRegistry.onContainersChange(id, setContainers)
-  }, [ctx, id])
+    return ctx.attachmentRegistry.onContainersChange(name, setContainers)
+  }, [ctx, name])
 
   if (!containers.length) return null
   return (

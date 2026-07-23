@@ -673,12 +673,9 @@ export class InitializeAttachmentCommand extends JSBCommand {
   protected getParams() {
     return {
       id: this.attachmentId,
-      placementId: this.options.placement.id,
-      position: this.options.position ?? { x: 0, y: 0, z: 0 },
-      rotation: this.options.rotation ?? { x: 0, y: 0, z: 0 },
-      scale: this.options.scale ?? { x: 1, y: 1, z: 1 },
-      width: this.options.width,
-      height: this.options.height,
+      parentEntityId: this.options.parentEntityId,
+      position: this.options.position ?? [0, 0, 0],
+      size: this.options.size,
       ownerViewId: this.options.ownerViewId,
     }
   }
