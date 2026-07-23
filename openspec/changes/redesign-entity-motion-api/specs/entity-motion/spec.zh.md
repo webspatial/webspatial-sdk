@@ -259,10 +259,20 @@ Entity motion 绑定 MUST 根据生效的时间轴、时长、缓动、延迟、
 #### Scenario: 同一目标的执行配置变化会替换对象
 - **GIVEN** Entity motion 绑定继续连接同一个目标
 - **WHEN** 归一化执行签名发生变化
-- **THEN** SDK MUST 注销当前动画对象并等待其 `destroy()` 成功,再使用最新配置创建新对象
+- **THEN** SDK MUST 保持当前动画对象和绑定代次,等待其 `destroy()` 成功
 - **AND** 旧对象的 `destroy()` 成功 MUST 表示其持有的控制器已停止、transform owner 已释放,且旧对象不会再写入该目标 transform
 - **AND** 替换期间当前 `entityProps` MUST 保持为该目标最近一次确认的已提交姿态
-- **AND** 替换对象的首次 fresh play MUST 读取当前原生姿态作为基准姿态
+- **AND** `destroy()` 成功后,SDK MUST 通过普通 Entity transform 更新入口提交当前 `entityProps` 中的完整姿态并等待更新成功
+- **AND** 姿态更新成功后,SDK MUST 推进绑定代次并使用最新配置创建新对象
+- **AND** 替换对象的首次 fresh play MUST 读取该确认姿态作为基准姿态
+- **AND** 该姿态恢复 MUST 保持现有 `entityProps` 和生命周期 callback 次数
+
+#### Scenario: 同一目标替换时 destroy 失败
+- **GIVEN** Entity motion 正在替换同一目标的动画对象
+- **WHEN** 旧对象的 `destroy()` 失败
+- **THEN** SDK MUST 保持旧对象和旧绑定代次
+- **AND** SDK MUST 清理本次替换产生的待执行命令
+- **AND** `onError` MUST 触发一次
 
 #### Scenario: 仅更新回调时保持当前播放对象
 - **GIVEN** 归一化执行签名保持相同
