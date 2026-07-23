@@ -139,7 +139,9 @@ struct SpatializedDynamic3DView: View {
             for (_, info) in spatialScene.attachmentManager.attachments {
                 if let attachmentEntity = attachments.entity(for: info.id) {
                     attachmentEntity.position = info.position
-                    if let parentEntity = findSpatialEntity(info.parentEntityId) {
+                    attachmentEntity.orientation = attachmentOrientation(info.rotation)
+                    attachmentEntity.scale = info.scale
+                    if let parentEntity = findSpatialEntity(info.placementId) {
                         parentEntity.addChild(attachmentEntity)
                     } else {
                         rootEntity.addChild(attachmentEntity)
@@ -152,8 +154,10 @@ struct SpatializedDynamic3DView: View {
             for (_, info) in spatialScene.attachmentManager.attachments {
                 if let attachmentEntity = attachments.entity(for: info.id) {
                     attachmentEntity.position = info.position
+                    attachmentEntity.orientation = attachmentOrientation(info.rotation)
+                    attachmentEntity.scale = info.scale
                     // Re-parent if not already under the correct parent
-                    if let parentEntity = findSpatialEntity(info.parentEntityId) {
+                    if let parentEntity = findSpatialEntity(info.placementId) {
                         if attachmentEntity.parent != parentEntity {
                             parentEntity.addChild(attachmentEntity)
                         }
@@ -170,8 +174,8 @@ struct SpatializedDynamic3DView: View {
                 Attachment(id: info.id) {
                     info.webViewModel.getView()
                         .frame(
-                            width: info.size.width,
-                            height: info.size.height
+                            width: info.frameSize.width,
+                            height: info.frameSize.height
                         )
                 }
             }
@@ -183,6 +187,14 @@ struct SpatializedDynamic3DView: View {
         .onDisappear {
             spatializedDynamic3DElement.setViewContent(nil)
         }
+    }
+
+    private func attachmentOrientation(_ rotation: SIMD3<Float>) -> simd_quatf {
+        let degreesToRadians = Float.pi / 180
+        let rx = simd_quatf(angle: rotation.x * degreesToRadians, axis: SIMD3<Float>(1, 0, 0))
+        let ry = simd_quatf(angle: rotation.y * degreesToRadians, axis: SIMD3<Float>(0, 1, 0))
+        let rz = simd_quatf(angle: rotation.z * degreesToRadians, axis: SIMD3<Float>(0, 0, 1))
+        return rz * ry * rx
     }
 
     private func findSpatialEntity(_ spatialId: String) -> SpatialEntity? {
