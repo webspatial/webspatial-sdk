@@ -25,10 +25,10 @@
 
 - [ ] 4.1 先编写红灯测试,覆盖 `entityProps` 在 `start`、`complete`、`stop`、`reset`、`finish` 和原生层接受 `api.set(values)` 后包含完整的 `position`、`rotation`、`scale`,React 更新时机限定为生命周期节点,`onStart` / `onComplete` / `onStop` / `onReset` 接收精确的 `EntityMotionProps` 参数、`onError` 接收精确的 `SpatializedPlaybackError` 参数、callback 返回值被忽略,`idle → finish → finished` 触发一次 `onComplete` 并保持现有 `onStart` 次数,以及终态由配置或 `api.set` 决定
 - [ ] 4.2 实现 React/Core 状态事件消费、回调分发和 `entityProps` 完整已提交变换持久化,保持原生层已确认状态的单向流动
-- [ ] 4.3 先编写红灯测试,覆盖公开播放接口、每个绑定对象独立的 FIFO 命令链与完整变换控制权:原生动画对象创建前的播放命令按顺序执行,`autoStart` 产生的 `play` 排在已有待执行命令之前;多条命令排队期间 `playState` 保持 `queued`,且 `isAnimating`、`isPaused`、`finished` 保持 `false`;创建成功回执在执行待处理命令前确认 `idle`;待处理的 `pause` 或 `stop` 保持 `idle`;创建失败回执确认 `idle`、清理待处理命令并分发分类错误;创建前的 `set` 保持控制台警告与空操作且不进入队列;创建后的 `set → play`、`stop → play`、`play → pause` 等待前一条内部 JSB 回执后再执行;命令失败不阻塞后续队列;解绑、替换和销毁使尚未发送的命令失效;动画活跃期间的写入保持动画和最新 `entityProps`;确认后完整 `entityProps` 镜像在绑定存续期间保持控制权;解绑后 React 属性恢复控制;终态填充保持已提交终点姿态
-- [ ] 4.3a 先编写绑定生命周期红灯测试,覆盖解绑和目标替换清空 `entityProps`、同一目标的执行签名变化依次等待旧对象 `destroy()` 成功、完整确认姿态存在时恢复该姿态、`entityProps` 为空时保持当前原生 transform,并创建新对象、`autoStart: false` 保持交接姿态、首次 fresh play 读取当前原生姿态、姿态恢复保持现有镜像和 callback 次数、姿态恢复或创建失败时收敛到 `idle`、清理本次替换命令、保持镜像并触发一次 `onError`、destroy 失败时保持旧对象与旧代次并清理本次替换命令和触发一次 `onError`、仅更新回调时保持当前对象与状态、替换代次的命令排队、每个新对象执行一次隐式 `autoStart`,以及按当前绑定代次和动画对象身份接受回执与事件
-- [ ] 4.4 复用 Element 动画在对象创建前暂存命令、创建后逐条执行的机制,为每个 Entity motion 绑定对象实现带队列批次失效保护的 FIFO 命令链;使用现有原生层创建回执在执行待处理命令前确认 `idle`,或收敛创建失败并清理待处理命令;创建前的 `set` 输出控制台警告、执行空操作并保持在队列之外,创建后所有命令串行执行;同时实现 React/Core 播放接口、JSB 命令发起、完整变换出口控制权和解绑后的控制权交还;原生层的 `set` 合并、状态机与终态提交由第 5 节实现
-- [ ] 4.4a 实现归一化执行签名、回调引用刷新、解绑与目标替换时清空镜像、同一目标销毁成功后的确认姿态或当前原生 transform 交接、姿态恢复与创建失败收敛、destroy 失败时的旧对象与旧代次保留和替换命令清理、替换代次命令队列、每个对象的 `autoStart` 和当前代次结果过滤
+- [ ] 4.3 先编写红灯测试,覆盖公开播放接口、每个绑定对象独立的 FIFO 命令链与完整变换控制权:原生动画对象创建前的播放命令按顺序执行,`autoStart` 产生的 `play` 排在已有待执行命令之前;多条命令排队期间 `playState` 保持 `queued`,且 `isAnimating`、`isPaused`、`finished` 保持 `false`;创建成功回执在执行待处理命令前确认 `idle`;待处理的 `pause` 或 `stop` 保持 `idle`;创建失败回执使状态收敛为 `idle`、终止当前绑定生命周期、清空对象状态、待处理命令和 `entityProps`,恢复基础属性控制并分发一次分类错误;创建前的 `set` 和绑定终止后的所有 API 保持控制台警告与空操作;创建后的 `set → play`、`stop → play`、`play → pause` 等待前一条内部 JSB 回执后再执行;普通命令失败继续执行后续队列;解绑、替换和销毁使尚未发送的命令失效;动画活跃期间的写入保持动画和最新 `entityProps`;正常绑定期间完整 `entityProps` 镜像保持控制权;解绑或终止后 React 属性恢复控制;终态填充保持已提交终点姿态
+- [ ] 4.3a 先编写绑定生命周期红灯测试,覆盖解绑和目标替换清空 `entityProps`、同一目标的执行签名变化依次等待旧对象 `destroy()` 成功、完整确认姿态存在时提交该姿态、`entityProps` 为空时保持当前原生 transform,并创建新对象、`autoStart: false` 保持交接姿态、首次 fresh play 读取当前原生姿态、姿态交接保持现有镜像和 callback 次数、姿态交接或创建失败终止当前生命周期并触发一次 `onError`、终止后的 API 保持 warning + no-op、config 与 callback 更新只刷新保存值、显式重新绑定开启新代次、destroy 失败时保持旧对象与旧代次并清理本次替换命令和触发一次 `onError`、正常生命周期中仅更新回调时保持当前对象与状态、替换代次的命令排队、每个新对象执行一次隐式 `autoStart`,以及按当前绑定代次和动画对象身份接受回执与事件
+- [ ] 4.4 复用 Element 动画在对象创建前暂存播放命令、创建后逐条执行的机制,为每个 Entity motion 绑定对象实现带队列批次失效保护的 FIFO 命令链;使用现有原生层创建回执在执行待处理命令前确认 `idle`,或在创建失败时终止当前绑定生命周期;创建前的 `set` 和终止后的所有命令输出控制台警告、执行空操作并保持在队列之外,创建后所有命令串行执行;同时实现 React/Core 播放接口、JSB 命令发起、完整变换出口控制权和解绑或终止后的控制权交还;原生层的 `set` 合并、状态机与终态提交由第 5 节实现
+- [ ] 4.4a 实现归一化执行签名、回调引用刷新、解绑与目标替换时清空镜像、同一目标销毁成功后的确认姿态或当前原生 transform 交接、姿态交接与创建失败的绑定终止流程、终止后的空操作门闩和显式重新绑定恢复、destroy 失败时的旧对象与旧代次保留和替换命令清理、替换代次命令队列、每个对象的 `autoStart` 和当前代次结果过滤
 - [ ] 4.5 先编写失败测试,覆盖 `normalizeEntityMotionConfig` 对顶层 `from` / `to`、`timeline.from` / `timeline.to` 和百分比关键帧的等价折叠、`timeline` 优先告警、公开默认值、timeline config 要求 `duration` 且纯顶层 `from` / `to` 默认 0.3 秒、finite 与范围校验、起止边界必填、空 timeline 与 frame 拒绝、归一化后重复百分比拒绝、属性白名单与字段级稀疏保留
 - [ ] 4.6 在 Core 实现归一化与同步 programmer-error 校验,保持现有 `EntityMotionTimelinePayload` 和创建命令传输结构兼容;异步 Bridge 与 Native 失败继续通过 `onError` 抵达用户;Native 对该 payload 的编译与执行由第 5 节实现
 
@@ -44,7 +44,7 @@
 - [ ] 5.8 实现 visionOS RealityKit 完整姿态分段 sequence 编译、播放控制器接入和平台参数映射
 - [ ] 5.9 先编写失败的 picoOS 集成测试,使用与 visionOS 相同的规范时间轴 fixtures 覆盖整 transform 绑定、多段完整姿态 sequence、旋转转换、四种缓动、delay、playback rate、loop 和编译失败
 - [ ] 5.10 实现 picoOS 完整姿态分段 sequence 编译、播放控制器接入和平台参数映射
-- [ ] 5.11 先编写失败的 fresh-play 状态测试,覆盖首次 `play` / `autoStart`、complete/finish/stop/reset 后 replay 读取最新基准姿态并重新编译,pause 后 play 恢复当前控制器,单次播放内 loop 复用当前资源,编译失败保持非活跃、React 专用 `queued` 与原生层四种状态的映射,以及 `finished` 根据 `playState` 精确派生
+- [ ] 5.11 先编写失败的 fresh-play 状态测试,覆盖首次 `play` / `autoStart`、complete/finish/stop/reset 后 replay 读取最新基准姿态并重新编译,pause 后 play 恢复当前控制器,单次播放内 loop 复用当前资源,编译失败保持非活跃、React 专用 `queued` 与原生层四种状态的映射、创建失败后公开状态收敛为 `idle`,以及 `finished` 根据 `playState` 精确派生
 - [ ] 5.12 在 `EntityMotionManager` 与 `EntityMotionAnimationObject` 中实现 fresh play、首次运行前按需读取基准姿态、delay/running/paused 状态转换、resume、loop 资源复用和命令失败回执
 - [ ] 5.13 先编写控制与事件红灯测试,覆盖完整状态命令矩阵和 `play`、`start`、`complete`、`pause`、`stop`、`reset`、`finish`、`destroy`、`set`、`error` 动作,首次 play 前的 `reset` / `finish`,终态命令重复执行,`stop` 提交当前姿态,`reset` 提交起始姿态,`finish` 在普通播放、reset loop 和 reverse loop 中提交 `to` / `100%`,`complete` 提交本次运行结果,非活跃状态下的 `set` 稀疏合并及基于规范化欧拉角基准的单轴 rotation patch,活跃状态下的 `set` 保持状态并输出警告,命令与完成事件串行处理,业务控制器身份隔离、零时长提交动作分类、保持其它动画运行、生命周期回调单次触发、确认姿态事件先于回执、独立于配置字段的完整已确认 `position`、`rotation`、`scale`,以及包含 loop reset 提交的 `entityProps` 与回调映射
 - [ ] 5.14 实现完整状态命令矩阵、控制器级清理、零时长终态提交、规范化欧拉角确认姿态读取/拆解及稀疏 rotation 合并、状态事件编码与发送、业务控制器身份过滤、零时长提交动作分类、命令与完成事件串行处理和生命周期回调单次触发门控;将 `set` 命令的 `INVALID_CONTROL_STATE` 转换为一次控制台警告和正常返回,同时保持当前姿态、状态与 `entityProps`
@@ -57,7 +57,7 @@
 
 ## 7. 文档、Demo 与迁移
 
-- [ ] 7.1 更新物体运动文档与示例,统一使用 `position`、`rotation`、`scale` 配置、`animation`、完整变换 `entityProps` 和补丁对象 `api.set`;说明通过 `entityProps` 读取、通过 `api.set(values)` 写入、绑定生命周期内的完整变换控制权和解绑后的控制权交还;补充顶层 `from`、`to` 简写及其规则(`timeline.from`、`timeline.to` 等价,`timeline` 优先,纯顶层配置默认 0.3 秒);说明每个动画显式声明起点 `from`/`0%` 和终点 `to`/`100%`,缺少边界时产生校验错误
+- [ ] 7.1 更新物体运动文档与示例,统一使用 `position`、`rotation`、`scale` 配置、`animation`、完整变换 `entityProps` 和补丁对象 `api.set`;说明通过 `entityProps` 读取、通过 `api.set(values)` 写入、正常绑定生命周期内的完整变换控制权、创建或交接失败后的终止行为、显式重新绑定方式和解绑或终止后的控制权交还;补充顶层 `from`、`to` 简写及其规则(`timeline.from`、`timeline.to` 等价,`timeline` 优先,纯顶层配置默认 0.3 秒);说明每个动画显式声明起点 `from`/`0%` 和终点 `to`/`100%`,缺少边界时产生校验错误
 - [ ] 7.2 更新 `apps/test-server` 中的 Entity animation demo 与 capability 页面到新的目标态 API
 - [ ] 7.3 补充迁移说明，覆盖旧顶层 transform config 的移除，Entity motion 绑定统一使用 `animation`
 
