@@ -261,11 +261,21 @@ Unbinding and target replacement MUST advance the binding generation, retire the
 - **WHEN** its normalized execution signature changes
 - **THEN** the SDK MUST keep the current animation object and binding generation while waiting for its `destroy()` to succeed
 - **AND** successful `destroy()` of the old object MUST mean its held controller has stopped, its transform owner has been released, and the old object will not write that target transform again
-- **AND** the current `entityProps` MUST remain the last confirmed committed pose for that target during replacement
-- **AND** after `destroy()` succeeds, the SDK MUST submit the complete pose in the current `entityProps` through the ordinary Entity transform update entry and wait for that update to succeed
-- **AND** after the pose update succeeds, the SDK MUST advance the binding generation and create the new object from the latest config
-- **AND** the replacement object's first fresh play MUST read that confirmed pose as its baseline
+- **AND** the SDK MUST preserve the current `entityProps` during replacement
+- **AND** after `destroy()` succeeds, when `entityProps` contains a complete confirmed pose, the SDK MUST submit that pose through the ordinary Entity transform update entry and wait for the update to succeed
+- **AND** after `destroy()` succeeds, when `entityProps` is empty, the SDK MUST keep the current native transform authoritative and proceed directly to new-object creation
+- **AND** after the applicable handoff branch succeeds, the SDK MUST advance the binding generation and create the new object from the latest config
+- **AND** the replacement object's first fresh play MUST read the current native transform, including any restored confirmed pose, as its baseline
 - **AND** this pose restoration MUST preserve the existing `entityProps` and lifecycle callback counts
+
+#### Scenario: Pose restoration or creation fails during same-target replacement
+- **GIVEN** the old animation object has been destroyed successfully during same-target replacement
+- **WHEN** confirmed-pose restoration or replacement-object creation fails
+- **THEN** the Native failure reply MUST end the attempted replacement and settle the public playback state to `idle`
+- **AND** the SDK MUST clear commands pending for the attempted replacement
+- **AND** the SDK MUST preserve the current `entityProps`
+- **AND** `onError` MUST fire once
+- **AND** a later execution-signature change MUST be able to retry object creation
 
 #### Scenario: Destroy fails during same-target replacement
 - **GIVEN** Entity motion is replacing an animation object for the same target
