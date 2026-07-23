@@ -39,7 +39,7 @@ The public API surface covers animation binding, playback control, and confirmed
 - **binding command queue**: the per-binding FIFO that serializes playback commands and `set` before they enter the JS Bridge. It is a React/Core ordering mechanism, not a second native animation queue.
 - **command reply**: the JSB success or failure receipt returned after Native has finished the command's synchronous state and transform commit work. When a command emits a state event, Native emits that event before returning the success reply.
 
-## 3. Functional Scope
+## 3. Design Goals
 
 `useEntityAnimation` lets users describe animations with position, rotation, and scale, bind them to an entity, and receive the native-confirmed transform. The functional scope is:
 
@@ -387,7 +387,7 @@ Native decides whether `api.set` takes effect: it accepts patches while playback
 - **Dispatch directly by runtime type.** In v1, `SpatialScene` dispatches elements and entities to their respective managers; real duplication between the two paths is the trigger for extracting a shared protocol.
 - **Measure large-scale concurrency.** Native RealityKit playback is preferable to per-frame JS writes, but high entity counts still require dedicated performance validation.
 
-## 5. Module Design
+## 5. System/Module Design
 
 ### 5.1 React SDK
 
