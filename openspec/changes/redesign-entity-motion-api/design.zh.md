@@ -953,8 +953,8 @@ val seg0 = TweenAnimation.createTweenAnimation(
     pose(0f,    0f),                        // from(完整姿态)
     pose(0.25f, 90f),                       // to(完整姿态)
     null,                                   // by
-    0.6f, 0f, RepeatMode.None, 0,           // duration / delay / repeatMode / repeatCount
-    EaseType.EaseOut,                       // 段0 缓动
+    0.6f, 0f, RepeatMode.NONE, 0,           // duration / delay / repeatMode / repeatCount
+    EaseType.EASE_OUT,                      // 段0 缓动
     0f, 1f, false, null, null, null
 )
 // 段1:整姿态从 t=0.6s 到 t=1.2s
@@ -964,8 +964,8 @@ val seg1 = TweenAnimation.createTweenAnimation(
     pose(0.25f, 90f),
     pose(0f,    180f),
     null,
-    0.6f, 0f, RepeatMode.None, 0,
-    EaseType.Linear,                        // 段1 与段0 分别采用各自缓动
+    0.6f, 0f, RepeatMode.NONE, 0,
+    EaseType.LINEAR,                        // 段1 与段0 分别采用各自缓动
     0f, 1f, false, null, null, null
 )
 

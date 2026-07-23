@@ -953,8 +953,8 @@ val seg0 = TweenAnimation.createTweenAnimation(
     pose(0f,    0f),                        // from (full pose)
     pose(0.25f, 90f),                       // to (full pose)
     null,                                   // by
-    0.6f, 0f, RepeatMode.None, 0,           // duration / delay / repeatMode / repeatCount
-    EaseType.EaseOut,                       // segment 0 easing
+    0.6f, 0f, RepeatMode.NONE, 0,           // duration / delay / repeatMode / repeatCount
+    EaseType.EASE_OUT,                      // segment 0 easing
     0f, 1f, false, null, null, null
 )
 // Segment 1: full pose from t=0.6s to t=1.2s
@@ -964,8 +964,8 @@ val seg1 = TweenAnimation.createTweenAnimation(
     pose(0.25f, 90f),
     pose(0f,    180f),
     null,
-    0.6f, 0f, RepeatMode.None, 0,
-    EaseType.Linear,                        // segment 1 easing, different from segment 0
+    0.6f, 0f, RepeatMode.NONE, 0,
+    EaseType.LINEAR,                        // segment 1 easing, different from segment 0
     0f, 1f, false, null, null, null
 )
 
