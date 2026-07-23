@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import type { AnimatedProps, AnimatedPropsInternal } from '@webspatial/core-sdk'
+import type { AnimatedProps } from '@webspatial/core-sdk'
 import { useEntityTransform } from './useEntityTransform'
 
 // ---- Mock Entity ----

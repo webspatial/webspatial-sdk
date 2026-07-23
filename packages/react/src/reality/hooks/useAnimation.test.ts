@@ -3,8 +3,6 @@ import { renderHook, act } from '@testing-library/react'
 import type {
   AnimatedPropsInternal,
   AnimationConfig,
-  AnimatedProps,
-  AnimationApi,
 } from '@webspatial/core-sdk'
 
 // Mock supports() to return true for useAnimation with entity sub-token in test environment

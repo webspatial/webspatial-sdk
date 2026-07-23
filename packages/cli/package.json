@@ -24,7 +24,7 @@
     "build2": "tsc && npm run copy-assets",
     "copy-assets": "cp -R src/assets/ dist/assets/ && cp -R src/schema.json dist/",
     "clean": "rm -rf dist",
-    "lint": "eslint \"src/**/*.{js,ts}\""
+    "lint": "pnpm --workspace-root exec eslint packages/cli/src"
   },
   "repository": {
     "type": "git",

@@ -53,7 +53,8 @@
     "dev": "tsup --watch",
     "build": "tsup",
     "start": "npm run dev",
-    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
+    "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true",
+    "lint": "pnpm --workspace-root exec eslint packages/react/src"
   },
   "repository": {
     "type": "git",
