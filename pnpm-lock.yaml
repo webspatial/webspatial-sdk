@@ -417,7 +417,7 @@ importers:
         specifier: ^4.12.10
         version: 4.12.24(postcss@8.5.12)
       esbuild:
-        specifier: ^0.25.0
+        specifier: ^0.25.3
         version: 0.25.3
       esbuild-css-modules-plugin:
         specifier: ^3.1.2
@@ -605,7 +605,7 @@ importers:
         specifier: ^4.1.8
         version: 4.1.8(vitest@4.1.8)
       esbuild:
-        specifier: ^0.25.0
+        specifier: ^0.25.3
         version: 0.25.3
       esbuild-plugin-d.ts:
         specifier: ^1.3.1
