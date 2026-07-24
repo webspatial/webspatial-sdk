@@ -98,7 +98,7 @@ Entity motion MUST use the Entity's parent-relative local, right-handed coordina
 
 The SDK MUST use `entityProps` as the React-side persistence outlet for the complete committed Entity transform owned by the animation system.
 
-`entityProps` MUST update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, and native-accepted `api.set(values)` writes. Creation or handoff failure MUST clear it to `{}`. An empty `entityProps` object MUST be valid before the first confirmed state. Once native returns a confirmed state, `entityProps` MUST mirror the complete committed transform with complete `position`, `rotation`, and `scale` values. The complete mirror MUST be independent of the fields present in the animation config or an `api.set` patch. During a healthy current binding lifecycle, spreading `entityProps` after static/base props MUST keep that complete committed transform authoritative.
+`entityProps` MUST update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, and native-accepted `api.set(update)` writes. Creation or handoff failure MUST clear it to `{}`. An empty `entityProps` object MUST be valid before the first confirmed state. Once native returns a confirmed state, `entityProps` MUST mirror the complete committed transform with complete `position`, `rotation`, and `scale` values. The complete mirror MUST be independent of the fields present in the animation config or an `api.set` update. During a healthy current binding lifecycle, spreading `entityProps` after static/base props MUST keep that complete committed transform authoritative.
 
 #### Scenario: Complete writes terminal transform to `entityProps`
 - **WHEN** a non-looping Entity animation completes naturally
@@ -119,13 +119,15 @@ The SDK MUST use `entityProps` as the React-side persistence outlet for the comp
 - **GIVEN** an Entity animation with `loop: true`
 - **WHEN** the animation crosses a loop boundary
 - **THEN** the SDK MUST NOT update `entityProps` at that boundary
-- **AND** `entityProps` MUST only be committed on `stop`, `reset`, `finish`, or a native-accepted `api.set(values)`
+- **AND** `entityProps` MUST only be committed on `stop`, `reset`, `finish`, or a native-accepted `api.set(update)`
 
 ### Requirement: Playback and callbacks align with the new motion model
 
 Entity motion MUST align with the newer motion-family playback surface and lifecycle semantics while remaining transform-only.
 
 The target callback signatures MUST be `onStart(values: EntityMotionProps)`, `onComplete(values: EntityMotionProps)`, `onStop(values: EntityMotionProps)`, `onReset(values: EntityMotionProps)`, and `onError(error: SpatializedPlaybackError)`. Each lifecycle `values` argument MUST contain the complete confirmed `position`, `rotation`, and `scale`. Callback return values MUST be ignored.
+
+Core `EntityAnimationObject` MUST provide `onStart`, `onComplete`, `onStop`, `onReset`, and `onError` debug-listener methods aligned with those callbacks. These methods MUST only register observers and MUST NOT send playback control commands or change the animation execution signature. `pause` MUST NOT add `onPause`.
 
 `api.set` is a settled requirement. It is the imperative write entry for committed transform state and is specified in the dedicated `api.set` requirement below. It MUST NOT be treated as a playback command.
 
@@ -227,8 +229,8 @@ Each `EntityMotionAnimationObject` MUST scope cleanup to the animation controlle
 - **THEN** Native MUST stop and release the controllers owned by that Entity motion object
 - **AND** the unrelated Entity and descendant animation controllers MUST preserve their playback state
 
-#### Scenario: Zero-duration pose commit produces the command action
-- **GIVEN** accepted `stop`, `reset`, `finish`, or `set` requires a zero-duration pose commit
+#### Scenario: Zero-duration playback-control pose commits produce the command action
+- **GIVEN** accepted `stop`, `reset`, or `finish` requires a zero-duration pose commit
 - **WHEN** Native confirms that pose
 - **THEN** Native MUST emit the requested command action with the confirmed transform
 - **AND** natural `complete` MUST remain exclusive to the current business playback controller
@@ -237,7 +239,7 @@ Each `EntityMotionAnimationObject` MUST scope cleanup to the animation controlle
 
 The public Entity playback methods MAY return `void`, but the SDK MUST preserve call order through one FIFO command chain per Entity motion binding. Once a native animation object exists, the binding MUST NOT send the next playback or `set` command until the previous command's internal JSB reply has settled. A failed command or a `set` mapped to warning plus no-op MUST settle its queue item and MUST NOT block or reorder later commands.
 
-A successful JSB reply MUST mean Native has completed the command's synchronous state transition and any required transform commit. When a command produces a state event, Native MUST emit that event before returning the success reply. A natural asynchronous `complete` event is not part of the earlier `play` reply.
+A successful JSB reply MUST mean Native has completed the command's synchronous state transition and any required transform commit. When a playback control command produces a state event, Native MUST emit that event before returning the success reply. `SetEntityAnimation` MUST NOT produce a state event; after committing and reading back the transform, Native MUST return the complete confirmed transform through `SetEntityAnimationResult.values`. A natural asynchronous `complete` event is not part of the earlier `play` reply.
 
 #### Scenario: Playback commands before native object creation are flushed in order
 - **GIVEN** an Entity motion binding whose native animation object has not been created
@@ -255,8 +257,9 @@ A successful JSB reply MUST mean Native has completed the command's synchronous 
 
 #### Scenario: Consecutive set then play uses the committed set result
 - **GIVEN** the native animation object exists and playback is inactive
-- **WHEN** application code calls `api.set(values)` and immediately calls `api.play()`
+- **WHEN** application code calls `api.set(update)` and immediately calls `api.play()`
 - **THEN** the binding MUST wait for the `set` reply before sending `play`
+- **AND** the success reply `values` MUST contain complete confirmed `position`, `rotation`, and `scale`
 - **AND** fresh play MUST read the native transform committed by that `set` as its latest baseline
 
 #### Scenario: Unbind or destruction invalidates pending commands
@@ -319,9 +322,32 @@ Unbinding and target replacement MUST advance the binding generation, retire the
 - **WHEN** command replies or state events arrive
 - **THEN** results whose binding generation and animation-object identity match the current object MUST be the exclusive source of state, `entityProps`, and callback updates
 
+### Requirement: Entity motion uses dedicated JSB protocols and one id field
+
+Core and Native MUST use `CreateEntityAnimation`, `ControlEntityAnimation`, and `SetEntityAnimation` independently from the Spatialized Element animation protocol. The create request `id` MUST be the target Entity's `SpatialObject.id`; the successful create reply `id` MUST be the new Entity animation object's `SpatialObject.id`. Later control, set, state-event, and error-event traffic MUST directly use that animation-object `id` and MUST NOT introduce `elementId` or `animationId` aliases.
+
+`EntityMotionStateChangedDetail.action` MUST contain only `start`, `complete`, `pause`, `stop`, `reset`, and `finish`; it MUST NOT contain `set` or `error`. Public `finished` MUST be derived from `playState === 'finished'` and MUST NOT be transported as a state-event field. Asynchronous errors MUST use the dedicated `entityanimationerror` event, and state events MUST NOT carry errors. `SpatializedPlaybackError` MUST expose only a stable `code` and readable `reason` and MUST NOT repeat the command name.
+
+Native MUST create `EntityMotionAnimationObject` through the target `SpatialEntity.createAnimation(config)` and MUST NOT introduce `EntityMotionManager`. Core `EntityAnimationObject` MUST directly use the `id` inherited from `SpatialObject` and privately store the public `config` and normalized `timeline`. Native `EntityMotionAnimationObject.emitStateChanged()` MUST be private.
+
+#### Scenario: Creation uses the target and animation object ids directly
+- **GIVEN** Core requests an Entity animation for a target `SpatialEntity`
+- **WHEN** Native handles `CreateEntityAnimation`
+- **THEN** the request `id` MUST resolve the target through its `SpatialObject.id`
+- **AND** the target `SpatialEntity.createAnimation(config)` MUST create the animation object
+- **AND** the successful reply `id` MUST be the created animation object's inherited `SpatialObject.id`
+
+#### Scenario: Control, set, state, and error traffic use dedicated channels
+- **GIVEN** an Entity animation object has been created
+- **WHEN** Core controls playback, sets a transform, or consumes a Native event
+- **THEN** control and set commands and both event types MUST address the animation object through `id`
+- **AND** playback lifecycle changes MUST use `EntityMotionStateChangedDetail`
+- **AND** a successful set MUST return confirmed values through `SetEntityAnimationResult` without a state event
+- **AND** an asynchronous error MUST use `entityanimationerror` with `code` and `reason`
+
 ### Requirement: Every fresh play compiles against the latest native baseline
 
-When native creates an animation, it MUST fallback-validate and store the canonical timeline, register the animation object, and return an `animationId`; it MUST NOT read the playback baseline or generate a RealityKit playback resource during creation. A fresh play is the first `play` / `autoStart` after creation, or a `play` that starts again after `complete`, `finish`, `stop`, or `reset`. After each fresh play is accepted and before entering `delay` / `running`, native MUST read the current `entity.transform` as that run's baseline and compile the RealityKit playback resource from the canonical timeline and that baseline. Fields explicitly declared by the config MUST use config values, while fields omitted from the config MUST be filled from that run's baseline.
+When native creates an animation, it MUST fallback-validate and store the canonical timeline, register the animation object, and return its `id`; it MUST NOT read the playback baseline or generate a RealityKit playback resource during creation. A fresh play is the first `play` / `autoStart` after creation, or a `play` that starts again after `complete`, `finish`, `stop`, or `reset`. After each fresh play is accepted and before entering `delay` / `running`, native MUST read the current `entity.transform` as that run's baseline and compile the RealityKit playback resource from the canonical timeline and that baseline. Fields explicitly declared by the config MUST use config values, while fields omitted from the config MUST be filled from that run's baseline.
 
 A `play` after `pause` MUST resume the current playback controller and progress and MUST NOT read a new baseline or recompile. Loops within one fresh play MUST reuse that run's playback resource and MUST NOT read a new baseline or recompile at each loop boundary.
 
@@ -402,29 +428,31 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 
 ### Requirement: `api.set` is the imperative write entry for committed transform state
 
-The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST only accept a sparse `EntityMotionPatch` object (the write-side patch type; the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly) and MUST NOT support the updater function form `(prev) => next`. A valid patch MUST contain at least one transform scalar; `api.set({})` and patches containing only empty nested objects MUST synchronously throw. `api.set` MUST NOT be a playback command and MUST NOT seek, start, or change playback progress.
+The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST only accept a sparse `EntityTransformUpdate` object (the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly) and MUST NOT support the updater function form `(prev) => next`. A valid update MUST contain at least one transform scalar; `api.set({})` and updates containing only empty nested objects MUST synchronously throw. `api.set` MUST NOT be a playback command and MUST NOT seek, start, change playback progress, or change `playState`.
 
 Entity transform ownership MUST be arbitrated as one whole. Before the first confirmed state, static/base React props are authoritative. While the animation is active (`delay` / `running` / `paused`), the `animation` binding is authoritative for the entire transform; configured fields animate and the remaining fields hold their baseline values. Once native emits a confirmed state and while the current binding lifecycle remains healthy, `entityProps` is authoritative for the complete inactive transform. During inactive states, `api.set` updates the native committed transform. Creation or handoff failure terminates the current binding lifecycle and returns authority to static/base React props. Removing the binding also returns authority to React props.
 
-The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST read declarative `entityProps`, and compute its own patch before calling `api.set(values)` when it needs to write. `entityProps` MAY be empty before the first native-confirmed state and MUST NOT be promised readable at mount: creating or binding the animation MUST NOT emit an extra initial confirmed value. To read a meaningful native pose, application code MUST first trigger a lifecycle that commits a confirmed value (a `play` that reaches a terminal / lifecycle node, or an accepted `api.set`).
+The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST read declarative `entityProps`, compute its own update, and pass it to `api.set(update)`. `entityProps` MAY be empty before the first native-confirmed state and MUST NOT be promised readable at mount: creating or binding the animation MUST NOT emit an extra initial confirmed value. To read a meaningful native pose, application code MUST first trigger a lifecycle that commits a confirmed value (a `play` that reaches a terminal / lifecycle node, or an accepted `api.set`).
 
 #### Scenario: set updates committed state and entityProps
-- **WHEN** application code calls `api.set(values)` with Entity transform values
+- **WHEN** application code calls `api.set(update)` with an Entity transform update
 - **THEN** the SDK MUST send the write to native, which decides whether to accept it
-- **AND** when native accepts, `entityProps` MUST update to the complete confirmed `position`, `rotation`, and `scale` values emitted by native
+- **AND** when native accepts, it MUST commit and read back the complete transform and return confirmed `position`, `rotation`, and `scale` through `SetEntityAnimationResult.values`
+- **AND** Core MUST update `entityProps` from that success reply
+- **AND** `set` MUST NOT produce `EntityMotionStateChangedMsg`
 - **AND** when native rejects, `entityProps` MUST NOT update, and the rejection MUST surface a console warning rather than an `onError` event
 
 #### Scenario: set performs a sparse merge
 - **WHEN** application code calls `api.set` with only some transform fields, such as `{ position: { y: 0.3 } }`
-- **THEN** the SDK MUST send that sparse patch to native instead of merging a full value on the JS/Core side using `entityProps`
-- **AND** native MUST use the current committed `entity.transform` as the baseline and overwrite only fields provided in the patch
+- **THEN** the SDK MUST send that sparse update to native instead of merging a full value on the JS/Core side using `entityProps`
+- **AND** native MUST use the current committed `entity.transform` as the baseline and overwrite only fields provided in the update
 - **AND** omitted fields such as `rotation` and `scale` MUST keep the previous committed values from the native committed baseline
 
 #### Scenario: set does not support updater form
 - **WHEN** application code calls `api.set` with an updater function
 - **THEN** the SDK MUST explicitly reject the call
 - **AND** the SDK MUST NOT fabricate `prev` from an empty object, defaults, or a stale mirror
-- **AND** read-modify-write MUST be expressed by reading `entityProps` and then explicitly calling `api.set(values)`
+- **AND** read-modify-write MUST be expressed by reading `entityProps` and then explicitly calling `api.set(update)`
 
 #### Scenario: set during an active animation is not stashed
 - **GIVEN** an Entity animation is in `delay`, `running`, or `paused`
@@ -457,12 +485,12 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 
 ### Requirement: Playback errors are classified
 
-The SDK MUST synchronously throw the built-in `Error` for programmer errors detectable from public config or method arguments and MUST preserve the existing `onError` count. Native fallback-validation failures for creation payloads or `set` payloads MUST trigger `onError` through an asynchronous JSB result using `INVALID_TIMELINE` or `INVALID_SET_VALUES`, respectively. Failures discovered during Bridge or Native execution MUST be delivered through `onError` as a classified `SpatializedPlaybackError`, covering at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, `ANIMATION_NOT_FOUND`, and `COMPILATION_FAILED`. Asynchronous animation-object creation or pose-handoff failure MUST terminate the current binding lifecycle; other asynchronous playback failures MUST preserve their existing state semantics. Rejected `api.set` writes during an active animation, before binding / native object creation, or after current-binding termination MUST remain no-ops that emit a console warning.
+The SDK MUST synchronously throw the built-in `Error` for programmer errors detectable from public config or method arguments and MUST preserve the existing `onError` count. A JSB command failure MUST be converted from that command's reply into one `SpatializedPlaybackError`. An asynchronous native failure after a successful command reply MUST trigger `onError` exactly once through `entityanimationerror`. State events MUST NOT carry errors, and the same failure MUST NOT be reported through both a reply and an error event. Error codes MUST cover at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, `ANIMATION_NOT_FOUND`, `INVALID_TIMELINE`, `COMPILATION_FAILED`, and `INVALID_SET_VALUES`. Asynchronous animation-object creation or pose-handoff failure MUST terminate the current binding lifecycle; other asynchronous playback failures MUST preserve their existing state semantics. Rejected `api.set` writes during an active animation, before binding / native object creation, or after current-binding termination MUST remain no-ops that emit a console warning.
 
 #### Scenario: Error code is distinguishable
 - **WHEN** an Entity motion operation fails asynchronously in Bridge or Native
 - **THEN** `onError` MUST receive a `SpatializedPlaybackError` whose `code` identifies the failure kind
-- **AND** application code MUST be able to branch on `code` without parsing `message`
+- **AND** application code MUST be able to branch on `code` and use `reason` as the readable diagnostic
 
 ### Requirement: Entity target destruction invalidates associated animations
 
