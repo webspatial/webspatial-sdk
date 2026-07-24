@@ -94,6 +94,12 @@ type EntityMotionPatch = {
   scale?: Partial<Vec3>
 }
 
+type EntityTransformUpdate = {
+  position?: Partial<Vec3>
+  rotation?: Partial<Vec3>
+  scale?: Partial<Vec3>
+}
+
 type EntityMotionFrame = EntityMotionPatch & {
   timingFunction?: TimingFunction
 }
@@ -112,7 +118,7 @@ type SpatializedPlaybackError = {
     | 'COMPILATION_FAILED'
     | 'INVALID_CONTROL_STATE'
     | 'INVALID_SET_VALUES'
-  message?: string
+  reason: string
 }
 
 type EntityMotionConfig = {
@@ -325,7 +331,7 @@ A few rules:
 
 1. **Use it only after the native animation object exists and while the animation is not playing** (this includes: never played, already finished, stopped / reset). When playback is active (including delay and paused), the native object has not been created, or the current binding lifecycle has terminated after creation / handoff failure, `api.set` is rejected as a **noop** (it neither interrupts the animation nor gets queued for later replay; the object stays unchanged and `entityProps` does not update) and logs a warning to the console; it does **not** trigger `onError`. To take over the object mid-animation, stop the animation first, or wait until it ends.
 2. **Pass only the fields you want to change**; the rest stay as they are. For example, `api.set({ position: { y: 0.3 } })` does not touch `rotation` or `scale`.
-3. **On a successful write, `entityProps` updates** to the new pose; if the write is not accepted (e.g. called during playback), it is a noop — `entityProps` stays unchanged and a warning is logged to the console; `onError` does not fire.
+3. **On a successful write, `entityProps` updates** to the new pose. After Native commits and reads back the complete transform, it returns the confirmed value in the set command's success reply; `set` emits no playback state event and does not change `playState`. If the write is not accepted (e.g. called during playback), it is a noop — `entityProps` stays unchanged and a warning is logged to the console; `onError` does not fire.
 4. **Want to change based on the current value?** Read `entityProps` to get the current pose, compute the new value yourself, then pass it to `api.set`. There is no `api.get` here — in React, an imperative getter tends to read stale values and cause read-then-write conflicts.
 5. **It is not a playback command**: `api.set` does not start playback or change playback progress.
 
@@ -386,7 +392,7 @@ interface EntityPlaybackApi {
   stop(): void
   reset(): void
   finish(): void
-  set(values: EntityMotionPatch): void
+  set(update: EntityTransformUpdate): void
   readonly playState: 'queued' | 'idle' | 'running' | 'paused' | 'finished'
   readonly isAnimating: boolean
   readonly isPaused: boolean

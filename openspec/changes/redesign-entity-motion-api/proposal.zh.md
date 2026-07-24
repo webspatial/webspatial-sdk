@@ -94,6 +94,12 @@ type EntityMotionPatch = {
   scale?: Partial<Vec3>
 }
 
+type EntityTransformUpdate = {
+  position?: Partial<Vec3>
+  rotation?: Partial<Vec3>
+  scale?: Partial<Vec3>
+}
+
 type EntityMotionFrame = EntityMotionPatch & {
   timingFunction?: TimingFunction
 }
@@ -112,7 +118,7 @@ type SpatializedPlaybackError = {
     | 'COMPILATION_FAILED'
     | 'INVALID_CONTROL_STATE'
     | 'INVALID_SET_VALUES'
-  message?: string
+  reason: string
 }
 
 type EntityMotionConfig = {
@@ -325,7 +331,7 @@ api.set({ position: { y: 0.3 } })
 
 1. **只在原生动画对象已经创建且动画不处于播放状态时用**(包括:从未播放、已播完、已停止 / 重置)。动画正在播放(含延迟、暂停)、原生动画对象尚未创建或当前绑定已经因创建 / 交接失败而终止时,调用 `api.set` 会被拒绝——此时它是一次 **noop**(不打断动画、也不会延后补播,物体保持不变,`entityProps` 也不更新),并在控制台打印一条警告(warning),**不会**触发 `onError`。想在动画进行中接管物体,请先停止动画,或等它结束。
 2. **只传你想改的字段即可**,其余保持原样。例如 `api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
-3. **写入成功后 `entityProps` 会更新**为新姿态;如果写入未被接受(比如在动画播放中调用),则是一次 noop——`entityProps` 保持不变,并在控制台打印一条警告,不会触发 `onError`。
+3. **写入成功后 `entityProps` 会更新**为新姿态。Native 在提交并回读完整姿态后,通过设置命令的成功回执返回确认值;`set` 不产生播放状态事件,也不改变 `playState`。如果写入未被接受(比如在动画播放中调用),则是一次 noop——`entityProps` 保持不变,并在控制台打印一条警告,不会触发 `onError`。
 4. **想基于当前值来改**?先读 `entityProps` 拿到当前姿态,自己算好新值,再传给 `api.set`。这里没有 `api.get`——因为在 React 里用取值函数容易读到过期的旧值、产生先读后写的冲突。
 5. **它不是播放命令**:`api.set` 不会开始播放、也不改变播放进度。
 
@@ -386,7 +392,7 @@ interface EntityPlaybackApi {
   stop(): void
   reset(): void
   finish(): void
-  set(values: EntityMotionPatch): void
+  set(update: EntityTransformUpdate): void
   readonly playState: 'queued' | 'idle' | 'running' | 'paused' | 'finished'
   readonly isAnimating: boolean
   readonly isPaused: boolean

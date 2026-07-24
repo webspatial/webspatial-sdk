@@ -2,7 +2,7 @@
 
 ## 1. Background
 
-`useEntityAnimation` is the WebSpatial SDK React Hook that drives transform animations for 3D entities in a scene. It supports percentage keyframes, animation-result write-back, and a unified imperative transform setter, and it unifies entity motion onto the generic animation binding, lifecycle, and cross-layer protocol.
+`useEntityAnimation` is the WebSpatial SDK React Hook that drives transform animations for 3D entities in a scene. It supports percentage keyframes, animation-result write-back, and a unified imperative transform setter, and it unifies entity motion onto the generic animation binding and lifecycle.
 
 This redesign integrates entity motion into the generic animation architecture: the React layer provides the Hook, target binding, and result mirror; Core normalizes and validates configuration; and the visionOS native layer compiles and executes animations with RealityKit. The native transform is the single authoritative data source. Every transform change is confirmed by native before it is mirrored to React, structurally preventing the animation end state from conflicting with stale React base properties and snapping back.
 
@@ -10,8 +10,8 @@ The goals are to:
 
 - Define the responsibility boundaries and data flow across React, Core, and native.
 - Define both the “config → canonical tracks → RealityKit animation” path and the “native confirmed transform → `entityProps`” path.
-- Entities reuse the existing create, control, and state-event protocol.
-- Spatial-element and entity animations reuse the shared playback interface and cross-layer protocol while their corresponding animation objects implement target-specific capabilities.
+- Entities use dedicated create, control, and set protocols, while state events report only playback state and native-confirmed transforms.
+- Spatial-element and entity animations reuse the shared playback interface while using target-specific animation objects and cross-layer protocols.
 
 The public API surface covers animation binding, playback control, and confirmed-transform write-back, with native RealityKit as the unified execution engine. This document fully defines the API shape, behavior boundaries, cross-layer protocol, compilation rules, and module responsibilities for a self-contained technical review.
 
@@ -50,8 +50,8 @@ The public API surface covers animation binding, playback control, and confirmed
 | Target binding | Returns `animation`, which binds through the entity component's `animation` property. |
 | Playback control | `api` provides `play`, `pause`, `stop`, `reset`, and `finish`. |
 | Result write-back | Native reports transforms at confirmed lifecycle points; React exposes them as `entityProps` to preserve the confirmed end state. |
-| Imperative set | In an inactive state, `api.set(patch)` merges a sparse patch onto the native committed transform. |
-| Lifecycle and errors | Reuses the generic animation create, control, destroy, target-invalidation, and error-event path. |
+| Imperative set | In an inactive state, `api.set(update)` merges a sparse update onto the native committed transform. |
+| Lifecycle and errors | Reuses the generic animation binding and lifecycle while using Entity-specific JSB commands and error events. |
 | Capability detection | Detects the complete capability through `supports('useEntityAnimation')`. |
 
 ## 4. Design Approach and Trade-offs
@@ -75,7 +75,7 @@ From this a few rules follow:
 
 - Play, stop, reset, finish, `api.set` — every operation that changes the transform goes to the native layer first.
 - When an ordinary playback or control command fails, the entity transform and `entityProps` retain their current values. Animation-object creation or pose-handoff failure enters the binding-termination path.
-- When native accepts a command, it reports the confirmed transform through an animation state event, and React then updates `entityProps`.
+- When native accepts a playback control command, it reports the confirmed transform through an animation state event. When it accepts `set`, it reports the confirmed transform through `SetEntityAnimationResult`. React updates `entityProps` from the value Core forwards.
 - React mirrors native-confirmed transforms back to the user; writes during active animation are handled as no-ops.
 - `entityProps` starts empty. The first confirmation fills it with the complete committed `position`, `rotation`, and `scale` values. During a healthy current binding lifecycle, this complete mirror owns the inactive transform; unbinding or binding termination returns control to React props.
 
@@ -120,7 +120,7 @@ flowchart TB
         UseEntity["useEntityAnimation(config)<br/>returns [animation, api, entityProps]"]
         ReactBinding["create motion binding and playback api"]
         EntityProps["entityProps<br/>mirror of native confirmed transform"]
-        ApiSet["api.set(patch)<br/>commits native authoritative state"]
+        ApiSet["api.set(update)<br/>commits native authoritative state"]
         BindTarget["useBindMotionTarget({ binding, target })<br/>animation binding"]
 
         UseEntity --> ReactBinding
@@ -135,7 +135,7 @@ flowchart TB
         Tracks["canonical tracks<br/>position.* / rotation.* / scale.*"]
         Validate["validateEntityMotionConfig()<br/>validate the transform property allowlist"]
         PlaybackApi["SpatializedPlaybackApi<br/>shared playback interface"]
-        EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>adds set(EntityMotionPatch)"]
+        EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>adds set(EntityTransformUpdate)"]
         CoreAnimationObject["EntityAnimationObject<br/>implements EntityPlaybackApi"]
 
         EntityCreate --> Normalize
@@ -148,24 +148,24 @@ flowchart TB
     end
 
     subgraph Native["native layer (RealityKit)"]
-        Resolve["look up entity by elementId"]
-        ResolveAnimation["look up global animation object by animationId"]
-        ElementAdapter["element manager"]
-        EntityManager["new entity motion creation service"]
+        Resolve["look up entity by id"]
+        ResolveAnimation["look up global animation object by id"]
+        EntityCreateNative["SpatialEntity.createAnimation(config)<br/>create entity animation object"]
         AnimationObject["EntityMotionAnimationObject<br/>per-object state machine"]
         NativeValidate["fallback-validate on create<br/>store canonical tracks"]
         Compile["each fresh play<br/>tracks + current baseline -> RealityKit transform animation"]
         Authority["native transform<br/>single authority"]
-        Event["state-changed event<br/>reports confirmed value"]
+        Event["playback state-changed event<br/>reports confirmed value"]
+        SetResult["SetEntityAnimationResult<br/>returns confirmed value"]
 
-        Resolve --> ElementAdapter
-        Resolve --> EntityManager
+        Resolve --> EntityCreateNative
         ResolveAnimation --> AnimationObject
-        EntityManager --> NativeValidate
-        EntityManager --> AnimationObject
+        EntityCreateNative --> NativeValidate
+        EntityCreateNative --> AnimationObject
         AnimationObject --> Compile
         Compile --> Authority
         Authority --> Event
+        AnimationObject --> SetResult
     end
 
     BindTarget -->|"call target creation entry"| EntityCreate
@@ -173,14 +173,16 @@ flowchart TB
     ApiSet -->|"delegate set"| CoreAnimationObject
     EntityCreate -->|"create animation command"| Resolve
     CoreAnimationObject -->|"control animation command"| ResolveAnimation
-    Event -->|"confirmed value"| EntityProps
+    Event -->|"playback confirmed value"| CoreAnimationObject
+    SetResult -->|"set confirmed value"| CoreAnimationObject
+    CoreAnimationObject -->|"notify binding to update mirror"| EntityProps
 ```
 
 **Responsibilities per layer:**
 
 - **React layer** handles the Hook API, binding lifecycle, the `entityProps` mirror, callback dispatch, and re-render. Once target binding completes, the binder calls `SpatialEntity.createAnimation(config)`.
-- **Shared logic layer** uses `SpatialEntity.createAnimation(config)` to encapsulate the target id plus Entity-specific normalization and validation, send the create command, and return an `EntityAnimationObject`. `EntityPlaybackApi` extends the existing `SpatializedPlaybackApi` and adds `set` only for Entity; `EntityAnimationObject` and the ordinary `AnimationObject` implement their respective interfaces without inheriting from each other. Normalization folds the three public authoring forms into internal canonical entity tracks; when `timeline` and top-level `from` / `to` are both present, `timeline` is the sole effective input and development mode logs a duplicate-declaration warning. `elementId` is the spatial-object id transport field in the Core-to-native create command.
-- **Native layer** stores animation objects in `SpatialScene.spatialObjects` and reuses the `SpatialObject` lifecycle. `SpatialScene` resolves create targets and control objects; each Entity animation object owns its state machine, fresh-play compilation, RealityKit execution, and confirmed-pose reporting.
+- **Shared logic layer** uses the target's own `SpatialObject.id` in `SpatialEntity.createAnimation(config)`, performs Entity-specific normalization and validation, sends the create command, and returns an `EntityAnimationObject`. `EntityPlaybackApi` extends the existing `SpatializedPlaybackApi` and adds `set` only for Entity; `EntityAnimationObject` and the ordinary `AnimationObject` implement their respective interfaces without inheriting from each other. Normalization folds the three public authoring forms into internal canonical entity tracks; when `timeline` and top-level `from` / `to` are both present, `timeline` is the sole effective input and development mode logs a duplicate-declaration warning.
+- **Native layer** stores animation objects in `SpatialScene.spatialObjects` and reuses the `SpatialObject` lifecycle. `SpatialScene` resolves create targets and animation objects; the target Entity creates an `EntityMotionAnimationObject` through `createAnimation(config)`, and the animation object owns its state machine, fresh-play compilation, RealityKit execution, and confirmed-pose reporting.
 
 #### Cross-layer class diagram
 
@@ -221,7 +223,7 @@ classDiagram
         }
         class EntityPlaybackApi {
             <<interface>>
-            +set(values EntityMotionPatch)
+            +set(update EntityTransformUpdate)
         }
         class AnimationObject {
             +play()
@@ -231,27 +233,34 @@ classDiagram
             +finish()
         }
         class EntityAnimationObject {
-            +elementId string
-            +timeline EntityMotionTimelinePayload
+            +id string
+            -config EntityMotionConfig
+            -timeline EntityMotionTimelinePayload
             +play()
             +pause()
             +stop()
             +reset()
             +finish()
-            +set(values EntityMotionPatch)
+            +set(update EntityTransformUpdate)
+            +onStart(callback)
+            +onComplete(callback)
+            +onStop(callback)
+            +onReset(callback)
+            +onError(callback)
         }
-        class CreateSpatializedElementAnimationJSBCommand
-        class ControlSpatializedElementAnimationJSBCommand
+        class CreateEntityAnimationJSBCommand
+        class ControlEntityAnimationJSBCommand
+        class SetEntityAnimationJSBCommand
     }
     namespace NativeLayer {
         class SpatialScene {
-            +onCreateSpatializedElementAnimation()
-            +onControlSpatializedElementAnimation()
+            +onCreateEntityAnimation()
+            +onControlEntityAnimation()
+            +onSetEntityAnimation()
             +findSpatialObject(id)
         }
-        class SpatializedElementAnimationManager
-        class EntityMotionManager {
-            +create()
+        class NativeSpatialEntity {
+            +createAnimation(config)
         }
         class EntityMotionAnimationObject
         class RealityKit
@@ -267,24 +276,25 @@ classDiagram
     EntityPlaybackApi <|.. EntityAnimationObject : implements
     SpatialEntity --> EntityAnimationObject : creates and returns
     EntityPlaybackApi --> EntityAnimationObject : delegates commands
-    SpatialEntity --> CreateSpatializedElementAnimationJSBCommand
-    EntityAnimationObject --> ControlSpatializedElementAnimationJSBCommand
-    CreateSpatializedElementAnimationJSBCommand --> SpatialScene : JSB handling
-    ControlSpatializedElementAnimationJSBCommand --> SpatialScene : JSB handling
-    SpatialScene --> SpatializedElementAnimationManager : create target is element
-    SpatialScene --> EntityMotionManager : create target is entity
-    SpatialScene --> EntityMotionAnimationObject : control by animationId
-    EntityMotionManager --> EntityMotionAnimationObject : creates
+    SpatialEntity --> CreateEntityAnimationJSBCommand
+    EntityAnimationObject --> ControlEntityAnimationJSBCommand
+    EntityAnimationObject --> SetEntityAnimationJSBCommand
+    CreateEntityAnimationJSBCommand --> SpatialScene : JSB handling
+    ControlEntityAnimationJSBCommand --> SpatialScene : JSB handling
+    SetEntityAnimationJSBCommand --> SpatialScene : JSB handling
+    SpatialScene --> NativeSpatialEntity : create animation by id
+    SpatialScene --> EntityMotionAnimationObject : control or set by id
+    NativeSpatialEntity --> EntityMotionAnimationObject : creates
     EntityMotionAnimationObject --> RealityKit
 ```
 
-The diagram presents React, shared-logic, and native classes together; each class remains in its labeled layer. Create commands resolve their target by `elementId` in `SpatialScene.spatialObjects` and enter the element or entity creation path by target runtime type. Control commands resolve an animation object by `animationId` in the same global table and invoke the matching control path by animation-object runtime type. Managers do not own a second animation registry.
+The diagram presents React, shared-logic, and native classes together; each class remains in its labeled layer. The `id` in a create request is the target Entity's `SpatialObject.id`; the `id` in the create reply is the new animation object's `SpatialObject.id`. Core constructs `EntityAnimationObject` with the reply `id`, and later control, set, and event traffic uses that object `id` directly. The Entity protocol introduces no extra id aliases.
 
 #### Cross-layer Communication Overview
 
-- Core sends create and control commands to Native through `CreateSpatializedElementAnimationJSBCommand` and `ControlSpatializedElementAnimationJSBCommand`.
-- Native reports playback state, confirmed transforms, and classified errors to Core through `spatialanimationstatechanged`.
-- React consumes the state events forwarded by Core and updates callbacks and `entityProps`.
+- Core sends create, playback control, and transform-set commands through `CreateEntityAnimationJSBCommand`, `ControlEntityAnimationJSBCommand`, and `SetEntityAnimationJSBCommand`.
+- Native reports playback state and confirmed transforms through `spatialanimationstatechanged`, and asynchronous post-acceptance errors through `entityanimationerror`.
+- Core `EntityAnimationObject` directly consumes both event types. It updates its playback state and invokes matching `onXXX` debug listeners, after which React `EntityMotionBinding` updates public state, lifecycle callbacks, and `entityProps`.
 
 Section 5.2 Core SDK defines the JSB payloads and error types, Section 5.3 Native defines command-processing rules, and Section 5.1 React SDK defines the state-event mapping into React.
 
@@ -305,7 +315,7 @@ sequenceDiagram
     participant Bridge as JS Bridge
     box Native
         participant Scene as SpatialScene
-        participant Manager as EntityMotionManager
+        participant NativeEntity as SpatialEntity
         participant NativeObj as EntityMotionAnimationObject
         participant Compiler as EntityMotionTimelineCompiler
     end
@@ -314,23 +324,23 @@ sequenceDiagram
     App->>Hook: bind to entity via animation
     Hook->>Entity: createAnimation(config)
     Entity->>Entity: normalize and validate, produce timeline payload
-    Entity->>Bridge: CreateSpatializedElementAnimationJSBCommand.execute(elementId, timeline payload)
-    Bridge->>Scene: CreateSpatializedElementAnimation
-    Scene->>Scene: findSpatialObject(elementId)
-    Scene->>Manager: create(command, target)
-    Manager->>NativeObj: create object, store only target + timeline payload
-    Manager-->>Scene: NativeObj
+    Entity->>Bridge: CreateEntityAnimationJSBCommand.execute(id, timeline payload)
+    Bridge->>Scene: CreateEntityAnimation
+    Scene->>Scene: findSpatialObject(id)
+    Scene->>NativeEntity: createAnimation(timeline payload)
+    NativeEntity->>NativeObj: create object, store only target + timeline payload
+    NativeEntity-->>Scene: NativeObj
     Scene->>Scene: addSpatialObject(NativeObj)
     Scene-->>Bridge: success({ id })
     Bridge-->>Entity: { id }
-    Entity->>Obj: new EntityAnimationObject(id, timeline payload)
+    Entity->>Obj: new EntityAnimationObject(id, config, timeline payload)
     Obj-->>Hook: EntityAnimationObject
     Note over NativeObj: create reads no baseline, compiles no resource, creates no controller
     App->>Hook: api.play()
     Hook->>Obj: play()
-    Obj->>Bridge: ControlSpatializedElementAnimationJSBCommand.execute(play)
-    Bridge->>Scene: ControlSpatializedElementAnimation(play)
-    Scene->>Scene: findSpatialObject(animationId)
+    Obj->>Bridge: ControlEntityAnimationJSBCommand.execute(id, play)
+    Bridge->>Scene: ControlEntityAnimation
+    Scene->>Scene: findSpatialObject(id)
     Scene->>NativeObj: play()
     alt fresh play
         NativeObj->>NativeObj: read latest native baseline
@@ -364,7 +374,7 @@ sequenceDiagram
         participant NativeObj as EntityMotionAnimationObject
     end
 
-    NativeObj->>NativeObj: state change (start/complete/stop/reset/finish/set accepted)
+    NativeObj->>NativeObj: playback state change (start/complete/stop/reset/finish)
     NativeObj->>NativeObj: read authoritative transform
     NativeObj->>NativeObj: decompose into position / rotation / scale
     NativeObj->>NativeObj: encode complete position / rotation / scale
@@ -375,16 +385,16 @@ sequenceDiagram
     App->>App: spread entityProps onto the entity, rest at confirmed transform
 ```
 
-Native decides whether `api.set` takes effect: it accepts patches while playback is inactive and the native object exists, and handles all other timing as no-ops with a console warning. The first confirmed value comes from a fresh-play start-pose confirmation or an accepted `set`, so `entityProps` may be empty before then.
+Native decides whether `api.set` takes effect: it accepts updates while playback is inactive and the native object exists, and handles all other timing as no-ops with a console warning. An accepted `set` returns its confirmed transform through `SetEntityAnimationResult` rather than a state event. The first confirmed value comes from a fresh-play start-pose confirmation or an accepted `set`, so `entityProps` may be empty before then.
 
 ### 4.4 Key Trade-offs
 
-- **Command names keep the `Element` wording.** Entities reuse the existing create and control commands. Their target-state semantics cover spatial objects, and `elementId` identifies a spatial object.
+- **Entity uses a dedicated bridge protocol.** Creation, playback control, and transform setting use separate Entity-specific commands. All three commands use `SpatialObject.id` directly and do not inherit Element animation protocol fields.
 - **Accept native compilation cost on fresh play.** Each fresh play makes the entity animation object read the current baseline and invoke the compiler for multi-keyframe handling, sparse keyframes, rotation conversion, and whole-transform serial compilation in exchange for an up-to-date baseline, native RealityKit playback, system compositing, and one execution model.
 - **Slice into a serial chain of full poses.** Cut the timeline into a set of nodes, each carrying a complete `position` / `rotation` / `scale`, then chain them in order into one whole-transform animation. The visionOS RealityKit animation binding granularity is the whole `.transform`, and current easing requirements apply per segment. A serial chain of full poses therefore aligns visionOS and picoOS, where native animation binds the whole transform; all channels within one segment share a single `timingFunction`.
 - **Own the whole transform through the binding lifecycle.** Once the animation is active, the entire `.transform` is owned by the animation. For example, animating only `position.y` freezes `position.x` / `position.z` — and `rotation` / `scale` too — at baseline during playback. After native produces the first confirmed state, `entityProps` persists the complete committed transform while the current binding lifecycle remains healthy; inactive dynamic writes use `api.set`, and unbinding or binding termination returns control to React props. Entity motion reuses the Element animation's native animating-mask arbitration: the target Entity stores the whole-transform animation owner, `EntityMotionAnimationObject` acquires that owner when it commits the first confirmed state, and `SpatialScene` checks the owner at the ordinary Entity transform update entry. While the owner exists, an ordinary update returns success and preserves the current native transform; unbinding, binding termination, or destroying the animation object releases the owner.
-- **`set` uses sparse patch objects.** In v1, `api.set` accepts a sparse patch object and consumers read the latest confirmed transform through `entityProps`.
-- **Dispatch directly by runtime type.** In v1, `SpatialScene` dispatches elements and entities to their respective managers; real duplication between the two paths is the trigger for extracting a shared protocol.
+- **`set` uses a sparse update object.** In v1, `api.set` accepts `EntityTransformUpdate`, and consumers read the latest confirmed transform through `entityProps`.
+- **Entity handlers dispatch directly.** The three Entity-specific handlers on `SpatialScene` independently perform create, playback control, and transform set without entering the Element animation manager.
 - **Measure large-scale concurrency.** Native RealityKit playback is preferable to per-frame JS writes, but high entity counts still require dedicated performance validation.
 
 ## 5. System/Module Design
@@ -392,7 +402,7 @@ Native decides whether `api.set` takes effect: it accepts patches while playback
 ### 5.1 React SDK
 
 - **Public interface:** `useEntityAnimation` returns `[animation, api, entityProps]`; the entity component receives `EntityMotionBinding` through its `animation` property.
-- **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`; `api.set(values)` submits a sparse state patch to native.
+- **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`; `api.set(update)` submits a sparse transform update to native.
 - **Target binding:** `useBindMotionTarget({ binding, target })` maintains one binding per `SpatialEntity` and calls `target.createAnimation(config)` after binding. Unbinding and target replacement clear the binding-owned `entityProps` mirror to `{}`, so spreading the returned object leaves ordinary React transform props authoritative.
 - **Command sequencing:** `EntityMotionBinding` reuses the Element animation binding's pending-command and sequential-flush model. It serializes commands per binding and does not send the next command until the current JSB reply settles.
 - **Result mirror:** `entityProps` mirrors native-confirmed `position`, `rotation`, and `scale`, driving React re-render and lifecycle callbacks.
@@ -405,7 +415,7 @@ The public `EntityPlaybackApi` remains a `void` command surface. Internally, eac
 - When `autoStart` is enabled, its generated `play` command is inserted at the front of the pending playback commands when creation succeeds, matching the existing Element animation behavior.
 - `api.set` before binding, before native animation-object creation, or after the current binding lifecycle terminates never enters the queue. It remains a console warning plus no-op.
 - After the native animation object exists, all playback commands and `set` enter the same per-binding FIFO. A failure or a warning-plus-no-op settles that queue item and allows the next item to run; it does not poison or reorder the queue.
-- A JSB success reply means Native has completed the command's synchronous state transition and any required transform commit. If the command produces `start`, `pause`, `stop`, `reset`, `finish`, or `set`, Native emits the corresponding state event before returning that success reply. A natural asynchronous `complete` event remains independent of the earlier `play` reply.
+- A JSB success reply means Native has completed the command's synchronous state transition and any required transform commit. If a playback control command produces `start`, `pause`, `stop`, `reset`, or `finish`, Native emits the corresponding state event before returning that success reply. `SetEntityAnimation` emits no state event; after committing and reading back the transform, Native returns the complete confirmed transform directly in the success reply. A natural asynchronous `complete` event remains independent of the earlier `play` reply.
 - Unbinding, target replacement, config-driven object replacement, or destruction invalidates the current queue generation and drops every command that has not been sent. The in-flight command may settle under the documented teardown race, but its reply cannot dispatch another command from the invalidated generation.
 
 This ordering makes consecutive calls deterministic. In particular, `set → play` waits for the accepted `set` reply before fresh play reads its baseline; `stop → play` waits for the stopped transform commit; and `play → pause` waits until Native has accepted the play command.
@@ -439,7 +449,7 @@ classDiagram
             +stop()
             +reset()
             +finish()
-            +set(values)
+            +set(update EntityTransformUpdate)
         }
         class EntityMotionBinding
         class EntityMotionProps {
@@ -473,7 +483,7 @@ classDiagram
 
 #### State-event Mapping
 
-React consumes `EntityMotionStateChangedMsg` forwarded by Core and maps native actions to user callbacks and `entityProps` updates:
+Core `EntityAnimationObject` directly consumes native `EntityMotionStateChangedMsg`, maps native actions to its own state and `onXXX` debug listeners, and lets React `EntityMotionBinding` update user callbacks and `entityProps`:
 
 | native action | mapped user callback | updates entityProps |
 |---|---|---|
@@ -482,18 +492,28 @@ React consumes `EntityMotionStateChangedMsg` forwarded by Core and maps native a
 | `finish` | `onComplete` | yes (end state) |
 | `stop` | `onStop` | yes (current transform) |
 | `reset` | `onReset` | yes (starting transform) |
-| `set` | internal commit | yes (merged transform) |
-| `error` | `onError` | no |
 | `pause` | playback state change | no |
 
-Event `values` use the `EntityMotionProps` shape with `position`, `rotation`, and `scale`. Classified errors reach the user through `onError`. Animation-object creation or pose-handoff failure additionally clears `entityProps` and terminates the current binding lifecycle; other errors preserve the current `entityProps`.
+Event `values` use the `EntityMotionProps` shape with `position`, `rotation`, and `scale`. Because `set` does not change playback state, it does not appear in this table; Core reads the merged confirmed transform from `SetEntityAnimationResult.values` and updates `entityProps`. Errors do not enter state events; Core triggers `onError` from the dedicated `EntityAnimationErrorMsg`. Animation-object creation or pose-handoff failure additionally clears `entityProps` and terminates the current binding lifecycle; other errors preserve the current `entityProps`.
 
 ### 5.2 Core SDK
 
-- **Target creation entry:** `SpatialEntity.createAnimation(config)` uses its own id, performs Entity-specific normalization and validation, sends the shared create command, and returns an `EntityAnimationObject`. Ordinary `SpatializedElement.createAnimation(config)` still returns `AnimationObject`.
-- **Playback interfaces:** the existing `SpatializedPlaybackApi` keeps common playback methods and state and does not contain `set`; `EntityPlaybackApi extends SpatializedPlaybackApi` and adds only `set(EntityMotionPatch)`.
-- **Animation objects:** `AnimationObject extends SpatialObject implements SpatializedPlaybackApi`; `EntityAnimationObject extends SpatialObject implements EntityPlaybackApi`. The two concrete classes do not inherit from each other. They may reuse create / control / event helpers internally while retaining their respective timeline and confirmed-value types; `elementId` is the spatial-object id transport field in the Core-to-native create command.
-- **Types and functions:** Core defines entity-motion types, `EntityMotionPatch`, `EntityMotionProps`, the property allowlist, normalization and validation functions, and the internal canonical timeline.
+- **Target creation entry:** `SpatialEntity.createAnimation(config)` uses its own id, performs Entity-specific normalization and validation, sends `CreateEntityAnimation`, and returns an `EntityAnimationObject`. Ordinary `SpatializedElement.createAnimation(config)` still returns `AnimationObject`.
+- **Playback interfaces:** the existing `SpatializedPlaybackApi` keeps common playback methods and state and does not contain `set`; `EntityPlaybackApi extends SpatializedPlaybackApi` and adds only `set(EntityTransformUpdate)`.
+- **Animation objects:** `AnimationObject extends SpatialObject implements SpatializedPlaybackApi`; `EntityAnimationObject extends SpatialObject implements EntityPlaybackApi`. The two concrete classes do not inherit from each other. `EntityAnimationObject` directly uses the `id` inherited from `SpatialObject`, privately stores the public `config` and normalized `timeline`, and exposes `onStart`, `onComplete`, `onStop`, `onReset`, and `onError` debug-listener methods aligned with React callbacks. Both `finish` and natural completion trigger `onComplete`.
+- **Types and functions:** Core defines entity-motion types, `EntityTransformUpdate`, `EntityMotionProps`, the property allowlist, normalization and validation functions, and the internal canonical timeline.
+
+The `onXXX` methods on `EntityAnimationObject` only register observers; they send no control commands and do not change animation configuration or the execution signature. Their parameters align with React callbacks:
+
+```text
+onStart(listener: (values: EntityMotionProps) => void)
+onComplete(listener: (values: EntityMotionProps) => void)
+onStop(listener: (values: EntityMotionProps) => void)
+onReset(listener: (values: EntityMotionProps) => void)
+onError(listener: (error: SpatializedPlaybackError) => void)
+```
+
+State events trigger the first four methods, while the dedicated error event triggers `onError`. `pause` only updates playback state, so there is no `onPause`.
 
 #### Class Diagram
 
@@ -512,7 +532,7 @@ classDiagram
         }
         class EntityPlaybackApi {
             <<interface>>
-            +set(values EntityMotionPatch)
+            +set(update EntityTransformUpdate)
         }
         class SpatialEntity {
             +createAnimation(config) EntityAnimationObject
@@ -529,17 +549,24 @@ classDiagram
             +tracks EntityMotionTrack[]
         }
         class EntityAnimationObject {
-            +elementId string
-            +timeline EntityMotionTimelinePayload
+            +id string
+            -config EntityMotionConfig
+            -timeline EntityMotionTimelinePayload
             +play()
             +pause()
             +stop()
             +reset()
             +finish()
-            +set(values EntityMotionPatch)
+            +set(update EntityTransformUpdate)
+            +onStart(callback)
+            +onComplete(callback)
+            +onStop(callback)
+            +onReset(callback)
+            +onError(callback)
         }
-        class CreateSpatializedElementAnimationJSBCommand
-        class ControlSpatializedElementAnimationJSBCommand
+        class CreateEntityAnimationJSBCommand
+        class ControlEntityAnimationJSBCommand
+        class SetEntityAnimationJSBCommand
     }
     SpatializedPlaybackApi <|-- EntityPlaybackApi : extends
     SpatialObject <|-- EntityAnimationObject
@@ -548,36 +575,53 @@ classDiagram
     EntityMotionNormalizer --> EntityMotionTimelinePayload : produces canonical timeline
     SpatialEntity --> EntityAnimationObject : creates and returns
     EntityAnimationObject --> EntityMotionTimelinePayload : carries
-    SpatialEntity --> CreateSpatializedElementAnimationJSBCommand : sends create command
-    EntityAnimationObject --> ControlSpatializedElementAnimationJSBCommand : sends control command
+    SpatialEntity --> CreateEntityAnimationJSBCommand : sends create command
+    EntityAnimationObject --> ControlEntityAnimationJSBCommand : sends control command
+    EntityAnimationObject --> SetEntityAnimationJSBCommand : sends set command
 ```
 
 #### JSB Protocol
 
-Core defines the wire contract for create commands, control commands, state events, and classified errors.
+Core defines Entity-specific wire contracts for create, control, set, state, and error messages. These protocols do not depend on the Spatialized Element animation protocol.
 
 ##### Create animation command
 
-`elementId` is a spatial-object id and can point to an element or an entity:
+The create request `id` is the target Entity's `SpatialObject.id`. A successful create reply also returns only `id`, whose value is the new animation object's `SpatialObject.id`:
 
 ```text
-CreateSpatializedElementAnimation {
-  elementId: string
-  timeline: EntityMotionTimeline | SpatializedMotionTimeline
+CreateEntityAnimation {
+  id: string
+  timeline: EntityMotionTimelinePayload
+}
+
+CreateEntityAnimationResult {
+  id: string
 }
 ```
 
 ##### Control animation command
 
 ```text
-ControlSpatializedElementAnimation {
-  animationId: string
-  type: 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
-  values?: EntityMotionPatch
+ControlEntityAnimation {
+  id: string
+  type: 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy'
 }
 ```
 
-`api.set` reuses the control command, accepts a deeply sparse `EntityMotionPatch`, and is sent to Native as `type: 'set'`. Calls before binding or before native animation-object creation are classified as no-ops, log a console warning, and are not stashed as later commands. JSB does not expose `resume`; a `play` received while paused makes the native animation object resume its current controller internally.
+##### Set animation transform command
+
+```text
+SetEntityAnimation {
+  id: string
+  update: EntityTransformUpdate
+}
+
+SetEntityAnimationResult {
+  values: EntityMotionProps
+}
+```
+
+`api.set` uses the dedicated set command and accepts a deeply sparse `EntityTransformUpdate`. After merging, committing, and reading back the complete confirmed transform, Native returns `SetEntityAnimationResult`; Core updates `entityProps` from `values` without a state event. Calls before binding or before native animation-object creation are classified as no-ops, log a console warning, and are not stashed as later commands. JSB does not expose `resume`; a `play` received while paused makes the native animation object resume its current controller internally.
 
 ```text
 type EntityMotionProps = {
@@ -586,14 +630,14 @@ type EntityMotionProps = {
   scale?: Vec3
 }
 
-type EntityMotionPatch = {
+type EntityTransformUpdate = {
   position?: Partial<Vec3>
   rotation?: Partial<Vec3>
   scale?: Partial<Vec3>
 }
 ```
 
-`EntityMotionPatch` represents any deep subset of `EntityMotionProps`. Native merges the supplied axes and reports complete `position`, `rotation`, and `scale` values in every confirmed event, each as a complete `Vec3`.
+`EntityTransformUpdate` represents any deep subset of `EntityMotionProps`. Native merges the supplied axes. Confirmed values in playback state events and `SetEntityAnimationResult.values` both contain complete `position`, `rotation`, and `scale`, each as a complete `Vec3`.
 
 ##### State-changed event
 
@@ -602,14 +646,11 @@ type EntityMotionNativePlayState = 'idle' | 'running' | 'paused' | 'finished'
 type EntityMotionPlayState = 'queued' | EntityMotionNativePlayState
 
 interface EntityMotionStateChangedDetail {
-  animationId: string
+  id: string
   action:
-    | 'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy' | 'set'
-    | 'start' | 'complete' | 'error'
+    | 'start' | 'complete' | 'pause' | 'stop' | 'reset' | 'finish'
   playState: EntityMotionNativePlayState
-  finished: boolean
   values?: EntityMotionProps
-  error?: SpatializedPlaybackError
 }
 
 interface EntityMotionStateChangedMsg {
@@ -620,11 +661,25 @@ interface EntityMotionStateChangedMsg {
 
 `values` use the entity target's `EntityMotionProps`, containing `position`, `rotation`, and `scale`.
 
-`queued` is a React binding state while commands await native animation-object creation. The existing native creation reply confirms the initial `idle` state without adding a protocol field. On creation failure, the React binding settles the public state to `idle` and terminates the current binding lifecycle. Native control replies and state events then confirm `idle`, `running`, `paused`, or `finished`. During a healthy binding lifecycle, native replies and state events are the exclusive source of public playback state. The public `finished` flag is derived from `playState === 'finished'`; every other state reports `finished: false`.
+`queued` is a React binding state while commands await native animation-object creation. The native creation reply confirms the initial `idle` state. On creation failure, the React binding settles the public state to `idle` and terminates the current binding lifecycle. Native control replies and state events then confirm `idle`, `running`, `paused`, or `finished`. During a healthy binding lifecycle, native replies and state events are the exclusive source of public playback state. The public `finished` flag is derived from `playState === 'finished'` and is not carried in the JSB state event.
 
-##### Playback error type
+##### Entity error event and error type
 
-Both target types share a closed error-code set:
+State events do not carry errors. Asynchronous failures after Native accepts a command use the dedicated Entity event:
+
+```text
+interface EntityAnimationErrorDetail {
+  id: string
+  error: SpatializedPlaybackError
+}
+
+interface EntityAnimationErrorMsg {
+  type: 'entityanimationerror'
+  detail: EntityAnimationErrorDetail
+}
+```
+
+`SpatializedPlaybackError` does not repeat the command name. Core already owns the current command context while processing a reply, and the corresponding animation object receives asynchronous errors. The public shape exposes a stable code and readable reason:
 
 ```text
 type SpatializedPlaybackError = {
@@ -636,11 +691,30 @@ type SpatializedPlaybackError = {
     | 'COMPILATION_FAILED'
     | 'INVALID_CONTROL_STATE'
     | 'INVALID_SET_VALUES'
-  message?: string
+  reason: string
 }
 ```
 
-The layer that discovers an error determines its delivery path. Synchronous Core validation of public config and method arguments throws the built-in `Error` and preserves the existing `onError` count. Native fallback validation of a creation payload or `set` payload maps its asynchronous JSB result to `INVALID_TIMELINE` or `INVALID_SET_VALUES`, respectively; Bridge or Native execution failures reach the user through `onError(SpatializedPlaybackError)`. Asynchronous animation-object creation and pose-handoff failures terminate the current binding lifecycle. Other asynchronous playback errors preserve their existing state semantics. Expected `api.set` state rejection remains warning + no-op.
+The discovery phase determines error delivery:
+
+- Synchronous Core validation of public config and method arguments throws the built-in `Error` and does not trigger `onError`.
+- A JSB command failure returns through that command's reply. Core converts the reply to one `SpatializedPlaybackError` and triggers `onError`.
+- An asynchronous native failure after a successful command reply is reported exactly once through `entityanimationerror`. Core `EntityAnimationObject` consumes the event and triggers `onError`.
+- One failure chooses one outlet. State events never carry errors, preventing duplicate `onError` delivery.
+- Animation-object creation or pose-handoff failure terminates the current binding lifecycle. Other asynchronous playback errors preserve their existing state semantics.
+- Calling `api.set` during active playback is an expected state rejection and remains warning + no-op without an error event or `onError`.
+
+Users handle codes as follows:
+
+| Code | Recommended handling |
+|---|---|
+| `TARGET_NOT_FOUND` | Verify that the target Entity exists and remains in a valid lifecycle, then bind again. |
+| `UNSUPPORTED_TARGET` | Verify that `id` belongs to an animatable Entity and perform capability detection before creation. |
+| `ANIMATION_NOT_FOUND` | Stop using the destroyed or invalid animation object, bind again, and obtain a new object `id`. |
+| `INVALID_TIMELINE` | Correct timeline times, properties, keyframes, or values. Core normally catches public-config errors synchronously. |
+| `COMPILATION_FAILED` | Simplify or adjust the keyframe combination Native cannot compile and record `reason` for diagnosis. |
+| `INVALID_CONTROL_STATE` | Wait for an allowed state or stop playback first. The SDK converts active-playback `set` to warning + no-op. |
+| `INVALID_SET_VALUES` | Correct `EntityTransformUpdate` so it contains at least one valid transform scalar. |
 
 #### Types, normalization, and validation
 
@@ -730,28 +804,30 @@ supports('useEntityAnimation')
 
 ### 5.3 Native
 
-- **Command entry:** `SpatialScene` receives create and control commands. Create looks up a target by `elementId`; control looks up a global animation object by `animationId` and dispatches by its runtime type.
-- **Execution subsystem:** `EntityMotionManager` only provides Entity animation-object creation. Animation objects reuse `SpatialScene.spatialObjects` and the `SpatialObject` lifecycle, while `EntityMotionAnimationObject` owns per-object control and fresh/resume decisions.
-- **Confirmed-value reporting:** `EntityMotionAnimationObject` reads and decomposes the native transform and reports confirmed values through state events.
+- **Command entry:** `SpatialScene` separately receives `CreateEntityAnimation`, `ControlEntityAnimation`, and `SetEntityAnimation`. All three commands look up their corresponding `SpatialObject` by `id`.
+- **Execution subsystem:** after create resolves a target Entity, it calls `entity.createAnimation(config)`. Animation objects reuse `SpatialScene.spatialObjects` and the `SpatialObject` lifecycle, while `EntityMotionAnimationObject` owns per-object control and fresh/resume decisions.
+- **Confirmed-value reporting:** playback lifecycle points report confirmed values through state events; `set` reports confirmed values through `SetEntityAnimationResult`.
+- **Error reporting:** asynchronous failures after a successful command reply use `entityanimationerror` rather than the state event.
 
 #### Class Diagram
 
-Readability and testability drive subsystem decomposition, and its file organization may evolve independently from the element path. The following responsibility boundaries are recommended; manager helpers may be merged or split according to logic complexity and reuse needs. The existing `SpatializedElementAnimationObject` and the new `EntityMotionAnimationObject` both inherit from `SpatialObject` and reuse the same lifecycle. They are sibling types with no direct inheritance relationship; this design does not introduce a shared Native playback interface in advance.
+Readability and testability drive subsystem decomposition, and its file organization may evolve independently from the element path. The existing `SpatializedElementAnimationObject` and the new `EntityMotionAnimationObject` both inherit from `SpatialObject` and reuse the same lifecycle. They are sibling types with no direct inheritance relationship; this design does not introduce a shared Native playback interface in advance.
 
 ```mermaid
 classDiagram
     class SpatialObject
     class SpatializedElementAnimationObject
     class SpatialScene {
-        +onCreateSpatializedElementAnimation()
-        +onControlSpatializedElementAnimation()
+        +onCreateEntityAnimation()
+        +onControlEntityAnimation()
+        +onSetEntityAnimation()
         +findSpatialObject(id)
     }
-    class EntityMotionManager {
-        +create(command, target)
+    class SpatialEntity {
+        +createAnimation(config)
     }
     class EntityMotionAnimationObject {
-        +animationId
+        +id
         +target SpatialEntity
         +timeline EntityMotionTimelinePayload
         +playState
@@ -763,8 +839,9 @@ classDiagram
         +stop()
         +reset()
         +finish()
-        +set(values)
-        +emitStateChanged()
+        +set(update)
+        -emitStateChanged()
+        -emitError()
     }
     class EntityMotionTimelineCompiler {
         +compile(payload, baseline)
@@ -780,21 +857,21 @@ classDiagram
     }
     class EntityMotionTransformValues {
         +readConfirmedValues()
-        +mergePatch()
+        +mergeUpdate()
         +decomposeTransform()
     }
     class RealityKit
 
     SpatialObject <|-- SpatializedElementAnimationObject
     SpatialObject <|-- EntityMotionAnimationObject
-    SpatialScene --> EntityMotionManager : create target is entity
-    SpatialScene --> EntityMotionAnimationObject : control by animationId
-    EntityMotionManager --> EntityMotionAnimationObject : creates
+    SpatialScene --> SpatialEntity : create animation by id
+    SpatialScene --> EntityMotionAnimationObject : control or set by id
+    SpatialEntity --> EntityMotionAnimationObject : creates
     EntityMotionAnimationObject --> EntityMotionTimelineCompiler
     EntityMotionTimelineCompiler --> EntityMotionTiming
     EntityMotionTimelineCompiler --> EntityMotionTransformValues
     EntityMotionAnimationObject --> RealityKit : read baseline transform
-    EntityMotionAnimationObject --> EntityMotionTransformValues : decompose / merge patch
+    EntityMotionAnimationObject --> EntityMotionTransformValues : decompose / merge update
     EntityMotionAnimationObject --> EntityMotionBridgeTypes : encode confirmed value / error
     EntityMotionAnimationObject --> RealityKit : playback controller / entity animation
     EntityMotionTimelineCompiler --> RealityKit : whole-transform animation resource
@@ -802,35 +879,34 @@ classDiagram
 
 **Responsibilities per class:**
 
-- **Entity motion manager (`EntityMotionManager`):** provides Entity animation-object creation: it fallback-validates the create payload, constructs an animation object that stores the canonical timeline, and hands it to `SpatialScene` for registration. It owns no private registry, handles no per-object controls, and stores no playback state.
-- **Entity animation object (`EntityMotionAnimationObject`):** represents a single entity animation, holding the `animationId`, target entity, canonical timeline, playback state, current playback controller, and resource, and handling all of that object's state transitions. `play()` calls private `resumeCurrent()` while paused; in another fresh-play-eligible state it reads the baseline, invokes the compiler, and starts through private `startFresh(resource)`. After every start-pose confirmation / end state / accepted `set`, it obtains the complete confirmed transform via the decomposition helper, encodes it via the bridge helper, then emits a state-changed event.
+- **Target entity (`SpatialEntity`):** `createAnimation(config)` fallback-validates the create payload, constructs an animation object that stores the target and canonical timeline, and returns it to `SpatialScene` for registration. The Entity owns no animation registry or playback state.
+- **Entity animation object (`EntityMotionAnimationObject`):** represents one entity animation, directly uses its inherited `SpatialObject.id`, and stores the target entity, canonical timeline, playback state, current playback controller, and resource. It owns every per-object state transition. `play()` calls private `resumeCurrent()` while paused; in another fresh-play-eligible state it reads the baseline, invokes the compiler, and starts through private `startFresh(resource)`. Start-pose confirmation and playback lifecycle end states use private `emitStateChanged()` to emit state events. An accepted `set` directly returns `SetEntityAnimationResult` with the complete confirmed transform. Private `emitError()` emits the dedicated asynchronous error event.
 - **Timeline compiler (`EntityMotionTimelineCompiler`):** on each fresh play, accepts the canonical timeline and that run's baseline and slices and compiles them into one chained whole-transform RealityKit animation resource.
 - **Bridge types (`EntityMotionBridgeTypes`):** carry the native bridge encode/decode structures, including timeline data, control values, confirmed values, and errors. If the command types are sufficient, this part may exist as a few scattered structs.
 - **Playback parameter mapping (`EntityMotionTiming`):** maps the single easing already resolved for each segment, plus delay, loop, and playback rate, to the RealityKit representation; all four built-in easings map directly.
-- **Transform decomposition and merge (`EntityMotionTransformValues`):** responsible for decomposing the confirmed value from the entity transform, merging the sparse `api.set` patch onto the committed baseline, and converting between Euler degrees and the RealityKit rotation representation.
+- **Transform decomposition and merge (`EntityMotionTransformValues`):** responsible for decomposing the confirmed value from the entity transform, merging the sparse `api.set` update onto the committed baseline, and converting between Euler degrees and the RealityKit rotation representation.
 
 #### JSB Command Processing
 
-`SpatialScene` looks up the spatial-object registry by `elementId` and dispatches create commands by runtime type:
+`SpatialScene` looks up the spatial-object registry by the create request `id`:
 
 ```text
-is element -> element manager
-is entity  -> EntityMotionManager
-otherwise  -> UNSUPPORTED_TARGET
+is entity -> entity.createAnimation(config)
+otherwise -> UNSUPPORTED_TARGET
 ```
 
 Processing rules:
 
-- When the registry lacks `elementId`, create fails with `TARGET_NOT_FOUND`.
-- After create succeeds, `SpatialScene` adds the animation object to global `spatialObjects` as a `SpatialObject`; `animationId` is its spatial id, and the existing success reply confirms the object's initial `idle` state.
-- Control commands look up an animation object by `animationId` in global `spatialObjects`, then enter the Element or Entity control path by animation-object runtime type. Only `EntityMotionAnimationObject` handles Entity-only `set`.
-- Synchronous command errors return through the JSB reply; only asynchronous playback failures after command acceptance return through one `spatialanimationstatechanged` error event.
-- A successful JSB reply is returned only after the command's synchronous native state transition and transform commit have completed. When that command emits a state event, Native emits the event before resolving the success reply; the binding queue uses reply settlement as the boundary for dispatching the next command.
+- When the registry lacks the target `id`, create fails with `TARGET_NOT_FOUND`.
+- After create succeeds, `SpatialScene` adds the animation object to global `spatialObjects` as a `SpatialObject`; the success reply returns that object's `id` and confirms its initial `idle` state.
+- Control commands look up an `EntityMotionAnimationObject` by `id` in global `spatialObjects`. The set command uses the same lookup and separately invokes `set(update)`.
+- Synchronous command errors return through the JSB reply; only asynchronous playback failures after command acceptance return through one `entityanimationerror`.
+- A successful JSB reply is returned only after the command's synchronous native state transition and transform commit have completed. When a playback control command emits a state event, Native emits the event before resolving the success reply. A set command returns the complete confirmed transform in its reply after transform commit and read-back and emits no state event. The binding queue uses reply settlement as the boundary for dispatching the next command.
 - When fresh-play compilation fails, the control command fails and the animation remains inactive.
 
-The create reply shape remains unchanged. A successful reply carrying `animationId` confirms an existing object in `idle`; a failed reply confirms that no object was created and lets the binding settle to `idle`, clear pending commands, and dispatch the classified error.
+The successful create reply carries only the animation object's `id` and confirms an existing object in `idle`; a failed reply confirms that no object was created and lets the binding settle to `idle`, clear pending commands, and dispatch the classified error.
 
-Native accepts and commits `api.set` while inactive. While active, it keeps the transform unchanged and returns `INVALID_CONTROL_STATE`; Core maps that `set` result to warning + no-op without triggering `onError`. The JSB shape remains unchanged.
+Native accepts and commits `api.set` while inactive. While active, it keeps the transform unchanged and returns `INVALID_CONTROL_STATE` through the `SetEntityAnimation` reply; Core maps that result to warning + no-op without triggering `onError`.
 
 #### Timeline compilation
 
@@ -1054,9 +1130,9 @@ Decomposition rules:
 
 - `position` comes from the translation part of the native transform.
 - `scale` comes from the scale part of the native transform.
-- `rotation` uses Euler degrees in the Entity's parent-relative local, right-handed coordinate system, where +X points right, +Y points up, and +Z points toward the viewer. Composition uses ZYX intrinsic rotation, equivalent to XYZ extrinsic rotation, with matrix order `Rz × Ry × Rx`. Confirmed native rotation is decomposed from its rotation matrix with `y` in `[-90°, 90°]` and `x` / `z` in `(-180°, 180°]`; at gimbal lock, `z` is fixed to `0°` and `x` is derived from the matrix. Equivalent quaternions therefore produce the same Euler result. A sparse `api.set` rotation patch merges onto this canonical complete Euler baseline before recomposition.
+- `rotation` uses Euler degrees in the Entity's parent-relative local, right-handed coordinate system, where +X points right, +Y points up, and +Z points toward the viewer. Composition uses ZYX intrinsic rotation, equivalent to XYZ extrinsic rotation, with matrix order `Rz × Ry × Rx`. Confirmed native rotation is decomposed from its rotation matrix with `y` in `[-90°, 90°]` and `x` / `z` in `(-180°, 180°]`; at gimbal lock, `z` is fixed to `0°` and `x` is derived from the matrix. Equivalent quaternions therefore produce the same Euler result. A sparse `api.set` rotation update merges onto this canonical complete Euler baseline before recomposition.
 - After decomposition, report the complete committed transform independently of the animation config and the fields written by `api.set`.
-- Both callback values and `entityProps` use `EntityMotionProps`; every confirmed value contains complete `position`, `rotation`, and `scale` values, each as a complete `Vec3`. `api.set(values)` accepts a deeply sparse `EntityMotionPatch`. For example, after axis-wise merging `set({ position: { y: 0.3 } })`, the confirmed result contains the complete position, rotation, and scale.
+- Both callback values and `entityProps` use `EntityMotionProps`; every confirmed value contains complete `position`, `rotation`, and `scale` values, each as a complete `Vec3`. `api.set(update)` accepts a deeply sparse `EntityTransformUpdate`. For example, after axis-wise merging `set({ position: { y: 0.3 } })`, the confirmed result contains the complete position, rotation, and scale.
 
 #### Native Internal Sequences
 
@@ -1065,17 +1141,17 @@ Decomposition rules:
 ```mermaid
 sequenceDiagram
     participant Scene as SpatialScene
-    participant Manager as EntityMotionManager
+    participant Entity as SpatialEntity
     participant Obj as EntityMotionAnimationObject
 
-    Scene->>Scene: findSpatialObject(elementId)
+    Scene->>Scene: findSpatialObject(id)
     alt resolved to an entity
-        Scene->>Manager: create(command, target)
-        Manager->>Manager: fallback-validate timeline data
-        Manager->>Obj: init(animationId, target, timeline)
-        Manager-->>Scene: animation object
+        Scene->>Entity: createAnimation(config)
+        Entity->>Entity: fallback-validate timeline data
+        Entity->>Obj: init(id, target, timeline)
+        Entity-->>Scene: animation object
         Scene->>Scene: addSpatialObject(animation object)
-        Scene-->>Scene: animationId = animation object spatial id
+        Scene-->>Scene: return animation object id
     else target lookup failure / target type outside supported range
         Scene->>Scene: build TARGET_NOT_FOUND / UNSUPPORTED_TARGET receipt
     end
@@ -1091,7 +1167,7 @@ sequenceDiagram
     participant RK as RealityKit
     participant Event as EntityMotionStateChangedMsg
 
-    Scene->>Scene: findSpatialObject(animationId)
+    Scene->>Scene: findSpatialObject(id)
     Scene->>Obj: play()
     alt fresh play
         Obj->>RK: read current transform as this run's baseline
@@ -1111,16 +1187,16 @@ sequenceDiagram
     Obj->>Event: emit complete, with confirmed value
 ```
 
-Create only stores the canonical timeline; `SpatialScene` registers the animation object and returns its `animationId`. Each fresh play reads the latest baseline and compiles that run's RealityKit resource, then commits and confirms the complete start pose. `start` and the first `entityProps` update happen after that confirmation without waiting for delay to end. A `play` after pause reuses the current resource and controller without reading the baseline, compiling, or producing another `start`.
+Create only stores the canonical timeline; `SpatialScene` registers the animation object and returns its `id`. Each fresh play reads the latest baseline and compiles that run's RealityKit resource, then commits and confirms the complete start pose. `start` and the first `entityProps` update happen after that confirmation without waiting for delay to end. A `play` after pause reuses the current resource and controller without reading the baseline, compiling, or producing another `start`.
 
 State-command matrix:
 
 | Native state | `play` | `pause` | `stop` | `reset` | `finish` | `set` |
 |---|---|---|---|---|---|---|
-| `idle` | fresh play → `running`; emit `start` once after start-pose confirmation | keep `idle` | keep `idle` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | commit patch; keep `idle` |
+| `idle` | fresh play → `running`; emit `start` once after start-pose confirmation | keep `idle` | keep `idle` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | commit update; keep `idle` |
 | `running` (including delay) | keep current run | → `paused`; emit `pause` | commit current pose → `idle`; emit `stop` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | keep current run; warning receipt |
 | `paused` | resume current controller → `running` | keep `paused` | commit current pose → `idle`; emit `stop` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | keep paused run; warning receipt |
-| `finished` | fresh play → `running`; emit `start` once after start-pose confirmation | keep `finished` | keep `finished` | commit start pose → `idle`; emit `reset` | keep `finished` | commit patch; keep `finished` |
+| `finished` | fresh play → `running`; emit `start` once after start-pose confirmation | keep `finished` | keep `finished` | commit start pose → `idle`; emit `reset` | keep `finished` | commit update; keep `finished` |
 
 For `reset` and `finish`, an existing run supplies its confirmed start and end poses. Before the first run, the compiler reads the current native transform as the baseline on demand and computes the configured start or end pose. `finish` always commits the configured `to` / `100%` pose for ordinary, reset-loop, and reverse-loop playback.
 
@@ -1130,14 +1206,14 @@ Lifecycle gates provide these callback counts: one `onStart` for each accepted f
 
 ```mermaid
 sequenceDiagram
-    participant JSB as ControlSpatializedElementAnimationJSBCommand
+    participant JSB as ControlEntityAnimationJSBCommand
     participant Scene as SpatialScene
     participant Obj as EntityMotionAnimationObject
     participant RK as RealityKit
     participant Event as EntityMotionStateChangedMsg
 
-    JSB->>Scene: control animation(animationId, type=pause)
-    Scene->>Scene: findSpatialObject(animationId)
+    JSB->>Scene: control animation(id, type=pause)
+    Scene->>Scene: findSpatialObject(id)
     alt found and state allows
         Scene->>Obj: pause()
         Obj->>RK: controller pause
@@ -1152,14 +1228,14 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant JSB as ControlSpatializedElementAnimationJSBCommand
+    participant JSB as ControlEntityAnimationJSBCommand
     participant Scene as SpatialScene
     participant Obj as EntityMotionAnimationObject
     participant RK as RealityKit
     participant Event as EntityMotionStateChangedMsg
 
-    JSB->>Scene: control animation(animationId, type=stop/reset/finish)
-    Scene->>Scene: findSpatialObject(animationId)
+    JSB->>Scene: control animation(id, type=stop/reset/finish)
+    Scene->>Scene: findSpatialObject(id)
     alt found
         Scene->>Obj: stop() / reset() / finish()
         Obj->>RK: read current transform or compute end-state transform
@@ -1169,7 +1245,7 @@ sequenceDiagram
         Obj->>Obj: read transform and decompose confirmed value
         Obj->>Event: emit stop/reset/finish, with confirmed value
         Scene-->>JSB: success
-    else animationId is absent
+    else id is absent
         Scene-->>JSB: fail(ANIMATION_NOT_FOUND)
     end
 ```
@@ -1178,35 +1254,38 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant JSB as ControlSpatializedElementAnimationJSBCommand
+    participant Core as EntityAnimationObject
+    participant JSB as SetEntityAnimationJSBCommand
     participant Scene as SpatialScene
     participant Obj as EntityMotionAnimationObject
     participant RK as RealityKit
-    participant Event as EntityMotionStateChangedMsg
 
-    JSB->>Scene: control animation(animationId, type=set, values)
-    Scene->>Scene: findSpatialObject(animationId)
-    alt animationId is absent
+    Core->>JSB: execute(id, update)
+    JSB->>Scene: set animation transform(id, update)
+    Scene->>Scene: findSpatialObject(id)
+    alt id is absent
         Scene-->>JSB: fail(ANIMATION_NOT_FOUND)
     else animation delayed / playing / paused
         Scene-->>JSB: fail(INVALID_CONTROL_STATE)
         Note over JSB: Core maps to warning + no-op; no onError
     else animation idle / at end state
-        Scene->>Obj: set(values)
+        Scene->>Obj: set(update)
         Obj->>RK: read current transform as committed baseline
-        Obj->>Obj: merge sparse patch onto baseline
+        Obj->>Obj: merge sparse update onto baseline
         Obj->>RK: commit merged transform with zero duration
         Obj->>Obj: read transform and decompose confirmed value
-        Obj->>Event: emit set, with confirmed value
-        Scene-->>JSB: success
+        Obj-->>Scene: EntityMotionProps
+        Scene-->>JSB: success({ values })
+        JSB-->>Core: SetEntityAnimationResult
+        Core->>Core: update entityProps from values
     end
 ```
 
-Pause reuses the compiled whole-transform chain and controls the current playback controller. Stop / reset / finish stop that controller and commit the target pose with zero duration. While inactive, `set` merges the sparse patch onto the committed transform and commits it with zero duration.
+Pause reuses the compiled whole-transform chain and controls the current playback controller. Stop / reset / finish stop that controller and commit the target pose with zero duration. While inactive, `set` merges the sparse update onto the committed transform, commits it with zero duration, reads back the complete confirmed transform, and returns it through the success reply. `set` preserves the existing `playState` and emits no state event.
 
 A native Entity animation object has the same lifecycle as one target binding. When the target is destroyed, `SpatialScene` cascades destruction to associated animations through the global `SpatialObject` lifecycle and retains no invalid object.
 
-Boundary constraint: `SpatialScene` owns global `spatialObjects`, create-target lookup, control-animation lookup, runtime-type dispatch, command receipts, and the `SpatialObject` lifecycle. `EntityMotionManager` only provides Entity animation-object creation; `EntityMotionAnimationObject` owns per-object compilation, playback state, controls, confirmed values, and resource release. Extract a shared protocol only after real duplication appears; do not introduce a second registry in advance.
+Boundary constraint: `SpatialScene` owns global `spatialObjects`, create-target lookup, animation-object lookup, the three Entity command replies, and the `SpatialObject` lifecycle. `SpatialEntity.createAnimation(config)` creates Entity animation objects; `EntityMotionAnimationObject` owns per-object compilation, playback state, controls, confirmed values, event emission, and resource release. Entity and Element paths keep separate protocols while sharing the global `spatialObjects` lifecycle.
 
 ## 6. Risk Assessment
 
@@ -1217,3 +1296,6 @@ Boundary constraint: `SpatialScene` owns global `spatialObjects`, create-target 
 | Zero-duration pose commits affect unrelated animations or terminal state | The command matrix bounds commits for `stop` / `reset` / `finish` / `set`; 8.4/8.5 cover terminal commits |
 | Missing transform-owner arbitration lets React writes override animation | `SpatialScene` checks the owner at the ordinary Entity transform update entry; 4.3/8.2 cover ownership |
 | Continuing after animation-object creation or same-target pose-handoff failure creates ambiguous state | Report the failure through `onError`, terminate the current binding lifecycle, and clear the mirror and pending commands; 4.3a covers termination and explicit rebinding |
+| Using `id` in both create requests and replies causes semantic confusion | Protocol direction fixes the meaning: request means target Entity id, reply means animation-object id; Core/native contract tests assert both |
+| State and error events report the same failure twice | Each failure chooses either a command reply or `entityanimationerror`; state events carry no errors |
+| The three Entity JSB commands drift between Core and Native | Bridge contract tests separately cover create, control, set, and both event types |
