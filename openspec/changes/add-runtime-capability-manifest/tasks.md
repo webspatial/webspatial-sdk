@@ -16,7 +16,7 @@
 
 - [x] 3.1 Make the checked-in visionOS Xcode project and builder-generated project consume the same generated manifest representation.
 - [x] 3.2 Add a centralized document-start `WKUserScript` provider that installs a frozen, non-writable manifest value before authored application scripts.
-- [x] 3.3 Apply the provider to every primary and additional spatial/content WKWebView creation path.
+- [x] 3.3 Apply the provider to every application-hosting Scene WebView and exclude SpatialDiv/Attachment portal WebViews through an explicit WebView role.
 - [x] 3.4 Add native/builder tests that verify direct and generated Xcode projects embed the expected runtime type, package version, build ID, and capability allowlist.
 
 ## 4. Preview QA and Maintenance Workflow
@@ -30,5 +30,5 @@
 
 - [x] 5.1 Run core and builder unit tests plus repository typecheck/lint checks for all touched packages.
 - [x] 5.2 Build the visionOS platform/builder artifacts and confirm generated output is deterministic and package-complete.
-- [x] 5.3 Run AVP simulator coverage for initial-script capability queries in the primary and additional WKWebViews.
+- [x] 5.3 Run AVP simulator coverage proving the manifest is available in application Scene WebViews and absent from SpatialDiv/Attachment portal WebViews.
 - [x] 5.4 Verify legacy visionOS, picoOS without a provider, Puppeteer, plain browser, and SSR behavior remain unchanged.

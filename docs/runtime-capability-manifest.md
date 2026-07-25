@@ -45,6 +45,11 @@ pnpm test:runtime-capabilities
 The generated Swift file is checked in and included in the published visionOS
 platform package. The runtime does not read repository JSON at execution time.
 
+The runtime injects the generated manifest into each Scene WebView that loads
+authored application code. SpatialDiv and Attachment WebViews only receive
+portal DOM from the host React tree, so they do not receive a manifest and do
+not perform independent capability detection.
+
 ## Build metadata
 
 The builder fills manifest metadata while generating the Xcode project:

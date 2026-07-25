@@ -105,7 +105,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     ) {
         self.windowStyle = windowStyle
         self.url = url
-        spatialWebViewModel = SpatialWebViewModel(url: url)
+        spatialWebViewModel = SpatialWebViewModel(url: url, role: .application)
         super.init()
         resetBackgroundMaterialOnWindowStyleChange(windowStyle)
 
@@ -437,7 +437,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
         // Just create a bare webview — metadata arrives via InitializeAttachment JSB
         let id = UUID().uuidString
-        let webViewModel = SpatialWebViewModel(url: nil)
+        let webViewModel = SpatialWebViewModel(url: nil, role: .portal)
         webViewModel.setBackgroundTransparent(true)
         pendingAttachmentWebViewModels[id] = webViewModel
         return WebViewElementInfo(id: id, element: webViewModel)

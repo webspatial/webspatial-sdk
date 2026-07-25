@@ -80,11 +80,13 @@ The generated Xcode project and the checked-in platform project must consume the
 
 This avoids runtime path and bundle-resource failures and ensures the manifest being injected is the one reviewed with the native implementation.
 
-### 4. Inject before application scripts in every WebSpatial WKWebView
+### 4. Inject before application scripts in application WebViews
 
-The visionOS provider installs an internal `WKUserScript` at `WKUserScriptInjectionTime.atDocumentStart` for every WebSpatial WKWebView configuration, including additional spatial/content webviews.
+The visionOS provider installs an internal `WKUserScript` at `WKUserScriptInjectionTime.atDocumentStart` in each `SpatialScene` application WebView. This includes additional scenes that load authored application content.
 
 The script defines an internal, frozen manifest value before authored scripts execute. Applications continue to use `WebSpatialRuntime.supports`; the injected global is a provider-to-SDK implementation contract, not a new application-facing API.
+
+SpatialDiv and Attachment WebViews are portal rendering surfaces, not independent application runtimes. React, the SDK, and `supports()` continue to execute in the host application WebView while `createPortal()` writes DOM into the child document. These portal WebViews do not receive the manifest.
 
 Synchronous document-start delivery is required because `supports()` and lazy-load gating are synchronous. An asynchronous JSB request would introduce races and require a public API change.
 
@@ -128,7 +130,7 @@ QA surfaces the parsed runtime type, version, build ID, manifest version, provid
 ## Risks / Trade-offs
 
 - **[Risk] Source capability declarations drift from native implementation** → Validate keys and generated output in CI, require native feature PRs to update the source, and cover declared capabilities with targeted integration tests.
-- **[Risk] Manifest injection is missing from one WKWebView creation path** → Centralize provider installation in WKWebView configuration and test both primary and spatial/content webviews.
+- **[Risk] Application and portal WebView creation paths are confused** → Give WebView models an explicit role, inject only for application roles, and test both sides of that boundary.
 - **[Risk] Authored JavaScript tampers with the internal global** → Inject first, freeze the manifest, define the property as non-writable/non-configurable where practical, and snapshot validated data. Capability detection remains advisory rather than a security boundary.
 - **[Risk] A malformed manifest hides all new capabilities** → Fall back without throwing and expose the selected provider source in the diagnostic test page.
 - **[Risk] Older SDKs do not understand manifests** → They retain their existing table behavior; newer capability names are already unknown/false to them.
@@ -139,7 +141,7 @@ QA surfaces the parsed runtime type, version, build ID, manifest version, provid
 
 1. Add manifest schema/types, validation, snapshot caching, and resolution precedence to the SDK while retaining every existing fallback.
 2. Add the checked-in visionOS capability source and deterministic validation/generation tooling.
-3. Install the generated provider in every visionOS WKWebView at document start.
+3. Install the generated provider in every visionOS application WebView at document start while leaving portal WebViews untouched.
 4. Add unit, builder, native, and preview QA coverage before treating the provider as authoritative.
 5. Document the cutover: future visionOS capability changes update the current source rather than a guessed `CAPABILITY_TABLE` row.
 6. Roll back safely by disabling/removing provider injection; updated SDKs then resume existing table behavior.

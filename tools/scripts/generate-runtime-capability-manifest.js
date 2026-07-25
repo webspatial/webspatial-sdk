@@ -120,37 +120,11 @@ ${supported}
           Object.freeze(manifest.runtime);
           Object.freeze(manifest.supported);
           Object.freeze(manifest);
-          const install = target => {
-            if (
-              !target ||
-              Object.prototype.hasOwnProperty.call(
-                target,
-                "__webspatialCapabilities",
-              )
-            ) {
-              return;
-            }
-            Object.defineProperty(target, "__webspatialCapabilities", {
-              value: manifest,
-              writable: false,
-              configurable: false,
-            });
-          };
-
-          install(globalThis);
-
-          const nativeOpen = globalThis.open;
-          if (typeof nativeOpen === "function") {
-            globalThis.open = function(...args) {
-              const child = Reflect.apply(nativeOpen, this, args);
-              try {
-                install(child);
-              } catch {
-                // Cross-origin windows are intentionally left untouched.
-              }
-              return child;
-            };
-          }
+          Object.defineProperty(globalThis, "__webspatialCapabilities", {
+            value: manifest,
+            writable: false,
+            configurable: false,
+          });
         })();
         """
     }

@@ -92,17 +92,18 @@ The visionOS platform package MUST contain a Git-managed current-capability sour
 
 ### Requirement: visionOS document-start injection
 
-The visionOS runtime MUST install the generated manifest in every WebSpatial WKWebView JavaScript environment before authored scripts execute. The injected value MUST be protected against ordinary reassignment where the platform permits.
+The visionOS runtime MUST install the generated manifest in every application-hosting WebSpatial WKWebView JavaScript environment before authored scripts execute. It MUST NOT install the manifest in SpatialDiv or Attachment portal WebViews that only receive DOM rendered by the host application. The injected value MUST be protected against ordinary reassignment where the platform permits.
 
-#### Scenario: Primary WebSpatial WKWebView
+#### Scenario: Application WebSpatial WKWebView
 
-- **WHEN** the runtime creates the primary WebSpatial WKWebView
+- **WHEN** the runtime creates a primary or additional Scene WebView that loads authored application content
 - **THEN** it MUST install the manifest with document-start injection before loading application content
 
-#### Scenario: Additional WebSpatial WKWebView
+#### Scenario: Portal WebSpatial WKWebView
 
-- **WHEN** the runtime creates an additional spatial or content WKWebView
-- **THEN** it MUST install the same runtime-build manifest before loading that webview's authored content
+- **WHEN** the runtime creates a SpatialDiv or Attachment WebView used only as a `createPortal()` DOM target
+- **THEN** it MUST NOT install the runtime capability manifest in that WebView
+- **AND** capability queries MUST continue to execute against the manifest in the host application WebView
 
 ### Requirement: Provider protocol is platform-neutral
 

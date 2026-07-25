@@ -23,9 +23,33 @@ final class RuntimeCapabilityManifestTests: XCTestCase {
         XCTAssertTrue(source.contains("__webspatialCapabilities"))
         XCTAssertTrue(source.contains("Object.freeze(manifest)"))
         XCTAssertTrue(source.contains("writable: false"))
-        XCTAssertTrue(source.contains("const nativeOpen = globalThis.open"))
-        XCTAssertTrue(source.contains("install(child)"))
+        XCTAssertFalse(source.contains("globalThis.open"))
         XCTAssertEqual(userScript.injectionTime, .atDocumentStart)
         XCTAssertFalse(userScript.isForMainFrameOnly)
+    }
+
+    func test_manifestIsInstalledOnlyForApplicationWebViews() {
+        let applicationController = WKUserContentController()
+        WKWebViewManager.Instance.installRuntimeCapabilityManifestIfNeeded(
+            into: applicationController,
+            role: .application
+        )
+
+        let portalController = WKUserContentController()
+        WKWebViewManager.Instance.installRuntimeCapabilityManifestIfNeeded(
+            into: portalController,
+            role: .portal
+        )
+
+        XCTAssertTrue(containsRuntimeCapabilityManifest(applicationController))
+        XCTAssertFalse(containsRuntimeCapabilityManifest(portalController))
+    }
+
+    private func containsRuntimeCapabilityManifest(
+        _ controller: WKUserContentController
+    ) -> Bool {
+        controller.userScripts.contains {
+            $0.source.contains("__webspatialCapabilities")
+        }
     }
 }

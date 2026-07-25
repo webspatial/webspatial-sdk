@@ -1,9 +1,15 @@
 import SwiftUI
 @preconcurrency import WebKit
 
+enum SpatialWebViewRole {
+    case application
+    case portal
+}
+
 @Observable
 class SpatialWebViewModel {
     var url = ""
+    let role: SpatialWebViewRole
     private(set) var title: String?
     private var view: SpatialWebView?
     private var controller: SpatialWebController?
@@ -27,9 +33,10 @@ class SpatialWebViewModel {
 
     var scrollOffset: CGPoint = .zero
 
-    init(url: String?) {
+    init(url: String?, role: SpatialWebViewRole) {
         controller = SpatialWebController()
         self.url = url ?? ""
+        self.role = role
         controller!.model = self
         controller?.registerNavigationInvoke(invoke: onNavigationInvoke)
         controller?.registerOpenWindowInvoke(invoke: onOpenWindowInvoke)
@@ -43,7 +50,12 @@ class SpatialWebViewModel {
 
     func load(_ url: String, _ configuration: WKWebViewConfiguration? = nil, _ spatialId: String? = "") {
         if controller?.webview == nil {
-            _ = WKWebViewManager.Instance.create(controller: controller!, configuration: configuration, spatialId: spatialId)
+            _ = WKWebViewManager.Instance.create(
+                controller: controller!,
+                configuration: configuration,
+                spatialId: spatialId,
+                role: role
+            )
             controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
             controller!.webview?.isOpaque = backgroundTransparent
         }
@@ -58,7 +70,7 @@ class SpatialWebViewModel {
 
     func loadHTML(_ htmlText: String) {
         if controller?.webview == nil {
-            _ = WKWebViewManager.Instance.create(controller: controller!)
+            _ = WKWebViewManager.Instance.create(controller: controller!, role: role)
             controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
             controller!.webview?.isOpaque = backgroundTransparent
         }
