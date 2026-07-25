@@ -10,8 +10,8 @@ final class RuntimeCapabilityManifestTests: XCTestCase {
 
         XCTAssertEqual(manifest["manifestVersion"] as? Int, 1)
         XCTAssertEqual(runtime?["type"], "visionos")
-        XCTAssertEqual(runtime?["version"], RuntimeCapabilityManifestProvider.packageVersion)
-        XCTAssertEqual(runtime?["buildId"], "package-\(RuntimeCapabilityManifestProvider.packageVersion)")
+        XCTAssertEqual(runtime?["version"], pwaManager.getShellVersion())
+        XCTAssertEqual(runtime?["buildId"], pwaManager.getRuntimeBuildId())
         XCTAssertTrue(supported?.contains("Model") ?? false)
         XCTAssertTrue(supported?.contains("useAnimation:entity") ?? false)
     }

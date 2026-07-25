@@ -54,6 +54,7 @@ The SDK MUST use a runtime manifest only when its schema version is supported, i
 - **WHEN** a visionOS runtime artifact is built
 - **THEN** its manifest MUST contain a non-empty build ID generated from available build provenance
 - **AND** the checked-in capability source MUST NOT hard-code a preview or stable build ID
+- **AND** the checked-in generated capability provider MUST obtain runtime version and build ID from build metadata rather than embedding package semver
 
 #### Scenario: Schema version changes deliberately
 
@@ -76,7 +77,7 @@ A runtime capability provider MUST make its manifest available synchronously bef
 
 ### Requirement: Repository-managed visionOS provider source
 
-The visionOS platform package MUST contain a Git-managed current-capability source with the manifest version, `visionos` runtime type, and complete supported allowlist. The visionOS build flow MUST validate this source against the SDK registry and embed generated manifest data into the runtime artifact; the runtime MUST NOT depend on reading the repository source path at execution time.
+The visionOS platform package MUST contain a Git-managed current-capability source with the manifest version, `visionos` runtime type, and complete supported allowlist. The visionOS generation flow MUST validate this source against the SDK registry and embed the static manifest data into the runtime artifact, while runtime version and build ID MUST come from build metadata; the runtime MUST NOT depend on reading the repository source path at execution time.
 
 #### Scenario: Native feature PR updates support
 

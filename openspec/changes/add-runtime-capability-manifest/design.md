@@ -61,10 +61,13 @@ The repository owns a visionOS source file, initially `packages/visionOS/runtime
 - runtime type
 - the canonical sorted `supported` allowlist
 
-The source does not contain a stable package version or a hard-coded build ID. A build step validates the source against the SDK key/token registry and produces the embedded manifest with:
+The source and generated Swift do not contain a stable package version or a hard-coded build ID. Generation validates the source against the SDK key/token registry and emits only the static protocol data:
 
-- `runtime.version` from `@webspatial/platform-visionos/package.json`
-- `runtime.buildId` from build provenance
+- `manifestVersion`
+- runtime type
+- the canonical sorted `supported` allowlist
+
+The builder writes `runtime.version` and `runtime.buildId` into `manifest.swift`, where `pwaManager` owns runtime build metadata. The provider reads those values when it constructs the injected manifest. Changesets can therefore update package versions without making the checked-in capability generation stale.
 
 `manifestVersion` is an integer protocol version maintained deliberately in source. It changes only when parsing semantics become incompatible; adding backward-compatible optional metadata does not require a bump.
 
@@ -74,7 +77,7 @@ A content-derived `capabilitySetId` is deferred. It can be added as optional met
 
 ### 3. Embed at build time; do not read repository JSON at runtime
 
-The visionOS application does not open the source JSON from the filesystem. The platform build/builder flow converts the validated source and generated metadata into a Swift or JavaScript literal carried by the runtime artifact.
+The visionOS application does not open the source JSON from the filesystem. The generation flow converts the validated static source into a Swift literal carried by the runtime artifact, while the builder independently writes version and provenance metadata into `manifest.swift`.
 
 The generated Xcode project and the checked-in platform project must consume the same generated representation. CI verifies generation is deterministic and that checked-in generated output, if any, is not stale.
 

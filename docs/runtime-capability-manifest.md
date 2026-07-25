@@ -43,7 +43,9 @@ pnpm test:runtime-capabilities
 ```
 
 The generated Swift file is checked in and included in the published visionOS
-platform package. The runtime does not read repository JSON at execution time.
+platform package. It contains only the static manifest version, runtime type, and
+capability allowlist. The runtime does not read repository JSON at execution
+time, and Changesets package-version updates do not require regeneration.
 
 The runtime injects the generated manifest into each Scene WebView that loads
 authored application code. SpatialDiv and Attachment WebViews only receive
@@ -52,7 +54,8 @@ not perform independent capability detection.
 
 ## Build metadata
 
-The builder fills manifest metadata while generating the Xcode project:
+The builder fills `pwaManager` metadata while generating the Xcode project, and
+the capability provider reads it while constructing the injected manifest:
 
 - `manifestVersion` is maintained manually and changes only for an incompatible
   schema revision.

@@ -8,7 +8,6 @@ const sourcePath = path.join(
   repoRoot,
   'packages/visionOS/runtime-capabilities.json',
 )
-const packagePath = path.join(repoRoot, 'packages/visionOS/package.json')
 const outputPath = path.join(
   repoRoot,
   'packages/visionOS/web-spatial/RuntimeCapabilityManifest.generated.swift',
@@ -68,7 +67,7 @@ function validateSource(source, registry) {
   }
 }
 
-function renderSwift(source, packageVersion) {
+function renderSwift(source) {
   const supported = source.supported
     .map(entry => `        ${JSON.stringify(entry)},`)
     .join('\n')
@@ -82,27 +81,17 @@ import Foundation
 enum RuntimeCapabilityManifestProvider {
     static let manifestVersion = ${source.manifestVersion}
     static let runtimeType = ${JSON.stringify(source.runtime.type)}
-    static let packageVersion = ${JSON.stringify(packageVersion)}
     static let supported = [
 ${supported}
     ]
 
     static func manifestDictionary() -> [String: Any] {
-        let configuredVersion = pwaManager.getShellVersion()
-        let runtimeVersion = configuredVersion == "WS_SHELL_VERSION"
-            ? packageVersion
-            : configuredVersion
-        let configuredBuildId = pwaManager.getRuntimeBuildId()
-        let runtimeBuildId = configuredBuildId == "package-WS_SHELL_VERSION"
-            ? "package-\\(packageVersion)"
-            : configuredBuildId
-
         return [
             "manifestVersion": manifestVersion,
             "runtime": [
                 "type": runtimeType,
-                "version": runtimeVersion,
-                "buildId": runtimeBuildId,
+                "version": pwaManager.getShellVersion(),
+                "buildId": pwaManager.getRuntimeBuildId(),
             ],
             "supported": supported,
         ]
@@ -142,9 +131,8 @@ ${supported}
 
 const registry = loadTypeScriptModule(keysPath)
 const source = JSON.parse(fs.readFileSync(sourcePath, 'utf8'))
-const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'))
 validateSource(source, registry)
-const expected = renderSwift(source, packageJson.version)
+const expected = renderSwift(source)
 
 if (process.argv.includes('--check')) {
   const actual = fs.existsSync(outputPath)

@@ -7,7 +7,6 @@ import Foundation
 enum RuntimeCapabilityManifestProvider {
     static let manifestVersion = 1
     static let runtimeType = "visionos"
-    static let packageVersion = "1.7.0"
     static let supported = [
         "-xr-back",
         "-xr-background-material",
@@ -73,21 +72,12 @@ enum RuntimeCapabilityManifestProvider {
     ]
 
     static func manifestDictionary() -> [String: Any] {
-        let configuredVersion = pwaManager.getShellVersion()
-        let runtimeVersion = configuredVersion == "WS_SHELL_VERSION"
-            ? packageVersion
-            : configuredVersion
-        let configuredBuildId = pwaManager.getRuntimeBuildId()
-        let runtimeBuildId = configuredBuildId == "package-WS_SHELL_VERSION"
-            ? "package-\(packageVersion)"
-            : configuredBuildId
-
         return [
             "manifestVersion": manifestVersion,
             "runtime": [
                 "type": runtimeType,
-                "version": runtimeVersion,
-                "buildId": runtimeBuildId,
+                "version": pwaManager.getShellVersion(),
+                "buildId": pwaManager.getRuntimeBuildId(),
             ],
             "supported": supported,
         ]
