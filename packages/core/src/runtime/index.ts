@@ -15,3 +15,11 @@ export {
 export type { CapabilityVersionRow } from './capability-data'
 export { CAPABILITY_TABLE } from './capability-data'
 export type { CapabilityKey } from './keys'
+export {
+  getRuntimeCapabilityManifest,
+  parseRuntimeCapabilityManifest,
+  RUNTIME_CAPABILITY_MANIFEST_GLOBAL,
+  serializeRuntimeCapabilityManifest,
+  type RuntimeCapabilityManifest,
+  type RuntimeCapabilityProviderType,
+} from './capability-manifest'

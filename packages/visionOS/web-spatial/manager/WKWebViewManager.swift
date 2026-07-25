@@ -11,6 +11,7 @@ class WKWebViewManager {
         // TODO: get native api instead of using the injected WS_SDK_VERSION placeholder
         let userScript = WKUserScript(source: "window.WebSpatailEnabled = true; window.WebSpatailNativeVersion = 'WS_SDK_VERSION';", injectionTime: .atDocumentStart, forMainFrameOnly: false)
         userContentController.addUserScript(userScript)
+        userContentController.addUserScript(RuntimeCapabilityManifestProvider.makeUserScript())
 //        userContentController.add(controller, name: "bridge")
         userContentController.addScriptMessageHandler(controller, contentWorld: .page, name: "bridge")
         let myConfig = (configuration != nil) ? configuration! : WKWebViewConfiguration()

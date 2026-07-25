@@ -17,6 +17,7 @@
     "web-spatial",
     "web-spatialTests",
     "web-spatial.xcodeproj",
+    "runtime-capabilities.json",
     "package.json"
   ],
   "author": "",
