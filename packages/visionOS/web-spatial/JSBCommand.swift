@@ -1,11 +1,5 @@
 import SwiftUI
 
-struct JSBVec3: Codable {
-    let x: Double
-    let y: Double
-    let z: Double
-}
-
 struct UpdateSpatialSceneProperties: CommandDataProtocol {
     static let commandType: String = "UpdateSpatialSceneProperties"
     let cornerRadius: CornerRadius?
@@ -400,21 +394,20 @@ struct GetSpatialSceneStateCommand: CommandDataProtocol {
 struct InitializeAttachmentCommand: CommandDataProtocol {
     static let commandType = "InitializeAttachment"
     let id: String
-    let placementId: String
-    let position: JSBVec3?
-    let rotation: JSBVec3?
-    let scale: JSBVec3?
-    let width: Double?
-    let height: Double?
+    let parentEntityId: String
+    let position: [Float]?
+    let size: AttachmentSize?
     let ownerViewId: String
 }
 
 struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     static let commandType = "UpdateAttachmentEntity"
     let id: String
-    let position: JSBVec3?
-    let rotation: JSBVec3?
-    let scale: JSBVec3?
-    let width: Double?
-    let height: Double?
+    let position: [Float]?
+    let size: AttachmentSize?
+}
+
+struct AttachmentSize: Codable {
+    let width: Double
+    let height: Double
 }
