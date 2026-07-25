@@ -29,6 +29,6 @@
 ## 5. Validation
 
 - [x] 5.1 Run core and builder unit tests plus repository typecheck/lint checks for all touched packages.
-- [ ] 5.2 Build the visionOS platform/builder artifacts and confirm generated output is deterministic and package-complete.
-- [ ] 5.3 Run AVP simulator coverage for initial-script capability queries in the primary and additional WKWebViews.
+- [x] 5.2 Build the visionOS platform/builder artifacts and confirm generated output is deterministic and package-complete.
+- [x] 5.3 Run AVP simulator coverage for initial-script capability queries in the primary and additional WKWebViews.
 - [x] 5.4 Verify legacy visionOS, picoOS without a provider, Puppeteer, plain browser, and SSR behavior remain unchanged.

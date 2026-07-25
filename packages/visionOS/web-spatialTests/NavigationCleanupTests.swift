@@ -18,7 +18,8 @@ final class NavigationCleanupTests: XCTestCase {
             id: "test-attachment",
             parentEntityId: "test-parent-entity",
             position: SIMD3<Float>(0, 0, 0),
-            size: CGSize(width: 100, height: 100)
+            size: CGSize(width: 100, height: 100),
+            webViewModel: SpatialWebViewModel(url: nil)
         )
         XCTAssertFalse(scene.attachmentManager.attachments.isEmpty)
 

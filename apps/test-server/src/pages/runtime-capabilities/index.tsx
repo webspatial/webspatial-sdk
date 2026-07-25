@@ -283,11 +283,9 @@ export default function RuntimeCapabilitiesPage() {
             </div>
             <div className="rounded-xl border border-gray-800 bg-black/30 px-4 py-3 backdrop-blur-sm">
               <div className="text-xs font-medium text-gray-500">
-                Matrix mismatches
+                vision vs pico differences
               </div>
-              <div
-                className={`mt-1 text-lg font-semibold ${mismatchCount ? 'text-rose-400' : 'text-emerald-400'}`}
-              >
+              <div className="mt-1 text-lg font-semibold text-amber-300">
                 {mismatchCount}
               </div>
             </div>

@@ -23,6 +23,8 @@ final class RuntimeCapabilityManifestTests: XCTestCase {
         XCTAssertTrue(source.contains("__webspatialCapabilities"))
         XCTAssertTrue(source.contains("Object.freeze(manifest)"))
         XCTAssertTrue(source.contains("writable: false"))
+        XCTAssertTrue(source.contains("const nativeOpen = globalThis.open"))
+        XCTAssertTrue(source.contains("install(child)"))
         XCTAssertEqual(userScript.injectionTime, .atDocumentStart)
         XCTAssertFalse(userScript.isForMainFrameOnly)
     }
