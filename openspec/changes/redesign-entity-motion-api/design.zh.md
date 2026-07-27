@@ -180,7 +180,7 @@ flowchart TB
 
 **各层职责:**
 
-- **React 层**负责 Hook API、绑定生命周期、`entityProps` 镜像、回调分发和重渲染。目标绑定完成后,绑定器调用 `SpatialEntity.createAnimation(config)`。
+- **React 层**负责 Hook API、目标绑定协调、`entityProps` 镜像、命令排队、回调分发和重渲染。`useEntityAnimation` 创建一个 `EntityMotionBinding` 和一个稳定的 `EntityPlaybackApi` 控制门面;`useEntity` 通过 `useBindMotionTarget` 把目标交给绑定对象。`EntityMotionBinding` 作为 React 胶水层保存最新期望配置、连接当前目标与 Core 动画对象,并调用 `SpatialEntity.createAnimation(config)`。
 - **公共逻辑层**由 `SpatialEntity.createAnimation(config)` 使用目标自身的 `SpatialObject.id`,执行 Entity 专属归一化与校验,发送创建命令并返回 `EntityAnimationObject`。`EntityPlaybackApi` 扩展现有 `SpatializedPlaybackApi` 并只为 Entity 增加 `set`;`EntityAnimationObject` 与普通 `AnimationObject` 分别实现对应接口,两个具体类之间没有继承关系。归一化会把对外的三种书写形态折叠成内部规范物体轨道;当 `timeline` 与顶层 `from` / `to` 同时出现时,`timeline` 是唯一生效输入,开发模式同时打印重复声明警告。
 - **原生层**由 `SpatialScene.spatialObjects` 统一持有动画对象并复用 `SpatialObject` 生命周期。`SpatialScene` 负责创建目标查找和动画对象查找;目标 Entity 通过 `createAnimation(config)` 创建 `EntityMotionAnimationObject`;动画对象负责单对象状态机、fresh play 编译、RealityKit 执行和确认姿态回传。
 
@@ -194,6 +194,7 @@ classDiagram
             +api EntityPlaybackApi
             +entityProps EntityMotionProps
         }
+        class useEntity
         class EntityMotionBinding
         class EntityMotionProps {
             +position Vec3
@@ -265,17 +266,21 @@ classDiagram
         class EntityMotionAnimationObject
         class RealityKit
     }
-    useEntityAnimation --> EntityMotionBinding : 返回 animation
-    useEntityAnimation --> EntityPlaybackApi : 返回 api
-    useEntityAnimation --> EntityMotionProps : 返回 entityProps
-    EntityMotionBinding --> useBindMotionTarget : 绑定目标
-    useBindMotionTarget --> SpatialEntity : 调用 createAnimation(config)
+    useEntityAnimation --> EntityMotionBinding : 创建并返回 animation
+    useEntityAnimation --> EntityPlaybackApi : 创建并返回 api 控制门面
+    useEntityAnimation --> EntityMotionProps : 返回当前镜像
+    EntityMotionBinding *-- EntityMotionProps : 持有确认姿态镜像
+    useEntity --> useBindMotionTarget : 调用
+    useBindMotionTarget --> EntityMotionBinding : 调用内部绑定与解绑入口
+    useBindMotionTarget --> SpatialEntity : 接收 target
+    EntityPlaybackApi --> EntityMotionBinding : 控制门面委派
+    EntityMotionBinding --> SpatialEntity : 调用 createAnimation(config)
+    EntityMotionBinding --> EntityAnimationObject : 委派命令并消费通知
     SpatialEntity --> EntityMotionNormalizer : 归一化并校验
     SpatializedPlaybackApi <|-- EntityPlaybackApi : extends
     SpatializedPlaybackApi <|.. AnimationObject : implements
     EntityPlaybackApi <|.. EntityAnimationObject : implements
     SpatialEntity --> EntityAnimationObject : 创建并返回
-    EntityPlaybackApi --> EntityAnimationObject : 委派命令
     SpatialEntity --> CreateEntityAnimationJSBCommand
     EntityAnimationObject --> ControlEntityAnimationJSBCommand
     EntityAnimationObject --> SetEntityAnimationJSBCommand
@@ -401,11 +406,25 @@ sequenceDiagram
 
 ### 5.1 React SDK
 
-- **公开接口:** `useEntityAnimation` 返回 `[animation, api, entityProps]`;物体组件通过 `animation` 属性接收 `EntityMotionBinding`。
-- **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`;`api.set(update)` 把稀疏 transform 更新提交给原生。
-- **目标绑定:** `useBindMotionTarget({ binding, target })` 维护一个绑定对应一个 `SpatialEntity` 的约束,绑定完成后调用 `target.createAnimation(config)`。解绑和目标替换会把绑定持有的 `entityProps` 镜像清空为 `{}`,继续展开返回对象时由普通 React 变换属性控制。
+- **公开接口:** `useEntityAnimation` 创建一个 `EntityMotionBinding` 和一个稳定的 `EntityPlaybackApi` 控制门面,读取绑定对象的当前确认姿态镜像,并返回 `[animation, api, entityProps]`;物体组件通过 `animation` 属性接收 `EntityMotionBinding`。
+- **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`,并把命令委派给 `EntityMotionBinding`;绑定对象按照 FIFO 顺序把命令委派给当前 `EntityAnimationObject`。`api.set(update)` 把稀疏 transform 更新提交给原生。
+- **目标绑定:** `useEntity` 消费物体组件的 `animation` 属性,并调用 `useBindMotionTarget({ binding, target })`。该 Hook 在 React effect 建立和清理时分别调用绑定对象对称的内部绑定与解绑入口。`EntityMotionBinding` 保证自身在同一时刻最多连接一个 `SpatialEntity`,绑定完成后调用 `target.createAnimation(config)`。解绑或目标替换时,绑定对象执行清理并把自身持有的 `entityProps` 镜像清空为 `{}`。应用继续展开返回对象时,普通 React 变换属性恢复控制。
 - **命令顺序:** `EntityMotionBinding` 复用 Element 动画绑定在对象创建前暂存命令、创建后逐条执行的机制。每个绑定对象独立串行执行命令,当前命令收到 JSB 回执后才发送下一条命令。
-- **结果镜像:** `entityProps` 镜像原生确认的 `position`、`rotation`、`scale`,并驱动 React 重渲染与生命周期回调。
+- **结果镜像:** `EntityMotionBinding` 持有 `entityProps`,消费当前 `EntityAnimationObject` 的确认值并通知 React 重渲染。`useEntityAnimation` 在每次渲染中读取当前镜像并作为第三项返回。`entityProps` 包含原生确认的 `position`、`rotation` 和 `scale`。
+
+#### 对象职责与调用关系
+
+- **`useEntityAnimation`:** 管理 React 侧 `EntityMotionBinding` 实例的存续,创建稳定的 `EntityPlaybackApi` 控制门面,把最新配置交给绑定对象,订阅镜像和公开状态变化,并返回当前 `entityProps` 快照。
+- **`EntityMotionBinding`:** 作为 React 响应式 API 与 Core 动画对象之间的胶水层,保存最新期望配置、当前目标、当前动画对象、确认姿态镜像和待执行命令。它协调目标连接、对象创建与替换、命令串行化、确认值提交和 React 更新。供控制门面读取的内部 `playState` getter 在存在待执行命令时返回 `queued`,在当前动画对象存在时读取 `EntityAnimationObject.playState`,其它时机返回 `idle`。
+- **`EntityPlaybackApi`:** 作为应用可见的稳定控制门面,把播放命令、`set` 和状态读取委派给同一个 `EntityMotionBinding`。配置更新和动画对象替换保持该门面对象的身份。
+- **`useEntity` 与 `useBindMotionTarget`:** `useEntity` 提供组件的 `animation` 属性和已解析的 `SpatialEntity`;`useBindMotionTarget` 使用 React effect 调用绑定对象的内部 `__bindTarget(target)` 和 `__unbindTarget(target)`。
+- **`EntityMotionProps`:** 表示 `EntityMotionBinding` 持有的只读确认姿态快照。应用通过 `useEntityAnimation` 返回值读取该快照。
+- **`SpatialEntity`:** 提供 `createAnimation(config)` 创建入口。`EntityMotionBinding` 使用最新期望配置调用该入口。
+- **`EntityAnimationObject`:** 持有当前 Core 动画对象采用的配置快照和权威播放状态,执行播放与 `set` 命令,并向绑定对象通知状态、确认姿态和错误。
+
+`EntityMotionBinding` 保存的最新期望配置服务于目标晚绑定和对象替换。`EntityAnimationObject` 保存的配置快照服务于当前 Core 对象执行。两者具有不同生命周期和职责。过期的创建、销毁、姿态交接、命令回执和状态事件必须失效;实现可以使用递增 token、取消信号或等价机制。
+
+本文中的“绑定生命周期”表示 React 目标连接会话。`EntityAnimationObject` 持有播放状态机并管理播放生命周期。
 
 #### 绑定命令队列与完成语义
 
@@ -434,29 +453,49 @@ sequenceDiagram
 
 #### 类图
 
+类图中 `+` 表示可由其它 React SDK 源码模块调用,`-` 表示类私有状态。`<<public>>` 表示应用公开 API,`<<opaque>>` 表示应用只传递而不调用内部成员的公开类型。包导出入口与公开类型声明决定应用可见性。
+
 ```mermaid
 classDiagram
     namespace ReactSDK {
         class useEntityAnimation {
+            <<public>>
             +animation EntityMotionBinding
             +api EntityPlaybackApi
             +entityProps EntityMotionProps
         }
         class EntityPlaybackApi {
             <<interface>>
+            <<public>>
+            +set(update EntityTransformUpdate)
+        }
+        class EntityMotionBinding {
+            <<opaque>>
+            -desiredConfig EntityMotionConfig
+            -target SpatialEntity
+            -animationObject EntityAnimationObject
+            -entityProps EntityMotionProps
+            -pendingCommands
+            +currentEntityProps EntityMotionProps
+            +playState EntityMotionPlayState
+            +__bindTarget(target SpatialEntity)
+            +__unbindTarget(target SpatialEntity)
+            +updateConfig(config EntityMotionConfig)
             +play()
             +pause()
             +stop()
             +reset()
             +finish()
             +set(update EntityTransformUpdate)
+            +destroy()
         }
-        class EntityMotionBinding
         class EntityMotionProps {
+            <<public>>
             +position Vec3
             +rotation Vec3
             +scale Vec3
         }
+        class useEntity
         class useBindMotionTarget {
             +binding EntityMotionBinding
             +target SpatialEntity
@@ -465,20 +504,49 @@ classDiagram
     namespace CoreSDKBoundary {
         class SpatializedPlaybackApi {
             <<interface>>
+            +play()
+            +pause()
+            +stop()
+            +reset()
+            +finish()
+            +playState SpatializedMotionPlayState
+            +isAnimating boolean
+            +isPaused boolean
+            +finished boolean
         }
         class SpatialEntity {
             +createAnimation(config) EntityAnimationObject
         }
-        class EntityAnimationObject
+        class EntityAnimationObject {
+            -config EntityMotionConfig
+            +playState EntityMotionNativePlayState
+            +play()
+            +pause()
+            +stop()
+            +reset()
+            +finish()
+            +set(update EntityTransformUpdate)
+            +destroy()
+            +onStart(callback)
+            +onComplete(callback)
+            +onStop(callback)
+            +onReset(callback)
+            +onError(callback)
+        }
     }
-    useEntityAnimation --> EntityMotionBinding : 返回 animation
-    useEntityAnimation --> EntityPlaybackApi : 返回 api
-    useEntityAnimation --> EntityMotionProps : 返回 entityProps
-    EntityMotionBinding --> useBindMotionTarget : 传入 binding
-    useBindMotionTarget --> SpatialEntity : 绑定目标
+    useEntityAnimation --> EntityMotionBinding : 创建、返回并读取镜像
+    useEntityAnimation --> EntityPlaybackApi : 创建并返回稳定门面
+    useEntityAnimation --> EntityMotionProps : 返回当前快照
+    EntityMotionBinding *-- EntityMotionProps : 持有确认姿态镜像
+    useEntity --> useBindMotionTarget : 调用
+    useBindMotionTarget --> EntityMotionBinding : 调用内部绑定与解绑入口
+    useBindMotionTarget --> SpatialEntity : 接收 target
     SpatializedPlaybackApi <|-- EntityPlaybackApi : extends
+    EntityPlaybackApi <|.. EntityAnimationObject : implements
+    EntityPlaybackApi --> EntityMotionBinding : 门面委派
+    EntityMotionBinding --> SpatialEntity : 调用 createAnimation
+    EntityMotionBinding --> EntityAnimationObject : 委派命令并消费通知
     SpatialEntity --> EntityAnimationObject : 创建
-    EntityPlaybackApi --> EntityAnimationObject : 委派播放与 set
 ```
 
 #### 状态事件映射

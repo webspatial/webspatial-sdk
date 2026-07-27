@@ -180,7 +180,7 @@ flowchart TB
 
 **Responsibilities per layer:**
 
-- **React layer** handles the Hook API, binding lifecycle, the `entityProps` mirror, callback dispatch, and re-render. Once target binding completes, the binder calls `SpatialEntity.createAnimation(config)`.
+- **React layer** handles the Hook API, target-binding coordination, the `entityProps` mirror, command queuing, callback dispatch, and re-render. `useEntityAnimation` creates one `EntityMotionBinding` and one stable `EntityPlaybackApi` facade; `useEntity` passes the target to the binding through `useBindMotionTarget`. As the React glue layer, `EntityMotionBinding` stores the latest desired config, connects the current target to the Core animation object, and calls `SpatialEntity.createAnimation(config)`.
 - **Shared logic layer** uses the target's own `SpatialObject.id` in `SpatialEntity.createAnimation(config)`, performs Entity-specific normalization and validation, sends the create command, and returns an `EntityAnimationObject`. `EntityPlaybackApi` extends the existing `SpatializedPlaybackApi` and adds `set` only for Entity; `EntityAnimationObject` and the ordinary `AnimationObject` implement their respective interfaces without inheriting from each other. Normalization folds the three public authoring forms into internal canonical entity tracks; when `timeline` and top-level `from` / `to` are both present, `timeline` is the sole effective input and development mode logs a duplicate-declaration warning.
 - **Native layer** stores animation objects in `SpatialScene.spatialObjects` and reuses the `SpatialObject` lifecycle. `SpatialScene` resolves create targets and animation objects; the target Entity creates an `EntityMotionAnimationObject` through `createAnimation(config)`, and the animation object owns its state machine, fresh-play compilation, RealityKit execution, and confirmed-pose reporting.
 
@@ -194,6 +194,7 @@ classDiagram
             +api EntityPlaybackApi
             +entityProps EntityMotionProps
         }
+        class useEntity
         class EntityMotionBinding
         class EntityMotionProps {
             +position Vec3
@@ -265,17 +266,21 @@ classDiagram
         class EntityMotionAnimationObject
         class RealityKit
     }
-    useEntityAnimation --> EntityMotionBinding : returns animation
-    useEntityAnimation --> EntityPlaybackApi : returns api
-    useEntityAnimation --> EntityMotionProps : returns entityProps
-    EntityMotionBinding --> useBindMotionTarget : bind target
-    useBindMotionTarget --> SpatialEntity : call createAnimation(config)
+    useEntityAnimation --> EntityMotionBinding : creates and returns animation
+    useEntityAnimation --> EntityPlaybackApi : creates and returns api facade
+    useEntityAnimation --> EntityMotionProps : returns current mirror
+    EntityMotionBinding *-- EntityMotionProps : owns confirmed-pose mirror
+    useEntity --> useBindMotionTarget : calls
+    useBindMotionTarget --> EntityMotionBinding : calls internal bind and unbind
+    useBindMotionTarget --> SpatialEntity : receives target
+    EntityPlaybackApi --> EntityMotionBinding : facade delegates
+    EntityMotionBinding --> SpatialEntity : calls createAnimation(config)
+    EntityMotionBinding --> EntityAnimationObject : delegates commands and consumes notifications
     SpatialEntity --> EntityMotionNormalizer : normalize and validate
     SpatializedPlaybackApi <|-- EntityPlaybackApi : extends
     SpatializedPlaybackApi <|.. AnimationObject : implements
     EntityPlaybackApi <|.. EntityAnimationObject : implements
     SpatialEntity --> EntityAnimationObject : creates and returns
-    EntityPlaybackApi --> EntityAnimationObject : delegates commands
     SpatialEntity --> CreateEntityAnimationJSBCommand
     EntityAnimationObject --> ControlEntityAnimationJSBCommand
     EntityAnimationObject --> SetEntityAnimationJSBCommand
@@ -401,11 +406,25 @@ Native decides whether `api.set` takes effect: it accepts updates while playback
 
 ### 5.1 React SDK
 
-- **Public interface:** `useEntityAnimation` returns `[animation, api, entityProps]`; the entity component receives `EntityMotionBinding` through its `animation` property.
-- **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`; `api.set(update)` submits a sparse transform update to native.
-- **Target binding:** `useBindMotionTarget({ binding, target })` maintains one binding per `SpatialEntity` and calls `target.createAnimation(config)` after binding. Unbinding and target replacement clear the binding-owned `entityProps` mirror to `{}`, so spreading the returned object leaves ordinary React transform props authoritative.
+- **Public interface:** `useEntityAnimation` creates one `EntityMotionBinding` and one stable `EntityPlaybackApi` facade, reads the binding's current confirmed-pose mirror, and returns `[animation, api, entityProps]`; the entity component receives `EntityMotionBinding` through its `animation` property.
+- **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`, delegating commands to `EntityMotionBinding`; the binding delegates them to the current `EntityAnimationObject` in FIFO order. `api.set(update)` submits a sparse transform update to native.
+- **Target binding:** `useEntity` consumes the entity component's `animation` property and calls `useBindMotionTarget({ binding, target })`. On React effect setup and cleanup, the hook calls the binding's symmetric internal bind and unbind entries. `EntityMotionBinding` ensures that it connects to at most one `SpatialEntity` at a time and calls `target.createAnimation(config)` after binding. On unbinding or target replacement, the binding performs cleanup and clears its owned `entityProps` mirror to `{}`. Continuing to spread the returned object then restores control to ordinary React transform props.
 - **Command sequencing:** `EntityMotionBinding` reuses the Element animation binding's pending-command and sequential-flush model. It serializes commands per binding and does not send the next command until the current JSB reply settles.
-- **Result mirror:** `entityProps` mirrors native-confirmed `position`, `rotation`, and `scale`, driving React re-render and lifecycle callbacks.
+- **Result mirror:** `EntityMotionBinding` owns `entityProps`, consumes confirmed values from the current `EntityAnimationObject`, and schedules React re-render. `useEntityAnimation` reads the current mirror on every render and returns it as the third tuple item. `entityProps` contains native-confirmed `position`, `rotation`, and `scale`.
+
+#### Object responsibilities and call relationships
+
+- **`useEntityAnimation`:** Owns the React-side lifetime of one `EntityMotionBinding`, creates a stable `EntityPlaybackApi` facade, passes the latest config to the binding, subscribes to mirror and public-state changes, and returns the current `entityProps` snapshot.
+- **`EntityMotionBinding`:** Acts as the glue layer between the reactive React API and the Core animation object. It stores the latest desired config, current target, current animation object, confirmed-pose mirror, and pending commands. It coordinates target attachment, object creation and replacement, command serialization, confirmed-value commits, and React updates. Its internal `playState` getter, consumed by the control facade, returns `queued` while commands await an object, reads `EntityAnimationObject.playState` while the current object exists, and returns `idle` otherwise.
+- **`EntityPlaybackApi`:** Is the application-visible stable control facade. It delegates playback commands, `set`, and state reads to the same `EntityMotionBinding`. Config updates and animation-object replacement preserve the facade identity.
+- **`useEntity` and `useBindMotionTarget`:** `useEntity` provides the component's `animation` property and resolved `SpatialEntity`; `useBindMotionTarget` uses a React effect to call the binding's internal `__bindTarget(target)` and `__unbindTarget(target)`.
+- **`EntityMotionProps`:** Is the read-only confirmed-pose snapshot owned by `EntityMotionBinding`. Applications read the snapshot through the `useEntityAnimation` return value.
+- **`SpatialEntity`:** Provides the `createAnimation(config)` entry. `EntityMotionBinding` calls it with the latest desired config.
+- **`EntityAnimationObject`:** Owns the config snapshot used by the current Core animation object and the authoritative playback state, executes playback and `set` commands, and notifies the binding of state, confirmed poses, and errors.
+
+The latest desired config stored by `EntityMotionBinding` supports late target binding and object replacement. The config snapshot stored by `EntityAnimationObject` supports execution of the current Core object. They have different lifetimes and responsibilities. Stale create, destroy, pose-handoff, command-reply, and state-event work must be invalidated; implementations may use an incrementing token, cancellation signal, or an equivalent mechanism.
+
+In this document, “binding lifecycle” means the React target-attachment session. `EntityAnimationObject` owns the playback state machine and manages the playback lifecycle.
 
 #### Binding command queue and completion semantics
 
@@ -434,29 +453,49 @@ This ordering makes consecutive calls deterministic. In particular, `set → pla
 
 #### Class Diagram
 
+In this diagram, `+` marks members callable by other React SDK source modules, and `-` marks class-private state. `<<public>>` marks application-public API, while `<<opaque>>` marks a public type that applications pass through without calling its internal members. Package exports and public type declarations determine application visibility.
+
 ```mermaid
 classDiagram
     namespace ReactSDK {
         class useEntityAnimation {
+            <<public>>
             +animation EntityMotionBinding
             +api EntityPlaybackApi
             +entityProps EntityMotionProps
         }
         class EntityPlaybackApi {
             <<interface>>
+            <<public>>
+            +set(update EntityTransformUpdate)
+        }
+        class EntityMotionBinding {
+            <<opaque>>
+            -desiredConfig EntityMotionConfig
+            -target SpatialEntity
+            -animationObject EntityAnimationObject
+            -entityProps EntityMotionProps
+            -pendingCommands
+            +currentEntityProps EntityMotionProps
+            +playState EntityMotionPlayState
+            +__bindTarget(target SpatialEntity)
+            +__unbindTarget(target SpatialEntity)
+            +updateConfig(config EntityMotionConfig)
             +play()
             +pause()
             +stop()
             +reset()
             +finish()
             +set(update EntityTransformUpdate)
+            +destroy()
         }
-        class EntityMotionBinding
         class EntityMotionProps {
+            <<public>>
             +position Vec3
             +rotation Vec3
             +scale Vec3
         }
+        class useEntity
         class useBindMotionTarget {
             +binding EntityMotionBinding
             +target SpatialEntity
@@ -465,20 +504,49 @@ classDiagram
     namespace CoreSDKBoundary {
         class SpatializedPlaybackApi {
             <<interface>>
+            +play()
+            +pause()
+            +stop()
+            +reset()
+            +finish()
+            +playState SpatializedMotionPlayState
+            +isAnimating boolean
+            +isPaused boolean
+            +finished boolean
         }
         class SpatialEntity {
             +createAnimation(config) EntityAnimationObject
         }
-        class EntityAnimationObject
+        class EntityAnimationObject {
+            -config EntityMotionConfig
+            +playState EntityMotionNativePlayState
+            +play()
+            +pause()
+            +stop()
+            +reset()
+            +finish()
+            +set(update EntityTransformUpdate)
+            +destroy()
+            +onStart(callback)
+            +onComplete(callback)
+            +onStop(callback)
+            +onReset(callback)
+            +onError(callback)
+        }
     }
-    useEntityAnimation --> EntityMotionBinding : returns animation
-    useEntityAnimation --> EntityPlaybackApi : returns api
-    useEntityAnimation --> EntityMotionProps : returns entityProps
-    EntityMotionBinding --> useBindMotionTarget : passed as binding
-    useBindMotionTarget --> SpatialEntity : binds target
+    useEntityAnimation --> EntityMotionBinding : creates, returns, and reads mirror
+    useEntityAnimation --> EntityPlaybackApi : creates and returns stable facade
+    useEntityAnimation --> EntityMotionProps : returns current snapshot
+    EntityMotionBinding *-- EntityMotionProps : owns confirmed-transform mirror
+    useEntity --> useBindMotionTarget : calls
+    useBindMotionTarget --> EntityMotionBinding : calls internal bind and unbind
+    useBindMotionTarget --> SpatialEntity : receives target
     SpatializedPlaybackApi <|-- EntityPlaybackApi : extends
+    EntityPlaybackApi <|.. EntityAnimationObject : implements
+    EntityPlaybackApi --> EntityMotionBinding : facade delegates
+    EntityMotionBinding --> SpatialEntity : calls createAnimation
+    EntityMotionBinding --> EntityAnimationObject : delegates commands and consumes notifications
     SpatialEntity --> EntityAnimationObject : creates
-    EntityPlaybackApi --> EntityAnimationObject : delegates playback and set
 ```
 
 #### State-event Mapping
