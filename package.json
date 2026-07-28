@@ -14,6 +14,8 @@
     "xcode": "open packages/visionOS/web-spatial.xcodeproj",
     "adbDevPorts": "adb reverse tcp:35729 tcp:35729 && adb reverse tcp:5173 tcp:5173",
     "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\" \"pnpm run test:workflows\"",
+    "api:snapshot": "node tools/api-snapshot/cli.js update",
+    "api:snapshot:check": "node tools/api-snapshot/cli.js check",
     "check:unused": "node tools/scripts/check-unused-locals.js",
     "codeql:js": "node tools/scripts/run-codeql-js.js",
     "test:workflows": "node tools/scripts/check-release-workflows.js",

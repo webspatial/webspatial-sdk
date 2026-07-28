@@ -1,0 +1,99 @@
+name: API Snapshot
+
+# Regenerates the normalized WebSpatial public-API snapshot
+# (tools/api-snapshot) on every PR, diffs it against the committed baseline,
+# and reports what changed — components/hooks/types from the built .d.ts,
+# --xr-* CSS properties and their initial values, JSX spatial attributes and
+# events, manifest schema keys, docs coverage, and cross-source consistency.
+#
+# The job fails on any drift so the baseline must be regenerated
+# (`pnpm run api:snapshot`) and committed in the same PR, making the
+# developer-facing impact reviewable in the diff itself.
+
+on:
+  push:
+    branches:
+      - main
+      - stable
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  CI: true
+  SKIP_SIMPLE_GIT_HOOKS: 1
+
+jobs:
+  api-snapshot:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build SDK declaration files
+        run: |
+          pnpm --filter @webspatial/core-sdk build
+          pnpm --filter @webspatial/react-sdk build
+
+      - name: Check API snapshot against committed baseline
+        run: node tools/api-snapshot/cli.js check --report api-snapshot-report.md
+
+      - name: Publish report to job summary
+        if: always()
+        run: |
+          if [ -f api-snapshot-report.md ]; then
+            cat api-snapshot-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Post report as PR comment
+        # Forked PRs get a read-only token; the job summary still carries the
+        # report there.
+        if: >-
+          always() && github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs')
+            if (!fs.existsSync('api-snapshot-report.md')) return
+            const report = fs.readFileSync('api-snapshot-report.md', 'utf8')
+            const hasChanges = report.includes('| API |')
+            const marker = '<!-- webspatial-api-snapshot-report -->'
+            const body = `${marker}\n${report}`
+            const { owner, repo } = context.repo
+            const issue_number = context.payload.pull_request.number
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            })
+            const existing = comments.find(c => c.body && c.body.startsWith(marker))
+            // Stay quiet on PRs that don't touch the API surface; if an
+            // earlier push did, refresh the comment so it shows live state.
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              })
+            } else if (hasChanges) {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body })
+            }

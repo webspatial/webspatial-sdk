@@ -72,6 +72,19 @@ pnpm run codeql:js
 
 The script creates a JavaScript/TypeScript database under `.codeql-db/` and writes SARIF results to `.codeql-results/javascript-security-and-quality.sarif`. Override paths with `CODEQL_DATABASE` or `CODEQL_OUTPUT`, or set `CODEQL=/path/to/codeql` if the binary is not on `PATH`.
 
+## Public API Snapshot
+
+CI snapshots the SDK's public API surface — exports of the `@webspatial/react-sdk` entry points, `--xr-*` CSS properties and their runtime initial values, `enable-xr` / `onSpatial*` JSX augmentations, manifest schema keys, docs coverage, and cross-source consistency — and diffs it against the committed baseline in [`tools/api-snapshot/api-baseline.json`](tools/api-snapshot/api-baseline.json). The check fails on any drift.
+
+If your PR intentionally changes the public API (or documents/undocuments one), regenerate the baseline and commit it with your change:
+
+```sh
+pnpm --filter @webspatial/core-sdk build && pnpm --filter @webspatial/react-sdk build
+pnpm run api:snapshot
+```
+
+The PR comment posted by the `API Snapshot` workflow classifies each change (Breaking / Additive / Inconsistent / Documentation). Rows classed **Inconsistent** mean two sources of truth in the repo disagree — fix the sources rather than committing the mismatch into the baseline. See [`tools/api-snapshot/README.md`](tools/api-snapshot/README.md) for details.
+
 ## Testing on Apple Vision Pro Simulator
 
 1. Open the project in Xcode:

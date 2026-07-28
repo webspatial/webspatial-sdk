@@ -35,3 +35,6 @@ temp
 # test reports
 /packages/autoTest/reports/
 packages/visionOS/Packages/RealityKitContent/.build/**
+
+# API snapshot local report output
+/api-snapshot-report.md
