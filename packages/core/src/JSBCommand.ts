@@ -1,4 +1,10 @@
 import { getPlatform } from './platform-runtime'
+import { pointToPhysical } from './physicalMetrics'
+import {
+  getRuntime,
+  supports,
+  VISIONOS_DEBUG_SHELL_VERSION_PLACEHOLDER,
+} from './runtime/supports'
 import { SpatialComponent } from './reality/component/SpatialComponent'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
 import { SpatialMaterial } from './reality/material/SpatialMaterial'
@@ -666,6 +672,29 @@ export class AnimateTransformJSBCommand extends JSBCommand {
     return params
   }
 }
+function usePlacementProtocol(): boolean {
+  // WS_SHELL_VERSION debug shells claim every capability via supports(), but
+  // the in-repo visionOS runtime still decodes only the legacy attachment
+  // payload — keep sending it there.
+  const rt = getRuntime()
+  if (
+    rt.type === 'visionos' &&
+    rt.shellVersion === VISIONOS_DEBUG_SHELL_VERSION_PLACEHOLDER
+  ) {
+    return false
+  }
+  return supports('AttachmentEntity', ['placement'])
+}
+
+function toPlacementVec3(position?: [number, number, number]): {
+  x: number
+  y: number
+  z: number
+} {
+  const [x, y, z] = position ?? [0, 0, 0]
+  return { x, y, z }
+}
+
 export class InitializeAttachmentCommand extends JSBCommand {
   commandType = 'InitializeAttachment'
   constructor(
@@ -675,12 +704,25 @@ export class InitializeAttachmentCommand extends JSBCommand {
     super()
   }
   protected getParams() {
+    const p = this.options
+    if (!usePlacementProtocol()) {
+      return {
+        id: this.attachmentId,
+        parentEntityId: p.parentEntityId,
+        position: p.position ?? [0, 0, 0],
+        size: p.size,
+        ownerViewId: p.ownerViewId,
+      }
+    }
+    // Placement runtimes (PicoWebApp/0.4.90 OTA0+, WSAppShell/1.8.0+) only
+    // decode the placement-shaped payload: Vec3 position and meter dimensions.
     return {
       id: this.attachmentId,
-      parentEntityId: this.options.parentEntityId,
-      position: this.options.position ?? [0, 0, 0],
-      size: this.options.size,
-      ownerViewId: this.options.ownerViewId,
+      placementId: p.parentEntityId,
+      position: toPlacementVec3(p.position),
+      width: pointToPhysical(p.size.width),
+      height: pointToPhysical(p.size.height),
+      ownerViewId: p.ownerViewId,
     }
   }
 }
@@ -694,10 +736,20 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     super()
   }
   protected getParams() {
-    return {
-      id: this.attachmentId,
-      ...this.options,
+    if (!usePlacementProtocol()) {
+      return {
+        id: this.attachmentId,
+        ...this.options,
+      }
     }
+    const { position, size } = this.options
+    const params: Record<string, any> = { id: this.attachmentId }
+    if (position) params.position = toPlacementVec3(position)
+    if (size) {
+      params.width = pointToPhysical(size.width)
+      params.height = pointToPhysical(size.height)
+    }
+    return params
   }
 }
 
