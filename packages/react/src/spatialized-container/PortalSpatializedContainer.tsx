@@ -8,8 +8,8 @@ import {
   SpatialContentReadyCallback,
   SpatialEventOptions,
   SpatializedElementRef,
+  Vec3,
 } from './types'
-import type { Vec3 } from '@webspatial/core-sdk'
 
 function constrainedAxisToVec3(
   input: SpatialEventOptions['constrainedToAxis'] | undefined,
@@ -32,6 +32,7 @@ function constrainedAxisKey(
 import { SpatialID } from './SpatialID'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
 import { useSpatializedElement } from './hooks/useSpatializedElement'
+import { useBindSpatializedMotion } from './motion/useBindSpatializedMotion'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
@@ -86,6 +87,7 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     spatializedContent: Content,
     createSpatializedElement,
     getExtraSpatializedElementProperties,
+    'xr-animation': xrAnimation,
     onSpatialTap,
     onSpatialDragStart,
     onSpatialDrag,
@@ -132,6 +134,11 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     spatializedContainerObject,
     spatializedElement,
   )
+
+  useBindSpatializedMotion({
+    binding: xrAnimation,
+    element: spatializedElement,
+  })
 
   const PlaceholderEl = renderPlaceholderInSubPortal(
     portalInstanceObject,

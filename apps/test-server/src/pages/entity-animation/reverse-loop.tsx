@@ -1,9 +1,5 @@
-import {
-  BoxEntity,
-  Reality,
-  SceneGraph,
-  useAnimation,
-} from '@webspatial/react-sdk'
+import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
   Log,
@@ -15,7 +11,7 @@ import {
 export default function EntityAnimationReverseLoopPage() {
   const logger = useLog()
 
-  const [animation, api] = useAnimation({
+  const [animation, api] = useEntityAnimation({
     from: { rotation: { x: 0, y: 0, z: 0 } },
     to: { rotation: { x: 0, y: 170, z: 0 } },
     duration: 2.0,
