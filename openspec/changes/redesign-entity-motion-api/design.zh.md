@@ -26,12 +26,12 @@
 - **权威数据源**:某份数据以谁为准。本设计中物体的真实姿态只以原生层为准。
 - **镜像(mirror)**:React 侧把原生层已确认的姿态复制一份出来供渲染使用,这份复制就叫镜像。
 - **`entityProps`**:Hook 返回给使用者的姿态镜像,形如 `{ position?, rotation?, scale? }`,展开到组件上可让物体停在动画终点。
-- **确认姿态(confirmed transform)**:原生层执行完一个动作后,回读物体真实姿态并回传的那份值。React 只用这种值更新 `entityProps`。
+- **确认姿态(confirmed transform)**:原生层执行完一个动作后,返回 Entity 当前的完整 transform。React 只用这种值更新 `entityProps`。
 - **轨道(track)/ 通道(channel)**:一条描述单个属性(如 `position.y`)随时间变化的曲线;二者可互换,均指某单个属性的关键帧序列。编译时把各通道关键帧时间取并集切片、每个切点采样出完整姿态后整体播放(见 5.3)。
 - **关键帧(keyframe)**:曲线上的一个时间点及其取值,例如"第 0.6 秒时 `position.y` = 0.25"。
 - **缓动函数(timingFunction)**:描述两帧之间快慢变化的曲线,如匀速 `linear`、先慢后快 `easeIn`。
 - **基准值(baseline)**:每次 fresh play 被接受时的原生当前值;当某个字段未写入 config 时,用它补全本轮播放的完整姿态。
-- **起始姿态确认(start confirmation)**:fresh play 编译成功后,Native 把 config 的 `from` / `0%` 与本轮 baseline 合成为完整起始姿态,提交给目标并回读确认值。确认成功后立即发出 `start`,React 据此更新 `entityProps`;该事件不等待 delay 结束。
+- **起始姿态确认(start confirmation)**:fresh play 编译成功后,Native 把 config 的 `from` / `0%` 与本轮 baseline 合成为完整起始姿态,提交给目标并返回 Entity 当前的完整 transform。确认成功后立即发出 `start`,React 据此更新 `entityProps`;该事件不等待 delay 结束。
 - **fresh play**:创建后的首次播放,或动画在 `complete` / `finish` / `stop` / `reset` 后重新开始播放;`autoStart` 也属于 fresh play。`pause` 后继续 `play` 是恢复当前播放,不属于 fresh play。
 - **球面线性插值(slerp)**:RealityKit 对旋转采用的插值方式,总是走两个朝向之间的最短路径。
 - **空操作(no-op)**:命令被接收后,物体和 `entityProps` 保持原值。
@@ -77,7 +77,7 @@ React 配置 / api.set
 - 普通播放或控制命令结果为失败时,物体姿态与 `entityProps` 保持原值。动画对象创建或姿态交接失败进入绑定终止流程。
 - 原生接受播放控制命令时,通过动画状态事件回传确认姿态;接受 `set` 时,通过 `SetEntityAnimationResult` 回传确认姿态。React 收到 Core 转发的确认值后更新 `entityProps`。
 - React 把原生确认过的姿态镜像给使用者;动画进行中的写入按空操作处理。
-- `entityProps` 初始为空。首次确认后,它包含完整的已提交 `position`、`rotation`、`scale` 值。当前绑定生命周期正常存续期间,播放空闲状态下的变换由这份完整镜像控制;解绑或绑定终止后由 React 属性控制。
+- `entityProps` 初始为空。首次确认后,它包含完整的已提交 `position`、`rotation`、`scale` 值。播放空闲期间,组件组合后的 React 属性控制 transform;把 `entityProps` 展开在基础属性之后即可保持确认姿态。
 
 #### 复用通用动画架构
 
@@ -397,7 +397,7 @@ sequenceDiagram
 - **Entity 使用独立桥接协议。** 创建、播放控制和姿态设置分别使用 Entity 专属命令。三条命令都直接使用 `SpatialObject.id`,避免继承 Element 动画协议及其字段语义。
 - **承担 fresh play 的原生编译成本。** 每次 fresh play 都由物体动画对象读取当前 baseline,再调用编译器完成多关键帧、稀疏关键帧、旋转换算和整姿态串联编译,换取最新 baseline、RealityKit 原生播放、系统合成和统一播放语义。
 - **切片为整姿态串联。** 把时间轴切成若干节点、每个节点携带完整的 `position` / `rotation` / `scale`,再按先后顺序串联成一条整姿态动画播放。visionOS(RealityKit)的动画绑定粒度是整个 `.transform`,当前缓动需求也以整段为单位。因此采用整姿态串联,天然对齐 visionOS 与 picoOS(两端原生都绑定整 transform);同一区间内各通道共用一个 `timingFunction`。
-- **绑定生命周期内持有完整变换。** 动画进入活跃状态后,整个 `.transform` 由动画控制。例如只动画 `position.y` 时,`position.x`、`position.z`、`rotation`、`scale` 在播放期间都保持本轮基准姿态。原生层产生首个已确认状态后,`entityProps` 在当前绑定生命周期正常存续期间持久化完整的已提交变换;播放空闲时的动态写入使用 `api.set`,解绑或绑定终止后由 React 属性控制。Entity motion 复用 Element 动画的 Native animating mask 仲裁机制:目标 Entity 保存完整 transform 的动画 owner,`EntityMotionAnimationObject` 在提交首个已确认状态时获取 owner,`SpatialScene` 在普通 Entity transform 更新入口检查 owner。owner 存续期间,普通更新返回成功并保持当前原生 transform;解绑、绑定终止或销毁动画对象时释放 owner。
+- **只在播放活跃期间保护完整 transform。** 每次 fresh play 时,Native 在提交起始姿态前启用完整 transform 写入保护。例如只动画 `position.y` 时,`position.x`、`position.z`、`rotation`、`scale` 在播放期间都保持本轮基准姿态。延迟、运行和暂停期间持续保护,因此 `SpatialScene` 接受普通 React transform 更新但不应用。停止、重置、结束和自然完成会提交对应姿态、解除保护,并返回 Entity 当前的完整 transform,供 Core 更新 `entityProps`。播放空闲期间,普通 React transform 更新恢复生效。解绑、绑定终止和销毁动画对象也会作为清理路径解除保护。该行为与 Element 动画的 Native animating mask 一致。
 - **`set` 使用稀疏更新对象。** v1 的 `api.set` 接受 `EntityTransformUpdate`,当前确认姿态通过 `entityProps` 读取。
 - **Entity handler 直接分发。** `SpatialScene` 的三条 Entity 专属 handler 分别完成创建、播放控制和姿态设置,不经过 Element 动画管理器。
 - **并发性能需要实测。** RealityKit 原生播放优于 JS 逐帧写入,但海量物体并发仍需专项性能验证。
@@ -434,7 +434,7 @@ sequenceDiagram
 - `autoStart` 开启时,创建成功后生成的 `play` 命令插入待执行播放命令的队首。该行为与现有 Element 动画一致。
 - 绑定、原生动画对象创建前或当前绑定生命周期终止后调用 `api.set` 时,该命令不进入队列。SDK 输出控制台警告并执行空操作。
 - 原生动画对象创建后,所有播放命令和 `set` 进入同一条绑定命令队列。命令失败或 `set` 被转换为“警告并执行空操作”时,SDK 结束当前队列项并继续执行下一项。失败不会阻塞队列,也不会改变后续命令的顺序。
-- JSB 成功回执表示原生层已完成该命令的同步状态转换和所需姿态提交。播放控制命令产生 `start`、`pause`、`stop`、`reset` 或 `finish` 状态事件时,原生层先发出对应事件,再返回成功回执。`SetEntityAnimation` 不产生状态事件,原生层在提交并回读姿态后直接通过成功回执返回完整确认值。自然完成产生的异步 `complete` 事件不属于此前 `play` 命令的回执。
+- JSB 成功回执表示原生层已完成该命令的同步状态转换和所需姿态提交。播放控制命令产生 `start`、`pause`、`stop`、`reset` 或 `finish` 状态事件时,原生层先发出对应事件,再返回成功回执。`SetEntityAnimation` 不产生状态事件,Native 更新 Entity 后直接通过成功回执返回 Entity 当前的完整 transform。自然完成产生的异步 `complete` 事件不属于此前 `play` 命令的回执。
 - 解绑、目标替换、配置变更导致动画对象替换或销毁时,绑定对象使当前队列批次失效,并丢弃所有尚未发送的命令。正在执行的命令可以按既有销毁竞态规则完成,但其回执不得继续触发已失效队列中的下一条命令。
 
 该顺序保证连续调用具有确定行为。`set → play` 会等待已接受的 `set` 返回回执,再由 fresh play 读取基准值;`stop → play` 会等待停止后的姿态提交完成;`play → pause` 会等待原生层接受 `play` 命令。
@@ -445,7 +445,7 @@ sequenceDiagram
 
 - 解绑时,绑定对象推进绑定代次、注销当前 `EntityAnimationObject`、销毁对应原生对象、把 `entityProps` 清空为 `{}`,并触发 React 渲染。返回的空对象可以继续安全地展开在基础属性之后。
 - 重新绑定不同目标时,绑定对象先完成同一套清理,再为新目标创建动画对象。新目标从空镜像开始,并建立自身的确认值。
-- 当前绑定生命周期正常且同一目标的归一化执行签名发生变化时,绑定对象保持旧对象和旧代次至销毁成功。旧对象销毁成功并释放 transform owner 后,`entityProps` 包含完整确认姿态时,绑定对象通过普通 Entity transform 更新入口提交该姿态并等待更新成功;`entityProps` 为空时,当前原生 transform 保持权威,绑定对象直接进入新对象创建。随后绑定对象推进代次并使用最新配置创建新对象。替换对象的首次 fresh play 读取当前原生 transform 作为基准姿态,其中包括已提交的确认姿态。该交接保持现有 `entityProps` 和生命周期回调次数。姿态交接或新对象创建失败时,绑定对象执行与初次创建失败相同的终止流程。旧对象销毁失败时,绑定对象保持旧对象、旧代次和原有播放状态,清理本次替换产生的待执行命令,并触发一次 `onError`。
+- 当前绑定生命周期正常且同一目标的归一化执行签名发生变化时,绑定对象保持旧对象和旧代次至销毁成功。旧对象销毁成功并解除可能存在的 transform 写入保护后,`entityProps` 包含完整确认姿态时,绑定对象通过普通 Entity transform 更新入口提交该姿态并等待更新成功;`entityProps` 为空时,当前原生 transform 保持权威,绑定对象直接进入新对象创建。随后绑定对象推进代次并使用最新配置创建新对象。替换对象的首次 fresh play 读取当前原生 transform 作为基准姿态,其中包括已提交的确认姿态。该交接保持现有 `entityProps` 和生命周期回调次数。姿态交接或新对象创建失败时,绑定对象执行与初次创建失败相同的终止流程。旧对象销毁失败时,绑定对象保持旧对象、旧代次和原有播放状态,清理本次替换产生的待执行命令,并触发一次 `onError`。
 - 当前绑定生命周期正常时,仅更新回调会保持当前动画对象、控制器、队列、状态和 `entityProps`,并替换后续已接受事件使用的回调引用。当前绑定生命周期终止后,config 和 callback 更新只刷新绑定保存的最新值。
 - 替换开始后发出的命令归属新的绑定代次,并等待该代次的动画对象。创建完成后,`autoStart: true` 在该代次待执行命令的队首加入一次隐式 `play`;`autoStart: false` 直接执行显式待执行命令。
 - 绑定代次和动画对象身份同时匹配当前对象的命令回执或状态事件会更新绑定。当前代次是状态、`entityProps` 和公开生命周期回调更新的唯一来源。替换清理由销毁生命周期完成。
@@ -689,7 +689,7 @@ SetEntityAnimationResult {
 }
 ```
 
-`api.set` 使用独立设置命令,接受深度稀疏的 `EntityTransformUpdate`。Native 在合并更新、提交姿态并回读完整确认值后返回 `SetEntityAnimationResult`;Core 使用 `values` 更新 `entityProps`,不发送状态事件。绑定前或原生动画对象创建前的调用归类为空操作并打印控制台警告,也不会暂存为后续命令。JSB 不提供 `resume`;paused 后调用 `play` 时由 Native 动画对象内部恢复当前 controller。
+`api.set` 使用独立设置命令,接受深度稀疏的 `EntityTransformUpdate`。Native 合并更新并修改 Entity,再通过 `SetEntityAnimationResult` 返回 Entity 当前的完整 transform;Core 使用 `values` 更新 `entityProps`,不发送状态事件。绑定前或原生动画对象创建前的调用归类为空操作并打印控制台警告,也不会暂存为后续命令。JSB 不提供 `resume`;paused 后调用 `play` 时由 Native 动画对象内部恢复当前 controller。
 
 ```text
 type EntityMotionProps = {
@@ -969,7 +969,7 @@ classDiagram
 - 创建成功后,`SpatialScene` 把动画对象作为 `SpatialObject` 加入全局 `spatialObjects`;成功回执返回该对象的 `id` 并确认其初始状态为 `idle`。
 - 控制命令通过 `id` 在全局 `spatialObjects` 查找 `EntityMotionAnimationObject`。设置命令使用同一套查找规则,并单独调用 `set(update)`。
 - 同步命令错误通过 JSB reply 回传;仅命令接受后发生的异步播放错误通过一次 `entityanimationerror` 回传。
-- JSB 成功回执只在原生层完成命令的同步状态转换和姿态提交后返回。播放控制命令需要产生状态事件时,原生层先发出事件,再返回成功回执。设置命令在姿态提交和回读完成后通过回执返回完整确认值,不产生状态事件。绑定命令队列收到回执后,才发送下一条命令。
+- JSB 成功回执只在原生层完成命令的同步状态转换和姿态提交后返回。播放控制命令需要产生状态事件时,原生层先发出事件,再返回成功回执。设置命令更新 Entity 后通过回执返回 Entity 当前的完整 transform,不产生状态事件。绑定命令队列收到回执后,才发送下一条命令。
 - fresh play 编译失败时,控制命令失败,动画保持非活跃。
 
 创建成功回执只携带动画对象的 `id`,确认对象已经创建并处于 `idle`;失败回执确认对象创建结束,绑定对象据此收敛到 `idle`、清理待执行命令并分发分类错误。
@@ -1241,9 +1241,10 @@ sequenceDiagram
         Obj->>RK: 读取当前姿态作本轮 baseline
         Obj->>Compiler: compile(timeline, baseline)
         Compiler-->>Obj: 整姿态动画资源
+        Obj->>Obj: 启用完整 transform 写入保护
         Obj->>RK: 提交 from / 0% 完整起始姿态
-        Obj->>RK: 回读确认姿态
-        Obj->>Event: 发出 start,携带确认值
+        Obj->>RK: 读取 Entity 当前的完整 transform
+        Obj->>Event: 发出 start,携带当前完整 transform
         Obj->>RK: 创建控制器并进入 delay / running
         RK-->>Obj: 播放控制器
     else paused 后恢复
@@ -1251,8 +1252,9 @@ sequenceDiagram
         Obj->>RK: 恢复当前控制器,不产生 start
     end
     RK-->>Obj: 完成 / 终态回调
-    Obj->>Obj: 读取姿态并拆解确认值
-    Obj->>Event: 发出 complete,携带确认值
+    Obj->>Obj: 读取并拆解 Entity 当前的完整 transform
+    Obj->>Obj: 解除完整 transform 写入保护
+    Obj->>Event: 发出 complete,携带当前完整 transform
 ```
 
 创建阶段只保存规范时间轴,由 `SpatialScene` 注册 animation object 并返回其 `id`。每次 fresh play 读取最新 baseline 并编译本轮 RealityKit 资源,随后提交并确认完整起始姿态;`start` 和首个 `entityProps` 更新发生在确认成功后,不等待 delay 结束。paused 后的 `play` 直接复用当前资源和控制器,不读取 baseline、不编译、不产生新的 `start`。
@@ -1310,8 +1312,9 @@ sequenceDiagram
         Obj->>RK: 停止当前业务播放控制器
         Note over RK: Entity 及其子节点上的其它动画继续播放
         Obj->>RK: 以零时长提交目标姿态
-        Obj->>Obj: 读取姿态并拆解确认值
-        Obj->>Event: 发出 stop/reset/finish,携带确认值
+        Obj->>Obj: 读取并拆解 Entity 当前的完整 transform
+        Obj->>Obj: 解除完整 transform 写入保护
+        Obj->>Event: 发出 stop/reset/finish,携带当前完整 transform
         Scene-->>JSB: 成功
     else id 不存在
         Scene-->>JSB: 失败(ANIMATION_NOT_FOUND)
@@ -1341,7 +1344,7 @@ sequenceDiagram
         Obj->>RK: 读取当前姿态作已提交基准
         Obj->>Obj: 在基准上合并稀疏更新
         Obj->>RK: 以零时长提交合并后姿态
-        Obj->>Obj: 读取姿态并拆解确认值
+        Obj->>Obj: 读取并拆解 Entity 当前的完整 transform
         Obj-->>Scene: EntityMotionProps
         Scene-->>JSB: 成功({ values })
         JSB-->>Core: SetEntityAnimationResult
@@ -1349,7 +1352,7 @@ sequenceDiagram
     end
 ```
 
-暂停复用已编译的整姿态串联动画并控制当前播放控制器。停止 / 重置 / 结束会停止该控制器,并以零时长提交目标姿态。`set` 在非活跃状态下把稀疏更新合并到已提交姿态后以零时长提交,回读完整确认姿态并通过成功回执返回。`set` 保持原有 `playState`,不发送状态事件。
+暂停复用已编译的整姿态串联动画、控制当前播放控制器,并保持完整 transform 写入保护。停止 / 重置 / 结束会停止该控制器、以零时长提交目标姿态,并在返回完整 transform 前解除保护。自然完成也会在 `complete` 事件前解除保护。`set` 在非活跃状态下把稀疏更新合并到已提交姿态后以零时长提交,并通过成功回执返回 Entity 当前的完整 transform。`set` 保持原有 `playState`,不发送状态事件。
 
 Native Entity animation object 与一次 target binding 同生命周期;target 销毁时,`SpatialScene` 通过全局 `SpatialObject` lifecycle 级联销毁关联动画,不保留失效对象。
 
@@ -1362,7 +1365,7 @@ Native Entity animation object 与一次 target binding 同生命周期;target �
 | 平台能力验证缺少可追溯记录 | 第 8 节验收任务记录平台版本、SDK 版本、fixtures、执行命令和结果 |
 | 控制器级停止影响同一 Entity 或子节点上的其它动画 | 原生清理只停止当前 `EntityMotionAnimationObject` 持有的控制器,8.4/8.5 覆盖其它动画保持运行 |
 | 零时长姿态提交影响其它动画或终态 | 状态命令矩阵限定 `stop` / `reset` / `finish` / `set` 的提交动作,8.4/8.5 覆盖终态提交 |
-| transform owner 仲裁遗漏导致 React 写入覆盖动画 | `SpatialScene` 在普通 Entity transform 更新入口检查 owner,4.3/8.2 覆盖 ownership |
+| transform 写入保护遗漏导致 React 写入覆盖活动动画 | `SpatialScene` 在普通 Entity transform 更新入口检查 animating mask;停止、重置、结束、自然完成、解绑和销毁时解除保护;4.3/8.2 覆盖该行为 |
 | 动画对象创建或同目标姿态交接失败后继续执行产生状态歧义 | 失败通过 `onError` 报告并终止当前绑定生命周期,清空镜像和待执行命令;4.3a 覆盖终止与显式重新绑定 |
 | 创建请求和创建回执都使用 `id` 导致语义混淆 | 协议按消息方向固定含义:请求为目标 Entity id,回执为动画对象 id;Core/Native contract 测试分别断言 |
 | 状态事件和错误事件重复报告同一失败 | 同一失败只选择命令回执或 `entityanimationerror` 一个出口,状态事件不承载错误 |

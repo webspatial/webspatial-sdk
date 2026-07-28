@@ -310,7 +310,7 @@ return (
 )
 ```
 
-**After the animation completes**, `entityProps` updates to the complete end pose (`position`, `rotation`, and `scale`), and the object remains on that committed pose. While the current binding lifecycle remains healthy, this complete mirror owns the transform even while playback is inactive. Animation-object creation or same-target config-replacement handoff failure clears the mirror and terminates that lifecycle.
+**After the animation completes**, `entityProps` updates to the complete end pose (`position`, `rotation`, and `scale`). Native animation stops blocking ordinary React transform writes, and the combined React props keep the object on that pose. Animation-object creation or same-target config-replacement handoff failure clears the mirror and terminates that lifecycle.
 
 **When it updates**: `entityProps` does not update every frame. It only updates at key moments: when playback starts, completes, stops, resets, finishes, when an `api.set` write succeeds, and when creation or handoff failure clears it.
 
@@ -331,7 +331,7 @@ A few rules:
 
 1. **Use it only after the native animation object exists and while the animation is not playing** (this includes: never played, already finished, stopped / reset). When playback is active (including delay and paused), the native object has not been created, or the current binding lifecycle has terminated after creation / handoff failure, `api.set` is rejected as a **noop** (it neither interrupts the animation nor gets queued for later replay; the object stays unchanged and `entityProps` does not update) and logs a warning to the console; it does **not** trigger `onError`. To take over the object mid-animation, stop the animation first, or wait until it ends.
 2. **Pass only the fields you want to change**; the rest stay as they are. For example, `api.set({ position: { y: 0.3 } })` does not touch `rotation` or `scale`.
-3. **On a successful write, `entityProps` updates** to the new pose. After Native commits and reads back the complete transform, it returns the confirmed value in the set command's success reply; `set` emits no playback state event and does not change `playState`. If the write is not accepted (e.g. called during playback), it is a noop — `entityProps` stays unchanged and a warning is logged to the console; `onError` does not fire.
+3. **On a successful write, `entityProps` updates** to the new pose. Native updates the Entity and returns its complete current transform in the set command's success reply; Core uses that value to update `entityProps`. `set` emits no playback state event and does not change `playState`. If the write is not accepted (e.g. called during playback), it is a noop — `entityProps` stays unchanged and a warning is logged to the console; `onError` does not fire.
 4. **Want to change based on the current value?** Read `entityProps` to get the current pose, compute the new value yourself, then pass it to `api.set`. There is no `api.get` here — in React, an imperative getter tends to read stale values and cause read-then-write conflicts.
 5. **It is not a playback command**: `api.set` does not start playback or change playback progress.
 
@@ -343,27 +343,25 @@ A few rules:
 
 ---
 
-## Who Wins: Animation vs. Your Props
+## Who Controls the Transform
 
-The object's pose can be influenced by static/base props, the `entityProps` committed mirror, and the active animation. Ownership is always decided for the **whole transform**:
+The component combines static/base props and `entityProps` as ordinary React props. Native animation temporarily blocks those ordinary writes while playback is active:
 
-| Situation | Who wins |
+| Situation | Who controls the transform |
 |---|---|
-| Before the first native-confirmed state | Static/base React props |
-| The animation is playing (including delay and paused) | The animation owns the whole transform; the remaining components hold their baseline values |
-| A confirmed state exists and playback is inactive | The complete `entityProps` mirror; dynamic writes use `api.set` |
-| Animation-object creation or pose handoff fails | The current binding lifecycle terminates, `entityProps` clears, and static/base React props control |
-| The animation binding is removed | React props regain control |
+| Playback is inactive | The combined React props. Before the first confirmed value, `entityProps` is empty and the base props determine the pose. After confirmation, spreading complete `entityProps` last preserves that pose. |
+| The animation is playing, delayed, or paused | Native animation controls the whole transform and blocks ordinary React transform writes; components omitted from the config hold their baseline values. |
+| Animation-object creation or pose handoff fails | The current binding lifecycle terminates, `entityProps` clears, and the remaining React props control. |
+| The animation binding is removed | `entityProps` clears and the remaining React props control. |
 
-This matches visionOS / picoOS natively: the underlying runtime binds the whole transform. During active animation, configured components animate and the remaining components hold their baseline values. Native reports the complete committed transform at confirmed lifecycle points, and `entityProps` persists that complete value while the current binding lifecycle remains healthy.
+This matches visionOS / picoOS natively: the underlying runtime binds the whole transform. During active animation, configured components animate and the remaining components hold their baseline values. Pause keeps the write protection. Stop, reset, finish, and natural completion commit the corresponding pose, remove the write protection, and report the Entity's complete current transform so Core can update `entityProps`.
 
 A few practical takeaways follow:
 
 - **While the animation is playing**, the entire transform is taken over by the animation, so writing any component via props or `api.set` has no effect; components not in the config are frozen at baseline.
-- **During animation**, the runtime binds the whole transform and rotation holds its baseline value.
-- **After the first confirmed state**, ordinary transform props remain static/base inputs while the binding is attached. Use `api.set` for inactive dynamic changes.
+- **While playback is inactive**, the combined React props control the transform. Use `api.set` to update the Native committed transform and receive the resulting complete pose through `entityProps`.
 - **After animation-object creation or pose handoff fails**, the current binding terminates and ordinary React transform props regain control. Restarting requires an explicit unbind followed by rebind, or a new binding.
-- **After the binding is removed**, `entityProps` ownership is cleared and ordinary React transform props regain control.
+- **After the binding is removed**, `entityProps` clears and the remaining React transform props continue to control the Entity.
 
 ### Recommended Pattern
 
@@ -377,7 +375,7 @@ Put `entityProps` **after** your other props, so the object correctly stays at t
 />
 ```
 
-Once `entityProps` has a confirmed value, it remains authoritative when `basePosition` changes. Call `api.set` to change the committed transform, or remove the animation binding to return control to ordinary React props.
+Once `entityProps` has a confirmed value, spreading it after `basePosition` makes it the effective React transform value. Call `api.set` to change the Native committed transform and update `entityProps`.
 
 ---
 
@@ -441,10 +439,10 @@ If animation-object creation or same-target config-replacement pose handoff fail
 
 | State | How to enter | Is `api.set` usable | Does `entityProps` update | Who controls the transform |
 |---|---|---|---|---|
-| **Initial** | Before the first confirmed value | ✅ Usable after native object creation | Filled at the first confirmation | Static/base React props |
-| **Playing** (incl. delay, paused) | `play()` / `autoStart`; still counts after `pause()` | ❌ Rejected (noop + warning) | Only once, at the moment playback starts | The animation owns the whole transform; fields omitted from the config freeze at this run's fresh-play baseline |
-| **Inactive with confirmed state** | `complete` / `stop` / `reset` / `finish`, or successful `api.set` | ✅ Usable | ✅ Contains the complete committed transform | `entityProps`; dynamic writes use `api.set` |
-| **Terminated binding** | Animation-object creation or pose handoff failure | ❌ Every API is warning + no-op | Cleared to `{}` | Static/base React props; restart requires explicit rebinding |
+| **Initial** | Before the first confirmed value | ✅ Usable after native object creation | Filled at the first confirmation | Combined React props; `entityProps` is empty |
+| **Playing** (incl. delay, paused) | `play()` / `autoStart`; still counts after `pause()` | ❌ Rejected (noop + warning) | Only once, at the moment playback starts | Native animation controls the whole transform; fields omitted from the config freeze at this run's fresh-play baseline |
+| **Inactive with confirmed state** | `complete` / `stop` / `reset` / `finish`, or successful `api.set` | ✅ Usable | ✅ Contains the complete committed transform | Combined React props; spread `entityProps` last |
+| **Terminated binding** | Animation-object creation or pose handoff failure | ❌ Every API is warning + no-op | Cleared to `{}` | Remaining React props; restart requires explicit rebinding |
 
 > **Note**: a looping animation has no natural "reaches end", so `entityProps` does not update and the baseline is not reread at each loop boundary. `stop()`, `reset()`, or `finish()` updates `entityProps`; after the animation becomes inactive, a successful `api.set()` also updates `entityProps`.
 

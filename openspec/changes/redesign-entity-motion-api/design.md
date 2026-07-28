@@ -26,12 +26,12 @@ The public API surface covers animation binding, playback control, and confirmed
 - **authoritative data source**: which side a given piece of data defers to. In this design, an entity's real transform defers only to the native layer.
 - **mirror**: React copies the transform the native layer has already confirmed and uses that copy for rendering. That copy is the mirror.
 - **`entityProps`**: the transform mirror the Hook returns to the user, of the form `{ position?, rotation?, scale? }`. Spread onto the component, it keeps the entity resting at the animation's end state.
-- **confirmed transform**: after the native layer finishes an action, it reads back the entity's real transform and reports it. React updates `entityProps` only from such values.
+- **confirmed transform**: after the native layer finishes an action, it reports the Entity's complete current transform. React updates `entityProps` only from such values.
 - **track / channel**: a curve describing how a single property (e.g. `position.y`) changes over time; the two are interchangeable and both refer to the keyframe sequence of one single property. Compilation slices at the union of channel keyframe times, samples a full pose at each slice point, and plays the whole transform (see 5.3).
 - **keyframe**: a time point on a curve and its value, e.g. "at 0.6s, `position.y` = 0.25."
 - **timingFunction**: a curve describing the pacing between two frames, e.g. constant-speed `linear`, slow-then-fast `easeIn`.
 - **baseline**: the current native value when each fresh play is accepted; it fills fields omitted from the config to form the full pose for that playback run.
-- **start confirmation**: after a fresh play compiles successfully, Native combines config `from` / `0%` values with that run's baseline, commits the complete start pose to the target, and reads back confirmed values. Native emits `start` as soon as that confirmation succeeds, and React updates `entityProps` without waiting for delay to end.
+- **start confirmation**: after a fresh play compiles successfully, Native combines config `from` / `0%` values with that run's baseline, commits the complete start pose to the target, and reports the Entity's complete current transform. Native emits `start` as soon as that confirmation succeeds, and React updates `entityProps` without waiting for delay to end.
 - **fresh play**: the first playback after creation, or playback restarted after `complete`, `finish`, `stop`, or `reset`; `autoStart` is also a fresh play. Continuing `play` after `pause` resumes the current run and is not a fresh play.
 - **spherical linear interpolation (slerp)**: the interpolation RealityKit uses for rotation, always taking the shortest path between two orientations.
 - **no-op**: after the command is received, the entity and `entityProps` retain their current values.
@@ -77,7 +77,7 @@ From this a few rules follow:
 - When an ordinary playback or control command fails, the entity transform and `entityProps` retain their current values. Animation-object creation or pose-handoff failure enters the binding-termination path.
 - When native accepts a playback control command, it reports the confirmed transform through an animation state event. When it accepts `set`, it reports the confirmed transform through `SetEntityAnimationResult`. React updates `entityProps` from the value Core forwards.
 - React mirrors native-confirmed transforms back to the user; writes during active animation are handled as no-ops.
-- `entityProps` starts empty. The first confirmation fills it with the complete committed `position`, `rotation`, and `scale` values. During a healthy current binding lifecycle, this complete mirror owns the inactive transform; unbinding or binding termination returns control to React props.
+- `entityProps` starts empty. The first confirmation fills it with the complete committed `position`, `rotation`, and `scale` values. While playback is inactive, the component's combined React props control the transform; spreading `entityProps` after base props preserves the confirmed pose.
 
 #### Reuse the generic animation architecture
 
@@ -397,7 +397,7 @@ Native decides whether `api.set` takes effect: it accepts updates while playback
 - **Entity uses a dedicated bridge protocol.** Creation, playback control, and transform setting use separate Entity-specific commands. All three commands use `SpatialObject.id` directly and do not inherit Element animation protocol fields.
 - **Accept native compilation cost on fresh play.** Each fresh play makes the entity animation object read the current baseline and invoke the compiler for multi-keyframe handling, sparse keyframes, rotation conversion, and whole-transform serial compilation in exchange for an up-to-date baseline, native RealityKit playback, system compositing, and one execution model.
 - **Slice into a serial chain of full poses.** Cut the timeline into a set of nodes, each carrying a complete `position` / `rotation` / `scale`, then chain them in order into one whole-transform animation. The visionOS RealityKit animation binding granularity is the whole `.transform`, and current easing requirements apply per segment. A serial chain of full poses therefore aligns visionOS and picoOS, where native animation binds the whole transform; all channels within one segment share a single `timingFunction`.
-- **Own the whole transform through the binding lifecycle.** Once the animation is active, the entire `.transform` is owned by the animation. For example, animating only `position.y` freezes `position.x` / `position.z` — and `rotation` / `scale` too — at baseline during playback. After native produces the first confirmed state, `entityProps` persists the complete committed transform while the current binding lifecycle remains healthy; inactive dynamic writes use `api.set`, and unbinding or binding termination returns control to React props. Entity motion reuses the Element animation's native animating-mask arbitration: the target Entity stores the whole-transform animation owner, `EntityMotionAnimationObject` acquires that owner when it commits the first confirmed state, and `SpatialScene` checks the owner at the ordinary Entity transform update entry. While the owner exists, an ordinary update returns success and preserves the current native transform; unbinding, binding termination, or destroying the animation object releases the owner.
+- **Protect the whole transform only while playback is active.** On each fresh play, Native enables whole-transform write protection before committing the start pose. For example, animating only `position.y` freezes `position.x` / `position.z` — and `rotation` / `scale` too — at baseline during playback. Delay, running, and pause keep this protection, so `SpatialScene` accepts ordinary React transform updates without applying them. Stop, reset, finish, and natural completion commit the corresponding pose, remove the protection, and report the Entity's complete current transform so Core can update `entityProps`. Ordinary React transform updates apply again while playback is inactive. Unbinding, binding termination, and animation-object destruction also remove the protection as cleanup paths. This matches the Element animation's native animating-mask behavior.
 - **`set` uses a sparse update object.** In v1, `api.set` accepts `EntityTransformUpdate`, and consumers read the latest confirmed transform through `entityProps`.
 - **Entity handlers dispatch directly.** The three Entity-specific handlers on `SpatialScene` independently perform create, playback control, and transform set without entering the Element animation manager.
 - **Measure large-scale concurrency.** Native RealityKit playback is preferable to per-frame JS writes, but high entity counts still require dedicated performance validation.
@@ -434,7 +434,7 @@ The public `EntityPlaybackApi` remains a `void` command surface. Internally, eac
 - When `autoStart` is enabled, its generated `play` command is inserted at the front of the pending playback commands when creation succeeds, matching the existing Element animation behavior.
 - `api.set` before binding, before native animation-object creation, or after the current binding lifecycle terminates never enters the queue. It remains a console warning plus no-op.
 - After the native animation object exists, all playback commands and `set` enter the same per-binding FIFO. A failure or a warning-plus-no-op settles that queue item and allows the next item to run; it does not poison or reorder the queue.
-- A JSB success reply means Native has completed the command's synchronous state transition and any required transform commit. If a playback control command produces `start`, `pause`, `stop`, `reset`, or `finish`, Native emits the corresponding state event before returning that success reply. `SetEntityAnimation` emits no state event; after committing and reading back the transform, Native returns the complete confirmed transform directly in the success reply. A natural asynchronous `complete` event remains independent of the earlier `play` reply.
+- A JSB success reply means Native has completed the command's synchronous state transition and any required transform commit. If a playback control command produces `start`, `pause`, `stop`, `reset`, or `finish`, Native emits the corresponding state event before returning that success reply. `SetEntityAnimation` emits no state event; after updating the Entity, Native returns its complete current transform directly in the success reply. A natural asynchronous `complete` event remains independent of the earlier `play` reply.
 - Unbinding, target replacement, config-driven object replacement, or destruction invalidates the current queue generation and drops every command that has not been sent. The in-flight command may settle under the documented teardown race, but its reply cannot dispatch another command from the invalidated generation.
 
 This ordering makes consecutive calls deterministic. In particular, `set → play` waits for the accepted `set` reply before fresh play reads its baseline; `stop → play` waits for the stopped transform commit; and `play → pause` waits until Native has accepted the play command.
@@ -445,7 +445,7 @@ This ordering makes consecutive calls deterministic. In particular, `set → pla
 
 - Unbinding increments the binding generation, retires the current `EntityAnimationObject`, destroys its native object, clears `entityProps` to `{}`, and schedules a React render. The returned empty object remains safe to spread after static/base props.
 - Rebinding to a different target performs the same cleanup before creating the new target's animation object. The new target begins with an empty mirror and establishes its own confirmed values.
-- During a healthy current binding lifecycle, a normalized execution-signature change on the same target keeps the old object and generation current until destruction succeeds. After the old object is destroyed and releases the transform owner, the binding submits the latest confirmed complete pose through the ordinary Entity transform update entry when `entityProps` contains one. When `entityProps` is empty, the current native transform remains authoritative and the binding proceeds directly to new-object creation. The binding then advances the generation and creates the new object from the latest config. The replacement object's first fresh play reads the current native transform, including any submitted confirmed pose, as its baseline. The handoff preserves the existing `entityProps` and lifecycle callback counts. Pose-handoff or new-object-creation failure executes the same terminal path as initial creation failure. When old-object destruction fails, the binding retains the old object, old generation, and existing playback state, clears commands pending for the attempted replacement, and fires `onError` once.
+- During a healthy current binding lifecycle, a normalized execution-signature change on the same target keeps the old object and generation current until destruction succeeds. After the old object is destroyed and any active transform write protection is removed, the binding submits the latest confirmed complete pose through the ordinary Entity transform update entry when `entityProps` contains one. When `entityProps` is empty, the current native transform remains authoritative and the binding proceeds directly to new-object creation. The binding then advances the generation and creates the new object from the latest config. The replacement object's first fresh play reads the current native transform, including any submitted confirmed pose, as its baseline. The handoff preserves the existing `entityProps` and lifecycle callback counts. Pose-handoff or new-object-creation failure executes the same terminal path as initial creation failure. When old-object destruction fails, the binding retains the old object, old generation, and existing playback state, clears commands pending for the attempted replacement, and fires `onError` once.
 - While the current binding lifecycle is healthy, a callback-only config update keeps the current animation object, controller, queue, state, and `entityProps`, and replaces the callback references used by subsequent accepted events. After the current binding lifecycle terminates, config and callback updates only refresh the latest values stored by the binding.
 - Commands issued after replacement begins belong to the new binding generation and wait for its animation object. After creation, `autoStart: true` contributes exactly one implicit `play` at the front of that generation's pending commands; `autoStart: false` begins with the explicit pending commands.
 - A command reply or state event with the current binding generation and animation-object identity updates the binding. The current generation is the exclusive source of state, `entityProps`, and public lifecycle callback updates. Replacement teardown is handled by the destroy lifecycle.
@@ -689,7 +689,7 @@ SetEntityAnimationResult {
 }
 ```
 
-`api.set` uses the dedicated set command and accepts a deeply sparse `EntityTransformUpdate`. After merging, committing, and reading back the complete confirmed transform, Native returns `SetEntityAnimationResult`; Core updates `entityProps` from `values` without a state event. Calls before binding or before native animation-object creation are classified as no-ops, log a console warning, and are not stashed as later commands. JSB does not expose `resume`; a `play` received while paused makes the native animation object resume its current controller internally.
+`api.set` uses the dedicated set command and accepts a deeply sparse `EntityTransformUpdate`. Native merges the update, changes the Entity, and returns its complete current transform through `SetEntityAnimationResult`; Core updates `entityProps` from `values` without a state event. Calls before binding or before native animation-object creation are classified as no-ops, log a console warning, and are not stashed as later commands. JSB does not expose `resume`; a `play` received while paused makes the native animation object resume its current controller internally.
 
 ```text
 type EntityMotionProps = {
@@ -969,7 +969,7 @@ Processing rules:
 - After create succeeds, `SpatialScene` adds the animation object to global `spatialObjects` as a `SpatialObject`; the success reply returns that object's `id` and confirms its initial `idle` state.
 - Control commands look up an `EntityMotionAnimationObject` by `id` in global `spatialObjects`. The set command uses the same lookup and separately invokes `set(update)`.
 - Synchronous command errors return through the JSB reply; only asynchronous playback failures after command acceptance return through one `entityanimationerror`.
-- A successful JSB reply is returned only after the command's synchronous native state transition and transform commit have completed. When a playback control command emits a state event, Native emits the event before resolving the success reply. A set command returns the complete confirmed transform in its reply after transform commit and read-back and emits no state event. The binding queue uses reply settlement as the boundary for dispatching the next command.
+- A successful JSB reply is returned only after the command's synchronous native state transition and transform commit have completed. When a playback control command emits a state event, Native emits the event before resolving the success reply. A set command returns the Entity's complete current transform after the update and emits no state event. The binding queue uses reply settlement as the boundary for dispatching the next command.
 - When fresh-play compilation fails, the control command fails and the animation remains inactive.
 
 The successful create reply carries only the animation object's `id` and confirms an existing object in `idle`; a failed reply confirms that no object was created and lets the binding settle to `idle`, clear pending commands, and dispatch the classified error.
@@ -1241,9 +1241,10 @@ sequenceDiagram
         Obj->>RK: read current transform as this run's baseline
         Obj->>Compiler: compile(timeline, baseline)
         Compiler-->>Obj: whole-transform animation resource
+        Obj->>Obj: enable whole-transform write protection
         Obj->>RK: commit complete from / 0% start pose
-        Obj->>RK: read back confirmed transform
-        Obj->>Event: emit start with confirmed values
+        Obj->>RK: read Entity's complete current transform
+        Obj->>Event: emit start with complete current values
         Obj->>RK: create controller and enter delay / running
         RK-->>Obj: playback controller
     else resume after pause
@@ -1251,8 +1252,9 @@ sequenceDiagram
         Obj->>RK: resume current controller without start
     end
     RK-->>Obj: complete / end-state callback
-    Obj->>Obj: read transform and decompose confirmed value
-    Obj->>Event: emit complete, with confirmed value
+    Obj->>Obj: read and decompose Entity's complete current transform
+    Obj->>Obj: remove whole-transform write protection
+    Obj->>Event: emit complete, with complete current value
 ```
 
 Create only stores the canonical timeline; `SpatialScene` registers the animation object and returns its `id`. Each fresh play reads the latest baseline and compiles that run's RealityKit resource, then commits and confirms the complete start pose. `start` and the first `entityProps` update happen after that confirmation without waiting for delay to end. A `play` after pause reuses the current resource and controller without reading the baseline, compiling, or producing another `start`.
@@ -1310,8 +1312,9 @@ sequenceDiagram
         Obj->>RK: stop current business playback controller
         Note over RK: unrelated Entity and descendant animations keep playing
         Obj->>RK: commit target transform with zero duration
-        Obj->>Obj: read transform and decompose confirmed value
-        Obj->>Event: emit stop/reset/finish, with confirmed value
+        Obj->>Obj: read and decompose Entity's complete current transform
+        Obj->>Obj: remove whole-transform write protection
+        Obj->>Event: emit stop/reset/finish, with complete current value
         Scene-->>JSB: success
     else id is absent
         Scene-->>JSB: fail(ANIMATION_NOT_FOUND)
@@ -1341,7 +1344,7 @@ sequenceDiagram
         Obj->>RK: read current transform as committed baseline
         Obj->>Obj: merge sparse update onto baseline
         Obj->>RK: commit merged transform with zero duration
-        Obj->>Obj: read transform and decompose confirmed value
+        Obj->>Obj: read and decompose Entity's complete current transform
         Obj-->>Scene: EntityMotionProps
         Scene-->>JSB: success({ values })
         JSB-->>Core: SetEntityAnimationResult
@@ -1349,7 +1352,7 @@ sequenceDiagram
     end
 ```
 
-Pause reuses the compiled whole-transform chain and controls the current playback controller. Stop / reset / finish stop that controller and commit the target pose with zero duration. While inactive, `set` merges the sparse update onto the committed transform, commits it with zero duration, reads back the complete confirmed transform, and returns it through the success reply. `set` preserves the existing `playState` and emits no state event.
+Pause reuses the compiled whole-transform chain, controls the current playback controller, and keeps whole-transform write protection active. Stop / reset / finish stop that controller, commit the target pose with zero duration, and remove the protection before reporting the resulting complete transform. Natural completion performs the same removal before its `complete` event. While inactive, `set` merges the sparse update onto the committed transform, commits it with zero duration, and returns the Entity's complete current transform through the success reply. `set` preserves the existing `playState` and emits no state event.
 
 A native Entity animation object has the same lifecycle as one target binding. When the target is destroyed, `SpatialScene` cascades destruction to associated animations through the global `SpatialObject` lifecycle and retains no invalid object.
 
@@ -1362,7 +1365,7 @@ Boundary constraint: `SpatialScene` owns global `spatialObjects`, create-target 
 | Platform capability validation lacks traceable records | Section 8 acceptance tasks record platform versions, SDK versions, fixtures, executed commands, and results |
 | Controller-scoped stop affects unrelated animations on the same Entity or descendants | Native cleanup stops only the controller held by the current `EntityMotionAnimationObject`; 8.4/8.5 cover unrelated animations remaining active |
 | Zero-duration pose commits affect unrelated animations or terminal state | The command matrix bounds commits for `stop` / `reset` / `finish` / `set`; 8.4/8.5 cover terminal commits |
-| Missing transform-owner arbitration lets React writes override animation | `SpatialScene` checks the owner at the ordinary Entity transform update entry; 4.3/8.2 cover ownership |
+| Missing transform write protection lets React writes override active animation | `SpatialScene` checks the animating mask at the ordinary Entity transform update entry; stop, reset, finish, natural completion, unbind, and destruction remove the protection; 4.3/8.2 cover the behavior |
 | Continuing after animation-object creation or same-target pose-handoff failure creates ambiguous state | Report the failure through `onError`, terminate the current binding lifecycle, and clear the mirror and pending commands; 4.3a covers termination and explicit rebinding |
 | Using `id` in both create requests and replies causes semantic confusion | Protocol direction fixes the meaning: request means target Entity id, reply means animation-object id; Core/native contract tests assert both |
 | State and error events report the same failure twice | Each failure chooses either a command reply or `entityanimationerror`; state events carry no errors |

@@ -310,7 +310,7 @@ return (
 )
 ```
 
-**动画完成后**,`entityProps` 会更新为完整的终点姿态(`position`、`rotation`、`scale`),物体保持在该已提交姿态。当前绑定生命周期正常存续期间,这份完整镜像始终持有变换控制权。动画对象创建或同一目标配置替换的姿态交接失败时,绑定清空该镜像并终止当前生命周期。
+**动画完成后**,`entityProps` 会更新为完整的终点姿态(`position`、`rotation`、`scale`)。Native animation 停止阻止普通 React transform 写入,组合后的 React 属性使物体保持在该姿态。动画对象创建或同一目标配置替换的姿态交接失败时,绑定清空该镜像并终止当前生命周期。
 
 **更新时机**:`entityProps` 不是每一帧都更新,只在这些关键节点更新:动画开始播放、完成、停止、重置、结束、`api.set` 写入成功,以及创建或交接失败时清空。
 
@@ -331,7 +331,7 @@ api.set({ position: { y: 0.3 } })
 
 1. **只在原生动画对象已经创建且动画不处于播放状态时用**(包括:从未播放、已播完、已停止 / 重置)。动画正在播放(含延迟、暂停)、原生动画对象尚未创建或当前绑定已经因创建 / 交接失败而终止时,调用 `api.set` 会被拒绝——此时它是一次 **noop**(不打断动画、也不会延后补播,物体保持不变,`entityProps` 也不更新),并在控制台打印一条警告(warning),**不会**触发 `onError`。想在动画进行中接管物体,请先停止动画,或等它结束。
 2. **只传你想改的字段即可**,其余保持原样。例如 `api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
-3. **写入成功后 `entityProps` 会更新**为新姿态。Native 在提交并回读完整姿态后,通过设置命令的成功回执返回确认值;`set` 不产生播放状态事件,也不改变 `playState`。如果写入未被接受(比如在动画播放中调用),则是一次 noop——`entityProps` 保持不变,并在控制台打印一条警告,不会触发 `onError`。
+3. **写入成功后 `entityProps` 会更新**为新姿态。Native 更新 Entity,并通过设置命令的成功回执返回 Entity 当前的完整 transform;Core 使用该值更新 `entityProps`。`set` 不产生播放状态事件,也不改变 `playState`。如果写入未被接受(比如在动画播放中调用),则是一次 noop——`entityProps` 保持不变,并在控制台打印一条警告,不会触发 `onError`。
 4. **想基于当前值来改**?先读 `entityProps` 拿到当前姿态,自己算好新值,再传给 `api.set`。这里没有 `api.get`——因为在 React 里用取值函数容易读到过期的旧值、产生先读后写的冲突。
 5. **它不是播放命令**:`api.set` 不会开始播放、也不改变播放进度。
 
@@ -343,27 +343,25 @@ api.set({ position: { y: 0.3 } })
 
 ---
 
-## 动画和你的 props 谁说了算
+## 谁控制 transform
 
-物体姿态可能同时受到基础属性、`entityProps` 已提交镜像和活动动画影响。系统始终为**完整变换**选择一个控制来源:
+组件把基础属性和 `entityProps` 组合为普通 React 属性。播放活跃期间,Native animation 暂时阻止这些普通 transform 写入:
 
-| 情况 | 谁说了算 |
+| 情况 | 谁控制 transform |
 |---|---|
-| 首个原生已确认状态之前 | 基础 React 属性控制 |
-| 动画正在播放(含延迟、暂停) | 动画控制完整变换;配置中的其余分量保持基准姿态 |
-| 已有已确认状态且播放空闲 | 完整 `entityProps` 镜像控制;动态写入使用 `api.set` |
-| 动画对象创建或姿态交接失败 | 当前绑定生命周期终止,`entityProps` 清空,基础 React 属性控制 |
-| 动画解绑 | React 属性控制 |
+| 播放空闲 | 组合后的 React 属性控制。首个确认值产生前 `entityProps` 为空,姿态由基础属性决定;确认后把完整 `entityProps` 放在最后展开即可保持该姿态。 |
+| 动画正在播放、延迟或暂停 | Native animation 控制完整 transform 并阻止普通 React transform 写入;配置中未声明的分量保持基准姿态。 |
+| 动画对象创建或姿态交接失败 | 当前绑定生命周期终止,`entityProps` 清空,其余 React 属性控制。 |
+| 动画解绑 | `entityProps` 清空,其余 React 属性控制。 |
 
-这和 visionOS / picoOS 原生一致:底层绑定完整变换。动画活跃期间,配置字段执行动画,其余字段保持基准姿态。原生层在生命周期确认节点回传完整的已提交变换,`entityProps` 在当前绑定生命周期正常存续期间持久化该完整值。
+这和 visionOS / picoOS 原生一致:底层绑定完整变换。动画活跃期间,配置字段执行动画,其余字段保持基准姿态。暂停保持 transform 写入保护。停止、重置、结束和自然完成会提交对应姿态、解除写入保护,并返回 Entity 当前的完整 transform,供 Core 更新 `entityProps`。
 
 由此可得几个常见结论:
 
 - **动画正在播时**,整个 transform 都由动画接管,你此时用 props 或 `api.set` 改任何分量都不会生效;没写进 config 的分量会被冻结在基准值。
-- **动画播放期间**,底层绑定完整变换,旋转保持本轮基准值。
-- **首个已确认状态之后**,当前绑定生命周期正常存续期间普通变换属性保持为基础输入;播放空闲时的动态修改使用 `api.set`。
+- **播放空闲期间**,组合后的 React 属性控制 transform。使用 `api.set` 更新 Native 已提交 transform,并通过 `entityProps` 获得更新后的完整姿态。
 - **动画对象创建或姿态交接失败后**,当前绑定终止,普通 React 变换属性恢复控制。重新开始需要显式解绑后再绑定,或创建新的 binding。
-- **动画解绑后**,普通 React 变换属性恢复控制。
+- **动画解绑后**,`entityProps` 清空,其余 React 变换属性继续控制 Entity。
 
 ### 推荐写法
 
@@ -377,7 +375,7 @@ api.set({ position: { y: 0.3 } })
 />
 ```
 
-`entityProps` 获得已确认值后,`basePosition` 变化时它继续持有控制权。修改已提交变换时调用 `api.set`;交还普通 React 属性控制时解除动画绑定。
+`entityProps` 获得已确认值后,把它放在 `basePosition` 后展开,它就是 React 最终传入的 transform 值。调用 `api.set` 可以修改 Native 已提交 transform 并更新 `entityProps`。
 
 ---
 
@@ -441,10 +439,10 @@ stateDiagram-v2
 
 | 状态 | 怎么进入 | `api.set` 能用吗 | `entityProps` 会更新吗 | transform 归谁控制 |
 |---|---|---|---|---|
-| **初始状态** | 首个已确认值产生之前 | 原生动画对象创建后 ✅ 能用 | 首次确认时填充 | 基础 React 属性控制 |
+| **初始状态** | 首个已确认值产生之前 | 原生动画对象创建后 ✅ 能用 | 首次确认时填充 | 组合后的 React 属性控制;`entityProps` 为空 |
 | **播放中**(含延迟、暂停) | `play()` / `autoStart`;`pause()` 后仍属此类 | ❌ 被拒绝(noop + 警告) | 仅在开始播放那一刻更新一次 | 动画接管整个 transform;config 未声明的字段冻结在本轮 fresh-play baseline |
-| **已有确认值的播放空闲状态** | `complete`、`stop`、`reset`、`finish`,或成功的 `api.set` | ✅ 能用 | ✅ 包含完整的已提交变换 | `entityProps` 控制;动态写入使用 `api.set` |
-| **终止绑定** | 动画对象创建或姿态交接失败 | ❌ 所有 API 均为 noop + 警告 | 清空为 `{}` | 基础 React 属性控制;重新开始需要显式重新绑定 |
+| **已有确认值的播放空闲状态** | `complete`、`stop`、`reset`、`finish`,或成功的 `api.set` | ✅ 能用 | ✅ 包含完整的已提交变换 | 组合后的 React 属性控制;把 `entityProps` 放在最后展开 |
+| **终止绑定** | 动画对象创建或姿态交接失败 | ❌ 所有 API 均为 noop + 警告 | 清空为 `{}` | 其余 React 属性控制;重新开始需要显式重新绑定 |
 
 > **提示**:循环动画没有自然的“播放到终点”,所以循环期间 `entityProps` 不会在每圈结束时更新,也不会在每圈重新读取 baseline。`stop()`、`reset()` 或 `finish()` 会更新 `entityProps`;动画进入非活跃状态后,成功的 `api.set()` 也会更新 `entityProps`。
 

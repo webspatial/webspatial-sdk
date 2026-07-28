@@ -4,7 +4,7 @@
 
 SDK MUST 提供 `useEntityAnimation(config)` 作为公共 Entity motion hook。该 hook MUST 返回三元组 `[animation, api, entityProps]`。
 
-返回的 `animation` 对象 MUST 能通过物体组件上的 `animation` 属性进行绑定。首个原生已确认状态产生前,SDK MUST 接受空的 `entityProps` 对象。首个原生已确认状态产生后,`entityProps` MUST 表示完整的已提交变换,字段固定为完整的 `position`、`rotation`、`scale`。当前绑定生命周期正常存续期间,播放空闲状态下的变换 MUST 由这份完整镜像控制。动画对象创建或同一目标配置替换的姿态交接失败 MUST 清空镜像并终止当前绑定生命周期。解绑后 React 属性 MUST 恢复控制。
+返回的 `animation` 对象 MUST 能通过物体组件上的 `animation` 属性进行绑定。首个原生已确认状态产生前,SDK MUST 接受空的 `entityProps` 对象。首个原生已确认状态产生后,`entityProps` MUST 表示完整的已提交变换,字段固定为完整的 `position`、`rotation`、`scale`。播放空闲期间,Entity MUST 接受组件组合后的 React 属性所产生的 transform。动画对象创建或同一目标配置替换的姿态交接失败 MUST 清空镜像并终止当前绑定生命周期。解绑 MUST 清空镜像,其余 React 属性继续控制。
 
 #### Scenario: Hook 返回结构
 - **WHEN** 应用代码调用 `useEntityAnimation(config)`
@@ -96,9 +96,9 @@ Entity motion MUST 使用 Entity 相对父节点的局部右手坐标系和角�
 
 ### Requirement: `entityProps` 持久化已提交的 transform 状态
 
-SDK MUST 使用 `entityProps` 作为动画系统持有的物体完整已提交变换在 React 侧的持久化出口。
+SDK MUST 使用 `entityProps` 作为 Native 返回的物体完整已提交变换在 React 侧的持久化出口。
 
-`entityProps` MUST 在动画系统提交生命周期值时更新,包括 `start`、`complete`、`stop`、`reset`、`finish` 以及原生层接受的 `api.set(update)` 写入。创建或交接失败 MUST 把它清空为 `{}`。首个已确认状态产生前,SDK MUST 接受空的 `entityProps` 对象。首个已确认状态产生后,它 MUST 以完整的 `position`、`rotation`、`scale` 值镜像完整的已提交变换。每次确认后的字段集合 MUST 固定为完整的 `position`、`rotation`、`scale`。当前绑定生命周期正常存续期间,把 `entityProps` 展开在基础属性之后 MUST 使完整的已提交变换保持控制权。
+`entityProps` MUST 在动画系统提交生命周期值时更新,包括 `start`、`complete`、`stop`、`reset`、`finish` 以及原生层接受的 `api.set(update)` 写入。创建或交接失败 MUST 把它清空为 `{}`。首个已确认状态产生前,SDK MUST 接受空的 `entityProps` 对象。首个已确认状态产生后,它 MUST 以完整的 `position`、`rotation`、`scale` 值镜像完整的已提交变换。每次确认后的字段集合 MUST 固定为完整的 `position`、`rotation`、`scale`。播放空闲期间,把 `entityProps` 展开在基础属性之后 MUST 使完整的已提交变换成为 React 最终传入的 transform。
 
 #### Scenario: complete 把终态写入 `entityProps`
 - **WHEN** 一个非循环 Entity 动画自然完成
@@ -239,7 +239,7 @@ Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`�
 
 公开 Entity playback 方法 MAY 返回 `void`,但 SDK MUST 通过每个 Entity motion binding 独立的一条 FIFO 命令链保持调用顺序。Native animation object 创建后,binding MUST 等待前一条命令的内部 JSB reply settled,再发送下一条 playback 或 `set` 命令。失败命令或映射为 warning + no-op 的 `set` MUST 结束当前队列项,且 MUST NOT 阻塞或改变后续命令顺序。
 
-JSB 成功回执 MUST 表示 Native 已完成命令的同步状态转换和所需姿态提交。播放控制命令产生状态事件时,Native MUST 先发出事件,再返回成功回执。`SetEntityAnimation` MUST NOT 产生状态事件;Native MUST 在提交并回读姿态后通过 `SetEntityAnimationResult.values` 返回完整确认姿态。自然完成产生的异步 `complete` 事件不属于此前的 `play` 回执。
+JSB 成功回执 MUST 表示 Native 已完成命令的同步状态转换和所需姿态提交。播放控制命令产生状态事件时,Native MUST 先发出事件,再返回成功回执。`SetEntityAnimation` MUST NOT 产生状态事件;Native 更新 Entity 后 MUST 通过 `SetEntityAnimationResult.values` 返回 Entity 当前的完整 transform。自然完成产生的异步 `complete` 事件不属于此前的 `play` 回执。
 
 #### Scenario: Native object 创建前的 playback 命令按顺序 flush
 - **GIVEN** Entity motion binding 的 Native animation object 尚未创建
@@ -284,7 +284,7 @@ Entity motion 绑定 MUST 根据生效的时间轴、时长、缓动、延迟、
 - **GIVEN** 当前绑定生命周期正常,且 Entity motion 绑定继续连接同一个目标
 - **WHEN** 归一化执行签名发生变化
 - **THEN** SDK MUST 保持当前动画对象和绑定代次,等待其 `destroy()` 成功
-- **AND** 旧对象的 `destroy()` 成功 MUST 表示其持有的控制器已停止、transform owner 已释放,且旧对象不会再写入该目标 transform
+- **AND** 旧对象的 `destroy()` 成功 MUST 表示其持有的控制器已停止、transform 写入保护已解除,且旧对象不会再写入该目标 transform
 - **AND** 替换期间 SDK MUST 保持当前 `entityProps`
 - **AND** `destroy()` 成功后,`entityProps` 包含完整确认姿态时,SDK MUST 通过普通 Entity transform 更新入口提交该姿态并等待更新成功
 - **AND** `destroy()` 成功后,`entityProps` 为空时,SDK MUST 保持当前原生 transform 的权威性并直接进入新对象创建
@@ -380,14 +380,22 @@ Native 创建动画时 MUST 兜底校验并保存规范时间轴、注册动画�
 - **THEN** fresh play 的控制命令 MUST 显式失败
 - **AND** 动画 MUST 保持非活跃
 
-### Requirement: 动画 alive 期间由动画系统持有整个 Entity transform
+### Requirement: 活跃动画保护整个 Entity transform
 
-动画处于活跃播放状态时,动画系统 MUST 持有完整的物体变换控制权。底层平台(visionOS / picoOS)绑定整个 `.transform`;配置字段执行动画,其余字段 MUST 保持基准姿态。此期间活动动画 MUST 保持控制权,最新的 `entityProps` 已确认值 MUST 保持稳定,SDK MUST 立即丢弃 React 属性写入和 `api.set` 写入。首个已确认状态产生后,当前绑定生命周期正常存续期间的播放空闲动态写入 MUST 使用 `api.set`;普通 React 变换属性保持为基础输入。Native `SpatialScene` MUST 在普通 Entity transform 更新入口执行完整 transform 的 animating mask 仲裁。首个已确认状态产生前,普通更新 MUST 更新 fresh play 的 baseline;首个已确认状态产生后且 transform owner 存续期间,普通更新 MUST 返回成功并保持当前原生 transform;解绑、绑定终止或销毁动画对象后,普通更新 MUST 恢复更新原生 transform。
+动画处于 `delay`、`running` 或 `paused` 时,动画系统 MUST 控制完整的 Entity transform。底层平台(visionOS / picoOS)绑定整个 `.transform`;配置字段执行动画,其余字段 MUST 保持基准姿态。每次 fresh play 时,Native MUST 启用完整 transform 写入保护,并在暂停期间保持该保护。保护生效期间,最新的 `entityProps` 已确认值 MUST 保持稳定,SDK MUST 立即丢弃 React 属性写入和 `api.set` 写入。Native `SpatialScene` MUST 在普通 Entity transform 更新入口通过 animating mask 仲裁,返回成功并保持当前原生 transform。
+
+执行 `stop`、`reset`、`finish` 或自然完成时,Native MUST 提交对应姿态,取得 Entity 当前的完整 transform,解除完整 transform 写入保护,再发出携带该 transform 的状态事件。解绑、绑定终止和销毁动画对象 MUST 作为清理路径解除保护。播放空闲且保护未生效时,普通 Entity transform 更新 MUST 更新原生 transform。
 
 #### Scenario: React props 不覆盖活动动画
 - **GIVEN** 一个 Entity 动画处于 `delay`、`running` 或 `paused`
 - **WHEN** 应用在动画活跃期间更新任一 transform 分量
 - **THEN** 这些 props 写入 MUST NOT 覆盖活动动画
+
+#### Scenario: 暂停保持 transform 写入保护
+- **GIVEN** Entity 动画正在运行
+- **WHEN** 应用暂停动画
+- **THEN** 普通 React transform 写入 MUST 继续被阻止
+- **AND** 暂停动画 MUST 保持当前姿态
 
 #### Scenario: config 未写的分量在动画期间冻结在基准值
 - **GIVEN** 一个 Entity 动画处于 `delay`、`running` 或 `paused`,且 config 未动画某个分量(例如只动画 `position`)
@@ -401,10 +409,17 @@ Native 创建动画时 MUST 兜底校验并保存规范时间轴、注册动画�
 - **THEN** `entityProps` 中完整的已提交 `position`、`rotation`、`scale` 值 MUST 代表权威终态变换
 - **AND** 推荐的组合顺序是让 `entityProps` 放在陈旧 base props 之后应用
 
+#### Scenario: 播放结束后恢复 React transform 写入
+- **GIVEN** Entity 动画处于活跃状态
+- **WHEN** 动画停止、重置、结束或自然完成
+- **THEN** Native MUST 提交对应的完整姿态
+- **AND** Native MUST 在返回 Entity 当前的完整 transform 前解除完整 transform 写入保护
+- **AND** 后续普通 React transform 更新 MUST 更新原生 transform
+
 
 ### Requirement: 动态接管使用 `api.set`
 
-首个已确认状态产生前,普通物体变换属性控制完整变换。已确认状态产生后且动画绑定存续期间,播放空闲状态下的完整变换由 `entityProps` 控制。`api.set` MUST 是该已提交变换的唯一动态写入通道。
+播放空闲期间,组件组合后的 React 属性 MUST 控制完整 Entity transform。首个已确认状态产生前,`entityProps` MAY 为空,因此组合结果由基础属性决定。已确认状态产生后,把完整 `entityProps` 展开在基础属性之后 MUST 使它成为 React 最终传入的 transform。`api.set` MUST 更新 Native 已提交 transform,Core MUST 使用 Native 返回的完整 transform 更新 `entityProps`。
 
 #### Scenario: 非活跃动态接管使用 set
 - **GIVEN** 没有活跃的 Entity 动画（`idle` 或 terminal）
@@ -430,14 +445,14 @@ Entity motion 的生命周期 callback MUST 只是通知。它们的返回值 MU
 
 SDK MUST 提供 `api.set` 作为 `entityProps` 所镜像的已提交 Entity transform 状态的命令式写入入口。`api.set` MUST 只接受一个稀疏的 `EntityTransformUpdate` object(与读取侧 `EntityMotionProps` 同为 `{ position?, rotation?, scale? }` 形态,但命名区分),MUST NOT 支持 updater 函数 `(prev) => next`。合法 update MUST 至少包含一个 transform 标量;`api.set({})` 和只包含空嵌套对象的 update MUST 同步抛错。`api.set` MUST NOT 是 playback 命令,MUST NOT seek、start、改变播放进度或改变 `playState`。
 
-物体变换控制权 MUST 按完整变换统一仲裁。首个已确认状态产生前,完整变换由基础 React 属性控制。动画处于活跃状态(`delay`、`running`、`paused`)时,完整变换由 `animation` 绑定控制;配置字段执行动画,其余字段保持基准姿态。原生层产生已确认状态后且当前绑定生命周期正常存续期间,播放空闲状态下的完整变换由 `entityProps` 控制。播放空闲状态下,`api.set` 更新原生层的已提交变换。创建或交接失败终止当前绑定生命周期后,基础 React 属性恢复控制。解绑后 React 属性恢复控制。
+物体变换写入 MUST 按完整 transform 统一仲裁。播放空闲期间,组件组合后的 React 属性控制 transform。动画处于活跃状态(`delay`、`running`、`paused`)时,Native animation 控制完整 transform 并阻止普通 React transform 写入;配置字段执行动画,其余字段保持基准姿态。`stop`、`reset`、`finish` 和自然完成 MUST 在提交对应姿态后解除保护。播放空闲状态下,`api.set` 更新 Native 已提交 transform,Core 使用 Native 返回的完整结果更新 `entityProps`。创建或交接失败终止当前绑定生命周期并清空 `entityProps`。解绑也清空 `entityProps`。
 
 SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码 MUST 读取声明式的 `entityProps`,并在需要写入时自行计算 update 后调用 `api.set(update)`。首个 native confirmed state 之前 `entityProps` MAY 为空,且 MUST NOT 承诺在 mount 时可读:创建或绑定动画 MUST NOT 额外 emit 一个初始 confirmed value。要读取有意义的 native 姿态,应用代码 MUST 先触发一次提交 confirmed value 的 lifecycle(一次到达终态 / lifecycle 节点的 `play`,或一次被接受的 `api.set`)。
 
 #### Scenario: set 更新已提交状态与 entityProps
 - **WHEN** 应用调用 `api.set(update)` 并传入 Entity transform 更新
 - **THEN** SDK MUST 把该写入下发 native,由 native 决定是否接受
-- **AND** 原生层接受后 MUST 提交并回读完整姿态,通过 `SetEntityAnimationResult.values` 返回已确认 `position`、`rotation`、`scale`
+- **AND** 原生层接受后 MUST 更新 Entity,通过 `SetEntityAnimationResult.values` 返回 Entity 当前完整的 `position`、`rotation`、`scale`
 - **AND** Core MUST 使用该成功回执更新 `entityProps`
 - **AND** `set` MUST NOT 产生 `EntityMotionStateChangedMsg`
 - **AND** native 拒绝时 `entityProps` MUST NOT 更新,且该拒绝 MUST 输出一条 console warning,而不是触发 `onError`
