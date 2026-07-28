@@ -316,6 +316,8 @@ sequenceDiagram
 
 Only config signature changes, target rebinding, recreation after explicit `destroy()`, or element destroy cascading enter the destroy + recreate lifecycle. `reset()` writes the timeline sample at time zero and `finish()` writes the sample at duration; sparse property tracks therefore use their first and last values respectively. Both controls operate on the current native `AnimationObject`.
 
+The Native `AnimationObject` keeps terminal events aligned with state transitions. Explicit `finish()` transitions `idle`, `running`, or `paused` to `finished`, while natural completion transitions `running` to `finished`. For each transition from a non-`finished` state to `finished`, Native emits one `finish` or `complete` event, and Core forwards that event as one `onComplete` callback. Native ignores repeated `finish()` calls while already `finished`, so an unchanged state emits no terminal event. After `play()` or `reset()` leaves `finished`, a later transition into `finished` is a new transition and fires the callback again.
+
 ## Pre-bind explicit play sequence
 
 ```mermaid

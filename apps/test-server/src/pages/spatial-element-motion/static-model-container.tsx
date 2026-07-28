@@ -23,7 +23,7 @@ const TIMELINE_CONFIG = {
     },
   },
   '50%': {
-    opacity: 1,
+    opacity: 0.5,
     transform: {
       translate: { y: -8, z: 55 },
       rotate: { x: 10, z: 80 },
@@ -31,7 +31,7 @@ const TIMELINE_CONFIG = {
     },
   },
   '100%': {
-    opacity: 0.1,
+    opacity: 1,
     transform: {
       translate: { y: 0, z: 20 },
       rotate: { x: 20 },
@@ -41,7 +41,7 @@ const TIMELINE_CONFIG = {
 } as const
 
 export default function SpatialElementMotionStaticModelContainerPage() {
-  const { lines, log } = useLog()
+  const { lines, log, clear } = useLog()
   const static3dAnim = supports('useAnimation')
 
   const [motion, api, style] = useAnimation({
@@ -150,6 +150,10 @@ export default function SpatialElementMotionStaticModelContainerPage() {
           </button>
           <button type="button" className={btnCls} onClick={() => api.reset()}>
             Reset
+          </button>
+          {/* Clear captured runtime events without changing animation state. */}
+          <button type="button" className={btnCls} onClick={clear}>
+            Clear Log
           </button>
         </div>
 

@@ -273,13 +273,27 @@ The API MUST expose `play`, `pause`, `stop`, `reset`, and `finish`, plus `isAnim
 
 ### Requirement: Lifecycle callbacks are mutually consistent
 
-Config MUST support `onStart`, `onComplete`, `onStop`, `onReset`, and `onError`. Natural completion and confirmed `finish()` invoke `onComplete`; `stop()` invokes `onStop`; `reset()` invokes `onReset`. Exactly one of `onComplete`, `onStop`, or `onReset` MUST fire for each session termination. `onError` MAY fire independently for asynchronous native failure.
+Config MUST support `onStart`, `onComplete`, `onStop`, `onReset`, and `onError`. Each authoritative `playState` transition from any non-`finished` state to `finished` MUST invoke `onComplete` exactly once. Natural completion and confirmed `finish()` MUST follow the same rule. `stop()` MUST invoke `onStop`, and `reset()` MUST invoke `onReset`. Each terminal operation MUST fire exactly one of `onComplete`, `onStop`, or `onReset`. `onError` MAY independently report an asynchronous Native failure.
 
 #### Scenario: Finish invokes onComplete
 
-- **WHEN** native confirms an explicit finish
-- **THEN** `onComplete` MUST receive terminal values
-- **AND** `finished` MUST become true
+- **WHEN** `finish()` is invoked in `idle`, `running`, or `paused`
+- **AND** Native confirms that `playState` transitions to `finished`
+- **THEN** `onComplete` MUST receive terminal values and fire exactly once
+- **AND** `finished` MUST become `true`
+
+#### Scenario: Repeated finish in finished state is idempotent
+
+- **GIVEN** `playState` is already `finished`
+- **WHEN** `finish()` is invoked again
+- **THEN** `playState` MUST remain `finished`
+- **AND** `onComplete` MUST NOT fire again
+
+#### Scenario: Re-entering finished invokes onComplete again
+
+- **GIVEN** `playState` has transitioned from `finished` to another state
+- **WHEN** `playState` transitions to `finished` again
+- **THEN** `onComplete` MUST fire exactly once for the new transition
 
 #### Scenario: Stop and reset clear finished
 

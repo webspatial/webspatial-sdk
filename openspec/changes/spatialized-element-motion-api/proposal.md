@@ -167,7 +167,7 @@ This animates the Reality container, so its child entities move with it while re
 | `loop` | Repeats playback; reverse looping may be requested through the loop options |
 | `playbackRate` | Playback speed multiplier |
 | `onStart` | Called when playback starts |
-| `onComplete` | Called after natural completion or confirmed `finish()` |
+| `onComplete` | Called once each time `playState` transitions from any non-`finished` state to `finished` |
 | `onStop` | Called after `stop()` with the current visual values |
 | `onReset` | Called after `reset()` with the starting visual values |
 | `onError` | Receives asynchronous playback errors |
@@ -203,9 +203,11 @@ to: {
 | `pause()` | Pauses the whole session at the current value |
 | `stop()` | Stops an active session and keeps the current value; state returns to `idle` |
 | `reset()` | Seeks to the session's starting values and returns to `idle` |
-| `finish()` | Seeks to terminal values and enters `finished` after confirmation |
+| `finish()` | Seeks from `idle`, `running`, or `paused` to terminal values and enters `finished` after confirmation |
 
 The API also exposes `isAnimating`, `isPaused`, `finished`, and `playState`. `playState` is one of `idle`, `queued`, `running`, `paused`, or `finished`.
+
+`onComplete` fires once for each transition into `finished`. Repeated `finish()` calls while the state remains `finished` do not fire the callback again. After `play()` or `reset()` leaves `finished`, the next transition into `finished` fires the callback again.
 
 Commands may be issued before the host binds. Explicit `play()` and `finish()` are queued and applied after binding. `autoStart: false` selects manual playback, and explicit queued commands continue after binding.
 
