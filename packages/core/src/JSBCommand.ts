@@ -672,6 +672,8 @@ export class AnimateTransformJSBCommand extends JSBCommand {
     return params
   }
 }
+// TODO(remove): temporary OTA0 compat shim — delete once #1330 lands and
+// attachment JSB always uses the placement-shaped payload.
 function usePlacementProtocol(): boolean {
   // WS_SHELL_VERSION debug shells claim every capability via supports(), but
   // the in-repo visionOS runtime still decodes only the legacy attachment
