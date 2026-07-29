@@ -743,13 +743,16 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
       }
     }
     const { position, size } = this.options
-    const params: Record<string, any> = { id: this.attachmentId }
-    if (position) params.position = toPlacementVec3(position)
-    if (size) {
-      params.width = pointToPhysical(size.width)
-      params.height = pointToPhysical(size.height)
+    return {
+      id: this.attachmentId,
+      ...(position ? { position: toPlacementVec3(position) } : {}),
+      ...(size
+        ? {
+            width: pointToPhysical(size.width),
+            height: pointToPhysical(size.height),
+          }
+        : {}),
     }
-    return params
   }
 }
 
