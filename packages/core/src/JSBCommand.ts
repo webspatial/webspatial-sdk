@@ -714,8 +714,8 @@ export class InitializeAttachmentCommand extends JSBCommand {
         ownerViewId: p.ownerViewId,
       }
     }
-    // Placement runtimes (PicoWebApp/0.4.90 OTA0+, WSAppShell/1.8.0+) only
-    // decode the placement-shaped payload: Vec3 position and meter dimensions.
+    // Runtimes advertising this capability decode a Vec3 position and meter
+    // dimensions instead of the legacy tuple and point size.
     return {
       id: this.attachmentId,
       placementId: p.parentEntityId,
