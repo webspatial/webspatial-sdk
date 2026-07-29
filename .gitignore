@@ -34,3 +34,4 @@ temp
 
 # test reports
 /packages/autoTest/reports/
+packages/visionOS/Packages/RealityKitContent/.build/**

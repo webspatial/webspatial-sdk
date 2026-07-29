@@ -43,11 +43,11 @@ export type { SpatialBootProps } from './runtime/SpatialBoot'
 
 // --- Runtime capability infrastructure (from @webspatial/core-sdk/runtime) ----
 export { WebSpatialRuntime } from './webSpatialRuntime'
-export {
-  WebSpatialRuntimeError,
-  type CapabilityKey,
-  type WebSpatialRuntimeSnapshot,
-  type WebSpatialRuntimeType,
+export { WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
+export type {
+  CapabilityKey,
+  WebSpatialRuntimeSnapshot,
+  WebSpatialRuntimeType,
 } from '@webspatial/core-sdk/runtime'
 
 // --- Core-sdk type re-exports (zero runtime cost) ---------------------------
@@ -217,7 +217,6 @@ export type {
 
 // --- Hooks (placeholder / ready-gated per spec "Hook placeholders") ---------
 export { useMetrics } from './hooks-web/useMetrics'
-export { useAnimation } from './hooks-web/useAnimation'
 
 // --- Public type surface (no runtime values) --------------------------------
 // Spatial event + ref types — referenced by facade prop / ref typing.
