@@ -52,6 +52,9 @@ function matrixVision_1_5_0_Flags(): Record<string, boolean> {
   flags['SpatialRotateEvent:constrainedToAxis'] = true
   // Container useAnimation is not supported until WSAppShell/1.8.0.
   flags['useAnimation'] = false
+  // Placement-shaped attachment protocol lands in picoOS PicoWebApp/0.4.90
+  // (OTA0); no visionOS shell decodes it yet.
+  flags['AttachmentEntity:placement'] = false
   return flags
 }
 
@@ -67,6 +70,9 @@ function matrixVision_1_6_0_Flags(): Record<string, boolean> {
   flags['SpatialRotateEvent:constrainedToAxis'] = true
   // Container useAnimation is not supported until WSAppShell/1.8.0.
   flags['useAnimation'] = false
+  // Placement-shaped attachment protocol lands in picoOS PicoWebApp/0.4.90
+  // (OTA0); no visionOS shell decodes it yet.
+  flags['AttachmentEntity:placement'] = false
   return flags
 }
 
@@ -139,6 +145,7 @@ function matrixPico_0_3_1_Flags(): Record<string, boolean> {
 function matrixPico_0_4_90_Flags(): Record<string, boolean> {
   const flags = matrixPico_0_3_1_Flags()
   flags['useAnimation'] = true
+  flags['AttachmentEntity:placement'] = true
   return flags
 }
 
