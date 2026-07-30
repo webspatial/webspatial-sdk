@@ -299,6 +299,44 @@ These read-only properties expose the axis-aligned bounding box (AABB) of the lo
 1. Add `readonly boundingBoxCenter: DOMPointReadOnly` and `readonly boundingBoxExtents: DOMPointReadOnly` to `SpatializedStatic3DElementRef` in `spatialized-container/types.ts`.
 2. Expose them as getters in `extraRefProps` in `SpatializedStatic3DElementContainer.tsx`, delegating to the core element getters (mirroring the existing `duration` getters).
 
+### 7. `blob:` URL Support for `<Model>` Sources
+
+`<Model>` should accept `blob:` URLs on `src` and child `<source>` elements. Today source URLs are sent to native as strings, and native downloads them — which cannot resolve `blob` URL since it's local to the WebView. So the bytes must be shipped from JS → native. The bridge is string-only, so we transfer chunked base64 into a native temp file; the existing local-file load path handles the rest. The blob URL is created via
+
+```js
+const resp = await fetch(src)
+const blob = await resp.blob()
+const blobURL = URL.createObjectURL(blob)
+// "blob:https://webspatial-hackathon.vercel.app/ef1ac2cd-0f6a-4e1a-861a-dac5427e7c29"
+```
+
+#### Design
+
+Blob URLs pass through the existing create/update flow unchanged. When native's source-fallback loop reaches a `blob:` source:
+
+1. **Native → JS**: new WebMsg `modelblobrequest` `{ requestId, src }`. Native creates a unique, non-reused `requestId` for each source attempt, including reloads of the same `src`.
+2. **JS** (pure transport — no format logic): `fetch(src)` → blob; read 8 MiB slices, base64-encode each, send via new JSB command `TransferModelBlobData` `{ requestId, src, data, type, size }`, awaiting each call's ack before sending the next. `requestId` is copied from `modelblobrequest` onto every chunk. `type`/`size` ride on every chunk (cheap next to an 8 MiB payload, and lets native resolve the extension from any chunk). The command extends `SpatializedElementCommand`, so the element `id` native routes on is supplied implicitly. A rejected ack aborts the loop. If the fetch fails (e.g. revoked blob) send `{ requestId, src, isError: true }` instead.
+3. **Native**: routes each chunk to the element by `id`, then to that element's transfer by `requestId`; unknown, cancelled, or completed request IDs are rejected so chunks from an earlier same-URL load cannot enter a newer transfer. It appends each decoded chunk to a temp file via `FileHandle` (order is guaranteed by the sequential acks; end-of-stream is reached when the appended byte count hits `size`). It then resolves the file extension from the mime type provided by `<source type>`, falling back to blob `type` or falling back to USDZ as a last resort. Renames, and loads `Model3DAsset(url:)`, on success reports the original blob URL. On error, unsupported type, or timeout (1 s per chunk), it deletes the temp file and continues the fallback loop.
+
+Sequential acks give natural backpressure: memory stays bounded to one in-flight chunk, with no full-model buffer anywhere. Temp files are deleted on error, element reload, and element destroy. No caching in v1: two elements sharing a blob URL transfer twice.
+
+#### 7.1. Core SDK (`@webspatial/core-sdk`)
+
+1. `WebMsgCommand.ts` — new `modelblobrequest` WebMsg type with detail `{ requestId, src }`, sent by native to request transfer of a blob source. `requestId` uniquely identifies this source attempt even when the same `src` is reloaded.
+2. `JSBCommand.ts` — new `TransferModelBlobDataCommand`, extending `SpatializedElementCommand` (so the element `id` is injected implicitly), with payload `{ requestId, src, data?, type?, size?, isError? }`.
+3. New `blob/blobTransfer.ts` — the JS half of the protocol: copy `requestId` from `modelblobrequest`, `fetch(src)` the blob, read it in 8 MiB slices, base64-encode each slice, and send it via `TransferModelBlobData`, awaiting each call's ack before sending the next. Every chunk carries `requestId`; `type`/`size` ride on every chunk so native can resolve the file extension from any chunk. A rejected ack aborts the loop; a fetch failure (e.g. a revoked blob) sends `{ requestId, src, isError: true }` instead. It takes only the element (a `SpatialObject`), request ID, and blob URL, so it stays component-agnostic and reusable by other components' blob transfers later.
+4. `SpatializedStatic3DElement.ts` — handles `modelblobrequest` in `onReceiveEvent`, driving the transfer via `blobTransfer.ts`; stops pumping if the element is destroyed.
+5. Sequential acks give natural backpressure — memory stays bounded to one in-flight chunk, with no full-model buffer anywhere on either side of the bridge.
+
+#### 7.2. Native visionOS Layer (`packages/visionOS`)
+
+1. `WebMsgCommand.swift` / `JSBCommand.swift` — mirror the new message and command.
+2. New `model/blob/BlobTransfer.swift` — reassembles decoded chunks into a temp file via `FileHandle`, tracking the running byte count against `size` (end-of-stream is reached when the appended byte count hits `size`); resolves mime → extension (`<source type>` attr it already holds, falling back to the received `type`; `model/vnd.usdz+zip` → `usdz`, `model/gltf-binary` → `glb`, …) and renames on completion; enforces a 1 s per-chunk timeout. Component-agnostic — just a reassembly helper the element drives.
+3. `model/SpatializedStatic3DElement.swift` — owns the JSB communication and transfer lifecycle: creates a unique `requestId` for each source attempt, sends it with `modelblobrequest`, feeds incoming `TransferModelBlobData` chunks to a `BlobTransfer` keyed by `requestId`, exposes an async fetch that returns the temp file URL, and handles cancel/abort. Cancelling a transfer removes its request ID so later chunks are rejected. Holds the temp file URLs and deletes them in `onDestroy` (temp files are also deleted on error and on element reload).
+4. `model/SpatialScene.swift` — registers the `TransferModelBlobData` JSB listener and routes each chunk to the element by `id`; the element then resolves the transfer by `requestId`. Unknown or cancelled request IDs receive a failed ack, which aborts the stale JS stream.
+5. `view/SpatializedStatic3DView.swift` — in the fallback loop, if `source.src` starts with `blob:`, awaits the element's fetch (passing the source's `type` attr), loads the returned temp file via `Model3DAsset(url:)`, and returns the original blob URL string so `currentSrc` report the blob URL rather than the temp file path.
+6. No caching in v1 — two elements sharing the same blob URL transfer twice.
+
 ## Risks
 
 - **Safari Alignment**: Since the `<model>` element is still an evolving standard, our implementation is a best-effort interpretation. We must be prepared to adapt as the standard solidifies.
