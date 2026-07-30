@@ -150,12 +150,12 @@ Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`�
 
 ### Requirement: Entity motion 具有确定的状态与生命周期转换
 
-公开 Entity motion 状态 MUST 使用 `queued`、`idle`、`running`、`paused` 和 `finished`。`queued` MUST 表示原生动画对象创建前的 React 绑定阶段。`queued` 期间 `isAnimating`、`isPaused` 和 `finished` MUST 保持 `false`,排队命令 MUST 保持这些布尔值。当前绑定生命周期正常存续期间,原生层创建回执、控制回执和状态事件 MUST 作为公开播放状态与布尔值的唯一数据源。原生层状态 MUST 使用 `idle`、`running`、`paused` 和 `finished`。原生层创建成功回执 MUST 在执行待处理命令前确认初始 `idle` 状态。原生层创建失败回执 MUST 执行终止当前绑定生命周期的错误流程。公开 `finished` 标记 MUST 等于 `playState === 'finished'` 的结果。
+公开 Entity motion 状态 MUST 使用 `queued`、`idle`、`running`、`paused` 和 `finished`。`queued` MUST 表示至少一条播放命令正在等待原生动画对象创建。原生动画对象创建期间没有待执行播放命令时,公开状态 MUST 保持 `idle`。`autoStart` 生成的隐式 `play` MUST 视为待执行播放命令。`queued` 期间 `isAnimating`、`isPaused` 和 `finished` MUST 保持 `false`,排队命令 MUST 保持这些布尔值。当前绑定生命周期正常存续期间,原生层创建回执 MUST 建立初始公开 `idle` 状态。动画对象创建完成后,每次播放状态变化时,原生层 MUST 发送携带最新 `playState` 的状态消息,Core MUST 根据该消息更新公开状态。原生层状态 MUST 使用 `idle`、`running`、`paused` 和 `finished`。原生层创建成功回执 MUST 在执行待处理命令前确认初始 `idle` 状态。原生层创建失败回执 MUST 执行终止当前绑定生命周期的错误流程。公开 `finished` 标记 MUST 等于 `playState === 'finished'` 的结果。
 
 每次 fresh play MUST 保存当前原生层业务控制器身份。原生层 MUST 串行处理控制命令与控制器完成回调。控制器身份匹配当前业务控制器的完成事件 MUST 具备完成该次运行的资格。
 
 #### Scenario: 原生层创建回执结束 queued
-- **GIVEN** 播放命令在原生动画对象创建前进入待处理队列
+- **GIVEN** 至少一条播放命令正在等待原生动画对象创建
 - **WHEN** 原生层创建回执到达
 - **THEN** 成功回执 MUST 在绑定对象执行待处理命令前确认公开 `idle`
 - **AND** 待处理的 `pause` 或 `stop` 在原生层 `idle` 执行后 MUST 保持公开 `idle`
@@ -382,7 +382,7 @@ Native 创建动画时 MUST 兜底校验并保存规范时间轴、注册动画�
 
 ### Requirement: 活跃动画保护整个 Entity transform
 
-动画处于 `delay`、`running` 或 `paused` 时,动画系统 MUST 控制完整的 Entity transform。底层平台(visionOS / picoOS)绑定整个 `.transform`;配置字段执行动画,其余字段 MUST 保持基准姿态。每次 fresh play 时,Native MUST 启用完整 transform 写入保护,并在暂停期间保持该保护。保护生效期间,最新的 `entityProps` 已确认值 MUST 保持稳定,SDK MUST 立即丢弃 React 属性写入和 `api.set` 写入。Native `SpatialScene` MUST 在普通 Entity transform 更新入口通过 animating mask 仲裁,返回成功并保持当前原生 transform。
+动画处于 `delay`、`running` 或 `paused` 时,动画系统 MUST 控制完整的 Entity transform。底层平台(visionOS / picoOS)绑定整个 `.transform`;配置字段执行动画,其余字段 MUST 保持基准姿态。每次 fresh play 时,Native MUST 启用完整 transform 写入保护,并在暂停期间保持该保护。保护生效期间,最新的 `entityProps` 已确认值 MUST 保持稳定,SDK MUST 立即丢弃 React 属性写入。原生对象创建后的 `api.set` MUST 保持 FIFO 顺序并抵达 Native,接收 `INVALID_CONTROL_STATE`,再由 SDK 映射为一次 warning 与空操作,且不触发 `onError`。Native `SpatialScene` MUST 在普通 Entity transform 更新入口通过 animating mask 仲裁,返回成功并保持当前原生 transform。
 
 执行 `stop`、`reset`、`finish` 或自然完成时,Native MUST 提交对应姿态,取得 Entity 当前的完整 transform,解除完整 transform 写入保护,再发出携带该 transform 的状态事件。解绑、绑定终止和销毁动画对象 MUST 作为清理路径解除保护。播放空闲且保护未生效时,普通 Entity transform 更新 MUST 更新原生 transform。
 

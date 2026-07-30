@@ -1,3 +1,5 @@
+> **状态:已正式 superseded。** `redesign-entity-motion-api` 是 Entity motion 的权威目标态。本 change 仅保留为迁移历史。
+
 ## 为什么
 
 **问题**

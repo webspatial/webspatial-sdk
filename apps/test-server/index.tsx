@@ -83,6 +83,8 @@ import EntityAnimationCancelSyncPage from './src/pages/entity-animation/cancel-s
 import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/capability-check'
 import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loop'
 import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
+import EntityAnimationConfigReplacementPage from './src/pages/entity-animation/config-replacement'
+import EntityAnimationIsolationCleanupPage from './src/pages/entity-animation/isolation-cleanup'
 import SpatialElementMotionPage from './src/pages/spatial-element-motion/index'
 import SpatialElementMotionRealityContainerPage from './src/pages/spatial-element-motion/reality-container'
 import SpatialElementMotionStaticModelContainerPage from './src/pages/spatial-element-motion/static-model-container'
@@ -251,6 +253,14 @@ function App() {
                 <Route
                   path="/entity-animation/play-state"
                   element={<EntityAnimationPlayStatePage />}
+                />
+                <Route
+                  path="/entity-animation/config-replacement"
+                  element={<EntityAnimationConfigReplacementPage />}
+                />
+                <Route
+                  path="/entity-animation/isolation-cleanup"
+                  element={<EntityAnimationIsolationCleanupPage />}
                 />
                 <Route
                   path="/spatial-element-motion"

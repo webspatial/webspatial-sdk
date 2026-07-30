@@ -3,6 +3,7 @@ import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
 import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
+  EntityPropsPanel,
   Log,
   fmtVec3,
   btnCls,
@@ -12,6 +13,8 @@ import {
 function EntranceAnimationScene({
   onStart,
   onComplete,
+  onSetConfirmed,
+  onReset,
   onError,
 }: {
   onStart: () => void
@@ -19,9 +22,14 @@ function EntranceAnimationScene({
     position?: { x: number; y: number; z: number }
     scale?: { x: number; y: number; z: number }
   }) => void
-  onError: (error: { command: string; reason: string }) => void
+  onSetConfirmed: () => void
+  onReset: (value: {
+    position?: { x: number; y: number; z: number }
+    scale?: { x: number; y: number; z: number }
+  }) => void
+  onError: (error: { code: string; reason: string }) => void
 }) {
-  const [animation] = useEntityAnimation({
+  const [animation, api, entityProps] = useEntityAnimation({
     from: {
       position: { x: 0, y: 0, z: 0 },
       scale: { x: 0.1, y: 0.1, z: 0.1 },
@@ -36,15 +44,45 @@ function EntranceAnimationScene({
     autoStart: true,
     onStart,
     onComplete,
+    onReset,
     onError,
   })
 
   return (
-    <Reality style={{ width: '100%', height: '260px' }}>
-      <SceneGraph>
-        <BoxEntity width={0.1} height={0.1} depth={0.1} animation={animation} />
-      </SceneGraph>
-    </Reality>
+    <>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          className={btnCls}
+          onClick={() => {
+            api.set({ position: { y: 0.06 } })
+            onSetConfirmed()
+          }}
+        >
+          api.set(y = 0.06)
+        </button>
+        <button className={btnCls} onClick={() => api.reset()}>
+          Reset to start
+        </button>
+      </div>
+      <div className="mt-3 text-xs font-mono text-gray-500">
+        playState={api.playState} &nbsp; isAnimating=
+        {String(api.isAnimating)}
+      </div>
+      <Reality style={{ width: '100%', height: '260px' }}>
+        <SceneGraph>
+          <BoxEntity
+            width={0.1}
+            height={0.1}
+            depth={0.1}
+            position={{ x: 0, y: 0, z: 0 }}
+            scale={{ x: 1, y: 1, z: 1 }}
+            {...entityProps}
+            animation={animation}
+          />
+        </SceneGraph>
+      </Reality>
+      <EntityPropsPanel entityProps={entityProps} />
+    </>
   )
 }
 
@@ -77,8 +115,16 @@ export default function EntityAnimationEntrancePage() {
               `onComplete pos=${fmtVec3(value.position)} scale=${fmtVec3(value.scale)}`,
             )
           }
+          onSetConfirmed={() =>
+            logger.log('api.set requested; see entityProps')
+          }
+          onReset={value =>
+            logger.log(
+              `onReset pos=${fmtVec3(value.position)} scale=${fmtVec3(value.scale)}`,
+            )
+          }
           onError={error =>
-            logger.log(`onError [${error.command}] ${error.reason}`)
+            logger.log(`onError [${error.code}] ${error.reason}`)
           }
         />
         <Log lines={logger.lines} />

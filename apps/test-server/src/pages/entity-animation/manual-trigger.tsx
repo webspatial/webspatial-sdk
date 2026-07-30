@@ -8,6 +8,7 @@ import {
 import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
+  EntityPropsPanel,
   Log,
   fmtVec3,
   btnCls,
@@ -20,7 +21,7 @@ export default function EntityAnimationManualTriggerPage() {
   const [playbackRate, setPlaybackRate] = useState(1.0)
   const [posX, setPosX] = useState(0)
 
-  const [animation, api] = useEntityAnimation({
+  const [animation, api, entityProps] = useEntityAnimation({
     from: { position: { x: -0.1, y: 0, z: 0 } },
     to: { position: { x: 0.1, y: 0, z: 0 } },
     duration: 3.0,
@@ -30,8 +31,9 @@ export default function EntityAnimationManualTriggerPage() {
     onStart: () => logger.log('onStart'),
     onComplete: value =>
       logger.log(`onComplete pos=${fmtVec3(value.position)}`),
-    onCancel: value => logger.log(`onCancel pos=${fmtVec3(value.position)}`),
-    onError: error => logger.log(`onError [${error.command}] ${error.reason}`),
+    onStop: value => logger.log(`onStop pos=${fmtVec3(value.position)}`),
+    onReset: value => logger.log(`onReset pos=${fmtVec3(value.position)}`),
+    onError: error => logger.log(`onError [${error.code}] ${error.reason}`),
   })
 
   return (
@@ -62,11 +64,38 @@ export default function EntityAnimationManualTriggerPage() {
           <button
             className={btnCls}
             onClick={() => {
-              api.cancel()
-              logger.log('cancel()')
+              api.stop()
+              logger.log('stop()')
             }}
           >
-            Cancel
+            Stop
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.reset()
+              logger.log('reset()')
+            }}
+          >
+            Reset
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.finish()
+              logger.log('finish()')
+            }}
+          >
+            Finish
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.set({ position: { y: 0.06 } })
+              logger.log('api.set(y=0.06) requested; see entityProps')
+            }}
+          >
+            api.set(y = 0.06)
           </button>
           <button
             className={btnCls}
@@ -128,10 +157,12 @@ export default function EntityAnimationManualTriggerPage() {
               depth={0.1}
               position={{ x: posX, y: 0, z: 0 }}
               materials={['matRed']}
+              {...entityProps}
               animation={animation}
             />
           </SceneGraph>
         </Reality>
+        <EntityPropsPanel entityProps={entityProps} />
         <Log lines={logger.lines} />
       </section>
     </EntityAnimationPageShell>

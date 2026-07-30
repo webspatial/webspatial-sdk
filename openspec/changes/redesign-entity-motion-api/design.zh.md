@@ -351,10 +351,12 @@ sequenceDiagram
         NativeObj->>NativeObj: 读取最新 native baseline
         NativeObj->>Compiler: compile(timeline payload, baseline)
         Compiler-->>NativeObj: 完整变换动画资源
-        NativeObj->>NativeObj: 提交并确认起始姿态,发出 start
+        NativeObj->>NativeObj: 提交并确认起始姿态
         NativeObj->>NativeObj: 创建 controller 并进入 delay / running
+        NativeObj->>Event: 发送携带 start 和 running 的状态消息
     else paused 后 play
         NativeObj->>NativeObj: private resumeCurrent()
+        NativeObj->>Event: 发送携带 running 的状态消息
         Note over NativeObj: 不读 baseline、不编译、不重复 start
     end
     NativeObj-->>Scene: success
@@ -379,11 +381,11 @@ sequenceDiagram
         participant NativeObj as EntityMotionAnimationObject
     end
 
-    NativeObj->>NativeObj: 状态变化(开始/完成/停止/重置/结束/set 被接受)
+    NativeObj->>NativeObj: 生命周期确认节点(start/complete/stop/reset/finish)
     NativeObj->>NativeObj: 读取权威姿态
     NativeObj->>NativeObj: 拆解为 position / rotation / scale
     NativeObj->>NativeObj: 编码完整 position、rotation、scale
-    NativeObj->>Event: 回传确认值
+    NativeObj->>Event: 回传 action、playState 和确认姿态
     Event->>Obj: 收到事件
     Obj-->>Hook: 确认后的 EntityMotionProps
     Hook-->>App: entityProps 更新
@@ -430,8 +432,9 @@ sequenceDiagram
 
 公开的 `EntityPlaybackApi` 保持 `void` 命令接口。内部由每个 `EntityMotionBinding` 持有一条 FIFO 命令链,在不向应用暴露 JSB Promise 的前提下保持调用顺序。
 
-- 目标绑定或原生动画对象创建完成前,`play`、`pause`、`stop`、`reset`、`finish` 按调用顺序进入待执行命令队列。原生层创建回执首先确认初始 `idle` 状态。创建成功回执到达后,绑定对象逐条执行队列中的命令。当前 `EntityAnimationObject` 的内部命令 Promise 完成后,才发送下一条命令。创建失败回执使公开状态收敛为 `idle`,使当前绑定代次失效,清空动画对象引用、控制器派生状态、待执行队列和 `entityProps`,触发 React 渲染以恢复基础属性控制,通过 `onError` 报告一次错误,并终止当前绑定生命周期。
-- `autoStart` 开启时,创建成功后生成的 `play` 命令插入待执行播放命令的队首。该行为与现有 Element 动画一致。
+- 原生动画对象创建期间,`play`、`pause`、`stop`、`reset`、`finish` 按调用顺序排队。`autoStart` 生成的 `play` 排在队首。
+- Native 动画对象创建期间为 `idle`;如果此时调用播放,命令等待执行,状态变为 `queued`。
+- 创建成功后,原生层先确认 `idle`,再按顺序执行队列。每条命令完成后执行下一条。
 - 绑定、原生动画对象创建前或当前绑定生命周期终止后调用 `api.set` 时,该命令不进入队列。SDK 输出控制台警告并执行空操作。
 - 原生动画对象创建后,所有播放命令和 `set` 进入同一条绑定命令队列。命令失败或 `set` 被转换为“警告并执行空操作”时,SDK 结束当前队列项并继续执行下一项。失败不会阻塞队列,也不会改变后续命令的顺序。
 - JSB 成功回执表示原生层已完成该命令的同步状态转换和所需姿态提交。播放控制命令产生 `start`、`pause`、`stop`、`reset` 或 `finish` 状态事件时,原生层先发出对应事件,再返回成功回执。`SetEntityAnimation` 不产生状态事件,Native 更新 Entity 后直接通过成功回执返回 Entity 当前的完整 transform。自然完成产生的异步 `complete` 事件不属于此前 `play` 命令的回执。
@@ -729,7 +732,7 @@ interface EntityMotionStateChangedMsg {
 
 `values` 使用物体目标的 `EntityMotionProps`,包含 `position`、`rotation`、`scale`。
 
-`queued` 是命令等待原生动画对象创建期间的 React 绑定状态。原生层创建回执确认初始 `idle` 状态。创建失败时,React 绑定把公开状态收敛为 `idle` 并终止当前绑定生命周期。后续原生层控制回执和状态事件确认 `idle`、`running`、`paused` 或 `finished`。正常绑定生命周期中的原生层回执与状态事件是公开播放状态的唯一数据源。公开 `finished` 标记由 `playState === 'finished'` 派生,不进入 JSB 状态事件。
+`queued` 是命令等待原生动画对象创建期间的 React 绑定状态。原生层创建回执确认初始 `idle` 状态。创建失败时,React 绑定把公开状态收敛为 `idle` 并终止当前绑定生命周期。后续原生层状态消息确认 `idle`、`running`、`paused` 或 `finished`。正常绑定生命周期中的创建回执与原生层状态消息是公开播放状态的唯一数据源。公开 `finished` 标记由 `playState === 'finished'` 派生。
 
 ##### Entity 错误事件与错误类型
 
@@ -746,8 +749,6 @@ interface EntityAnimationErrorMsg {
   detail: EntityAnimationErrorDetail
 }
 ```
-
-`SpatializedPlaybackError` 不重复携带命令名称。Core 在命令回执处理中已经持有当前命令上下文,异步错误也由对应动画对象接收。对用户稳定开放错误码和可读原因:
 
 ```text
 type SpatializedPlaybackError = {
@@ -969,7 +970,7 @@ classDiagram
 - 创建成功后,`SpatialScene` 把动画对象作为 `SpatialObject` 加入全局 `spatialObjects`;成功回执返回该对象的 `id` 并确认其初始状态为 `idle`。
 - 控制命令通过 `id` 在全局 `spatialObjects` 查找 `EntityMotionAnimationObject`。设置命令使用同一套查找规则,并单独调用 `set(update)`。
 - 同步命令错误通过 JSB reply 回传;仅命令接受后发生的异步播放错误通过一次 `entityanimationerror` 回传。
-- JSB 成功回执只在原生层完成命令的同步状态转换和姿态提交后返回。播放控制命令需要产生状态事件时,原生层先发出事件,再返回成功回执。设置命令更新 Entity 后通过回执返回 Entity 当前的完整 transform,不产生状态事件。绑定命令队列收到回执后,才发送下一条命令。
+- 播放状态发生变化时,原生层先发送携带最新 `playState` 的状态消息,再返回控制命令成功回执。
 - fresh play 编译失败时,控制命令失败,动画保持非活跃。
 
 创建成功回执只携带动画对象的 `id`,确认对象已经创建并处于 `idle`;失败回执确认对象创建结束,绑定对象据此收敛到 `idle`、清理待执行命令并分发分类错误。
@@ -1172,7 +1173,7 @@ fun playSequencedTransformAnimation(entity: Entity): AnimationPlaybackController
 2. **时间范围:** `duration` 必须为正;每个关键帧的 `at` 必须落在 `[0, duration]` 内。
 3. **排序与重复:** 每条轨道的关键帧按 `at` 非递减排序;每个属性对应一条唯一轨道。
 4. **切片时间取各通道并集:** 把所有通道的关键帧时间取并集作为整条时间轴的切点,相邻切点之间构成一段。例如 `position.y` 在 `0, 0.6, 1.2`、`rotation.y` 在 `0, 1.2`,并集 `0, 0.6, 1.2` 切成 `[0, 0.6]` 与 `[0.6, 1.2]` 两段。
-5. **每个切点采样完整姿态,缺帧按通道回落:** 每个切点都要给出完整的 `position` / `rotation` / `scale`。某通道在该时刻存在关键帧空缺时,仅按时间比例在它自己的数值关键帧之间做线性插值,得到切点值。早于该通道首帧的时段回落到播放起点的原生基准值,晚于末帧的时段保持末帧值。配置中空缺的分量(例如 `scale.*`)会被采样为基准值并在播放期间保持原值——即整个 transform 在动画期间都由动画持有。
+5. **稀疏通道补全:** 编译器在每个切点生成完整姿态。相邻关键帧之间线性插值;首帧晚于零时,从零时刻 baseline 插值到首帧;末帧后沿用末帧值;其余分量全程沿用 baseline。
 6. **逐段串联整姿态:** 相邻切点构成一段整姿态 `FromToByAnimation<Transform>`,各段按时间顺序用 `sequence` 串成一条整姿态动画,统一绑定到整个 transform(`bindTarget: .transform`),详见“时间轴切片为整姿态节点并串联”。
 7. **旋转:** `rotation.*` 输入是欧拉角度数,编译时转成 RealityKit 所需的旋转表示,由 RealityKit 使用最短路径球面插值处理。某个旋转通道若单帧增量达到或超过 180°、或跨多轴,实际路径可能区别于逐轴直觉;特定的多圈或多轴路径由使用者通过中间关键帧显式定义。
 8. **缩放:** `scale.*` 必须非负,非法缩放直接失败。
@@ -1244,17 +1245,18 @@ sequenceDiagram
         Obj->>Obj: 启用完整 transform 写入保护
         Obj->>RK: 提交 from / 0% 完整起始姿态
         Obj->>RK: 读取 Entity 当前的完整 transform
-        Obj->>Event: 发出 start,携带当前完整 transform
         Obj->>RK: 创建控制器并进入 delay / running
         RK-->>Obj: 播放控制器
+        Obj->>Event: 发出 start,携带 running 和当前完整 transform
     else paused 后恢复
         Obj->>Obj: private resumeCurrent()
         Obj->>RK: 恢复当前控制器,不产生 start
+        Obj->>Event: 发送携带 running 的状态消息
     end
     RK-->>Obj: 完成 / 终态回调
     Obj->>Obj: 读取并拆解 Entity 当前的完整 transform
     Obj->>Obj: 解除完整 transform 写入保护
-    Obj->>Event: 发出 complete,携带当前完整 transform
+    Obj->>Event: 发出 complete,携带 finished 和当前完整 transform
 ```
 
 创建阶段只保存规范时间轴,由 `SpatialScene` 注册 animation object 并返回其 `id`。每次 fresh play 读取最新 baseline 并编译本轮 RealityKit 资源,随后提交并确认完整起始姿态;`start` 和首个 `entityProps` 更新发生在确认成功后,不等待 delay 结束。paused 后的 `play` 直接复用当前资源和控制器,不读取 baseline、不编译、不产生新的 `start`。
@@ -1287,7 +1289,7 @@ sequenceDiagram
     alt 找到且状态允许
         Scene->>Obj: pause()
         Obj->>RK: 控制器暂停
-        Obj->>Event: 发出 pause,携带播放状态
+        Obj->>Event: 发出 pause,携带 paused
         Scene-->>JSB: 成功
     else 动画查询失败 / 状态非法
         Scene-->>JSB: 失败
@@ -1314,7 +1316,7 @@ sequenceDiagram
         Obj->>RK: 以零时长提交目标姿态
         Obj->>Obj: 读取并拆解 Entity 当前的完整 transform
         Obj->>Obj: 解除完整 transform 写入保护
-        Obj->>Event: 发出 stop/reset/finish,携带当前完整 transform
+        Obj->>Event: stop/reset 携带 idle,finish 携带 finished,同时携带当前完整 transform
         Scene-->>JSB: 成功
     else id 不存在
         Scene-->>JSB: 失败(ANIMATION_NOT_FOUND)

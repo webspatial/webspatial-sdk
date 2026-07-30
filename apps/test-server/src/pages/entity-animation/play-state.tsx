@@ -2,7 +2,9 @@ import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
 import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
+  EntityPropsPanel,
   Log,
+  fmtVec3,
   btnCls,
   btnPrimary,
   useLog,
@@ -11,7 +13,7 @@ import {
 export default function EntityAnimationPlayStatePage() {
   const logger = useLog()
 
-  const [animation, api] = useEntityAnimation({
+  const [animation, api, entityProps] = useEntityAnimation({
     from: {
       position: { x: -0.2, y: 0, z: 0 },
       scale: { x: 0.5, y: 0.5, z: 0.5 },
@@ -27,7 +29,16 @@ export default function EntityAnimationPlayStatePage() {
     onStart: () => logger.log(`[cb] onStart — playState=${api.playState}`),
     onComplete: () =>
       logger.log(`[cb] onComplete — playState=${api.playState}`),
-    onCancel: () => logger.log(`[cb] onCancel — playState=${api.playState}`),
+    onStop: value =>
+      logger.log(
+        `[cb] onStop — playState=${api.playState} pos=${fmtVec3(value.position)}`,
+      ),
+    onReset: value =>
+      logger.log(
+        `[cb] onReset — playState=${api.playState} pos=${fmtVec3(value.position)}`,
+      ),
+    onError: error =>
+      logger.log(`[cb] onError [${error.code}] ${error.reason}`),
   })
 
   const logState = (action: string) => {
@@ -43,7 +54,8 @@ export default function EntityAnimationPlayStatePage() {
         <>
           Verify <code className="text-cyan-300">api.playState</code>{' '}
           transitions: idle → running → paused → running → finished, and idle →
-          running → idle (cancel). The state badge updates on every render.
+          running → idle after stop or reset. The state badge updates on every
+          render.
         </>
       }
     >
@@ -70,11 +82,38 @@ export default function EntityAnimationPlayStatePage() {
           <button
             className={btnCls}
             onClick={() => {
-              api.cancel()
-              logState('cancel()')
+              api.stop()
+              logState('stop()')
             }}
           >
-            Cancel
+            Stop
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.reset()
+              logState('reset()')
+            }}
+          >
+            Reset
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.finish()
+              logState('finish()')
+            }}
+          >
+            Finish
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.set({ scale: { x: 0.75, y: 0.75, z: 0.75 } })
+              logger.log('api.set(scale=0.75) requested; see entityProps')
+            }}
+          >
+            api.set(scale = 0.75)
           </button>
           <button className={btnCls} onClick={() => logState('query')}>
             Query State
@@ -98,11 +137,14 @@ export default function EntityAnimationPlayStatePage() {
               width={0.1}
               height={0.1}
               depth={0.1}
-              // position={{ x: 0, y: 0, z: 0 }}
+              position={{ x: 0, y: 0, z: 0 }}
+              scale={{ x: 1, y: 1, z: 1 }}
+              {...entityProps}
               animation={animation}
             />
           </SceneGraph>
         </Reality>
+        <EntityPropsPanel entityProps={entityProps} />
         <Log lines={logger.lines} />
 
         <div className="mt-4 rounded-lg border border-gray-800 bg-black/30 p-4 text-xs text-gray-500">
@@ -124,7 +166,16 @@ export default function EntityAnimationPlayStatePage() {
               <strong>Wait for end:</strong> running → finished
             </li>
             <li>
-              <strong>Cancel:</strong> running/paused → idle
+              <strong>Stop:</strong> running/paused → idle with the current
+              confirmed pose
+            </li>
+            <li>
+              <strong>Reset:</strong> running/paused/finished → idle at the
+              configured start pose
+            </li>
+            <li>
+              <strong>Finish:</strong> running/paused/idle → finished at the
+              configured end pose
             </li>
             <li>
               <strong>Play after finished:</strong> finished → running (new

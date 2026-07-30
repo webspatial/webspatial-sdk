@@ -8,6 +8,8 @@
 2. **动画结果回写(`entityProps`)**:Hook 会把动画的最终姿态交回给你,让物体在动画结束后稳稳停在终点。
 3. **绑定方式(`animation`)**:通过组件的 `animation` 属性把动画绑定到物体上。
 
+`useEntityAnimation` 保持为 experimental API,从 `@webspatial/react-sdk/experimental` 导入。
+
 > **几个基础名词**(下文会反复用到):
 > - **Entity**:场景里的一个 3D 物体,比如一个盒子 `<BoxEntity>`。
 > - **transform**:物体的空间姿态,由三部分组成——位置 `position`(单位:米)、旋转 `rotation`(单位:度)、缩放 `scale`(倍数,1 表示原始大小)。
@@ -36,7 +38,7 @@
 ## 快速上手:一个完整例子
 
 ```tsx
-import { useEntityAnimation } from '...'
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 
 function MyBox() {
   // 让盒子在 0.8 秒内向上移动 0.25 米,并放大到 1.1 倍
@@ -323,17 +325,17 @@ return (
 动画播完后,如果你想用代码把物体移到新姿态,调用 `api.set`:
 
 ```tsx
-// 把盒子抬高到 y = 0.3(其它保持不变)
+// 把盒子抬高到 y = 0.3(其它字段沿用当前值)
 api.set({ position: { y: 0.3 } })
 ```
 
 几条规则:
 
-1. **只在原生动画对象已经创建且动画不处于播放状态时用**(包括:从未播放、已播完、已停止 / 重置)。动画正在播放(含延迟、暂停)、原生动画对象尚未创建或当前绑定已经因创建 / 交接失败而终止时,调用 `api.set` 会被拒绝——此时它是一次 **noop**(不打断动画、也不会延后补播,物体保持不变,`entityProps` 也不更新),并在控制台打印一条警告(warning),**不会**触发 `onError`。想在动画进行中接管物体,请先停止动画,或等它结束。
-2. **只传你想改的字段即可**,其余保持原样。例如 `api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
-3. **写入成功后 `entityProps` 会更新**为新姿态。Native 更新 Entity,并通过设置命令的成功回执返回 Entity 当前的完整 transform;Core 使用该值更新 `entityProps`。`set` 不产生播放状态事件,也不改变 `playState`。如果写入未被接受(比如在动画播放中调用),则是一次 noop——`entityProps` 保持不变,并在控制台打印一条警告,不会触发 `onError`。
-4. **想基于当前值来改**?先读 `entityProps` 拿到当前姿态,自己算好新值,再传给 `api.set`。这里没有 `api.get`——因为在 React 里用取值函数容易读到过期的旧值、产生先读后写的冲突。
-5. **它不是播放命令**:`api.set` 不会开始播放、也不改变播放进度。
+1. **在 `animation` 绑定完成后的空闲阶段调用**。播放完成、停止或重置后可以直接调用;播放期间先调用 `stop()`,随后调用 `api.set()`。
+2. **传入需要更新的字段**,其余字段沿用当前值。例如 `api.set({ position: { y: 0.3 } })` 更新 `position.y`,同时沿用当前 `rotation` 和 `scale`。
+3. **写入成功后,`entityProps` 更新为 Entity 的完整当前姿态**。
+4. **基于当前姿态更新时**,读取 `entityProps`、计算新值,再传给 `api.set`。`entityProps` 是当前姿态的数据来源。
+5. **`api.set` 设置静止姿态**,播放进度沿用当前值。
 
 ### api.set 之后再播放的起点
 
@@ -398,7 +400,7 @@ interface EntityPlaybackApi {
 }
 ```
 
-前五个是**播放控制**,操作动画的播放进度;`api.set` 是**设置姿态**,直接改物体的静止姿态,不影响播放进度。两者都是 `api` 上的方法,用途不同:需要控制动画时用前五个,需要在动画结束后手动摆放物体时用 `api.set`。
+前五个方法控制动画的播放进度。`api.set` 设置物体的静止姿态,同时沿用当前播放进度。播放控制使用前五个方法;动画结束后的姿态调整使用 `api.set`。
 
 ---
 
@@ -409,8 +411,8 @@ interface EntityPlaybackApi {
 ```mermaid
 stateDiagram-v2
     [*] --> idle
-    idle --> queued: 原生对象创建前收到播放命令
-    queued --> idle: 原生层创建回执
+    idle --> queued: 播放请求排队
+    queued --> idle: 播放准备完成
     idle --> running: play() / autoStart
     idle --> finished: finish()
     running --> paused: pause()
@@ -423,7 +425,7 @@ stateDiagram-v2
     finished --> idle: reset()
 ```
 
-`running` 包含起播前的延迟等待。`queued` 表示播放命令正在等待原生动画对象创建。排队期间三个布尔值保持 `false`。原生层创建回执在绑定对象执行待处理命令前确认 `idle`;后续控制回执和状态事件持续同步公开状态与原生确认值。
+`running` 包含起播前的延迟等待。`queued` 表示播放请求已提交并等待执行。`autoStart` 和初始化阶段调用 `play()` 会进入该状态。播放开始后,状态变为 `running`。
 
 动画对象创建或同一目标配置替换的姿态交接失败时,`onError` 报告一次分类错误,公开状态收敛为 `idle`,`entityProps` 清空,当前绑定生命周期终止。该绑定后续的所有 API 调用均输出警告并执行空操作;config 和 callback 更新只刷新绑定保存的最新值。应用通过显式解绑后重新绑定,或创建新的 binding 开启新生命周期。
 
@@ -445,6 +447,8 @@ stateDiagram-v2
 | **终止绑定** | 动画对象创建或姿态交接失败 | ❌ 所有 API 均为 noop + 警告 | 清空为 `{}` | 其余 React 属性控制;重新开始需要显式重新绑定 |
 
 > **提示**:循环动画没有自然的“播放到终点”,所以循环期间 `entityProps` 不会在每圈结束时更新,也不会在每圈重新读取 baseline。`stop()`、`reset()` 或 `finish()` 会更新 `entityProps`;动画进入非活跃状态后,成功的 `api.set()` 也会更新 `entityProps`。
+
+文档化 capability 从 visionOS 的 WSAppShell `1.9.0` 和 picoOS 的 PicoWebApp `0.7.0` 开始可用。
 
 ---
 

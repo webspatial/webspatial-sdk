@@ -2,7 +2,9 @@ import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
 import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
+  EntityPropsPanel,
   Log,
+  fmtVec3,
   btnCls,
   btnPrimary,
   useLog,
@@ -11,14 +13,25 @@ import {
 export default function EntityAnimationReverseLoopPage() {
   const logger = useLog()
 
-  const [animation, api] = useEntityAnimation({
-    from: { rotation: { x: 0, y: 0, z: 0 } },
-    to: { rotation: { x: 0, y: 170, z: 0 } },
+  const [animation, api, entityProps] = useEntityAnimation({
+    timeline: {
+      from: { rotation: { x: 0, y: 0, z: 0 } },
+      '50%': {
+        position: { x: 0.04, y: 0.02, z: 0 },
+        rotation: { x: 0, y: 85, z: 0 },
+        timingFunction: 'easeInOut',
+      },
+      to: {
+        position: { x: 0.08, y: 0, z: 0 },
+        rotation: { x: 0, y: 170, z: 0 },
+      },
+    },
     duration: 2.0,
     timingFunction: 'linear',
     loop: { reverse: true },
     onStart: () => logger.log('onStart (loop)'),
-    onError: error => logger.log(`onError [${error.command}] ${error.reason}`),
+    onStop: value => logger.log(`onStop rot=${fmtVec3(value.rotation)}`),
+    onError: error => logger.log(`onError [${error.code}] ${error.reason}`),
   })
 
   const toggle = () => {
@@ -51,11 +64,20 @@ export default function EntityAnimationReverseLoopPage() {
           <button
             className={btnCls}
             onClick={() => {
-              api.cancel()
-              logger.log('cancel()')
+              api.stop()
+              logger.log('stop()')
             }}
           >
-            Cancel
+            Stop
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.set({ scale: { x: 1.2, y: 1.2, z: 1.2 } })
+              logger.log('api.set(scale=1.2) requested; see entityProps')
+            }}
+          >
+            api.set(scale = 1.2)
           </button>
           <button className={btnCls} onClick={logger.clear}>
             Clear log
@@ -71,10 +93,15 @@ export default function EntityAnimationReverseLoopPage() {
               width={0.1}
               height={0.1}
               depth={0.1}
+              position={{ x: 0, y: 0, z: 0 }}
+              rotation={{ x: 0, y: 0, z: 0 }}
+              scale={{ x: 1, y: 1, z: 1 }}
+              {...entityProps}
               animation={animation}
             />
           </SceneGraph>
         </Reality>
+        <EntityPropsPanel entityProps={entityProps} />
         <Log lines={logger.lines} />
       </section>
     </EntityAnimationPageShell>
