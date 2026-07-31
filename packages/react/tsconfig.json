@@ -27,6 +27,9 @@
         "./src/internal/facades-client.ts"
       ],
       "@webspatial/core-sdk": ["../core/src"],
+      "@webspatial/core-sdk/internal/entity-motion": [
+        "../core/src/internal/entity-motion.ts"
+      ],
       "@webspatial/core-sdk/runtime": ["../core/src/runtime/index.ts"]
     }
   },

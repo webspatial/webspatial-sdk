@@ -346,6 +346,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addJSBListener(AnimateTransformCommand.self, onAnimateTransform)
 
+        spatialWebViewModel.addJSBListener(CreateEntityAnimationCommand.self, onCreateEntityAnimation)
+        spatialWebViewModel.addJSBListener(ControlEntityAnimationCommand.self, onControlEntityAnimation)
+        spatialWebViewModel.addJSBListener(SetEntityAnimationCommand.self, onSetEntityAnimation)
+
         spatialWebViewModel.addJSBListener(CreateSpatializedElementAnimationCommand.self, onCreateSpatializedElementAnimation)
         spatialWebViewModel.addJSBListener(ControlSpatializedElementAnimationCommand.self, onControlSpatializedElementAnimation)
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
@@ -1087,9 +1091,15 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
-    private func onCreateEntity(command: CreateSpatialEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+    /// Creates and registers one SpatialEntity in this scene.
+    func createEntity(command: CreateSpatialEntity) -> SpatialEntity {
         let entity = Dynamic3DManager.createEntity(command)
         addSpatialObject(entity)
+        return entity
+    }
+
+    private func onCreateEntity(command: CreateSpatialEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        let entity = createEntity(command: command)
         resolve(.success(AddSpatializedElementReply(id: entity.spatialId)))
     }
 
@@ -1463,6 +1473,113 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    /// Creates and registers one native Entity motion animation object.
+    func createEntityAnimation(command: CreateEntityAnimationCommand) throws -> CreateEntityAnimationResult {
+        guard let target = spatialObjects[command.id] else {
+            throw JsbError(code: .TARGET_NOT_FOUND, message: "Entity \(command.id) not found")
+        }
+        guard let entity = target as? SpatialEntity else {
+            throw JsbError(code: .UNSUPPORTED_TARGET, message: "Object \(command.id) is not an Entity")
+        }
+        do {
+            let animation = try entity.createAnimation(
+                timeline: command.timeline,
+                sendWebMsg: { [weak self] id, msg in
+                    self?.sendWebMsg(id, msg)
+                }
+            )
+            addSpatialObject(animation)
+            return CreateEntityAnimationResult(id: animation.id)
+        } catch let error as EntityMotionAnimationObjectError {
+            throw JsbError(code: error.replyCode, message: error.reason)
+        } catch let error as EntityMotionCompilationError {
+            throw JsbError(code: .INVALID_TIMELINE, message: error.reason)
+        } catch {
+            throw JsbError(code: .COMPILATION_FAILED, message: error.localizedDescription)
+        }
+    }
+
+    /// Applies one control command to a registered Entity motion animation object.
+    func controlEntityAnimation(command: ControlEntityAnimationCommand) throws {
+        guard let animation = spatialObjects[command.id] as? EntityMotionAnimationObject else {
+            throw JsbError(code: .ANIMATION_NOT_FOUND, message: "Animation \(command.id) not found")
+        }
+        do {
+            switch command.type {
+            case .play:
+                try animation.play()
+            case .pause:
+                animation.pause()
+            case .stop:
+                animation.stop()
+            case .reset:
+                try animation.reset()
+            case .finish:
+                try animation.finish()
+            case .destroy:
+                animation.destroy()
+            }
+        } catch let error as EntityMotionAnimationObjectError {
+            throw JsbError(code: error.replyCode, message: error.reason)
+        } catch {
+            throw JsbError(code: .COMPILATION_FAILED, message: error.localizedDescription)
+        }
+    }
+
+    /// Applies a sparse committed-transform update to a registered Entity motion animation object.
+    func setEntityAnimation(command: SetEntityAnimationCommand) throws -> SetEntityAnimationResult {
+        guard let animation = spatialObjects[command.id] as? EntityMotionAnimationObject else {
+            throw JsbError(code: .ANIMATION_NOT_FOUND, message: "Animation \(command.id) not found")
+        }
+        do {
+            return try SetEntityAnimationResult(values: animation.set(command.update))
+        } catch let error as EntityMotionAnimationObjectError {
+            throw JsbError(code: error.replyCode, message: error.reason)
+        } catch {
+            throw JsbError(code: .INVALID_SET_VALUES, message: error.localizedDescription)
+        }
+    }
+
+    private func onCreateEntityAnimation(
+        command: CreateEntityAnimationCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        do {
+            try resolve(.success(createEntityAnimation(command: command)))
+        } catch let error as JsbError {
+            resolve(.failure(error))
+        } catch {
+            resolve(.failure(JsbError(code: .COMPILATION_FAILED, message: error.localizedDescription)))
+        }
+    }
+
+    private func onControlEntityAnimation(
+        command: ControlEntityAnimationCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        do {
+            try controlEntityAnimation(command: command)
+            resolve(.success(nil))
+        } catch let error as JsbError {
+            resolve(.failure(error))
+        } catch {
+            resolve(.failure(JsbError(code: .COMPILATION_FAILED, message: error.localizedDescription)))
+        }
+    }
+
+    private func onSetEntityAnimation(
+        command: SetEntityAnimationCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        do {
+            try resolve(.success(setEntityAnimation(command: command)))
+        } catch let error as JsbError {
+            resolve(.failure(error))
+        } catch {
+            resolve(.failure(JsbError(code: .INVALID_SET_VALUES, message: error.localizedDescription)))
+        }
+    }
+
     private func onCreateSpatializedElementAnimation(command: CreateSpatializedElementAnimationCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let element: SpatializedElement = findSpatialObject(command.elementId) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "CreateSpatializedElementAnimation play: element \(command.elementId) not found")))
@@ -1566,10 +1683,28 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         if let element = spatialObject as? SpatializedElement {
             elementAnimationManager.destroyAnimationsForElement(element.spatialId)
         }
+        if let entity = spatialObject as? SpatialEntity {
+            destroyEntityAnimationsForTarget(entity.spatialId)
+        }
         spatialObjects.removeValue(forKey: spatialObject.spatialId)
 
         // notify web side, spatialObject is destroyed
         sendWebMsg(spatialObject.spatialId, SpatialObjectDestroiedEvent())
+    }
+
+    /// Destroys all Entity motion objects targeting a destroyed Entity.
+    private func destroyEntityAnimationsForTarget(_ entityId: String) {
+        let animations = spatialObjects.values.compactMap { object -> EntityMotionAnimationObject? in
+            guard let animation = object as? EntityMotionAnimationObject,
+                  animation.targetEntityId == entityId
+            else {
+                return nil
+            }
+            return animation
+        }
+        for animation in animations {
+            animation.destroy()
+        }
     }
 
     /// Find the dynamic 3D container (SpatializedDynamic3DElement) that contains the entity by ID.

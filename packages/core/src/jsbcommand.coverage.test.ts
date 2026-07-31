@@ -266,6 +266,51 @@ describe('JSBCommand', () => {
       }),
     )
   })
+
+  it('builds Entity motion commands with one direct id field', async () => {
+    const {
+      CreateEntityAnimationJSBCommand,
+      ControlEntityAnimationJSBCommand,
+      SetEntityAnimationJSBCommand,
+    } = await import('./JSBCommand')
+    const timeline = {
+      duration: 1,
+      delay: 0,
+      playbackRate: 1,
+      loop: false,
+      tracks: [],
+    }
+
+    await new CreateEntityAnimationJSBCommand({
+      id: 'entity-1',
+      timeline,
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'CreateEntityAnimation',
+      JSON.stringify({ id: 'entity-1', timeline }),
+    )
+
+    await new ControlEntityAnimationJSBCommand({
+      id: 'animation-1',
+      type: 'play',
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'ControlEntityAnimation',
+      JSON.stringify({ id: 'animation-1', type: 'play' }),
+    )
+
+    await new SetEntityAnimationJSBCommand({
+      id: 'animation-1',
+      update: { rotation: { y: 45 } },
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'SetEntityAnimation',
+      JSON.stringify({
+        id: 'animation-1',
+        update: { rotation: { y: 45 } },
+      }),
+    )
+  })
 })
 
 describe('SpatialObject', () => {

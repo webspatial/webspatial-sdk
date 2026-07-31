@@ -1,17 +1,14 @@
-/** Async playback failure from native bridge. */
+/** Stable Entity or spatialized-element playback failure. */
 export interface SpatializedPlaybackError {
-  /** Operation that failed. */
-  command:
-    | 'create'
-    | 'play'
-    | 'pause'
-    | 'resume'
-    | 'stop'
-    | 'reset'
-    | 'finish'
-    | 'destroy'
-  /** Native or SDK error code when available. */
-  code?: string
+  /** Machine-readable failure category. */
+  code:
+    | 'TARGET_NOT_FOUND'
+    | 'UNSUPPORTED_TARGET'
+    | 'ANIMATION_NOT_FOUND'
+    | 'INVALID_TIMELINE'
+    | 'COMPILATION_FAILED'
+    | 'INVALID_CONTROL_STATE'
+    | 'INVALID_SET_VALUES'
   /** Human-readable failure reason. */
   reason: string
 }

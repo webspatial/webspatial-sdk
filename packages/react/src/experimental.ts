@@ -13,6 +13,16 @@ export type { OrnamentProps } from './facades/Ornament'
 export { useAnimation } from './hooks-web/useAnimation'
 export { useEntityAnimation } from './hooks-web/useEntityAnimation'
 export type {
+  EntityMotionConfig,
+  EntityMotionProps,
+  EntityPlaybackApi,
+  EntityTransformUpdate,
+} from '@webspatial/core-sdk'
+export type {
+  EntityMotionAnimation,
+  UseEntityAnimationResult,
+} from './reality/hooks/useAnimation'
+export type {
   UseAnimationResult,
   SpatializedMotionConfig,
   SpatializedMotionSegmentConfig,

@@ -1,2 +1,7 @@
 export * from './AnimationObject'
 export { validateSpatializedMotionConfig } from './compute/validate'
+export { EntityAnimationObject } from './entity'
+export {
+  validateEntityMotionConfig,
+  validateEntityTransformUpdate,
+} from './entity'

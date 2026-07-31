@@ -44,7 +44,12 @@ export * from './reality'
 export * from './types/types'
 export * from './types/animation'
 export * from './types/motion'
-export { validateSpatializedMotionConfig } from './motion'
+export {
+  validateEntityMotionConfig,
+  validateEntityTransformUpdate,
+  validateSpatializedMotionConfig,
+} from './motion'
+export { EntityAnimationObject } from './motion'
 export * from './runtime'
 
 export { composeSRT, decomposeSRT } from './utils'

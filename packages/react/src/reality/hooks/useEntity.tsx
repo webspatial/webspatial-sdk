@@ -1,8 +1,11 @@
 import { ForwardedRef, useEffect, useRef } from 'react'
 import { SpatialEntity } from '@webspatial/core-sdk'
-import type { AnimatedProps, AnimatedPropsInternal } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import { EntityEventHandler, EntityProps } from '../type'
+import type {
+  EntityMotionAnimation,
+  EntityMotionBindingInternal,
+} from './EntityMotionBinding'
 import {
   EntityRefShape,
   EntityRef,
@@ -45,7 +48,7 @@ export const useEntity = ({
   const forceUpdate = useForceUpdate()
 
   // Track the current animation prop for bind/unbind
-  const prevAnimationRef = useRef<AnimatedProps | undefined>(undefined)
+  const prevAnimationRef = useRef<EntityMotionAnimation | undefined>(undefined)
 
   useEffect(() => {
     if (!ctx) return
@@ -66,19 +69,24 @@ export const useEntity = ({
           ent.destroy()
           return
         }
-        if (parent) {
-          const result = await parent.addEntity(ent)
-          if (!result.success) throw new Error('parent.addEntity failed')
-        } else {
-          const result = await ctx.reality.addEntity(ent)
-          if (!result.success) throw new Error('ctx.reality.addEntity failed')
+        const result = parent
+          ? await parent.addEntity(ent)
+          : await ctx.reality.addEntity(ent)
+        if (controller.signal.aborted) {
+          ent.destroy()
+          return
+        }
+        if (!result.success) {
+          throw new Error(
+            parent ? 'parent.addEntity failed' : 'ctx.reality.addEntity failed',
+          )
         }
 
         instanceRef.current?.updateEntity(ent)
 
         // Bind animation if present
         if (animation) {
-          ;(animation as AnimatedPropsInternal).__bind?.(ent)
+          ;(animation as unknown as EntityMotionBindingInternal).__bind(ent)
           prevAnimationRef.current = animation
         }
 
@@ -94,7 +102,9 @@ export const useEntity = ({
       controller.abort()
       // Unbind animation on cleanup
       if (prevAnimationRef.current) {
-        ;(prevAnimationRef.current as AnimatedPropsInternal).__unbind?.()
+        ;(
+          prevAnimationRef.current as unknown as EntityMotionBindingInternal
+        ).__unbind()
         prevAnimationRef.current = undefined
       }
       instanceRef.current?.destroy()
@@ -112,12 +122,12 @@ export const useEntity = ({
 
     // Unbind old animation
     if (prevAnimation) {
-      ;(prevAnimation as AnimatedPropsInternal).__unbind?.()
+      ;(prevAnimation as unknown as EntityMotionBindingInternal).__unbind()
     }
 
     // Bind new animation
     if (animation) {
-      ;(animation as AnimatedPropsInternal).__bind?.(entity)
+      ;(animation as unknown as EntityMotionBindingInternal).__bind(entity)
     }
 
     prevAnimationRef.current = animation
@@ -128,7 +138,6 @@ export const useEntity = ({
     position,
     rotation,
     scale,
-    animation,
   })
   useEntityRef(ref, instanceRef.current)
 

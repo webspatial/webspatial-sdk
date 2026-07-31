@@ -573,7 +573,10 @@ describe('useAnimation tuple api native backend', () => {
 
     act(() => {
       firstAnimation.emitComplete({ opacity: 0.25 })
-      firstAnimation.emitError({ command: 'play', reason: 'stale error' })
+      firstAnimation.emitError({
+        code: 'COMPILATION_FAILED',
+        reason: 'stale error',
+      })
     })
 
     expect(result.current[2].opacity).toBeUndefined()
@@ -582,13 +585,16 @@ describe('useAnimation tuple api native backend', () => {
 
     act(() => {
       secondAnimation.emitComplete({ opacity: 1 })
-      secondAnimation.emitError({ command: 'play', reason: 'current error' })
+      secondAnimation.emitError({
+        code: 'COMPILATION_FAILED',
+        reason: 'current error',
+      })
     })
 
     expect(result.current[2].opacity).toBe(1)
     expect(onComplete).toHaveBeenCalledWith({ opacity: 1 })
     expect(onError).toHaveBeenCalledWith({
-      command: 'play',
+      code: 'COMPILATION_FAILED',
       reason: 'current error',
     })
   })
@@ -631,7 +637,7 @@ describe('useAnimation tuple api native backend', () => {
     await waitFor(() => {
       expect(secondAnimation.setCallbacks).toHaveBeenCalled()
       expect(oldOnError).toHaveBeenCalledWith({
-        command: 'destroy',
+        code: 'ANIMATION_NOT_FOUND',
         reason: 'destroy failed',
       })
     })
@@ -889,7 +895,7 @@ describe('useAnimation tuple api native backend', () => {
 
     await waitFor(() =>
       expect(onError).toHaveBeenCalledWith({
-        command: 'create',
+        code: 'COMPILATION_FAILED',
         reason: 'create failed',
       }),
     )
@@ -901,7 +907,7 @@ describe('useAnimation tuple api native backend', () => {
     const onError = vi.fn()
     const element = createMockElement('direct-control-fail')
     const error = {
-      command: 'play',
+      code: 'INVALID_CONTROL_STATE',
       reason: 'play failed',
     }
     element.animation.play.mockImplementationOnce(async () => {
@@ -936,7 +942,7 @@ describe('useAnimation tuple api native backend', () => {
     const onError = vi.fn()
     const element = createMockElement('queued-control-fail')
     const error = {
-      command: 'play',
+      code: 'INVALID_CONTROL_STATE',
       reason: 'queued play failed',
     }
     element.animation.play.mockImplementationOnce(async () => {
@@ -967,7 +973,7 @@ describe('useAnimation tuple api native backend', () => {
     const onError = vi.fn()
     const element = createMockElement('autostart-control-fail')
     const error = {
-      command: 'play',
+      code: 'INVALID_CONTROL_STATE',
       reason: 'autoStart play failed',
     }
     element.animation.play.mockImplementationOnce(async () => {

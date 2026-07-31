@@ -20,6 +20,8 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     private var _enableDragEnd: Bool = false
     private var _enableMagnify: Bool = false
     private var _enableMagnifyEnd: Bool = false
+    /// Entity motion animation id that currently owns the complete transform.
+    private var entityMotionTransformOwnerId: String?
 
     var rotation: simd_quatd = .init()
     var spatialChildren: [String: SpatialEntity] = [:]
@@ -108,8 +110,52 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         }
     }
 
-    func updateTransform(_ matrix: [String: Float]) {
+    /// Updates the RealityKit transform when no Entity motion object owns it.
+    @discardableResult
+    func updateTransform(_ matrix: [String: Float]) -> Bool {
+        guard entityMotionAllowsExternalTransformWrite else {
+            return false
+        }
         transform.matrix = float4x4([matrix["0"]!, matrix["1"]!, matrix["2"]!, matrix["3"]!], [matrix["4"]!, matrix["5"]!, matrix["6"]!, matrix["7"]!], [matrix["8"]!, matrix["9"]!, matrix["10"]!, matrix["11"]!], [matrix["12"]!, matrix["13"]!, matrix["14"]!, matrix["15"]!])
+        return true
+    }
+
+    /// Creates a native Entity motion animation object for this Entity.
+    func createAnimation(
+        timeline: EntityMotionTimelinePayload,
+        sendWebMsg: ((String, Encodable) -> Void)? = nil
+    ) throws -> EntityMotionAnimationObject {
+        try EntityMotionAnimationObject(
+            target: self,
+            timeline: timeline,
+            sendWebMsg: sendWebMsg
+        )
+    }
+
+    /// Indicates whether ordinary React transform writes can update the Entity.
+    var entityMotionAllowsExternalTransformWrite: Bool {
+        entityMotionTransformOwnerId == nil
+    }
+
+    /// Acquires complete-transform write ownership for one Entity motion animation.
+    func acquireEntityMotionTransformWrite(animationId: String) -> Bool {
+        if let owner = entityMotionTransformOwnerId {
+            return owner == animationId
+        }
+        entityMotionTransformOwnerId = animationId
+        return true
+    }
+
+    /// Releases complete-transform write ownership for one Entity motion animation.
+    func releaseEntityMotionTransformWrite(animationId: String) {
+        if entityMotionTransformOwnerId == animationId {
+            entityMotionTransformOwnerId = nil
+        }
+    }
+
+    /// Returns whether the supplied Entity motion animation owns transform writes.
+    func entityMotionLocksTransformWrite(animationId: String) -> Bool {
+        entityMotionTransformOwnerId == animationId
     }
 
     func updateGesture(_ type: String, _ isEable: Bool) {

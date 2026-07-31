@@ -79,6 +79,7 @@ const externals = [
   'react/jsx-runtime',
   'react/jsx-dev-runtime',
   '@webspatial/core-sdk',
+  '@webspatial/core-sdk/internal/entity-motion',
   '@webspatial/react-sdk/internal/facades-client',
 ]
 
