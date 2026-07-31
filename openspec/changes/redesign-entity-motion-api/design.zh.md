@@ -356,8 +356,8 @@ sequenceDiagram
         NativeObj->>Event: 发送携带 start 和 running 的状态消息
     else paused 后 play
         NativeObj->>NativeObj: private resumeCurrent()
-        NativeObj->>Event: 发送携带 running 的状态消息
-        Note over NativeObj: 不读 baseline、不编译、不重复 start
+        NativeObj->>Event: 发送仅携带 running 的状态消息
+        Note over NativeObj: 复用当前 baseline、resource、controller 并保持 onStart 次数
     end
     NativeObj-->>Scene: success
     Scene-->>Bridge: success
@@ -385,7 +385,7 @@ sequenceDiagram
     NativeObj->>NativeObj: 读取权威姿态
     NativeObj->>NativeObj: 拆解为 position / rotation / scale
     NativeObj->>NativeObj: 编码完整 position、rotation、scale
-    NativeObj->>Event: 回传 action、playState 和确认姿态
+    NativeObj->>Event: 回传 callbackAction、playState 和确认姿态
     Event->>Obj: 收到事件
     Obj-->>Hook: 确认后的 EntityMotionProps
     Hook-->>App: entityProps 更新
@@ -437,7 +437,7 @@ sequenceDiagram
 - 创建成功后,原生层先确认 `idle`,再按顺序执行队列。每条命令完成后执行下一条。
 - 绑定、原生动画对象创建前或当前绑定生命周期终止后调用 `api.set` 时,该命令不进入队列。SDK 输出控制台警告并执行空操作。
 - 原生动画对象创建后,所有播放命令和 `set` 进入同一条绑定命令队列。命令失败或 `set` 被转换为“警告并执行空操作”时,SDK 结束当前队列项并继续执行下一项。失败不会阻塞队列,也不会改变后续命令的顺序。
-- JSB 成功回执表示原生层已完成该命令的同步状态转换和所需姿态提交。播放控制命令产生 `start`、`pause`、`stop`、`reset` 或 `finish` 状态事件时,原生层先发出对应事件,再返回成功回执。`SetEntityAnimation` 不产生状态事件,Native 更新 Entity 后直接通过成功回执返回 Entity 当前的完整 transform。自然完成产生的异步 `complete` 事件不属于此前 `play` 命令的回执。
+- 控制命令产生状态消息时,原生层先提交消息,再完成空成功回执。`SetEntityAnimation` 通过成功回执返回完整确认姿态。自然完成产生独立的异步完成状态消息。
 - 解绑、目标替换、配置变更导致动画对象替换或销毁时,绑定对象使当前队列批次失效,并丢弃所有尚未发送的命令。正在执行的命令可以按既有销毁竞态规则完成,但其回执不得继续触发已失效队列中的下一条命令。
 
 该顺序保证连续调用具有确定行为。`set → play` 会等待已接受的 `set` 返回回执,再由 fresh play 读取基准值;`stop → play` 会等待停止后的姿态提交完成;`play → pause` 会等待原生层接受 `play` 命令。
@@ -554,18 +554,18 @@ classDiagram
 
 #### 状态事件映射
 
-Core `EntityAnimationObject` 直接消费 Native 发出的 `EntityMotionStateChangedMsg`,将 Native action 映射到自身状态和 `onXXX` 调试监听器。React `EntityMotionBinding` 再消费这些对象级通知,更新用户 callback 和 `entityProps`:
+Core `EntityAnimationObject` 直接消费同一种 `EntityMotionStateChangedMsg`:`playState` 更新状态,可选的 `callbackAction` 与完整 `values` 成对触发 callback 和 `entityProps` 更新。
 
-| Native action | 对应用户 callback | 是否更新 entityProps |
+| 场景 | `playState` | `callbackAction` / callback |
 |---|---|---|
-| `start` | `onStart` | 是(fresh play 起始姿态被 Native 接受后一次,不等待 delay 结束) |
-| `complete` | `onComplete` | 是(终态) |
-| `finish` | `onComplete` | 是(终态) |
-| `stop` | `onStop` | 是(当前姿态) |
-| `reset` | `onReset` | 是(起点姿态) |
-| `pause` | 播放状态变化 | 否 |
+| fresh play | `running` | `start` / `onStart` |
+| paused 后恢复 | `running` | — |
+| pause | `paused` | — |
+| 自然完成或 `finish()` | `finished` | `complete` / `onComplete` |
+| stop | `idle` | `stop` / `onStop` |
+| reset | `idle` | `reset` / `onReset` |
 
-状态事件中的 `values` 使用 `EntityMotionProps` 形态,包含 `position`、`rotation`、`scale`。`set` 不改变播放状态,因此不进入该表;Core 从 `SetEntityAnimationResult.values` 取得合并后的确认姿态并更新 `entityProps`。错误不进入状态事件,Core 通过独立的 `EntityAnimationErrorMsg` 触发 `onError`。动画对象创建或姿态交接失败会额外清空 `entityProps` 并终止当前绑定生命周期;其它错误保持当前 `entityProps`。
+`values` 包含完整的 `position`、`rotation`、`scale`。`set` 从 `SetEntityAnimationResult.values` 更新 `entityProps`;错误由 `EntityAnimationErrorMsg` 触发 `onError`。
 
 ### 5.2 Core SDK
 
@@ -679,6 +679,8 @@ ControlEntityAnimation {
 }
 ```
 
+控制成功回执使用空 payload 确认当前命令处理完成。绑定对象收到该回执后发送下一条等待命令;公开 `playState` 由 `EntityMotionStateChangedMsg` 更新。
+
 ##### 设置动画姿态命令
 
 ```text
@@ -718,9 +720,8 @@ type EntityMotionPlayState = 'queued' | EntityMotionNativePlayState
 
 interface EntityMotionStateChangedDetail {
   id: string
-  action:
-    | 'start' | 'complete' | 'pause' | 'stop' | 'reset' | 'finish'
   playState: EntityMotionNativePlayState
+  callbackAction?: 'start' | 'complete' | 'stop' | 'reset'
   values?: EntityMotionProps
 }
 
@@ -730,7 +731,7 @@ interface EntityMotionStateChangedMsg {
 }
 ```
 
-`values` 使用物体目标的 `EntityMotionProps`,包含 `position`、`rotation`、`scale`。
+每次播放状态确认或 lifecycle callback 都使用同一个 `EntityMotionStateChangedMsg`。`playState` 始终存在;触发用户 callback 的消息同时携带 `callbackAction` 与完整 `values`。显式 `finish()` 和自然完成都使用 `callbackAction: 'complete'`。暂停和恢复通过只含 `id` 与 `playState` 的消息更新状态。
 
 `queued` 是命令等待原生动画对象创建期间的 React 绑定状态。原生层创建回执确认初始 `idle` 状态。创建失败时,React 绑定把公开状态收敛为 `idle` 并终止当前绑定生命周期。后续原生层状态消息确认 `idle`、`running`、`paused` 或 `finished`。正常绑定生命周期中的创建回执与原生层状态消息是公开播放状态的唯一数据源。公开 `finished` 标记由 `playState === 'finished'` 派生。
 
@@ -1197,6 +1198,7 @@ type EntityMotionProps = {
 
 拆解规则:
 
+- `start`、`stop`、`reset`、`finish`、自然完成和成功 `set` 先完成对应姿态提交,再重新读取 Entity 当前的完整 transform;该读取结果是状态消息 `values`、callback values 和 `SetEntityAnimationResult.values` 的统一来源。
 - `position` 来自原生姿态的平移部分。
 - `scale` 来自原生姿态的缩放部分。
 - `rotation` 使用角度制欧拉角和 Entity 相对父节点的局部右手坐标系，其中 +X 向右、+Y 向上、+Z 朝向观察者。旋转按 ZYX intrinsic 顺序组合，等价于 XYZ extrinsic，矩阵顺序为 `Rz × Ry × Rx`。原生层确认的旋转通过旋转矩阵拆解，`y` 位于 `[-90°, 90°]`，`x` 和 `z` 位于 `(-180°, 180°]`；gimbal lock 时固定 `z = 0°`，并从矩阵计算 `x`。等价 quaternion 因此产生相同的欧拉角结果。`api.set` 的稀疏 rotation update 先合并到这份规范化完整欧拉角基准，再重新组合姿态。
@@ -1247,16 +1249,16 @@ sequenceDiagram
         Obj->>RK: 读取 Entity 当前的完整 transform
         Obj->>RK: 创建控制器并进入 delay / running
         RK-->>Obj: 播放控制器
-        Obj->>Event: 发出 start,携带 running 和当前完整 transform
+        Obj->>Event: 发出 running + callbackAction=start + 当前完整 transform
     else paused 后恢复
         Obj->>Obj: private resumeCurrent()
-        Obj->>RK: 恢复当前控制器,不产生 start
-        Obj->>Event: 发送携带 running 的状态消息
+        Obj->>RK: 恢复当前控制器并保持现有 onStart 次数
+        Obj->>Event: 发送仅携带 running 的状态消息
     end
     RK-->>Obj: 完成 / 终态回调
     Obj->>Obj: 读取并拆解 Entity 当前的完整 transform
     Obj->>Obj: 解除完整 transform 写入保护
-    Obj->>Event: 发出 complete,携带 finished 和当前完整 transform
+    Obj->>Event: 发出 finished + callbackAction=complete + 当前完整 transform
 ```
 
 创建阶段只保存规范时间轴,由 `SpatialScene` 注册 animation object 并返回其 `id`。每次 fresh play 读取最新 baseline 并编译本轮 RealityKit 资源,随后提交并确认完整起始姿态;`start` 和首个 `entityProps` 更新发生在确认成功后,不等待 delay 结束。paused 后的 `play` 直接复用当前资源和控制器,不读取 baseline、不编译、不产生新的 `start`。
@@ -1265,10 +1267,10 @@ sequenceDiagram
 
 | 原生层状态 | `play` | `pause` | `stop` | `reset` | `finish` | `set` |
 |---|---|---|---|---|---|---|
-| `idle` | fresh play → `running`;起始姿态确认后发出一次 `start` | 保持 `idle` | 保持 `idle` | 提交起始姿态 → `idle`;发出 `reset` | 提交终点姿态 → `finished`;发出 `finish` | 提交更新;保持 `idle` |
-| `running`(包含 delay) | 保持当前运行 | → `paused`;发出 `pause` | 提交当前姿态 → `idle`;发出 `stop` | 提交起始姿态 → `idle`;发出 `reset` | 提交终点姿态 → `finished`;发出 `finish` | 保持当前运行;返回警告回执 |
-| `paused` | 恢复当前控制器 → `running` | 保持 `paused` | 提交当前姿态 → `idle`;发出 `stop` | 提交起始姿态 → `idle`;发出 `reset` | 提交终点姿态 → `finished`;发出 `finish` | 保持暂停运行;返回警告回执 |
-| `finished` | fresh play → `running`;起始姿态确认后发出一次 `start` | 保持 `finished` | 保持 `finished` | 提交起始姿态 → `idle`;发出 `reset` | 保持 `finished` | 提交更新;保持 `finished` |
+| `idle` | fresh play → `running`;起始姿态确认后发出 `callbackAction: start` | 保持 `idle` | 保持 `idle` | 提交起始姿态 → `idle`;发出 `callbackAction: reset` | 提交终点姿态 → `finished`;发出 `callbackAction: complete` | 提交更新;保持 `idle` |
+| `running`(包含 delay) | 保持当前运行 | → `paused`;发出 paused 状态消息 | 提交当前姿态 → `idle`;发出 `callbackAction: stop` | 提交起始姿态 → `idle`;发出 `callbackAction: reset` | 提交终点姿态 → `finished`;发出 `callbackAction: complete` | 保持当前运行;返回警告回执 |
+| `paused` | 恢复当前控制器 → `running`;发出 running 状态消息 | 保持 `paused` | 提交当前姿态 → `idle`;发出 `callbackAction: stop` | 提交起始姿态 → `idle`;发出 `callbackAction: reset` | 提交终点姿态 → `finished`;发出 `callbackAction: complete` | 保持暂停运行;返回警告回执 |
+| `finished` | fresh play → `running`;起始姿态确认后发出 `callbackAction: start` | 保持 `finished` | 保持 `finished` | 提交起始姿态 → `idle`;发出 `callbackAction: reset` | 保持 `finished` | 提交更新;保持 `finished` |
 
 `reset` 和 `finish` 优先使用当前运行的已确认起始姿态和终点姿态。首次运行之前调用时,编译器按需读取当前原生层 transform 作为基准姿态,并计算配置声明的起始姿态或终点姿态。普通播放、reset loop 和 reverse loop 的 `finish` 统一提交配置声明的 `to` / `100%` 姿态。
 
@@ -1289,7 +1291,7 @@ sequenceDiagram
     alt 找到且状态允许
         Scene->>Obj: pause()
         Obj->>RK: 控制器暂停
-        Obj->>Event: 发出 pause,携带 paused
+        Obj->>Event: 发出仅携带 paused 的状态消息
         Scene-->>JSB: 成功
     else 动画查询失败 / 状态非法
         Scene-->>JSB: 失败
@@ -1316,7 +1318,7 @@ sequenceDiagram
         Obj->>RK: 以零时长提交目标姿态
         Obj->>Obj: 读取并拆解 Entity 当前的完整 transform
         Obj->>Obj: 解除完整 transform 写入保护
-        Obj->>Event: stop/reset 携带 idle,finish 携带 finished,同时携带当前完整 transform
+        Obj->>Event: stop/reset 携带对应 callbackAction,finish 携带 callbackAction=complete,同时携带当前完整 transform
         Scene-->>JSB: 成功
     else id 不存在
         Scene-->>JSB: 失败(ANIMATION_NOT_FOUND)
@@ -1356,7 +1358,7 @@ sequenceDiagram
 
 暂停复用已编译的整姿态串联动画、控制当前播放控制器,并保持完整 transform 写入保护。停止 / 重置 / 结束会停止该控制器、以零时长提交目标姿态,并在返回完整 transform 前解除保护。自然完成也会在 `complete` 事件前解除保护。`set` 在非活跃状态下把稀疏更新合并到已提交姿态后以零时长提交,并通过成功回执返回 Entity 当前的完整 transform。`set` 保持原有 `playState`,不发送状态事件。
 
-Native Entity animation object 与一次 target binding 同生命周期;target 销毁时,`SpatialScene` 通过全局 `SpatialObject` lifecycle 级联销毁关联动画,不保留失效对象。
+Native Entity animation object 与一次 target binding 同生命周期;target 销毁时,`SpatialScene` 通过全局 `SpatialObject` lifecycle 级联销毁关联动画,并为每个 animation id 发送 `objectdestroy`。Core 消费该消息后标记动画对象已销毁并注销该 animation id 的事件接收器。后续 playback 在 Core 本地完成空操作;`set` 在 Core 本地输出 warning 并完成空操作,同时保持现有 `onError` 次数。在途命令继续适用 `ANIMATION_NOT_FOUND` 竞态结果。
 
 边界约束:`SpatialScene` 负责全局 `spatialObjects`、创建目标查找、动画对象查找、三条 Entity 命令回执和 `SpatialObject` lifecycle。`SpatialEntity.createAnimation(config)` 负责创建 Entity 动画对象;`EntityMotionAnimationObject` 内聚单对象编译、播放状态、控制、确认值、事件发送和资源释放。Entity 与 Element 路径保持独立协议,并共享全局 `spatialObjects` 生命周期。
 

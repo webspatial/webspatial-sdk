@@ -356,8 +356,8 @@ sequenceDiagram
         NativeObj->>Event: send start state message with running
     else play after pause
         NativeObj->>NativeObj: private resumeCurrent()
-        NativeObj->>Event: emit state message with running
-        Note over NativeObj: no baseline read, compile, or repeated start
+        NativeObj->>Event: emit state message carrying only running
+        Note over NativeObj: reuse current baseline, resource, and controller; preserve onStart count
     end
     NativeObj-->>Scene: success
     Scene-->>Bridge: success
@@ -385,7 +385,7 @@ sequenceDiagram
     NativeObj->>NativeObj: read authoritative transform
     NativeObj->>NativeObj: decompose into position / rotation / scale
     NativeObj->>NativeObj: encode complete position / rotation / scale
-    NativeObj->>Event: report action, playState, and confirmed value
+    NativeObj->>Event: report callbackAction, playState, and confirmed value
     Event->>Obj: receive event
     Obj-->>Hook: confirmed EntityMotionProps
     Hook-->>App: entityProps updated
@@ -437,7 +437,7 @@ The public `EntityPlaybackApi` remains a `void` command surface. Internally, eac
 - After creation succeeds, Native first confirms `idle`, then the binding runs the queue in order. Each command completes before the next command runs.
 - `api.set` before binding, before native animation-object creation, or after the current binding lifecycle terminates never enters the queue. It remains a console warning plus no-op.
 - After the native animation object exists, all playback commands and `set` enter the same per-binding FIFO. A failure or a warning-plus-no-op settles that queue item and allows the next item to run; it does not poison or reorder the queue.
-- A JSB success reply means Native has completed the command's synchronous state transition and any required transform commit. If a playback control command produces `start`, `pause`, `stop`, `reset`, or `finish`, Native emits the corresponding state event before returning that success reply. `SetEntityAnimation` emits no state event; after updating the Entity, Native returns its complete current transform directly in the success reply. A natural asynchronous `complete` event remains independent of the earlier `play` reply.
+- When a control command produces a state message, Native submits the message before completing an empty success reply. `SetEntityAnimation` returns the complete confirmed transform in its success reply. Natural completion produces an independent asynchronous completion state message.
 - Unbinding, target replacement, config-driven object replacement, or destruction invalidates the current queue generation and drops every command that has not been sent. The in-flight command may settle under the documented teardown race, but its reply cannot dispatch another command from the invalidated generation.
 
 This ordering makes consecutive calls deterministic. In particular, `set → play` waits for the accepted `set` reply before fresh play reads its baseline; `stop → play` waits for the stopped transform commit; and `play → pause` waits until Native has accepted the play command.
@@ -554,18 +554,18 @@ classDiagram
 
 #### State-event Mapping
 
-Core `EntityAnimationObject` directly consumes native `EntityMotionStateChangedMsg`, maps native actions to its own state and `onXXX` debug listeners, and lets React `EntityMotionBinding` update user callbacks and `entityProps`:
+Core `EntityAnimationObject` directly consumes one `EntityMotionStateChangedMsg` shape: `playState` updates state, while optional `callbackAction` plus complete `values` update callbacks and `entityProps`.
 
-| native action | mapped user callback | updates entityProps |
+| scenario | `playState` | `callbackAction` / callback |
 |---|---|---|
-| `start` | `onStart` | yes (once after Native accepts the fresh-play start pose, without waiting for delay to end) |
-| `complete` | `onComplete` | yes (end state) |
-| `finish` | `onComplete` | yes (end state) |
-| `stop` | `onStop` | yes (current transform) |
-| `reset` | `onReset` | yes (starting transform) |
-| `pause` | playback state change | no |
+| fresh play | `running` | `start` / `onStart` |
+| resume after pause | `running` | — |
+| pause | `paused` | — |
+| natural completion or `finish()` | `finished` | `complete` / `onComplete` |
+| stop | `idle` | `stop` / `onStop` |
+| reset | `idle` | `reset` / `onReset` |
 
-Event `values` use the `EntityMotionProps` shape with `position`, `rotation`, and `scale`. Because `set` does not change playback state, it does not appear in this table; Core reads the merged confirmed transform from `SetEntityAnimationResult.values` and updates `entityProps`. Errors do not enter state events; Core triggers `onError` from the dedicated `EntityAnimationErrorMsg`. Animation-object creation or pose-handoff failure additionally clears `entityProps` and terminates the current binding lifecycle; other errors preserve the current `entityProps`.
+`values` contain complete `position`, `rotation`, and `scale`. `set` updates `entityProps` from `SetEntityAnimationResult.values`; `EntityAnimationErrorMsg` triggers `onError`.
 
 ### 5.2 Core SDK
 
@@ -679,6 +679,8 @@ ControlEntityAnimation {
 }
 ```
 
+A successful control reply uses an empty payload to confirm current-command completion. The binding then sends the next waiting command, while `EntityMotionStateChangedMsg` updates public `playState`.
+
 ##### Set animation transform command
 
 ```text
@@ -718,9 +720,8 @@ type EntityMotionPlayState = 'queued' | EntityMotionNativePlayState
 
 interface EntityMotionStateChangedDetail {
   id: string
-  action:
-    | 'start' | 'complete' | 'pause' | 'stop' | 'reset' | 'finish'
   playState: EntityMotionNativePlayState
+  callbackAction?: 'start' | 'complete' | 'stop' | 'reset'
   values?: EntityMotionProps
 }
 
@@ -730,7 +731,7 @@ interface EntityMotionStateChangedMsg {
 }
 ```
 
-`values` use the entity target's `EntityMotionProps`, containing `position`, `rotation`, and `scale`.
+Every playback-state confirmation or lifecycle callback uses the same `EntityMotionStateChangedMsg`. `playState` is always present; messages that trigger a user callback carry both `callbackAction` and complete `values`. Explicit `finish()` and natural completion both use `callbackAction: 'complete'`. Pause and resume update state through messages containing only `id` and `playState`.
 
 `queued` is a React binding state while commands await native animation-object creation. The native creation reply confirms the initial `idle` state. On creation failure, the React binding settles the public state to `idle` and terminates the current binding lifecycle. Later Native state messages confirm `idle`, `running`, `paused`, or `finished`. During a healthy binding lifecycle, the creation reply and Native state messages are the exclusive sources of public playback state. The public `finished` flag is derived from `playState === 'finished'`.
 
@@ -1197,6 +1198,7 @@ type EntityMotionProps = {
 
 Decomposition rules:
 
+- `start`, `stop`, `reset`, `finish`, natural completion, and successful `set` first complete their corresponding transform commit and then read the Entity's complete current transform again. That readback is the shared source for state-message `values`, callback values, and `SetEntityAnimationResult.values`.
 - `position` comes from the translation part of the native transform.
 - `scale` comes from the scale part of the native transform.
 - `rotation` uses Euler degrees in the Entity's parent-relative local, right-handed coordinate system, where +X points right, +Y points up, and +Z points toward the viewer. Composition uses ZYX intrinsic rotation, equivalent to XYZ extrinsic rotation, with matrix order `Rz × Ry × Rx`. Confirmed native rotation is decomposed from its rotation matrix with `y` in `[-90°, 90°]` and `x` / `z` in `(-180°, 180°]`; at gimbal lock, `z` is fixed to `0°` and `x` is derived from the matrix. Equivalent quaternions therefore produce the same Euler result. A sparse `api.set` rotation update merges onto this canonical complete Euler baseline before recomposition.
@@ -1247,16 +1249,16 @@ sequenceDiagram
         Obj->>RK: read Entity's complete current transform
         Obj->>RK: create controller and enter delay / running
         RK-->>Obj: playback controller
-        Obj->>Event: emit start with running and complete current values
+        Obj->>Event: emit running + callbackAction=start + complete current values
     else resume after pause
         Obj->>Obj: private resumeCurrent()
-        Obj->>RK: resume current controller without start
-        Obj->>Event: emit state message with running
+        Obj->>RK: resume current controller and preserve current onStart count
+        Obj->>Event: emit state message carrying only running
     end
     RK-->>Obj: complete / end-state callback
     Obj->>Obj: read and decompose Entity's complete current transform
     Obj->>Obj: remove whole-transform write protection
-    Obj->>Event: emit complete with finished and complete current value
+    Obj->>Event: emit finished + callbackAction=complete + complete current value
 ```
 
 Create only stores the canonical timeline; `SpatialScene` registers the animation object and returns its `id`. Each fresh play reads the latest baseline and compiles that run's RealityKit resource, then commits and confirms the complete start pose. `start` and the first `entityProps` update happen after that confirmation without waiting for delay to end. A `play` after pause reuses the current resource and controller without reading the baseline, compiling, or producing another `start`.
@@ -1265,10 +1267,10 @@ State-command matrix:
 
 | Native state | `play` | `pause` | `stop` | `reset` | `finish` | `set` |
 |---|---|---|---|---|---|---|
-| `idle` | fresh play → `running`; emit `start` once after start-pose confirmation | keep `idle` | keep `idle` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | commit update; keep `idle` |
-| `running` (including delay) | keep current run | → `paused`; emit `pause` | commit current pose → `idle`; emit `stop` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | keep current run; warning receipt |
-| `paused` | resume current controller → `running` | keep `paused` | commit current pose → `idle`; emit `stop` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | keep paused run; warning receipt |
-| `finished` | fresh play → `running`; emit `start` once after start-pose confirmation | keep `finished` | keep `finished` | commit start pose → `idle`; emit `reset` | keep `finished` | commit update; keep `finished` |
+| `idle` | fresh play → `running`; emit `callbackAction: start` after start-pose confirmation | keep `idle` | keep `idle` | commit start pose → `idle`; emit `callbackAction: reset` | commit end pose → `finished`; emit `callbackAction: complete` | commit update; keep `idle` |
+| `running` (including delay) | keep current run | → `paused`; emit paused state message | commit current pose → `idle`; emit `callbackAction: stop` | commit start pose → `idle`; emit `callbackAction: reset` | commit end pose → `finished`; emit `callbackAction: complete` | keep current run; warning receipt |
+| `paused` | resume current controller → `running`; emit running state message | keep `paused` | commit current pose → `idle`; emit `callbackAction: stop` | commit start pose → `idle`; emit `callbackAction: reset` | commit end pose → `finished`; emit `callbackAction: complete` | keep paused run; warning receipt |
+| `finished` | fresh play → `running`; emit `callbackAction: start` after start-pose confirmation | keep `finished` | keep `finished` | commit start pose → `idle`; emit `callbackAction: reset` | keep `finished` | commit update; keep `finished` |
 
 For `reset` and `finish`, an existing run supplies its confirmed start and end poses. Before the first run, the compiler reads the current native transform as the baseline on demand and computes the configured start or end pose. `finish` always commits the configured `to` / `100%` pose for ordinary, reset-loop, and reverse-loop playback.
 
@@ -1289,7 +1291,7 @@ sequenceDiagram
     alt found and state allows
         Scene->>Obj: pause()
         Obj->>RK: controller pause
-        Obj->>Event: emit pause with paused
+        Obj->>Event: emit state message carrying only paused
         Scene-->>JSB: success
     else animation lookup failure / illegal state
         Scene-->>JSB: fail
@@ -1316,7 +1318,7 @@ sequenceDiagram
         Obj->>RK: commit target transform with zero duration
         Obj->>Obj: read and decompose Entity's complete current transform
         Obj->>Obj: remove whole-transform write protection
-        Obj->>Event: emit stop/reset with idle, or finish with finished, and complete current value
+        Obj->>Event: stop/reset carry their callbackAction; finish carries callbackAction=complete; all carry complete current values
         Scene-->>JSB: success
     else id is absent
         Scene-->>JSB: fail(ANIMATION_NOT_FOUND)
@@ -1356,7 +1358,7 @@ sequenceDiagram
 
 Pause reuses the compiled whole-transform chain, controls the current playback controller, and keeps whole-transform write protection active. Stop / reset / finish stop that controller, commit the target pose with zero duration, and remove the protection before reporting the resulting complete transform. Natural completion performs the same removal before its `complete` event. While inactive, `set` merges the sparse update onto the committed transform, commits it with zero duration, and returns the Entity's complete current transform through the success reply. `set` preserves the existing `playState` and emits no state event.
 
-A native Entity animation object has the same lifecycle as one target binding. When the target is destroyed, `SpatialScene` cascades destruction to associated animations through the global `SpatialObject` lifecycle and retains no invalid object.
+A native Entity animation object has the same lifecycle as one target binding. When the target is destroyed, `SpatialScene` cascades destruction to associated animations through the global `SpatialObject` lifecycle and sends `objectdestroy` for each animation id. Core consumes that message, marks the animation object destroyed, and unregisters the event receiver for that animation id. Later playback completes locally as a no-op; `set` logs a warning and completes locally as a no-op while preserving the existing `onError` count. In-flight commands continue to use the `ANIMATION_NOT_FOUND` race result.
 
 Boundary constraint: `SpatialScene` owns global `spatialObjects`, create-target lookup, animation-object lookup, the three Entity command replies, and the `SpatialObject` lifecycle. `SpatialEntity.createAnimation(config)` creates Entity animation objects; `EntityMotionAnimationObject` owns per-object compilation, playback state, controls, confirmed values, event emission, and resource release. Entity and Element paths keep separate protocols while sharing the global `spatialObjects` lifecycle.
 

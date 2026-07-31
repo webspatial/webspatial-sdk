@@ -98,6 +98,8 @@ Entity motion MUST use the Entity's parent-relative local, right-handed coordina
 
 The SDK MUST use `entityProps` as the React-side persistence outlet for the complete committed Entity transform reported by Native.
 
+`start`, `stop`, `reset`, `finish`, natural completion, and native-accepted `api.set` MUST first commit the pose and then read the Entity's complete current transform again. State-message `values`, callback values, and `SetEntityAnimationResult.values` MUST all use that readback and contain complete `position`, `rotation`, `scale`, and canonical ZYX Euler values.
+
 `entityProps` MUST update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, and native-accepted `api.set(update)` writes. Creation or handoff failure MUST clear it to `{}`. An empty `entityProps` object MUST be valid before the first confirmed state. Once native returns a confirmed state, `entityProps` MUST mirror the complete committed transform with complete `position`, `rotation`, and `scale` values. The complete mirror MUST be independent of the fields present in the animation config or an `api.set` update. During inactive playback, spreading `entityProps` after static/base props MUST make that complete committed transform the effective React transform input.
 
 #### Scenario: Complete writes terminal transform to `entityProps`
@@ -188,6 +190,7 @@ Each fresh play MUST store its active native business-controller identity. Nativ
 - **GIVEN** the native animation state is `running` or `paused`
 - **WHEN** application code calls a playback command
 - **THEN** `play` MUST preserve `running` or resume `paused` to `running`
+- **AND** when `paused` resumes to `running`, Native MUST send a state message carrying only the animation `id` and `playState: running`
 - **AND** `pause` MUST move `running` to `paused` and preserve `paused`
 - **AND** `stop` MUST commit the current pose and enter `idle`
 - **AND** `reset` MUST commit the run's start pose and enter `idle`
@@ -221,7 +224,7 @@ Each fresh play MUST store its active native business-controller identity. Nativ
 
 ### Requirement: Entity motion cleanup is controller-scoped and internal commits are isolated
 
-Each `EntityMotionAnimationObject` MUST scope cleanup to the animation controllers it owns. Other animation controllers on the same Entity and its descendants MUST preserve their playback state. A zero-duration pose commit MUST produce the requested command action, while natural `complete` MUST remain exclusive to the current business playback controller.
+Each `EntityMotionAnimationObject` MUST scope cleanup to the animation controllers it owns. Other animation controllers on the same Entity and its descendants MUST preserve their playback state. A zero-duration pose commit MUST produce the corresponding `callbackAction`, while natural completion MUST remain exclusive to the current business playback controller.
 
 #### Scenario: Playback control preserves unrelated animations
 - **GIVEN** an Entity motion run and unrelated Entity or descendant animations are active
@@ -229,17 +232,17 @@ Each `EntityMotionAnimationObject` MUST scope cleanup to the animation controlle
 - **THEN** Native MUST stop and release the controllers owned by that Entity motion object
 - **AND** the unrelated Entity and descendant animation controllers MUST preserve their playback state
 
-#### Scenario: Zero-duration playback-control pose commits produce the command action
+#### Scenario: Zero-duration playback-control pose commits produce callbackAction
 - **GIVEN** accepted `stop`, `reset`, or `finish` requires a zero-duration pose commit
 - **WHEN** Native confirms that pose
-- **THEN** Native MUST emit the requested command action with the confirmed transform
+- **THEN** Native MUST respectively use `stop`, `reset`, or `complete` as `callbackAction` and carry the confirmed transform
 - **AND** natural `complete` MUST remain exclusive to the current business playback controller
 
 ### Requirement: Entity motion commands preserve per-binding FIFO order
 
 The public Entity playback methods MAY return `void`, but the SDK MUST preserve call order through one FIFO command chain per Entity motion binding. Once a native animation object exists, the binding MUST NOT send the next playback or `set` command until the previous command's internal JSB reply has settled. A failed command or a `set` mapped to warning plus no-op MUST settle its queue item and MUST NOT block or reorder later commands.
 
-A successful JSB reply MUST mean Native has completed the command's synchronous state transition and any required transform commit. When a playback control command produces a state event, Native MUST emit that event before returning the success reply. `SetEntityAnimation` MUST NOT produce a state event; after updating the Entity, Native MUST return its complete current transform through `SetEntityAnimationResult.values`. A natural asynchronous `complete` event is not part of the earlier `play` reply.
+When a playback control command produces a state message, Native MUST submit that message before confirming current-command completion with an empty success reply; the binding MUST then send the next command. Natural completion MUST produce an independent asynchronous completion state message.
 
 #### Scenario: Playback commands before native object creation are flushed in order
 - **GIVEN** an Entity motion binding whose native animation object has not been created
@@ -326,7 +329,7 @@ Unbinding and target replacement MUST advance the binding generation, retire the
 
 Core and Native MUST use `CreateEntityAnimation`, `ControlEntityAnimation`, and `SetEntityAnimation` independently from the Spatialized Element animation protocol. The create request `id` MUST be the target Entity's `SpatialObject.id`; the successful create reply `id` MUST be the new Entity animation object's `SpatialObject.id`. Later control, set, state-event, and error-event traffic MUST directly use that animation-object `id` and MUST NOT introduce `elementId` or `animationId` aliases.
 
-`EntityMotionStateChangedDetail.action` MUST contain only `start`, `complete`, `pause`, `stop`, `reset`, and `finish`; it MUST NOT contain `set` or `error`. Public `finished` MUST be derived from `playState === 'finished'` and MUST NOT be transported as a state-event field. Asynchronous errors MUST use the dedicated `entityanimationerror` event, and state events MUST NOT carry errors. `SpatializedPlaybackError` MUST expose only a stable `code` and readable `reason` and MUST NOT repeat the command name.
+Every playback-state confirmation or lifecycle callback MUST use the same `EntityMotionStateChangedDetail` and carry the animation `id` plus the latest `playState`. Messages that trigger lifecycle callbacks MUST carry both `callbackAction` and complete `values`; the complete `callbackAction` set MUST be `start`, `complete`, `stop`, and `reset`. Explicit `finish()` and natural completion MUST both use `callbackAction: complete`. Pause and resume messages MUST carry only `id` and `playState`. Public `finished` MUST derive from `playState === 'finished'`. Asynchronous errors MUST use the dedicated `entityanimationerror` event. `SpatializedPlaybackError` MUST expose only a stable `code` and readable `reason`.
 
 Native MUST create `EntityMotionAnimationObject` through the target `SpatialEntity.createAnimation(config)` and MUST NOT introduce `EntityMotionManager`. Core `EntityAnimationObject` MUST directly use the `id` inherited from `SpatialObject` and privately store the public `config` and normalized `timeline`. Native `EntityMotionAnimationObject.emitStateChanged()` MUST be private.
 
@@ -341,7 +344,7 @@ Native MUST create `EntityMotionAnimationObject` through the target `SpatialEnti
 - **GIVEN** an Entity animation object has been created
 - **WHEN** Core controls playback, sets a transform, or consumes a Native event
 - **THEN** control and set commands and both event types MUST address the animation object through `id`
-- **AND** playback lifecycle changes MUST use `EntityMotionStateChangedDetail`
+- **AND** every playback-state confirmation or lifecycle callback MUST use `EntityMotionStateChangedDetail`
 - **AND** a successful set MUST return confirmed values through `SetEntityAnimationResult` without a state event
 - **AND** an asynchronous error MUST use `entityanimationerror` with `code` and `reason`
 
@@ -507,14 +510,14 @@ The SDK MUST synchronously throw the built-in `Error` for programmer errors dete
 - **THEN** `onError` MUST receive a `SpatializedPlaybackError` whose `code` identifies the failure kind
 - **AND** application code MUST be able to branch on `code` and use `reason` as the readable diagnostic
 
-### Requirement: Entity target destruction invalidates associated animations
+### Requirement: Entity target destruction synchronizes associated animation cleanup
 
-If an Entity target is destroyed first, the SDK MUST destroy its associated animation objects. After that destruction has synchronized to Core, playback commands MUST be no-ops and `api.set` MUST be a warning plus no-op without triggering `onError`. A command racing with teardown MAY fail with `ANIMATION_NOT_FOUND`.
+If an Entity target is destroyed first, the SDK MUST destroy its associated animation objects and Native MUST send `objectdestroy` for each animation id. Core MUST consume that message, mark the matching animation object destroyed, and unregister the event receiver for that animation id. After synchronization, playback commands MUST complete locally as no-ops and produce zero JSB commands; `api.set` MUST log a warning, complete locally as a no-op, produce zero JSB commands, and preserve the existing `onError` count. An in-flight command racing with teardown MAY end with `ANIMATION_NOT_FOUND`.
 
 #### Scenario: Target-first destruction cascades animation cleanup
 - **WHEN** an Entity target is destroyed before its associated native animation objects
-- **THEN** Native MUST destroy every Entity animation object associated with that target
-- **AND** after destruction synchronizes to Core, playback MUST be a no-op and `api.set` MUST be a warning plus no-op without triggering `onError`
+- **THEN** Native MUST destroy every associated animation and send `objectdestroy` for each animation id
+- **AND** Core MUST mark the object destroyed, unregister its event receiver, and complete later playback and `api.set` locally
 
 #### Scenario: Control command races teardown
 - **WHEN** a control command races with animation-object teardown

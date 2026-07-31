@@ -98,6 +98,8 @@ Entity motion MUST 使用 Entity 相对父节点的局部右手坐标系和角�
 
 SDK MUST 使用 `entityProps` 作为 Native 返回的物体完整已提交变换在 React 侧的持久化出口。
 
+`start`、`stop`、`reset`、`finish`、自然完成和原生层接受的 `api.set` MUST 先提交姿态,再重新读取 Entity 当前的完整 transform;状态消息 `values`、callback values 和 `SetEntityAnimationResult.values` MUST 统一使用该回读结果,并包含完整的 `position`、`rotation`、`scale` 与规范化 ZYX 欧拉角。
+
 `entityProps` MUST 在动画系统提交生命周期值时更新,包括 `start`、`complete`、`stop`、`reset`、`finish` 以及原生层接受的 `api.set(update)` 写入。创建或交接失败 MUST 把它清空为 `{}`。首个已确认状态产生前,SDK MUST 接受空的 `entityProps` 对象。首个已确认状态产生后,它 MUST 以完整的 `position`、`rotation`、`scale` 值镜像完整的已提交变换。每次确认后的字段集合 MUST 固定为完整的 `position`、`rotation`、`scale`。播放空闲期间,把 `entityProps` 展开在基础属性之后 MUST 使完整的已提交变换成为 React 最终传入的 transform。
 
 #### Scenario: complete 把终态写入 `entityProps`
@@ -188,6 +190,7 @@ Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`�
 - **GIVEN** 原生层动画状态是 `running` 或 `paused`
 - **WHEN** 应用调用 playback 命令
 - **THEN** `play` MUST 保持 `running`,或把 `paused` 恢复为 `running`
+- **AND** `paused` 恢复为 `running` 时,Native MUST 发送只携带 animation `id` 和 `playState: running` 的状态消息
 - **AND** `pause` MUST 把 `running` 转为 `paused`,并保持 `paused`
 - **AND** `stop` MUST 提交当前姿态并进入 `idle`
 - **AND** `reset` MUST 提交本轮起始姿态并进入 `idle`
@@ -221,7 +224,7 @@ Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`�
 
 ### Requirement: Entity motion 清理限定控制器范围并隔离内部提交
 
-每个 `EntityMotionAnimationObject` MUST 把清理范围限定为自身持有的动画控制器。同一 Entity 及其子节点上的其它动画控制器 MUST 保持原有播放状态。零时长姿态提交 MUST 产生请求的命令动作,自然 `complete` MUST 由当前业务播放控制器唯一产生。
+每个 `EntityMotionAnimationObject` MUST 把清理范围限定为自身持有的动画控制器。同一 Entity 及其子节点上的其它动画控制器 MUST 保持原有播放状态。零时长姿态提交 MUST 产生对应的 `callbackAction`,自然完成 MUST 由当前业务播放控制器唯一产生。
 
 #### Scenario: 播放控制保持其它动画运行
 - **GIVEN** Entity motion 运行和其它 Entity 或子节点动画处于活跃状态
@@ -229,17 +232,17 @@ Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`�
 - **THEN** 原生层 MUST 停止并释放该 Entity motion 对象持有的控制器
 - **AND** 其它 Entity 和子节点动画控制器 MUST 保持原有播放状态
 
-#### Scenario: 播放控制的零时长姿态提交产生命令动作
+#### Scenario: 播放控制的零时长姿态提交产生 callbackAction
 - **GIVEN** 已接受的 `stop`、`reset` 或 `finish` 需要零时长姿态提交
 - **WHEN** 原生层确认该姿态
-- **THEN** 原生层 MUST 发出携带确认姿态的请求命令动作
+- **THEN** 原生层 MUST 分别使用 `stop`、`reset`、`complete` 作为 `callbackAction`,并携带确认姿态
 - **AND** 自然 `complete` MUST 由当前业务播放控制器唯一产生
 
 ### Requirement: Entity motion 命令保持 binding 级 FIFO 顺序
 
 公开 Entity playback 方法 MAY 返回 `void`,但 SDK MUST 通过每个 Entity motion binding 独立的一条 FIFO 命令链保持调用顺序。Native animation object 创建后,binding MUST 等待前一条命令的内部 JSB reply settled,再发送下一条 playback 或 `set` 命令。失败命令或映射为 warning + no-op 的 `set` MUST 结束当前队列项,且 MUST NOT 阻塞或改变后续命令顺序。
 
-JSB 成功回执 MUST 表示 Native 已完成命令的同步状态转换和所需姿态提交。播放控制命令产生状态事件时,Native MUST 先发出事件,再返回成功回执。`SetEntityAnimation` MUST NOT 产生状态事件;Native 更新 Entity 后 MUST 通过 `SetEntityAnimationResult.values` 返回 Entity 当前的完整 transform。自然完成产生的异步 `complete` 事件不属于此前的 `play` 回执。
+播放控制命令产生状态消息时,Native MUST 先提交消息,再通过空成功回执确认当前命令完成;绑定对象 MUST 据此发送下一条命令。自然完成 MUST 产生独立的异步完成状态消息。
 
 #### Scenario: Native object 创建前的 playback 命令按顺序 flush
 - **GIVEN** Entity motion binding 的 Native animation object 尚未创建
@@ -326,7 +329,7 @@ Entity motion 绑定 MUST 根据生效的时间轴、时长、缓动、延迟、
 
 Core 与 Native MUST 使用独立于 Spatialized Element 动画的 `CreateEntityAnimation`、`ControlEntityAnimation` 和 `SetEntityAnimation` 三条命令。创建请求的 `id` MUST 是目标 Entity 的 `SpatialObject.id`;创建成功回执的 `id` MUST 是新建 Entity 动画对象的 `SpatialObject.id`。后续控制、设置、状态事件和错误事件 MUST 直接使用该动画对象的 `id`,MUST NOT 引入 `elementId` 或 `animationId` 别名。
 
-`EntityMotionStateChangedDetail.action` MUST 只包含 `start`、`complete`、`pause`、`stop`、`reset` 和 `finish`;MUST NOT 包含 `set` 或 `error`。公开 `finished` MUST 从 `playState === 'finished'` 派生,MUST NOT 作为状态事件字段传输。异步错误 MUST 使用独立的 `entityanimationerror` 事件,状态事件 MUST NOT 携带错误。`SpatializedPlaybackError` MUST 只公开稳定的 `code` 和可读的 `reason`,MUST NOT 重复携带命令名称。
+每次播放状态确认或 lifecycle callback MUST 使用同一个 `EntityMotionStateChangedDetail`,并携带 animation `id` 与最新 `playState`。触发生命周期 callback 的消息 MUST 同时携带 `callbackAction` 和完整 `values`;`callbackAction` 的完整集合 MUST 为 `start`、`complete`、`stop` 和 `reset`。显式 `finish()` 与自然完成 MUST 统一使用 `callbackAction: complete`。暂停和恢复消息 MUST 只携带 `id` 与 `playState`。公开 `finished` MUST 从 `playState === 'finished'` 派生。异步错误 MUST 使用独立的 `entityanimationerror` 事件。`SpatializedPlaybackError` MUST 只公开稳定的 `code` 和可读的 `reason`。
 
 Native MUST 由目标 `SpatialEntity.createAnimation(config)` 创建 `EntityMotionAnimationObject`,MUST NOT 引入 `EntityMotionManager`。Core `EntityAnimationObject` MUST 直接使用继承自 `SpatialObject` 的 `id`,并私有保存公开 `config` 和归一化 `timeline`。Native `EntityMotionAnimationObject.emitStateChanged()` MUST 是私有方法。
 
@@ -341,7 +344,7 @@ Native MUST 由目标 `SpatialEntity.createAnimation(config)` 创建 `EntityMoti
 - **GIVEN** Entity 动画对象已经创建
 - **WHEN** Core 控制播放、设置变换或消费 Native 事件
 - **THEN** 控制命令、设置命令和两类事件 MUST 通过 `id` 指向动画对象
-- **AND** 播放生命周期变化 MUST 使用 `EntityMotionStateChangedDetail`
+- **AND** 每次播放状态确认或 lifecycle callback MUST 使用 `EntityMotionStateChangedDetail`
 - **AND** 设置成功 MUST 通过 `SetEntityAnimationResult` 返回确认值且不产生状态事件
 - **AND** 异步错误 MUST 使用携带 `code` 和 `reason` 的 `entityanimationerror`
 
@@ -507,14 +510,14 @@ SDK MUST 对公开 config 或方法参数中可直接检测的 programmer error 
 - **THEN** `onError` MUST 收到一个 `SpatializedPlaybackError`,其 `code` 标识失败类型
 - **AND** 应用代码 MUST 能够按 `code` 分支,并使用 `reason` 记录可读原因
 
-### Requirement: Entity target 销毁会使关联动画失效
+### Requirement: Entity target 销毁同步关联动画清理
 
-若 Entity target 先销毁,SDK MUST 销毁其关联 animation objects。销毁同步到 Core 后,playback 命令 MUST 是 no-op,`api.set` MUST 是 warning + no-op 且不触发 `onError`;与销毁竞态的命令 MAY 以 `ANIMATION_NOT_FOUND` 失败。
+若 Entity target 先销毁,SDK MUST 销毁其关联 animation objects,Native MUST 为每个 animation id 发送 `objectdestroy`。Core MUST 消费该消息、标记对应动画对象已销毁,并注销该 animation id 的事件接收器。同步完成后,playback 命令 MUST 在 Core 本地完成空操作并产生零条 JSB 命令;`api.set` MUST 在 Core 本地输出 warning、完成空操作、产生零条 JSB 命令并保持现有 `onError` 次数。与销毁竞态的在途命令 MAY 以 `ANIMATION_NOT_FOUND` 结束。
 
 #### Scenario: target 先销毁时级联清理动画
 - **WHEN** Entity target 在关联 native animation object 之前销毁
-- **THEN** Native MUST 销毁该 target 的所有关联 Entity animation objects
-- **AND** 销毁同步到 Core 后,playback MUST 是 no-op,`api.set` MUST 是 warning + no-op 且不触发 `onError`
+- **THEN** Native MUST 销毁全部关联动画并为每个 animation id 发送 `objectdestroy`
+- **AND** Core MUST 标记对象已销毁、注销事件接收器,并在本地完成后续 playback 与 `api.set`
 
 #### Scenario: 控制命令与销毁竞态
 - **WHEN** 控制命令与 animation object 销毁发生竞态
