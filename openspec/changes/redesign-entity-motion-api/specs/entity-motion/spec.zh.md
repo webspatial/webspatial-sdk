@@ -240,7 +240,7 @@ Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`�
 
 ### Requirement: Entity motion 命令保持 binding 级 FIFO 顺序
 
-公开 Entity 播放方法 MAY 返回 `void`。每个 Entity motion 绑定 MUST 使用独立 FIFO 队列。原生动画对象创建后,绑定 MUST 等待当前 JSB 回执完成,再发送下一条 `update`、播放或 `set` 命令。失败只结束当前队列项,后续顺序保持不变。
+公开 `EntityPlaybackApi` 方法 MAY 返回 `void`。具体的 Core `EntityAnimationObject.set(update)` MUST 返回 `Promise<EntityMotionProps | void>`,供绑定等待 `SetEntityAnimation` 回执。该 Promise MUST NOT 通过公开 `EntityPlaybackApi.set(update)` 暴露。每个 Entity motion 绑定 MUST 使用独立 FIFO 队列。原生动画对象创建后,绑定 MUST 等待当前 JSB 回执完成,再发送下一条 `update`、播放或 `set` 命令。失败只结束当前队列项,后续顺序保持不变。
 
 播放控制命令产生状态消息时,Native MUST 先提交消息,再通过空成功回执确认当前命令完成;绑定对象 MUST 据此发送下一条命令。自然完成 MUST 产生独立的异步完成状态消息。
 
@@ -281,6 +281,8 @@ Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`�
 ### Requirement: 同一目标的配置更新原地提交并具有确定的 retarget 语义
 
 Entity motion 绑定 MUST 根据规范时间轴和播放参数比较执行定义。等价配置 MUST 视为同一执行定义。回调和 `autoStart` MUST 独立处理。`autoStart` MUST 只控制初次创建后的隐式 `play`。
+
+`SpatialEntity.createAnimation(config)` 和 `EntityAnimationObject.update(config)` MUST 分别同步归一化并校验初始配置和更新配置。
 
 解绑和目标替换 MUST 推进绑定代次、销毁当前对象,并清空 `entityProps`。同一目标的配置变化 MUST 通过当前 `EntityAnimationObject` 和 id 原地提交,并保持绑定代次和对象。成功更新 MUST 推进执行版本。命令、回执和事件 MUST 关联绑定代次、id 和执行版本。
 

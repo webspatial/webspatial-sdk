@@ -110,15 +110,15 @@
 
 ## 9. In-place Config Update and Retarget
 
-- [ ] 9.1 Add Core red tests for `update(config)` validation, equivalent config, successful commit, rollback, and calls after destruction
+- [ ] 9.1 Add Core red tests for validation internalized by `update(config)`, equivalent config, successful commit, rollback, calls after destruction, and the concrete `set(update)` promise returning the confirmed pose
 - [ ] 9.2 Add React red tests for stable object and id, shared FIFO, safe coalescing, callback updates, `autoStart`, failure recovery, and revision filtering
 - [ ] 9.3 Add Core and visionOS Bridge red tests for `UpdateEntityAnimation` encoding, results, errors, and message order
 - [ ] 9.4 Read-only verify that RealityKit can read the current pose, prepare resources, switch controllers, filter old completion, and preserve pause; return to design review if atomic rollback cannot hold
 - [ ] 9.5 Add visionOS retarget red tests for temporary start, baseline, easing, complete new timing, configured boundaries, intermediate keyframes, stale events, and write protection
 - [ ] 9.6 Add visionOS state and failure red tests for pause, idle, finish, callbacks, `entityProps`, and atomic rollback
-- [ ] 9.7 Minimally implement Core `update(config)`, `UpdateEntityAnimationJSBCommand`, snapshot commit, and execution revision; remove React's execution-signature dependency
+- [ ] 9.7 Minimally implement Core `update(config)`, `UpdateEntityAnimationJSBCommand`, snapshot commit, and execution revision; internalize config validation and execution-definition comparison in the create and update entries; make concrete `set(update)` return a confirmed-pose promise
 - [ ] 9.8 Minimally implement React in-place update, FIFO, and safe coalescing; delete same-target recreate, pose handoff, and replacement generation
 - [ ] 9.9 Minimally implement visionOS update handling, transaction, retarget, paused definition, stale-event filtering, and confirmed-pose reporting
-- [ ] 9.10 Refactor with tests green, deleting superseded replacement code and fixtures while preserving target replacement, unbind, and destruction
+- [ ] 9.10 Refactor with tests green, deleting superseded replacement code and fixtures plus Entity motion internal-subpath exports, mappings, references, and tests while preserving target replacement, unbind, and destruction
 - [ ] 9.11 Implement and test equivalent picoOS Bridge, retarget, rollback, and race behavior
 - [ ] 9.12 Run Core/React tests, full visionOS tests, Simulator acceptance, and strict OpenSpec validation; record the state matrix and results

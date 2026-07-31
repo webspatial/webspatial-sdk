@@ -240,7 +240,7 @@ Each `EntityMotionAnimationObject` MUST scope cleanup to the animation controlle
 
 ### Requirement: Entity motion commands preserve per-binding FIFO order
 
-Public Entity playback methods MAY return `void`. Each Entity motion binding MUST use an independent FIFO queue. After the Native animation object exists, the binding MUST wait for the current JSB reply before sending the next `update`, playback, or `set` command. Failure settles only the current item and preserves later order.
+Public `EntityPlaybackApi` methods MAY return `void`. The concrete Core `EntityAnimationObject.set(update)` MUST return `Promise<EntityMotionProps | void>` so the binding can await the `SetEntityAnimation` reply. This promise MUST NOT be exposed through public `EntityPlaybackApi.set(update)`. Each Entity motion binding MUST use an independent FIFO queue. After the Native animation object exists, the binding MUST wait for the current JSB reply before sending the next `update`, playback, or `set` command. Failure settles only the current item and preserves later order.
 
 When a playback control command produces a state message, Native MUST submit that message before confirming current-command completion with an empty success reply; the binding MUST then send the next command. Natural completion MUST produce an independent asynchronous completion state message.
 
@@ -281,6 +281,8 @@ When a playback control command produces a state message, Native MUST submit tha
 ### Requirement: Same-target config updates commit in place with deterministic retarget semantics
 
 The Entity motion binding MUST compare canonical timelines and playback options. Equivalent configs MUST represent the same execution definition. Callbacks and `autoStart` MUST be handled separately. `autoStart` MUST only control implicit `play` after initial creation.
+
+`SpatialEntity.createAnimation(config)` and `EntityAnimationObject.update(config)` MUST synchronously normalize and validate initial and updated config respectively.
 
 Unbinding and target replacement MUST advance the binding generation, destroy the current object, and clear `entityProps`. Same-target config changes MUST commit in place through the current `EntityAnimationObject` and id while preserving the binding generation and object. A successful update MUST advance the execution revision. Commands, replies, and events MUST carry the binding generation, id, and execution revision.
 

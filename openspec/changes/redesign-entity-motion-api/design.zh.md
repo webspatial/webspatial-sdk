@@ -436,7 +436,7 @@ sequenceDiagram
 
 #### 绑定命令队列与完成语义
 
-公开的 `EntityPlaybackApi` 保持 `void` 命令接口。内部由每个 `EntityMotionBinding` 持有一条 FIFO 命令链,在不向应用暴露 JSB Promise 的前提下保持调用顺序。
+公开的 `EntityPlaybackApi` 保持 `void` 命令接口。具体的 `EntityAnimationObject.set(update)` 返回 `Promise<EntityMotionProps | void>`,供绑定对象等待原生回执并更新 `entityProps`。每个 `EntityMotionBinding` 持有一条 FIFO 命令链,但不向应用暴露该 Promise。
 
 - 原生动画对象创建期间,`play`、`pause`、`stop`、`reset`、`finish` 按调用顺序排队。`autoStart` 生成的 `play` 排在队首。
 - Native 动画对象创建期间为 `idle`;如果此时调用播放,命令等待执行,状态变为 `queued`。
@@ -451,7 +451,7 @@ sequenceDiagram
 
 #### 解绑、重新绑定与配置更新
 
-解绑或目标替换会销毁对象。同一目标通过 `EntityAnimationObject.update(config)` 原地更新。Core 用规范时间轴和播放参数判断配置是否等价。回调和 `autoStart` 不参与比较。`autoStart` 只控制初次创建后的隐式 `play`。
+解绑或目标替换会销毁对象。同一目标通过 `EntityAnimationObject.update(config)` 原地更新。`SpatialEntity.createAnimation(config)` 和 `EntityAnimationObject.update(config)` 分别同步归一化并校验初始配置和更新配置。React 不提前校验配置。Core 用规范时间轴和播放参数判断配置是否等价。回调和 `autoStart` 不参与比较。`autoStart` 只控制初次创建后的隐式 `play`。
 
 - 解绑时,绑定对象推进绑定代次、注销当前 `EntityAnimationObject`、销毁对应原生对象、把 `entityProps` 清空为 `{}`,并触发 React 渲染。返回的空对象可以继续安全地展开在基础属性之后。
 - 重新绑定不同目标时,绑定对象先完成同一套清理,再为新目标创建动画对象。新目标从空镜像开始,并建立自身的确认值。

@@ -110,15 +110,15 @@
 
 ## 9. 原地配置更新与重新定向
 
-- [ ] 9.1 先编写 Core 红灯测试,覆盖 `update(config)` 校验、等价配置、成功提交、失败回滚和销毁后调用
+- [ ] 9.1 先编写 Core 红灯测试,覆盖 `update(config)` 内化校验、等价配置、成功提交、失败回滚、销毁后调用,以及具体 `set(update)` Promise 返回确认姿态
 - [ ] 9.2 先编写 React 红灯测试,覆盖对象与 id 稳定、统一 FIFO、安全合并、回调更新、`autoStart`、失败恢复和版本过滤
 - [ ] 9.3 先编写 Core 与 visionOS 桥接红灯测试,覆盖 `UpdateEntityAnimation` 编解码、结果、错误和消息顺序
 - [ ] 9.4 只读验证 RealityKit 读取当前姿态、准备资源、切换控制器、过滤旧完成事件和保持暂停的能力;无法满足原子回滚时返回设计评审
 - [ ] 9.5 先编写 visionOS 重新定向红灯测试,覆盖临时起点、基准姿态、缓动、完整新时序、配置边界、中间关键帧、旧事件和写入保护
 - [ ] 9.6 先编写 visionOS 状态与失败红灯测试,覆盖暂停、空闲、完成、回调、`entityProps` 和原子回滚
-- [ ] 9.7 最小实现 Core `update(config)`、`UpdateEntityAnimationJSBCommand`、快照提交和执行版本,删除 React 的执行签名依赖
+- [ ] 9.7 最小实现 Core `update(config)`、`UpdateEntityAnimationJSBCommand`、快照提交和执行版本;把配置校验与执行定义比较内化到创建和更新入口;让具体 `set(update)` 返回确认姿态 Promise
 - [ ] 9.8 最小实现 React 原地更新、FIFO 和安全合并,删除同目标销毁重建、姿态交接和替换代次
 - [ ] 9.9 最小实现 visionOS 更新入口、事务更新、重新定向、暂停定义、旧事件过滤和确认姿态回传
-- [ ] 9.10 在测试持续通过时重构,删除已取代的替换代码和测试夹具,保留目标替换、解绑和销毁流程
+- [ ] 9.10 在测试持续通过时重构,删除已取代的替换代码和测试夹具,以及 Entity motion internal 子路径的导出、映射、引用和测试;保留目标替换、解绑和销毁流程
 - [ ] 9.11 为 picoOS 实现并测试同等的桥接、重新定向、回滚和竞态行为
 - [ ] 9.12 运行 Core/React 测试、visionOS 完整测试、模拟器验收和 OpenSpec 严格校验,记录状态矩阵与结果
