@@ -57,37 +57,50 @@ export default function EntityAnimationReverseLoopPage() {
       description="Infinite reverse-loop rotation from Y 0 to 170 degrees, with pause and resume handled by the same control."
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
-        <div className="flex flex-wrap gap-2">
-          <button className={btnPrimary} onClick={toggle}>
-            {api.isPaused ? 'Resume' : api.isAnimating ? 'Pause' : 'Play'}
-          </button>
-          <button
-            className={btnCls}
-            onClick={() => {
-              api.stop()
-              logger.log('stop()')
-            }}
-          >
-            Stop
-          </button>
-          <button
-            className={btnCls}
-            onClick={() => {
-              api.set({ scale: { x: 1.2, y: 1.2, z: 1.2 } })
-              logger.log('api.set(scale=1.2) requested; see entityProps')
-            }}
-          >
-            api.set(scale = 1.2)
-          </button>
-          <button className={btnCls} onClick={logger.clear}>
-            Clear log
-          </button>
+        <div
+          enable-xr
+          data-name="Entity Motion Reverse Loop Controls"
+          data-webspatial-play-state={api.playState}
+          data-webspatial-is-animating={String(api.isAnimating)}
+          data-webspatial-is-paused={String(api.isPaused)}
+          data-webspatial-entity-props={JSON.stringify(entityProps)}
+          className="rounded-xl border border-gray-800 p-3"
+        >
+          <div className="flex flex-wrap gap-2">
+            <button className={btnPrimary} onClick={toggle}>
+              {api.isPaused ? 'Resume' : api.isAnimating ? 'Pause' : 'Play'}
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                api.stop()
+                logger.log('stop()')
+              }}
+            >
+              Stop
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                api.set({ scale: { x: 1.2, y: 1.2, z: 1.2 } })
+                logger.log('api.set(scale=1.2) requested; see entityProps')
+              }}
+            >
+              api.set(scale = 1.2)
+            </button>
+            <button className={btnCls} onClick={logger.clear}>
+              Clear log
+            </button>
+          </div>
+          <div className="mt-3 text-xs font-mono text-gray-500">
+            playState={api.playState} &nbsp; isAnimating=
+            {String(api.isAnimating)} &nbsp; isPaused={String(api.isPaused)}
+          </div>
         </div>
-        <div className="mt-3 text-xs font-mono text-gray-500">
-          isAnimating={String(api.isAnimating)} &nbsp; isPaused=
-          {String(api.isPaused)}
-        </div>
-        <Reality style={{ width: '100%', height: '220px' }}>
+        <Reality
+          data-name="Entity Motion Reverse Loop Reality"
+          style={{ width: '100%', height: '220px' }}
+        >
           <SceneGraph>
             <BoxEntity
               width={0.1}

@@ -50,25 +50,37 @@ function EntranceAnimationScene({
 
   return (
     <>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          className={btnCls}
-          onClick={() => {
-            api.set({ position: { y: 0.06 } })
-            onSetConfirmed()
-          }}
-        >
-          api.set(y = 0.06)
-        </button>
-        <button className={btnCls} onClick={() => api.reset()}>
-          Reset to start
-        </button>
+      <div
+        enable-xr
+        data-name="Entity Motion Entrance Controls"
+        data-webspatial-play-state={api.playState}
+        data-webspatial-is-animating={String(api.isAnimating)}
+        data-webspatial-entity-props={JSON.stringify(entityProps)}
+        className="mt-3 rounded-xl border border-gray-800 p-3"
+      >
+        <div className="flex flex-wrap gap-2">
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.set({ position: { y: 0.06 } })
+              onSetConfirmed()
+            }}
+          >
+            api.set(y = 0.06)
+          </button>
+          <button className={btnCls} onClick={() => api.reset()}>
+            Reset to start
+          </button>
+        </div>
+        <div className="mt-3 text-xs font-mono text-gray-500">
+          playState={api.playState} &nbsp; isAnimating=
+          {String(api.isAnimating)}
+        </div>
       </div>
-      <div className="mt-3 text-xs font-mono text-gray-500">
-        playState={api.playState} &nbsp; isAnimating=
-        {String(api.isAnimating)}
-      </div>
-      <Reality style={{ width: '100%', height: '260px' }}>
+      <Reality
+        data-name="Entity Motion Entrance Reality"
+        style={{ width: '100%', height: '260px' }}
+      >
         <SceneGraph>
           <BoxEntity
             width={0.1}

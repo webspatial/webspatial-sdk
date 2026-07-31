@@ -1,4 +1,6 @@
+import { useRef, useState } from 'react'
 import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
+import type { EntityRefShape } from '@webspatial/react-sdk'
 import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
@@ -12,6 +14,9 @@ import {
 
 export default function EntityAnimationPlayStatePage() {
   const logger = useLog()
+  const entityRef = useRef<EntityRefShape>(null)
+  const [targetDestroyed, setTargetDestroyed] = useState(false)
+  const [onErrorCount, setOnErrorCount] = useState(0)
 
   const [animation, api, entityProps] = useEntityAnimation({
     from: {
@@ -37,8 +42,10 @@ export default function EntityAnimationPlayStatePage() {
       logger.log(
         `[cb] onReset — playState=${api.playState} pos=${fmtVec3(value.position)}`,
       ),
-    onError: error =>
-      logger.log(`[cb] onError [${error.code}] ${error.reason}`),
+    onError: error => {
+      setOnErrorCount(count => count + 1)
+      logger.log(`[cb] onError [${error.code}] ${error.reason}`)
+    },
   })
 
   const logState = (action: string) => {
@@ -60,80 +67,110 @@ export default function EntityAnimationPlayStatePage() {
       }
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
-        <div className="flex flex-wrap gap-2">
-          <button
-            className={btnPrimary}
-            onClick={() => {
-              api.play()
-              logState('play()')
-            }}
-          >
-            Play
-          </button>
-          <button
-            className={btnCls}
-            onClick={() => {
-              api.pause()
-              logState('pause()')
-            }}
-          >
-            Pause
-          </button>
-          <button
-            className={btnCls}
-            onClick={() => {
-              api.stop()
-              logState('stop()')
-            }}
-          >
-            Stop
-          </button>
-          <button
-            className={btnCls}
-            onClick={() => {
-              api.reset()
-              logState('reset()')
-            }}
-          >
-            Reset
-          </button>
-          <button
-            className={btnCls}
-            onClick={() => {
-              api.finish()
-              logState('finish()')
-            }}
-          >
-            Finish
-          </button>
-          <button
-            className={btnCls}
-            onClick={() => {
-              api.set({ scale: { x: 0.75, y: 0.75, z: 0.75 } })
-              logger.log('api.set(scale=0.75) requested; see entityProps')
-            }}
-          >
-            api.set(scale = 0.75)
-          </button>
-          <button className={btnCls} onClick={() => logState('query')}>
-            Query State
-          </button>
-          <button className={btnCls} onClick={logger.clear}>
-            Clear log
-          </button>
+        <div
+          enable-xr
+          data-name="Entity Motion Play State Controls"
+          data-webspatial-play-state={api.playState}
+          data-webspatial-is-animating={String(api.isAnimating)}
+          data-webspatial-is-paused={String(api.isPaused)}
+          data-webspatial-finished={String(api.finished)}
+          data-webspatial-target-destroyed={String(targetDestroyed)}
+          data-webspatial-on-error-count={String(onErrorCount)}
+          data-webspatial-entity-props={JSON.stringify(entityProps)}
+          className="rounded-xl border border-gray-800 p-3"
+        >
+          <div className="flex flex-wrap gap-2">
+            <button
+              className={btnPrimary}
+              onClick={() => {
+                api.play()
+                logState('play()')
+              }}
+            >
+              Play
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                api.pause()
+                logState('pause()')
+              }}
+            >
+              Pause
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                api.stop()
+                logState('stop()')
+              }}
+            >
+              Stop
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                api.reset()
+                logState('reset()')
+              }}
+            >
+              Reset
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                api.finish()
+                logState('finish()')
+              }}
+            >
+              Finish
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                api.set({ scale: { x: 0.75, y: 0.75, z: 0.75 } })
+                logger.log('api.set(scale=0.75) requested; see entityProps')
+              }}
+            >
+              api.set(scale = 0.75)
+            </button>
+            <button
+              data-name="entity-motion-destroy-target"
+              className={btnCls}
+              onClick={() => {
+                entityRef.current?.entity?.destroy()
+                setTargetDestroyed(true)
+                logger.log('target Entity destroy() requested')
+              }}
+            >
+              Destroy target
+            </button>
+            <button className={btnCls} onClick={() => logState('query')}>
+              Query State
+            </button>
+            <button className={btnCls} onClick={logger.clear}>
+              Clear log
+            </button>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
+            <PlayStateBadge state={api.playState} />
+            <span className="text-xs font-mono text-gray-500">
+              isAnimating={String(api.isAnimating)} &nbsp; isPaused=
+              {String(api.isPaused)} &nbsp; finished={String(api.finished)}
+              &nbsp; targetDestroyed={String(targetDestroyed)} &nbsp;
+              onErrorCount={onErrorCount}
+            </span>
+          </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-3">
-          <PlayStateBadge state={api.playState} />
-          <span className="text-xs font-mono text-gray-500">
-            isAnimating={String(api.isAnimating)} &nbsp; isPaused=
-            {String(api.isPaused)} &nbsp; finished={String(api.finished)}
-          </span>
-        </div>
-
-        <Reality style={{ width: '100%', height: '220px' }}>
+        <Reality
+          data-name="Entity Motion Play State Reality"
+          style={{ width: '100%', height: '220px' }}
+        >
           <SceneGraph>
             <BoxEntity
+              ref={entityRef}
               width={0.1}
               height={0.1}
               depth={0.1}

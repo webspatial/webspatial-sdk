@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
+import { BoxEntity, Entity, Reality, SceneGraph } from '@webspatial/react-sdk'
 import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
@@ -25,6 +25,15 @@ function IsolatedEntity({ name, y }: { name: 'A' | 'B'; y: number }) {
     onError: error =>
       logger.log(`${name}:onError [${error.code}] ${error.reason}`),
   })
+  const [childAnimation, childApi, childEntityProps] = useEntityAnimation({
+    from: { position: { x: -0.04, y: 0, z: 0 } },
+    to: { position: { x: 0.04, y: 0, z: 0 } },
+    duration: 0.8,
+    loop: { reverse: true },
+    autoStart: false,
+    onError: error =>
+      logger.log(`${name}:child:onError [${error.code}] ${error.reason}`),
+  })
 
   return (
     <div
@@ -32,28 +41,56 @@ function IsolatedEntity({ name, y }: { name: 'A' | 'B'; y: number }) {
       className="rounded-xl border border-gray-800 p-3"
     >
       <div className="mb-2 font-semibold">Entity {name}</div>
-      <div className="flex gap-2">
-        <button className={btnPrimary} onClick={() => api.play()}>
-          Play {name}
-        </button>
-        <button className={btnCls} onClick={() => api.stop()}>
-          Stop {name}
-        </button>
+      <div
+        enable-xr
+        data-name={`Entity Motion Isolation ${name} Controls`}
+        data-webspatial-parent-state={api.playState}
+        data-webspatial-child-state={childApi.playState}
+        data-webspatial-parent-props={JSON.stringify(entityProps)}
+        data-webspatial-child-props={JSON.stringify(childEntityProps)}
+        className="rounded-xl border border-gray-800 p-3"
+      >
+        <div className="flex gap-2">
+          <button
+            className={btnPrimary}
+            onClick={() => {
+              api.play()
+              childApi.play()
+            }}
+          >
+            Play {name}
+          </button>
+          <button className={btnCls} onClick={() => api.stop()}>
+            Stop {name}
+          </button>
+        </div>
+        <div className="mt-2 font-mono text-xs">
+          parent={api.playState}; child={childApi.playState}
+        </div>
       </div>
-      <div className="mt-2 font-mono text-xs">playState={api.playState}</div>
-      <Reality style={{ width: '100%', height: '180px' }}>
+      <Reality
+        data-name={`Entity Motion Isolation ${name} Reality`}
+        style={{ width: '100%', height: '180px' }}
+      >
         <SceneGraph>
-          <BoxEntity
-            width={0.08}
-            height={0.08}
-            depth={0.08}
+          <Entity
             position={{ x: 0, y, z: 0 }}
             {...entityProps}
             animation={animation}
-          />
+          >
+            <BoxEntity
+              width={0.08}
+              height={0.08}
+              depth={0.08}
+              position={{ x: 0, y: 0, z: 0 }}
+              {...childEntityProps}
+              animation={childAnimation}
+            />
+          </Entity>
         </SceneGraph>
       </Reality>
       <EntityPropsPanel entityProps={entityProps} />
+      <EntityPropsPanel entityProps={childEntityProps} />
       <Log lines={logger.lines} />
     </div>
   )
