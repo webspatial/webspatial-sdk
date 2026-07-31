@@ -312,11 +312,29 @@ return (
 )
 ```
 
-**动画完成后**,`entityProps` 会更新为完整的终点姿态(`position`、`rotation`、`scale`)。Native animation 停止阻止普通 React transform 写入,组合后的 React 属性使物体保持在该姿态。动画对象创建或同一目标配置替换的姿态交接失败时,绑定清空该镜像并终止当前生命周期。
+**动画完成后**,`entityProps` 更新为完整终点姿态,组合后的 React 属性让物体保持该姿态。初次创建失败会清空 `entityProps`;配置更新失败会保留当前动画和 `entityProps`。
 
-**更新时机**:`entityProps` 不是每一帧都更新,只在这些关键节点更新:动画开始播放、完成、停止、重置、结束、`api.set` 写入成功,以及创建或交接失败时清空。
+**更新时机**:`entityProps` 在动画开始、完成、停止、重置、结束、配置更新成功或 `api.set` 成功时更新。初次创建失败时清空。
 
 > **注意**:在第一次播放、或第一次 `api.set` 成功之前,`entityProps` 可能是空的。不要在组件刚挂载时就假设它已经有值——要先播放一次动画,或成功调用一次 `api.set`,它才会有值。
+
+---
+
+## 播放过程中更新 config
+
+同一 Entity 的 config 变化会更新当前动画:
+
+| 更新时状态 | 行为 |
+|---|---|
+| `delay` 或 `running` | 立即从当前姿态重新定向,从头执行新延迟和完整时长 |
+| `paused` | 保持暂停;下次 `play` 从暂停姿态执行新时间轴 |
+| `idle` 或 `finished` | 保持当前状态;下次 `play` 使用新 config 的起点 |
+
+- 时间轴或播放参数变化都会触发重新定向。
+- 当前姿态临时作为本次执行的起点,避免跳变。后续 `reset` 和重新播放仍使用新 config 声明的起点。
+- 新时间轴从头执行。旧执行不触发 `onStop` 或 `onComplete`;新执行触发一次 `onStart`。
+- 只更新回调不影响播放。`autoStart` 只作用于初次创建。
+- 更新失败会保留当前动画和状态,并触发一次最新的 `onError`。
 
 ---
 
@@ -353,7 +371,8 @@ api.set({ position: { y: 0.3 } })
 |---|---|
 | 播放空闲 | 组合后的 React 属性控制。首个确认值产生前 `entityProps` 为空,姿态由基础属性决定;确认后把完整 `entityProps` 放在最后展开即可保持该姿态。 |
 | 动画正在播放、延迟或暂停 | Native animation 控制完整 transform 并阻止普通 React transform 写入;配置中未声明的分量保持基准姿态。 |
-| 动画对象创建或姿态交接失败 | 当前绑定生命周期终止,`entityProps` 清空,其余 React 属性控制。 |
+| 动画对象初次创建失败 | 当前绑定生命周期终止,`entityProps` 清空,其余 React 属性控制。 |
+| 同一目标配置更新失败 | 旧执行、当前状态和 `entityProps` 保持不变。 |
 | 动画解绑 | `entityProps` 清空,其余 React 属性控制。 |
 
 这和 visionOS / picoOS 原生一致:底层绑定完整变换。动画活跃期间,配置字段执行动画,其余字段保持基准姿态。暂停保持 transform 写入保护。停止、重置、结束和自然完成会提交对应姿态、解除写入保护,并返回 Entity 当前的完整 transform,供 Core 更新 `entityProps`。
@@ -362,7 +381,8 @@ api.set({ position: { y: 0.3 } })
 
 - **动画正在播时**,整个 transform 都由动画接管,你此时用 props 或 `api.set` 改任何分量都不会生效;没写进 config 的分量会被冻结在基准值。
 - **播放空闲期间**,组合后的 React 属性控制 transform。使用 `api.set` 更新 Native 已提交 transform,并通过 `entityProps` 获得更新后的完整姿态。
-- **动画对象创建或姿态交接失败后**,当前绑定终止,普通 React 变换属性恢复控制。重新开始需要显式解绑后再绑定,或创建新的 binding。
+- **动画对象初次创建失败后**,当前绑定终止,普通 React 变换属性恢复控制。重新开始需要显式解绑后再绑定,或创建新的 binding。
+- **同一目标配置更新失败后**,binding 继续有效,旧动画继续执行,无需重新绑定。
 - **动画解绑后**,`entityProps` 清空,其余 React 变换属性继续控制 Entity。
 
 ### 推荐写法
@@ -427,7 +447,7 @@ stateDiagram-v2
 
 `running` 包含起播前的延迟等待。`queued` 表示播放请求已提交并等待执行。`autoStart` 和初始化阶段调用 `play()` 会进入该状态。播放开始后,状态变为 `running`。
 
-动画对象创建或同一目标配置替换的姿态交接失败时,`onError` 报告一次分类错误,公开状态收敛为 `idle`,`entityProps` 清空,当前绑定生命周期终止。该绑定后续的所有 API 调用均输出警告并执行空操作;config 和 callback 更新只刷新绑定保存的最新值。应用通过显式解绑后重新绑定,或创建新的 binding 开启新生命周期。
+初次创建失败时,`onError` 触发一次,状态变为 `idle`,`entityProps` 清空。后续调用会输出警告。重新绑定后可以重试。配置更新失败时,当前动画继续有效。
 
 | `playState` | `isAnimating` | `isPaused` | `finished` |
 |---|---|---|---|
@@ -444,7 +464,7 @@ stateDiagram-v2
 | **初始状态** | 首个已确认值产生之前 | 原生动画对象创建后 ✅ 能用 | 首次确认时填充 | 组合后的 React 属性控制;`entityProps` 为空 |
 | **播放中**(含延迟、暂停) | `play()` / `autoStart`;`pause()` 后仍属此类 | ❌ 被拒绝(noop + 警告) | 仅在开始播放那一刻更新一次 | 动画接管整个 transform;config 未声明的字段冻结在本轮 fresh-play baseline |
 | **已有确认值的播放空闲状态** | `complete`、`stop`、`reset`、`finish`,或成功的 `api.set` | ✅ 能用 | ✅ 包含完整的已提交变换 | 组合后的 React 属性控制;把 `entityProps` 放在最后展开 |
-| **终止绑定** | 动画对象创建或姿态交接失败 | ❌ 所有 API 均为 noop + 警告 | 清空为 `{}` | 其余 React 属性控制;重新开始需要显式重新绑定 |
+| **终止绑定** | 动画对象初次创建失败 | ❌ 所有 API 均为 noop + 警告 | 清空为 `{}` | 其余 React 属性控制;重新开始需要显式重新绑定 |
 
 > **提示**:循环动画没有自然的“播放到终点”,所以循环期间 `entityProps` 不会在每圈结束时更新,也不会在每圈重新读取 baseline。`stop()`、`reset()` 或 `finish()` 会更新 `entityProps`;动画进入非活跃状态后,成功的 `api.set()` 也会更新 `entityProps`。
 

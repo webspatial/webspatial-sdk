@@ -312,11 +312,29 @@ return (
 )
 ```
 
-**After the animation completes**, `entityProps` updates to the complete end pose (`position`, `rotation`, and `scale`). Native animation stops blocking ordinary React transform writes, and the combined React props keep the object on that pose. Animation-object creation or same-target config-replacement handoff failure clears the mirror and terminates that lifecycle.
+**After the animation completes**, `entityProps` updates to the complete end pose, and the combined React props keep the object there. Initial creation failure clears `entityProps`; config-update failure preserves the current animation and `entityProps`.
 
-**When it updates**: `entityProps` does not update every frame. It only updates at key moments: when playback starts, completes, stops, resets, finishes, when an `api.set` write succeeds, and when creation or handoff failure clears it.
+**When it updates**: `entityProps` updates on start, completion, stop, reset, finish, successful config update, or successful `api.set`. Initial creation failure clears it.
 
 > **Note**: before the first playback, or before the first successful `api.set`, `entityProps` may be empty. Do not assume it already has a value right when the component mounts — play the animation once, or call `api.set` successfully once, and it will then hold a value.
+
+---
+
+## Updating config During Playback
+
+Config changes on the same Entity update the current animation:
+
+| State at update | Behavior |
+|---|---|
+| `delay` or `running` | Retarget from the current pose and run the new delay and full duration from the beginning |
+| `paused` | Remain paused; the next `play` runs the new timeline from the paused pose |
+| `idle` or `finished` | Preserve the state; the next `play` uses the new config's start |
+
+- Timeline or playback-option changes trigger retargeting.
+- The current pose temporarily starts this run to avoid a jump. Later `reset` and replay use the new config's declared start.
+- The new timeline starts from the beginning. The old run fires neither `onStop` nor `onComplete`; the new run fires `onStart` once.
+- Callback-only changes do not affect playback. `autoStart` applies only to initial creation.
+- Update failure preserves the current animation and state and fires the latest `onError` once.
 
 ---
 
@@ -353,7 +371,8 @@ The component combines static/base props and `entityProps` as ordinary React pro
 |---|---|
 | Playback is inactive | The combined React props. Before the first confirmed value, `entityProps` is empty and the base props determine the pose. After confirmation, spreading complete `entityProps` last preserves that pose. |
 | The animation is playing, delayed, or paused | Native animation controls the whole transform and blocks ordinary React transform writes; components omitted from the config hold their baseline values. |
-| Animation-object creation or pose handoff fails | The current binding lifecycle terminates, `entityProps` clears, and the remaining React props control. |
+| Initial animation-object creation fails | The current binding lifecycle terminates, `entityProps` clears, and the remaining React props control. |
+| Same-target config update fails | The old execution, current state, and `entityProps` remain unchanged. |
 | The animation binding is removed | `entityProps` clears and the remaining React props control. |
 
 This matches visionOS / picoOS natively: the underlying runtime binds the whole transform. During active animation, configured components animate and the remaining components hold their baseline values. Pause keeps the write protection. Stop, reset, finish, and natural completion commit the corresponding pose, remove the write protection, and report the Entity's complete current transform so Core can update `entityProps`.
@@ -362,7 +381,8 @@ A few practical takeaways follow:
 
 - **While the animation is playing**, the entire transform is taken over by the animation, so writing any component via props or `api.set` has no effect; components not in the config are frozen at baseline.
 - **While playback is inactive**, the combined React props control the transform. Use `api.set` to update the Native committed transform and receive the resulting complete pose through `entityProps`.
-- **After animation-object creation or pose handoff fails**, the current binding terminates and ordinary React transform props regain control. Restarting requires an explicit unbind followed by rebind, or a new binding.
+- **After initial animation-object creation fails**, the current binding terminates and ordinary React transform props regain control. Restarting requires an explicit unbind followed by rebind, or a new binding.
+- **After a same-target config update fails**, the binding remains valid and the old animation continues without rebinding.
 - **After the binding is removed**, `entityProps` clears and the remaining React transform props continue to control the Entity.
 
 ### Recommended Pattern
@@ -427,7 +447,7 @@ stateDiagram-v2
 
 `running` includes the start delay. `queued` means the playback request has been submitted and awaits execution. `autoStart` and `play()` calls during initialization enter this state. Playback start changes the state to `running`.
 
-If animation-object creation or same-target config-replacement pose handoff fails, `onError` reports one classified error, the public state settles to `idle`, `entityProps` clears, and the current binding lifecycle terminates. Every later API call on that binding logs a warning and performs a no-op; config and callback updates only refresh the latest values stored by the binding. Application code starts a new lifecycle by explicitly unbinding and rebinding, or by creating a new binding.
+If initial creation fails, `onError` fires once, the state becomes `idle`, and `entityProps` clears. Later calls log a warning. Rebinding allows another attempt. If a config update fails, the current animation remains valid.
 
 | `playState` | `isAnimating` | `isPaused` | `finished` |
 |---|---|---|---|
@@ -444,7 +464,7 @@ If animation-object creation or same-target config-replacement pose handoff fail
 | **Initial** | Before the first confirmed value | ✅ Usable after native object creation | Filled at the first confirmation | Combined React props; `entityProps` is empty |
 | **Playing** (incl. delay, paused) | `play()` / `autoStart`; still counts after `pause()` | ❌ Rejected (noop + warning) | Only once, at the moment playback starts | Native animation controls the whole transform; fields omitted from the config freeze at this run's fresh-play baseline |
 | **Inactive with confirmed state** | `complete` / `stop` / `reset` / `finish`, or successful `api.set` | ✅ Usable | ✅ Contains the complete committed transform | Combined React props; spread `entityProps` last |
-| **Terminated binding** | Animation-object creation or pose handoff failure | ❌ Every API is warning + no-op | Cleared to `{}` | Remaining React props; restart requires explicit rebinding |
+| **Terminated binding** | Initial animation-object creation failure | ❌ Every API is warning + no-op | Cleared to `{}` | Remaining React props; restart requires explicit rebinding |
 
 > **Note**: a looping animation has no natural "reaches end", so `entityProps` does not update and the baseline is not reread at each loop boundary. `stop()`, `reset()`, or `finish()` updates `entityProps`; after the animation becomes inactive, a successful `api.set()` also updates `entityProps`.
 

@@ -27,9 +27,9 @@
 - [x] 4.1 先编写红灯测试,覆盖 `entityProps` 在 `start`、`complete`、`stop`、`reset`、`finish` 和原生层接受 `api.set(update)` 后包含完整的 `position`、`rotation`、`scale`,`set` 确认值来自 `SetEntityAnimationResult.values` 且不产生状态事件,React 更新时机限定为生命周期节点或成功设置回执,`onStart` / `onComplete` / `onStop` / `onReset` 接收精确的 `EntityMotionProps` 参数、`onError` 接收精确的 `SpatializedPlaybackError` 参数、callback 返回值被忽略,`idle → finish → finished` 触发一次 `onComplete` 并保持现有 `onStart` 次数,以及终态由配置或 `api.set` 决定
 - [x] 4.2 实现 React/Core 状态消息、设置回执和独立错误事件消费,完成调试 `onXXX`、用户 callback 分发和 `entityProps` 完整已提交变换持久化,保持原生层已确认状态的单向流动
 - [x] 4.3 先编写红灯测试,覆盖公开播放接口、每个绑定对象独立的 FIFO 命令链与完整 transform 写入保护:原生动画对象创建期间没有待执行播放命令时保持 `idle`;播放命令等待创建时公开 `queued`,`autoStart` 生成的隐式 `play` 也属于待执行命令;创建前的播放命令按顺序执行,`autoStart` 产生的 `play` 排在已有待执行命令之前;命令排队期间 `isAnimating`、`isPaused`、`finished` 保持 `false`;创建成功回执在执行待处理命令前确认 `idle`;待处理的 `pause` 或 `stop` 保持 `idle`;创建失败回执使状态收敛为 `idle`、终止当前绑定生命周期、清空对象状态、待处理命令和 `entityProps`,由其余 React 属性继续控制并分发一次分类错误;创建前的 `set` 和绑定终止后的所有 API 保持控制台警告与空操作;创建后的 `set → play`、`stop → play`、`play → pause` 等待前一条内部 JSB 回执后再执行;活跃期 `set` 按 FIFO 抵达 Native,并把 `INVALID_CONTROL_STATE` 映射为 warning + no-op;普通命令失败继续执行后续队列;解绑、替换和销毁使尚未发送的命令失效;动画活跃期间的写入保持动画和最新 `entityProps`;fresh play 启用保护、暂停保持保护、停止/重置/结束/自然完成解除保护,播放空闲期间普通 React transform 更新抵达 Native;终态填充通过完整 `entityProps` 保持已提交姿态
-- [x] 4.3a 先编写绑定生命周期红灯测试,覆盖解绑和目标替换清空 `entityProps`、同一目标的执行签名变化依次等待旧对象 `destroy()` 成功、完整确认姿态存在时提交该姿态、`entityProps` 为空时保持当前原生 transform,并创建新对象、`autoStart: false` 保持交接姿态、首次 fresh play 读取当前原生姿态、姿态交接保持现有镜像和 callback 次数、姿态交接或创建失败终止当前生命周期并触发一次 `onError`、终止后的 API 保持 warning + no-op、config 与 callback 更新只刷新保存值、显式重新绑定开启新代次、destroy 失败时保持旧对象与旧代次并清理本次替换命令和触发一次 `onError`、正常生命周期中仅更新回调时保持当前对象与状态、替换代次的命令排队、每个新对象执行一次隐式 `autoStart`,以及按当前绑定代次和动画对象身份接受回执与事件
+- [x] 4.3a 历史实现任务:先编写绑定生命周期红灯测试,覆盖同一目标销毁重建与姿态交接等原设计。该行为已被第 9 节原地 update 设计取代;保留勾选状态只表示历史任务已完成,不代表当前目标态
 - [x] 4.4 复用 Element 动画在对象创建前暂存播放命令、创建后逐条执行的机制,为每个 Entity motion 绑定对象实现带队列批次失效保护的 FIFO 命令链;使用 `CreateEntityAnimation` 回执在执行待处理命令前确认 `idle`,或在创建失败时终止当前绑定生命周期;创建前的 `set` 和终止后的所有命令输出控制台警告、执行空操作并保持在队列之外,创建后所有命令串行执行;同时实现 React/Core 播放接口、JSB 命令发起和完整 transform `entityProps` 更新,使组合后的 React 属性控制播放空闲状态;原生层的 `set` 合并、状态机、终态提交和 transform 写入保护由第 5 节实现
-- [x] 4.4a 实现归一化执行签名、回调引用刷新、解绑与目标替换时清空镜像、同一目标销毁成功后的确认姿态或当前原生 transform 交接、姿态交接与创建失败的绑定终止流程、终止后的空操作门闩和显式重新绑定恢复、destroy 失败时的旧对象与旧代次保留和替换命令清理、替换代次命令队列、每个对象的 `autoStart` 和当前代次结果过滤
+- [x] 4.4a 历史实现任务:实现同一目标执行签名变化后的销毁重建、姿态交接和 replacement generation。该行为已被第 9 节原地 update 设计取代;后续实现必须删除这部分 replacement 路径
 - [x] 4.4b 先编写 Core/React 红灯测试,覆盖同一种状态消息、`playState` 权威更新、`callbackAction` 与完整 `values` 成对消费、暂停和恢复只更新状态、`finish()` 与自然完成统一触发 `onComplete`、控制成功回执只允许发送下一条等待命令,以及状态消息与回执竞态保持最新状态
 - [x] 4.4c 实现 Core/React 状态消息消费:`playState` 更新公开状态,可选 `callbackAction` 分发 callback 和确认姿态,控制成功回执确认当前命令处理完成并允许发送下一条等待命令
 - [x] 4.4d 先编写 Core/React target 销毁红灯测试,覆盖 animation id 对应的 `objectdestroy`、已销毁状态、该 id 的事件接收器注销、后续 playback 本地空操作、后续 `set` 本地 warning + 空操作、JSB 命令数稳定和 `onError` 次数稳定
@@ -84,7 +84,7 @@
 
 ## 7. 文档、Demo 与迁移
 
-- [ ] 7.1 更新物体运动文档与示例,统一使用 `position`、`rotation`、`scale` 配置、`animation`、完整变换 `entityProps` 和 `EntityTransformUpdate` 写入;说明通过 `entityProps` 读取、通过 `api.set(update)` 写入、组合后的 React 属性控制播放空闲状态、Native 在 delay/running/paused 期间提供完整 transform 写入保护、停止/重置/结束/自然完成后解除保护、创建或交接失败后的终止行为和显式重新绑定方式;补充顶层 `from`、`to` 简写及其规则(`timeline.from`、`timeline.to` 等价,`timeline` 优先,纯顶层配置默认 0.3 秒);说明每个动画显式声明起点 `from`/`0%` 和终点 `to`/`100%`,缺少边界时产生校验错误
+- [ ] 7.1 更新物体运动文档与示例,统一使用 `position`、`rotation`、`scale` 配置、`animation`、完整变换 `entityProps` 和 `EntityTransformUpdate` 写入;说明通过 `entityProps` 读取、通过 `api.set(update)` 写入、组合后的 React 属性控制播放空闲状态、Native 在 delay/running/paused 期间提供完整 transform 写入保护、停止/重置/结束/自然完成后解除保护、初次创建失败后的终止行为和显式重新绑定方式;补充顶层 `from`、`to` 简写及其规则(`timeline.from`、`timeline.to` 等价,`timeline` 优先,纯顶层配置默认 0.3 秒);说明每个动画显式声明起点 `from`/`0%` 和终点 `to`/`100%`,缺少边界时产生校验错误;补充第 9 节定义的原地 config update 与 retarget 行为
 - [x] 7.2 更新 `apps/test-server` 中的 Entity animation demo 与 capability 页面到新的目标态 API
 - [ ] 7.3 补充迁移说明，覆盖旧顶层 transform config 的移除，Entity motion 绑定统一使用 `animation`
 
@@ -107,3 +107,18 @@
 - [x] 8.8 记录 visionOS 与 picoOS 并发性能测量的延期跟进范围;这些测量不作为本次变更的发布 gate
 - [ ] 8.9 建立 Design-to-Tasks 对照表,确认每个 Native 类、JSB 协议、编译规则、控制时序和错误路径都有实现与验证任务
 - [x] 8.10 在提案与实现对照复核中确认 `add-entity-transform-animation` 已记录为正式 superseded
+
+## 9. 原地配置更新与重新定向
+
+- [ ] 9.1 先编写 Core 红灯测试,覆盖 `update(config)` 校验、等价配置、成功提交、失败回滚和销毁后调用
+- [ ] 9.2 先编写 React 红灯测试,覆盖对象与 id 稳定、统一 FIFO、安全合并、回调更新、`autoStart`、失败恢复和版本过滤
+- [ ] 9.3 先编写 Core 与 visionOS 桥接红灯测试,覆盖 `UpdateEntityAnimation` 编解码、结果、错误和消息顺序
+- [ ] 9.4 只读验证 RealityKit 读取当前姿态、准备资源、切换控制器、过滤旧完成事件和保持暂停的能力;无法满足原子回滚时返回设计评审
+- [ ] 9.5 先编写 visionOS 重新定向红灯测试,覆盖临时起点、基准姿态、缓动、完整新时序、配置边界、中间关键帧、旧事件和写入保护
+- [ ] 9.6 先编写 visionOS 状态与失败红灯测试,覆盖暂停、空闲、完成、回调、`entityProps` 和原子回滚
+- [ ] 9.7 最小实现 Core `update(config)`、`UpdateEntityAnimationJSBCommand`、快照提交和执行版本,删除 React 的执行签名依赖
+- [ ] 9.8 最小实现 React 原地更新、FIFO 和安全合并,删除同目标销毁重建、姿态交接和替换代次
+- [ ] 9.9 最小实现 visionOS 更新入口、事务更新、重新定向、暂停定义、旧事件过滤和确认姿态回传
+- [ ] 9.10 在测试持续通过时重构,删除已取代的替换代码和测试夹具,保留目标替换、解绑和销毁流程
+- [ ] 9.11 为 picoOS 实现并测试同等的桥接、重新定向、回滚和竞态行为
+- [ ] 9.12 运行 Core/React 测试、visionOS 完整测试、模拟器验收和 OpenSpec 严格校验,记录状态矩阵与结果
