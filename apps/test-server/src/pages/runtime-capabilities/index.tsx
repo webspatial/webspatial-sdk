@@ -1,15 +1,13 @@
+import { CAPABILITY_TABLE, getRuntime, supports } from '@webspatial/core-sdk'
 import {
-  CAPABILITY_TABLE,
   COMPONENT_KEYS,
   CSS_KEYS,
   DOM_DEPTH_KEYS,
   GESTURE_KEYS,
-  getRuntime,
   JS_SCENE_KEYS,
   SUB_TOKENS_BY_NAME,
-  supports,
   TOP_LEVEL_KEYS,
-} from '@webspatial/core-sdk'
+} from '@webspatial/core-sdk/runtime/keys'
 import { WebSpatialRuntime } from '@webspatial/react-sdk'
 import React, { useMemo, useState } from 'react'
 

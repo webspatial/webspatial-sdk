@@ -118,6 +118,7 @@ The test suite verifies:
 4. Parsing and handling in WebspatialProtocolHandler
 5. Creation and management of Spatialized2DElement
 6. Full flow from protocol invocation to element creation
+7. SpatialDiv transform probe mirrors host intrinsic tag (`basicTransformProbeTag.test.ts` — `h1` + stylesheet `h1.basicTransformProbe { transform }`)
 
 ## License
 

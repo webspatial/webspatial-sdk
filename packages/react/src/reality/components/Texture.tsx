@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { SpatialTextureResource } from '@webspatial/core-sdk'
 import { useRealityContext } from '../context'
-import { getAbsoluteUrl } from '../../utils/urlUtils'
+import { getAbsoluteUrl } from '../../internal/urlUtils'
 
 export type TextureProps = {
   children?: React.ReactNode

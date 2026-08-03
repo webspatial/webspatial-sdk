@@ -484,7 +484,7 @@ describe('spatialized-container/hooks', () => {
       handler?.()
     })
 
-    expect(portalInstanceObject.notify2DFrameChange).toHaveBeenCalledTimes(1)
+    expect(portalInstanceObject.notify2DFrameChange).toHaveBeenCalledTimes(2)
     expect(renders).toBeGreaterThan(1)
 
     r.unmount()
@@ -1095,14 +1095,15 @@ describe('TransformVisibilityTaskContainer', () => {
     ) as HTMLDivElement
     expect(host).toBeTruthy()
 
-    const div = host.querySelector('div') as HTMLDivElement
-    expect(div).toBeTruthy()
-    expect(div.getAttribute(SpatialID)).toBe('tv1')
-    expect(div.className).toBe('c')
-    expect(div.style.left).toBe('-10000px')
-    expect(div.style.top).toBe('-10000px')
-    expect(div.style.opacity).toBe('0')
-    expect(div.style.pointerEvents).toBe('none')
+    const probe = host.querySelector(
+      `div[${SpatialID}="tv1"]`,
+    ) as HTMLDivElement
+    expect(probe).toBeTruthy()
+    expect(probe.className).toBe('c')
+    expect(probe.style.left).toBe('-10000px')
+    expect(probe.style.top).toBe('-10000px')
+    expect(probe.style.opacity).toBe('0')
+    expect(probe.style.pointerEvents).toBe('none')
 
     r.unmount()
     host.remove()
@@ -1206,6 +1207,7 @@ describe('PortalSpatializedContainer', () => {
         computedStyle: any
         dom: HTMLElement | null
         attachSpatializedElement = vi.fn()
+        notify2DFrameChange = vi.fn()
         init = vi.fn(() => initCalls.push(this.spatialId))
         destroy = vi.fn(() => destroyCalls.push(this.spatialId))
         constructor(
@@ -1236,7 +1238,7 @@ describe('PortalSpatializedContainer', () => {
       return { useSpatializedElement: () => spatializedElement }
     })
     vi.doMock('./spatialized-container/hooks/useSync2DFrame', () => {
-      return { useSync2DFrame: vi.fn() }
+      return { useSync2DFrame: () => vi.fn() }
     })
 
     const { PortalInstanceContext } = await import(
@@ -1325,7 +1327,7 @@ describe('PortalSpatializedContainer', () => {
 })
 
 describe('SpatializedContainer', () => {
-  it('renders plain component and runs ready callback in non-WebSpatial env', async () => {
+  it('renders plain component in non-WebSpatial env WITHOUT invoking onSpatialContentReady (spec: ready fires only for a real spatial content host)', async () => {
     vi.resetModules()
     vi.doMock('./spatialized-container/context/PortalInstanceContext', () => {
       return {
@@ -1340,12 +1342,7 @@ describe('SpatializedContainer', () => {
     const { SpatializedContainer } = await import(
       './spatialized-container/SpatializedContainer'
     )
-    const cleanup = vi.fn()
-    const onSpatialContentReady = vi.fn((ctx: { host: HTMLElement }) => {
-      expect(ctx.host.tagName).toBe('DIV')
-      expect(ctx.host.isConnected).toBe(true)
-      return cleanup
-    })
+    const onSpatialContentReady = vi.fn()
 
     const r = render(
       React.createElement(SpatializedContainer, {
@@ -1356,11 +1353,13 @@ describe('SpatializedContainer', () => {
     )
     const el = r.container.querySelector('[data-testid="plain"]')
     expect(el).toBeTruthy()
+    // Still MUST NOT leak as a DOM attribute.
     expect(el?.getAttribute('onSpatialContentReady')).toBe(null)
-    expect(onSpatialContentReady).toHaveBeenCalledTimes(1)
+    // Degraded plain-web host has no spatial content host → callback NOT called.
+    expect(onSpatialContentReady).not.toHaveBeenCalled()
 
     r.unmount()
-    expect(cleanup).toHaveBeenCalledTimes(1)
+    expect(onSpatialContentReady).not.toHaveBeenCalled()
   })
 
   it('renders root container with standard/portal/task containers', async () => {
@@ -1550,7 +1549,7 @@ describe('utils/getSession', () => {
     vi.doUnmock('./utils/getSession')
 
     const session = { ok: true }
-    const Spatial = vi.fn().mockImplementation(() => {
+    const Spatial = vi.fn().mockImplementation(function () {
       return {
         isSupported: () => true,
         requestSession: vi.fn(() => session),
@@ -1577,7 +1576,7 @@ describe('utils/getSession', () => {
     vi.resetModules()
     vi.doUnmock('./utils/getSession')
 
-    const Spatial = vi.fn().mockImplementation(() => {
+    const Spatial = vi.fn().mockImplementation(function () {
       return {
         isSupported: () => false,
         requestSession: vi.fn(),
@@ -1602,19 +1601,20 @@ describe('utils/debugTool', () => {
     vi.resetModules()
 
     const inspect = vi.fn().mockResolvedValue({ a: 1 })
-    vi.doMock('./utils/getSession', () => {
+    // After the §12.9 calibration follow-up, `enableDebugTool` no longer
+    // statically imports `./utils/getSession` (that import statically
+    // pulled `Spatial` + `SpatialSession` into the default-entry bundle).
+    // The debug tool now routes through `getSpatialImpl()?.getSession?.()`,
+    // so the test mocks the bridge instead.
+    vi.doMock('./runtime/bridge', () => {
       return {
-        getSession: () => ({
-          getSpatialScene: () => ({ inspect }),
+        getSpatialImpl: () => ({
+          getSession: () => ({
+            getSpatialScene: () => ({ inspect }),
+          }),
         }),
       }
     })
-    vi.doMock('@webspatial/core-sdk', () => {
-      return {
-        isSSREnv: () => false,
-      }
-    })
-
     const { enableDebugTool } = await import('./utils/debugTool')
     enableDebugTool()
 
@@ -1633,18 +1633,19 @@ describe('utils/debugTool', () => {
 
   it('enableDebugTool is no-op in SSR env', async () => {
     vi.resetModules()
-    delete (window as any).inspectCurrentSpatialScene
-    delete (window as any).getSpatialized2DElement
+    const originalWindow = window
+    delete (originalWindow as any).inspectCurrentSpatialScene
+    delete (originalWindow as any).getSpatialized2DElement
 
-    vi.doMock('@webspatial/core-sdk', () => {
-      return {
-        isSSREnv: () => true,
-      }
-    })
     const { enableDebugTool } = await import('./utils/debugTool')
-    enableDebugTool()
-    expect((window as any).inspectCurrentSpatialScene).toBeUndefined()
-    expect((window as any).getSpatialized2DElement).toBeUndefined()
+    vi.stubGlobal('window', undefined)
+    try {
+      enableDebugTool()
+    } finally {
+      vi.stubGlobal('window', originalWindow)
+    }
+    expect((originalWindow as any).inspectCurrentSpatialScene).toBeUndefined()
+    expect((originalWindow as any).getSpatialized2DElement).toBeUndefined()
   })
 })
 
@@ -1728,6 +1729,7 @@ describe('Spatialized2DElementContainer', () => {
             ? React.createElement(props.spatializedContent, {
                 component: 'div',
                 style: {},
+                portalInstanceObject,
                 'data-name': 'hello',
                 spatializedElement: el,
               })
@@ -1806,10 +1808,12 @@ describe('SpatializedStatic3DElementContainer', () => {
     }))
 
     const updateProperties = vi.fn()
-    const updateModelTransform = vi.fn()
+    const setEntityTransform = vi.fn()
     const spatializedStatic3DElement: any = {
       updateProperties,
-      updateModelTransform,
+      set entityTransform(value: unknown) {
+        setEntityTransform(value)
+      },
       ready: Promise.resolve(true),
       currentSrc: window.location.origin + '/resolved.usdz',
       onLoadCallback: undefined,
@@ -1901,6 +1905,7 @@ describe('SpatializedStatic3DElementContainer', () => {
       loop: undefined,
       posterURL: '',
       loading: 'eager',
+      stagemode: 'none',
     })
 
     spatializedStatic3DElement.onLoadCallback?.()
@@ -1910,6 +1915,8 @@ describe('SpatializedStatic3DElementContainer', () => {
     expect(onLoad.mock.calls[0]?.[0].type).toBe('modelloaded')
     expect(onError.mock.calls[0]?.[0].type).toBe('modelloadfailed')
     expect(onLoad.mock.calls[0]?.[0].target).toEqual({ tid: 1 })
+    expect(onLoad.mock.calls[0]?.[0].currentTarget).toEqual({ tid: 1 })
+    expect(onError.mock.calls[0]?.[0].currentTarget).toEqual({ tid: 1 })
 
     expect(extra.currentSrc).toBe(window.location.origin + '/resolved.usdz')
     await expect(extra.ready).resolves.toMatchObject({ type: 'modelloaded' })
@@ -1917,8 +1924,8 @@ describe('SpatializedStatic3DElementContainer', () => {
     const m = extra.entityTransform
     ;(m as any).m11 = 2
     extra.entityTransform = m
-    expect(updateModelTransform).toHaveBeenCalledTimes(1)
-    expect(updateModelTransform).toHaveBeenCalledWith(expect.any(DOMMatrix))
+    expect(setEntityTransform).toHaveBeenCalledTimes(1)
+    expect(setEntityTransform).toHaveBeenCalledWith(expect.any(DOMMatrix))
     expect((domProxy as any).entityTransform).toBeUndefined()
     ;(globalThis as any).requestAnimationFrame = originalRAF
   })
@@ -1934,7 +1941,6 @@ describe('SpatializedStatic3DElementContainer', () => {
 
     const spatializedStatic3DElement: any = {
       updateProperties: vi.fn(),
-      updateModelTransform: vi.fn(),
       ready: Promise.resolve(false),
     }
     const createSpatializedStatic3DElement = vi

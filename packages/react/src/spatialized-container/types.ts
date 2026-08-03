@@ -1,4 +1,6 @@
 import React, { ElementType } from 'react'
+import type { PortalInstanceObject } from './context/PortalInstanceContext'
+import type { SpatializedMotionBinding } from './motion/motionBindingTypes'
 import { SpatialID } from './SpatialID'
 import {
   ModelLoadingMode,
@@ -12,6 +14,7 @@ import {
   SpatialMagnifyEvent as CoreSpatialMagnifyEvent,
   SpatialMagnifyEndEvent as CoreSpatialMagnifyEndEvent,
   SpatializedStatic3DElement,
+  type StageMode,
   type Vec3,
 } from '@webspatial/core-sdk'
 
@@ -64,6 +67,7 @@ export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
         computedStyle: CSSStyleDeclaration,
       ) => Record<string, any>
       spatialEventOptions?: SpatialEventOptions
+      'xr-animation'?: SpatializedMotionBinding
 
       [SpatialID]: string
     }
@@ -85,6 +89,7 @@ export type SpatializedContentProps<
   P extends ElementType,
 > = Omit<PortalSpatializedContainerProps<T>, 'spatializedContent'> & {
   spatializedElement: SpatializedElement
+  portalInstanceObject: PortalInstanceObject
   /** SpatialDiv (2D) portal content only. */
   onSpatialContentReady?: SpatialContentReadyCallback
 }
@@ -105,10 +110,13 @@ export type SpatializedStatic3DContainerProps =
       autoPlay?: boolean
       loop?: boolean
       loading?: ModelLoadingMode
+      stagemode?: StageMode
       children?: React.ReactNode
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
       spatialEventOptions?: SpatialEventOptions
+      /** Native root-transform motion binding from `useAnimation()` via `xr-animation`. */
+      'xr-animation'?: SpatializedMotionBinding
     }
 
 export type SpatializedStatic3DContentProps = {
@@ -118,9 +126,11 @@ export type SpatializedStatic3DContentProps = {
   autoPlay?: boolean
   loop?: boolean
   loading?: ModelLoadingMode
+  stagemode?: StageMode
   children?: React.ReactNode
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void
+  'xr-animation'?: SpatializedMotionBinding
 }
 
 export const SpatialCustomStyleVars = {
@@ -232,6 +242,8 @@ export type ModelSpatialMagnifyEvent =
 export type ModelSpatialMagnifyEndEvent =
   SpatialMagnifyEndEvent<SpatializedStatic3DElementRef>
 
-export type ModelLoadEvent = CustomEvent & {
-  target: SpatializedStatic3DElementRef
-}
+export type ModelLoadEvent<T extends EventTarget = EventTarget> =
+  CustomEvent & {
+    target: T
+    currentTarget: SpatializedStatic3DElementRef
+  }

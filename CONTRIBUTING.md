@@ -7,7 +7,7 @@ Thank you for your interest in contributing to WebSpatial! This document provide
 ### Required Tools
 
 - [Node.js 22+](https://nodejs.org/en/download/package-manager) and pnpm 9+ to install dependencies and run the local test website
-- [XCode >= 15.4](https://apps.apple.com/us/app/xcode/id497799835?mt=12) (If building for VisionOS)
+- [Xcode 26.x](https://apps.apple.com/us/app/xcode/id497799835?mt=12) with the Apple Vision Pro simulator (current CI selects Xcode 26.3 for visionOS builds)
 - [VSCode](https://code.visualstudio.com/) Text editor (recommended)
 
 ### Recommended Knowledge
@@ -51,6 +51,8 @@ npm run dev
 ```
 
 5. Verify that the server is started by going to http://localhost:5173/
+
+If you develop an **external** app with a **linked** `@webspatial/react-sdk` and Vite HMR (not the monorepo test-server), dedupe `react` / `react-dom` in Vite and alias the SDK to a single copy. Portal hook invariants and regression tests are documented in `packages/react/src/spatialized-container/ARCHITECTURE.md` (section **Portal lifecycle and local dev (HMR)**).
 
 ## Local CodeQL-Aligned Checks
 

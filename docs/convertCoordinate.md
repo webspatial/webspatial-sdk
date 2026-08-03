@@ -106,15 +106,18 @@ type CoordinateConvertible =
 
 When converting from an entity to `window`, you receive pixel values. When converting from `window` to an entity, you provide pixel values and receive meters. When converting from a 2D frame to `window`, both are in pixels but the frame uses view-local coordinates while the window uses view-global coordinates.
 
-### Fallback Behavior
+### Unsupported behavior
 
-`convertCoordinate` is designed to be safe by default. If any of the following conditions are true, the function returns the original `position` unchanged instead of throwing:
+`convertCoordinate` is a runtime-gated API. Guard cross-environment code with `WebSpatialRuntime.supports('convertCoordinate')` before calling.
 
-- The `from` or `to` reference cannot be resolved to a valid scene ID.
-- The spatial scene is not yet available (session not initialized).
-- The native conversion call fails or throws internally.
+| Condition | Behavior |
+|-----------|----------|
+| `supports('convertCoordinate')` is `false` (plain web, SSR) | Throws `WebSpatialRuntimeError` |
+| WebSpatial runtime but `bootSpatial()` not awaited | Throws `WebSpatialRuntimeError` (message points to `bootSpatial()`) |
+| Invalid `from` / `to` ref | Throws `WebSpatialRuntimeError` with diagnostic message |
+| Supported runtime + booted session | Performs native conversion via `ConvertCoordinateCommand` |
 
-This means you can call `convertCoordinate` early in a component lifecycle without wrapping it in try/catch, though you should be aware that the result may be unconverted.
+If the native conversion call fails after the session is ready, the error propagates from the bridge (same as other spatial scene commands).
 
 ### Async Nature
 
@@ -146,7 +149,7 @@ Internally, each `CoordinateConvertible` target is resolved to a string ID via t
 2. **`EntityRef`** — resolved via `entityRef.entity.id`.
 3. **`SpatializedElementRef` / `ModelRef`** — resolved by traversing `__spatializedElement`, `__innerSpatializedElement`, or falling back to the `SpatialID` DOM attribute.
 
-If resolution returns `null`, the conversion is skipped and the original position is returned.
+If resolution returns `null`, `convertCoordinate` throws `WebSpatialRuntimeError`.
 
 ## Examples
 
@@ -553,10 +556,10 @@ This two-step approach via the window coordinate system ensures cross-Reality co
 
 ## References
 
-- [`Vec3`](./Vec3.md) — 3D vector type used for positions
-- [`<Reality>`](./Reality.md) — Reality volume component
-- [`<Entity>`](./Entity.md) — Entity component and `EntityRef`
+- [`Vec3`](../packages/core/src/types/types.ts) — 3D vector type used for positions
+- [`<Reality>`](./dynamic-3d-api-prd.md#5-reality) — Reality volume component
+- [`<Entity>`](./dynamic-3d-api-prd.md#6-entity-group-container) — Entity component and `EntityRef`
 - [`<Model>`](./Model.md) — Model component and `ModelRef`
-- [`SpatializedElementRef`](./SpatializedContainer.md) — Spatialized container ref type
+- [`SpatializedElementRef`](../packages/react/src/spatialized-container/types.ts) — Spatialized container ref type
 - [RealityKit — Entity coordinate conversion](https://developer.apple.com/documentation/realitykit/entity/convert(position:from:))
 - [RealityKit — RealityViewContent](https://developer.apple.com/documentation/realitykit/realityviewcontent)

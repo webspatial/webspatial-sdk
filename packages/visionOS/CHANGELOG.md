@@ -1,4 +1,4 @@
-# @webspatial/platform-avp
+# @webspatial/platform-visionos
 
 ## 1.7.0
 

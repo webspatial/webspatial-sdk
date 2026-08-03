@@ -5,6 +5,9 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     weak var model: SpatialWebViewModel?
     var webview: WKWebView?
     private var isObserving = false
+    private var urlObservation: NSKeyValueObservation?
+    private var canGoBackObservation: NSKeyValueObservation?
+    private var canGoForwardObservation: NSKeyValueObservation?
     private var navigationInvoke: ((_ data: URL) -> Bool)?
     private var openWindowInvoke: ((_ data: URL) -> WebViewElementInfo?)?
     private var webviewStateChangeInvoke: ((_ type: SpatialWebViewState) -> Void)?
@@ -205,30 +208,35 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
 
     func startObserving() {
         guard !isObserving else { return }
-        webview?.addObserver(self, forKeyPath: #keyPath(WKWebView.url), options: .new, context: nil)
+        urlObservation = webview?.observe(\.url, options: [.new]) { [weak self] webView, _ in
+            guard let self, let url = webView.url?.absoluteString else { return }
+            Task { @MainActor in
+                self.model?.url = url
+                self.webviewStateChangeInvoke?(.didUpdateURL)
+            }
+        }
+        canGoBackObservation = webview?.observe(\.canGoBack, options: [.new]) { [weak self] _, _ in
+            Task { @MainActor in
+                self?.webviewStateChangeInvoke?(.didUpdateNavigationState)
+            }
+        }
+        canGoForwardObservation = webview?.observe(\.canGoForward, options: [.new]) { [weak self] _, _ in
+            Task { @MainActor in
+                self?.webviewStateChangeInvoke?(.didUpdateNavigationState)
+            }
+        }
         isObserving = true
     }
 
     func stopObserving() {
         guard isObserving else { return }
-        webview?.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
+        urlObservation?.invalidate()
+        canGoBackObservation?.invalidate()
+        canGoForwardObservation?.invalidate()
+        urlObservation = nil
+        canGoBackObservation = nil
+        canGoForwardObservation = nil
         isObserving = false
-    }
-
-    override func observeValue(
-        forKeyPath keyPath: String?,
-        of object: Any?,
-        change: [NSKeyValueChangeKey: Any]?,
-        context: UnsafeMutableRawPointer?
-    ) {
-        if keyPath == #keyPath(WKWebView.url),
-           let url = (object as? WKWebView)?.url?.absoluteString
-        {
-            DispatchQueue.main.async {
-//                print("url change", url)
-                self.model?.url = url
-            }
-        }
     }
 
     func destroy() {

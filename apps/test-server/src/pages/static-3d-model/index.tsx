@@ -13,6 +13,7 @@ function App() {
   const [playbackRate, setPlaybackRate] = useState(1.0)
   const [loop, setLoop] = useState(true)
   const [loading, setLoading] = useState<'eager' | 'lazy'>('eager')
+  const [isOrbit, setIsOrbit] = useState(true)
   useEffect(() => {
     modelRef
       .current!.ready?.then(() => logLine('ref.current.ready success'))
@@ -35,8 +36,9 @@ function App() {
         // src="/modelasset/cone.usdz"
         poster="/img/toy_drummer.png"
         enable-xr
-        autoPlay
+        autoPlay={false}
         loop={loop}
+        stagemode={isOrbit ? 'orbit' : 'none'}
         style={{
           height: '200px',
           '--xr-depth': '100px',
@@ -46,7 +48,7 @@ function App() {
         }}
         ref={modelRef}
         onError={e => logLine(`Model error ${modelRef.current?.currentSrc}`)}
-        onLoad={e => logLine(`Model success ${e.target.currentSrc}`)}
+        onLoad={e => logLine(`Model success ${e.currentTarget.currentSrc}`)}
         onSpatialTap={e => {
           logLine('model onSpatialTap', e.detail.location3D)
         }}
@@ -91,7 +93,7 @@ function App() {
         <button
           className="btn m-1"
           onClick={() => {
-            if (modelRef.current?.currentTime) {
+            if (modelRef.current?.currentTime != undefined) {
               modelRef.current.currentTime -= 10
             }
           }}
@@ -113,7 +115,7 @@ function App() {
         <button
           className="btn m-1"
           onClick={() => {
-            if (modelRef.current?.currentTime) {
+            if (modelRef.current?.currentTime != undefined) {
               modelRef.current.currentTime += 10
             }
           }}
@@ -137,6 +139,15 @@ function App() {
             onChange={() => setLoading(loading === 'eager' ? 'lazy' : 'eager')}
           />
           <span className="label-text m-1">Eager</span>
+        </label>
+        <label className="inline-flex items-center align-middle">
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={isOrbit}
+            onChange={() => setIsOrbit(!isOrbit)}
+          />
+          <span className="label-text m-1">Orbit</span>
         </label>
         <select
           className="select m-1"
@@ -165,6 +176,7 @@ function App() {
         enable-xr
         autoPlay
         loading={loading}
+        stagemode="orbit"
         style={{
           height: '200px',
           '--xr-depth': '100px',

@@ -10,6 +10,10 @@ import {
 import { buildSpatialSceneQuery } from '../spatialSceneQuery'
 import type { SpatialSceneCreationOptionsInternal } from '../../types/internal'
 import type { AttachmentEntityOptions } from '../../types/types'
+import {
+  buildSpatialRequestQuery,
+  createSpatialRequestId,
+} from '../spatialRequestMetadata'
 
 type JSBError = {
   code?: string
@@ -63,9 +67,10 @@ export class VisionOSPlatform implements PlatformAbility {
   private async openProtocolAsync(
     command: string,
   ): Promise<WebSpatialProtocolResult> {
+    const requestId = createSpatialRequestId()
     const { spatialId: id = '', windowProxy } = this.openWindow(
       command,
-      '',
+      buildSpatialRequestQuery(requestId),
       undefined,
       undefined,
     )

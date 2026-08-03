@@ -1,4 +1,10 @@
 import { getPlatform } from './platform-runtime'
+import { pointToPhysical } from './physicalMetrics'
+import {
+  getRuntime,
+  supports,
+  VISIONOS_DEBUG_SHELL_VERSION_PLACEHOLDER,
+} from './runtime/supports'
 import { SpatialComponent } from './reality/component/SpatialComponent'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
 import { SpatialMaterial } from './reality/material/SpatialMaterial'
@@ -27,7 +33,12 @@ import {
   ModelSource,
   SpatialTextureResourceOptions,
 } from './types/types'
+import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
+import type {
+  ControlSpatializedElementAnimationCommand,
+  CreateSpatializedElementAnimationCommand,
+} from './types/motion/spatializedElementMotion'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -628,6 +639,64 @@ export class CheckWebViewCanCreateCommand extends JSBCommand {
   }
 }
 
+export class AnimateTransformJSBCommand extends JSBCommand {
+  commandType = 'AnimateTransform'
+
+  constructor(private command: AnimateTransformCommand) {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    const { type, animationId, entityId } = this.command
+    const params: Record<string, any> = { type, animationId }
+
+    if (entityId !== undefined) params.entityId = entityId
+
+    if (type === 'play') {
+      if (this.command.toTransform) {
+        params.toTransform = Array.from(this.command.toTransform)
+      }
+      if (this.command.fromTransform) {
+        params.fromTransform = Array.from(this.command.fromTransform)
+      }
+      if (this.command.duration !== undefined)
+        params.duration = this.command.duration
+      if (this.command.timingFunction !== undefined)
+        params.timingFunction = this.command.timingFunction
+      if (this.command.delay !== undefined) params.delay = this.command.delay
+      if (this.command.loop !== undefined) params.loop = this.command.loop
+      if (this.command.playbackRate !== undefined)
+        params.playbackRate = this.command.playbackRate
+    }
+
+    return params
+  }
+}
+// TODO(remove): temporary OTA0 compat shim — delete once #1330 lands and
+// attachment JSB always uses the placement-shaped payload.
+function usePlacementProtocol(): boolean {
+  // WS_SHELL_VERSION debug shells claim every capability via supports(), but
+  // the in-repo visionOS runtime still decodes only the legacy attachment
+  // payload — keep sending it there.
+  const rt = getRuntime()
+  if (
+    rt.type === 'visionos' &&
+    rt.shellVersion === VISIONOS_DEBUG_SHELL_VERSION_PLACEHOLDER
+  ) {
+    return false
+  }
+  return supports('AttachmentEntity', ['placement'])
+}
+
+function toPlacementVec3(position?: [number, number, number]): {
+  x: number
+  y: number
+  z: number
+} {
+  const [x, y, z] = position ?? [0, 0, 0]
+  return { x, y, z }
+}
+
 export class InitializeAttachmentCommand extends JSBCommand {
   commandType = 'InitializeAttachment'
   constructor(
@@ -637,12 +706,25 @@ export class InitializeAttachmentCommand extends JSBCommand {
     super()
   }
   protected getParams() {
+    const p = this.options
+    if (!usePlacementProtocol()) {
+      return {
+        id: this.attachmentId,
+        parentEntityId: p.parentEntityId,
+        position: p.position ?? [0, 0, 0],
+        size: p.size,
+        ownerViewId: p.ownerViewId,
+      }
+    }
+    // Runtimes advertising this capability decode a Vec3 position and meter
+    // dimensions instead of the legacy tuple and point size.
     return {
       id: this.attachmentId,
-      parentEntityId: this.options.parentEntityId,
-      position: this.options.position ?? [0, 0, 0],
-      size: this.options.size,
-      ownerViewId: this.options.ownerViewId,
+      placementId: p.parentEntityId,
+      position: toPlacementVec3(p.position),
+      width: pointToPhysical(p.size.width),
+      height: pointToPhysical(p.size.height),
+      ownerViewId: p.ownerViewId,
     }
   }
 }
@@ -656,9 +738,54 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     super()
   }
   protected getParams() {
+    if (!usePlacementProtocol()) {
+      return {
+        id: this.attachmentId,
+        ...this.options,
+      }
+    }
+    const { position, size } = this.options
     return {
       id: this.attachmentId,
-      ...this.options,
+      ...(position ? { position: toPlacementVec3(position) } : {}),
+      ...(size
+        ? {
+            width: pointToPhysical(size.width),
+            height: pointToPhysical(size.height),
+          }
+        : {}),
+    }
+  }
+}
+
+export class CreateSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'CreateSpatializedElementAnimation'
+
+  constructor(private command: CreateSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { elementId, timeline } = this.command
+    return {
+      elementId,
+      timeline,
+    }
+  }
+}
+
+export class ControlSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'ControlSpatializedElementAnimation'
+
+  constructor(private command: ControlSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { animationId, type } = this.command
+    return {
+      animationId,
+      type,
     }
   }
 }

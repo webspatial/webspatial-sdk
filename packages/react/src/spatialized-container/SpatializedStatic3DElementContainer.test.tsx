@@ -31,7 +31,10 @@ const spatializedElement: SpatializedElementStub = {
 }
 const portalInstanceValue = {
   dom: document.createElement('div'),
-} as unknown as PortalInstanceObject
+} as { dom?: HTMLElement }
+let lastExtraRefProps:
+  | ((domProxy: unknown) => Record<string, unknown>)
+  | undefined
 
 vi.mock('@webspatial/core-sdk', () => ({
   SpatializedStatic3DElement: class {},
@@ -44,8 +47,11 @@ vi.mock('./SpatializedContainer', () => ({
   }: {
     spatializedContent: React.ComponentType<Record<string, unknown>>
   } & Record<string, unknown>) => {
+    lastExtraRefProps = props.extraRefProps as typeof lastExtraRefProps
     return (
-      <PortalInstanceContext.Provider value={portalInstanceValue}>
+      <PortalInstanceContext.Provider
+        value={portalInstanceValue as unknown as PortalInstanceObject}
+      >
         <Content {...props} spatializedElement={spatializedElement} />
       </PortalInstanceContext.Provider>
     )
@@ -78,7 +84,9 @@ function lastObserver() {
 describe('SpatializedStatic3DElementContainer lazy/eager loading behavior', () => {
   beforeEach(() => {
     updateProperties.mockClear()
+    lastExtraRefProps = undefined
     IntersectionObserverMock.instances = []
+    portalInstanceValue.dom = document.createElement('div')
     globalThis.IntersectionObserver =
       IntersectionObserverMock as unknown as typeof IntersectionObserver
   })
@@ -185,5 +193,71 @@ describe('SpatializedStatic3DElementContainer lazy/eager loading behavior', () =
     expect(updateProperties).toHaveBeenLastCalledWith(
       expect.objectContaining({ loading: 'eager' }),
     )
+  })
+
+  it('stays lazy when portal dom is missing', () => {
+    portalInstanceValue.dom = undefined
+
+    render(
+      <SpatializedStatic3DElementContainer src="/model.usdz" loading="lazy" />,
+    )
+
+    expect(updateProperties).toHaveBeenCalledTimes(1)
+    expect(updateProperties).toHaveBeenLastCalledWith(
+      expect.objectContaining({ loading: 'lazy' }),
+    )
+    expect(lastObserver()).toBeUndefined()
+    expect(updateProperties).not.toHaveBeenCalledWith(
+      expect.objectContaining({ loading: 'eager' }),
+    )
+  })
+
+  it('attaches observer once portal dom appears and eager only after intersecting', () => {
+    portalInstanceValue.dom = undefined
+
+    const { rerender } = render(
+      <SpatializedStatic3DElementContainer src="/model.usdz" loading="lazy" />,
+    )
+
+    expect(lastObserver()).toBeUndefined()
+
+    portalInstanceValue.dom = document.createElement('div')
+    rerender(
+      <SpatializedStatic3DElementContainer src="/model.usdz" loading="lazy" />,
+    )
+
+    expect(lastObserver()?.observe).toHaveBeenCalledWith(
+      portalInstanceValue.dom,
+    )
+    expect(updateProperties).toHaveBeenLastCalledWith(
+      expect.objectContaining({ loading: 'lazy' }),
+    )
+
+    act(() => {
+      lastObserver()!.trigger(true)
+    })
+
+    expect(updateProperties).toHaveBeenLastCalledWith(
+      expect.objectContaining({ loading: 'eager' }),
+    )
+  })
+
+  it('resolves ready from the DOM-linked spatialized element when a nested standard branch did not create one', async () => {
+    const readyTarget = {
+      ready: Promise.resolve(true),
+    }
+
+    render(<SpatializedStatic3DElementContainer src="/model.usdz" />)
+
+    const domProxy = Object.assign(document.createElement('div'), {
+      __innerSpatializedElement: () => readyTarget,
+    })
+    const extra = lastExtraRefProps!(domProxy)
+
+    await expect(
+      Promise.resolve().then(() => extra.ready),
+    ).resolves.toMatchObject({
+      type: 'modelloaded',
+    })
   })
 })

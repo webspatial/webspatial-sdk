@@ -18,8 +18,11 @@
     "codeql:js": "node tools/scripts/run-codeql-js.js",
     "test:workflows": "node tools/scripts/check-release-workflows.js",
     "test:react-compat": "pnpm --filter react18-compat test && pnpm --filter react19-compat test",
+    "test:rspack-compat": "pnpm --filter spatial-rspack-min --fail-if-no-match build",
+    "test:fixtures": "pnpm --filter spatial-vite-min --fail-if-no-match build && pnpm --filter spatial-next-min --fail-if-no-match build && pnpm --filter spatial-next-eager-min --fail-if-no-match build && pnpm --filter spatial-remix-min --fail-if-no-match build && pnpm run test:rspack-compat",
     "test:auto": "cd tests/autoTest/ && pnpm run test",
     "test:auto:setup-local": "cd tests/autoTest/ && pnpm run setup-local",
+    "test:size-budget": "pnpm --filter @webspatial/react-sdk build && pnpm --filter marginal-delta-vite test",
     "ciTest": "cd tests/ci-test/ && pnpm run test",
     "format": "pnpm -r run format",
     "ci:publish": "changeset publish",
@@ -62,13 +65,15 @@
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
     "@changesets/cli": "^2.29.2",
-    "@vitest/coverage-v8": "^3.0.9",
+    "@fission-ai/openspec": "^1.4.0",
+    "@vitest/coverage-v8": "^4.1.8",
     "concurrently": "^8.2.2",
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
     "simple-git-hooks": "^2.11.1",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.9"
+    "vite": "6.4.2",
+    "vitest": "^4.1.8"
   },
   "packageManager": "pnpm@9.0.0",
   "pnpm": {
@@ -125,11 +130,15 @@
       "js-yaml@>=4.0.0 <4.1.1": ">=4.1.1",
       "qs@<6.14.2": ">=6.14.2",
       "diff@>=5.0.0 <5.2.2": ">=5.2.2",
-      "tmp@<=0.2.3": ">=0.2.4",
       "@eslint/plugin-kit@<0.3.4": ">=0.3.4",
       "min-document@<=2.19.0": ">=2.19.1",
       "yaml@<2.8.3": ">=2.8.3",
-      "yaml@2.7.1": "2.8.4"
+      "yaml@2.7.1": "2.8.4",
+      "ws@>=8.0.0 <8.20.1": ">=8.20.1",
+      "uuid@<11.1.1": "11.1.1",
+      "brace-expansion@>=5.0.0 <5.0.6": ">=5.0.6",
+      "qs@>=6.11.1 <=6.15.1": ">=6.15.2",
+      "tmp@<0.2.6": ">=0.2.6"
     }
   }
 }

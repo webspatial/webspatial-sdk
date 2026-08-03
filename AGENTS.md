@@ -6,6 +6,7 @@ This repository is a `pnpm` workspace monorepo that ships WebSpatial SDK package
 
 - `packages/*`: published packages (Core SDK, React SDK, Builder CLI, platform shells).
 - `apps/test-server`: local dev site and demo pages used during development.
+- `apps/spatial-vite-min`, `apps/spatial-next-min`, `apps/spatial-remix-min`: small **consumer-shaped** fixtures (Vite SPA, Next SSR, React Router / Remix-style SSR).
 - `tests/ci-test`: CI/e2e harness (Mocha/Chai) that runs against the Apple Vision Pro simulator.
 - `tests/autoTest`: Puppeteer-based browser automation suite for WebSpatial demo pages.
 - `tools/scripts`: repo scripts used by CI and pre-commit checks.
@@ -44,14 +45,17 @@ From repo root:
 
 - Package manager is `pnpm` (enforced by `preinstall`).
 - Pre-commit runs `lint-staged`; it rejects files >= 1MB and non-English (CJK) characters.
-- Keep PRs focused: avoid committing local artifacts (`.trae/`, `node_modules/`, build outputs).
+- Keep PRs focused: avoid committing untracked local artifacts (`node_modules/`, build outputs, temp tool scratch dirs). Tracked agent helper docs under `.trae/` are part of the repo.
 - **AI Agent Rule:** When refactoring, moving, or modifying existing code, DO NOT strip, delete, or rewrite existing inline comments unless explicitly instructed to do so. Retain all original developer context.
 - **AI Agent Rule:** Keep refactors (like moving files or renaming variables) strictly separate from logic changes to make PRs easier to review.
 
 ## Useful Entry Points
 
 - Root scripts: `package.json`.
+- Portal / 2D sync / HMR invariants (when editing `packages/react/src/spatialized-container/`): `packages/react/src/spatialized-container/ARCHITECTURE.md` — section **Portal lifecycle and local dev (HMR)**; tests: `useSpatializedElement.hmr.test.ts`, `useSpatialContentReady.test.ts`, `SpatializedStatic3DElementContainer.test.tsx`.
+- Portal head sync / CSS-in-JS (when editing `windowStyleSync.ts`, `useSyncHeadStyles.ts`, `useSync2DFrame.ts`): `packages/react/src/spatialized-container/ARCHITECTURE.md` — section **Portal head sync (CSS-in-JS)**; tests: `windowStyleSync.test.ts`, `useSyncHeadStyles.test.tsx`; demo: `#/styledComponentsSpatialTest`.
 - Dev server docs: `apps/test-server/README.md`.
+- **AVP simulator automation (iwdp):** `tools/scripts/IWDP-SIM.md` — `python3 tools/scripts/iwdp-sim.py` drives SpatialDiv WKWebViews (DOM/CSS/click/screenshot); agent skill: `.codex/skills/webspatial-avp-iwdp/SKILL.md`.
 - E2E harness docs: `tests/ci-test/README.md`.
 - Browser auto test docs: `tests/autoTest/README.md`.
 - Contributor setup: `CONTRIBUTING.md`.

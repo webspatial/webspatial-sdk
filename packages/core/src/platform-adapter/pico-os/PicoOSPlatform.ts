@@ -11,6 +11,11 @@ import { buildSpatialSceneQuery } from '../spatialSceneQuery'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 import type { SpatialSceneCreationOptionsInternal } from '../../types/internal'
 import type { AttachmentEntityOptions } from '../../types/types'
+import {
+  buildSpatialRequestQuery,
+  createSpatialRequestId,
+  DEFAULT_SPATIAL_REQUEST_TIMEOUT_MS,
+} from '../spatialRequestMetadata'
 
 interface JSBResponse {
   success: boolean
@@ -95,26 +100,86 @@ export class PicoOSPlatform implements PlatformAbility {
     command: string,
   ): Promise<WebSpatialProtocolResult> {
     return new Promise(resolve => {
-      const createdId = nextRequestId()
+      const createdId = createSpatialRequestId()
+      let settled = false
+      let timeoutId: ReturnType<typeof setTimeout> | undefined
+      let cleanupDocumentReadyListener: (() => void) | undefined
+
+      // Native creation may respond synchronously, asynchronously, or never.
+      // Funnel every path through one settle() helper so receiver cleanup is
+      // exactly-once.
+      const settle = (result: WebSpatialProtocolResult) => {
+        if (settled) return
+        settled = true
+        if (timeoutId !== undefined) {
+          clearTimeout(timeoutId)
+        }
+        cleanupDocumentReadyListener?.()
+        cleanupDocumentReadyListener = undefined
+        SpatialWebEvent.removeEventReceiver(createdId)
+        resolve(result)
+      }
+
       try {
         let windowProxy: WindowProxy | null = null
+        const settleWhenDocumentComplete = (spatialId: string) => {
+          const successResult = CommandResultSuccess({
+            windowProxy: windowProxy,
+            id: spatialId,
+          })
+          const childDocument = windowProxy?.document
+
+          if (!childDocument) {
+            settle(
+              CommandResultFailure(
+                'E_SPATIAL_DOCUMENT_UNAVAILABLE',
+                `${command} document is unavailable`,
+              ),
+            )
+            return
+          }
+
+          if (childDocument.readyState === 'complete') {
+            settle(successResult)
+            return
+          }
+
+          const onReadyStateChange = () => {
+            if (childDocument.readyState !== 'complete') return
+            settle(successResult)
+          }
+
+          cleanupDocumentReadyListener = () => {
+            childDocument.removeEventListener(
+              'readystatechange',
+              onReadyStateChange,
+            )
+          }
+          childDocument.addEventListener('readystatechange', onReadyStateChange)
+        }
+
+        timeoutId = setTimeout(() => {
+          settle(
+            CommandResultFailure(
+              'E_SPATIAL_REQUEST_TIMEOUT',
+              `${command} request timed out`,
+            ),
+          )
+        }, DEFAULT_SPATIAL_REQUEST_TIMEOUT_MS)
+
         SpatialWebEvent.addEventReceiver(
           createdId,
           (result: { spatialId: string }) => {
-            resolve(
-              CommandResultSuccess({
-                windowProxy: windowProxy,
-                id: result.spatialId,
-              }),
-            )
-            SpatialWebEvent.removeEventReceiver(createdId)
+            settleWhenDocumentComplete(result.spatialId)
           },
         )
-        windowProxy = this.openWindow(command, 'rid=' + createdId).windowProxy
+        windowProxy = this.openWindow(
+          command,
+          buildSpatialRequestQuery(createdId),
+        ).windowProxy
       } catch (error: unknown) {
         const { code, message } = this.parseJSBError(error)
-        SpatialWebEvent.removeEventReceiver(createdId)
-        resolve(CommandResultFailure(code, message))
+        settle(CommandResultFailure(code, message))
       }
     })
   }

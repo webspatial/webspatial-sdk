@@ -13,14 +13,19 @@ import { ResourceRegistry } from '../utils'
 import { AttachmentRegistry } from '../context/AttachmentContext'
 import { SpatializedElementRef } from '../../spatialized-container/types'
 import { SpatializedElement } from '@webspatial/core-sdk'
+import type { SpatializedMotionBinding } from '../../spatialized-container/motion/motionBindingTypes'
 import { EntityEventHandler } from '../type'
 import { useRealityEvents } from '../hooks'
+import { markWebSpatialPrimitive } from '../../jsx/primitive-marker'
 
 export type RealityProps = Omit<
   React.ComponentPropsWithRef<'div'>,
   'onSpatialContentReady'
 > &
-  EntityEventHandler
+  EntityEventHandler & {
+    /** Native root-transform motion on the Reality container (`SpatializedDynamic3DElement`). */
+    'xr-animation'?: SpatializedMotionBinding
+  }
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
   function RealityBase({ children, ...inProps }, ref) {
@@ -40,6 +45,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       onSpatialRotateEnd,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
+      'xr-animation': xrAnimation,
       ...props
     } = inProps
     const ctxRef = useRef<RealityContextValue | null>(null)
@@ -67,7 +73,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       const id = ++creationId.current
       const resourceRegistry = new ResourceRegistry()
       const attachmentRegistry = new AttachmentRegistry()
-      const session = await getSession()
+      const session = getSession()
       if (!session) {
         resourceRegistry.destroy()
         attachmentRegistry.destroy()
@@ -135,6 +141,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
         <SpatializedContainer<SpatializedElementRef>
           component="div"
           ref={ref}
+          xr-animation={xrAnimation}
           // @ts-ignore
           createSpatializedElement={createReality}
           spatializedContent={content}
@@ -145,3 +152,6 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     )
   },
 )
+// Brand the real implementation too: the eager entry exports THIS `Reality`,
+// and the JSX runtime must short-circuit it rather than wrapping it.
+markWebSpatialPrimitive(Reality, 'Reality')
