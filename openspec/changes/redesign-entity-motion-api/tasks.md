@@ -47,7 +47,8 @@ Bridge implementation:
   - [x] 5.2a Core Entity-specific Bridge types, JSB commands, empty successful control replies, `callbackAction` state-message consumption, and dedicated error events
   - [x] 5.2b visionOS `EntityMotionBridgeTypes` codecs, empty successful control replies, `callbackAction` state messages, and four `SpatialScene` handler registrations
   - [ ] 5.2c picoOS `EntityMotionBridgeTypes` codecs and four handler registrations
-- [x] 5.3 Verify visionOS target dispatch and lifecycle behavior: target lookup and rejection, stable error mapping, animation-object registration and lookup, explicit destroy, target-first destruction, cleanup, post-destroy local behavior, and `ANIMATION_NOT_FOUND` teardown results
+- [x] 5.3a Verify the visionOS target-dispatch and lifecycle implementation and its existing object-level tests
+- [ ] 5.3b Add direct `SpatialScene` handler tests for target lookup and rejection, stable error mapping, animation-object registration and lookup, explicit destroy, target-first destruction, cleanup, and `ANIMATION_NOT_FOUND` teardown results
 
 Native lifecycle implementation:
   - [x] 5.4a visionOS `SpatialScene` Entity handlers, global spatial-objects registration/lookup, target-destroy cascade, and animation-object cleanup are implemented
@@ -85,15 +86,15 @@ Native state implementation:
 - [x] 6.2 Add failing tests for explicit validation failures on unsupported Entity motion targets and invalid transform authoring
 - [x] 6.3 Update runtime capability and validation implementation behavior to match the new target-state contract
 
-## 7. Docs, Demos, and Migration
+## 7. Docs and Demos
 
-- [x] 7.1 Update Entity motion docs and migration guidance for the current config, binding, tuple, playback API, `entityProps`, `api.set`, transform ownership, capability check, and in-place update behavior
+- [x] 7.1 Update Entity motion docs for the current config, binding, tuple, playback API, `entityProps`, `api.set`, transform ownership, capability check, and in-place update behavior
 - [x] 7.2 Update `apps/test-server` Entity animation demos and capability pages to the new target-state API
 
 ## 8. Verification and Cross-platform Acceptance
 
 - [x] 8.1 Execute implementation in strict TDD order: for each behavior group, write failing tests first, implement the minimum change to pass, then refactor with tests still green
-- [x] 8.2 Run targeted React/Core tests for the tuple, binding, normalization, capability detection, `callbackAction`, state-message/control-reply races, target `objectdestroy`, `entityProps`, transform write protection, inactive React transform updates, and `api.set` command initiation
+- [x] 8.2 Run targeted React/Core tests for the tuple, binding, normalization, capability detection, `callbackAction`, state-message/control-reply races, target `objectdestroy`, post-destroy FIFO invalidation, `entityProps`, transform write protection, inactive React transform updates, and `api.set` command initiation
 Bridge and integration acceptance:
   - [x] 8.3a Run Core Entity motion targeted tests against the new Bridge contract
   - [x] 8.3b Run full visionOS `xcodebuild test` against the new Bridge contract

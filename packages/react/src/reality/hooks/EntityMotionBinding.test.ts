@@ -30,6 +30,7 @@ function createMockAnimationObject(id = 'animation-1') {
   } = {}
   const object = {
     id,
+    isDestroyed: false,
     playState: 'idle',
     isAnimating: false,
     isPaused: false,
@@ -531,6 +532,28 @@ describe('EntityMotionBinding', () => {
     expect(binding.entityProps).toEqual({})
     expect(object.finish).not.toHaveBeenCalled()
     expect(object.destroy).toHaveBeenCalledOnce()
+  })
+
+  test('native destroy invalidates unsent commands after an in-flight command settles', async () => {
+    const first = deferred<undefined>()
+    const { object } = createMockAnimationObject()
+    object.play.mockImplementation(() => first.promise)
+    const binding = new EntityMotionBinding(createConfig())
+    binding.__bind({
+      id: 'entity-1',
+      createAnimation: vi.fn(async () => object),
+    } as any)
+    await flushPromises()
+
+    binding.api.play()
+    binding.api.finish()
+    await vi.waitFor(() => expect(object.play).toHaveBeenCalledOnce())
+
+    object.isDestroyed = true
+    first.resolve(undefined)
+    await flushPromises()
+
+    expect(object.finish).not.toHaveBeenCalled()
   })
 
   test('terminates on creation failure and recovers only after unbind and rebind', async () => {

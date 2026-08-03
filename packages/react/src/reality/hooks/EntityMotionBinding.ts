@@ -352,6 +352,12 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     generation: number,
   ): void {
     if (this.commandRunToken) return
+    if (object.isDestroyed) {
+      // Native destruction invalidates every command that has not been sent.
+      this.commandQueue = []
+      ++this.commandEpoch
+      return
+    }
     const command = this.commandQueue.shift()
     if (!command) return
     const commandEpoch = this.commandEpoch

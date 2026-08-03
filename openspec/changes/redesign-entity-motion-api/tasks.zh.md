@@ -47,7 +47,8 @@ Bridge 实现：
   - [x] 5.2a Core Entity 专属 Bridge 类型、JSB 命令、空控制成功回执、`callbackAction` 状态消息消费和独立错误事件
   - [x] 5.2b visionOS `EntityMotionBridgeTypes` 编解码、空控制成功回执、`callbackAction` 状态消息和四个 `SpatialScene` handler 注册
   - [ ] 5.2c picoOS `EntityMotionBridgeTypes` 编解码和四个 handler 注册
-- [x] 5.3 验证 visionOS 目标分发和生命周期：目标查询与拒绝、稳定错误映射、动画对象注册与查询、显式销毁、目标先销毁、清理、销毁后本地行为和 `ANIMATION_NOT_FOUND` 竞态结果
+- [x] 5.3a 核实 visionOS 目标分发与生命周期实现及现有对象级测试
+- [ ] 5.3b 补充 `SpatialScene` handler 直接测试，覆盖目标查询与拒绝、稳定错误映射、动画对象注册与查询、显式销毁、目标先销毁、清理和 `ANIMATION_NOT_FOUND` 竞态结果
 
 Native 生命周期实现：
   - [x] 5.4a visionOS `SpatialScene` Entity handler、全局 spatial objects 注册/查找、target 销毁级联和动画对象清理已实现
@@ -85,15 +86,15 @@ Native 状态实现：
 - [x] 6.2 先编写失败测试，覆盖不支持的 Entity motion target 和非法 transform authoring 的显式校验失败
 - [x] 6.3 更新 runtime capability 与校验实现行为，使之匹配新的目标态契约
 
-## 7. 文档、Demo 与迁移
+## 7. 文档与 Demo
 
-- [x] 7.1 更新 Entity motion 文档与迁移说明，覆盖当前配置、绑定、三元组、播放接口、`entityProps`、`api.set`、transform 所有权、能力检测和原地更新行为
+- [x] 7.1 更新 Entity motion 文档，覆盖当前配置、绑定、三元组、播放接口、`entityProps`、`api.set`、transform 所有权、能力检测和原地更新行为
 - [x] 7.2 更新 `apps/test-server` 中的 Entity animation demo 与 capability 页面到新的目标态 API
 
 ## 8. 验证与跨端验收
 
 - [x] 8.1 严格按 TDD 顺序执行实现：每组行为先写失败测试，再做最小实现使其通过，最后在测试持续通过前提下重构
-- [x] 8.2 运行 React/Core 定向单测,覆盖 tuple、binding、归一化、能力检测、`callbackAction`、状态消息与控制回执竞态、target `objectdestroy`、`entityProps`、transform 写入保护、播放空闲期间 React transform 更新和 `api.set` 命令发起
+- [x] 8.2 运行 React/Core 定向单测,覆盖 tuple、binding、归一化、能力检测、`callbackAction`、状态消息与控制回执竞态、target `objectdestroy`、销毁后 FIFO 失效、`entityProps`、transform 写入保护、播放空闲期间 React transform 更新和 `api.set` 命令发起
 Bridge 与集成验收：
   - [x] 8.3a 运行新 Bridge 契约下的 Core Entity motion 定向测试
   - [x] 8.3b 运行新 Bridge 契约下的完整 visionOS `xcodebuild test`
