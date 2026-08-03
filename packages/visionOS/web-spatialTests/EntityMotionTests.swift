@@ -1307,6 +1307,40 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         XCTAssertEqual(animation.confirmedValues.position.x, 1, accuracy: 1e-6)
     }
 
+    /// Defers the baseline snapshot for an inactive update until a later command needs it.
+    func testIdleUpdateResetUsesLatestNativeBaseline() throws {
+        let entity = SpatialEntity("entity-motion-target")
+        entity.transform.translation = SIMD3<Float>(0, 1, 0)
+        var messages: [EntityMotionStateChangedMessage] = []
+        let animation = try EntityMotionAnimationObject(
+            id: "animation-1",
+            target: entity,
+            timeline: timeline(),
+            sendWebMsg: { _, message in
+                if let state = message as? EntityMotionStateChangedMessage {
+                    messages.append(state)
+                }
+            }
+        )
+        let candidate = timeline(
+            tracks: [
+                track("position.x", [(0, 2), (1, 4)]),
+            ]
+        )
+
+        let result = try animation.update(candidate)
+        entity.transform.translation.y = 5
+        try animation.reset()
+
+        XCTAssertEqual(result.revision, 1)
+        XCTAssertEqual(result.values.position.y, 1, accuracy: 1e-6)
+        XCTAssertEqual(animation.timeline, candidate)
+        XCTAssertEqual(animation.playState, .idle)
+        XCTAssertEqual(entity.transform.translation.x, 2, accuracy: 1e-6)
+        XCTAssertEqual(entity.transform.translation.y, 5, accuracy: 1e-6)
+        XCTAssertEqual(messages.map(\.detail.callbackAction), [.reset])
+    }
+
     /// Retargets a running animation from the current pose with a new revision and start event.
     func testRunningUpdateRetargetsFromCurrentPoseAndPreservesConfiguredTimeline() throws {
         let entity = SpatialEntity("entity-motion-target")

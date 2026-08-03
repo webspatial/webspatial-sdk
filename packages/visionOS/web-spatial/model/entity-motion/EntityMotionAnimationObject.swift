@@ -243,9 +243,20 @@ final class EntityMotionAnimationObject: SpatialObject {
         try EntityMotionTimelineCompiler.validate(candidate)
         let current = try Self.currentPose(for: target)
         let active = isActive
-        let executionTimeline = active
-            ? Self.retargetTimeline(candidate, from: current)
-            : candidate
+        if !active {
+            timeline = candidate
+            executionRevision += 1
+            confirmedValues = current
+            baselinePose = nil
+            compiledTimeline = nil
+            preparedPausedPlayback = nil
+            return UpdateEntityAnimationResult(
+                values: confirmedValues.confirmedPayload,
+                revision: executionRevision
+            )
+        }
+
+        let executionTimeline = Self.retargetTimeline(candidate, from: current)
         let compiled = try EntityMotionTimelineCompiler.compile(
             executionTimeline,
             baseline: current
@@ -256,14 +267,12 @@ final class EntityMotionAnimationObject: SpatialObject {
         ).resource
         let previousState = playState
 
-        if active {
-            stopController()
-        }
+        stopController()
         timeline = candidate
         executionRevision += 1
         confirmedValues = current
         baselinePose = current
-        compiledTimeline = active ? compiled : nil
+        compiledTimeline = compiled
 
         switch previousState {
         case .running:
@@ -273,7 +282,7 @@ final class EntityMotionAnimationObject: SpatialObject {
             playState = .paused
             preparedPausedPlayback = .init(compiled: compiled, resource: resource)
         case .idle, .finished:
-            preparedPausedPlayback = nil
+            preconditionFailure("Active Entity motion update entered an inactive state.")
         }
 
         return UpdateEntityAnimationResult(
