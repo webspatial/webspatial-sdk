@@ -98,6 +98,7 @@ class JSBManager {
             let jsbInfo = message.components(separatedBy: "::")
             let hasData = jsbInfo.count == 2 && jsbInfo[1] != ""
             let requiresEntityPayload = actionKey == CreateEntityAnimationCommand.commandType
+                || actionKey == UpdateEntityAnimationCommand.commandType
                 || actionKey == ControlEntityAnimationCommand.commandType
                 || actionKey == SetEntityAnimationCommand.commandType
             if requiresEntityPayload, !hasData {
@@ -130,7 +131,8 @@ class JSBManager {
         } catch {
             let code: ReplyCode
             switch actionKey {
-            case CreateEntityAnimationCommand.commandType:
+            case CreateEntityAnimationCommand.commandType,
+                 UpdateEntityAnimationCommand.commandType:
                 code = .INVALID_TIMELINE
             case ControlEntityAnimationCommand.commandType:
                 code = .INVALID_CONTROL_STATE

@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { getEntityMotionExecutionSignature } from '../../internal/entity-motion'
 import {
   normalizeEntityMotionConfig,
   serializeEntityMotionTimeline,
@@ -356,96 +355,6 @@ describe('Entity motion validation', () => {
     [{ rotation: { y: Number.NaN } }, 'finite'],
   ])('rejects invalid set update %#', (update, message) => {
     expect(() => validateEntityTransformUpdate(update)).toThrow(message)
-  })
-})
-
-describe('Entity motion execution signature', () => {
-  test('normalizes equivalent public boundary authoring to one opaque string', () => {
-    const topLevel = getEntityMotionExecutionSignature({
-      from: { position: { x: 0 } },
-      to: { position: { x: 1 } },
-    })
-    const namedTimeline = getEntityMotionExecutionSignature({
-      duration: 0.3,
-      timeline: {
-        from: { position: { x: 0 } },
-        to: { position: { x: 1 } },
-      },
-    })
-    const percentageTimeline = getEntityMotionExecutionSignature({
-      duration: 0.3,
-      timeline: {
-        '0%': { position: { x: 0 } },
-        '100%': { position: { x: 1 } },
-      },
-    })
-    const explicitDefaults = getEntityMotionExecutionSignature({
-      from: { position: { x: 0 } },
-      to: { position: { x: 1 } },
-      duration: 0.3,
-      timingFunction: 'easeInOut',
-      delay: 0,
-      playbackRate: 1,
-      loop: false,
-      autoStart: true,
-    })
-
-    expect(namedTimeline).toBe(topLevel)
-    expect(percentageTimeline).toBe(topLevel)
-    expect(explicitDefaults).toBe(topLevel)
-    expect(typeof topLevel).toBe('string')
-  })
-
-  test('excludes callbacks and includes every execution option', () => {
-    const base = {
-      from: { position: { x: 0 } },
-      to: { position: { x: 1 } },
-    } as const
-    const first = getEntityMotionExecutionSignature({
-      ...base,
-      onStart: vi.fn(),
-      onError: vi.fn(),
-    })
-    const callbackOnly = getEntityMotionExecutionSignature({
-      ...base,
-      onStart: vi.fn(),
-      onError: vi.fn(),
-    })
-
-    expect(callbackOnly).toBe(first)
-    for (const config of [
-      { ...base, duration: 2 },
-      { ...base, timingFunction: 'linear' as const },
-      { ...base, delay: 1 },
-      { ...base, playbackRate: 2 },
-      { ...base, loop: true },
-      { ...base, autoStart: false },
-      {
-        from: { position: { x: 0 } },
-        to: { position: { x: 2 } },
-      },
-    ]) {
-      expect(getEntityMotionExecutionSignature(config)).not.toBe(first)
-    }
-  })
-
-  test('does not amplify the public timeline-precedence warning', () => {
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const config = {
-      from: { position: { x: 10 } },
-      to: { position: { x: 20 } },
-      duration: 1,
-      timeline: {
-        from: { position: { x: 0 } },
-        to: { position: { x: 1 } },
-      },
-    }
-
-    validateEntityMotionConfig(config)
-    getEntityMotionExecutionSignature(config)
-
-    expect(warning).toHaveBeenCalledOnce()
-    warning.mockRestore()
   })
 })
 

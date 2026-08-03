@@ -22,21 +22,16 @@ import type {
 import {
   createEntityAnimationObject,
   EntityAnimationObject,
-  setEntityAnimationAndWait,
 } from './EntityAnimationObject'
+import { normalizeEntityMotionConfig } from './normalizeEntityMotionConfig'
 
 const config: EntityMotionConfig = {
   from: { position: { x: 0 } },
   to: { position: { x: 1 } },
 }
 
-const timeline: EntityMotionTimelinePayload = {
-  duration: 0.3,
-  delay: 0,
-  playbackRate: 1,
-  loop: false,
-  tracks: [],
-}
+const timeline: EntityMotionTimelinePayload =
+  normalizeEntityMotionConfig(config)
 
 const values: EntityMotionProps = {
   position: { x: 1, y: 2, z: 3 },
@@ -99,9 +94,7 @@ describe('EntityAnimationObject', () => {
     const valuesListener = vi.fn()
     animation.onValuesChange(valuesListener)
 
-    await expect(
-      setEntityAnimationAndWait(animation, { position: { x: 1 } }),
-    ).resolves.toEqual(values)
+    await expect(animation.set({ position: { x: 1 } })).resolves.toEqual(values)
 
     expect(platformSpy.callJSB).toHaveBeenCalledWith(
       'SetEntityAnimation',
@@ -130,9 +123,7 @@ describe('EntityAnimationObject', () => {
     const errorListener = vi.fn()
     animation.onError(errorListener)
 
-    await expect(
-      setEntityAnimationAndWait(animation, { scale: { x: 2 } }),
-    ).resolves.toBeUndefined()
+    await expect(animation.set({ scale: { x: 2 } })).resolves.toBeUndefined()
 
     expect(warning).toHaveBeenCalledOnce()
     expect(errorListener).not.toHaveBeenCalled()
@@ -172,6 +163,7 @@ describe('EntityAnimationObject', () => {
       type: 'spatialanimationstatechanged',
       detail: {
         id: 'animation-1',
+        revision: 0,
         playState: 'paused',
       },
     })
@@ -197,6 +189,7 @@ describe('EntityAnimationObject', () => {
       type: 'spatialanimationstatechanged',
       detail: {
         id: 'animation-1',
+        revision: 0,
         playState: 'paused',
       },
     })
@@ -207,6 +200,7 @@ describe('EntityAnimationObject', () => {
       type: 'spatialanimationstatechanged',
       detail: {
         id: 'animation-1',
+        revision: 0,
         callbackAction: 'complete',
         playState: 'finished',
         values,
@@ -283,6 +277,7 @@ describe('EntityAnimationObject', () => {
       type: 'spatialanimationstatechanged',
       detail: {
         id: 'animation-1',
+        revision: 0,
         callbackAction: 'start',
         playState: 'running',
         values,
@@ -297,6 +292,7 @@ describe('EntityAnimationObject', () => {
       type: 'spatialanimationstatechanged',
       detail: {
         id: 'another-animation',
+        revision: 0,
         callbackAction: 'complete',
         playState: 'finished',
         values,
@@ -308,6 +304,7 @@ describe('EntityAnimationObject', () => {
       type: 'spatialanimationstatechanged',
       detail: {
         id: 'animation-1',
+        revision: 0,
         callbackAction: 'complete',
         playState: 'finished',
         values,
@@ -350,6 +347,7 @@ describe('EntityAnimationObject', () => {
       type: 'spatialanimationstatechanged',
       detail: {
         id: 'animation-1',
+        revision: 0,
         callbackAction: 'complete',
         playState: 'finished',
         values,
@@ -378,6 +376,7 @@ describe('EntityAnimationObject', () => {
       type: 'spatialanimationstatechanged',
       detail: {
         id: 'animation-1',
+        revision: 0,
         playState: 'paused',
       },
     })
@@ -391,6 +390,7 @@ describe('EntityAnimationObject', () => {
       type: 'spatialanimationstatechanged',
       detail: {
         id: 'animation-1',
+        revision: 0,
         playState: 'running',
       },
     })
@@ -400,6 +400,54 @@ describe('EntityAnimationObject', () => {
     expect(animation.isPaused).toBe(false)
     expect(startListener).not.toHaveBeenCalled()
     expect(valuesListener).not.toHaveBeenCalled()
+  })
+
+  it('ignores missing and stale state revisions after an update commits', async () => {
+    platformSpy.callJSB.mockImplementation(() => ok({ values, revision: 1 }))
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+    const playStateListener = vi.fn()
+    animation.onPlayStateChange(playStateListener)
+
+    await animation.update({
+      from: { position: { x: 0 } },
+      to: { position: { x: 2 } },
+      duration: 1,
+    })
+
+    SpatialWebEvent.eventReceiver['animation-1']?.({
+      type: 'spatialanimationstatechanged',
+      detail: {
+        id: 'animation-1',
+        revision: 0,
+        playState: 'finished',
+      },
+    })
+    SpatialWebEvent.eventReceiver['animation-1']?.({
+      type: 'spatialanimationstatechanged',
+      detail: {
+        id: 'animation-1',
+        playState: 'running',
+      },
+    })
+
+    expect(animation.playState).toBe('idle')
+    expect(playStateListener).not.toHaveBeenCalled()
+
+    SpatialWebEvent.eventReceiver['animation-1']?.({
+      type: 'spatialanimationstatechanged',
+      detail: {
+        id: 'animation-1',
+        revision: 1,
+        playState: 'paused',
+      },
+    })
+
+    expect(animation.playState).toBe('paused')
+    expect(playStateListener).toHaveBeenCalledOnce()
+    expect(playStateListener).toHaveBeenCalledWith('paused')
   })
 
   it('ignores invalid event envelopes and unpaired callback values', () => {
@@ -419,6 +467,7 @@ describe('EntityAnimationObject', () => {
         type: 'spatialanimationstatechanged',
         detail: {
           id: 'animation-1',
+          revision: 0,
           callbackAction: 'error',
           playState: 'running',
           values,
@@ -428,6 +477,7 @@ describe('EntityAnimationObject', () => {
         type: 'spatialanimationstatechanged',
         detail: {
           id: 'animation-1',
+          revision: 0,
           callbackAction: 'start',
           playState: 'waiting',
           values,
@@ -437,6 +487,7 @@ describe('EntityAnimationObject', () => {
         type: 'spatialanimationstatechanged',
         detail: {
           id: 'animation-1',
+          revision: 0,
           playState: 'running',
           values,
         },
@@ -445,6 +496,7 @@ describe('EntityAnimationObject', () => {
         type: 'spatialanimationstatechanged',
         detail: {
           id: 'animation-1',
+          revision: 0,
           callbackAction: 'complete',
           playState: 'finished',
         },
@@ -457,6 +509,7 @@ describe('EntityAnimationObject', () => {
       type: 'spatialanimationstatechanged',
       detail: {
         id: 'animation-1',
+        revision: 0,
         playState: 'paused',
       },
     })
@@ -487,7 +540,7 @@ describe('EntityAnimationObject', () => {
     await animation.stop()
     await animation.reset()
     await animation.finish()
-    await setEntityAnimationAndWait(animation, { position: { x: 2 } })
+    await animation.set({ position: { x: 2 } })
 
     expect(platformSpy.callJSB).not.toHaveBeenCalled()
     expect(warning).toHaveBeenCalledOnce()
@@ -599,7 +652,7 @@ describe('EntityAnimationObject', () => {
       animation.onError(errorListener)
 
       await expect(
-        setEntityAnimationAndWait(animation, { position: { x: 1 } }),
+        animation.set({ position: { x: 1 } }),
       ).resolves.toBeUndefined()
 
       expect(valuesListener).not.toHaveBeenCalled()
@@ -634,6 +687,111 @@ describe('EntityAnimationObject', () => {
       code: 'ANIMATION_NOT_FOUND',
       reason: 'destroy failed',
     })
+  })
+
+  it('validates update config synchronously without sending a command', () => {
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+
+    expect(() =>
+      animation.update({
+        from: { position: { x: 0 } },
+      }),
+    ).toThrow()
+    expect(platformSpy.callJSB).not.toHaveBeenCalled()
+  })
+
+  it('skips equivalent execution config including callback and autoStart changes', async () => {
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+
+    await animation.update({
+      timeline: {
+        from: { position: { x: 0 } },
+        to: { position: { x: 1 } },
+      },
+      duration: 0.3,
+      autoStart: false,
+      onComplete: vi.fn(),
+    })
+
+    expect(platformSpy.callJSB).not.toHaveBeenCalled()
+  })
+
+  it('commits a successful config update and confirmed pose', async () => {
+    platformSpy.callJSB.mockImplementation(() => ok({ values, revision: 1 }))
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+    const valuesListener = vi.fn()
+    animation.onValuesChange(valuesListener)
+    const nextConfig: EntityMotionConfig = {
+      from: { position: { x: 0 } },
+      to: { position: { x: 2 } },
+      duration: 1,
+    }
+
+    await animation.update(nextConfig)
+    await animation.update(nextConfig)
+
+    expect(platformSpy.callJSB).toHaveBeenCalledOnce()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'UpdateEntityAnimation',
+      JSON.stringify({
+        id: 'animation-1',
+        timeline: normalizeEntityMotionConfig(nextConfig),
+      }),
+    )
+    expect(valuesListener).toHaveBeenCalledOnce()
+    expect(valuesListener).toHaveBeenCalledWith(values)
+  })
+
+  it('keeps the committed config when an update fails', async () => {
+    platformSpy.callJSB.mockResolvedValue({
+      success: false,
+      data: undefined,
+      errorCode: 'COMPILATION_FAILED',
+      errorMessage: 'update failed',
+    })
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+    const errorListener = vi.fn()
+    animation.onError(errorListener)
+
+    await animation.update({
+      from: { position: { x: 0 } },
+      to: { position: { x: 2 } },
+    })
+    await animation.update(config)
+
+    expect(platformSpy.callJSB).toHaveBeenCalledOnce()
+    expect(errorListener).toHaveBeenCalledOnce()
+    expect(errorListener).toHaveBeenCalledWith({
+      code: 'COMPILATION_FAILED',
+      reason: 'update failed',
+    })
+  })
+
+  it('keeps update local after object destruction', async () => {
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+    SpatialWebEvent.eventReceiver['animation-1']?.({ type: 'objectdestroy' })
+
+    await animation.update({
+      from: { position: { x: 0 } },
+      to: { position: { x: 2 } },
+    })
+
+    expect(platformSpy.callJSB).not.toHaveBeenCalled()
   })
 })
 

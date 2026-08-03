@@ -38,13 +38,6 @@ export default defineConfig({
         replacement: resolve(__dirname, '../core/src/install-polyfills.ts'),
       },
       {
-        find: '@webspatial/core-sdk/internal/entity-motion',
-        replacement: resolve(
-          __dirname,
-          '../core/src/internal/entity-motion.ts',
-        ),
-      },
-      {
         find: '@webspatial/core-sdk',
         replacement: fileURLToPath(
           new URL('../core/src/index.ts', import.meta.url),

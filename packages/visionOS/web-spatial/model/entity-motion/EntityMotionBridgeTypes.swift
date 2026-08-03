@@ -224,6 +224,24 @@ struct CreateEntityAnimationResult: Codable, Equatable {
     let id: String
 }
 
+/// Request payload for `UpdateEntityAnimation`.
+struct UpdateEntityAnimationCommand: CommandDataProtocol, Codable, Equatable {
+    /// JSB command name.
+    static let commandType = "UpdateEntityAnimation"
+    /// Animation object id.
+    let id: String
+    /// Replacement canonical motion timeline.
+    let timeline: EntityMotionTimelinePayload
+}
+
+/// Successful `UpdateEntityAnimation` reply.
+struct UpdateEntityAnimationResult: Codable, Equatable {
+    /// Complete transform confirmed by native.
+    let values: EntityMotionConfirmedTransformPayload
+    /// Committed execution-definition revision.
+    let revision: Int
+}
+
 /// Closed control operations for an animation object.
 enum EntityAnimationControlType: String, Codable, CaseIterable, Equatable {
     /// Starts or resumes playback.
@@ -312,6 +330,8 @@ enum EntityMotionCallbackAction: String, Codable, Equatable {
 struct EntityMotionStateChangedDetail: Codable, Equatable {
     /// Animation object id.
     let id: String
+    /// Execution-definition revision that produced the state.
+    let revision: Int
     /// Native playback state after the transition.
     let playState: EntityMotionPlayState
     /// Optional lifecycle callback associated with the confirmation.

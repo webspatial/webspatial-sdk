@@ -46,11 +46,13 @@ final class EntityMotionAnimationObject: SpatialObject {
     /// Target Entity id retained for lifecycle cleanup.
     let targetEntityId: String
     /// Canonical timeline supplied by Core.
-    let timeline: EntityMotionTimelinePayload
+    private(set) var timeline: EntityMotionTimelinePayload
     /// Latest native playback state.
     private(set) var playState: EntityMotionPlayState = .idle
     /// Latest complete transform confirmed by native.
     private(set) var confirmedValues: EntityMotionPose
+    /// Revision of the committed execution definition.
+    private(set) var executionRevision = 0
 
     /// Weak target reference to avoid retaining destroyed Entities.
     private weak var target: SpatialEntity?
@@ -66,6 +68,16 @@ final class EntityMotionAnimationObject: SpatialObject {
     private var completionSubscription: (any Cancellable)?
     /// Gates duplicate completion callbacks from the same playback controller.
     private var acceptsCompletionEvent = false
+    /// Prepared retarget retained while an updated animation remains paused.
+    private var preparedPausedPlayback: PreparedPlayback?
+
+    /// Fully prepared execution that can be committed without another throwing operation.
+    private struct PreparedPlayback {
+        /// Compiled full-pose timeline.
+        let compiled: EntityMotionCompiledTimeline
+        /// Generated RealityKit animation resource.
+        let resource: AnimationResource
+    }
 
     /// Creates one Entity motion object without reading the playback baseline.
     init(
@@ -95,6 +107,11 @@ final class EntityMotionAnimationObject: SpatialObject {
     /// Starts fresh playback or resumes paused playback.
     func play(at timestamp: CFTimeInterval = CACurrentMediaTime()) throws {
         if playState == .paused {
+            if let preparedPausedPlayback {
+                self.preparedPausedPlayback = nil
+                startPreparedPlayback(preparedPausedPlayback)
+                return
+            }
             playbackController?.resume()
             playState = .running
             emitStateChanged(playState: .running)
@@ -167,8 +184,10 @@ final class EntityMotionAnimationObject: SpatialObject {
     }
 
     /// Handles the current RealityKit controller's natural completion.
-    func completeNaturally() {
-        guard acceptsCompletionEvent else {
+    func completeNaturally(revision: Int? = nil) {
+        guard acceptsCompletionEvent,
+              revision ?? executionRevision == executionRevision
+        else {
             return
         }
         acceptsCompletionEvent = false
@@ -215,6 +234,54 @@ final class EntityMotionAnimationObject: SpatialObject {
         }
     }
 
+    /// Atomically commits a replacement timeline and retargets active playback.
+    @discardableResult
+    func update(_ candidate: EntityMotionTimelinePayload) throws -> UpdateEntityAnimationResult {
+        guard let target else {
+            throw EntityMotionAnimationObjectError.targetNotFound(targetEntityId)
+        }
+        try EntityMotionTimelineCompiler.validate(candidate)
+        let current = try Self.currentPose(for: target)
+        let active = isActive
+        let executionTimeline = active
+            ? Self.retargetTimeline(candidate, from: current)
+            : candidate
+        let compiled = try EntityMotionTimelineCompiler.compile(
+            executionTimeline,
+            baseline: current
+        )
+        let resource = try Self.makeAnimationResource(
+            compiled: compiled,
+            timeline: candidate
+        ).resource
+        let previousState = playState
+
+        if active {
+            stopController()
+        }
+        timeline = candidate
+        executionRevision += 1
+        confirmedValues = current
+        baselinePose = current
+        compiledTimeline = active ? compiled : nil
+
+        switch previousState {
+        case .running:
+            playState = .running
+            startPreparedPlayback(.init(compiled: compiled, resource: resource))
+        case .paused:
+            playState = .paused
+            preparedPausedPlayback = .init(compiled: compiled, resource: resource)
+        case .idle, .finished:
+            preparedPausedPlayback = nil
+        }
+
+        return UpdateEntityAnimationResult(
+            values: confirmedValues.confirmedPayload,
+            revision: executionRevision
+        )
+    }
+
     /// Releases native resources and transform write ownership.
     override func onDestroy() {
         stopController()
@@ -259,16 +326,37 @@ final class EntityMotionAnimationObject: SpatialObject {
         }
     }
 
+    /// Starts a precompiled execution after its candidate definition has committed.
+    private func startPreparedPlayback(_ prepared: PreparedPlayback) {
+        guard let target else {
+            return
+        }
+        compiledTimeline = prepared.compiled
+        playState = .running
+        acceptsCompletionEvent = timeline.loop.mode == .none
+        emitStateChanged(
+            playState: .running,
+            callbackAction: .start,
+            values: confirmedValues
+        )
+        playbackController = target.playAnimation(prepared.resource, startsPaused: false)
+        observeCompletion(on: target)
+    }
+
     /// Subscribes to the current RealityKit playback-completed event.
     private func observeCompletion(on target: SpatialEntity) {
+        let revision = executionRevision
         completionSubscription = target.scene?.subscribe(
             to: AnimationEvents.PlaybackCompleted.self,
             on: target
         ) { [weak self] event in
-            guard let self, event.playbackController == self.playbackController else {
+            guard let self,
+                  event.playbackController == self.playbackController,
+                  revision == self.executionRevision
+            else {
                 return
             }
-            self.completeNaturally()
+            self.completeNaturally(revision: revision)
         }
     }
 
@@ -318,11 +406,6 @@ final class EntityMotionAnimationObject: SpatialObject {
     /// Returns the configured first pose for reset.
     private func startPose() throws -> EntityMotionPose {
         let baseline = baselinePose ?? makeBaselineForTerminalCommand()
-        if let compiledTimeline,
-           let pose = compiledTimeline.slices.first?.pose
-        {
-            return pose
-        }
         return try EntityMotionTimelineCompiler.compile(
             timeline,
             baseline: baseline
@@ -370,6 +453,7 @@ final class EntityMotionAnimationObject: SpatialObject {
         sendWebMsg?(spatialId, EntityMotionStateChangedMessage(
             detail: .init(
                 id: spatialId,
+                revision: executionRevision,
                 playState: playState,
                 callbackAction: callbackAction,
                 values: values?.confirmedPayload
@@ -454,6 +538,52 @@ final class EntityMotionAnimationObject: SpatialObject {
                 Float(pose.position.z)
             )
         )
+    }
+
+    /// Replaces each controlled time-zero scalar with the current native pose.
+    private static func retargetTimeline(
+        _ timeline: EntityMotionTimelinePayload,
+        from pose: EntityMotionPose
+    ) -> EntityMotionTimelinePayload {
+        EntityMotionTimelinePayload(
+            duration: timeline.duration,
+            delay: timeline.delay,
+            playbackRate: timeline.playbackRate,
+            loop: timeline.loop,
+            tracks: timeline.tracks.map { track in
+                EntityMotionTrackPayload(
+                    property: track.property,
+                    keyframes: track.keyframes.map { keyframe in
+                        guard keyframe.at == 0 else {
+                            return keyframe
+                        }
+                        return EntityMotionKeyframePayload(
+                            at: keyframe.at,
+                            value: scalarValue(for: track.property, in: pose),
+                            timingFunction: keyframe.timingFunction
+                        )
+                    },
+                    timingFunction: track.timingFunction
+                )
+            }
+        )
+    }
+
+    /// Reads one canonical scalar property from a complete pose.
+    private static func scalarValue(for property: String, in pose: EntityMotionPose) -> Double {
+        switch property {
+        case "position.x": pose.position.x
+        case "position.y": pose.position.y
+        case "position.z": pose.position.z
+        case "rotation.x": pose.rotation.x
+        case "rotation.y": pose.rotation.y
+        case "rotation.z": pose.rotation.z
+        case "scale.x": pose.scale.x
+        case "scale.y": pose.scale.y
+        case "scale.z": pose.scale.z
+        default:
+            preconditionFailure("Validated Entity motion property became unsupported.")
+        }
     }
 
     /// Generates one complete-transform RealityKit animation resource.

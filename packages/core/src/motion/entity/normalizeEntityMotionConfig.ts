@@ -340,34 +340,6 @@ export function validateEntityMotionConfig(config: EntityMotionConfig): void {
 }
 
 /**
- * Validates Entity motion configuration without render-phase warnings.
- *
- * @internal React emits declaration warnings only after a render commits.
- * @param config - Configuration to validate.
- */
-export function validateEntityMotionConfigSilently(
-  config: EntityMotionConfig,
-): void {
-  normalizeEntityMotionConfig(config, false)
-}
-
-/**
- * Returns an opaque normalized signature for Entity motion execution.
- *
- * @internal This comparison helper is not an Entity motion authoring surface.
- * @param config - Public Entity motion configuration.
- * @returns Stable string used only for execution-equivalence comparison.
- */
-export function getEntityMotionExecutionSignature(
-  config: EntityMotionConfig,
-): string {
-  return JSON.stringify({
-    timeline: normalizeEntityMotionConfig(config, false),
-    autoStart: config.autoStart !== false,
-  })
-}
-
-/**
  * Validates one sparse committed-transform update.
  *
  * @param update - Sparse update supplied to `EntityPlaybackApi.set`.

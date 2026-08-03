@@ -43,6 +43,7 @@ import type {
   ControlEntityAnimationCommand,
   CreateEntityAnimationCommand,
   SetEntityAnimationCommand,
+  UpdateEntityAnimationCommand,
 } from './types/motion/entityMotion'
 
 abstract class JSBCommand {
@@ -862,6 +863,22 @@ export class CreateEntityAnimationJSBCommand extends JSBCommand {
   }
 
   /** Returns the dedicated Entity animation create payload. */
+  protected getParams() {
+    return this.command
+  }
+}
+
+/** Sends a candidate timeline to an existing Entity animation object. */
+export class UpdateEntityAnimationJSBCommand extends JSBCommand {
+  /** Native bridge command name. */
+  commandType = 'UpdateEntityAnimation'
+
+  /** Creates a bridge command from its complete wire request. */
+  constructor(private command: UpdateEntityAnimationCommand) {
+    super()
+  }
+
+  /** Returns the dedicated Entity animation update payload. */
   protected getParams() {
     return this.command
   }

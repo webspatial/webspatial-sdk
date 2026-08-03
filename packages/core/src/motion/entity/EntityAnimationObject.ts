@@ -1,6 +1,7 @@
 import {
   ControlEntityAnimationJSBCommand,
   SetEntityAnimationJSBCommand,
+  UpdateEntityAnimationJSBCommand,
 } from '../../JSBCommand'
 import { SpatialObject } from '../../SpatialObject'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
@@ -18,10 +19,14 @@ import type {
   EntityPlaybackApi,
   EntityTransformUpdate,
   SetEntityAnimationResult,
+  UpdateEntityAnimationResult,
 } from '../../types/motion/entityMotion'
 import type { SpatializedMotionPlayState } from '../../types/motion/spatializedMotion'
 import type { SpatializedPlaybackError } from '../../types/motion/spatializedPlayback'
-import { validateEntityTransformUpdate } from './normalizeEntityMotionConfig'
+import {
+  normalizeEntityMotionConfig,
+  validateEntityTransformUpdate,
+} from './normalizeEntityMotionConfig'
 
 const ENTITY_MOTION_CALLBACK_ACTIONS = [
   'start',
@@ -57,10 +62,6 @@ const entityAnimationObjectOptions = new WeakMap<
   EntityAnimationObject,
   EntityAnimationObjectOptions
 >()
-const entityAnimationSetCommands = new WeakMap<
-  EntityAnimationObject,
-  (update: EntityTransformUpdate) => Promise<EntityMotionProps | void>
->()
 
 /**
  * Creates an Entity animation object through the package-internal canonical path.
@@ -76,27 +77,6 @@ export function createEntityAnimationObject(
   const animation = new EntityAnimationObject(id)
   entityAnimationObjectOptions.set(animation, options)
   return animation
-}
-
-/**
- * Waits for an Entity set command inside the binding FIFO.
- *
- * @internal
- * @param animation - Current Core Entity animation object.
- * @param update - Sparse transform update already validated by the public entry.
- * @returns Native-confirmed values after the internal JSB reply settles.
- */
-export function setEntityAnimationAndWait(
-  animation: EntityAnimationObject,
-  update: EntityTransformUpdate,
-): Promise<EntityMotionProps | void> {
-  validateEntityTransformUpdate(update)
-  const execute = entityAnimationSetCommands.get(animation)
-  if (execute) return execute(update)
-  const fallback = animation.set as unknown as (
-    value: EntityTransformUpdate,
-  ) => Promise<EntityMotionProps | void> | void
-  return Promise.resolve(fallback.call(animation, update))
 }
 
 /** Core playback object for one Native Entity animation object. */
@@ -122,11 +102,12 @@ export class EntityAnimationObject
   private playStateListener?: (state: EntityMotionNativePlayState) => void
   /** Error fingerprints already reported during the current command cycle. */
   private reportedErrors = new Set<string>()
+  /** Latest execution revision committed by Native. */
+  private executionRevision = 0
 
   /** Creates a public Core handle and begins receiving events addressed by its id. */
   constructor(id: string) {
     super(id)
-    entityAnimationSetCommands.set(this, update => this.performSet(update))
     SpatialWebEvent.addEventReceiver(id, data => this.onReceiveEvent(data))
   }
 
@@ -175,10 +156,10 @@ export class EntityAnimationObject
     return this.control('finish')
   }
 
-  /** Validates and schedules a sparse transform update through Native. */
-  set(update: EntityTransformUpdate): void {
+  /** Validates and sends a sparse transform update through Native. */
+  set(update: EntityTransformUpdate): Promise<EntityMotionProps | void> {
     validateEntityTransformUpdate(update)
-    void this.performSet(update).catch(error => {
+    return this.performSet(update).catch(error => {
       this.reportErrorOnce({
         code: 'COMPILATION_FAILED',
         reason:
@@ -186,7 +167,19 @@ export class EntityAnimationObject
             ? error.message
             : 'Entity animation set command failed',
       })
+      return undefined
     })
+  }
+
+  /** Validates and commits a changed execution definition in place. */
+  update(config: EntityMotionConfig): Promise<void> {
+    const timeline = normalizeEntityMotionConfig(config)
+    if (this.isDestroyed) return Promise.resolve()
+    const current = entityAnimationObjectOptions.get(this)
+    if (current && this.timelinesEqual(current.timeline, timeline)) {
+      return Promise.resolve()
+    }
+    return this.performUpdate(config, timeline)
   }
 
   /** Registers the start observer used by Core consumers. */
@@ -299,6 +292,59 @@ export class EntityAnimationObject
     return confirmedValues!
   }
 
+  /** Sends one candidate timeline and commits snapshots only after confirmation. */
+  private async performUpdate(
+    config: EntityMotionConfig,
+    timeline: EntityMotionTimelinePayload,
+  ): Promise<void> {
+    this.reportedErrors.clear()
+    try {
+      const ret = await new UpdateEntityAnimationJSBCommand({
+        id: this.id,
+        timeline,
+      }).execute()
+      if (!ret.success) {
+        this.reportReplyError(ret)
+        return
+      }
+      const result = ret.data as UpdateEntityAnimationResult | undefined
+      const confirmedValues = result?.values
+      const validationError = this.getConfirmedValuesError(confirmedValues)
+      if (
+        validationError ||
+        !Number.isSafeInteger(result?.revision) ||
+        result!.revision <= this.executionRevision
+      ) {
+        this.reportErrorOnce({
+          code: 'COMPILATION_FAILED',
+          reason:
+            validationError ??
+            '[EntityAnimationObject] update revision must increase',
+        })
+        return
+      }
+      entityAnimationObjectOptions.set(this, { config, timeline })
+      this.executionRevision = result!.revision
+      this.valuesListener?.(confirmedValues!)
+    } catch (error) {
+      this.reportErrorOnce({
+        code: 'COMPILATION_FAILED',
+        reason:
+          error instanceof Error
+            ? error.message
+            : 'Entity animation update command failed',
+      })
+    }
+  }
+
+  /** Compares detached canonical timelines as execution definitions. */
+  private timelinesEqual(
+    left: EntityMotionTimelinePayload,
+    right: EntityMotionTimelinePayload,
+  ): boolean {
+    return JSON.stringify(left) === JSON.stringify(right)
+  }
+
   /** Converts one failed command reply into one public playback error. */
   private reportReplyError(ret: {
     errorCode?: string
@@ -347,6 +393,7 @@ export class EntityAnimationObject
     }
     if (this.isStateChangedMsg(data)) {
       if (data.detail.id !== this.id) return
+      if (data.detail.revision < this.executionRevision) return
       this.reportedErrors.clear()
       this._playState = data.detail.playState
       this.playStateListener?.(data.detail.playState)
@@ -395,6 +442,8 @@ export class EntityAnimationObject
     if (
       candidate.type !== 'spatialanimationstatechanged' ||
       typeof detail?.id !== 'string' ||
+      !Number.isSafeInteger(detail.revision) ||
+      detail.revision < 0 ||
       !(ENTITY_MOTION_NATIVE_PLAY_STATES as readonly unknown[]).includes(
         detail.playState,
       )

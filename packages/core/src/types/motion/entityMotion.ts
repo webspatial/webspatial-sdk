@@ -147,6 +147,22 @@ export interface CreateEntityAnimationResult {
   id: string
 }
 
+/** Wire request for updating one Entity animation object in place. */
+export interface UpdateEntityAnimationCommand {
+  /** Entity animation object's `SpatialObject.id`. */
+  id: string
+  /** Candidate canonical timeline consumed by Native. */
+  timeline: EntityMotionTimelinePayload
+}
+
+/** Successful in-place Entity animation update result. */
+export interface UpdateEntityAnimationResult {
+  /** Complete transform confirmed by Native. */
+  values: EntityMotionProps
+  /** Committed execution revision. */
+  revision: number
+}
+
 /** Playback control accepted by an Entity animation object. */
 export type EntityAnimationControlType =
   | 'play'
@@ -192,6 +208,8 @@ export type EntityMotionCallbackAction = 'start' | 'complete' | 'stop' | 'reset'
 export interface EntityMotionStateChangedDetail {
   /** Entity animation object's `SpatialObject.id`. */
   id: string
+  /** Execution-definition revision that produced this state. */
+  revision: number
   /** Confirmed Native playback state. */
   playState: EntityMotionNativePlayState
   /** Optional lifecycle callback dispatched for this state confirmation. */

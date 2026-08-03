@@ -32,7 +32,7 @@ function throwAnimationUnavailable(capability: string): never {
 export function useEntityAnimation(
   config: EntityMotionConfig,
 ): [EntityMotionAnimation, EntityPlaybackApi, EntityMotionProps] {
-  const real = getSpatialImpl()?.__useEntityAnimation
+  const real = getSpatialImpl()?.useEntityAnimation
   if (!real) return throwAnimationUnavailable('useEntityAnimation')
   return real(config)
 }

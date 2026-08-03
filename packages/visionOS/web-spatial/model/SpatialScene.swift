@@ -347,6 +347,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(AnimateTransformCommand.self, onAnimateTransform)
 
         spatialWebViewModel.addJSBListener(CreateEntityAnimationCommand.self, onCreateEntityAnimation)
+        spatialWebViewModel.addJSBListener(UpdateEntityAnimationCommand.self, onUpdateEntityAnimation)
         spatialWebViewModel.addJSBListener(ControlEntityAnimationCommand.self, onControlEntityAnimation)
         spatialWebViewModel.addJSBListener(SetEntityAnimationCommand.self, onSetEntityAnimation)
 
@@ -1473,13 +1474,17 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
-    /// Creates and registers one native Entity motion animation object.
-    func createEntityAnimation(command: CreateEntityAnimationCommand) throws -> CreateEntityAnimationResult {
+    private func onCreateEntityAnimation(
+        command: CreateEntityAnimationCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
         guard let target = spatialObjects[command.id] else {
-            throw JsbError(code: .TARGET_NOT_FOUND, message: "Entity \(command.id) not found")
+            resolve(.failure(JsbError(code: .TARGET_NOT_FOUND, message: "Entity \(command.id) not found")))
+            return
         }
         guard let entity = target as? SpatialEntity else {
-            throw JsbError(code: .UNSUPPORTED_TARGET, message: "Object \(command.id) is not an Entity")
+            resolve(.failure(JsbError(code: .UNSUPPORTED_TARGET, message: "Object \(command.id) is not an Entity")))
+            return
         }
         do {
             let animation = try entity.createAnimation(
@@ -1489,20 +1494,42 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
                 }
             )
             addSpatialObject(animation)
-            return CreateEntityAnimationResult(id: animation.id)
+            resolve(.success(CreateEntityAnimationResult(id: animation.id)))
         } catch let error as EntityMotionAnimationObjectError {
-            throw JsbError(code: error.replyCode, message: error.reason)
+            resolve(.failure(JsbError(code: error.replyCode, message: error.reason)))
         } catch let error as EntityMotionCompilationError {
-            throw JsbError(code: .INVALID_TIMELINE, message: error.reason)
+            resolve(.failure(JsbError(code: .INVALID_TIMELINE, message: error.reason)))
         } catch {
-            throw JsbError(code: .COMPILATION_FAILED, message: error.localizedDescription)
+            resolve(.failure(JsbError(code: .COMPILATION_FAILED, message: error.localizedDescription)))
         }
     }
 
-    /// Applies one control command to a registered Entity motion animation object.
-    func controlEntityAnimation(command: ControlEntityAnimationCommand) throws {
+    private func onUpdateEntityAnimation(
+        command: UpdateEntityAnimationCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
         guard let animation = spatialObjects[command.id] as? EntityMotionAnimationObject else {
-            throw JsbError(code: .ANIMATION_NOT_FOUND, message: "Animation \(command.id) not found")
+            resolve(.failure(JsbError(code: .ANIMATION_NOT_FOUND, message: "Animation \(command.id) not found")))
+            return
+        }
+        do {
+            try resolve(.success(animation.update(command.timeline)))
+        } catch let error as EntityMotionCompilationError {
+            resolve(.failure(JsbError(code: .INVALID_TIMELINE, message: error.reason)))
+        } catch let error as EntityMotionAnimationObjectError {
+            resolve(.failure(JsbError(code: error.replyCode, message: error.reason)))
+        } catch {
+            resolve(.failure(JsbError(code: .COMPILATION_FAILED, message: error.localizedDescription)))
+        }
+    }
+
+    private func onControlEntityAnimation(
+        command: ControlEntityAnimationCommand,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        guard let animation = spatialObjects[command.id] as? EntityMotionAnimationObject else {
+            resolve(.failure(JsbError(code: .ANIMATION_NOT_FOUND, message: "Animation \(command.id) not found")))
+            return
         }
         do {
             switch command.type {
@@ -1519,49 +1546,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             case .destroy:
                 animation.destroy()
             }
-        } catch let error as EntityMotionAnimationObjectError {
-            throw JsbError(code: error.replyCode, message: error.reason)
-        } catch {
-            throw JsbError(code: .COMPILATION_FAILED, message: error.localizedDescription)
-        }
-    }
-
-    /// Applies a sparse committed-transform update to a registered Entity motion animation object.
-    func setEntityAnimation(command: SetEntityAnimationCommand) throws -> SetEntityAnimationResult {
-        guard let animation = spatialObjects[command.id] as? EntityMotionAnimationObject else {
-            throw JsbError(code: .ANIMATION_NOT_FOUND, message: "Animation \(command.id) not found")
-        }
-        do {
-            return try SetEntityAnimationResult(values: animation.set(command.update))
-        } catch let error as EntityMotionAnimationObjectError {
-            throw JsbError(code: error.replyCode, message: error.reason)
-        } catch {
-            throw JsbError(code: .INVALID_SET_VALUES, message: error.localizedDescription)
-        }
-    }
-
-    private func onCreateEntityAnimation(
-        command: CreateEntityAnimationCommand,
-        resolve: @escaping JSBManager.ResolveHandler<Encodable>
-    ) {
-        do {
-            try resolve(.success(createEntityAnimation(command: command)))
-        } catch let error as JsbError {
-            resolve(.failure(error))
-        } catch {
-            resolve(.failure(JsbError(code: .COMPILATION_FAILED, message: error.localizedDescription)))
-        }
-    }
-
-    private func onControlEntityAnimation(
-        command: ControlEntityAnimationCommand,
-        resolve: @escaping JSBManager.ResolveHandler<Encodable>
-    ) {
-        do {
-            try controlEntityAnimation(command: command)
             resolve(.success(nil))
-        } catch let error as JsbError {
-            resolve(.failure(error))
+        } catch let error as EntityMotionAnimationObjectError {
+            resolve(.failure(JsbError(code: error.replyCode, message: error.reason)))
         } catch {
             resolve(.failure(JsbError(code: .COMPILATION_FAILED, message: error.localizedDescription)))
         }
@@ -1571,10 +1558,14 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         command: SetEntityAnimationCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
     ) {
+        guard let animation = spatialObjects[command.id] as? EntityMotionAnimationObject else {
+            resolve(.failure(JsbError(code: .ANIMATION_NOT_FOUND, message: "Animation \(command.id) not found")))
+            return
+        }
         do {
-            try resolve(.success(setEntityAnimation(command: command)))
-        } catch let error as JsbError {
-            resolve(.failure(error))
+            try resolve(.success(SetEntityAnimationResult(values: animation.set(command.update))))
+        } catch let error as EntityMotionAnimationObjectError {
+            resolve(.failure(JsbError(code: error.replyCode, message: error.reason)))
         } catch {
             resolve(.failure(JsbError(code: .INVALID_SET_VALUES, message: error.localizedDescription)))
         }

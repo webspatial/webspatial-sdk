@@ -272,6 +272,7 @@ describe('JSBCommand', () => {
       CreateEntityAnimationJSBCommand,
       ControlEntityAnimationJSBCommand,
       SetEntityAnimationJSBCommand,
+      UpdateEntityAnimationJSBCommand,
     } = await import('./JSBCommand')
     const timeline = {
       duration: 1,
@@ -309,6 +310,15 @@ describe('JSBCommand', () => {
         id: 'animation-1',
         update: { rotation: { y: 45 } },
       }),
+    )
+
+    await new UpdateEntityAnimationJSBCommand({
+      id: 'animation-1',
+      timeline,
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'UpdateEntityAnimation',
+      JSON.stringify({ id: 'animation-1', timeline }),
     )
   })
 })

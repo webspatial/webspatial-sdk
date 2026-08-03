@@ -21,7 +21,7 @@ export type {
 export type {
   EntityMotionAnimation,
   UseEntityAnimationResult,
-} from './reality/hooks/useAnimation'
+} from './reality/hooks/useEntityAnimation'
 export type {
   UseAnimationResult,
   SpatializedMotionConfig,

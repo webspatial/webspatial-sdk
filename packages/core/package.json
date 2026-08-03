@@ -18,10 +18,6 @@
       "types": "./dist/runtime/keys.d.ts",
       "import": "./dist/runtime/keys.js"
     },
-    "./internal/entity-motion": {
-      "types": "./dist/internal/entity-motion.d.ts",
-      "import": "./dist/internal/entity-motion.js"
-    },
     "./install-polyfills": {
       "types": "./dist/install-polyfills.d.ts",
       "import": "./dist/install-polyfills.js"

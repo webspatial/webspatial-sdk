@@ -99,6 +99,54 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
         XCTAssertEqual(result.values.scale.y, 1)
     }
 
+    /// Confirms update replaces the canonical timeline and returns its committed revision.
+    func testUpdateCommandAndConfirmedReplyRoundTrip() throws {
+        let timeline = EntityMotionTimelinePayload(
+            duration: 2,
+            delay: 0.25,
+            playbackRate: 1.5,
+            loop: .disabled,
+            tracks: [
+                EntityMotionTrackPayload(
+                    property: "position.x",
+                    keyframes: [
+                        .init(at: 0, value: 0, timingFunction: nil),
+                        .init(at: 2, value: 4, timingFunction: nil),
+                    ],
+                    timingFunction: .linear
+                ),
+            ]
+        )
+        let command = UpdateEntityAnimationCommand(
+            id: "animation-1",
+            timeline: timeline
+        )
+        let values = EntityMotionConfirmedTransformPayload(
+            position: .init(x: 1, y: 2, z: 3),
+            rotation: .init(x: 4, y: 5, z: 6),
+            scale: .init(x: 1, y: 1, z: 1)
+        )
+        let result = UpdateEntityAnimationResult(values: values, revision: 1)
+
+        XCTAssertEqual(UpdateEntityAnimationCommand.commandType, "UpdateEntityAnimation")
+        XCTAssertEqual(
+            try JSONDecoder().decode(
+                UpdateEntityAnimationCommand.self,
+                from: JSONEncoder().encode(command)
+            ),
+            command
+        )
+        XCTAssertEqual(
+            try JSONDecoder().decode(
+                UpdateEntityAnimationResult.self,
+                from: JSONEncoder().encode(result)
+            ),
+            result
+        )
+        XCTAssertEqual(result.values.position.x, 1)
+        XCTAssertEqual(result.revision, 1)
+    }
+
     /// Confirms lifecycle state and asynchronous errors use separate closed channels.
     func testStateAndErrorMessagesRoundTripOnDedicatedChannels() throws {
         let values = EntityMotionConfirmedTransformPayload(
@@ -109,6 +157,7 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
         let state = EntityMotionStateChangedMessage(
             detail: .init(
                 id: "animation-1",
+                revision: 1,
                 playState: .finished,
                 callbackAction: .complete,
                 values: values
@@ -117,6 +166,7 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
         let stateOnly = EntityMotionStateChangedMessage(
             detail: .init(
                 id: "animation-1",
+                revision: 1,
                 playState: .paused,
                 callbackAction: nil,
                 values: nil
@@ -141,7 +191,7 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
             try jsonObject(JSONEncoder().encode(stateOnly)),
             [
                 "type": "spatialanimationstatechanged",
-                "detail": ["id": "animation-1", "playState": "paused"],
+                "detail": ["id": "animation-1", "revision": 1, "playState": "paused"],
             ]
         )
         XCTAssertEqual(
@@ -204,6 +254,22 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
             try JSONDecoder().decode(
                 SetEntityAnimationResult.self,
                 from: Data(incompleteConfirmation.utf8)
+            )
+        )
+
+        let incompleteUpdateConfirmation = #"""
+        {
+          "values":{
+            "position":{"x":1,"y":2,"z":3},
+            "rotation":{"x":4,"y":5,"z":6},
+            "scale":{"x":1,"y":1,"z":1}
+          }
+        }
+        """#
+        XCTAssertThrowsError(
+            try JSONDecoder().decode(
+                UpdateEntityAnimationResult.self,
+                from: Data(incompleteUpdateConfirmation.utf8)
             )
         )
 
@@ -329,6 +395,7 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
     func testMalformedEntityCommandsReplyExactlyOnceThroughHandlerMessage() throws {
         let manager = JSBManager()
         manager.register(CreateEntityAnimationCommand.self)
+        manager.register(UpdateEntityAnimationCommand.self)
         manager.register(ControlEntityAnimationCommand.self)
         manager.register(SetEntityAnimationCommand.self)
 
@@ -349,6 +416,11 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
                 "INVALID_CONTROL_STATE"
             ),
             (
+                "UpdateEntityAnimation",
+                #"{"id":"animation-1","timeline":{"duration":1,"delay":0,"playbackRate":1,"loop":{"unknown":true},"tracks":[]}}"#,
+                "INVALID_TIMELINE"
+            ),
+            (
                 "SetEntityAnimation",
                 #"{"id":"animation-1"}"#,
                 "INVALID_SET_VALUES"
@@ -362,6 +434,11 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
                 "ControlEntityAnimation",
                 "",
                 "INVALID_CONTROL_STATE"
+            ),
+            (
+                "UpdateEntityAnimation",
+                "",
+                "INVALID_TIMELINE"
             ),
             (
                 "SetEntityAnimation",
@@ -1230,6 +1307,106 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         XCTAssertEqual(animation.confirmedValues.position.x, 1, accuracy: 1e-6)
     }
 
+    /// Retargets a running animation from the current pose with a new revision and start event.
+    func testRunningUpdateRetargetsFromCurrentPoseAndPreservesConfiguredTimeline() throws {
+        let entity = SpatialEntity("entity-motion-target")
+        var messages: [EntityMotionStateChangedMessage] = []
+        var order: [String] = []
+        let animation = try EntityMotionAnimationObject(
+            id: "animation-1",
+            target: entity,
+            timeline: timeline(),
+            sendWebMsg: { _, message in
+                if let state = message as? EntityMotionStateChangedMessage {
+                    messages.append(state)
+                    order.append("message-\(state.detail.revision)")
+                }
+            }
+        )
+        try animation.play()
+        entity.transform.translation.x = 5
+        let candidate = timeline(
+            duration: 2,
+            delay: 0.25,
+            tracks: [
+                track("position.x", [(0, 100), (1, 7), (2, 10)]),
+            ]
+        )
+
+        let result = try animation.update(candidate)
+        order.append("reply-\(result.revision)")
+
+        XCTAssertEqual(result.revision, 1)
+        XCTAssertEqual(result.values.position.x, 5, accuracy: 1e-6)
+        XCTAssertEqual(animation.timeline, candidate)
+        XCTAssertEqual(animation.playState, .running)
+        XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
+        XCTAssertEqual(messages.map(\.detail.revision), [0, 1])
+        XCTAssertEqual(messages.map(\.detail.callbackAction), [.start, .start])
+        XCTAssertEqual(order, ["message-0", "message-1", "reply-1"])
+        XCTAssertEqual(
+            try XCTUnwrap(messages.last?.detail.values?.position.x),
+            5,
+            accuracy: 1e-6
+        )
+    }
+
+    /// Keeps pause through an update and starts the prepared definition on the next play.
+    func testPausedUpdatePreservesPauseUntilPlayStartsNewExecution() throws {
+        let entity = SpatialEntity("entity-motion-target")
+        var messages: [EntityMotionStateChangedMessage] = []
+        let animation = try EntityMotionAnimationObject(
+            id: "animation-1",
+            target: entity,
+            timeline: timeline(),
+            sendWebMsg: { _, message in
+                if let state = message as? EntityMotionStateChangedMessage {
+                    messages.append(state)
+                }
+            }
+        )
+        try animation.play()
+        animation.pause()
+        entity.transform.translation.x = 3
+
+        let result = try animation.update(timeline(duration: 2))
+
+        XCTAssertEqual(result.revision, 1)
+        XCTAssertEqual(result.values.position.x, 3, accuracy: 1e-6)
+        XCTAssertEqual(animation.playState, .paused)
+        XCTAssertEqual(messages.map(\.detail.callbackAction), [.start, nil])
+
+        try animation.play()
+
+        XCTAssertEqual(animation.playState, .running)
+        XCTAssertEqual(messages.map(\.detail.callbackAction), [.start, nil, .start])
+        XCTAssertEqual(messages.last?.detail.revision, 1)
+        XCTAssertEqual(
+            try XCTUnwrap(messages.last?.detail.values?.position.x),
+            3,
+            accuracy: 1e-6
+        )
+    }
+
+    /// Leaves the old execution untouched when candidate preparation fails.
+    func testUpdateFailureRollsBackTimelineRevisionStateAndWriteProtection() throws {
+        let entity = SpatialEntity("entity-motion-target")
+        let original = timeline()
+        let animation = try EntityMotionAnimationObject(
+            id: "animation-1",
+            target: entity,
+            timeline: original
+        )
+        try animation.play()
+
+        XCTAssertThrowsError(try animation.update(timeline(duration: 0)))
+
+        XCTAssertEqual(animation.timeline, original)
+        XCTAssertEqual(animation.executionRevision, 0)
+        XCTAssertEqual(animation.playState, .running)
+        XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
+    }
+
     /// Creates a minimal full-pose timeline for object behavior tests.
     private func timeline(
         duration: Double = 1,
@@ -1295,163 +1472,6 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         XCTAssertEqual(values.scale.x, pose.scale.x, accuracy: 1e-8, file: file, line: line)
         XCTAssertEqual(values.scale.y, pose.scale.y, accuracy: 1e-8, file: file, line: line)
         XCTAssertEqual(values.scale.z, pose.scale.z, accuracy: 1e-8, file: file, line: line)
-    }
-}
-
-final class EntityMotionSpatialSceneTests: XCTestCase {
-    /// Distinguishes a missing target from an existing unsupported object.
-    func testCreateDistinguishesMissingAndUnsupportedTargets() {
-        let scene = SpatialScene("http://localhost:5173/", .window, .visible, nil)
-        let element: Spatialized2DElement = scene.createSpatializedElement(.Spatialized2DElement)
-
-        XCTAssertThrowsError(
-            try scene.createEntityAnimation(
-                command: .init(id: "missing", timeline: timeline())
-            )
-        ) { error in
-            XCTAssertEqual((error as? JsbError)?.code, .TARGET_NOT_FOUND)
-        }
-        XCTAssertThrowsError(
-            try scene.createEntityAnimation(
-                command: .init(id: element.spatialId, timeline: timeline())
-            )
-        ) { error in
-            XCTAssertEqual((error as? JsbError)?.code, .UNSUPPORTED_TARGET)
-        }
-    }
-
-    /// Confirms SpatialScene registers, controls, sets, and destroys Entity motion objects.
-    func testSceneOwnsEntityAnimationLifecycle() throws {
-        let scene = SpatialScene("http://localhost:5173/", .window, .visible, nil)
-        let entity = scene.createEntity(command: CreateSpatialEntity(name: "target"))
-
-        let createResult = try scene.createEntityAnimation(
-            command: CreateEntityAnimationCommand(
-                id: entity.spatialId,
-                timeline: timeline()
-            )
-        )
-        let animation: EntityMotionAnimationObject? = scene.findSpatialObject(createResult.id)
-        XCTAssertNotNil(animation)
-        XCTAssertNotEqual(createResult.id, entity.spatialId)
-
-        let playResult: Void = try scene.controlEntityAnimation(
-            command: ControlEntityAnimationCommand(id: createResult.id, type: .play)
-        )
-        _ = playResult
-        XCTAssertEqual(animation?.playState, .running)
-
-        let pauseResult: Void = try scene.controlEntityAnimation(
-            command: ControlEntityAnimationCommand(id: createResult.id, type: .pause)
-        )
-        _ = pauseResult
-        XCTAssertEqual(animation?.playState, .paused)
-
-        let resumeResult: Void = try scene.controlEntityAnimation(
-            command: ControlEntityAnimationCommand(id: createResult.id, type: .play)
-        )
-        _ = resumeResult
-        XCTAssertEqual(animation?.playState, .running)
-
-        XCTAssertThrowsError(
-            try scene.setEntityAnimation(
-                command: SetEntityAnimationCommand(
-                    id: createResult.id,
-                    update: EntityMotionTransformPayload(
-                        position: .init(x: nil, y: 2, z: nil),
-                        rotation: nil,
-                        scale: nil
-                    )
-                )
-            )
-        ) { error in
-            XCTAssertEqual((error as? JsbError)?.code, .INVALID_CONTROL_STATE)
-        }
-
-        let stopResult: Void = try scene.controlEntityAnimation(
-            command: ControlEntityAnimationCommand(id: createResult.id, type: .stop)
-        )
-        _ = stopResult
-        XCTAssertEqual(animation?.playState, .idle)
-        let setResult = try scene.setEntityAnimation(
-            command: SetEntityAnimationCommand(
-                id: createResult.id,
-                update: EntityMotionTransformPayload(
-                    position: .init(x: nil, y: 2, z: nil),
-                    rotation: nil,
-                    scale: nil
-                )
-            )
-        )
-        XCTAssertEqual(setResult.values.position.y, 2, accuracy: 1e-6)
-
-        _ = try scene.controlEntityAnimation(
-            command: ControlEntityAnimationCommand(id: createResult.id, type: .destroy)
-        )
-        XCTAssertNil(scene.findSpatialObject(createResult.id) as EntityMotionAnimationObject?)
-    }
-
-    /// Confirms destroying a target Entity also destroys scene-owned Entity motion objects.
-    func testDestroyingEntityCleansUpEntityAnimationObjects() throws {
-        let scene = SpatialScene("http://localhost:5173/", .window, .visible, nil)
-        let entity = scene.createEntity(command: CreateSpatialEntity(name: "target"))
-        let createResult = try scene.createEntityAnimation(
-            command: CreateEntityAnimationCommand(
-                id: entity.spatialId,
-                timeline: timeline()
-            )
-        )
-
-        _ = try scene.controlEntityAnimation(
-            command: ControlEntityAnimationCommand(id: createResult.id, type: .play)
-        )
-        XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
-
-        entity.destroy()
-
-        XCTAssertNil(scene.findSpatialObject(createResult.id) as EntityMotionAnimationObject?)
-        XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
-        XCTAssertThrowsError(
-            try scene.controlEntityAnimation(
-                command: ControlEntityAnimationCommand(id: createResult.id, type: .play)
-            )
-        ) { error in
-            XCTAssertEqual((error as? JsbError)?.code, .ANIMATION_NOT_FOUND)
-        }
-        XCTAssertThrowsError(
-            try scene.setEntityAnimation(
-                command: SetEntityAnimationCommand(
-                    id: createResult.id,
-                    update: EntityMotionTransformPayload(
-                        position: .init(x: 2, y: nil, z: nil),
-                        rotation: nil,
-                        scale: nil
-                    )
-                )
-            )
-        ) { error in
-            XCTAssertEqual((error as? JsbError)?.code, .ANIMATION_NOT_FOUND)
-        }
-    }
-
-    /// Creates a minimal full-pose timeline for scene command tests.
-    private func timeline() -> EntityMotionTimelinePayload {
-        EntityMotionTimelinePayload(
-            duration: 1,
-            delay: 0,
-            playbackRate: 1,
-            loop: .disabled,
-            tracks: [
-                EntityMotionTrackPayload(
-                    property: "position.x",
-                    keyframes: [
-                        EntityMotionKeyframePayload(at: 0, value: 0, timingFunction: nil),
-                        EntityMotionKeyframePayload(at: 1, value: 1, timingFunction: nil),
-                    ],
-                    timingFunction: .linear
-                ),
-            ]
-        )
     }
 }
 

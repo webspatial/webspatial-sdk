@@ -4,7 +4,6 @@ import type {
   EntityMotionProps,
   EntityPlaybackApi,
 } from '@webspatial/core-sdk'
-import { validateEntityMotionConfigSilently } from '@webspatial/core-sdk/internal/entity-motion'
 import {
   EntityMotionBinding,
   type EntityMotionAnimation,
@@ -23,7 +22,6 @@ export type UseEntityAnimationResult = [
 export function useEntityAnimation(
   config: EntityMotionConfig,
 ): UseEntityAnimationResult {
-  validateEntityMotionConfigSilently(config)
   const bindingRef = useRef<EntityMotionBinding | null>(null)
   if (bindingRef.current === null) {
     bindingRef.current = new EntityMotionBinding(config)

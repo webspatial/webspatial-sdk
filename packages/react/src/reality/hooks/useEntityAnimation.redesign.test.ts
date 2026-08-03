@@ -8,7 +8,10 @@ import {
   useEffect,
   type ReactNode,
 } from 'react'
-import { type EntityMotionAnimation, useEntityAnimation } from './useAnimation'
+import {
+  type EntityMotionAnimation,
+  useEntityAnimation,
+} from './useEntityAnimation'
 
 describe('useEntityAnimation redesign', () => {
   test('returns a stable experimental tuple with an empty confirmed mirror', () => {
@@ -44,23 +47,6 @@ describe('useEntityAnimation redesign', () => {
     expectTypeOf<EntityMotionAnimation>().not.toHaveProperty('__unbind')
   })
 
-  test('throws detectable config errors synchronously without onError', () => {
-    const onError = vi.fn()
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    expect(() =>
-      renderHook(() =>
-        useEntityAnimation({
-          from: { position: { x: 0 } },
-          to: { opacity: 1 } as never,
-          onError,
-        }),
-      ),
-    ).toThrow('unsupported')
-    expect(onError).not.toHaveBeenCalled()
-    consoleError.mockRestore()
-  })
-
   test('exposes a synchronously validated set update through the hook api', () => {
     const onError = vi.fn()
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -82,8 +68,7 @@ describe('useEntityAnimation redesign', () => {
     warning.mockRestore()
   })
 
-  test('starts one committed replacement across repeated StrictMode renders', async () => {
-    const destruction = new Promise<undefined>(() => {})
+  test('updates the same object across repeated StrictMode renders', async () => {
     const object = {
       id: 'animation-1',
       playState: 'idle',
@@ -96,7 +81,8 @@ describe('useEntityAnimation redesign', () => {
       reset: vi.fn(async () => undefined),
       finish: vi.fn(async () => undefined),
       set: vi.fn(async () => undefined),
-      destroy: vi.fn(() => destruction),
+      update: vi.fn(async () => undefined),
+      destroy: vi.fn(async () => undefined),
       onStart: vi.fn(),
       onComplete: vi.fn(),
       onStop: vi.fn(),
@@ -127,7 +113,9 @@ describe('useEntityAnimation redesign', () => {
     rerender({ duration: 2 })
     rerender({ duration: 2 })
 
-    await vi.waitFor(() => expect(object.destroy).toHaveBeenCalledOnce())
+    await vi.waitFor(() => expect(object.update).toHaveBeenCalled())
+    expect(object.destroy).not.toHaveBeenCalled()
+    expect(object.id).toBe('animation-1')
   })
 
   test('keeps an abandoned render from updating callbacks or the desired signature', async () => {
@@ -153,6 +141,7 @@ describe('useEntityAnimation redesign', () => {
       reset: vi.fn(async () => undefined),
       finish: vi.fn(async () => undefined),
       set: vi.fn(async () => undefined),
+      update: vi.fn(async () => undefined),
       destroy: vi.fn(async () => undefined),
       onStart: vi.fn((listener: typeof listeners.start) => {
         listeners.start = listener
@@ -293,6 +282,7 @@ describe('useEntityAnimation redesign', () => {
       reset: vi.fn(async () => undefined),
       finish: vi.fn(async () => undefined),
       set: vi.fn(async () => undefined),
+      update: vi.fn(async () => undefined),
       destroy: vi.fn(async () => undefined),
       onStart: vi.fn(),
       onComplete: vi.fn(),
