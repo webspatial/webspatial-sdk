@@ -1220,6 +1220,43 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         XCTAssertEqual(actions, [.complete])
     }
 
+    /// Confirms finish commits the configured endpoint once for every loop mode.
+    func testFinishCommitsEndpointOnceForEveryLoopMode() throws {
+        let loopModes: [EntityMotionLoopPayload] = [
+            .disabled,
+            .enabled,
+            .options(reverse: true),
+        ]
+
+        for (index, loop) in loopModes.enumerated() {
+            let entity = SpatialEntity("entity-motion-target-\(index)")
+            var messages: [EntityMotionStateChangedMessage] = []
+            let animation = try EntityMotionAnimationObject(
+                id: "animation-\(index)",
+                target: entity,
+                timeline: timeline(
+                    loop: loop,
+                    tracks: [
+                        track("position.x", [(0, 1), (1, 4)]),
+                    ]
+                ),
+                sendWebMsg: { _, message in
+                    if let state = message as? EntityMotionStateChangedMessage {
+                        messages.append(state)
+                    }
+                }
+            )
+
+            try animation.finish()
+            try animation.finish()
+
+            XCTAssertEqual(animation.playState, .finished)
+            XCTAssertEqual(entity.transform.translation.x, 4, accuracy: 1e-6)
+            XCTAssertEqual(messages.map(\.detail.callbackAction), [.complete])
+            XCTAssertEqual(messages.last?.detail.playState, .finished)
+        }
+    }
+
     /// Confirms the complete state-command matrix emits lifecycle actions only for accepted transitions.
     func testStateCommandMatrixEmitsOnlyAcceptedLifecycleActions() throws {
         let entity = SpatialEntity("entity-motion-target")
@@ -1341,6 +1378,43 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         XCTAssertEqual(messages.map(\.detail.callbackAction), [.reset])
     }
 
+    /// Confirms a finished update stays inactive and defers its next baseline until play.
+    func testFinishedUpdateDefersBaselineUntilFreshPlay() throws {
+        let entity = SpatialEntity("entity-motion-target")
+        entity.transform.translation = SIMD3<Float>(0, 1, 0)
+        var messages: [EntityMotionStateChangedMessage] = []
+        let animation = try EntityMotionAnimationObject(
+            id: "animation-1",
+            target: entity,
+            timeline: timeline(),
+            sendWebMsg: { _, message in
+                if let state = message as? EntityMotionStateChangedMessage {
+                    messages.append(state)
+                }
+            }
+        )
+        try animation.finish()
+        let candidate = timeline(
+            tracks: [
+                track("position.x", [(0, 2), (1, 4)]),
+            ]
+        )
+
+        let result = try animation.update(candidate)
+        entity.transform.translation.y = 5
+
+        XCTAssertEqual(result.revision, 1)
+        XCTAssertEqual(animation.playState, .finished)
+        XCTAssertEqual(messages.map(\.detail.callbackAction), [.complete])
+
+        try animation.play()
+
+        XCTAssertEqual(animation.playState, .running)
+        XCTAssertEqual(animation.confirmedValues.position.x, 2, accuracy: 1e-6)
+        XCTAssertEqual(animation.confirmedValues.position.y, 5, accuracy: 1e-6)
+        XCTAssertEqual(messages.map(\.detail.callbackAction), [.complete, .start])
+    }
+
     /// Retargets a running animation from the current pose with a new revision and start event.
     func testRunningUpdateRetargetsFromCurrentPoseAndPreservesConfiguredTimeline() throws {
         let entity = SpatialEntity("entity-motion-target")
@@ -1362,8 +1436,13 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         let candidate = timeline(
             duration: 2,
             delay: 0.25,
+            playbackRate: 1.5,
             tracks: [
-                track("position.x", [(0, 100), (1, 7), (2, 10)]),
+                track(
+                    "position.x",
+                    [(0, 100), (1, 7), (2, 10)],
+                    timing: .easeOut
+                ),
             ]
         )
 
@@ -1383,6 +1462,37 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
             5,
             accuracy: 1e-6
         )
+    }
+
+    /// Confirms completion from the replaced execution cannot finish the new run.
+    func testRunningUpdateIgnoresStaleCompletionRevision() throws {
+        let entity = SpatialEntity("entity-motion-target")
+        var messages: [EntityMotionStateChangedMessage] = []
+        let animation = try EntityMotionAnimationObject(
+            id: "animation-1",
+            target: entity,
+            timeline: timeline(),
+            sendWebMsg: { _, message in
+                if let state = message as? EntityMotionStateChangedMessage {
+                    messages.append(state)
+                }
+            }
+        )
+        try animation.play()
+        let result = try animation.update(timeline(duration: 2))
+
+        animation.completeNaturally(revision: 0)
+
+        XCTAssertEqual(result.revision, 1)
+        XCTAssertEqual(animation.playState, .running)
+        XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
+        XCTAssertEqual(messages.map(\.detail.callbackAction), [.start, .start])
+
+        animation.completeNaturally(revision: 1)
+
+        XCTAssertEqual(animation.playState, .finished)
+        XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
+        XCTAssertEqual(messages.map(\.detail.callbackAction), [.start, .start, .complete])
     }
 
     /// Keeps pause through an update and starts the prepared definition on the next play.
