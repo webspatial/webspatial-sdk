@@ -105,6 +105,8 @@ export function supports(name: string, tokens?: readonly string[]): boolean {
   if (tokList.length === 0) {
     return row.flags[canonical] === true
   }
-  if (row.flags[canonical] !== true) return false
+  if (row.flags[canonical] !== true) {
+    return false
+  }
   return tokList.every(t => row.flags[`${canonical}:${t}`] === true)
 }

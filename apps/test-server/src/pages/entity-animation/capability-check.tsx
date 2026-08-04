@@ -8,7 +8,7 @@ export default function EntityAnimationCapabilityCheckPage() {
   return (
     <EntityAnimationPageShell
       title="Capability Detection"
-      description="Check whether the current runtime reports support for the useAnimation hook."
+      description="Check whether the current runtime reports support for the useEntityAnimation hook; the runtime probe key remains useAnimation."
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <p className="text-sm text-gray-400">

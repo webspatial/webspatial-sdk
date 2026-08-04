@@ -108,7 +108,10 @@ export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
     'baseplateVisibility',
   ],
   SpatialRotateEvent: ['constrainedToAxis'],
-  useAnimation: ['entity'],
+  // Placement-shaped attachment JSB protocol (placementId + Vec3 transform +
+  // meter width/height). Runtimes without it take the legacy payload
+  // (parentEntityId + tuple position + point size).
+  AttachmentEntity: ['placement'],
   Model: [
     'autoplay',
     'loop',

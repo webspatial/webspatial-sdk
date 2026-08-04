@@ -13,6 +13,11 @@ import { Spatialized2DElementProperties } from './types/types'
  */
 export class Spatialized2DElement extends SpatializedElement {
   /**
+   * Identifies the motion target kind supported by this element.
+   */
+  override readonly kind = 'spatialized2d' as const
+
+  /**
    * Creates a new spatialized 2D element.
    * @param id Unique identifier for this element
    * @param windowProxy Reference to the window object containing the 2D content

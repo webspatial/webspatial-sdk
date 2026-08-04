@@ -6,8 +6,9 @@ export default function EntityAnimationPage() {
       <div className="mx-auto max-w-6xl">
         <h1 className="mb-2 text-2xl font-bold">Entity Transform Animation</h1>
         <p className="mb-2 max-w-3xl text-sm text-gray-400">
-          Test pages for the <code className="text-cyan-300">useAnimation</code>{' '}
-          hook (OpenSpec:{' '}
+          Test pages for the{' '}
+          <code className="text-cyan-300">useEntityAnimation</code> hook
+          (OpenSpec:{' '}
           <code className="text-cyan-300">add-entity-transform-animation</code>
           ). Animations run natively at 90 fps via the JSBridge with no
           per-frame JS calls.
@@ -36,7 +37,8 @@ export default function EntityAnimationPage() {
               Stop and sync: after stop, the next render keeps the stop-point.
             </li>
             <li>
-              Capability: <code>supports('useAnimation', ['entity'])</code> is
+              Capability: <code>supports('useAnimation', ['entity'])</code>{' '}
+              probes the runtime key for <code>useEntityAnimation</code> and is
               true in WebSpatial runtime and false otherwise.
             </li>
             <li>Reset loop: box moves, resets to the start, and repeats.</li>

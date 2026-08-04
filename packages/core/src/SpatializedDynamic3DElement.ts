@@ -11,6 +11,11 @@ import {
 } from './types/types'
 
 export class SpatializedDynamic3DElement extends SpatializedElement {
+  /**
+   * Identifies the motion target kind supported by this element.
+   */
+  override readonly kind = 'dynamic3d' as const
+
   children: SpatialEntityOrReality[] = []
   events: Record<string, (data: any) => void> = {}
 

@@ -10,3 +10,11 @@ registerReactSdkEntry('lazy')
 
 export { Ornament } from './facades/Ornament'
 export type { OrnamentProps } from './facades/Ornament'
+export { useAnimation } from './hooks-web/useAnimation'
+export { useEntityAnimation } from './hooks-web/useEntityAnimation'
+export type {
+  UseAnimationResult,
+  SpatializedMotionConfig,
+  SpatializedMotionSegmentConfig,
+  SpatializedPlaybackApi,
+} from './spatialized-container/motion'

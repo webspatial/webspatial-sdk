@@ -314,6 +314,7 @@ describe('lazy-load facades', () => {
             id="x"
             url="u"
             src="s"
+            name="n"
             attachment="a"
             size={{ width: 0, height: 0 }}
           >
@@ -400,6 +401,33 @@ describe('lazy-load facades', () => {
       expect(section.hasAttribute('onspatialtap')).toBe(false)
       expect(section.hasAttribute('spatialeventoptions')).toBe(false)
       expect(ref.current).toBe(section)
+    })
+
+    it('withSpatialized2DElementContainer fallback does not bind xr-animation in plain-web mode', () => {
+      const Wrapped = withSpatialized2DElementContainer(
+        'section',
+      ) as unknown as React.ComponentType<Record<string, unknown>>
+      const motion = {
+        __kind: 'spatializedMotion' as const,
+        __setElement: vi.fn(),
+        __onUnbind: vi.fn(),
+      }
+
+      const { getByTestId, unmount } = render(
+        <Wrapped xr-animation={motion} data-testid="fallback-motion-host">
+          Motion host
+        </Wrapped>,
+      )
+      const host = getByTestId('fallback-motion-host')
+
+      expect(host.hasAttribute('xr-animation')).toBe(false)
+      expect(motion.__setElement).not.toHaveBeenCalled()
+      expect(motion.__onUnbind).not.toHaveBeenCalled()
+
+      unmount()
+
+      expect(motion.__setElement).not.toHaveBeenCalled()
+      expect(motion.__onUnbind).not.toHaveBeenCalled()
     })
 
     it('withSpatialMonitor fallback renders the raw El transparently', () => {

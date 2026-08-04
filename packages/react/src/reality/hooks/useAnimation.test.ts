@@ -22,7 +22,7 @@ vi.mock('@webspatial/core-sdk', async () => {
 })
 
 // Import after mock
-const { useAnimation } = await import('./useAnimation')
+const { useEntityAnimation: useAnimation } = await import('./useAnimation')
 
 const baseConfig: AnimationConfig = {
   to: { position: { x: 1, y: 0, z: 0 } },
