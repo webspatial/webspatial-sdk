@@ -78,6 +78,7 @@ export const routes = [
     ],
   },
   { path: '/unit-convert', label: 'Unit Convert' },
+  { path: '/scene/ornament-test', label: 'Ornament Test' },
   {
     path: '/scene',
     label: 'Scene',

@@ -60,6 +60,7 @@
 				Dynamic3DManager.swift,
 				FileCoordinator.swift,
 				JSBManager.swift,
+				OrnamentManager.swift,
 				WKWebViewManager.swift,
 			);
 			target = 2B2F1D622BEBFAAA006897EE /* web-spatial */;
@@ -87,6 +88,7 @@
 				"element-motion/SpatializedElementMotionTiming.swift",
 				"element-motion/SpatializedElementMotionTransformTypes.swift",
 				MaterialSceneRefresh.swift,
+				OrnamentElement.swift,
 				SpatialApp.swift,
 				Spatialized2DElement.swift,
 				SpatializedDynamic3DElement.swift,
@@ -118,6 +120,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				LoadingView.swift,
+				OrnamentHost.swift,
 				SceneHandlerUIView.swift,
 				Spatialized2DElementView.swift,
 				SpatializedDynamic3DView.swift,

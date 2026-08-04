@@ -970,4 +970,3 @@ The contracts that are **specific to the lazy-load default entry** and do NOT ap
 - **WHEN** a future change proposes to add, remove, or restructure a distribution form (e.g. adding an SSR-only entry, removing the lazy-load entry if product feedback shows it unused, splitting the eager entry by capability)
 - **THEN** the change proposal MUST explicitly enumerate which packaging-hygiene contracts from this Requirement's preamble continue to hold and which (if any) need updating
 - **AND** removing or weakening any hygiene contract MUST be a separately-justified breaking change with its own CHANGELOG entry, NOT a side effect of the distribution-form restructuring
-

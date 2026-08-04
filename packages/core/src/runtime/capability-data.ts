@@ -23,6 +23,7 @@ function baseTrueFlags(): Record<string, boolean> {
       flags[`${name}:${t}`] = true
     }
   }
+  flags['Ornament'] = false
   return flags
 }
 
@@ -85,6 +86,7 @@ function matrixVision_1_7_0_Flags(): Record<string, boolean> {
   flags['Model:currentTime'] = true
   flags['Model:loading'] = true
   flags['Model:poster'] = true
+  flags['Ornament'] = true
   return flags
 }
 
@@ -136,6 +138,7 @@ function matrixPico_0_2_2_Flags(): Record<string, boolean> {
 function matrixPico_0_3_1_Flags(): Record<string, boolean> {
   const flags = matrixPico_0_2_2_Flags()
   flags['Model:loading'] = true
+  flags['Ornament'] = true
   return flags
 }
 

@@ -75,6 +75,23 @@ export class CreateSpatialized2DElement implements CommandDataProtocol {
   url: string = ''
 }
 
+export class AddOrnamentToScene implements CommandDataProtocol {
+  commandType = 'AddOrnamentToScene'
+  ornamentId: string = ''
+}
+
+export class UpdateOrnament implements CommandDataProtocol {
+  commandType = 'UpdateOrnament'
+  id: string = ''
+  attachmentAnchor?: string
+  contentAlignment?: string
+  visibility?: string
+  width?: number
+  height?: number
+  cornerRadius?: CornerRadius
+  backgroundMaterial?: BackgroundMaterial
+}
+
 // Update spatialized 2D element properties command
 export class UpdateSpatialized2DElementProperties
   implements SpatializedElementProperties

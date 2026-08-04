@@ -122,6 +122,10 @@ export type {
   // Attachment options.
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
+  // Ornament options.
+  OrnamentOptions,
+  OrnamentPoint3D,
+  OrnamentVisibility,
   // PWA manifest + scene config (used by builder tooling and consumer
   // manifest authoring).
   XRSceneSize,
