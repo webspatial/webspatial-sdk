@@ -31,6 +31,8 @@ export default function EntityAnimationPage() {
             <li>Entrance: box rises and scales up after 0.3 s delay.</li>
             <li>
               Manual: play moves box left-to-right and stop freezes mid-flight.
+              React transform probes are blocked during delay, running, and
+              paused states, then accepted after playback becomes inactive.
             </li>
             <li>
               Reverse loop: box rotates back and forth and pause/resume works.
@@ -43,6 +45,20 @@ export default function EntityAnimationPage() {
               support on compatible WebSpatial runtimes.
             </li>
             <li>Reset loop: box moves, resets to the start, and repeats.</li>
+            <li>
+              In-place config update: execution changes keep the React animation
+              reference stable; running and paused retargets preserve pose and
+              state; callback-only updates use the latest callback.
+            </li>
+            <li>
+              Binding ownership: unbind clears entityProps and restores React
+              control; binding the same animation to a second Entity is rejected
+              without disturbing the first.
+            </li>
+            <li>
+              Callback scenarios report PASS only when start, complete, stop,
+              and reset callbacks match their expected exactly-once counts.
+            </li>
             <li>
               All lifecycle callbacks appear in the log panel when the runtime
               supports the animation flow.

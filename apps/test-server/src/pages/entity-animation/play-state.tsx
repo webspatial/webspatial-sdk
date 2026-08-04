@@ -12,11 +12,41 @@ import {
   useLog,
 } from './shared'
 
+type CallbackCounts = {
+  start: number
+  complete: number
+  stop: number
+  reset: number
+}
+
+type CallbackScenario = 'none' | 'natural' | 'finish' | 'stop' | 'reset'
+
+const emptyCallbackCounts: CallbackCounts = {
+  start: 0,
+  complete: 0,
+  stop: 0,
+  reset: 0,
+}
+
+const callbackExpectations: Record<
+  Exclude<CallbackScenario, 'none'>,
+  CallbackCounts
+> = {
+  natural: { start: 1, complete: 1, stop: 0, reset: 0 },
+  finish: { start: 0, complete: 1, stop: 0, reset: 0 },
+  stop: { start: 1, complete: 0, stop: 1, reset: 0 },
+  reset: { start: 1, complete: 0, stop: 0, reset: 1 },
+}
+
 export default function EntityAnimationPlayStatePage() {
   const logger = useLog()
   const entityRef = useRef<EntityRefShape>(null)
   const [targetDestroyed, setTargetDestroyed] = useState(false)
   const [onErrorCount, setOnErrorCount] = useState(0)
+  const [callbackCounts, setCallbackCounts] =
+    useState<CallbackCounts>(emptyCallbackCounts)
+  const [callbackScenario, setCallbackScenario] =
+    useState<CallbackScenario>('none')
 
   const [animation, api, entityProps] = useEntityAnimation({
     from: {
@@ -31,17 +61,29 @@ export default function EntityAnimationPlayStatePage() {
     duration: 4.0,
     timingFunction: 'easeInOut',
     autoStart: false,
-    onStart: () => logger.log(`[cb] onStart — playState=${api.playState}`),
-    onComplete: () =>
-      logger.log(`[cb] onComplete — playState=${api.playState}`),
-    onStop: value =>
+    onStart: () => {
+      setCallbackCounts(counts => ({ ...counts, start: counts.start + 1 }))
+      logger.log(`[cb] onStart — playState=${api.playState}`)
+    },
+    onComplete: () => {
+      setCallbackCounts(counts => ({
+        ...counts,
+        complete: counts.complete + 1,
+      }))
+      logger.log(`[cb] onComplete — playState=${api.playState}`)
+    },
+    onStop: value => {
+      setCallbackCounts(counts => ({ ...counts, stop: counts.stop + 1 }))
       logger.log(
         `[cb] onStop — playState=${api.playState} pos=${fmtVec3(value.position)}`,
-      ),
-    onReset: value =>
+      )
+    },
+    onReset: value => {
+      setCallbackCounts(counts => ({ ...counts, reset: counts.reset + 1 }))
       logger.log(
         `[cb] onReset — playState=${api.playState} pos=${fmtVec3(value.position)}`,
-      ),
+      )
+    },
     onError: error => {
       setOnErrorCount(count => count + 1)
       logger.log(`[cb] onError [${error.code}] ${error.reason}`)
@@ -52,6 +94,22 @@ export default function EntityAnimationPlayStatePage() {
     logger.log(
       `${action} → playState=${api.playState} isAnimating=${api.isAnimating} isPaused=${api.isPaused} finished=${api.finished}`,
     )
+  }
+  const expected =
+    callbackScenario === 'none' ? null : callbackExpectations[callbackScenario]
+  const callbackKeys = Object.keys(callbackCounts) as (keyof CallbackCounts)[]
+  const callbackStatus =
+    expected === null
+      ? 'NOT_ARMED'
+      : callbackKeys.some(key => callbackCounts[key] > expected[key])
+        ? 'FAIL'
+        : callbackKeys.every(key => callbackCounts[key] === expected[key])
+          ? 'PASS'
+          : 'PENDING'
+  const armScenario = (scenario: Exclude<CallbackScenario, 'none'>) => {
+    setCallbackCounts(emptyCallbackCounts)
+    setCallbackScenario(scenario)
+    logger.log(`armed callback scenario: ${scenario}`)
   }
 
   return (
@@ -76,6 +134,9 @@ export default function EntityAnimationPlayStatePage() {
           data-webspatial-finished={String(api.finished)}
           data-webspatial-target-destroyed={String(targetDestroyed)}
           data-webspatial-on-error-count={String(onErrorCount)}
+          data-webspatial-callback-scenario={callbackScenario}
+          data-webspatial-callback-status={callbackStatus}
+          data-webspatial-callback-counts={JSON.stringify(callbackCounts)}
           data-webspatial-entity-props={JSON.stringify(entityProps)}
           className="rounded-xl border border-gray-800 p-3"
         >
@@ -153,6 +214,21 @@ export default function EntityAnimationPlayStatePage() {
             </button>
           </div>
 
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button className={btnCls} onClick={() => armScenario('natural')}>
+              Arm Natural Complete
+            </button>
+            <button className={btnCls} onClick={() => armScenario('finish')}>
+              Arm Finish from Idle
+            </button>
+            <button className={btnCls} onClick={() => armScenario('stop')}>
+              Arm Play then Stop
+            </button>
+            <button className={btnCls} onClick={() => armScenario('reset')}>
+              Arm Play then Reset
+            </button>
+          </div>
+
           <div className="mt-4 flex items-center gap-3">
             <PlayStateBadge state={api.playState} />
             <span className="text-xs font-mono text-gray-500">
@@ -161,6 +237,11 @@ export default function EntityAnimationPlayStatePage() {
               &nbsp; targetDestroyed={String(targetDestroyed)} &nbsp;
               onErrorCount={onErrorCount}
             </span>
+          </div>
+          <div className="mt-2 font-mono text-xs text-gray-500">
+            callbackScenario={callbackScenario} status={callbackStatus} &nbsp;
+            start={callbackCounts.start} complete={callbackCounts.complete}{' '}
+            stop={callbackCounts.stop} reset={callbackCounts.reset}
           </div>
         </div>
 

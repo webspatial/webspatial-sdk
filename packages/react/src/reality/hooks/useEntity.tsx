@@ -1,4 +1,4 @@
-import { ForwardedRef, useEffect, useRef } from 'react'
+import { ForwardedRef, useEffect, useRef, useState } from 'react'
 import { SpatialEntity } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import { EntityEventHandler, EntityProps } from '../type'
@@ -46,6 +46,7 @@ export const useEntity = ({
   const instanceRef = useRef<EntityRef>(new EntityRef(null, ctx))
 
   const forceUpdate = useForceUpdate()
+  const [bindingError, setBindingError] = useState<Error | null>(null)
 
   // Track the current animation prop for bind/unbind
   const prevAnimationRef = useRef<EntityMotionAnimation | undefined>(undefined)
@@ -86,8 +87,15 @@ export const useEntity = ({
 
         // Bind animation if present
         if (animation) {
-          ;(animation as unknown as EntityMotionBindingInternal).__bind(ent)
-          prevAnimationRef.current = animation
+          try {
+            ;(animation as unknown as EntityMotionBindingInternal).__bind(ent)
+            prevAnimationRef.current = animation
+          } catch (error) {
+            setBindingError(
+              error instanceof Error ? error : new Error(String(error)),
+            )
+            return
+          }
         }
 
         forceUpdate()
@@ -160,6 +168,8 @@ export const useEntity = ({
       ent.enableInput = !!enableInput
     }
   }, [instanceRef.current.entity, enableInput])
+
+  if (bindingError) throw bindingError
 
   return instanceRef.current.entity
 }

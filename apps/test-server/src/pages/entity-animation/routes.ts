@@ -41,9 +41,16 @@ export const entityAnimationRoutes: EntityAnimationRoute[] = [
     description: 'Verify api.playState transitions across the full lifecycle.',
   },
   {
+    path: '/entity-animation/binding-ownership',
+    label: 'Binding and Ownership',
+    description:
+      'Verify unbind takeover and reject one animation bound to two Entities.',
+  },
+  {
     path: '/entity-animation/config-replacement',
-    label: 'Config Replacement',
-    description: 'Replace execution config, refresh callbacks, and remount.',
+    label: 'In-place Config Update',
+    description:
+      'Retarget the current binding, refresh callbacks, and start a new lifecycle on remount.',
   },
   {
     path: '/entity-animation/isolation-cleanup',
