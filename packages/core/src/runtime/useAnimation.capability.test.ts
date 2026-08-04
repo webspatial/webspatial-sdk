@@ -38,15 +38,15 @@ describe('supports("useAnimation", ["entity"])', () => {
     expect(supports('useAnimation', ['entity'])).toBe(false)
   })
 
-  test('visionOS WSAppShell/1.7.0: supports("useAnimation") is true', async () => {
+  test('visionOS WSAppShell/1.7.0: supports("useAnimation") and supports("useAnimation", ["entity"]) are false', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 (KHTML, like Gecko) WSAppShell/1.7.0 WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
-    expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
+    expect(supports('useAnimation')).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
   })
 
   test('Puppeteer UA: supports("useAnimation", ["entity"]) is true (debug mode enables all)', async () => {

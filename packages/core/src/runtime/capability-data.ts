@@ -23,6 +23,7 @@ function baseTrueFlags(): Record<string, boolean> {
       flags[`${name}:${t}`] = true
     }
   }
+  flags['Ornament'] = false
   return flags
 }
 
@@ -52,7 +53,6 @@ function matrixVision_1_5_0_Flags(): Record<string, boolean> {
   flags['SpatialRotateEvent:constrainedToAxis'] = true
   // useAnimation not supported until WSAppShell/1.7.0
   flags['useAnimation'] = false
-  flags['Ornament'] = false
   return flags
 }
 
@@ -68,18 +68,15 @@ function matrixVision_1_6_0_Flags(): Record<string, boolean> {
   flags['SpatialRotateEvent:constrainedToAxis'] = true
   // useAnimation not supported until WSAppShell/1.7.0
   flags['useAnimation'] = false
-  flags['Ornament'] = false
   return flags
 }
 
 /**
  * visionOS **WSAppShell/1.7.0** — entity transform animation support.
- * Inherits from 1.6.0 and enables `useAnimation`.
+ * Container `useAnimation` remains unavailable in this row.
  */
 function matrixVision_1_7_0_Flags(): Record<string, boolean> {
   const flags = matrixVision_1_6_0_Flags()
-  flags['useAnimation'] = true
-  flags['useAnimation:entity'] = true
   flags['Model:currentTime'] = true
   flags['Model:loading'] = true
   flags['Model:poster'] = true
@@ -113,12 +110,10 @@ function matrixPico_0_1_2_Flags(): Record<string, boolean> {
 
 /**
  * picoOS **PicoWebApp/0.2.2** — entity transform animation support.
- * Inherits from 0.1.2 and enables `useAnimation`.
+ * Container `useAnimation` remains unavailable in this row.
  */
 function matrixPico_0_2_2_Flags(): Record<string, boolean> {
   const flags = matrixPico_0_1_2_Flags()
-  flags['useAnimation'] = true
-  flags['useAnimation:entity'] = true
   return flags
 }
 

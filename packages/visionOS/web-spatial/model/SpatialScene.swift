@@ -502,9 +502,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         currentPageGeneration += 1
         injectPageEpoch()
         logger.debug("SpatialScene page generation advanced to \(currentPageGeneration)")
+        ornamentManager.destroyAll()
         // Clean up all animation sessions
         animationManager.removeAll()
-        ornamentManager.destroyAll()
         // destroy all SpatialObject asset
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
@@ -1546,8 +1546,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
      */
 
     override func onDestroy() {
-        animationManager.removeAll()
         ornamentManager.destroyAll()
+        animationManager.removeAll()
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {
             spatialObject.destroy()

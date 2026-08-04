@@ -96,7 +96,7 @@ describe('getRuntime / supports', () => {
     expect(supports('xrOuterDepth')).toBe(false)
   })
 
-  test('pico UA PicoWebApp/0.3.1: beta2.1 enables Model loading and Ornament', async () => {
+  test('pico UA PicoWebApp/0.3.1: beta2.1 enables Model loading', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (X11; Linux x86_64; unknown OS0.11.0 like Quest) AppleWebKit/537.36 PicoWebApp/0.3.1 (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0',
@@ -105,13 +105,13 @@ describe('getRuntime / supports', () => {
     resetRuntimeCacheForTests()
     expect(supports('Model', ['currentTime', 'poster', 'loading'])).toBe(true)
     expect(supports('Model', ['stagemode'])).toBe(false)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
-    expect(supports('Ornament')).toBe(true)
+    expect(supports('useAnimation')).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
     expect(supports('xrInnerDepth')).toBe(false)
     expect(supports('xrOuterDepth')).toBe(false)
   })
 
-  test('pico UA above latest known row keeps PicoWebApp/0.3.1 capabilities', async () => {
+  test('pico UA above PicoWebApp/0.3.1 keeps its capabilities before OTA0', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (X11; Linux x86_64; unknown OS0.11.0 like Quest) AppleWebKit/537.36 PicoWebApp/0.3.2 (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0',
@@ -119,8 +119,8 @@ describe('getRuntime / supports', () => {
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
     expect(supports('Model', ['currentTime', 'poster', 'loading'])).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
-    expect(supports('Ornament')).toBe(true)
+    expect(supports('useAnimation')).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
   })
 
   test('alias Box → BoxEntity', async () => {
@@ -233,7 +233,7 @@ describe('getRuntime / supports', () => {
     expect(supports('Model', ['play', 'pause', 'duration'])).toBe(true)
   })
 
-  test('visionOS WSAppShell/1.7.0: Model currentTime, loading, poster, and Ornament are supported', async () => {
+  test('visionOS WSAppShell/1.7.0: Model currentTime, loading, and poster are supported', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 (KHTML, like Gecko) WSAppShell/1.7.0 WebSpatial/1.5.0 Safari/537.36',
@@ -242,7 +242,25 @@ describe('getRuntime / supports', () => {
     resetRuntimeCacheForTests()
     expect(supports('Model', ['currentTime', 'loading', 'poster'])).toBe(true)
     expect(supports('Model', ['stagemode'])).toBe(false)
-    expect(supports('useAnimation', ['entity'])).toBe(true)
-    expect(supports('Ornament')).toBe(true)
+    expect(supports('useAnimation')).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
+  })
+
+  test('Ornament is enabled starting from picoOS 0.3.1 and visionOS 1.7.0', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (X11; Linux x86_64; unknown OS0.11.0 like Quest) AppleWebKit/537.36 PicoWebApp/0.3.1 Chrome/138.0 WebSpatial/1.5.0',
+    } as Navigator)
+    let mod = await import('./supports')
+    mod.resetRuntimeCacheForTests()
+    expect(mod.supports('Ornament')).toBe(true)
+
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.7.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    mod = await import('./supports')
+    mod.resetRuntimeCacheForTests()
+    expect(mod.supports('Ornament')).toBe(true)
   })
 })
