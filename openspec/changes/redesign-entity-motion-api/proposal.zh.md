@@ -141,7 +141,7 @@ type EntityMotionConfig = {
 }
 ```
 
-默认值为 `autoStart: true`、`timingFunction: 'easeInOut'`、`delay: 0`、`playbackRate: 1` 和 `loop: false`。包含 `timeline` 的 config 必须提供 `duration`;只有纯顶层 `from` / `to` 使用 0.3 秒默认值。非法 config 属于 programmer error,并同步抛错。
+默认值为 `autoStart: true`、`timingFunction: 'easeInOut'`、`delay: 0`、`playbackRate: 1` 和 `loop: false`。每次全新执行先等待一次全局 `delay`,再播放运动;`playbackRate` 和 `loop` 仅作用于该运动,因此延迟不随播放速率缩放,也不在循环边界重复。包含 `timeline` 的 config 必须提供 `duration`;只有纯顶层 `from` / `to` 使用 0.3 秒默认值。非法 config 属于 programmer error,并同步抛错。
 
 ### 最简写法:顶层 from / to(从一个姿态到另一个)
 

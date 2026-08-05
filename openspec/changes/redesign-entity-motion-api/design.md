@@ -992,7 +992,7 @@ classDiagram
 - **Entity animation object (`EntityMotionAnimationObject`):** stores the target id and weak target reference, canonical timeline, confirmed pose, execution revision, compiled timeline, baseline, playback controller, completion subscription, and paused prepared playback. `update()` prepares and commits a new definition, then retargets or stores a paused definition according to state. `play()` resumes an unchanged paused run or starts the updated run from its saved pose. Controller identity, execution revision, and the completion gate reject stale or duplicate completion. The object emits events through `emitStateChanged()` and `emitError()`. `update` and `set` return the complete confirmed pose.
 - **Timeline compiler (`EntityMotionTimelineCompiler`):** on each fresh play, accepts the canonical timeline and that run's baseline and slices and compiles them into one chained whole-transform RealityKit animation resource.
 - **Bridge types (`EntityMotionBridgeTypes`):** carry the native bridge encode/decode structures, including timeline data, control values, confirmed values, and errors. If the command types are sufficient, this part may exist as a few scattered structs.
-- **Playback parameter mapping (`EntityMotionTiming`):** maps the single easing already resolved for each segment, plus delay, loop, and playback rate, to the RealityKit representation; all four built-in easings map directly.
+- **Playback parameter mapping (`EntityMotionTiming`):** maps the single easing already resolved for each segment, schedules one global delay before motion, and applies loop and playback rate to the motion sequence; all four built-in easings map directly.
 - **Transform decomposition and merge (`EntityMotionTransformValues`):** responsible for decomposing the confirmed value from the entity transform, merging the sparse `api.set` update onto the committed baseline, and converting between Euler degrees and the RealityKit rotation representation.
 
 #### JSB Command Processing
@@ -1049,7 +1049,7 @@ The whole timeline maps to a single bind target — the entire `transform`. Take
 
 **Per segment — expressed with `FromToByAnimation<Transform>`.** Each segment's `from` / `to` are the full poses at the two adjacent slice points, `duration` is the segment length, `timing` is the single easing Core already resolved for that segment, and `bindTarget` is fixed to `.transform`. The visionOS animation binding granularity is the whole `.transform`, which is the root reason for choosing full-pose slicing.
 
-**Chaining — connect end to end with `sequence`.** The full-pose segment animations are chained in time order via `AnimationResource.sequence(with:)` into a single animation, so each segment carries its own easing yet plays continuously. A timeline with only a start and an end frame becomes one `FromToByAnimation<Transform>`. `delay` / `speed` / `loop` act at the top of this chained animation.
+**Chaining — connect end to end with `sequence`.** The full-pose segment animations are chained in time order via `AnimationResource.sequence(with:)` into one motion sequence, so each segment carries its own easing yet plays continuously. A timeline with only a start and an end frame becomes one `FromToByAnimation<Transform>`. Each fresh execution schedules one global `delay` before that motion sequence. `speed` and `loop` apply to the motion sequence only, so speed does not scale the delay and a loop does not repeat it.
 
 Consider an example (`position.y` has 3 keyframes, `rotation.y` has only start and end, the slice-point union is `0 / 0.6s / 1.2s`, giving 2 segments):
 
@@ -1058,20 +1058,18 @@ flowchart TB
     Slice["slice times = union of channels' keyframe times<br/>{0, 0.6s, 1.2s} → 2 segments"]
     S0["segment 0 FromToBy<br/>from=full pose@0, to=full pose@0.6s, easeOut"]
     S1["segment 1 FromToBy<br/>from=full pose@0.6s, to=full pose@1.2s, linear"]
-    Clip["whole-transform animation<br/>+ top-level delay / speed / loop"]
+    Clip["fresh execution<br/>global delay once → speed-scaled / looped motion sequence"]
 
     Slice --> S0
     S0 -->|sequence| S1
     S1 --> Clip
 ```
 
-Each segment carries a full pose and joins the chain in time order; `delay` / `speed` / `loop` act at the top of the chained animation.
-
 ##### Output: the controllable playback object and sample code
 
 The final compilation output is the controllable playback object. Reusing the example above (2 full-pose segments), the following shows it on visionOS and picoOS: each segment compiles into a full-pose `FromToBy`, chained via `sequence` into one animation resource, then handed to the engine — obtaining a playback controller that can pause / resume / stop / change speed, i.e. a "controllable playback object." Both platforms bind the whole transform, so the code lines up.
 
-Platform capability validation on visionOS and picoOS is recorded through the Section 8 acceptance tasks, covering whole-transform binding, multi-segment sequence, per-segment easing, top-level delay / speed / loop, controller pause / internal resume / stop, and completion. The snippets below show resource construction and controller shape only; before handing the resource to the engine, `EntityMotionTiming` applies the top-level delay / speed / loop settings once to the whole sequence rather than repeating them on each segment.
+Platform capability validation on visionOS and picoOS is recorded through the Section 8 acceptance tasks. The snippets below show resource construction and controller shape only.
 
 visionOS (RealityKit / Swift):
 
@@ -1218,7 +1216,7 @@ fun playSequencedTransformAnimation(entity: Entity): AnimationPlaybackController
 7. **Rotation:** `rotation.*` input is Euler degrees; at compile time it is converted to the rotation representation RealityKit requires, and RealityKit applies shortest-path spherical interpolation. If a rotation channel's single-frame increment reaches or exceeds 180°, or spans multiple axes, the actual path may differ from per-axis intuition; users define a specific multi-turn or multi-axis path through explicit intermediate keyframes.
 8. **Scale:** `scale.*` must be non-negative; an invalid scale fails outright.
 9. **One easing per segment:** public-authoring `timingFunction` belongs to a global timeline node. In v1, Core duplicates that global value into the existing track/keyframe fields and guarantees one consistent timing value at each `at`; Native accepts this consistent global-timing form. Native resolves one timing value for each adjacent pair in the keyframe-time union and applies it exactly once when constructing the final whole-transform segment. Slice-point value sampling uses linear time interpolation, while final segment playback applies easing. The closed easing enum is `linear` / `easeIn` / `easeOut` / `easeInOut`, with every value mapping directly to a RealityKit built-in curve.
-10. **Loop / playback rate / delay:** these playback parameters live at the top of the timeline and apply uniformly to the whole chained animation, executed by the RealityKit playback layer. Loops within one fresh play reuse that run's resource without reading a new baseline or recompiling on every iteration.
+10. **Delay, playback rate, and loop:** each fresh execution runs the delay once; playback rate and loop apply only to the motion sequence. Loops reuse the current run's resource.
 11. **Explicit failure:** when a segment is outside RealityKit's expression range, the fresh-play control command must fail and leave the animation inactive.
 
 The cross-platform capability combinations above depend on the Section 8 acceptance records; this design does not introduce an SDK-managed segment-queue fallback. Acceptance records include platform versions, SDK versions, fixtures, executed commands, and results.

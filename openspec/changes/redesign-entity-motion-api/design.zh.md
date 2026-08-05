@@ -992,7 +992,7 @@ classDiagram
 - **物体动画对象(`EntityMotionAnimationObject`):** 保存目标 id 与弱目标引用、规范时间轴、确认姿态、执行版本、已编译时间轴、基准姿态、播放控制器、完成订阅和暂停时准备好的执行。`update()` 准备并提交新定义,根据当前状态重新定向或保存暂停定义。`play()` 恢复未更新的暂停执行,或从暂停更新保存的姿态启动新执行。控制器身份、执行版本和完成门禁共同拒绝旧完成事件与重复完成事件。对象通过 `emitStateChanged()` 和 `emitError()` 发送事件。`update` 与 `set` 返回完整确认姿态。
 - **时间轴编译器(`EntityMotionTimelineCompiler`):** 在每次 fresh play 时接受规范时间轴和本轮 baseline,将其切片编译为一条串联的整姿态 RealityKit 动画资源。
 - **桥接类型(`EntityMotionBridgeTypes`):** 承载原生桥接的编解码结构,包括时间轴数据、控制值、确认值和错误。若命令类型已够用,这部分可作为若干结构体分散存在。
-- **播放参数映射(`EntityMotionTiming`):** 把已经按全局时间段解析完成的唯一缓动函数、延迟、循环、播放速率映射到 RealityKit 的表达;四种内建缓动函数全部直接映射。
+- **播放参数映射(`EntityMotionTiming`):** 把已经按全局时间段解析完成的唯一缓动函数映射到 RealityKit,在运动前安排一次全局延迟,并把循环和播放速率应用于运动序列;四种内建缓动函数全部直接映射。
 - **姿态拆解与合并(`EntityMotionTransformValues`):** 负责从物体姿态拆解确认值、把 `api.set` 的稀疏更新合并到已提交基准上,以及欧拉角度数与 RealityKit 旋转表示之间的换算。
 
 #### JSB 命令处理
@@ -1049,7 +1049,7 @@ flowchart TB
 
 **逐段——用 `FromToByAnimation<Transform>` 表达。** 每段的 `from` / `to` 取相邻两个切点的完整姿态,`duration` 取该段时长,`timing` 取 Core 已为该全局时间段解析出的唯一缓动函数,`bindTarget` 固定为 `.transform`。visionOS 的动画绑定粒度是整个 `.transform`,这也是选择整姿态切片的根本原因。
 
-**串联——用 `sequence` 首尾相接。** 各段整姿态动画按时间顺序用 `AnimationResource.sequence(with:)` 串成一条动画,让每段各自带缓动、又连续播放。只有起止两帧的时间轴退化为单个 `FromToByAnimation<Transform>`。`delay` / `speed` / `loop` 作用在这条串联动画的顶层。
+**串联——用 `sequence` 首尾相接。** 各段整姿态动画按时间顺序用 `AnimationResource.sequence(with:)` 串成一条运动序列,让每段各自带缓动、又连续播放。只有起止两帧的时间轴退化为单个 `FromToByAnimation<Transform>`。每次全新执行在该运动序列之前安排一次全局 `delay`。`speed` 和 `loop` 仅作用于运动序列,因此 speed 不缩放延迟,loop 也不重复延迟。
 
 以一个例子说明(`position.y` 有 3 帧、`rotation.y` 只有起止 2 帧,切点并集为 `0 / 0.6s / 1.2s`,共 2 段):
 
@@ -1058,20 +1058,18 @@ flowchart TB
     Slice["切片时间 = 各通道关键帧时间并集<br/>{0, 0.6s, 1.2s} → 2 段"]
     S0["段0 FromToBy<br/>from=整姿态@0,to=整姿态@0.6s,easeOut"]
     S1["段1 FromToBy<br/>from=整姿态@0.6s,to=整姿态@1.2s,linear"]
-    Clip["整姿态动画<br/>+ 顶层 delay / speed / loop"]
+    Clip["全新执行<br/>一次全局延迟 → 变速 / 循环运动序列"]
 
     Slice --> S0
     S0 -->|sequence 串联| S1
     S1 --> Clip
 ```
 
-每段都携带完整姿态并按时间顺序串联,`delay` / `speed` / `loop` 作用在串联动画顶层。
-
 ##### 输出:可控播放对象与代码演示
 
 编译的最终输出是可控播放对象。沿用上文示例(2 段整姿态),下面分别用 visionOS 与 picoOS 演示:每段编成一个整姿态 `FromToBy`,用 `sequence` 串成一条动画资源,最后交给引擎播放,拿到可暂停 / 恢复 / 停止 / 变速的播放控制器——即“可控播放对象”。两端都绑定整个 transform,写法对齐。
 
-visionOS 与 picoOS 的平台能力按第 8 节验收任务留痕验证,覆盖整 transform 绑定、多段动画序列、每段独立缓动函数、顶层 delay / speed / loop、controller pause / internal resume / stop 以及 completion。以下代码只展示资源构造和 controller 形态;`EntityMotionTiming` 在交给引擎前把顶层 delay / speed / loop 统一应用到整条动画序列,不由单个时间段重复设置。
+visionOS 与 picoOS 的平台能力按第 8 节验收任务留痕验证。以下代码只展示资源构造和 controller 形态。
 
 visionOS(RealityKit / Swift):
 
@@ -1218,7 +1216,7 @@ fun playSequencedTransformAnimation(entity: Entity): AnimationPlaybackController
 7. **旋转:** `rotation.*` 输入是欧拉角度数,编译时转成 RealityKit 所需的旋转表示,由 RealityKit 使用最短路径球面插值处理。某个旋转通道若单帧增量达到或超过 180°、或跨多轴,实际路径可能区别于逐轴直觉;特定的多圈或多轴路径由使用者通过中间关键帧显式定义。
 8. **缩放:** `scale.*` 必须非负,非法缩放直接失败。
 9. **每段唯一缓动函数:** 公开配置中的 `timingFunction` 属于全局时间轴节点。v1 由 Core 把该全局值复制到现有 track/keyframe 字段,并保证同一个 `at` 上的缓动值统一且唯一;Native 接受这种全局缓动形态。Native 对关键帧时间并集中的每对相邻节点解析一个缓动值,并在构造最终整姿态分段时应用一次。切点值采样使用线性时间插值,最终分段播放应用缓动。缓动函数的取值是封闭枚举 `linear` / `easeIn` / `easeOut` / `easeInOut`,全部直接映射到 RealityKit 内建曲线。
-10. **循环 / 播放速率 / 延迟:** 这些播放参数放在时间轴顶层,对整条串联动画统一生效,由 RealityKit 播放层执行。同一次 fresh play 内的 loop 复用本轮资源,每圈不重新读取 baseline 或编译。
+10. **延迟、播放速率和循环:** 每次全新执行只运行一次延迟;播放速率和循环仅作用于运动序列。循环复用本轮资源。
 11. **失败显式化:** RealityKit 无法表达某个段时,fresh play 的控制命令必须失败,动画保持非活跃。
 
 上述跨端能力组合以第 8 节验收记录为准;本设计不引入 SDK 自行调度分段队列的降级方案。验收记录包含平台版本、SDK 版本、fixtures、执行命令和结果。

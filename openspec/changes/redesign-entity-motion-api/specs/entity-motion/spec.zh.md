@@ -37,6 +37,15 @@ SDK MUST 提供 `useEntityAnimation(config)` 作为公共 Entity motion hook。�
 
 默认值 MUST 为 `autoStart: true`、`timingFunction: 'easeInOut'`、`delay: 0`、`playbackRate: 1` 和 `loop: false`。包含 `timeline` 的 config MUST 提供 `duration`;纯顶层 `from` / `to` 的 `duration` MUST 默认为 0.3 秒。每个 transform 标量和百分比 MUST 是有限数值，`duration` MUST 是正有限数值，`delay` MUST 是非负有限数值，`playbackRate` MUST 是正有限数值，`scale` MUST 非负，百分比 MUST 位于 `[0%, 100%]`。每个 timeline frame MUST 至少包含一个 transform 标量。空 timeline、空 frame，以及 `50%` 与 `50.0%` 这类归一化到同一帧的百分比 key MUST 由 Core 同步抛错。
 
+每次全新执行 MUST 由一次全局初始延迟和随后的运动序列组成。`playbackRate` MUST 仅缩放运动序列,`loop` MUST 仅重复运动序列。全局延迟 MUST NOT 随 `playbackRate` 缩放,也 MUST NOT 在循环边界重复。
+
+#### Scenario: 全局延迟先于变速循环运动
+- **GIVEN** Entity motion config 配置了非零 `delay`、非默认 `playbackRate` 并启用循环
+- **WHEN** 一次全新执行开始并跨越一个或多个循环边界
+- **THEN** 全局延迟 MUST 在首次运动前执行一次
+- **AND** `playbackRate` MUST 仅缩放运动序列
+- **AND** 每次循环 MUST 仅重复运动序列,不重复延迟
+
 #### Scenario: Segment config 使用 Entity props 字段
 - **WHEN** 应用在 Entity motion 中定义 `timeline.from` 或 `timeline.to`
 - **THEN** Entity transform 值 MUST 通过 `position`、`rotation` 和 `scale` 进行 authoring

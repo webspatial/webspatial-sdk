@@ -141,7 +141,7 @@ type EntityMotionConfig = {
 }
 ```
 
-Defaults are `autoStart: true`, `timingFunction: 'easeInOut'`, `delay: 0`, `playbackRate: 1`, and `loop: false`. Every config containing `timeline` must provide `duration`; only pure top-level `from` / `to` uses the 0.3-second default. Invalid config is a programmer error and throws synchronously.
+Defaults are `autoStart: true`, `timingFunction: 'easeInOut'`, `delay: 0`, `playbackRate: 1`, and `loop: false`. Every fresh execution waits for the global `delay` once, then plays the motion; `playbackRate` and `loop` affect only that motion, so the delay is neither rate-scaled nor repeated at loop boundaries. Every config containing `timeline` must provide `duration`; only pure top-level `from` / `to` uses the 0.3-second default. Invalid config is a programmer error and throws synchronously.
 
 ### Option 0: top-level from / to (simplest form)
 

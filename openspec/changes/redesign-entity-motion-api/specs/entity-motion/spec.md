@@ -37,6 +37,15 @@ Inside a `timeline`, `from` MUST be equivalent to the `0%` frame and `to` MUST b
 
 The default values MUST be `autoStart: true`, `timingFunction: 'easeInOut'`, `delay: 0`, `playbackRate: 1`, and `loop: false`. A config containing `timeline` MUST provide `duration`; pure top-level `from` / `to` MUST default `duration` to 0.3 seconds. Every transform scalar and percentage MUST be finite, `duration` MUST be positive and finite, `delay` MUST be non-negative and finite, `playbackRate` MUST be positive and finite, `scale` MUST be non-negative, and percentages MUST fall within `[0%, 100%]`. Each timeline frame MUST contain at least one transform scalar. Core MUST synchronously throw for an empty timeline, an empty frame, or percentage keys such as `50%` and `50.0%` that normalize to the same frame.
 
+Each fresh execution MUST consist of one global initial delay followed by the motion sequence. `playbackRate` MUST scale only the motion sequence, and `loop` MUST repeat only the motion sequence. The global delay MUST NOT be scaled by `playbackRate` or repeated at a loop boundary.
+
+#### Scenario: Global delay precedes rate-scaled looping motion
+- **GIVEN** an Entity motion config with a non-zero `delay`, a non-default `playbackRate`, and looping enabled
+- **WHEN** a fresh execution starts and crosses one or more loop boundaries
+- **THEN** the global delay MUST run once before the first motion
+- **AND** `playbackRate` MUST scale only the motion sequence
+- **AND** every loop MUST repeat only the motion sequence without repeating the delay
+
 #### Scenario: Segment config uses Entity props fields
 - **WHEN** application code defines `timeline.from` or `timeline.to` for Entity motion
 - **THEN** Entity transform values MUST be authored through `position`, `rotation`, and `scale`
