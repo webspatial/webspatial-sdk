@@ -15,7 +15,7 @@ type PlaybackCommandType = 'play' | 'pause' | 'stop' | 'reset' | 'finish'
 type EntityMotionCommand =
   | { type: PlaybackCommandType }
   | { type: 'set'; update: EntityTransformUpdate }
-  | { type: 'update'; config: EntityMotionConfig; revision: number }
+  | { type: 'update'; config: EntityMotionConfig }
 
 declare const entityMotionAnimationBrand: unique symbol
 
@@ -141,7 +141,6 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
       {
         type: 'update',
         config: this.config,
-        revision: this.configRevision,
       },
       this.animationObject,
       this.generation,
