@@ -110,3 +110,4 @@ Bridge 与集成验收：
 - [x] 9.9 最小实现 visionOS 更新入口、事务更新、重新定向、暂停定义、旧事件过滤和确认姿态回传
 - [x] 9.10 在测试持续通过时重构,删除已取代的替换代码和测试夹具,以及 Entity motion internal 子路径的导出、映射、引用和测试;保留目标替换、解绑和销毁流程
 - [x] 9.12 运行 Core/React 测试、visionOS 完整测试、模拟器验收和 OpenSpec 严格校验,记录状态矩阵与结果
+- [x] 9.13 删除已被取代的 visionOS `AnimateTransform` 命令、会话管理器、Bridge 监听器和生命周期清理

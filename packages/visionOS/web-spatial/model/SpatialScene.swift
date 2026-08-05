@@ -42,10 +42,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     var attachmentManager = AttachmentManager()
     var ornamentManager = OrnamentManager()
-    /// NOTE: `@Observable` + `lazy` 在新版本 Swift 宏展开下会触发编译器报错（init accessor 访问 backing storage）。
-    /// 这里不需要让动画管理器参与 Observation，避免生成 `@ObservationTracked` 相关访问器即可。
-    @ObservationIgnored
-    lazy var animationManager: EntityAnimationManager = .init(scene: self)
 
     @ObservationIgnored
     lazy var elementAnimationManager: SpatializedElementAnimationManager = .init(sendWebMsg: { [weak self] id, msg in
@@ -344,8 +340,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(UpdateAttachmentEntityCommand.self, onUpdateAttachmentEntity)
         spatialWebViewModel.addJSBListener(UpdateOrnamentCommand.self, onUpdateOrnament)
 
-        spatialWebViewModel.addJSBListener(AnimateTransformCommand.self, onAnimateTransform)
-
         spatialWebViewModel.addJSBListener(CreateEntityAnimationCommand.self, onCreateEntityAnimation)
         spatialWebViewModel.addJSBListener(UpdateEntityAnimationCommand.self, onUpdateEntityAnimation)
         spatialWebViewModel.addJSBListener(ControlEntityAnimationCommand.self, onControlEntityAnimation)
@@ -517,8 +511,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         injectPageEpoch()
         logger.debug("SpatialScene page generation advanced to \(currentPageGeneration)")
         ornamentManager.destroyAll()
-        // Clean up all animation sessions
-        animationManager.removeAll()
         elementAnimationManager.removeAll()
         // destroy all SpatialObject asset
         let spatialObjectArray = spatialObjects.map { $0.value }
@@ -1434,46 +1426,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
-    private func onAnimateTransform(command: AnimateTransformCommand, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
-        switch command.type {
-        case "play":
-            guard let entityId = command.entityId else {
-                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateTransform play: entityId is required")))
-                return
-            }
-            guard let entity: SpatialEntity = findSpatialObject(entityId) else {
-                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateTransform play: entity \(entityId) not found")))
-                return
-            }
-            animationManager.handlePlay(command: command, entity: entity, resolve: resolve)
-
-        case "pause":
-            animationManager.handlePause(command: command, resolve: resolve)
-
-        case "resume":
-            guard let session = animationManager.getSession(command.animationId),
-                  let entity: SpatialEntity = findSpatialObject(session.entityId)
-            else {
-                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "AnimateTransform resume: session or entity not found")))
-                return
-            }
-            animationManager.handleResume(command: command, entity: entity, resolve: resolve)
-
-        case "cancel":
-            guard let session = animationManager.getSession(command.animationId),
-                  let entity: SpatialEntity = findSpatialObject(session.entityId)
-            else {
-                // Session may have already been cleaned up - acknowledge silently.
-                resolve(.success(nil))
-                return
-            }
-            animationManager.handleCancel(command: command, entity: entity, resolve: resolve)
-
-        default:
-            resolve(.failure(JsbError(code: .TypeError, message: "AnimateTransform: unknown command type '\(command.type)'")))
-        }
-    }
-
     private func onCreateEntityAnimation(
         command: CreateEntityAnimationCommand,
         resolve: @escaping JSBManager.ResolveHandler<Encodable>
@@ -1727,7 +1679,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
     override func onDestroy() {
         ornamentManager.destroyAll()
-        animationManager.removeAll()
         elementAnimationManager.removeAll()
         let spatialObjectArray = spatialObjects.map { $0.value }
         for spatialObject in spatialObjectArray {

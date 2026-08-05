@@ -110,3 +110,4 @@ Bridge and integration acceptance:
 - [x] 9.9 Minimally implement visionOS update handling, transaction, retarget, paused definition, stale-event filtering, and confirmed-pose reporting
 - [x] 9.10 Refactor with tests green, deleting superseded replacement code and fixtures plus Entity motion internal-subpath exports, mappings, references, and tests while preserving target replacement, unbind, and destruction
 - [x] 9.12 Run Core/React tests, full visionOS tests, Simulator acceptance, and strict OpenSpec validation; record the state matrix and results
+- [x] 9.13 Remove the superseded visionOS `AnimateTransform` command, session manager, bridge listener, and lifecycle cleanup
