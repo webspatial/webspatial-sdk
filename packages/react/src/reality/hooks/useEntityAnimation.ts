@@ -4,6 +4,7 @@ import type {
   EntityMotionProps,
   EntityPlaybackApi,
 } from '@webspatial/core-sdk'
+import { validateEntityMotionConfig } from '@webspatial/core-sdk'
 import {
   EntityMotionBinding,
   type EntityMotionAnimation,
@@ -22,6 +23,8 @@ export type UseEntityAnimationResult = [
 export function useEntityAnimation(
   config: EntityMotionConfig,
 ): UseEntityAnimationResult {
+  // Public config errors must reach the nearest React error boundary during render.
+  validateEntityMotionConfig(config)
   const bindingRef = useRef<EntityMotionBinding | null>(null)
   if (bindingRef.current === null) {
     bindingRef.current = new EntityMotionBinding(config)

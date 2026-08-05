@@ -14,6 +14,43 @@ import {
 } from './useEntityAnimation'
 
 describe('useEntityAnimation redesign', () => {
+  test('throws an invalid initial config during render without calling onError', () => {
+    const onError = vi.fn()
+
+    expect(() =>
+      renderHook(() =>
+        useEntityAnimation({
+          from: { position: { x: 0 } },
+          onError,
+        }),
+      ),
+    ).toThrow('both from and to')
+    expect(onError).not.toHaveBeenCalled()
+  })
+
+  test('throws an invalid config update during render without calling onError', () => {
+    const onError = vi.fn()
+    const { rerender } = renderHook(
+      ({ valid }) =>
+        useEntityAnimation(
+          valid
+            ? {
+                from: { position: { x: 0 } },
+                to: { position: { x: 1 } },
+                onError,
+              }
+            : {
+                from: { position: { x: 0 } },
+                onError,
+              },
+        ),
+      { initialProps: { valid: true } },
+    )
+
+    expect(() => rerender({ valid: false })).toThrow('both from and to')
+    expect(onError).not.toHaveBeenCalled()
+  })
+
   test('returns a stable experimental tuple with an empty confirmed mirror', () => {
     const { result, rerender } = renderHook(
       ({ duration }) =>

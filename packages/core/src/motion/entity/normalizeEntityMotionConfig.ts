@@ -336,7 +336,7 @@ export function normalizeEntityMotionConfig(
  * @param config - Configuration to validate.
  */
 export function validateEntityMotionConfig(config: EntityMotionConfig): void {
-  normalizeEntityMotionConfig(config)
+  normalizeEntityMotionConfig(config, false)
 }
 
 /**

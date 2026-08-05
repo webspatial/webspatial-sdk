@@ -8,7 +8,10 @@ import type {
   SpatializedMotionPlayState,
   SpatializedPlaybackError,
 } from '@webspatial/core-sdk'
-import { validateEntityTransformUpdate } from '@webspatial/core-sdk'
+import {
+  validateEntityMotionConfig,
+  validateEntityTransformUpdate,
+} from '@webspatial/core-sdk'
 
 type PlaybackCommandType = 'play' | 'pause' | 'stop' | 'reset' | 'finish'
 
@@ -73,6 +76,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
 
   /** Creates one stable binding and its public playback facade. */
   constructor(config: EntityMotionConfig) {
+    validateEntityMotionConfig(config)
     this.config = config
     const thisBinding = this
     this.api = {
@@ -104,6 +108,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
 
   /** Replaces authoring and callback references for subsequent work. */
   updateConfig(config: EntityMotionConfig): void {
+    validateEntityMotionConfig(config)
     const hasPrecedenceDeclaration =
       config.timeline !== undefined &&
       (config.from !== undefined || config.to !== undefined)
@@ -228,13 +233,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
       }
       this.notify()
     }
-    let creation: Promise<EntityAnimationObject>
-    try {
-      creation = entity.createAnimation(creationConfig)
-    } catch (error) {
-      handleFailure(error)
-      return
-    }
+    const creation = entity.createAnimation(creationConfig)
     creation
       .then(object => {
         if (generation !== this.generation || this.target !== entity) {

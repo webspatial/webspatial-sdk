@@ -43,6 +43,7 @@ function createMockAnimationObject(id = 'animation-1') {
     set: vi.fn<
       (update: EntityTransformUpdate) => Promise<EntityMotionProps | void>
     >(async () => undefined),
+    update: vi.fn(async () => undefined),
     destroy: vi.fn(async () => undefined),
     onStart: vi.fn((listener: typeof listeners.start) => {
       listeners.start = listener
@@ -96,6 +97,42 @@ async function flushPromises() {
 }
 
 describe('EntityMotionBinding', () => {
+  test('throws an invalid initial config synchronously without calling onError', () => {
+    const onError = vi.fn()
+
+    expect(
+      () =>
+        new EntityMotionBinding({
+          from: { position: { x: 0 } },
+          onError,
+        }),
+    ).toThrow('both from and to')
+    expect(onError).not.toHaveBeenCalled()
+  })
+
+  test('rejects an invalid config update before changing the active config', async () => {
+    const onError = vi.fn()
+    const { object } = createMockAnimationObject()
+    const binding = new EntityMotionBinding(createConfig({ onError }))
+    binding.__bind({
+      id: 'entity-1',
+      createAnimation: vi.fn(async () => object),
+    } as any)
+    await flushPromises()
+
+    expect(() =>
+      binding.updateConfig({
+        from: { position: { x: 0 } },
+        onError,
+      }),
+    ).toThrow('both from and to')
+    binding.reconcileConfig()
+    await flushPromises()
+
+    expect(object.update).not.toHaveBeenCalled()
+    expect(onError).not.toHaveBeenCalled()
+  })
+
   test('stays idle while creation has no pending playback command', async () => {
     const creation = deferred<any>()
     const binding = new EntityMotionBinding(createConfig())
