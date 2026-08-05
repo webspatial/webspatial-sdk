@@ -496,36 +496,6 @@ final class EntityMotionAnimationObject: SpatialObject {
         try EntityMotionTransformValues.decompose(entity.transform)
     }
 
-    /// Converts a RealityKit float matrix to the double matrix used by decomposition.
-    private static func doubleMatrix(from matrix: simd_float4x4) -> simd_double4x4 {
-        simd_double4x4(columns: (
-            SIMD4<Double>(
-                Double(matrix.columns.0.x),
-                Double(matrix.columns.0.y),
-                Double(matrix.columns.0.z),
-                Double(matrix.columns.0.w)
-            ),
-            SIMD4<Double>(
-                Double(matrix.columns.1.x),
-                Double(matrix.columns.1.y),
-                Double(matrix.columns.1.z),
-                Double(matrix.columns.1.w)
-            ),
-            SIMD4<Double>(
-                Double(matrix.columns.2.x),
-                Double(matrix.columns.2.y),
-                Double(matrix.columns.2.z),
-                Double(matrix.columns.2.w)
-            ),
-            SIMD4<Double>(
-                Double(matrix.columns.3.x),
-                Double(matrix.columns.3.y),
-                Double(matrix.columns.3.z),
-                Double(matrix.columns.3.w)
-            ),
-        ))
-    }
-
     /// Converts a complete pose to a RealityKit transform.
     private static func transform(from pose: EntityMotionPose) -> Transform {
         let rotation = EntityMotionTransformValues.composeEulerZYX(pose.rotation)
