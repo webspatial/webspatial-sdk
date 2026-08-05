@@ -12,27 +12,7 @@
 
 **阻断合入。**
 
-P1-1 已按 design 修复：React 不预校验 config，Core 同步异常进入 Error Boundary，且不增加 `onError`。P1-2 已完成独立错误类型、双语 OpenSpec 命名和 React experimental 公开出口闭环。其余 3 个 P1 与 2 个 P2 本轮未重新验收，保持原状态。
-
-## P1 复验流程
-
-```mermaid
-flowchart LR
-    Config["应用提交 config"] --> Binding["Binding 保存 config"]
-    Binding --> Queue["FIFO update"]
-    Queue --> CoreUpdate["Core create / update 同步校验"]
-    CoreUpdate -->|programmer error| SyncError["Binding 保存同步异常"]
-    SyncError --> HookRender["Hook 渲染阶段抛出"]
-    HookRender --> Boundary["Error Boundary"]
-    CoreUpdate -->|Bridge / Native 异步失败| EntityError["EntityPlaybackError → onError"]
-    Element["Element motion"] --> ElementError["SpatializedPlaybackError<br/>{ command, code?, reason }"]
-
-    style SyncError fill:#c8e6c9,color:#1a5e20
-    style HookRender fill:#c8e6c9,color:#1a5e20
-    style Boundary fill:#bbdefb,color:#0d47a1
-    style EntityError fill:#fff3e0,color:#e65100
-    style ElementError fill:#f3e5f5,color:#7b1fa2
-```
+剩余 2 个 P1 与 2 个 P2 阻断合入。已修复问题统一记录在文末“已修复”章节。
 
 ## P0 问题
 
@@ -42,17 +22,8 @@ flowchart LR
 
 | 编号 | 问题 | 影响 | 修改建议 | 代码位置 |
 |---|---|---|---|---|
-| 1 | [已修复] React 吞掉同步 programmer error | React 预校验已移除。初始绑定由 Core `createAnimation()` 同步校验并通过 `useEntity` 进入 Error Boundary；配置 update 由 Core `update()` 同步校验，Binding 保存该异常并通知 Hook 在全部 Hook 调用后抛出。Promise rejection 仍单独进入 `onError`。 | 无。保留同步错误边界、异步 `onError` 和 FIFO 回归测试。 | [`useEntityAnimation.ts`](../../../packages/react/src/reality/hooks/useEntityAnimation.ts)、[`EntityMotionBinding.ts`](../../../packages/react/src/reality/hooks/EntityMotionBinding.ts)、[`EntityMotionBinding.test.ts`](../../../packages/react/src/reality/hooks/EntityMotionBinding.test.ts)、[`useEntityAnimation.redesign.test.ts`](../../../packages/react/src/reality/hooks/useEntityAnimation.redesign.test.ts) |
-| 2 | [已修复] Entity 变更破坏既有 Element 错误契约 | Element 保持 `SpatializedPlaybackError { command, code?, reason }`；Entity 使用 `EntityPlaybackError { code, reason }` 和封闭错误码。双语 OpenSpec、Core 与 React experimental 入口的命名已统一，并有类型兼容和公开出口测试。 | 无。保持两类错误契约独立，不引入兼容泛型。 | [`spatializedPlayback.ts:1-17`](../../../packages/core/src/types/motion/spatializedPlayback.ts#L1-L17)、[`entityMotion.ts:45-61`](../../../packages/core/src/types/motion/entityMotion.ts#L45-L61)、[`experimental.ts:9-20`](../../../packages/react/src/experimental.ts#L9-L20)、[`spec.md:126-132`](specs/entity-motion/spec.md#L126-L132) |
-| 3 | Native handler 生命周期覆盖不完整 | OpenSpec 任务 5.3b 仍未完成。四个私有 handler 缺少目标查询错误、对象注册、显式销毁、target 先销毁、清理和 `ANIMATION_NOT_FOUND` 竞态的直接测试。对象级测试无法证明注册表和回执行为。 | 增加 `SpatialScene` handler 直接测试；全部通过后再勾选任务 5.3b。 | [`tasks.zh.md:47-48`](tasks.zh.md#L47-L48)、[`SpatialScene.swift:1402-1497`](../../../packages/visionOS/web-spatial/model/SpatialScene.swift#L1402-L1497) |
 | 4 | visionOS 验收结论缺少可追溯证据 | 任务 8.3c、8.4、8.7 和 9.12 要求记录环境、命令、统计、结果包、fixtures、观测结果和截图，仓库内没有对应证据文件。本次审查尝试重跑时，Xcode 在构建前的 package resolution 阶段失败。 | 新增受版本控制的验收记录，记录或引用新的 `.xcresult`，并补齐模拟器与 iwdp 逐项观测。证据补齐前，将对应任务恢复为未完成。 | [`tasks.zh.md:89-112`](tasks.zh.md#L89-L112) |
 | 5 | 缺少必需的 changeset | PR 修改了 `packages/` 下 59 个文件，但没有新增 `.changeset/*.md`。仓库校验脚本失败，未设置 maintainer bypass 时 CI 会阻断合入。main 中已有的旧 Entity changeset 描述的是已被取代的 API。 | 为最终公开 API 和实际破坏性影响新增 changeset，不复用旧 changeset 文案。 | [`CONTRIBUTING.md:91-105`](../../../CONTRIBUTING.md#L91-L105) |
-
-## P1-2 修复结果
-
-1. Entity Motion 双语 proposal、design、spec、tasks 已统一为 `EntityPlaybackError`，Element 的 `SpatializedPlaybackError` 保持不变。
-2. React experimental 公开出口已增加 `EntityPlaybackError` 与 `EntityPlaybackErrorCode`，公开出口类型测试已覆盖精确结构和封闭错误码。
-3. 修改未触及 Core、Bridge、Native 或 Element motion 运行时行为。
 
 ## P2 问题
 
@@ -75,8 +46,9 @@ flowchart LR
 | Core 与 React TypeScript 复验 | 通过 |
 | `pnpm test` | 通过 |
 | `pnpm --filter @webspatial/core-sdk lint` | 通过 |
+| visionOS Entity motion 定向测试 | 4 个测试类、41 项通过，包含 3 项 `SpatialScene` handler 直接测试 |
 | Changeset 校验脚本 | 失败：没有新增 changeset |
-| `xcodebuild -project packages/visionOS/web-spatial.xcodeproj -list` | 构建前失败：`sandbox-exec: sandbox_apply: Operation not permitted` |
+| `xcodebuild -project packages/visionOS/web-spatial.xcodeproj -list -json` | 通过 |
 
 ## 可删除内容与过度设计
 
@@ -97,6 +69,7 @@ flowchart LR
 以下内容属于本 PR 的必要范围：
 
 - Entity 专属 JSB 协议与 Bridge 契约测试；
+- `SpatialScene` handler 注册表、回执和销毁边界测试；
 - Core 归一化和 Native 兜底校验；
 - 绑定级 FIFO、绑定代次失效和执行版本过滤；
 - Native 完整 transform 所有权和提交后回读；
@@ -107,12 +80,49 @@ flowchart LR
 
 ## 最终检查清单
 
-- [x] 完成同步 programmer error 传播闭环。
-- [x] 完成错误契约闭环：Element 与 Entity 类型独立，React experimental 出口和双语 OpenSpec 已同步。
-- [ ] 增加 `SpatialScene` handler 直接测试。
 - [ ] 记录新的 visionOS 与 iwdp 验收证据。
 - [ ] 新增必需的 changeset。
 - [ ] 删除失效的测试服务器 alias。
 - [ ] 修复动态按钮无障碍标签。
 - [ ] 删除确认无调用方的 helper 和未使用命令字段。
 - [ ] 重新运行 OpenSpec、全仓测试、完整 visionOS 测试和模拟器验收。
+
+## 已修复
+
+| 编号 | 问题 | 修复结果 | 保持项 | 代码位置 |
+|---|---|---|---|---|
+| 1 | React 吞掉同步 programmer error | React 预校验已移除。初始绑定由 Core `createAnimation()` 同步校验并通过 `useEntity` 进入 Error Boundary；配置 update 由 Core `update()` 同步校验，Binding 保存该异常并通知 Hook 在全部 Hook 调用后抛出。Promise rejection 仍单独进入 `onError`。 | 保留同步错误边界、异步 `onError` 和 FIFO 回归测试。 | [`useEntityAnimation.ts`](../../../packages/react/src/reality/hooks/useEntityAnimation.ts)、[`EntityMotionBinding.ts`](../../../packages/react/src/reality/hooks/EntityMotionBinding.ts)、[`EntityMotionBinding.test.ts`](../../../packages/react/src/reality/hooks/EntityMotionBinding.test.ts)、[`useEntityAnimation.redesign.test.ts`](../../../packages/react/src/reality/hooks/useEntityAnimation.redesign.test.ts) |
+| 2 | Entity 变更破坏既有 Element 错误契约 | Element 保持 `SpatializedPlaybackError { command, code?, reason }`；Entity 使用 `EntityPlaybackError { code, reason }` 和封闭错误码。双语 OpenSpec、Core 与 React experimental 入口的命名已统一，并有类型兼容和公开出口测试。 | 保持两类错误契约独立，不引入兼容泛型。 | [`spatializedPlayback.ts:1-17`](../../../packages/core/src/types/motion/spatializedPlayback.ts#L1-L17)、[`entityMotion.ts:45-61`](../../../packages/core/src/types/motion/entityMotion.ts#L45-L61)、[`experimental.ts:9-20`](../../../packages/react/src/experimental.ts#L9-L20)、[`spec.md:126-132`](specs/entity-motion/spec.md#L126-L132) |
+| 3 | Native handler 生命周期覆盖不完整 | 新增 3 项直接测试，通过真实 JSB 注册和分发链覆盖目标不存在、类型拒绝、动画注册与查询、显式销毁、target 先销毁、注册表清理，以及 update、control、set 在 teardown 后返回 `ANIMATION_NOT_FOUND`。OpenSpec 任务 5.3b 已完成。 | handler 保持私有；对象级测试继续负责成功路径细节，handler 测试只保护跨层边界。 | [`EntityMotionTests.swift`](../../../packages/visionOS/web-spatialTests/EntityMotionTests.swift)、[`SpatialWebController.swift`](../../../packages/visionOS/web-spatial/webview/SpatialWebController.swift)、[`tasks.zh.md`](tasks.zh.md) |
+
+### P1 复验流程
+
+```mermaid
+flowchart LR
+    Config["应用提交 config"] --> Binding["Binding 保存 config"]
+    Binding --> Queue["FIFO update"]
+    Queue --> CoreUpdate["Core create / update 同步校验"]
+    CoreUpdate -->|programmer error| SyncError["Binding 保存同步异常"]
+    SyncError --> HookRender["Hook 渲染阶段抛出"]
+    HookRender --> Boundary["Error Boundary"]
+    CoreUpdate -->|Bridge / Native 异步失败| EntityError["EntityPlaybackError → onError"]
+    Element["Element motion"] --> ElementError["SpatializedPlaybackError<br/>{ command, code?, reason }"]
+
+    style SyncError fill:#c8e6c9,color:#1a5e20
+    style HookRender fill:#c8e6c9,color:#1a5e20
+    style Boundary fill:#bbdefb,color:#0d47a1
+    style EntityError fill:#fff3e0,color:#e65100
+    style ElementError fill:#f3e5f5,color:#7b1fa2
+```
+
+### P1-2 修复结果
+
+1. Entity Motion 双语 proposal、design、spec、tasks 已统一为 `EntityPlaybackError`，Element 的 `SpatializedPlaybackError` 保持不变。
+2. React experimental 公开出口已增加 `EntityPlaybackError` 与 `EntityPlaybackErrorCode`，公开出口类型测试已覆盖精确结构和封闭错误码。
+3. 修改未触及 Core、Bridge、Native 或 Element motion 运行时行为。
+
+### 已完成检查
+
+- [x] 完成同步 programmer error 传播闭环。
+- [x] 完成错误契约闭环：Element 与 Entity 类型独立，React experimental 出口和双语 OpenSpec 已同步。
+- [x] 完成 `SpatialScene` handler 注册表、回执和销毁边界测试。

@@ -45,7 +45,7 @@ Bridge 实现：
   - [x] 5.2a Core Entity 专属 Bridge 类型、JSB 命令、空控制成功回执、`callbackAction` 状态消息消费和独立错误事件
   - [x] 5.2b visionOS `EntityMotionBridgeTypes` 编解码、空控制成功回执、`callbackAction` 状态消息和四个 `SpatialScene` handler 注册
 - [x] 5.3a 核实 visionOS 目标分发与生命周期实现及现有对象级测试
-- [ ] 5.3b 补充 `SpatialScene` handler 直接测试，覆盖目标查询与拒绝、稳定错误映射、动画对象注册与查询、显式销毁、目标先销毁、清理和 `ANIMATION_NOT_FOUND` 竞态结果
+- [x] 5.3b 补充 `SpatialScene` handler 直接测试，覆盖目标查询与拒绝、稳定错误映射、动画对象注册与查询、显式销毁、目标先销毁、清理和 `ANIMATION_NOT_FOUND` 竞态结果
 
 Native 生命周期实现：
   - [x] 5.4a visionOS `SpatialScene` Entity handler、全局 spatial objects 注册/查找、target 销毁级联和动画对象清理已实现

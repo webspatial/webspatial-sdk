@@ -470,6 +470,168 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
     }
 }
 
+final class EntityMotionSpatialSceneHandlerTests: XCTestCase {
+    /// Confirms create rejects invalid targets and registers a valid animation object.
+    func testCreateHandlerRejectsInvalidTargetsAndRegistersAnimation() throws {
+        let scene = makeScene()
+        defer { scene.destroy() }
+
+        let missingReply = try send(
+            CreateEntityAnimationCommand(id: "missing-entity", timeline: makeTimeline()),
+            through: scene
+        )
+        XCTAssertEqual(missingReply.error?["code"] as? String, "TARGET_NOT_FOUND")
+
+        let unsupportedTarget = scene.createSpatializedElement(.Spatialized2DElement)
+        let unsupportedReply = try send(
+            CreateEntityAnimationCommand(id: unsupportedTarget.id, timeline: makeTimeline()),
+            through: scene
+        )
+        XCTAssertEqual(unsupportedReply.error?["code"] as? String, "UNSUPPORTED_TARGET")
+
+        let target = scene.createEntity(command: CreateSpatialEntity(name: "motion-target"))
+        let createReply = try send(
+            CreateEntityAnimationCommand(id: target.spatialId, timeline: makeTimeline()),
+            through: scene
+        )
+        let animationId = try XCTUnwrap(
+            (createReply.result as? [String: Any])?["id"] as? String
+        )
+        let registered: EntityMotionAnimationObject? = scene.findSpatialObject(animationId)
+
+        XCTAssertNil(createReply.error)
+        XCTAssertNotNil(registered)
+        XCTAssertEqual(registered?.targetEntityId, target.spatialId)
+    }
+
+    /// Confirms explicit destroy removes the object and all later handlers report teardown.
+    func testExplicitDestroyRemovesAnimationAndLaterHandlersReportNotFound() throws {
+        let scene = makeScene()
+        defer { scene.destroy() }
+        let animationId = try createAnimation(in: scene)
+
+        let destroyReply = try send(
+            ControlEntityAnimationCommand(id: animationId, type: .destroy),
+            through: scene
+        )
+
+        XCTAssertNil(destroyReply.error)
+        XCTAssertNil(scene.findSpatialObject(animationId) as EntityMotionAnimationObject?)
+
+        let replies = try [
+            send(
+                UpdateEntityAnimationCommand(id: animationId, timeline: makeTimeline()),
+                through: scene
+            ),
+            send(
+                ControlEntityAnimationCommand(id: animationId, type: .pause),
+                through: scene
+            ),
+            send(
+                SetEntityAnimationCommand(
+                    id: animationId,
+                    update: .init(
+                        position: .init(x: 1, y: nil, z: nil),
+                        rotation: nil,
+                        scale: nil
+                    )
+                ),
+                through: scene
+            ),
+        ]
+
+        XCTAssertTrue(replies.allSatisfy {
+            $0.error?["code"] as? String == "ANIMATION_NOT_FOUND"
+        })
+    }
+
+    /// Confirms target-first destruction cascades through the scene registry.
+    func testTargetDestructionCascadesAnimationCleanup() throws {
+        let scene = makeScene()
+        defer { scene.destroy() }
+        let target = scene.createEntity(command: CreateSpatialEntity(name: "motion-target"))
+        let animationId = try createAnimation(in: scene, target: target)
+
+        target.destroy()
+
+        XCTAssertNil(scene.findSpatialObject(target.spatialId) as SpatialEntity?)
+        XCTAssertNil(scene.findSpatialObject(animationId) as EntityMotionAnimationObject?)
+
+        let teardownReply = try send(
+            ControlEntityAnimationCommand(id: animationId, type: .stop),
+            through: scene
+        )
+        XCTAssertEqual(teardownReply.error?["code"] as? String, "ANIMATION_NOT_FOUND")
+    }
+
+    /// Creates one isolated scene with all production JSB handlers registered.
+    private func makeScene() -> SpatialScene {
+        SpatialScene("", .window, .visible, nil)
+    }
+
+    /// Creates one registered animation through the production create handler.
+    private func createAnimation(
+        in scene: SpatialScene,
+        target: SpatialEntity? = nil
+    ) throws -> String {
+        let target = target
+            ?? scene.createEntity(command: CreateSpatialEntity(name: "motion-target"))
+        let reply = try send(
+            CreateEntityAnimationCommand(id: target.spatialId, timeline: makeTimeline()),
+            through: scene
+        )
+        XCTAssertNil(reply.error)
+        return try XCTUnwrap((reply.result as? [String: Any])?["id"] as? String)
+    }
+
+    /// Sends one command through the registered JSB path and captures its reply.
+    private func send<T: CommandDataProtocol & Encodable>(
+        _ command: T,
+        through scene: SpatialScene
+    ) throws -> (result: Any?, error: NSDictionary?) {
+        let payload = try XCTUnwrap(
+            String(data: JSONEncoder().encode(command), encoding: .utf8)
+        )
+        let replyExpectation = expectation(description: "\(T.commandType) reply")
+        var result: Any?
+        var replyError: NSDictionary?
+
+        scene.spatialWebViewModel.getController()
+            .mockJSB("\(T.commandType)::\(payload)") { value, error in
+                result = value
+                if let error {
+                    replyError = try? JSONSerialization.jsonObject(
+                        with: Data(error.utf8)
+                    ) as? NSDictionary
+                }
+                replyExpectation.fulfill()
+            }
+
+        wait(for: [replyExpectation], timeout: 1)
+        return (result, replyError)
+    }
+
+    /// Creates the smallest valid native Entity motion timeline.
+    private func makeTimeline() -> EntityMotionTimelinePayload {
+        EntityMotionTimelinePayload(
+            duration: 1,
+            delay: 0,
+            playbackRate: 1,
+            loop: .disabled,
+            tracks: [
+                .init(
+                    property: "position.x",
+                    keyframes: [
+                        .init(at: 0, value: 0, timingFunction: nil),
+                        .init(at: 1, value: 1, timingFunction: nil),
+                    ],
+                    timingFunction: .linear
+                ),
+            ]
+        )
+    }
+}
+
 final class EntityMotionTimelineCompilerTests: XCTestCase {
     /// Rejects unsupported properties and malformed numeric timeline inputs.
     func testCompilerRejectsMalformedNativePayloads() {

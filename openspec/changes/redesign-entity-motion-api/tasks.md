@@ -45,7 +45,7 @@ Bridge implementation:
   - [x] 5.2a Core Entity-specific Bridge types, JSB commands, empty successful control replies, `callbackAction` state-message consumption, and dedicated error events
   - [x] 5.2b visionOS `EntityMotionBridgeTypes` codecs, empty successful control replies, `callbackAction` state messages, and four `SpatialScene` handler registrations
 - [x] 5.3a Verify the visionOS target-dispatch and lifecycle implementation and its existing object-level tests
-- [ ] 5.3b Add direct `SpatialScene` handler tests for target lookup and rejection, stable error mapping, animation-object registration and lookup, explicit destroy, target-first destruction, cleanup, and `ANIMATION_NOT_FOUND` teardown results
+- [x] 5.3b Add direct `SpatialScene` handler tests for target lookup and rejection, stable error mapping, animation-object registration and lookup, explicit destroy, target-first destruction, cleanup, and `ANIMATION_NOT_FOUND` teardown results
 
 Native lifecycle implementation:
   - [x] 5.4a visionOS `SpatialScene` Entity handlers, global spatial-objects registration/lookup, target-destroy cascade, and animation-object cleanup are implemented
