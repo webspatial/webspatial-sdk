@@ -282,6 +282,24 @@ describe('getRuntime / supports', () => {
     expect(supports('useEntityAnimation', ['entity'])).toBe(false)
   })
 
+  test.each([
+    ['0.6.99', false],
+    ['0.7.0', true],
+    ['1.0.0', true],
+  ] as const)(
+    'picoOS PicoWebApp/%s reports useEntityAnimation=%s',
+    async (version, expected) => {
+      vi.stubGlobal('navigator', {
+        userAgent: `Mozilla/5.0 (X11; Linux x86_64; swan OS6.1.0 like Quest) AppleWebKit/537.36 PicoWebApp/${version} (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0`,
+      } as Navigator)
+      const { supports, resetRuntimeCacheForTests } = await import('./supports')
+      resetRuntimeCacheForTests()
+      expect(supports('useEntityAnimation')).toBe(expected)
+      expect(supports('useEntityAnimation', [])).toBe(expected)
+      expect(supports('useEntityAnimation', ['entity'])).toBe(false)
+    },
+  )
+
   test('useAnimation rejects all sub-tokens', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
