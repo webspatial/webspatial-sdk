@@ -921,8 +921,8 @@ final class EntityMotionTimelineCompilerTests: XCTestCase {
         XCTAssertLessThanOrEqual(first.rotation.x, 180)
     }
 
-    /// Merges sparse rotation on the canonical baseline and rejects unrepresentable matrices.
-    func testSparseMergeUsesCanonicalEulerAndMatrixDecompositionFailsExplicitly() throws {
+    /// Merges sparse rotation on the canonical baseline.
+    func testSparseMergeUsesCanonicalEuler() throws {
         let baseline = EntityMotionPose(
             position: .init(1, 2, 3),
             rotation: .init(10, 20, 30),
@@ -953,12 +953,6 @@ final class EntityMotionTimelineCompilerTests: XCTestCase {
                 ),
                 onto: baseline
             )
-        )
-
-        var shear = matrix_identity_double4x4
-        shear.columns.1.x = 0.5
-        XCTAssertThrowsError(
-            try EntityMotionTransformValues.decomposeAffine(shear)
         )
     }
 

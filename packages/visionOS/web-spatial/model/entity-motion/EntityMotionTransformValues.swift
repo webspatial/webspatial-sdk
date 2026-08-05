@@ -121,74 +121,6 @@ enum EntityMotionTransformValues {
         }
     }
 
-    /// Decomposes a finite affine matrix without shear, reflection, or zero scale.
-    static func decomposeAffine(_ matrix: simd_double4x4) throws -> EntityMotionPose {
-        guard matrixIsFinite(matrix),
-              abs(matrix.columns.0.w) <= 1e-10,
-              abs(matrix.columns.1.w) <= 1e-10,
-              abs(matrix.columns.2.w) <= 1e-10,
-              abs(matrix.columns.3.w - 1) <= 1e-10
-        else {
-            throw EntityMotionCompilationError.unrepresentableTransform(
-                "Matrix is not a finite affine transform."
-            )
-        }
-
-        let axes = [
-            SIMD3<Double>(matrix.columns.0.x, matrix.columns.0.y, matrix.columns.0.z),
-            SIMD3<Double>(matrix.columns.1.x, matrix.columns.1.y, matrix.columns.1.z),
-            SIMD3<Double>(matrix.columns.2.x, matrix.columns.2.y, matrix.columns.2.z),
-        ]
-        let scale = SIMD3<Double>(
-            simd_length(axes[0]),
-            simd_length(axes[1]),
-            simd_length(axes[2])
-        )
-        guard scale.x > 0, scale.y > 0, scale.z > 0 else {
-            throw EntityMotionCompilationError.unrepresentableTransform(
-                "Matrix contains zero scale."
-            )
-        }
-
-        let normalized = [
-            axes[0] / scale.x,
-            axes[1] / scale.y,
-            axes[2] / scale.z,
-        ]
-        // RealityKit stores Transform matrices as Float, so valid rotated
-        // non-uniform scales accumulate small orthogonality roundoff.
-        let orthogonalityTolerance = 1e-5
-        guard abs(simd_dot(normalized[0], normalized[1])) <= orthogonalityTolerance,
-              abs(simd_dot(normalized[0], normalized[2])) <= orthogonalityTolerance,
-              abs(simd_dot(normalized[1], normalized[2])) <= orthogonalityTolerance
-        else {
-            throw EntityMotionCompilationError.unrepresentableTransform(
-                "Matrix contains shear."
-            )
-        }
-
-        let rotationMatrix = simd_double3x3(
-            normalized[0],
-            normalized[1],
-            normalized[2]
-        )
-        guard simd_determinant(rotationMatrix) > 0 else {
-            throw EntityMotionCompilationError.unrepresentableTransform(
-                "Matrix contains a reflected basis."
-            )
-        }
-
-        return try .init(
-            position: .init(
-                matrix.columns.3.x,
-                matrix.columns.3.y,
-                matrix.columns.3.z
-            ),
-            rotation: decomposeEulerZYX(simd_quatd(rotationMatrix)),
-            scale: scale
-        )
-    }
-
     /// Applies optional finite components to one baseline vector.
     private static func merge(
         _ update: EntityMotionVector3Payload?,
@@ -220,18 +152,5 @@ enum EntityMotionTransformValues {
             normalized -= 360
         }
         return abs(normalized) < 1e-12 ? 0 : normalized
-    }
-
-    /// Checks every matrix component without allocating an intermediate payload.
-    private static func matrixIsFinite(_ matrix: simd_double4x4) -> Bool {
-        let columns = [
-            matrix.columns.0,
-            matrix.columns.1,
-            matrix.columns.2,
-            matrix.columns.3,
-        ]
-        return columns.allSatisfy {
-            $0.x.isFinite && $0.y.isFinite && $0.z.isFinite && $0.w.isFinite
-        }
     }
 }
