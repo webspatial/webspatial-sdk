@@ -78,10 +78,13 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         var needAllow = deciside ?? false
 
         if !needAllow {
-            // webspatial:// is an internal scheme for in-app routing between main and attachment windows.
-            // Only open non-webspatial URLs externally via the system.
-            if navigationAction.request.url?.scheme != "webspatial" {
-                UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
+            let url = navigationAction.request.url!
+            if url.scheme == "about", SpatialOpenWindowCommand(url: url) != nil {
+                // Allow the child returned by createWebViewWith to finish its internal about:blank navigation.
+                needAllow = true
+            } else if url.scheme != "webspatial" {
+                // webspatial:// is an internal scheme for in-app routing between main and attachment windows.
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
             }
         }
         decisionHandler(needAllow ? .allow : .cancel)
