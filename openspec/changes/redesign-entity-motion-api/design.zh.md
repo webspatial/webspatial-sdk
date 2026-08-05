@@ -1069,7 +1069,7 @@ flowchart TB
 
 编译的最终输出是可控播放对象。沿用上文示例(2 段整姿态),下面分别用 visionOS 与 picoOS 演示:每段编成一个整姿态 `FromToBy`,用 `sequence` 串成一条动画资源,最后交给引擎播放,拿到可暂停 / 恢复 / 停止 / 变速的播放控制器——即“可控播放对象”。两端都绑定整个 transform,写法对齐。
 
-visionOS 与 picoOS 的平台能力按第 8 节验收任务留痕验证。以下代码只展示资源构造和 controller 形态。
+visionOS 平台能力按 `tasks.zh.md` 第 8 节验收任务留痕验证。picoOS 验收已迁出当前变更。以下代码只展示资源构造和 controller 形态。
 
 visionOS(RealityKit / Swift):
 
@@ -1219,7 +1219,7 @@ fun playSequencedTransformAnimation(entity: Entity): AnimationPlaybackController
 10. **延迟、播放速率和循环:** 每次全新执行只运行一次延迟;播放速率和循环仅作用于运动序列。循环复用本轮资源。
 11. **失败显式化:** RealityKit 无法表达某个段时,fresh play 的控制命令必须失败,动画保持非活跃。
 
-上述跨端能力组合以第 8 节验收记录为准;本设计不引入 SDK 自行调度分段队列的降级方案。验收记录包含平台版本、SDK 版本、fixtures、执行命令和结果。
+上述 visionOS 能力组合以 `tasks.zh.md` 第 8 节验收记录为准;picoOS 验收已迁出当前变更。本设计不引入 SDK 自行调度分段队列的降级方案。验收记录包含平台版本、SDK 版本、fixtures、执行命令和结果。
 
 #### 姿态拆解与确认值回传
 
@@ -1403,9 +1403,9 @@ Native Entity animation object 与一次 target binding 同生命周期;target �
 
 | 风险 | 缓解 |
 |---|---|
-| 平台能力验证缺少可追溯记录 | 第 8 节验收任务记录平台版本、SDK 版本、fixtures、执行命令和结果 |
-| 控制器级停止影响同一 Entity 或子节点上的其它动画 | 原生清理只停止当前 `EntityMotionAnimationObject` 持有的控制器,8.4/8.5 覆盖其它动画保持运行 |
-| 零时长姿态提交影响其它动画或终态 | 状态命令矩阵限定 `stop` / `reset` / `finish` / `set` 的提交动作,8.4/8.5 覆盖终态提交 |
+| 平台能力验证缺少可追溯记录 | `tasks.zh.md` 第 8 节记录平台版本、SDK 版本、fixtures、执行命令和结果 |
+| 控制器级停止影响同一 Entity 或子节点上的其它动画 | 原生清理只停止当前 `EntityMotionAnimationObject` 持有的控制器;任务 8.4 覆盖其它动画保持运行 |
+| 零时长姿态提交影响其它动画或终态 | 状态命令矩阵限定 `stop` / `reset` / `finish` / `set` 的提交动作;任务 8.4 覆盖终态提交 |
 | transform 写入保护遗漏导致 React 写入覆盖活动动画 | `SpatialScene` 在普通 Entity transform 更新入口检查 animating mask;停止、重置、结束、自然完成、解绑和销毁时解除保护;4.3/8.2 覆盖该行为 |
 | 配置 update 在旧执行已受破坏后失败 | Native 在停止旧 controller 前完成所有可能失败的候选准备;失败原子保留旧执行,第 9 节覆盖 RealityKit 可行性验证与回滚测试 |
 | 创建请求和创建回执都使用 `id` 导致语义混淆 | 协议按消息方向固定含义:请求为目标 Entity id,回执为动画对象 id;Core/Native contract 测试分别断言 |

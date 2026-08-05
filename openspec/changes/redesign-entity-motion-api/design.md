@@ -1069,7 +1069,7 @@ flowchart TB
 
 The final compilation output is the controllable playback object. Reusing the example above (2 full-pose segments), the following shows it on visionOS and picoOS: each segment compiles into a full-pose `FromToBy`, chained via `sequence` into one animation resource, then handed to the engine — obtaining a playback controller that can pause / resume / stop / change speed, i.e. a "controllable playback object." Both platforms bind the whole transform, so the code lines up.
 
-Platform capability validation on visionOS and picoOS is recorded through the Section 8 acceptance tasks. The snippets below show resource construction and controller shape only.
+VisionOS platform capability validation is recorded in Section 8 of `tasks.md`. PicoOS acceptance has moved outside this change. The snippets below show resource construction and controller shape only.
 
 visionOS (RealityKit / Swift):
 
@@ -1219,7 +1219,7 @@ fun playSequencedTransformAnimation(entity: Entity): AnimationPlaybackController
 10. **Delay, playback rate, and loop:** each fresh execution runs the delay once; playback rate and loop apply only to the motion sequence. Loops reuse the current run's resource.
 11. **Explicit failure:** when a segment is outside RealityKit's expression range, the fresh-play control command must fail and leave the animation inactive.
 
-The cross-platform capability combinations above depend on the Section 8 acceptance records; this design does not introduce an SDK-managed segment-queue fallback. Acceptance records include platform versions, SDK versions, fixtures, executed commands, and results.
+The visionOS capability combinations above depend on the acceptance records in Section 8 of `tasks.md`; picoOS acceptance has moved outside this change. This design does not introduce an SDK-managed segment-queue fallback. Acceptance records include platform versions, SDK versions, fixtures, executed commands, and results.
 
 #### Transform decomposition and confirmed-value reporting
 
@@ -1403,9 +1403,9 @@ Boundary constraint: `SpatialScene` owns global `spatialObjects`, create-target 
 
 | Risk | Mitigation |
 |---|---|
-| Platform capability validation lacks traceable records | Section 8 acceptance tasks record platform versions, SDK versions, fixtures, executed commands, and results |
-| Controller-scoped stop affects unrelated animations on the same Entity or descendants | Native cleanup stops only the controller held by the current `EntityMotionAnimationObject`; 8.4/8.5 cover unrelated animations remaining active |
-| Zero-duration pose commits affect unrelated animations or terminal state | The command matrix bounds commits for `stop` / `reset` / `finish` / `set`; 8.4/8.5 cover terminal commits |
+| Platform capability validation lacks traceable records | Section 8 of `tasks.md` records platform versions, SDK versions, fixtures, executed commands, and results |
+| Controller-scoped stop affects unrelated animations on the same Entity or descendants | Native cleanup stops only the controller held by the current `EntityMotionAnimationObject`; task 8.4 covers unrelated animations remaining active |
+| Zero-duration pose commits affect unrelated animations or terminal state | The command matrix bounds commits for `stop` / `reset` / `finish` / `set`; task 8.4 covers terminal commits |
 | Missing transform write protection lets React writes override active animation | `SpatialScene` checks the animating mask at the ordinary Entity transform update entry; stop, reset, finish, natural completion, unbind, and destruction remove the protection; 4.3/8.2 cover the behavior |
 | Config update fails after the old execution has already been damaged | Native completes every potentially failing candidate-preparation step before stopping the old controller; failure atomically preserves the old execution, and Section 9 covers RealityKit feasibility plus rollback tests |
 | Using `id` in both create requests and replies causes semantic confusion | Protocol direction fixes the meaning: request means target Entity id, reply means animation-object id; Core/native contract tests assert both |
