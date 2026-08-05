@@ -27,9 +27,6 @@
       "@webspatial/core-sdk/runtime/keys": [
         "../../packages/core/src/runtime/keys.ts"
       ],
-      "@webspatial/core-sdk/internal/entity-motion": [
-        "../../packages/core/src/internal/entity-motion.ts"
-      ],
       "@webspatial/react-sdk": ["../../packages/react/src/index.ts"],
       "@webspatial/react-sdk/spatial": [
         "../../packages/react/src/spatial/index.ts"

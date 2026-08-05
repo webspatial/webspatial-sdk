@@ -10,7 +10,7 @@
 
 ## 合入结论
 
-**存在 2 个 P2 问题。**
+**存在 1 个 P2 问题。**
 
 无剩余 P1。已修复问题统一记录在文末“已修复”章节。
 
@@ -29,7 +29,6 @@
 
 | 编号 | 问题 | 影响 | 修改建议 | 代码位置 |
 |---|---|---|---|---|
-| 6 | 已删除的内部子路径仍保留在测试服务器配置中 | alias 指向不存在的文件，并与已完成的任务 9.10 冲突。当前未被引用，但保留了错误的架构入口。 | 删除这三行 alias。 | [`apps/test-server/tsconfig.json:30-32`](../../../apps/test-server/tsconfig.json#L30-L32) |
 | 7 | 动态按钮的无障碍标签会过期 | effect 只在按钮首次出现时设置 `aria-label`，而多个按钮会在 Play、Pause、Resume、Destroy 和 Remount 之间改变文字。状态变化后，可访问名称和自动化标识与可见文字不一致。 | 为动态按钮显式设置稳定的无障碍标签，或者在文字变化时同步更新生成标签。 | [`shared.tsx:96-103`](../../../apps/test-server/src/pages/entity-animation/shared.tsx#L96-L103)、[`reverse-loop.tsx:70-72`](../../../apps/test-server/src/pages/entity-animation/reverse-loop.tsx#L70-L72) |
 
 ## 验证结果
@@ -58,8 +57,6 @@
 
 `normalizeEntityMotionConfig.ts:L353-370`：**删除**。`serializeEntityMotionTimeline` 只为自身单测复制 payload，没有生产调用方；当前生产路径已经直接使用归一化结果。
 
-`apps/test-server/tsconfig.json:L30-32`：**删除**。已移除的 Entity motion 内部子路径映射，无需替代。
-
 `EntityMotionBinding.ts:L15-18,L133-138`：**删除**。update 命令中的 `revision` 被写入但从未读取；保留 `configRevision`，删除命令字段。
 
 预计净删除：约 150 行。
@@ -80,7 +77,6 @@
 
 ## 最终检查清单
 
-- [ ] 删除失效的测试服务器 alias。
 - [ ] 修复动态按钮无障碍标签。
 - [ ] 删除确认无调用方的 helper 和未使用命令字段。
 - [ ] 重新运行 OpenSpec、全仓测试、完整 visionOS 测试和模拟器验收。
@@ -93,6 +89,7 @@
 | 2 | Entity 变更破坏既有 Element 错误契约 | Element 保持 `SpatializedPlaybackError { command, code?, reason }`；Entity 使用 `EntityPlaybackError { code, reason }` 和封闭错误码。双语 OpenSpec、Core 与 React experimental 入口的命名已统一，并有类型兼容和公开出口测试。 | 保持两类错误契约独立，不引入兼容泛型。 | [`spatializedPlayback.ts:1-17`](../../../packages/core/src/types/motion/spatializedPlayback.ts#L1-L17)、[`entityMotion.ts:45-61`](../../../packages/core/src/types/motion/entityMotion.ts#L45-L61)、[`experimental.ts:9-20`](../../../packages/react/src/experimental.ts#L9-L20)、[`spec.md:126-132`](specs/entity-motion/spec.md#L126-L132) |
 | 3 | Native handler 生命周期覆盖不完整 | 新增 3 项直接测试，通过真实 JSB 注册和分发链覆盖目标不存在、类型拒绝、动画注册与查询、显式销毁、target 先销毁、注册表清理，以及 update、control、set 在 teardown 后返回 `ANIMATION_NOT_FOUND`。OpenSpec 任务 5.3b 已完成。 | handler 保持私有；对象级测试继续负责成功路径细节，handler 测试只保护跨层边界。 | [`EntityMotionTests.swift`](../../../packages/visionOS/web-spatialTests/EntityMotionTests.swift)、[`SpatialWebController.swift`](../../../packages/visionOS/web-spatial/webview/SpatialWebController.swift)、[`tasks.zh.md`](tasks.zh.md) |
 | 5 | 缺少必需的 changeset | 新增一句话 changeset，将实验性 Entity motion API 对 Core、React 和 visionOS 的变更标记为 minor。 | 保留旧 Entity changeset，不复用其已被取代的 API 描述。 | [`entity-motion-experimental-api.md`](../../../.changeset/entity-motion-experimental-api.md) |
+| 6 | 已删除的内部子路径仍保留在测试服务器配置中 | 删除无引用且指向不存在文件的 TypeScript alias。 | 测试服务器继续通过公开入口使用 Entity motion API。 | [`tsconfig.json`](../../../apps/test-server/tsconfig.json) |
 
 ### P1 复验流程
 
