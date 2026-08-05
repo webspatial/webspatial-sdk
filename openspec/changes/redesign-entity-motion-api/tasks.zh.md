@@ -89,7 +89,6 @@ Native 状态实现：
 Bridge 与集成验收：
   - [x] 8.3a 运行新 Bridge 契约下的 Core Entity motion 定向测试
   - [x] 8.3b 运行新 Bridge 契约下的完整 visionOS `xcodebuild test`
-  - [x] 8.3c 使用当前 Apple Vision Pro Simulator 执行完整 `xcodebuild test`,记录 Xcode、SDK、Simulator、命令、测试统计和新 `.xcresult`
 - [x] 8.4 在 visionOS 上验收百分比多关键帧、稀疏字段、完整姿态 sequence、fresh play、delay、loop、pause 与 pause 后 play、stop/reset/finish/set、控制器级清理、其它 Entity 与子节点动画保持运行、终态提交和销毁,记录平台版本、SDK 版本、fixtures、执行命令和结果
   - [x] 8.4a 记录当前 Xcode、visionOS SDK、Apple Vision Pro Simulator 版本、设备名称和 UDID,以及全部 fixtures
   - [x] 8.4b 执行完整 `xcodebuild test` 与 `tools/scripts/iwdp-sim.py` 的 list、eval、click、dom/probe、screenshot,记录新 `.xcresult`、逐项观测和已检查截图路径
@@ -109,5 +108,4 @@ Bridge 与集成验收：
 - [x] 9.8 最小实现 React 原地更新、FIFO 和安全合并,删除同目标销毁重建、姿态交接和替换代次
 - [x] 9.9 最小实现 visionOS 更新入口、事务更新、重新定向、暂停定义、旧事件过滤和确认姿态回传
 - [x] 9.10 在测试持续通过时重构,删除已取代的替换代码和测试夹具,以及 Entity motion internal 子路径的导出、映射、引用和测试;保留目标替换、解绑和销毁流程
-- [x] 9.12 运行 Core/React 测试、visionOS 完整测试、模拟器验收和 OpenSpec 严格校验,记录状态矩阵与结果
 - [x] 9.13 删除已被取代的 visionOS `AnimateTransform` 命令、会话管理器、Bridge 监听器和生命周期清理

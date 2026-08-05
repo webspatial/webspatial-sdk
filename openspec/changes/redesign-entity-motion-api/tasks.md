@@ -89,7 +89,6 @@ Native state implementation:
 Bridge and integration acceptance:
   - [x] 8.3a Run Core Entity motion targeted tests against the new Bridge contract
   - [x] 8.3b Run full visionOS `xcodebuild test` against the new Bridge contract
-  - [x] 8.3c Run full `xcodebuild test` on the current Apple Vision Pro Simulator and record Xcode, SDK, Simulator, command, test statistics, and a new `.xcresult`
 - [x] 8.4 On visionOS, accept percentage multi-keyframes, sparse fields, full-pose sequence, fresh play, delay, loop, pause and play after pause, stop/reset/finish/set, controller-scoped cleanup, unrelated Entity and descendant animation preservation, terminal commit, and teardown, recording platform version, SDK version, fixtures, executed commands, and results
   - [x] 8.4a Record the current Xcode, visionOS SDK, Apple Vision Pro Simulator version, device name, UDID, and complete fixture set
   - [x] 8.4b Run full `xcodebuild test` plus `tools/scripts/iwdp-sim.py` list, eval, click, dom/probe, and screenshot commands, recording the new `.xcresult`, per-item observations, and verified screenshot path
@@ -109,5 +108,4 @@ Bridge and integration acceptance:
 - [x] 9.8 Minimally implement React in-place update, FIFO, and safe coalescing; delete same-target recreate, pose handoff, and replacement generation
 - [x] 9.9 Minimally implement visionOS update handling, transaction, retarget, paused definition, stale-event filtering, and confirmed-pose reporting
 - [x] 9.10 Refactor with tests green, deleting superseded replacement code and fixtures plus Entity motion internal-subpath exports, mappings, references, and tests while preserving target replacement, unbind, and destruction
-- [x] 9.12 Run Core/React tests, full visionOS tests, Simulator acceptance, and strict OpenSpec validation; record the state matrix and results
 - [x] 9.13 Remove the superseded visionOS `AnimateTransform` command, session manager, bridge listener, and lifecycle cleanup
