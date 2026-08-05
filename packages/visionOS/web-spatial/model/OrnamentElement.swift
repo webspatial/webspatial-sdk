@@ -59,8 +59,7 @@ struct OrnamentOptions: Codable, Equatable {
     }
 
     private static func queryValue(_ name: String, from url: URL) -> String? {
-        URLComponents(url: url, resolvingAgainstBaseURL: false)?
-            .queryItems?
+        webSpatialQueryItems(from: url)
             .first { $0.name == name }?
             .value
     }

@@ -155,6 +155,8 @@ function NumberField({
 }
 
 function NormalDomContent() {
+  const [doubleClickCount, setDoubleClickCount] = useState(0)
+
   return (
     <div
       data-testid="ornament-content-dom"
@@ -163,9 +165,25 @@ function NormalDomContent() {
       <div className="text-xs uppercase tracking-[0.18em] text-white/60">
         Normal DOM
       </div>
-      <div className="mt-2 text-lg font-semibold">Styled by Ornament</div>
-      <div className="mt-3 rounded-lg bg-black/20 px-3 py-2 text-sm">
+      <div className="mt-1 text-base font-semibold">Styled by Ornament</div>
+      <div className="mt-1 rounded-lg bg-black/20 px-2 py-1 text-xs">
         Ordinary CSS is applied to the Ornament document root.
+      </div>
+      <div className="mt-1 flex items-center gap-2">
+        <button
+          type="button"
+          data-testid="ornament-dblclick"
+          onDoubleClick={() => setDoubleClickCount(count => count + 1)}
+          className="rounded-lg bg-cyan-300 px-2 py-1 text-xs font-semibold text-slate-950"
+        >
+          Double-click me
+        </button>
+        <span
+          data-testid="ornament-dblclick-count"
+          className="text-xs text-white/80"
+        >
+          Count: {doubleClickCount}
+        </span>
       </div>
     </div>
   )
