@@ -2,9 +2,9 @@ import { describe, expect, test, vi } from 'vitest'
 import type {
   EntityMotionConfig,
   EntityMotionProps,
+  EntityPlaybackError,
   EntityTransformUpdate,
   SpatializedMotionPlayState,
-  SpatializedPlaybackError,
 } from '@webspatial/core-sdk'
 import { EntityMotionBinding } from './EntityMotionBinding'
 
@@ -24,7 +24,7 @@ function createMockAnimationObject(id = 'animation-1') {
     complete?: (values: EntityMotionProps) => void
     stop?: (values: EntityMotionProps) => void
     reset?: (values: EntityMotionProps) => void
-    error?: (error: SpatializedPlaybackError) => void
+    error?: (error: EntityPlaybackError) => void
     values?: (values: EntityMotionProps) => void
     state?: (state: SpatializedMotionPlayState) => void
   } = {}

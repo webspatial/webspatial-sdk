@@ -4,7 +4,6 @@ import type {
   SpatializedMotionPlayState,
   SpatializedPlaybackApi,
 } from './spatializedMotion'
-import type { SpatializedPlaybackError } from './spatializedPlayback'
 
 /** Transform values confirmed by the native Entity motion implementation. */
 export interface EntityMotionProps {
@@ -43,6 +42,24 @@ export type EntityMotionTimeline = {
   to?: EntityMotionFrame
 } & Partial<Record<`${number}%`, EntityMotionFrame>>
 
+/** Closed failure categories reported by Entity motion. */
+export type EntityPlaybackErrorCode =
+  | 'TARGET_NOT_FOUND'
+  | 'UNSUPPORTED_TARGET'
+  | 'ANIMATION_NOT_FOUND'
+  | 'INVALID_TIMELINE'
+  | 'COMPILATION_FAILED'
+  | 'INVALID_CONTROL_STATE'
+  | 'INVALID_SET_VALUES'
+
+/** Classified asynchronous Entity playback failure. */
+export interface EntityPlaybackError {
+  /** Machine-readable Entity failure category. */
+  code: EntityPlaybackErrorCode
+  /** Human-readable failure reason. */
+  reason: string
+}
+
 /** Public Entity motion configuration. */
 export interface EntityMotionConfig {
   /** Top-level start-boundary shorthand. */
@@ -72,7 +89,7 @@ export interface EntityMotionConfig {
   /** Called with the complete confirmed reset pose. */
   onReset?: (values: EntityMotionProps) => void
   /** Called for one classified bridge or native failure. */
-  onError?: (error: SpatializedPlaybackError) => void
+  onError?: (error: EntityPlaybackError) => void
 }
 
 /** Scalar Entity transform property accepted by the canonical timeline. */
@@ -231,7 +248,7 @@ export interface EntityAnimationErrorDetail {
   /** Entity animation object's `SpatialObject.id`. */
   id: string
   /** Classified asynchronous playback failure. */
-  error: SpatializedPlaybackError
+  error: EntityPlaybackError
 }
 
 /** Dedicated asynchronous Entity animation error event. */

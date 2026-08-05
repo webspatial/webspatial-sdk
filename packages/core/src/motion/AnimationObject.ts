@@ -153,10 +153,8 @@ export class AnimationObject
       this.started = false
       // Native currently emits asynchronous errors only when play cannot acquire the ownership mask.
       this.callbacks.onError?.({
-        code:
-          detail.error.code === 'mask-conflict'
-            ? 'INVALID_CONTROL_STATE'
-            : 'COMPILATION_FAILED',
+        command: 'play',
+        code: detail.error.code,
         reason: detail.error.message,
       })
       return

@@ -7,6 +7,8 @@ export type {
   EntityMotionProps,
   EntityMotionTimeline,
   EntityPlaybackApi,
+  EntityPlaybackError,
+  EntityPlaybackErrorCode,
   EntityTransformUpdate,
 } from './entityMotion'
 export type {

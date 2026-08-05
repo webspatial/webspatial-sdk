@@ -182,6 +182,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     this.creating = false
     object?.destroy().catch(error => {
       onError?.({
+        command: 'destroy',
         code: 'ANIMATION_NOT_FOUND',
         reason: error instanceof Error ? error.message : 'Destroy failed',
       })
@@ -260,6 +261,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
         this.isPausedState = false
         this.finishedState = false
         this.config.onError?.({
+          command: 'create',
           code: 'COMPILATION_FAILED',
           reason: error instanceof Error ? error.message : 'Create failed',
         })
@@ -323,6 +325,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
     }
     this.animationObject[command.type]().catch(error => {
       this.config.onError?.({
+        command: command.type,
         code: 'INVALID_CONTROL_STATE',
         reason: error instanceof Error ? error.message : 'Command failed',
       })
@@ -365,6 +368,7 @@ export class AnimationBinding implements SpatializedPlaybackApi {
         await animationObject[command.type]()
       } catch (error) {
         this.config.onError?.({
+          command: command.type,
           code: 'INVALID_CONTROL_STATE',
           reason: error instanceof Error ? error.message : 'Command failed',
         })

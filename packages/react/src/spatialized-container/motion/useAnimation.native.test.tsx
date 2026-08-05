@@ -637,6 +637,7 @@ describe('useAnimation tuple api native backend', () => {
     await waitFor(() => {
       expect(secondAnimation.setCallbacks).toHaveBeenCalled()
       expect(oldOnError).toHaveBeenCalledWith({
+        command: 'destroy',
         code: 'ANIMATION_NOT_FOUND',
         reason: 'destroy failed',
       })
@@ -895,6 +896,7 @@ describe('useAnimation tuple api native backend', () => {
 
     await waitFor(() =>
       expect(onError).toHaveBeenCalledWith({
+        command: 'create',
         code: 'COMPILATION_FAILED',
         reason: 'create failed',
       }),
@@ -907,6 +909,7 @@ describe('useAnimation tuple api native backend', () => {
     const onError = vi.fn()
     const element = createMockElement('direct-control-fail')
     const error = {
+      command: 'play',
       code: 'INVALID_CONTROL_STATE',
       reason: 'play failed',
     }
@@ -942,6 +945,7 @@ describe('useAnimation tuple api native backend', () => {
     const onError = vi.fn()
     const element = createMockElement('queued-control-fail')
     const error = {
+      command: 'play',
       code: 'INVALID_CONTROL_STATE',
       reason: 'queued play failed',
     }
@@ -973,6 +977,7 @@ describe('useAnimation tuple api native backend', () => {
     const onError = vi.fn()
     const element = createMockElement('autostart-control-fail')
     const error = {
+      command: 'play',
       code: 'INVALID_CONTROL_STATE',
       reason: 'autoStart play failed',
     }

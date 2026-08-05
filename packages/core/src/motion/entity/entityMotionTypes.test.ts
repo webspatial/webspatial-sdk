@@ -2,6 +2,7 @@ import { describe, expectTypeOf, test } from 'vitest'
 import type {
   EntityMotionConfig,
   EntityMotionProps,
+  EntityPlaybackError,
   EntityPlaybackApi,
   EntityTransformUpdate,
   SpatializedPlaybackError,
@@ -27,8 +28,21 @@ describe('Entity motion public types', () => {
     expectTypeOf<EntityPlaybackApi>().toHaveProperty('finish')
   })
 
-  test('removes command from SpatializedPlaybackError without compatibility', () => {
+  test('keeps Element and Entity playback error contracts independent', () => {
     expectTypeOf<SpatializedPlaybackError>().toEqualTypeOf<{
+      command:
+        | 'create'
+        | 'play'
+        | 'pause'
+        | 'resume'
+        | 'stop'
+        | 'reset'
+        | 'finish'
+        | 'destroy'
+      code?: string
+      reason: string
+    }>()
+    expectTypeOf<EntityPlaybackError>().toEqualTypeOf<{
       code:
         | 'TARGET_NOT_FOUND'
         | 'UNSUPPORTED_TARGET'

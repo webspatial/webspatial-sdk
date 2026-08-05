@@ -3,10 +3,10 @@ import type {
   EntityMotionConfig,
   EntityMotionProps,
   EntityPlaybackApi,
+  EntityPlaybackError,
   EntityTransformUpdate,
   SpatialEntity,
   SpatializedMotionPlayState,
-  SpatializedPlaybackError,
 } from '@webspatial/core-sdk'
 import {
   validateEntityMotionConfig,
@@ -394,7 +394,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
 
   /** Reports one ordinary rejected command without terminating the FIFO. */
   private reportCommandError(error: unknown): void {
-    const playbackError: SpatializedPlaybackError = {
+    const playbackError: EntityPlaybackError = {
       code: 'COMPILATION_FAILED',
       reason:
         error instanceof Error ? error.message : 'Entity motion command failed',

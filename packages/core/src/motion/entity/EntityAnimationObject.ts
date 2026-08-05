@@ -17,12 +17,12 @@ import type {
   EntityMotionStateChangedMsg,
   EntityMotionTimelinePayload,
   EntityPlaybackApi,
+  EntityPlaybackError,
   EntityTransformUpdate,
   SetEntityAnimationResult,
   UpdateEntityAnimationResult,
 } from '../../types/motion/entityMotion'
 import type { SpatializedMotionPlayState } from '../../types/motion/spatializedMotion'
-import type { SpatializedPlaybackError } from '../../types/motion/spatializedPlayback'
 import {
   normalizeEntityMotionConfig,
   validateEntityTransformUpdate,
@@ -95,7 +95,7 @@ export class EntityAnimationObject
   /** Registered reset observer. */
   private resetListener?: (values: EntityMotionProps) => void
   /** Registered error observer. */
-  private errorListener?: (error: SpatializedPlaybackError) => void
+  private errorListener?: (error: EntityPlaybackError) => void
   /** Registered confirmed-values observer. */
   private valuesListener?: (values: EntityMotionProps) => void
   /** Registered Native playback-state observer. */
@@ -203,7 +203,7 @@ export class EntityAnimationObject
   }
 
   /** Registers the asynchronous bridge error observer. */
-  onError(listener: (error: SpatializedPlaybackError) => void): void {
+  onError(listener: (error: EntityPlaybackError) => void): void {
     this.errorListener = listener
   }
 
@@ -349,8 +349,8 @@ export class EntityAnimationObject
   private reportReplyError(ret: {
     errorCode?: string
     errorMessage?: string
-  }): SpatializedPlaybackError {
-    const error: SpatializedPlaybackError = {
+  }): EntityPlaybackError {
+    const error: EntityPlaybackError = {
       code: this.toPlaybackErrorCode(ret.errorCode),
       reason: ret.errorMessage ?? 'Entity animation command failed',
     }
@@ -359,7 +359,7 @@ export class EntityAnimationObject
   }
 
   /** Reports one error fingerprint at most once in the current command cycle. */
-  private reportErrorOnce(error: SpatializedPlaybackError): void {
+  private reportErrorOnce(error: EntityPlaybackError): void {
     const fingerprint = `${error.code}\0${error.reason}`
     if (this.reportedErrors.has(fingerprint)) return
     this.reportedErrors.add(fingerprint)
@@ -369,7 +369,7 @@ export class EntityAnimationObject
   /** Narrows a bridge error code to the closed public error-code set. */
   private toPlaybackErrorCode(
     code: string | undefined,
-  ): SpatializedPlaybackError['code'] {
+  ): EntityPlaybackError['code'] {
     switch (code) {
       case 'TARGET_NOT_FOUND':
       case 'UNSUPPORTED_TARGET':

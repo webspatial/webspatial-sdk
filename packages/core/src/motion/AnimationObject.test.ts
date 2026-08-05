@@ -307,7 +307,8 @@ describe('AnimationObject', () => {
     })
 
     expect(onError).toHaveBeenCalledWith({
-      code: 'INVALID_CONTROL_STATE',
+      command: 'play',
+      code: 'mask-conflict',
       reason: 'Another animation is already writing this target',
     })
   })
