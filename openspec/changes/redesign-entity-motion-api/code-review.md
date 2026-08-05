@@ -10,9 +10,9 @@
 
 ## 合入结论
 
-**存在 1 个 P2 问题。**
+**无剩余 P0、P1、P2 问题。**
 
-无剩余 P1。已修复问题统一记录在文末“已修复”章节。
+已修复问题统一记录在文末“已修复”章节。
 
 ## P0 问题
 
@@ -29,7 +29,8 @@
 
 | 编号 | 问题 | 影响 | 修改建议 | 代码位置 |
 |---|---|---|---|---|
-| 7 | 动态按钮的无障碍标签会过期 | effect 只在按钮首次出现时设置 `aria-label`，而多个按钮会在 Play、Pause、Resume、Destroy 和 Remount 之间改变文字。状态变化后，可访问名称和自动化标识与可见文字不一致。 | 为动态按钮显式设置稳定的无障碍标签，或者在文字变化时同步更新生成标签。 | [`shared.tsx:96-103`](../../../apps/test-server/src/pages/entity-animation/shared.tsx#L96-L103)、[`reverse-loop.tsx:70-72`](../../../apps/test-server/src/pages/entity-animation/reverse-loop.tsx#L70-L72) |
+
+无。
 
 ## 验证结果
 
@@ -77,7 +78,6 @@
 
 ## 最终检查清单
 
-- [ ] 修复动态按钮无障碍标签。
 - [ ] 删除确认无调用方的 helper 和未使用命令字段。
 - [ ] 重新运行 OpenSpec、全仓测试、完整 visionOS 测试和模拟器验收。
 
@@ -90,6 +90,7 @@
 | 3 | Native handler 生命周期覆盖不完整 | 新增 3 项直接测试，通过真实 JSB 注册和分发链覆盖目标不存在、类型拒绝、动画注册与查询、显式销毁、target 先销毁、注册表清理，以及 update、control、set 在 teardown 后返回 `ANIMATION_NOT_FOUND`。OpenSpec 任务 5.3b 已完成。 | handler 保持私有；对象级测试继续负责成功路径细节，handler 测试只保护跨层边界。 | [`EntityMotionTests.swift`](../../../packages/visionOS/web-spatialTests/EntityMotionTests.swift)、[`SpatialWebController.swift`](../../../packages/visionOS/web-spatial/webview/SpatialWebController.swift)、[`tasks.zh.md`](tasks.zh.md) |
 | 5 | 缺少必需的 changeset | 新增一句话 changeset，将实验性 Entity motion API 对 Core、React 和 visionOS 的变更标记为 minor。 | 保留旧 Entity changeset，不复用其已被取代的 API 描述。 | [`entity-motion-experimental-api.md`](../../../.changeset/entity-motion-experimental-api.md) |
 | 6 | 已删除的内部子路径仍保留在测试服务器配置中 | 删除无引用且指向不存在文件的 TypeScript alias。 | 测试服务器继续通过公开入口使用 Entity motion API。 | [`tsconfig.json`](../../../apps/test-server/tsconfig.json) |
+| 7 | 动态按钮的无障碍标签会过期 | 共享 effect 在每次渲染后根据当前按钮文字同步 `aria-label` 与 `data-name`。 | 保留页面统一生成的无障碍标签和自动化标识。 | [`shared.tsx`](../../../apps/test-server/src/pages/entity-animation/shared.tsx) |
 
 ### P1 复验流程
 

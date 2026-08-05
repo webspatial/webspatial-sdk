@@ -97,9 +97,9 @@ export function EntityAnimationPageShell({
     rootRef.current?.querySelectorAll('button').forEach(button => {
       const label = button.textContent?.trim().replace(/\s+/g, ' ') || 'action'
       const actionName = label.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      // Keep generated metadata in sync with dynamic button text.
       button.dataset.name = `entity-motion-${pageName}-${actionName}`
-      if (!button.getAttribute('aria-label'))
-        button.setAttribute('aria-label', label)
+      button.setAttribute('aria-label', label)
     })
   })
 
