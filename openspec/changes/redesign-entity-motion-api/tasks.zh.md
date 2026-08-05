@@ -40,36 +40,28 @@
 Bridge 契约验证：
   - [x] 5.1a Core Bridge contract 红灯测试覆盖 Entity 专属创建、控制、设置命令、空控制成功回执、单一状态消息、`callbackAction`、独立错误事件和错误码
   - [x] 5.1b visionOS Bridge contract 红灯测试覆盖 Entity 专属命令、空控制成功回执、单一状态消息、`callbackAction`、独立错误事件、错误码和 loop wire shape
-  - [ ] 5.1c picoOS Bridge contract 红灯测试覆盖与 visionOS 相同的 Entity 专属命令、回执、事件和错误码集合
-  - [ ] 5.1d picoOS 实现完成后执行 Core、visionOS、picoOS 三端编解码一致性验证
 
 Bridge 实现：
   - [x] 5.2a Core Entity 专属 Bridge 类型、JSB 命令、空控制成功回执、`callbackAction` 状态消息消费和独立错误事件
   - [x] 5.2b visionOS `EntityMotionBridgeTypes` 编解码、空控制成功回执、`callbackAction` 状态消息和四个 `SpatialScene` handler 注册
-  - [ ] 5.2c picoOS `EntityMotionBridgeTypes` 编解码和四个 handler 注册
 - [x] 5.3a 核实 visionOS 目标分发与生命周期实现及现有对象级测试
 - [ ] 5.3b 补充 `SpatialScene` handler 直接测试，覆盖目标查询与拒绝、稳定错误映射、动画对象注册与查询、显式销毁、目标先销毁、清理和 `ANIMATION_NOT_FOUND` 竞态结果
 
 Native 生命周期实现：
   - [x] 5.4a visionOS `SpatialScene` Entity handler、全局 spatial objects 注册/查找、target 销毁级联和动画对象清理已实现
-  - [ ] 5.4b picoOS `SpatialScene` Entity handler、全局 spatial objects 生命周期级联和动画对象清理
 - [x] 5.5 添加 visionOS 时间轴编译器单元测试，覆盖属性、时间、缩放校验、时间并集、稀疏基准补全、延迟通道插值、完整姿态、缓动优先级、确定性欧拉角转换、确认变换和不可表达区间
 
 Native 编译器实现：
   - [x] 5.6a visionOS `EntityMotionTimelineCompiler`、`EntityMotionTiming` 与 `EntityMotionTransformValues` 已实现并覆盖完整姿态段、规范化欧拉角拆解和稀疏 update 合并
-  - [ ] 5.6b picoOS `EntityMotionTimelineCompiler`、`EntityMotionTiming` 与 `EntityMotionTransformValues`
 - [x] 5.7 先编写失败的 visionOS 集成测试,覆盖 RealityKit 整 `.transform` 绑定、多段完整姿态资源、`AnimationResource.sequence`、旋转转换、四种缓动、delay、playback rate、loop 和编译失败
   - [x] 5.7a 已添加 visionOS Bridge、timeline compiler 和动画对象状态机测试,并已纳入 `build-for-testing`
   - [x] 5.7b 补齐并运行 visionOS simulator 支持的 RealityKit `.transform`、`AnimationResource.sequence`、平台 easing、delay、playback rate、loop 和编译失败集成验收
 - [x] 5.8 实现 visionOS RealityKit 完整姿态分段 sequence 编译、播放控制器接入和平台参数映射
-- [ ] 5.9 先编写失败的 picoOS 集成测试,使用与 visionOS 相同的规范时间轴 fixtures 覆盖整 transform 绑定、多段完整姿态 sequence、旋转转换、四种缓动、delay、playback rate、loop 和编译失败
-- [ ] 5.10 实现 picoOS 完整姿态分段 sequence 编译、播放控制器接入和平台参数映射
 - [x] 5.11 先编写失败的 fresh-play 状态测试,覆盖首次 `play` / `autoStart`、complete/finish/stop/reset 后 replay 读取最新基准姿态并重新编译,pause 后 play 恢复当前控制器,单次播放内 loop 复用当前资源,编译失败保持非活跃、React 专用 `queued` 与原生层四种状态的映射、创建失败后公开状态收敛为 `idle`,以及 `finished` 根据 `playState` 精确派生
   - [x] 5.11a 已添加 visionOS fresh play 基线读取、写入保护、非活跃 `set`、终态释放和首次 play 前 `reset` 状态测试,并已纳入 `build-for-testing`
   - [x] 5.11b 补齐 `autoStart`、replay、pause 后 play 对应的原生层 `running` 状态消息与 Core 状态更新、loop 资源复用、编译失败、创建失败和 `finished` 派生的完整状态测试
 Native 播放实现：
   - [x] 5.12a visionOS `SpatialEntity.createAnimation(config)` 与 `EntityMotionAnimationObject` 实现创建、fresh play、基准姿态读取、delay/running/paused 状态转换、pause 后 play 发送 `running` 状态消息、loop 和命令失败回执路径
-  - [ ] 5.12b picoOS 对等创建、fresh play、状态转换、pause 后 play、loop 和命令失败回执路径
 
 Native 状态与事件验证：
   - [x] 5.13a 已添加 visionOS 非活跃 `set` 稀疏合并、活跃 `set` 状态拒绝、终态释放写入保护、reset 起始姿态和控制器清理测试,并已纳入 `build-for-testing`
@@ -78,7 +70,6 @@ Native 状态与事件验证：
 
 Native 状态实现：
   - [x] 5.14a visionOS 状态矩阵、控制器级清理、提交后完整 transform 回读、规范化欧拉角拆解、稀疏 rotation 合并、单一状态消息、`callbackAction`、空控制成功回执、专用错误事件、控制器身份过滤、串行处理和 `SetEntityAnimationResult.values` 回执路径
-  - [ ] 5.14b picoOS 对等状态矩阵、清理、终态提交、写入保护、transform 拆解、稀疏合并、事件和回执实现
 
 ## 6. Capability 与校验
 
@@ -99,12 +90,9 @@ Bridge 与集成验收：
   - [x] 8.3a 运行新 Bridge 契约下的 Core Entity motion 定向测试
   - [x] 8.3b 运行新 Bridge 契约下的完整 visionOS `xcodebuild test`
   - [x] 8.3c 使用当前 Apple Vision Pro Simulator 执行完整 `xcodebuild test`,记录 Xcode、SDK、Simulator、命令、测试统计和新 `.xcresult`
-  - [ ] 8.3d 运行 picoOS Bridge contract 与集成测试
 - [x] 8.4 在 visionOS 上验收百分比多关键帧、稀疏字段、完整姿态 sequence、fresh play、delay、loop、pause 与 pause 后 play、stop/reset/finish/set、控制器级清理、其它 Entity 与子节点动画保持运行、终态提交和销毁,记录平台版本、SDK 版本、fixtures、执行命令和结果
   - [x] 8.4a 记录当前 Xcode、visionOS SDK、Apple Vision Pro Simulator 版本、设备名称和 UDID,以及全部 fixtures
   - [x] 8.4b 执行完整 `xcodebuild test` 与 `tools/scripts/iwdp-sim.py` 的 list、eval、click、dom/probe、screenshot,记录新 `.xcresult`、逐项观测和已检查截图路径
-- [ ] 8.5 在 picoOS 运行与 8.4 相同的 fixtures 和验收矩阵,并记录平台版本、SDK 版本、fixtures、执行命令和结果
-- [ ] 8.6 picoOS 验收完成后，对照两端状态顺序、确认值、终态 transform、错误和 replay 行为
 - [x] 8.7 执行端到端回归,覆盖动画终态、active set 以及 Entity motion Spec 定义的 target 销毁生命周期和错误行为
   - [x] 8.7a 使用 iwdp 回归确认完整终态 transform、active set 警告与空操作、pause 与 pause 后 play 状态同步、finish 完成 callback 幂等、其它 Entity 保持运行和 target `objectdestroy` 后的 Core 本地行为
 - [x] 8.8 记录 visionOS 与 picoOS 并发性能测量的延期跟进范围;这些测量不作为本次变更的发布 gate
@@ -121,5 +109,4 @@ Bridge 与集成验收：
 - [x] 9.8 最小实现 React 原地更新、FIFO 和安全合并,删除同目标销毁重建、姿态交接和替换代次
 - [x] 9.9 最小实现 visionOS 更新入口、事务更新、重新定向、暂停定义、旧事件过滤和确认姿态回传
 - [x] 9.10 在测试持续通过时重构,删除已取代的替换代码和测试夹具,以及 Entity motion internal 子路径的导出、映射、引用和测试;保留目标替换、解绑和销毁流程
-- [ ] 9.11 为 picoOS 实现并测试同等的桥接、重新定向、回滚和竞态行为
 - [x] 9.12 运行 Core/React 测试、visionOS 完整测试、模拟器验收和 OpenSpec 严格校验,记录状态矩阵与结果

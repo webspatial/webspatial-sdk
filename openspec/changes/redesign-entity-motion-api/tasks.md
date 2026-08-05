@@ -40,36 +40,28 @@
 Bridge contract verification:
   - [x] 5.1a Core Bridge contract red tests cover Entity-specific create, control, and set commands; empty successful control replies; one state-message shape; `callbackAction`; dedicated error events; and error codes
   - [x] 5.1b visionOS Bridge contract red tests cover Entity-specific commands, empty successful control replies, one state-message shape, `callbackAction`, dedicated error events, error codes, and loop wire shapes
-  - [ ] 5.1c picoOS Bridge contract red tests cover the same Entity-specific commands, replies, events, and error-code set as visionOS
-  - [ ] 5.1d After picoOS implementation, run Core, visionOS, and picoOS encode/decode parity verification
 
 Bridge implementation:
   - [x] 5.2a Core Entity-specific Bridge types, JSB commands, empty successful control replies, `callbackAction` state-message consumption, and dedicated error events
   - [x] 5.2b visionOS `EntityMotionBridgeTypes` codecs, empty successful control replies, `callbackAction` state messages, and four `SpatialScene` handler registrations
-  - [ ] 5.2c picoOS `EntityMotionBridgeTypes` codecs and four handler registrations
 - [x] 5.3a Verify the visionOS target-dispatch and lifecycle implementation and its existing object-level tests
 - [ ] 5.3b Add direct `SpatialScene` handler tests for target lookup and rejection, stable error mapping, animation-object registration and lookup, explicit destroy, target-first destruction, cleanup, and `ANIMATION_NOT_FOUND` teardown results
 
 Native lifecycle implementation:
   - [x] 5.4a visionOS `SpatialScene` Entity handlers, global spatial-objects registration/lookup, target-destroy cascade, and animation-object cleanup are implemented
-  - [ ] 5.4b picoOS `SpatialScene` Entity handlers, global spatial-objects lifecycle cascade, and animation-object cleanup
 - [x] 5.5 Add visionOS timeline-compiler unit tests for property/time/scale validation, union times, sparse baseline completion, late-channel interpolation, full poses, easing precedence, deterministic Euler conversion, confirmed transforms, and unrepresentable segments
 
 Native compiler implementation:
   - [x] 5.6a visionOS `EntityMotionTimelineCompiler`, `EntityMotionTiming`, and `EntityMotionTransformValues` are implemented with full-pose segments, canonical Euler decomposition, and sparse-update merging
-  - [ ] 5.6b picoOS `EntityMotionTimelineCompiler`, `EntityMotionTiming`, and `EntityMotionTransformValues`
 - [x] 5.7 Add failing visionOS integration tests for RealityKit whole-`.transform` binding, multi-segment full-pose resources, `AnimationResource.sequence`, rotation conversion, all four easing modes, delay, playback rate, loop, and compilation failure
   - [x] 5.7a visionOS Bridge, timeline compiler, and animation-object state-machine tests have been added and are included in `build-for-testing`
   - [x] 5.7b Complete and run visionOS simulator-backed integration acceptance for RealityKit `.transform`, `AnimationResource.sequence`, platform easing, delay, playback rate, loop, and compilation failures
 - [x] 5.8 Implement visionOS RealityKit full-pose segment sequence compilation, playback-controller integration, and platform-option mapping
-- [ ] 5.9 Add failing picoOS integration tests using the same canonical-timeline fixtures as visionOS for whole-transform binding, multi-segment full-pose sequence, rotation conversion, all four easing modes, delay, playback rate, loop, and compilation failure
-- [ ] 5.10 Implement picoOS full-pose segment sequence compilation, playback-controller integration, and platform-option mapping
 - [x] 5.11 Add failing fresh-play state tests for first `play` / `autoStart`; replay after complete/finish/stop/reset reading the latest baseline and recompiling; play after pause resuming the current controller; loop within one run reusing the current resource; compilation failure remaining inactive; React-only `queued` mapping to the four Native states; public state settling to `idle` after creation failure; and exact derivation of `finished` from `playState`
   - [x] 5.11a visionOS tests cover fresh-play baseline capture, write protection, inactive `set`, terminal write-protection release, and `reset` before first play, and are included in `build-for-testing`
   - [x] 5.11b Complete coverage for `autoStart`, replay, play after pause including the Native `running` state message and Core state update, loop-resource reuse, compilation failure, creation failure, and `finished` derivation
 Native playback implementation:
   - [x] 5.12a visionOS `SpatialEntity.createAnimation(config)` and `EntityMotionAnimationObject` implement creation, fresh play, baseline capture, delay/running/paused transitions, play after pause with a `running` state message, loop, and command-failure reply paths
-  - [ ] 5.12b picoOS equivalent creation, fresh play, state transitions, play after pause, loop, and command-failure reply paths
 
 Native state and event verification:
   - [x] 5.13a visionOS tests cover inactive `set` sparse merging, active `set` state rejection, terminal write-protection release, reset start-pose commit, and controller cleanup, and are included in `build-for-testing`
@@ -78,7 +70,6 @@ Native state and event verification:
 
 Native state implementation:
   - [x] 5.14a visionOS state matrix, controller-scoped cleanup, post-commit complete-transform readback, canonical Euler decomposition, sparse rotation merging, one state-message shape, `callbackAction`, empty successful control replies, dedicated error events, controller identity filtering, serialized handling, and the `SetEntityAnimationResult.values` reply path
-  - [ ] 5.14b picoOS equivalent state matrix, cleanup, terminal commits, write protection, transform decomposition, sparse merging, events, and replies
 
 ## 6. Capability and Validation
 
@@ -99,12 +90,9 @@ Bridge and integration acceptance:
   - [x] 8.3a Run Core Entity motion targeted tests against the new Bridge contract
   - [x] 8.3b Run full visionOS `xcodebuild test` against the new Bridge contract
   - [x] 8.3c Run full `xcodebuild test` on the current Apple Vision Pro Simulator and record Xcode, SDK, Simulator, command, test statistics, and a new `.xcresult`
-  - [ ] 8.3d Run picoOS Bridge contract and integration tests
 - [x] 8.4 On visionOS, accept percentage multi-keyframes, sparse fields, full-pose sequence, fresh play, delay, loop, pause and play after pause, stop/reset/finish/set, controller-scoped cleanup, unrelated Entity and descendant animation preservation, terminal commit, and teardown, recording platform version, SDK version, fixtures, executed commands, and results
   - [x] 8.4a Record the current Xcode, visionOS SDK, Apple Vision Pro Simulator version, device name, UDID, and complete fixture set
   - [x] 8.4b Run full `xcodebuild test` plus `tools/scripts/iwdp-sim.py` list, eval, click, dom/probe, and screenshot commands, recording the new `.xcresult`, per-item observations, and verified screenshot path
-- [ ] 8.5 Run the same fixtures and acceptance matrix from 8.4 on picoOS, recording platform version, SDK version, fixtures, executed commands, and results
-- [ ] 8.6 After picoOS acceptance, compare both platforms' state ordering, confirmed values, terminal transforms, errors, and replay behavior
 - [x] 8.7 Run end-to-end regressions for terminal transforms, active set, and the target-destruction lifecycle and error behavior defined by the Entity motion spec
   - [x] 8.7a Use iwdp to confirm complete terminal transforms, active-set warning plus no-op behavior, pause and play-after-pause state synchronization, idempotent finish completion callbacks, unrelated Entity preservation, and Core-local behavior after target `objectdestroy`
 - [x] 8.8 Record the deferred follow-up scope for visionOS and picoOS concurrency measurements; these measurements are not a release gate for this change
@@ -121,5 +109,4 @@ Bridge and integration acceptance:
 - [x] 9.8 Minimally implement React in-place update, FIFO, and safe coalescing; delete same-target recreate, pose handoff, and replacement generation
 - [x] 9.9 Minimally implement visionOS update handling, transaction, retarget, paused definition, stale-event filtering, and confirmed-pose reporting
 - [x] 9.10 Refactor with tests green, deleting superseded replacement code and fixtures plus Entity motion internal-subpath exports, mappings, references, and tests while preserving target replacement, unbind, and destruction
-- [ ] 9.11 Implement and test equivalent picoOS Bridge, retarget, rollback, and race behavior
 - [x] 9.12 Run Core/React tests, full visionOS tests, Simulator acceptance, and strict OpenSpec validation; record the state matrix and results
