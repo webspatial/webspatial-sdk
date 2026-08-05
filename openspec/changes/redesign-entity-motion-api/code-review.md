@@ -52,13 +52,13 @@
 
 ## 可删除内容与过度设计
 
-`EntityMotionAnimationObject.swift:L499-527`：**删除**。确认姿态读取切换为 RealityKit `Transform` 后遗留的 float matrix 转换方法没有调用方，无需替代。
+`EntityMotionAnimationObject.swift:L499-527`：**待处理**。删除确认姿态读取切换为 RealityKit `Transform` 后遗留且没有调用方的 float matrix 转换方法，无需替代。
 
-`EntityMotionTransformValues.swift:L124-190,L225-236`：**删除**。仿射矩阵拆解及有限矩阵检查只被自身测试调用；生产路径使用 `decompose(Transform)`。同步删除仅验证 shear 的孤立测试。
+`EntityMotionTransformValues.swift:L124-190,L225-236`：**待处理**。删除只被自身测试调用的仿射矩阵拆解及有限矩阵检查；生产路径使用 `decompose(Transform)`。同步删除仅验证 shear 的孤立测试。
 
-`normalizeEntityMotionConfig.ts:L353-370`：**删除**。`serializeEntityMotionTimeline` 只为自身单测复制 payload，没有生产调用方；当前生产路径已经直接使用归一化结果。
+`normalizeEntityMotionConfig.ts:L353-370`：**待处理**。删除只为自身单测复制 payload 且没有生产调用方的 `serializeEntityMotionTimeline`；当前生产路径已经直接使用归一化结果。
 
-`EntityMotionBinding.ts:L15-18,L133-138`：**删除**。update 命令中的 `revision` 被写入但从未读取；保留 `configRevision`，删除命令字段。
+`EntityMotionBinding.ts:L15-18,L133-138`：**待处理**。删除 update 命令中写入但从未读取的 `revision` 字段，保留 `configRevision`。
 
 预计净删除：约 150 行。
 
