@@ -349,23 +349,3 @@ export function validateEntityTransformUpdate(
 ): void {
   collectPatch(update, 'update', false)
 }
-
-/**
- * Produces a detached Entity motion wire payload.
- *
- * @param timeline - Canonical normalized timeline.
- * @returns Detached payload safe to pass to the bridge.
- */
-export function serializeEntityMotionTimeline(
-  timeline: EntityMotionTimelinePayload,
-): EntityMotionTimelinePayload {
-  return {
-    ...timeline,
-    loop:
-      typeof timeline.loop === 'object' ? { ...timeline.loop } : timeline.loop,
-    tracks: timeline.tracks.map(track => ({
-      ...track,
-      keyframes: track.keyframes.map(keyframe => ({ ...keyframe })),
-    })),
-  }
-}

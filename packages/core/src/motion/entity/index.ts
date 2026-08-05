@@ -1,6 +1,5 @@
 export {
   normalizeEntityMotionConfig,
-  serializeEntityMotionTimeline,
   validateEntityMotionConfig,
   validateEntityTransformUpdate,
 } from './normalizeEntityMotionConfig'

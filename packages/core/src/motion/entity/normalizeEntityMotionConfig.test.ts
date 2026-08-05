@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import {
   normalizeEntityMotionConfig,
-  serializeEntityMotionTimeline,
   validateEntityMotionConfig,
   validateEntityTransformUpdate,
 } from './index'
@@ -355,20 +354,5 @@ describe('Entity motion validation', () => {
     [{ rotation: { y: Number.NaN } }, 'finite'],
   ])('rejects invalid set update %#', (update, message) => {
     expect(() => validateEntityTransformUpdate(update)).toThrow(message)
-  })
-})
-
-describe('serializeEntityMotionTimeline', () => {
-  test('creates a detached wire payload', () => {
-    const normalized = normalizeEntityMotionConfig({
-      from: { scale: { x: 1 } },
-      to: { scale: { x: 2 } },
-    })
-    const payload = serializeEntityMotionTimeline(normalized)
-
-    expect(payload).toEqual(normalized)
-    expect(payload).not.toBe(normalized)
-    expect(payload.tracks).not.toBe(normalized.tracks)
-    expect(payload.tracks[0].keyframes).not.toBe(normalized.tracks[0].keyframes)
   })
 })
