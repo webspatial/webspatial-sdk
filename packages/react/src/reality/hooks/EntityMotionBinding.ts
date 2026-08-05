@@ -8,10 +8,7 @@ import type {
   SpatialEntity,
   SpatializedMotionPlayState,
 } from '@webspatial/core-sdk'
-import {
-  validateEntityMotionConfig,
-  validateEntityTransformUpdate,
-} from '@webspatial/core-sdk'
+import { validateEntityTransformUpdate } from '@webspatial/core-sdk'
 
 type PlaybackCommandType = 'play' | 'pause' | 'stop' | 'reset' | 'finish'
 
@@ -69,6 +66,8 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
   private state: SpatializedMotionPlayState = 'idle'
   /** Complete Native-confirmed Entity transform mirror. */
   private confirmedValues: EntityMotionProps = {}
+  /** Core programmer error rethrown by the Hook during render. */
+  private pendingSynchronousError: Error | null = null
   /** React render subscribers. */
   private readonly listeners = new Set<() => void>()
   /** External-store revision advanced for every observable change. */
@@ -76,7 +75,6 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
 
   /** Creates one stable binding and its public playback facade. */
   constructor(config: EntityMotionConfig) {
-    validateEntityMotionConfig(config)
     this.config = config
     const thisBinding = this
     this.api = {
@@ -106,9 +104,13 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     return this.confirmedValues
   }
 
+  /** Returns the Core programmer error waiting for React error-boundary delivery. */
+  get synchronousError(): Error | null {
+    return this.pendingSynchronousError
+  }
+
   /** Replaces authoring and callback references for subsequent work. */
   updateConfig(config: EntityMotionConfig): void {
-    validateEntityMotionConfig(config)
     const hasPrecedenceDeclaration =
       config.timeline !== undefined &&
       (config.from !== undefined || config.to !== undefined)
@@ -190,6 +192,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     this.terminated = false
     this.state = 'idle'
     this.confirmedValues = {}
+    this.pendingSynchronousError = null
     this.notify()
     if (object) {
       void object.destroy().catch(() => {})
@@ -362,37 +365,52 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     const commandEpoch = this.commandEpoch
     const token = {}
     this.commandRunToken = token
-    const run = async (): Promise<void> => {
+    const run = (): Promise<unknown> => {
       if (
         commandEpoch !== this.commandEpoch ||
         generation !== this.generation ||
         this.animationObject !== object ||
         this.terminated
       ) {
-        return
+        return Promise.resolve()
       }
-      try {
-        if (command.type === 'update') {
-          await object.update(command.config)
-        } else if (command.type === 'set') {
-          await object.set(command.update)
-        } else {
-          await object[command.type]()
-        }
-      } catch (error) {
+      if (command.type === 'update') {
+        return object.update(command.config)
+      }
+      if (command.type === 'set') {
+        return object.set(command.update)
+      }
+      return object[command.type]()
+    }
+    let commandResult: Promise<unknown>
+    try {
+      commandResult = run()
+    } catch (error) {
+      if (this.commandRunToken === token) {
+        this.commandRunToken = null
+      }
+      if (generation === this.generation && this.animationObject === object) {
+        this.commandQueue = []
+        this.pendingSynchronousError =
+          error instanceof Error ? error : new Error(String(error))
+        this.notify()
+      }
+      return
+    }
+    void commandResult
+      .catch(error => {
         if (generation === this.generation && this.animationObject === object) {
           this.reportCommandError(error)
         }
-      }
-    }
-    void run().finally(() => {
-      if (this.commandRunToken !== token) return
-      this.commandRunToken = null
-      this.drainCommandQueue(object, generation)
-    })
+      })
+      .finally(() => {
+        if (this.commandRunToken !== token) return
+        this.commandRunToken = null
+        this.drainCommandQueue(object, generation)
+      })
   }
 
-  /** Reports one ordinary rejected command without terminating the FIFO. */
+  /** Reports one asynchronous rejected command without terminating the FIFO. */
   private reportCommandError(error: unknown): void {
     const playbackError: EntityPlaybackError = {
       code: 'COMPILATION_FAILED',

@@ -97,20 +97,29 @@ async function flushPromises() {
 }
 
 describe('EntityMotionBinding', () => {
-  test('throws an invalid initial config synchronously without calling onError', () => {
+  test('lets Core validate an invalid initial config synchronously without calling onError', () => {
     const onError = vi.fn()
+    const binding = new EntityMotionBinding({
+      from: { position: { x: 0 } },
+      onError,
+    })
+    const createAnimation = vi.fn(() => {
+      throw new Error(
+        '[useEntityAnimation] top-level config requires both from and to',
+      )
+    })
 
-    expect(
-      () =>
-        new EntityMotionBinding({
-          from: { position: { x: 0 } },
-          onError,
-        }),
+    expect(() =>
+      binding.__bind({
+        id: 'entity-1',
+        createAnimation,
+      } as any),
     ).toThrow('both from and to')
+    expect(createAnimation).toHaveBeenCalledOnce()
     expect(onError).not.toHaveBeenCalled()
   })
 
-  test('rejects an invalid config update before changing the active config', async () => {
+  test('lets Core validate an invalid config update synchronously without calling onError', async () => {
     const onError = vi.fn()
     const { object } = createMockAnimationObject()
     const binding = new EntityMotionBinding(createConfig({ onError }))
@@ -120,16 +129,54 @@ describe('EntityMotionBinding', () => {
     } as any)
     await flushPromises()
 
+    object.update.mockImplementation(() => {
+      throw new Error(
+        '[useEntityAnimation] top-level config requires both from and to',
+      )
+    })
     expect(() =>
       binding.updateConfig({
         from: { position: { x: 0 } },
         onError,
       }),
-    ).toThrow('both from and to')
-    binding.reconcileConfig()
+    ).not.toThrow()
+
+    expect(() => binding.reconcileConfig()).not.toThrow()
+    expect(object.update).toHaveBeenCalledOnce()
+    expect(binding.synchronousError?.message).toContain('both from and to')
+    expect(onError).not.toHaveBeenCalled()
+  })
+
+  test('preserves a Core synchronous config error after the update waits in FIFO', async () => {
+    const onError = vi.fn()
+    const play = deferred<undefined>()
+    const { object } = createMockAnimationObject()
+    object.play.mockImplementation(() => play.promise)
+    object.update.mockImplementation(() => {
+      throw new Error(
+        '[useEntityAnimation] top-level config requires both from and to',
+      )
+    })
+    const binding = new EntityMotionBinding(createConfig({ onError }))
+    binding.__bind({
+      id: 'entity-1',
+      createAnimation: vi.fn(async () => object),
+    } as any)
     await flushPromises()
 
-    expect(object.update).not.toHaveBeenCalled()
+    binding.api.play()
+    binding.updateConfig({
+      from: { position: { x: 0 } },
+      onError,
+    })
+    binding.reconcileConfig()
+    expect(binding.synchronousError).toBeNull()
+
+    play.resolve(undefined)
+    await vi.waitFor(() =>
+      expect(binding.synchronousError?.message).toContain('both from and to'),
+    )
+    expect(object.update).toHaveBeenCalledOnce()
     expect(onError).not.toHaveBeenCalled()
   })
 

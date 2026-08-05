@@ -1,7 +1,8 @@
-import { describe, expect, expectTypeOf, test, vi } from 'vitest'
-import { act, render, renderHook } from '@testing-library/react'
+import { afterEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
+import { act, render, renderHook, waitFor } from '@testing-library/react'
 import type { EntityTransformUpdate } from '@webspatial/core-sdk'
 import {
+  Component,
   createElement,
   StrictMode,
   Suspense,
@@ -13,8 +14,41 @@ import {
   useEntityAnimation,
 } from './useEntityAnimation'
 
+class TestErrorBoundary extends Component<
+  { children?: ReactNode; onError: (error: Error) => void },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null }
+
+  static getDerivedStateFromError(error: Error) {
+    return { error }
+  }
+
+  componentDidCatch(error: Error) {
+    this.props.onError(error)
+  }
+
+  render() {
+    return this.state.error ? null : this.props.children
+  }
+}
+
+function preventExpectedConfigError(event: ErrorEvent) {
+  if (
+    event.error instanceof Error &&
+    event.error.message.includes('both from and to')
+  ) {
+    event.preventDefault()
+  }
+}
+
 describe('useEntityAnimation redesign', () => {
-  test('throws an invalid initial config during render without calling onError', () => {
+  afterEach(() => {
+    window.removeEventListener('error', preventExpectedConfigError)
+    vi.restoreAllMocks()
+  })
+
+  test('leaves initial config validation to the Core target entry', () => {
     const onError = vi.fn()
 
     expect(() =>
@@ -24,13 +58,47 @@ describe('useEntityAnimation redesign', () => {
           onError,
         }),
       ),
-    ).toThrow('both from and to')
+    ).not.toThrow()
     expect(onError).not.toHaveBeenCalled()
   })
 
-  test('throws an invalid config update during render without calling onError', () => {
+  test('routes Core synchronous config update errors to an Error Boundary without calling onError', async () => {
     const onError = vi.fn()
-    const { rerender } = renderHook(
+    const boundaryError = vi.fn()
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    window.addEventListener('error', preventExpectedConfigError)
+    const object = {
+      id: 'animation-1',
+      playState: 'idle',
+      isAnimating: false,
+      isPaused: false,
+      finished: false,
+      play: vi.fn(async () => undefined),
+      pause: vi.fn(async () => undefined),
+      stop: vi.fn(async () => undefined),
+      reset: vi.fn(async () => undefined),
+      finish: vi.fn(async () => undefined),
+      set: vi.fn(async () => undefined),
+      update: vi.fn((config: { to?: unknown }) => {
+        if (config.to === undefined) {
+          throw new Error(
+            '[useEntityAnimation] top-level config requires both from and to',
+          )
+        }
+        return Promise.resolve()
+      }),
+      destroy: vi.fn(async () => undefined),
+      onStart: vi.fn(),
+      onComplete: vi.fn(),
+      onStop: vi.fn(),
+      onReset: vi.fn(),
+      onError: vi.fn(),
+      onPlayStateChange: vi.fn(),
+      onValuesChange: vi.fn(),
+    }
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(TestErrorBoundary, { onError: boundaryError }, children)
+    const { result, rerender } = renderHook(
       ({ valid }) =>
         useEntityAnimation(
           valid
@@ -44,10 +112,24 @@ describe('useEntityAnimation redesign', () => {
                 onError,
               },
         ),
-      { initialProps: { valid: true } },
+      { initialProps: { valid: true }, wrapper },
     )
+    ;(result.current[0] as any).__bind({
+      id: 'entity-1',
+      createAnimation: vi.fn(async () => object),
+    })
+    await waitFor(() => expect(result.current[1].playState).toBe('idle'))
 
-    expect(() => rerender({ valid: false })).toThrow('both from and to')
+    rerender({ valid: false })
+
+    await waitFor(() =>
+      expect(boundaryError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('both') }),
+      ),
+    )
+    expect(
+      object.update.mock.calls.some(([config]) => config.to === undefined),
+    ).toBe(true)
     expect(onError).not.toHaveBeenCalled()
   })
 
