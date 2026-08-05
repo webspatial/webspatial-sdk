@@ -16,6 +16,8 @@ export type {
   EntityMotionConfig,
   EntityMotionProps,
   EntityPlaybackApi,
+  EntityPlaybackError,
+  EntityPlaybackErrorCode,
   EntityTransformUpdate,
 } from '@webspatial/core-sdk'
 export type {

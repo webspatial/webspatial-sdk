@@ -111,7 +111,7 @@ type EntityMotionTimeline = {
   to?: EntityMotionFrame
 } & Partial<Record<`${number}%`, EntityMotionFrame>>
 
-type SpatializedPlaybackError = {
+type EntityPlaybackError = {
   code:
     | 'TARGET_NOT_FOUND'
     | 'UNSUPPORTED_TARGET'
@@ -137,7 +137,7 @@ type EntityMotionConfig = {
   onComplete?: (values: EntityMotionProps) => void
   onStop?: (values: EntityMotionProps) => void
   onReset?: (values: EntityMotionProps) => void
-  onError?: (error: SpatializedPlaybackError) => void
+  onError?: (error: EntityPlaybackError) => void
 }
 ```
 

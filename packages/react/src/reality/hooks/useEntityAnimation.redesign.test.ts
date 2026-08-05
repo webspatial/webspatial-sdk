@@ -13,6 +13,10 @@ import {
   type EntityMotionAnimation,
   useEntityAnimation,
 } from './useEntityAnimation'
+import type {
+  EntityPlaybackError,
+  EntityPlaybackErrorCode,
+} from '../../experimental'
 
 class TestErrorBoundary extends Component<
   { children?: ReactNode; onError: (error: Error) => void },
@@ -164,6 +168,22 @@ describe('useEntityAnimation redesign', () => {
   test('keeps binding methods outside the public opaque animation type', () => {
     expectTypeOf<EntityMotionAnimation>().not.toHaveProperty('__bind')
     expectTypeOf<EntityMotionAnimation>().not.toHaveProperty('__unbind')
+  })
+
+  test('exports Entity playback error types from the experimental entry', () => {
+    expectTypeOf<EntityPlaybackError>().toEqualTypeOf<{
+      code: EntityPlaybackErrorCode
+      reason: string
+    }>()
+    expectTypeOf<EntityPlaybackErrorCode>().toEqualTypeOf<
+      | 'TARGET_NOT_FOUND'
+      | 'UNSUPPORTED_TARGET'
+      | 'ANIMATION_NOT_FOUND'
+      | 'INVALID_TIMELINE'
+      | 'COMPILATION_FAILED'
+      | 'INVALID_CONTROL_STATE'
+      | 'INVALID_SET_VALUES'
+    >()
   })
 
   test('exposes a synchronously validated set update through the hook api', () => {

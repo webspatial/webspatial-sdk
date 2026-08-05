@@ -9,7 +9,7 @@
 
 - [x] 2.1 先编写失败测试,覆盖新的 `useEntityAnimation` 返回三元组 `[animation, api, entityProps]`、公开 playback surface(`play`、`pause`、`stop`、`reset`、`finish`)以及只接受 `EntityTransformUpdate` object 的 `api.set`
 - [x] 2.2 先编写失败测试,覆盖完整公开 config 契约、`position` / `rotation` / `scale` authoring、顶层 `from` / `to`、`timeline.from` / `timeline.to`、百分比关键帧、公开默认值、finite 与范围校验、起止边界必填、空 timeline、frame 与 `api.set` update 拒绝、边界帧内部字段稀疏、旧 config 拒绝和 `opacity` 等不支持目标
-- [x] 2.2a 先编写失败测试,覆盖 Core 可检测的公开 config 与方法参数错误同步抛出内置 `Error` 且保持 `onError` 次数、命令回执错误与独立 `entityanimationerror` 事件分别通过一次 `onError(SpatializedPlaybackError)` 返回、状态事件不携带错误,以及 `api.set` 状态拒绝保持 warning + no-op
+- [x] 2.2a 先编写失败测试,覆盖 Core 可检测的公开 config 与方法参数错误同步抛出内置 `Error` 且保持 `onError` 次数、命令回执错误与独立 `entityanimationerror` 事件分别通过一次 `onError(EntityPlaybackError)` 返回、状态事件不携带错误,以及 `api.set` 状态拒绝保持 warning + no-op
 - [x] 2.3 重设计 Core 和 React 类型面,实现上述 Entity motion config、transform-only callback values、playback API、写入侧 `EntityTransformUpdate` 与 Core `EntityAnimationObject` 调试 `onXXX`
 
 ## 3. Entity 绑定迁移
@@ -24,7 +24,7 @@
 
 ## 4. Playback、Outlet 与 Core 归一化
 
-- [x] 4.1 先编写红灯测试,覆盖 `entityProps` 在 `start`、`complete`、`stop`、`reset`、`finish` 和原生层接受 `api.set(update)` 后包含完整的 `position`、`rotation`、`scale`,`set` 确认值来自 `SetEntityAnimationResult.values` 且不产生状态事件,React 更新时机限定为生命周期节点或成功设置回执,`onStart` / `onComplete` / `onStop` / `onReset` 接收精确的 `EntityMotionProps` 参数、`onError` 接收精确的 `SpatializedPlaybackError` 参数、callback 返回值被忽略,`idle → finish → finished` 触发一次 `onComplete` 并保持现有 `onStart` 次数,以及终态由配置或 `api.set` 决定
+- [x] 4.1 先编写红灯测试,覆盖 `entityProps` 在 `start`、`complete`、`stop`、`reset`、`finish` 和原生层接受 `api.set(update)` 后包含完整的 `position`、`rotation`、`scale`,`set` 确认值来自 `SetEntityAnimationResult.values` 且不产生状态事件,React 更新时机限定为生命周期节点或成功设置回执,`onStart` / `onComplete` / `onStop` / `onReset` 接收精确的 `EntityMotionProps` 参数、`onError` 接收精确的 `EntityPlaybackError` 参数、callback 返回值被忽略,`idle → finish → finished` 触发一次 `onComplete` 并保持现有 `onStart` 次数,以及终态由配置或 `api.set` 决定
 - [x] 4.2 实现 React/Core 状态消息、设置回执和独立错误事件消费,完成调试 `onXXX`、用户 callback 分发和 `entityProps` 完整已提交变换持久化,保持原生层已确认状态的单向流动
 - [x] 4.3 先编写红灯测试,覆盖公开播放接口、每个绑定对象独立的 FIFO 命令链与完整 transform 写入保护:原生动画对象创建期间没有待执行播放命令时保持 `idle`;播放命令等待创建时公开 `queued`,`autoStart` 生成的隐式 `play` 也属于待执行命令;创建前的播放命令按顺序执行,`autoStart` 产生的 `play` 排在已有待执行命令之前;命令排队期间 `isAnimating`、`isPaused`、`finished` 保持 `false`;创建成功回执在执行待处理命令前确认 `idle`;待处理的 `pause` 或 `stop` 保持 `idle`;创建失败回执使状态收敛为 `idle`、终止当前绑定生命周期、清空对象状态、待处理命令和 `entityProps`,由其余 React 属性继续控制并分发一次分类错误;创建前的 `set` 和绑定终止后的所有 API 保持控制台警告与空操作;创建后的 `set → play`、`stop → play`、`play → pause` 等待前一条内部 JSB 回执后再执行;活跃期 `set` 按 FIFO 抵达 Native,并把 `INVALID_CONTROL_STATE` 映射为 warning + no-op;普通命令失败继续执行后续队列;解绑、替换和销毁使尚未发送的命令失效;动画活跃期间的写入保持动画和最新 `entityProps`;fresh play 启用保护、暂停保持保护、停止/重置/结束/自然完成解除保护,播放空闲期间普通 React transform 更新抵达 Native;终态填充通过完整 `entityProps` 保持已提交姿态
 - [x] 4.4 复用 Element 动画在对象创建前暂存播放命令、创建后逐条执行的机制,为每个 Entity motion 绑定对象实现带队列批次失效保护的 FIFO 命令链;使用 `CreateEntityAnimation` 回执在执行待处理命令前确认 `idle`,或在创建失败时终止当前绑定生命周期;创建前的 `set` 和终止后的所有命令输出控制台警告、执行空操作并保持在队列之外,创建后所有命令串行执行;同时实现 React/Core 播放接口、JSB 命令发起和完整 transform `entityProps` 更新,使组合后的 React 属性控制播放空闲状态;原生层的 `set` 合并、状态机、终态提交和 transform 写入保护由第 5 节实现

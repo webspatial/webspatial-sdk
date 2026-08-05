@@ -127,7 +127,7 @@ SDK MUST 使用 `entityProps` 作为 Native 返回的物体完整已提交变换
 
 Entity motion MUST 在保持 transform-only 约束的前提下，对齐新的 motion 家族 playback surface 与生命周期语义。
 
-目标 callback 签名 MUST 为 `onStart(values: EntityMotionProps)`、`onComplete(values: EntityMotionProps)`、`onStop(values: EntityMotionProps)`、`onReset(values: EntityMotionProps)` 和 `onError(error: SpatializedPlaybackError)`。每个生命周期 `values` 参数 MUST 包含完整的已确认 `position`、`rotation` 和 `scale`。callback 返回值 MUST 被忽略。
+目标 callback 签名 MUST 为 `onStart(values: EntityMotionProps)`、`onComplete(values: EntityMotionProps)`、`onStop(values: EntityMotionProps)`、`onReset(values: EntityMotionProps)` 和 `onError(error: EntityPlaybackError)`。每个生命周期 `values` 参数 MUST 包含完整的已确认 `position`、`rotation` 和 `scale`。callback 返回值 MUST 被忽略。
 
 Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`、`onComplete`、`onStop`、`onReset` 和 `onError` 调试监听方法。这些方法 MUST 只注册观察回调,MUST NOT 发送播放控制或配置 update 命令。`pause` MUST NOT 增加 `onPause`。
 
@@ -169,7 +169,7 @@ Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`�
 - **THEN** SDK MUST 使公开播放状态收敛为 `idle`
 - **AND** SDK MUST 使当前绑定代次失效,清空动画对象引用、控制器派生状态和全部待执行命令
 - **AND** SDK MUST 把 `entityProps` 清空为 `{}` 并触发 React 渲染,使基础 React 属性恢复完整变换控制
-- **AND** `onError` MUST 使用分类后的 `SpatializedPlaybackError` 触发一次
+- **AND** `onError` MUST 使用分类后的 `EntityPlaybackError` 触发一次
 - **AND** 当前绑定生命周期 MUST 终止
 - **AND** 该绑定后续的 `play`、`pause`、`stop`、`reset`、`finish` 和 `set` MUST 输出控制台警告并执行空操作
 - **AND** 这些后续调用 MUST 保持现有 `onError` 次数
@@ -360,7 +360,7 @@ Entity motion 绑定 MUST 根据规范时间轴和播放参数比较执行定义
 
 Core 与 Native MUST 使用独立于 Spatialized Element 动画的 `CreateEntityAnimation`、`UpdateEntityAnimation`、`ControlEntityAnimation` 和 `SetEntityAnimation` 四条命令。创建请求的 `id` MUST 是目标 Entity 的 `SpatialObject.id`;创建成功回执的 `id` MUST 是新建 Entity 动画对象的 `SpatialObject.id`。后续更新、控制、设置、状态事件和错误事件 MUST 直接使用该动画对象的 `id`,MUST NOT 引入 `elementId` 或 `animationId` 别名。
 
-每次播放状态确认或 lifecycle callback MUST 使用同一个 `EntityMotionStateChangedDetail`,并携带 animation `id`、execution revision 与最新 `playState`。触发生命周期 callback 的消息 MUST 同时携带 `callbackAction` 和完整 `values`;`callbackAction` 的完整集合 MUST 为 `start`、`complete`、`stop` 和 `reset`。显式 `finish()` 与自然完成 MUST 统一使用 `callbackAction: complete`。暂停和恢复消息 MUST 只携带 `id`、execution revision 与 `playState`。公开 `finished` MUST 从 `playState === 'finished'` 派生。异步错误 MUST 使用独立的 `entityanimationerror` 事件。`SpatializedPlaybackError` MUST 只公开稳定的 `code` 和可读的 `reason`。
+每次播放状态确认或 lifecycle callback MUST 使用同一个 `EntityMotionStateChangedDetail`,并携带 animation `id`、execution revision 与最新 `playState`。触发生命周期 callback 的消息 MUST 同时携带 `callbackAction` 和完整 `values`;`callbackAction` 的完整集合 MUST 为 `start`、`complete`、`stop` 和 `reset`。显式 `finish()` 与自然完成 MUST 统一使用 `callbackAction: complete`。暂停和恢复消息 MUST 只携带 `id`、execution revision 与 `playState`。公开 `finished` MUST 从 `playState === 'finished'` 派生。异步错误 MUST 使用独立的 `entityanimationerror` 事件。`EntityPlaybackError` MUST 只公开稳定的 `code` 和可读的 `reason`。
 
 Native MUST 由目标 `SpatialEntity.createAnimation(config)` 创建 `EntityMotionAnimationObject`,MUST NOT 引入 `EntityMotionManager`。Core `EntityAnimationObject` MUST 直接使用继承自 `SpatialObject` 的 `id`,并私有保存最近一次成功提交的公开 `config`、归一化 `timeline` 和 execution revision。Native `EntityMotionAnimationObject.emitStateChanged()` MUST 是私有方法。
 
@@ -535,11 +535,11 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 
 ### Requirement: 播放错误可分类
 
-SDK MUST 对公开 config 或方法参数中可直接检测的 programmer error 同步抛出内置 `Error`,并保持现有 `onError` 次数。JSB 命令失败 MUST 通过当前命令回执转换为一次 `SpatializedPlaybackError`。命令成功回执后发生的原生异步失败 MUST 只通过一次 `entityanimationerror` 触发 `onError`。状态事件 MUST NOT 携带错误,同一失败 MUST NOT 同时通过回执和错误事件报告。错误码至少覆盖 `TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、`ANIMATION_NOT_FOUND`、`INVALID_TIMELINE`、`COMPILATION_FAILED` 和 `INVALID_SET_VALUES`。动画对象初次创建的异步失败 MUST 终止当前绑定生命周期;配置 update 的异步失败 MUST 原子回滚并保留当前生命周期;其它异步播放错误 MUST 保持既有状态语义。动画活跃期间、binding / native object 创建前或当前绑定生命周期终止后被拒绝的 `api.set` MUST 保持为 no-op,并输出一条 console warning。
+SDK MUST 对公开 config 或方法参数中可直接检测的 programmer error 同步抛出内置 `Error`,并保持现有 `onError` 次数。JSB 命令失败 MUST 通过当前命令回执转换为一次 `EntityPlaybackError`。命令成功回执后发生的原生异步失败 MUST 只通过一次 `entityanimationerror` 触发 `onError`。状态事件 MUST NOT 携带错误,同一失败 MUST NOT 同时通过回执和错误事件报告。错误码至少覆盖 `TARGET_NOT_FOUND`、`UNSUPPORTED_TARGET`、`ANIMATION_NOT_FOUND`、`INVALID_TIMELINE`、`COMPILATION_FAILED` 和 `INVALID_SET_VALUES`。动画对象初次创建的异步失败 MUST 终止当前绑定生命周期;配置 update 的异步失败 MUST 原子回滚并保留当前生命周期;其它异步播放错误 MUST 保持既有状态语义。动画活跃期间、binding / native object 创建前或当前绑定生命周期终止后被拒绝的 `api.set` MUST 保持为 no-op,并输出一条 console warning。
 
 #### Scenario: 错误码可区分
 - **WHEN** 某个 Entity motion 操作在 Bridge 或 Native 阶段异步失败
-- **THEN** `onError` MUST 收到一个 `SpatializedPlaybackError`,其 `code` 标识失败类型
+- **THEN** `onError` MUST 收到一个 `EntityPlaybackError`,其 `code` 标识失败类型
 - **AND** 应用代码 MUST 能够按 `code` 分支,并使用 `reason` 记录可读原因
 
 ### Requirement: Entity target 销毁同步关联动画清理

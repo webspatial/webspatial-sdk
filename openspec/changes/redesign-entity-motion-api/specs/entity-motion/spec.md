@@ -127,7 +127,7 @@ The SDK MUST use `entityProps` as the React-side persistence outlet for the comp
 
 Entity motion MUST align with the newer motion-family playback surface and lifecycle semantics while remaining transform-only.
 
-The target callback signatures MUST be `onStart(values: EntityMotionProps)`, `onComplete(values: EntityMotionProps)`, `onStop(values: EntityMotionProps)`, `onReset(values: EntityMotionProps)`, and `onError(error: SpatializedPlaybackError)`. Each lifecycle `values` argument MUST contain the complete confirmed `position`, `rotation`, and `scale`. Callback return values MUST be ignored.
+The target callback signatures MUST be `onStart(values: EntityMotionProps)`, `onComplete(values: EntityMotionProps)`, `onStop(values: EntityMotionProps)`, `onReset(values: EntityMotionProps)`, and `onError(error: EntityPlaybackError)`. Each lifecycle `values` argument MUST contain the complete confirmed `position`, `rotation`, and `scale`. Callback return values MUST be ignored.
 
 Core `EntityAnimationObject` MUST provide `onStart`, `onComplete`, `onStop`, `onReset`, and `onError` debug-listener methods aligned with those callbacks. These methods MUST only register observers and MUST NOT send playback control or config-update commands. `pause` MUST NOT add `onPause`.
 
@@ -169,7 +169,7 @@ Each fresh play MUST store its active native business-controller identity. Nativ
 - **THEN** the SDK MUST settle the public playback state to `idle`
 - **AND** the SDK MUST invalidate the current binding generation and clear the animation-object reference, controller-derived state, and every pending command
 - **AND** the SDK MUST clear `entityProps` to `{}` and schedule a React render so static/base React props regain whole-transform authority
-- **AND** `onError` MUST fire once with the classified `SpatializedPlaybackError`
+- **AND** `onError` MUST fire once with the classified `EntityPlaybackError`
 - **AND** the current binding lifecycle MUST terminate
 - **AND** later `play`, `pause`, `stop`, `reset`, `finish`, and `set` calls on that binding MUST log a warning and perform a no-op
 - **AND** those later calls MUST preserve the existing `onError` count
@@ -360,7 +360,7 @@ Unbinding and target replacement MUST advance the binding generation, destroy th
 
 Core and Native MUST use `CreateEntityAnimation`, `UpdateEntityAnimation`, `ControlEntityAnimation`, and `SetEntityAnimation` independently from the Spatialized Element animation protocol. The create request `id` MUST be the target Entity's `SpatialObject.id`; the successful create reply `id` MUST be the new Entity animation object's `SpatialObject.id`. Later update, control, set, state-event, and error-event traffic MUST directly use that animation-object `id` and MUST NOT introduce `elementId` or `animationId` aliases.
 
-Every playback-state confirmation or lifecycle callback MUST use the same `EntityMotionStateChangedDetail` and carry the animation `id`, execution revision, and latest `playState`. Messages that trigger lifecycle callbacks MUST carry both `callbackAction` and complete `values`; the complete `callbackAction` set MUST be `start`, `complete`, `stop`, and `reset`. Explicit `finish()` and natural completion MUST both use `callbackAction: complete`. Pause and resume messages MUST carry only `id`, execution revision, and `playState`. Public `finished` MUST derive from `playState === 'finished'`. Asynchronous errors MUST use the dedicated `entityanimationerror` event. `SpatializedPlaybackError` MUST expose only a stable `code` and readable `reason`.
+Every playback-state confirmation or lifecycle callback MUST use the same `EntityMotionStateChangedDetail` and carry the animation `id`, execution revision, and latest `playState`. Messages that trigger lifecycle callbacks MUST carry both `callbackAction` and complete `values`; the complete `callbackAction` set MUST be `start`, `complete`, `stop`, and `reset`. Explicit `finish()` and natural completion MUST both use `callbackAction: complete`. Pause and resume messages MUST carry only `id`, execution revision, and `playState`. Public `finished` MUST derive from `playState === 'finished'`. Asynchronous errors MUST use the dedicated `entityanimationerror` event. `EntityPlaybackError` MUST expose only a stable `code` and readable `reason`.
 
 Native MUST create `EntityMotionAnimationObject` through the target `SpatialEntity.createAnimation(config)` and MUST NOT introduce `EntityMotionManager`. Core `EntityAnimationObject` MUST directly use the `id` inherited from `SpatialObject` and privately store the latest successfully committed public `config`, normalized `timeline`, and execution revision. Native `EntityMotionAnimationObject.emitStateChanged()` MUST be private.
 
@@ -535,11 +535,11 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 
 ### Requirement: Playback errors are classified
 
-The SDK MUST synchronously throw the built-in `Error` for programmer errors detectable from public config or method arguments and MUST preserve the existing `onError` count. A JSB command failure MUST be converted from that command's reply into one `SpatializedPlaybackError`. An asynchronous native failure after a successful command reply MUST trigger `onError` exactly once through `entityanimationerror`. State events MUST NOT carry errors, and the same failure MUST NOT be reported through both a reply and an error event. Error codes MUST cover at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, `ANIMATION_NOT_FOUND`, `INVALID_TIMELINE`, `COMPILATION_FAILED`, and `INVALID_SET_VALUES`. Asynchronous initial animation-object creation failure MUST terminate the current binding lifecycle; asynchronous config-update failure MUST roll back atomically and preserve the current lifecycle; other asynchronous playback failures MUST preserve their existing state semantics. Rejected `api.set` writes during an active animation, before binding / native object creation, or after current-binding termination MUST remain no-ops that emit a console warning.
+The SDK MUST synchronously throw the built-in `Error` for programmer errors detectable from public config or method arguments and MUST preserve the existing `onError` count. A JSB command failure MUST be converted from that command's reply into one `EntityPlaybackError`. An asynchronous native failure after a successful command reply MUST trigger `onError` exactly once through `entityanimationerror`. State events MUST NOT carry errors, and the same failure MUST NOT be reported through both a reply and an error event. Error codes MUST cover at least `TARGET_NOT_FOUND`, `UNSUPPORTED_TARGET`, `ANIMATION_NOT_FOUND`, `INVALID_TIMELINE`, `COMPILATION_FAILED`, and `INVALID_SET_VALUES`. Asynchronous initial animation-object creation failure MUST terminate the current binding lifecycle; asynchronous config-update failure MUST roll back atomically and preserve the current lifecycle; other asynchronous playback failures MUST preserve their existing state semantics. Rejected `api.set` writes during an active animation, before binding / native object creation, or after current-binding termination MUST remain no-ops that emit a console warning.
 
 #### Scenario: Error code is distinguishable
 - **WHEN** an Entity motion operation fails asynchronously in Bridge or Native
-- **THEN** `onError` MUST receive a `SpatializedPlaybackError` whose `code` identifies the failure kind
+- **THEN** `onError` MUST receive an `EntityPlaybackError` whose `code` identifies the failure kind
 - **AND** application code MUST be able to branch on `code` and use `reason` as the readable diagnostic
 
 ### Requirement: Entity target destruction synchronizes associated animation cleanup

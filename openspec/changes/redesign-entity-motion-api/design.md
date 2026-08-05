@@ -597,7 +597,7 @@ onStart(listener: (values: EntityMotionProps) => void)
 onComplete(listener: (values: EntityMotionProps) => void)
 onStop(listener: (values: EntityMotionProps) => void)
 onReset(listener: (values: EntityMotionProps) => void)
-onError(listener: (error: SpatializedPlaybackError) => void)
+onError(listener: (error: EntityPlaybackError) => void)
 ```
 
 State events trigger the first four methods, while the dedicated error event triggers `onError`. `pause` only updates playback state, so there is no `onPause`.
@@ -779,7 +779,7 @@ State events do not carry errors. Asynchronous failures after Native accepts a c
 ```text
 interface EntityAnimationErrorDetail {
   id: string
-  error: SpatializedPlaybackError
+  error: EntityPlaybackError
 }
 
 interface EntityAnimationErrorMsg {
@@ -789,7 +789,7 @@ interface EntityAnimationErrorMsg {
 ```
 
 ```text
-type SpatializedPlaybackError = {
+type EntityPlaybackError = {
   code:
     | 'TARGET_NOT_FOUND'
     | 'UNSUPPORTED_TARGET'
@@ -805,7 +805,7 @@ type SpatializedPlaybackError = {
 The discovery phase determines error delivery:
 
 - Synchronous Core validation of public config and method arguments throws the built-in `Error` and does not trigger `onError`.
-- A JSB command failure returns through that command's reply. Core converts the reply to one `SpatializedPlaybackError` and triggers `onError`.
+- A JSB command failure returns through that command's reply. Core converts the reply to one `EntityPlaybackError` and triggers `onError`.
 - An asynchronous native failure after a successful command reply is reported exactly once through `entityanimationerror`. Core `EntityAnimationObject` consumes the event and triggers `onError`.
 - One failure chooses one outlet. State events never carry errors, preventing duplicate `onError` delivery.
 - Initial animation-object creation failure terminates the current binding lifecycle. Config-update failure preserves the old execution and current binding lifecycle; other asynchronous playback errors preserve their existing state semantics.

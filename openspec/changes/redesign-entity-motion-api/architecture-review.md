@@ -25,7 +25,7 @@
 当前提案**不具备合入条件**。本轮复验状态如下：
 
 1. **P1-1 已修复。** React 不再预校验 config。`SpatialEntity.createAnimation()` 与 `EntityAnimationObject.update()` 保持 Core 同步校验；Binding 将同步 programmer error 与 Promise rejection 分流，前者通过外部 store 触发 Hook 在渲染阶段抛出，后者继续进入 `onError`。
-2. **P1-2 部分修复，高置信度。** Element 的 `SpatializedPlaybackError` 已恢复为 `{ command, code?, reason }`，Entity 已使用独立的 `EntityPlaybackError`。Entity Motion 的双语 OpenSpec 仍使用旧类型名，React experimental 入口也未导出新的 Entity 错误类型。
+2. **P1-2 已修复。** Element 保持 `SpatializedPlaybackError { command, code?, reason }`，Entity 使用独立的 `EntityPlaybackError { code, reason }`；双语 OpenSpec 已同步类型名，React experimental 入口已导出 Entity 错误类型，并有公开出口类型测试。
 3. OpenSpec 任务 5.3b 尚未完成，缺少 `SpatialScene` handler 直接测试。
 4. visionOS 验收任务已勾选，但仓库内没有命令、环境、统计、截图和结果包留痕。
 5. 当前分支缺少必需的 changeset，仓库 changeset 校验失败。
@@ -132,12 +132,12 @@ sequenceDiagram
 - transform 写入所有权在 running 和 paused 期间持续生效。
 - target 销毁通过 Native 全局对象注册表级联，并发送 `objectdestroy`。
 - RealityKit `Transform` 回读实现了规范化 ZYX 欧拉角。
+- Element 与 Entity 错误契约已经分离；Entity Motion 双语 OpenSpec、Core 和 React experimental 入口统一使用 `EntityPlaybackError`。
 
 ### 偏差
 
-1. **P1-2 部分修复。** Element 的 `SpatializedPlaybackError` 已恢复，Entity 已拆出 `EntityPlaybackError`，类型兼容测试也已补充。双语 proposal、design、spec、tasks 仍把 Entity 错误称为 `SpatializedPlaybackError`，React experimental 入口也未导出 Entity 错误类型。
-2. `SpatialScene` handler 为私有方法，缺少目标查找、对象注册、显式销毁、target 先销毁、清理和销毁竞态的直接测试。
-3. 需要模拟器验收留痕的任务没有对应的仓库内证据文件。
+1. `SpatialScene` handler 为私有方法，缺少目标查找、对象注册、显式销毁、target 先销毁、清理和销毁竞态的直接测试。
+2. 需要模拟器验收留痕的任务没有对应的仓库内证据文件。
 
 ## 提案完成情况
 
@@ -159,7 +159,7 @@ sequenceDiagram
 | React 定向测试 | 42 项通过 |
 | P1-1 Core 复验 | 3 个文件、81 项通过 |
 | P1-1 React 复验 | 4 个文件、44 项通过 |
-| React 包完整测试 | 类型检查与构建通过；45 个文件、516 项通过、4 项 todo |
+| React 包完整测试 | 类型检查与构建通过；45 个文件、517 项通过、4 项 todo |
 | `pnpm test` | 通过：Core 592 项、React 511 项、CLI 类型检查、测试服务器类型检查和工作流检查 |
 | Core 与 React TypeScript 检查 | 通过 |
 | Changeset 校验 | 失败：packages 变更没有新增 changeset |
@@ -170,8 +170,7 @@ sequenceDiagram
 
 **结论：阻断合入。**
 
-1. 完成 P1-2 的 Entity 错误类型命名、公开出口和双语 OpenSpec 闭环。
-2. 解决 `code-review.md` 中其余 P1 问题。
-3. 完成 OpenSpec 任务 5.3b。
-4. 记录一轮新的 visionOS 与 iwdp 验收证据。
-5. 删除由本提案产生的确定性孤立代码和失效配置。
+1. 解决 `code-review.md` 中其余 P1 问题。
+2. 完成 OpenSpec 任务 5.3b。
+3. 记录一轮新的 visionOS 与 iwdp 验收证据。
+4. 删除由本提案产生的确定性孤立代码和失效配置。

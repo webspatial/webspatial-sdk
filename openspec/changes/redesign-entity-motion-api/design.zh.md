@@ -597,7 +597,7 @@ onStart(listener: (values: EntityMotionProps) => void)
 onComplete(listener: (values: EntityMotionProps) => void)
 onStop(listener: (values: EntityMotionProps) => void)
 onReset(listener: (values: EntityMotionProps) => void)
-onError(listener: (error: SpatializedPlaybackError) => void)
+onError(listener: (error: EntityPlaybackError) => void)
 ```
 
 状态事件触发前四类方法,专用错误事件触发 `onError`。`pause` 只更新播放状态,因此不增加 `onPause`。
@@ -779,7 +779,7 @@ interface EntityMotionStateChangedMsg {
 ```text
 interface EntityAnimationErrorDetail {
   id: string
-  error: SpatializedPlaybackError
+  error: EntityPlaybackError
 }
 
 interface EntityAnimationErrorMsg {
@@ -789,7 +789,7 @@ interface EntityAnimationErrorMsg {
 ```
 
 ```text
-type SpatializedPlaybackError = {
+type EntityPlaybackError = {
   code:
     | 'TARGET_NOT_FOUND'
     | 'UNSUPPORTED_TARGET'
@@ -805,7 +805,7 @@ type SpatializedPlaybackError = {
 错误出口由发现错误的阶段决定:
 
 - Core 对公开 config 和方法参数执行的同步校验失败直接抛出内置 `Error`,不触发 `onError`。
-- JSB 命令执行失败通过当前命令回执返回。Core 将回执转换为一次 `SpatializedPlaybackError`,再触发 `onError`。
+- JSB 命令执行失败通过当前命令回执返回。Core 将回执转换为一次 `EntityPlaybackError`,再触发 `onError`。
 - 命令成功回执后发生的原生异步失败只通过一次 `entityanimationerror` 回传。Core `EntityAnimationObject` 消费该事件并触发 `onError`。
 - 同一失败只选择一个出口,状态事件不携带错误,从而避免重复触发 `onError`。
 - 动画对象初次创建失败会终止当前绑定生命周期。配置 update 失败保持旧执行和当前绑定生命周期;其它异步播放错误保持既有状态语义。
