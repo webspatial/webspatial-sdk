@@ -119,6 +119,35 @@ describe('EntityMotionBinding', () => {
     expect(onError).not.toHaveBeenCalled()
   })
 
+  test('rolls back binding state after synchronous creation failure', async () => {
+    const binding = new EntityMotionBinding(createConfig({ autoStart: false }))
+    const failingEntity = {
+      id: 'entity-1',
+      createAnimation: vi.fn(() => {
+        throw new Error('invalid initial config')
+      }),
+    }
+
+    expect(() => binding.__bind(failingEntity as any)).toThrow(
+      'invalid initial config',
+    )
+    expect(binding.api.playState).toBe('idle')
+    expect(binding.entityProps).toEqual({})
+
+    const { object } = createMockAnimationObject()
+    const replacementEntity = {
+      id: 'entity-2',
+      createAnimation: vi.fn(async () => object),
+    }
+
+    expect(() => binding.__bind(replacementEntity as any)).not.toThrow()
+    await flushPromises()
+    binding.api.play()
+    await flushPromises()
+
+    expect(object.play).toHaveBeenCalledOnce()
+  })
+
   test('lets Core validate an invalid config update synchronously without calling onError', async () => {
     const onError = vi.fn()
     const { object } = createMockAnimationObject()

@@ -175,7 +175,26 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     }
     this.state = this.pendingCommands.length > 0 ? 'queued' : 'idle'
     this.notify()
-    this.createAnimationObject(entity, generation)
+    try {
+      this.createAnimationObject(entity, generation)
+    } catch (error) {
+      // Synchronous Core validation must leave no partially established binding behind.
+      if (generation === this.generation && this.target === entity) {
+        this.target = null
+        this.animationObject = null
+        this.pendingCommands = []
+        this.commandQueue = []
+        ++this.commandEpoch
+        this.commandRunToken = null
+        ++this.generation
+        this.terminated = false
+        this.state = 'idle'
+        this.confirmedValues = {}
+        this.pendingSynchronousError = null
+        this.notify()
+      }
+      throw error
+    }
   }
 
   /** Unbinds the target, invalidates queued work, clears values, and destroys Native state. */
