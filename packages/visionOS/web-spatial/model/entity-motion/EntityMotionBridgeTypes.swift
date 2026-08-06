@@ -155,7 +155,7 @@ struct EntityMotionTransformPayload: Codable, Equatable {
 }
 
 /// Complete three-axis values transported in native confirmations.
-struct EntityMotionConfirmedVector3Payload: Codable, Equatable {
+struct EntityMotionConfirmedVector3Payload: Encodable, Equatable {
     /// X-axis value.
     let x: Double
     /// Y-axis value.
@@ -165,7 +165,7 @@ struct EntityMotionConfirmedVector3Payload: Codable, Equatable {
 }
 
 /// Complete nine-axis transform transported in native confirmations.
-struct EntityMotionConfirmedTransformPayload: Codable, Equatable {
+struct EntityMotionConfirmedTransformPayload: Encodable, Equatable {
     /// Complete position in meters.
     let position: EntityMotionConfirmedVector3Payload
     /// Complete Euler rotation in degrees.
@@ -219,7 +219,7 @@ struct CreateEntityAnimationCommand: CommandDataProtocol, Codable, Equatable {
 }
 
 /// Successful `CreateEntityAnimation` reply.
-struct CreateEntityAnimationResult: Codable, Equatable {
+struct CreateEntityAnimationResult: Encodable, Equatable {
     /// Created animation object id.
     let id: String
 }
@@ -235,7 +235,7 @@ struct UpdateEntityAnimationCommand: CommandDataProtocol, Codable, Equatable {
 }
 
 /// Successful `UpdateEntityAnimation` reply.
-struct UpdateEntityAnimationResult: Codable, Equatable {
+struct UpdateEntityAnimationResult: Encodable, Equatable {
     /// Complete transform confirmed by native.
     let values: EntityMotionConfirmedTransformPayload
     /// Committed execution-definition revision.
@@ -279,13 +279,13 @@ struct SetEntityAnimationCommand: CommandDataProtocol, Codable, Equatable {
 }
 
 /// Successful `SetEntityAnimation` reply.
-struct SetEntityAnimationResult: Codable, Equatable {
+struct SetEntityAnimationResult: Encodable, Equatable {
     /// Complete transform confirmed by native.
     let values: EntityMotionConfirmedTransformPayload
 }
 
 /// Closed error codes shared by synchronous replies and asynchronous errors.
-enum EntityMotionErrorCode: String, Codable, CaseIterable, Equatable {
+enum EntityMotionErrorCode: String, Encodable, CaseIterable, Equatable {
     /// Target id does not exist.
     case targetNotFound = "TARGET_NOT_FOUND"
     /// Target cannot run entity motion.
@@ -303,7 +303,7 @@ enum EntityMotionErrorCode: String, Codable, CaseIterable, Equatable {
 }
 
 /// Native playback states emitted to JavaScript.
-enum EntityMotionPlayState: String, Codable, Equatable {
+enum EntityMotionPlayState: String, Encodable, Equatable {
     /// Animation has not started or was reset.
     case idle
     /// Animation is playing.
@@ -315,7 +315,7 @@ enum EntityMotionPlayState: String, Codable, Equatable {
 }
 
 /// Lifecycle callback actions emitted to JavaScript.
-enum EntityMotionCallbackAction: String, Codable, Equatable {
+enum EntityMotionCallbackAction: String, Encodable, Equatable {
     /// Dispatches the playback-started callback.
     case start
     /// Dispatches the playback-completed callback.
@@ -327,7 +327,7 @@ enum EntityMotionCallbackAction: String, Codable, Equatable {
 }
 
 /// Detail carried by `spatialanimationstatechanged`.
-struct EntityMotionStateChangedDetail: Codable, Equatable {
+struct EntityMotionStateChangedDetail: Encodable, Equatable {
     /// Animation object id.
     let id: String
     /// Execution-definition revision that produced the state.
@@ -355,7 +355,7 @@ struct EntityMotionStateChangedMessage: Encodable, Equatable {
 }
 
 /// Asynchronous playback failure detail.
-struct EntityAnimationPlaybackError: Codable, Equatable {
+struct EntityAnimationPlaybackError: Encodable, Equatable {
     /// Stable failure code.
     let code: EntityMotionErrorCode
     /// Human-readable diagnostic reason.
@@ -363,7 +363,7 @@ struct EntityAnimationPlaybackError: Codable, Equatable {
 }
 
 /// Detail carried by `entityanimationerror`.
-struct EntityAnimationErrorDetail: Codable, Equatable {
+struct EntityAnimationErrorDetail: Encodable, Equatable {
     /// Animation object id.
     let id: String
     /// Playback failure.

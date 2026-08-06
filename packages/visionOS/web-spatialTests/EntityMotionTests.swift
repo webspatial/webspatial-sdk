@@ -63,8 +63,8 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
         }
     }
 
-    /// Confirms set accepts sparse axes and replies with one complete pose.
-    func testSetCommandAndConfirmedReplyRoundTrip() throws {
+    /// Confirms set accepts sparse axes and encodes one complete pose reply.
+    func testSetCommandAndConfirmedReplyEncoding() throws {
         let command = SetEntityAnimationCommand(
             id: "animation-1",
             update: EntityMotionTransformPayload(
@@ -88,19 +88,22 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
             command
         )
         XCTAssertEqual(
-            try JSONDecoder().decode(
-                SetEntityAnimationResult.self,
-                from: JSONEncoder().encode(result)
-            ),
-            result
+            try jsonObject(JSONEncoder().encode(result)),
+            [
+                "values": [
+                    "position": ["x": 1, "y": 2, "z": 3],
+                    "rotation": ["x": 4, "y": 5, "z": 6],
+                    "scale": ["x": 1, "y": 1, "z": 1],
+                ],
+            ]
         )
         XCTAssertEqual(result.values.position.x, 1)
         XCTAssertEqual(result.values.rotation.z, 6)
         XCTAssertEqual(result.values.scale.y, 1)
     }
 
-    /// Confirms update replaces the canonical timeline and returns its committed revision.
-    func testUpdateCommandAndConfirmedReplyRoundTrip() throws {
+    /// Confirms update replaces the canonical timeline and encodes its committed reply.
+    func testUpdateCommandAndConfirmedReplyEncoding() throws {
         let timeline = EntityMotionTimelinePayload(
             duration: 2,
             delay: 0.25,
@@ -137,11 +140,15 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
             command
         )
         XCTAssertEqual(
-            try JSONDecoder().decode(
-                UpdateEntityAnimationResult.self,
-                from: JSONEncoder().encode(result)
-            ),
-            result
+            try jsonObject(JSONEncoder().encode(result)),
+            [
+                "values": [
+                    "position": ["x": 1, "y": 2, "z": 3],
+                    "rotation": ["x": 4, "y": 5, "z": 6],
+                    "scale": ["x": 1, "y": 1, "z": 1],
+                ],
+                "revision": 1,
+            ]
         )
         XCTAssertEqual(result.values.position.x, 1)
         XCTAssertEqual(result.revision, 1)
@@ -217,36 +224,15 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
             ]
         )
 
-        let incompleteConfirmation = #"""
-        {
-          "values":{
-            "position":{"x":1,"y":2},
-            "rotation":{"x":4,"y":5,"z":6},
-            "scale":{"x":1,"y":1,"z":1}
-          }
-        }
-        """#
-        XCTAssertThrowsError(
-            try JSONDecoder().decode(
-                SetEntityAnimationResult.self,
-                from: Data(incompleteConfirmation.utf8)
-            )
-        )
-
-        let incompleteUpdateConfirmation = #"""
-        {
-          "values":{
-            "position":{"x":1,"y":2,"z":3},
-            "rotation":{"x":4,"y":5,"z":6},
-            "scale":{"x":1,"y":1,"z":1}
-          }
-        }
-        """#
-        XCTAssertThrowsError(
-            try JSONDecoder().decode(
-                UpdateEntityAnimationResult.self,
-                from: Data(incompleteUpdateConfirmation.utf8)
-            )
+        XCTAssertEqual(
+            try jsonObject(JSONEncoder().encode(SetEntityAnimationResult(values: values))),
+            [
+                "values": [
+                    "position": ["x": 1, "y": 2, "z": 3],
+                    "rotation": ["x": 4, "y": 5, "z": 6],
+                    "scale": ["x": 1, "y": 1, "z": 1],
+                ],
+            ]
         )
     }
 
