@@ -113,35 +113,10 @@ struct EntityMotionCompiledSegment: Equatable {
 
 /// Validated pure timeline representation ready for later RealityKit compilation.
 struct EntityMotionCompiledTimeline: Equatable {
-    /// Canonical source timeline.
-    let timeline: EntityMotionTimelinePayload
     /// Full-pose union slices.
     let slices: [EntityMotionCompiledSlice]
     /// Positive-duration segments.
     let segments: [EntityMotionCompiledSegment]
-    /// Validated tracks keyed by their closed property.
-    fileprivate let tracks: [EntityMotionProperty: EntityMotionTrackPayload]
-
-    /// Samples one property using the compiler's baseline-fill rules.
-    func sample(
-        property: EntityMotionProperty,
-        at time: Double,
-        baseline: EntityMotionPose
-    ) throws -> Double {
-        guard time.isFinite, (0 ... timeline.duration).contains(time) else {
-            throw EntityMotionCompilationError.invalidTimeline(
-                "Sample time is outside the timeline."
-            )
-        }
-        guard let track = tracks[property] else {
-            return baseline.value(for: property)
-        }
-        return EntityMotionTimelineCompiler.sample(
-            track: track,
-            at: time,
-            baseline: baseline.value(for: property)
-        )
-    }
 }
 
 /// Explicit validation and transform errors produced before RealityKit resource creation.
@@ -327,10 +302,8 @@ enum EntityMotionTimelineCompiler {
         }
 
         return .init(
-            timeline: timeline,
             slices: slices,
-            segments: segments,
-            tracks: validatedTracks
+            segments: segments
         )
     }
 

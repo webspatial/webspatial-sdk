@@ -719,6 +719,19 @@ final class EntityMotionTimelineCompilerTests: XCTestCase {
         XCTAssertEqual(compiled.segments[1].to.confirmedPayload.scale.z, 2)
     }
 
+    /// Keeps the compiled timeline limited to data consumed by playback.
+    func testCompiledTimelineStoresOnlyPlaybackData() throws {
+        let compiled = try EntityMotionTimelineCompiler.compile(
+            makeTimeline(),
+            baseline: .identity
+        )
+
+        XCTAssertEqual(
+            Mirror(reflecting: compiled).children.compactMap(\.label),
+            ["slices", "segments"]
+        )
+    }
+
     /// Interpolates from the time-zero baseline when a channel begins after zero.
     func testLateFirstChannelInterpolatesFromBaselineInsteadOfHolding() throws {
         let timeline = EntityMotionTimelinePayload(
@@ -727,7 +740,7 @@ final class EntityMotionTimelineCompilerTests: XCTestCase {
             playbackRate: 1,
             loop: .disabled,
             tracks: [
-                track("position.x", [(0, 0), (1, 10), (2, 20)]),
+                track("position.x", [(0, 0), (0.5, 5), (1, 10), (2, 20)]),
                 track("position.y", [(1, 12), (2, 22)]),
             ]
         )
@@ -742,13 +755,10 @@ final class EntityMotionTimelineCompilerTests: XCTestCase {
             baseline: baseline
         )
 
+        XCTAssertEqual(compiled.slices.map(\.at), [0, 0.5, 1, 2])
         XCTAssertEqual(compiled.slices[0].pose.position.y, 2, accuracy: 1e-9)
-        XCTAssertEqual(compiled.slices[1].pose.position.y, 12, accuracy: 1e-9)
-        XCTAssertEqual(
-            try compiled.sample(property: .positionY, at: 0.5, baseline: baseline),
-            7,
-            accuracy: 1e-9
-        )
+        XCTAssertEqual(compiled.slices[1].pose.position.y, 7, accuracy: 1e-9)
+        XCTAssertEqual(compiled.slices[2].pose.position.y, 12, accuracy: 1e-9)
     }
 
     /// Resolves keyframe easing before track easing and rejects cross-track conflicts.
