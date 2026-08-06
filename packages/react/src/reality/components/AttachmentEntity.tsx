@@ -1,12 +1,45 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Attachment } from '@webspatial/core-sdk'
-import type { Vec3 } from '@webspatial/core-sdk'
+import type { BackgroundMaterialType, Vec3 } from '@webspatial/core-sdk'
 
 import { useRealityContext, useParentContext } from '../context'
 import { setOpenWindowStyle } from '../../utils/windowStyleSync'
 import { useSyncHeadStyles } from '../../utils/useSyncHeadStyles'
 
 let instanceCounter = 0
+
+const ATTACHMENT_BACKGROUND_MATERIALS = new Set<string>([
+  'none',
+  'transparent',
+  'translucent',
+  'thin',
+  'regular',
+  'thick',
+])
+
+function normalizeCornerRadiusProp(value: number | undefined) {
+  if (value === undefined) return undefined
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? value
+    : 0
+}
+
+function normalizeBackgroundMaterialProp(
+  value: BackgroundMaterialType | undefined,
+): BackgroundMaterialType | undefined {
+  if (value === undefined) return undefined
+  if (typeof value === 'string' && ATTACHMENT_BACKGROUND_MATERIALS.has(value)) {
+    return value
+  }
+  if (typeof process === 'undefined' || process.env.NODE_ENV !== 'production') {
+    console.warn(
+      `[AttachmentEntity] Invalid backgroundMaterial "${String(value)}"; ` +
+        `falling back to "transparent". Supported values: ` +
+        `'none' | 'transparent' | 'translucent' | 'thin' | 'regular' | 'thick'.`,
+    )
+  }
+  return 'transparent'
+}
 
 type AttachmentEntityProps = {
   attachment: string
@@ -15,6 +48,8 @@ type AttachmentEntityProps = {
   scale?: Vec3
   width?: number
   height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
 }
 
 export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
@@ -24,6 +59,8 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   scale,
   width,
   height,
+  cornerRadius,
+  backgroundMaterial,
 }) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
@@ -32,6 +69,12 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   const instanceIdRef = useRef(`att_${++instanceCounter}`)
   const attachmentNameRef = useRef(attachmentName)
   const [childWindow, setChildWindow] = useState<WindowProxy | null>(null)
+
+  const normalizedCornerRadius = normalizeCornerRadiusProp(cornerRadius)
+  const normalizedBackgroundMaterial = React.useMemo(
+    () => normalizeBackgroundMaterialProp(backgroundMaterial),
+    [backgroundMaterial],
+  )
 
   // Create the attachment when the parent entity is ready
   useEffect(() => {
@@ -53,6 +96,8 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
           scale,
           width,
           height,
+          cornerRadius: normalizedCornerRadius,
+          backgroundMaterial: normalizedBackgroundMaterial,
           ownerViewId: ctx.reality.id,
         })
         if (cancelled) {
@@ -136,10 +181,19 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 
   useSyncHeadStyles(childWindow)
 
-  // Update transform and meter dimensions when they change
+  // Update transform, meter dimensions, and surface styling when they change.
+  // These are in-place updates — the native WebView is never recreated.
   useEffect(() => {
     if (!attachmentRef.current) return
-    attachmentRef.current.update({ position, rotation, scale, width, height })
+    attachmentRef.current.update({
+      position,
+      rotation,
+      scale,
+      width,
+      height,
+      cornerRadius: normalizedCornerRadius,
+      backgroundMaterial: normalizedBackgroundMaterial,
+    })
   }, [
     position?.x,
     position?.y,
@@ -152,6 +206,8 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     scale?.z,
     width,
     height,
+    normalizedCornerRadius,
+    normalizedBackgroundMaterial,
   ])
 
   return null

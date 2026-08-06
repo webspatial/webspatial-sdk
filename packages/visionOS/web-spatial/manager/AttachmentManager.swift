@@ -8,10 +8,35 @@ struct AttachmentInfo: Identifiable, Equatable {
     var rotation: SIMD3<Float>
     var scale: SIMD3<Float>
     var frameSize: CGSize
+    var cornerRadius: CornerRadius
+    var backgroundMaterial: BackgroundMaterial
     var webViewModel: SpatialWebViewModel
 
     static func == (lhs: AttachmentInfo, rhs: AttachmentInfo) -> Bool {
         lhs.id == rhs.id
+    }
+
+    /// Missing corner radii fall back to 0; individual invalid values
+    /// (negative or non-finite) are clamped to 0.
+    static func clampedCornerRadius(_ value: CornerRadius?) -> CornerRadius {
+        guard let value else { return CornerRadius() }
+        return CornerRadius(
+            topLeading: clampRadiusValue(value.topLeading),
+            bottomLeading: clampRadiusValue(value.bottomLeading),
+            topTrailing: clampRadiusValue(value.topTrailing),
+            bottomTrailing: clampRadiusValue(value.bottomTrailing)
+        )
+    }
+
+    static func clampRadiusValue(_ value: CGFloat) -> CGFloat {
+        value.isFinite && value >= 0 ? value : 0
+    }
+
+    /// Missing materials fall back to transparent. Invalid raw values decode
+    /// to `.None`, which renders with the same transparent surface behavior
+    /// as `.Transparent` (mirroring Ornament's material handling).
+    static func effectiveBackgroundMaterial(_ value: BackgroundMaterial?) -> BackgroundMaterial {
+        value ?? .Transparent
     }
 }
 
@@ -34,6 +59,8 @@ class AttachmentManager {
         rotation: SIMD3<Float>,
         scale: SIMD3<Float>,
         frameSize: CGSize,
+        cornerRadius: CornerRadius = CornerRadius(),
+        backgroundMaterial: BackgroundMaterial = .Transparent,
         webViewModel: SpatialWebViewModel
     ) -> AttachmentInfo {
         webViewModel.setBackgroundTransparent(true)
@@ -46,6 +73,8 @@ class AttachmentManager {
             rotation: rotation,
             scale: scale,
             frameSize: frameSize,
+            cornerRadius: cornerRadius,
+            backgroundMaterial: backgroundMaterial,
             webViewModel: webViewModel
         )
         attachments[id] = info
@@ -57,7 +86,9 @@ class AttachmentManager {
         position: SIMD3<Float>?,
         rotation: SIMD3<Float>?,
         scale: SIMD3<Float>?,
-        frameSize: CGSize?
+        frameSize: CGSize?,
+        cornerRadius: CornerRadius? = nil,
+        backgroundMaterial: BackgroundMaterial? = nil
     ) {
         guard var info = attachments[id] else { return }
 
@@ -72,6 +103,12 @@ class AttachmentManager {
         }
         if let frameSize = frameSize {
             info.frameSize = frameSize
+        }
+        if let cornerRadius = cornerRadius {
+            info.cornerRadius = cornerRadius
+        }
+        if let backgroundMaterial = backgroundMaterial {
+            info.backgroundMaterial = backgroundMaterial
         }
 
         attachments[id] = info

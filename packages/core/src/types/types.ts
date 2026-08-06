@@ -433,6 +433,16 @@ export interface AttachmentEntityOptions {
   scale?: Vec3
   width?: number
   height?: number
+  /**
+   * Uniform corner radius in points applied to all four corners of the
+   * attachment surface. Invalid values (negative or non-finite) fall back to 0.
+   */
+  cornerRadius?: number
+  /**
+   * Background material of the attachment surface. Invalid or missing values
+   * fall back to 'transparent'.
+   */
+  backgroundMaterial?: BackgroundMaterialType
   ownerViewId: string
 }
 
@@ -442,6 +452,8 @@ export interface AttachmentEntityUpdateOptions {
   scale?: Vec3
   width?: number
   height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
 }
 
 // manifest

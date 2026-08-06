@@ -499,6 +499,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             rotation: rotation,
             scale: scale,
             frameSize: frameSize,
+            cornerRadius: AttachmentInfo.clampedCornerRadius(command.cornerRadius),
+            backgroundMaterial: AttachmentInfo.effectiveBackgroundMaterial(command.backgroundMaterial),
             webViewModel: webViewModel
         )
 
@@ -1387,7 +1389,9 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             position: newPosition,
             rotation: newRotation,
             scale: newScale,
-            frameSize: newFrameSize
+            frameSize: newFrameSize,
+            cornerRadius: command.cornerRadius.map { AttachmentInfo.clampedCornerRadius($0) },
+            backgroundMaterial: command.backgroundMaterial
         )
         resolve(.success(baseReplyData))
     }

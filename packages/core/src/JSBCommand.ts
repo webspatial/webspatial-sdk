@@ -28,6 +28,10 @@ import {
   SpatialTextureResourceOptions,
 } from './types/types'
 import type { OrnamentOptions } from './Ornament'
+import {
+  normalizeAttachmentBackgroundMaterial,
+  normalizeAttachmentCornerRadius,
+} from './reality/attachmentSurface'
 import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
 import type {
@@ -717,6 +721,10 @@ export class InitializeAttachmentCommand extends JSBCommand {
       width: this.options.width,
       height: this.options.height,
       ownerViewId: this.options.ownerViewId,
+      cornerRadius: normalizeAttachmentCornerRadius(this.options.cornerRadius),
+      backgroundMaterial: normalizeAttachmentBackgroundMaterial(
+        this.options.backgroundMaterial,
+      ),
     }
   }
 }
@@ -730,10 +738,23 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     super()
   }
   protected getParams() {
-    return {
+    // Omitted fields stay omitted so the native side preserves the
+    // attachment's existing effective values on partial updates.
+    const params: Record<string, unknown> = {
       id: this.attachmentId,
       ...this.options,
     }
+    if (this.options.cornerRadius !== undefined) {
+      params.cornerRadius = normalizeAttachmentCornerRadius(
+        this.options.cornerRadius,
+      )
+    }
+    if (this.options.backgroundMaterial !== undefined) {
+      params.backgroundMaterial = normalizeAttachmentBackgroundMaterial(
+        this.options.backgroundMaterial,
+      )
+    }
+    return params
   }
 }
 

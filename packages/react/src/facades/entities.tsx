@@ -2,6 +2,7 @@
 
 import { ComponentType, ForwardedRef, forwardRef } from 'react'
 import type {
+  BackgroundMaterialType,
   SpatialBoxGeometryOptions,
   SpatialConeGeometryOptions,
   SpatialCylinderGeometryOptions,
@@ -105,6 +106,8 @@ export type AttachmentEntityProps = {
   scale?: Vec3
   width?: number
   height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
 }
 
 // `/* @__PURE__ */` annotations on each factory call: tells the consumer
