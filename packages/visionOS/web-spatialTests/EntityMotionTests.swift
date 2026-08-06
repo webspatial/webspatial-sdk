@@ -1688,6 +1688,51 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         )
     }
 
+    /// Ensures terminal transitions discard a paused retarget before later resume.
+    func testTerminalTransitionsDiscardPreparedPausedPlayback() throws {
+        for action in ["stop", "reset", "finish"] {
+            let entity = SpatialEntity("entity-motion-target-\(action)")
+            var messages: [EntityMotionStateChangedMessage] = []
+            let animation = try EntityMotionAnimationObject(
+                id: "animation-\(action)",
+                target: entity,
+                timeline: timeline(),
+                sendWebMsg: { _, message in
+                    if let state = message as? EntityMotionStateChangedMessage {
+                        messages.append(state)
+                    }
+                }
+            )
+
+            try animation.play()
+            animation.pause()
+            entity.transform.translation.x = 3
+            _ = try animation.update(timeline(duration: 2))
+
+            switch action {
+            case "stop":
+                animation.stop()
+            case "reset":
+                try animation.reset()
+            case "finish":
+                try animation.finish()
+            default:
+                XCTFail("Unexpected terminal action: \(action)")
+            }
+
+            try animation.play()
+            animation.pause()
+            try animation.play()
+
+            XCTAssertEqual(
+                messages.filter { $0.detail.callbackAction == .start }.count,
+                2,
+                "\(action) must not leave a stale prepared playback"
+            )
+            XCTAssertEqual(animation.playState, .running)
+        }
+    }
+
     /// Leaves the old execution untouched when candidate preparation fails.
     func testUpdateFailureRollsBackTimelineRevisionStateAndWriteProtection() throws {
         let entity = SpatialEntity("entity-motion-target")

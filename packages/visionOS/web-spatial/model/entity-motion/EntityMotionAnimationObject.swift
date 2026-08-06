@@ -375,6 +375,7 @@ final class EntityMotionAnimationObject: SpatialObject {
         completionSubscription = nil
         playbackController?.stop()
         playbackController = nil
+        preparedPausedPlayback = nil
     }
 
     /// Releases this object's transform write ownership from the target.
