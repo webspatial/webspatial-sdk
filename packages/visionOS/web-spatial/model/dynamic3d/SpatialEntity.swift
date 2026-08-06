@@ -1,6 +1,32 @@
 import RealityKit
 import SwiftUI
 
+private struct SpatialEntityInspectVector3: Encodable {
+    let x: Float
+    let y: Float
+    let z: Float
+
+    init(_ value: SIMD3<Float>) {
+        x = value.x
+        y = value.y
+        z = value.z
+    }
+}
+
+private struct SpatialEntityInspectQuaternion: Encodable {
+    let x: Float
+    let y: Float
+    let z: Float
+    let w: Float
+
+    init(_ value: simd_quatf) {
+        x = value.imag.x
+        y = value.imag.y
+        z = value.imag.z
+        w = value.real
+    }
+}
+
 @Observable
 class SpatialEntity: Entity, SpatialObjectProtocol {
     let spatialId: String
@@ -77,6 +103,11 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
     }
 
     func addChild(entity: SpatialEntity) {
+        if let previousParent = entity.parent as? SpatialEntity,
+           previousParent !== self
+        {
+            previousParent.spatialChildren.removeValue(forKey: entity.spatialId)
+        }
         spatialChildren[entity.spatialId] = entity
         super.addChild(entity)
     }
@@ -92,7 +123,7 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
 
     func removeFromParent() {
         if let parent = parent as? SpatialEntity {
-            parent.removeChild(self)
+            parent.removeChild(id: spatialId)
         }
     }
 
@@ -167,16 +198,26 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
 
     /// Encodable
     enum CodingKeys: String, CodingKey {
-        case id, name, isDestroyed, children, components
+        case id, name, type, isDestroyed, position, rotation, scale, children, components
+        case enableTap, enableRotate, enableDrag, enableMagnify, enableInteractive
     }
 
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(spatialId, forKey: .id)
         try container.encode(name, forKey: .name)
+        try container.encode(String(describing: Swift.type(of: self)), forKey: .type)
         try container.encode(isDestroyed, forKey: .isDestroyed)
+        try container.encode(SpatialEntityInspectVector3(transform.translation), forKey: .position)
+        try container.encode(SpatialEntityInspectQuaternion(transform.rotation), forKey: .rotation)
+        try container.encode(SpatialEntityInspectVector3(transform.scale), forKey: .scale)
         try container.encode(spatialChildren, forKey: .children)
         try container.encode(spatialComponents, forKey: .components)
+        try container.encode(enableTap, forKey: .enableTap)
+        try container.encode(enableRotate, forKey: .enableRotate)
+        try container.encode(enableDrag, forKey: .enableDrag)
+        try container.encode(enableMagnify, forKey: .enableMagnify)
+        try container.encode(enableInteractive, forKey: .enableInteractive)
     }
 
     /// Equatable
@@ -204,14 +245,16 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
             removeFromParent()
         }
         components.removeAll()
-        for (id, child) in spatialChildren {
+        let children = Array(spatialChildren.values)
+        for child in children {
             child.destroy()
         }
-        spatialChildren = [:]
-        for (id, components) in spatialComponents {
-            components.destroy()
+        spatialChildren.removeAll()
+        let ownedComponents = Array(spatialComponents.values)
+        for component in ownedComponents {
+            component.destroy()
         }
-        spatialComponents = [:]
+        spatialComponents.removeAll()
     }
 
     deinit {

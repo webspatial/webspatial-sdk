@@ -75,6 +75,7 @@ import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/in
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
 import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
 import OrnamentTestPage from './src/pages/ornament-test/index'
+import WebSpatialInspectorPage from './src/pages/webspatial-inspector/index'
 import EntityAnimationPage from './src/pages/entity-animation/index'
 import EntityAnimationEntrancePage from './src/pages/entity-animation/entrance'
 import EntityAnimationManualTriggerPage from './src/pages/entity-animation/manual-trigger'
@@ -219,6 +220,10 @@ function App() {
                 <Route
                   path="/scene/ornament-test"
                   element={<OrnamentTestPage />}
+                />
+                <Route
+                  path="/scene/webspatial-inspector"
+                  element={<WebSpatialInspectorPage />}
                 />
                 <Route
                   path="/entity-animation"
