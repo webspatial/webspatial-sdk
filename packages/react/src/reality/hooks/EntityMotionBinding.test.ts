@@ -176,7 +176,7 @@ describe('EntityMotionBinding', () => {
     expect(onError).not.toHaveBeenCalled()
   })
 
-  test('preserves a Core synchronous config error after the update waits in FIFO', async () => {
+  test('captures a Core synchronous config error before queued Native work', async () => {
     const onError = vi.fn()
     const play = deferred<undefined>()
     const { object } = createMockAnimationObject()
@@ -199,12 +199,10 @@ describe('EntityMotionBinding', () => {
       onError,
     })
     binding.reconcileConfig()
-    expect(binding.synchronousError).toBeNull()
+    expect(binding.synchronousError?.message).toContain('both from and to')
 
     play.resolve(undefined)
-    await vi.waitFor(() =>
-      expect(binding.synchronousError?.message).toContain('both from and to'),
-    )
+    await flushPromises()
     expect(object.update).toHaveBeenCalledOnce()
     expect(onError).not.toHaveBeenCalled()
   })
@@ -271,7 +269,7 @@ describe('EntityMotionBinding', () => {
     expect(binding.api.playState).toBe('queued')
   })
 
-  test('flushes autoStart first and pre-create playback commands in FIFO order', async () => {
+  test('delegates autoStart first and pre-create playback commands in call order', async () => {
     const creation = deferred<any>()
     const play = deferred<undefined>()
     const calls: string[] = []
@@ -298,11 +296,9 @@ describe('EntityMotionBinding', () => {
     creation.resolve(object)
     await flushPromises()
 
-    expect(calls).toEqual(['play'])
+    expect(calls).toEqual(['play', 'pause', 'finish'])
     play.resolve(undefined)
-    await vi.waitFor(() => {
-      expect(calls).toEqual(['play', 'pause', 'finish'])
-    })
+    await flushPromises()
   })
 
   test('warns and drops set before native object creation', async () => {
@@ -476,7 +472,7 @@ describe('EntityMotionBinding', () => {
     expect(onError).toHaveBeenCalledWith(error)
   })
 
-  test('serializes created commands and continues after an ordinary failure', async () => {
+  test('delegates created commands while Core owns serialization', async () => {
     const first = deferred<undefined>()
     const calls: string[] = []
     const onError = vi.fn()
@@ -502,18 +498,14 @@ describe('EntityMotionBinding', () => {
     binding.api.play()
     binding.api.stop()
     binding.api.set({ position: { x: 2 } })
-    await vi.waitFor(() => {
-      expect(calls).toEqual(['play'])
-    })
+    expect(calls).toEqual(['play', 'stop', 'set'])
 
     first.resolve(undefined)
-    await vi.waitFor(() => {
-      expect(calls).toEqual(['play', 'stop', 'set'])
-    })
+    await flushPromises()
     expect(onError).toHaveBeenCalledOnce()
   })
 
-  test('updates state from an event before reply while FIFO still waits for reply', async () => {
+  test('delegates consecutive controls and consumes Core state events', async () => {
     const playReply = deferred<undefined>()
     const calls: string[] = []
     const { object, listeners } = createMockAnimationObject()
@@ -537,11 +529,10 @@ describe('EntityMotionBinding', () => {
 
     binding.api.play()
     binding.api.pause()
-    await vi.waitFor(() => expect(calls).toEqual(['play']))
-
-    expect(binding.api.playState).toBe('running')
+    expect(calls).toEqual(['play', 'pause'])
+    expect(binding.api.playState).toBe('paused')
     playReply.resolve(undefined)
-    await vi.waitFor(() => expect(calls).toEqual(['play', 'pause']))
+    await flushPromises()
     expect(binding.api.playState).toBe('paused')
   })
 
@@ -620,7 +611,7 @@ describe('EntityMotionBinding', () => {
     expect(binding.api.finished).toBe(true)
   })
 
-  test('unbind clears mirror, invalidates unsent commands, and destroys the object', async () => {
+  test('unbind clears the mirror and delegates invalidation to Core destroy', async () => {
     const first = deferred<undefined>()
     const { object, listeners } = createMockAnimationObject()
     object.play.mockImplementation(() => first.promise)
@@ -643,11 +634,11 @@ describe('EntityMotionBinding', () => {
     await flushPromises()
 
     expect(binding.entityProps).toEqual({})
-    expect(object.finish).not.toHaveBeenCalled()
+    expect(object.finish).toHaveBeenCalledOnce()
     expect(object.destroy).toHaveBeenCalledOnce()
   })
 
-  test('native destroy invalidates unsent commands after an in-flight command settles', async () => {
+  test('delegates commands immediately so Core handles native destruction', async () => {
     const first = deferred<undefined>()
     const { object } = createMockAnimationObject()
     object.play.mockImplementation(() => first.promise)
@@ -666,7 +657,7 @@ describe('EntityMotionBinding', () => {
     first.resolve(undefined)
     await flushPromises()
 
-    expect(object.finish).not.toHaveBeenCalled()
+    expect(object.finish).toHaveBeenCalledOnce()
   })
 
   test('terminates on creation failure and recovers only after unbind and rebind', async () => {
@@ -724,24 +715,27 @@ describe('EntityMotionBinding', () => {
     ).toThrow('multiple entities')
   })
 
-  test('throws invalid set updates synchronously before pre-create timing warnings', () => {
+  test('warns and drops set updates before Core object creation', () => {
     const onError = vi.fn()
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const binding = new EntityMotionBinding(createConfig({ onError }))
 
     for (const update of invalidUpdates) {
-      expect(() => binding.api.set(update as never)).toThrow(Error)
+      expect(() => binding.api.set(update as never)).not.toThrow()
     }
 
     expect(onError).not.toHaveBeenCalled()
-    expect(warning).not.toHaveBeenCalled()
+    expect(warning).toHaveBeenCalledTimes(invalidUpdates.length)
     warning.mockRestore()
   })
 
-  test('throws invalid set updates synchronously without invoking a created object', async () => {
+  test('delegates set synchronously to the created Core object', async () => {
     const onError = vi.fn()
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { object } = createMockAnimationObject()
+    object.set.mockImplementation(() => {
+      throw new Error('Core set validation failed')
+    })
     const binding = new EntityMotionBinding(createConfig({ onError }))
     binding.__bind({
       id: 'entity-1',
@@ -749,18 +743,18 @@ describe('EntityMotionBinding', () => {
     } as any)
     await flushPromises()
 
-    for (const update of invalidUpdates) {
-      expect(() => binding.api.set(update as never)).toThrow(Error)
-    }
+    expect(() => binding.api.set({ position: { x: 2 } })).toThrow(
+      'Core set validation failed',
+    )
 
     await flushPromises()
-    expect(object.set).not.toHaveBeenCalled()
+    expect(object.set).toHaveBeenCalledOnce()
     expect(onError).not.toHaveBeenCalled()
     expect(warning).not.toHaveBeenCalled()
     warning.mockRestore()
   })
 
-  test('throws invalid set updates synchronously before terminated timing warnings', async () => {
+  test('warns and drops set updates after binding termination', async () => {
     const onError = vi.fn()
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const binding = new EntityMotionBinding(createConfig({ onError }))
@@ -773,11 +767,11 @@ describe('EntityMotionBinding', () => {
     await vi.waitFor(() => expect(onError).toHaveBeenCalledOnce())
 
     for (const update of invalidUpdates) {
-      expect(() => binding.api.set(update as never)).toThrow(Error)
+      expect(() => binding.api.set(update as never)).not.toThrow()
     }
 
     expect(onError).toHaveBeenCalledOnce()
-    expect(warning).not.toHaveBeenCalled()
+    expect(warning).toHaveBeenCalledTimes(invalidUpdates.length)
     warning.mockRestore()
   })
 

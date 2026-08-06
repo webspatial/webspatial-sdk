@@ -1,7 +1,6 @@
 export {
   normalizeEntityMotionConfig,
   validateEntityMotionConfig,
-  validateEntityTransformUpdate,
 } from './normalizeEntityMotionConfig'
 export {
   createEntityAnimationObject,

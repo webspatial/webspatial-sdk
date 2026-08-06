@@ -104,6 +104,14 @@ export class EntityAnimationObject
   private reportedErrors = new Set<string>()
   /** Latest execution revision committed by Native. */
   private executionRevision = 0
+  /** Native command starters waiting behind the active operation. */
+  private commandQueue: Array<() => void> = []
+  /** Whether one Native command is currently awaiting its reply. */
+  private commandRunning = false
+  /** Epoch used to invalidate commands that have not started. */
+  private commandEpoch = 0
+  /** Whether explicit destruction has started. */
+  private isDestroying = false
 
   /** Creates a public Core handle and begins receiving events addressed by its id. */
   constructor(id: string) {
@@ -133,33 +141,37 @@ export class EntityAnimationObject
 
   /** Starts fresh playback or resumes paused playback. */
   play(): Promise<void> {
-    return this.control('play')
+    return this.enqueueCommand(() => this.control('play'))
   }
 
   /** Pauses running playback. */
   pause(): Promise<void> {
-    return this.control('pause')
+    return this.enqueueCommand(() => this.control('pause'))
   }
 
   /** Stops playback at the current transform. */
   stop(): Promise<void> {
-    return this.control('stop')
+    return this.enqueueCommand(() => this.control('stop'))
   }
 
   /** Resets playback to its starting transform. */
   reset(): Promise<void> {
-    return this.control('reset')
+    return this.enqueueCommand(() => this.control('reset'))
   }
 
   /** Commits the terminal transform and finishes playback. */
   finish(): Promise<void> {
-    return this.control('finish')
+    return this.enqueueCommand(() => this.control('finish'))
   }
 
   /** Validates and sends a sparse transform update through Native. */
   set(update: EntityTransformUpdate): Promise<EntityMotionProps | void> {
     validateEntityTransformUpdate(update)
-    return this.performSet(update).catch(error => {
+    if (this.isDestroyed || this.isDestroying) {
+      console.warn('Entity animation set ignored after destroy')
+      return Promise.resolve()
+    }
+    return this.enqueueCommand(() => this.performSet(update)).catch(error => {
       this.reportErrorOnce({
         code: 'COMPILATION_FAILED',
         reason:
@@ -174,12 +186,12 @@ export class EntityAnimationObject
   /** Validates and commits a changed execution definition in place. */
   update(config: EntityMotionConfig): Promise<void> {
     const timeline = normalizeEntityMotionConfig(config)
-    if (this.isDestroyed) return Promise.resolve()
-    const current = entityAnimationObjectOptions.get(this)
-    if (current && this.timelinesEqual(current.timeline, timeline)) {
-      return Promise.resolve()
-    }
-    return this.performUpdate(config, timeline)
+    if (this.isDestroyed || this.isDestroying) return Promise.resolve()
+    return this.enqueueCommand(() => {
+      const current = entityAnimationObjectOptions.get(this)
+      if (current && this.timelinesEqual(current.timeline, timeline)) return
+      return this.performUpdate(config, timeline)
+    })
   }
 
   /** Registers the start observer used by Core consumers. */
@@ -225,22 +237,73 @@ export class EntityAnimationObject
 
   /** Destroys the dedicated Native Entity animation object idempotently. */
   override async destroy(): Promise<void> {
-    if (this.isDestroyed) return
-    const ret = await new ControlEntityAnimationJSBCommand({
-      id: this.id,
-      type: 'destroy',
-    }).execute()
-    if (!ret.success) {
-      const error = this.reportReplyError(ret)
-      throw new Error(error.reason)
+    if (this.isDestroyed || this.isDestroying) return
+    this.isDestroying = true
+    ++this.commandEpoch
+    try {
+      const ret = await new ControlEntityAnimationJSBCommand({
+        id: this.id,
+        type: 'destroy',
+      }).execute()
+      if (!ret.success) {
+        const error = this.reportReplyError(ret)
+        throw new Error(error.reason)
+      }
+      this.isDestroyed = true
+      this.onDestroy()
+    } finally {
+      this.isDestroying = false
     }
-    this.isDestroyed = true
-    this.onDestroy()
   }
 
   /** Removes the event receiver owned by this animation object. */
   protected override onDestroy(): void {
+    ++this.commandEpoch
     SpatialWebEvent.removeEventReceiver(this.id)
+  }
+
+  /** Appends one Native operation while keeping later commands runnable after failure. */
+  private enqueueCommand<T>(command: () => Promise<T> | T): Promise<T | void> {
+    const commandEpoch = this.commandEpoch
+    return new Promise<T | void>((resolve, reject) => {
+      this.commandQueue.push(() => {
+        if (
+          commandEpoch !== this.commandEpoch ||
+          this.isDestroyed ||
+          this.isDestroying
+        ) {
+          resolve()
+          this.finishCommand()
+          return
+        }
+        try {
+          Promise.resolve(command())
+            .then(resolve, reject)
+            .finally(() => {
+              this.finishCommand()
+            })
+        } catch (error) {
+          reject(error)
+          this.finishCommand()
+        }
+      })
+      this.runNextCommand()
+    })
+  }
+
+  /** Starts the next queued command if this object has no active operation. */
+  private runNextCommand(): void {
+    if (this.commandRunning) return
+    const next = this.commandQueue.shift()
+    if (!next) return
+    this.commandRunning = true
+    next()
+  }
+
+  /** Releases the active slot and continues the per-object FIFO. */
+  private finishCommand(): void {
+    this.commandRunning = false
+    this.runNextCommand()
   }
 
   /** Sends one ordered playback control to the dedicated Native protocol. */

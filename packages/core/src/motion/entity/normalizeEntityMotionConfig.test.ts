@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import {
   normalizeEntityMotionConfig,
   validateEntityMotionConfig,
-  validateEntityTransformUpdate,
 } from './index'
+import { validateEntityTransformUpdate } from './normalizeEntityMotionConfig'
 
 describe('normalizeEntityMotionConfig', () => {
   afterEach(() => {

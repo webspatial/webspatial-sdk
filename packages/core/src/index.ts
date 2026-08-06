@@ -46,7 +46,6 @@ export * from './types/animation'
 export * from './types/motion'
 export {
   validateEntityMotionConfig,
-  validateEntityTransformUpdate,
   validateSpatializedMotionConfig,
 } from './motion'
 export * from './runtime'

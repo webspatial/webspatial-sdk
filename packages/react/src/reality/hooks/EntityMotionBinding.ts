@@ -7,7 +7,6 @@ import type {
   SpatialEntity,
   SpatializedMotionPlayState,
 } from '@webspatial/core-sdk'
-import { validateEntityTransformUpdate } from '@webspatial/core-sdk'
 
 /** Core animation handle type inferred from the target creation entry. */
 type EntityAnimationObject = Awaited<
@@ -16,10 +15,7 @@ type EntityAnimationObject = Awaited<
 
 type PlaybackCommandType = 'play' | 'pause' | 'stop' | 'reset' | 'finish'
 
-type EntityMotionCommand =
-  | { type: PlaybackCommandType }
-  | { type: 'set'; update: EntityTransformUpdate }
-  | { type: 'update'; config: EntityMotionConfig }
+type EntityMotionCommand = { type: PlaybackCommandType }
 
 declare const entityMotionAnimationBrand: unique symbol
 
@@ -54,12 +50,6 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
   private animationObject: EntityAnimationObject | null = null
   /** Commands waiting for native object creation. */
   private pendingCommands: EntityMotionCommand[] = []
-  /** Unsent commands for the current binding generation. */
-  private commandQueue: EntityMotionCommand[] = []
-  /** Identity of the command currently awaiting its Core reply. */
-  private commandRunToken: object | null = null
-  /** Monotonic epoch that invalidates unsent commands independently of events. */
-  private commandEpoch = 0
   /** Monotonic binding generation used to reject stale work. */
   private generation = 0
   /** Whether creation failure terminated the current binding lifecycle. */
@@ -141,14 +131,19 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
       return
     }
     this.reconciledConfigRevision = this.configRevision
-    this.enqueueCommand(
-      {
-        type: 'update',
-        config: this.config,
-      },
-      this.animationObject,
-      this.generation,
-    )
+    const object = this.animationObject
+    const generation = this.generation
+    try {
+      void object.update(this.config).catch(error => {
+        if (generation === this.generation && this.animationObject === object) {
+          this.reportCommandError(error)
+        }
+      })
+    } catch (error) {
+      this.pendingSynchronousError =
+        error instanceof Error ? error : new Error(String(error))
+      this.notify()
+    }
   }
 
   /** Subscribes a React consumer to state or confirmed-value changes. */
@@ -187,9 +182,6 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
         this.target = null
         this.animationObject = null
         this.pendingCommands = []
-        this.commandQueue = []
-        ++this.commandEpoch
-        this.commandRunToken = null
         ++this.generation
         this.terminated = false
         this.state = 'idle'
@@ -208,9 +200,6 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     this.target = null
     this.animationObject = null
     this.pendingCommands = []
-    this.commandQueue = []
-    ++this.commandEpoch
-    this.commandRunToken = null
     this.terminated = false
     this.state = 'idle'
     this.confirmedValues = {}
@@ -241,8 +230,6 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
       if (generation !== this.generation || this.target !== entity) return
       this.animationObject = null
       this.pendingCommands = []
-      this.commandQueue = []
-      this.commandRunToken = null
       this.confirmedValues = {}
       this.state = 'idle'
       this.terminated = true
@@ -273,7 +260,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
         const commands = this.pendingCommands
         this.pendingCommands = []
         for (const command of commands) {
-          this.enqueueCommand(command, object, generation)
+          this.runPlaybackCommand(command.type, object, generation)
         }
         this.reconcileConfig()
       })
@@ -335,12 +322,11 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
       this.notify()
       return
     }
-    this.enqueueCommand(command, object, this.generation)
+    this.runPlaybackCommand(type, object, this.generation)
   }
 
   /** Dispatches a set command only after native object creation. */
   private dispatchSet(update: EntityTransformUpdate): void {
-    validateEntityTransformUpdate(update)
     if (this.terminated) {
       console.warn('[useEntityAnimation] set ignored after creation failure')
       return
@@ -352,84 +338,32 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
       )
       return
     }
-    this.enqueueCommand({ type: 'set', update }, object, this.generation)
-  }
-
-  /** Appends one command and coalesces only consecutive unsent updates. */
-  private enqueueCommand(
-    command: EntityMotionCommand,
-    object: EntityAnimationObject,
-    generation: number,
-  ): void {
-    const tail = this.commandQueue.at(-1)
-    if (command.type === 'update' && tail?.type === 'update') {
-      this.commandQueue[this.commandQueue.length - 1] = command
-    } else {
-      this.commandQueue.push(command)
-    }
-    this.drainCommandQueue(object, generation)
-  }
-
-  /** Runs queued commands one at a time for the current binding generation. */
-  private drainCommandQueue(
-    object: EntityAnimationObject,
-    generation: number,
-  ): void {
-    if (this.commandRunToken) return
-    if (object.isDestroyed) {
-      // Native destruction invalidates every command that has not been sent.
-      this.commandQueue = []
-      ++this.commandEpoch
-      return
-    }
-    const command = this.commandQueue.shift()
-    if (!command) return
-    const commandEpoch = this.commandEpoch
-    const token = {}
-    this.commandRunToken = token
-    const run = (): Promise<unknown> => {
-      if (
-        commandEpoch !== this.commandEpoch ||
-        generation !== this.generation ||
-        this.animationObject !== object ||
-        this.terminated
-      ) {
-        return Promise.resolve()
-      }
-      if (command.type === 'update') {
-        return object.update(command.config)
-      }
-      if (command.type === 'set') {
-        return object.set(command.update)
-      }
-      return object[command.type]()
-    }
-    let commandResult: Promise<unknown>
-    try {
-      commandResult = run()
-    } catch (error) {
-      if (this.commandRunToken === token) {
-        this.commandRunToken = null
-      }
+    const generation = this.generation
+    void object.set(update).catch(error => {
       if (generation === this.generation && this.animationObject === object) {
-        this.commandQueue = []
-        this.pendingSynchronousError =
-          error instanceof Error ? error : new Error(String(error))
-        this.notify()
+        this.reportCommandError(error)
       }
+    })
+  }
+
+  /** Delegates one playback command to the Core-owned object queue. */
+  private runPlaybackCommand(
+    type: PlaybackCommandType,
+    object: EntityAnimationObject,
+    generation: number,
+  ): void {
+    if (
+      generation !== this.generation ||
+      this.animationObject !== object ||
+      this.terminated
+    ) {
       return
     }
-    void commandResult
-      .catch(error => {
-        if (generation === this.generation && this.animationObject === object) {
-          this.reportCommandError(error)
-        }
-      })
-      .finally(() => {
-        if (this.commandRunToken !== token) return
-        this.commandRunToken = null
-        this.drainCommandQueue(object, generation)
-      })
+    void object[type]().catch(error => {
+      if (generation === this.generation && this.animationObject === object) {
+        this.reportCommandError(error)
+      }
+    })
   }
 
   /** Reports one asynchronous rejected command without terminating the FIFO. */

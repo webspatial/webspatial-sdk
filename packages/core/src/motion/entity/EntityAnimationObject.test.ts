@@ -48,6 +48,16 @@ function ok(data: unknown = {}) {
   })
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+  return { promise, resolve, reject }
+}
+
 describe('EntityAnimationObject', () => {
   beforeEach(() => {
     platformSpy.callJSB.mockReset()
@@ -83,6 +93,81 @@ describe('EntityAnimationObject', () => {
     )
     expect(animation.isDestroyed).toBe(true)
     expect(SpatialWebEvent.eventReceiver['animation-1']).toBeUndefined()
+  })
+
+  it('serializes commands inside each Core animation object', async () => {
+    const playReply =
+      deferred<ReturnType<typeof ok> extends Promise<infer T> ? T : never>()
+    const calls: string[] = []
+    platformSpy.callJSB.mockImplementation((name: string, payload: string) => {
+      const command = JSON.parse(payload) as { type?: string }
+      calls.push(command.type ?? name)
+      if (command.type === 'play') return playReply.promise
+      if (name === 'SetEntityAnimation') return ok({ values })
+      return ok()
+    })
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+
+    const play = animation.play()
+    const set = animation.set({ position: { x: 2 } })
+    const finish = animation.finish()
+    await vi.waitFor(() => expect(calls).toEqual(['play']))
+
+    playReply.resolve(await ok())
+    await Promise.all([play, set, finish])
+
+    expect(calls).toEqual(['play', 'SetEntityAnimation', 'finish'])
+  })
+
+  it('continues the Core queue after one command rejects', async () => {
+    const calls: string[] = []
+    platformSpy.callJSB.mockImplementation((name: string, payload: string) => {
+      const command = JSON.parse(payload) as { type?: string }
+      calls.push(command.type ?? name)
+      if (command.type === 'play') {
+        return Promise.reject(new Error('play failed'))
+      }
+      return ok()
+    })
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+
+    const play = animation.play()
+    const finish = animation.finish()
+
+    await expect(play).rejects.toThrow('play failed')
+    await expect(finish).resolves.toBeUndefined()
+    expect(calls).toEqual(['play', 'finish'])
+  })
+
+  it('invalidates unsent Core commands when destroy starts', async () => {
+    const playReply =
+      deferred<ReturnType<typeof ok> extends Promise<infer T> ? T : never>()
+    const calls: string[] = []
+    platformSpy.callJSB.mockImplementation((name: string, payload: string) => {
+      const command = JSON.parse(payload) as { type?: string }
+      calls.push(command.type ?? name)
+      if (command.type === 'play') return playReply.promise
+      return ok()
+    })
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+
+    const play = animation.play()
+    const finish = animation.finish()
+    await vi.waitFor(() => expect(calls).toEqual(['play']))
+    const destroy = animation.destroy()
+    playReply.resolve(await ok())
+    await Promise.all([play, finish, destroy])
+
+    expect(calls).toEqual(['play', 'destroy'])
   })
 
   it('returns confirmed set values without changing playback state', async () => {

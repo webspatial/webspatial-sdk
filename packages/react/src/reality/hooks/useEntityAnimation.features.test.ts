@@ -61,11 +61,7 @@ describe('Entity motion playback features', () => {
     expect(object.destroy).not.toHaveBeenCalled()
   })
 
-  test('coalesces only consecutive unsent config updates', async () => {
-    let releaseFirst!: () => void
-    const firstUpdate = new Promise<void>(resolve => {
-      releaseFirst = resolve
-    })
+  test('delegates consecutive config updates to the Core queue', async () => {
     const updatedTargets: number[] = []
     const object = {
       id: 'animation-1',
@@ -81,7 +77,6 @@ describe('Entity motion playback features', () => {
       set: vi.fn(async () => undefined),
       update: vi.fn(async config => {
         updatedTargets.push(config.to.position.x)
-        if (updatedTargets.length === 1) await firstUpdate
       }),
       destroy: vi.fn(async () => undefined),
       onStart: vi.fn(),
@@ -113,9 +108,7 @@ describe('Entity motion playback features', () => {
       await Promise.resolve()
     }
 
-    expect(updatedTargets).toEqual([2])
-    releaseFirst()
-    await vi.waitFor(() => expect(updatedTargets).toEqual([2, 4]))
+    expect(updatedTargets).toEqual([2, 3, 4])
   })
 
   test('continues the FIFO after update failure without replaying autoStart', async () => {

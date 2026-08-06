@@ -186,9 +186,8 @@ describe('useEntityAnimation redesign', () => {
     >()
   })
 
-  test('exposes a synchronously validated set update through the hook api', () => {
+  test('exposes a synchronously validated set update through the hook api', async () => {
     const onError = vi.fn()
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { result } = renderHook(() =>
       useEntityAnimation({
         from: { position: { x: 0 } },
@@ -197,14 +196,44 @@ describe('useEntityAnimation redesign', () => {
         onError,
       }),
     )
+    const object = {
+      id: 'animation-1',
+      playState: 'idle',
+      isAnimating: false,
+      isPaused: false,
+      finished: false,
+      play: vi.fn(async () => undefined),
+      pause: vi.fn(async () => undefined),
+      stop: vi.fn(async () => undefined),
+      reset: vi.fn(async () => undefined),
+      finish: vi.fn(async () => undefined),
+      set: vi.fn(() => {
+        throw new Error('Core set validation failed')
+      }),
+      update: vi.fn(async () => undefined),
+      destroy: vi.fn(async () => undefined),
+      onStart: vi.fn(),
+      onComplete: vi.fn(),
+      onStop: vi.fn(),
+      onReset: vi.fn(),
+      onError: vi.fn(),
+      onPlayStateChange: vi.fn(),
+      onValuesChange: vi.fn(),
+    }
+    ;(result.current[0] as any).__bind({
+      id: 'entity-1',
+      createAnimation: vi.fn(async () => object),
+    })
+    await waitFor(() => expect(result.current[1].playState).toBe('idle'))
 
     expectTypeOf(result.current[1].set)
       .parameter(0)
       .toEqualTypeOf<EntityTransformUpdate>()
-    expect(() => result.current[1].set({})).toThrow(Error)
+    expect(() => result.current[1].set({})).toThrow(
+      'Core set validation failed',
+    )
+    expect(object.set).toHaveBeenCalledWith({})
     expect(onError).not.toHaveBeenCalled()
-    expect(warning).not.toHaveBeenCalled()
-    warning.mockRestore()
   })
 
   test('updates the same object across repeated StrictMode renders', async () => {

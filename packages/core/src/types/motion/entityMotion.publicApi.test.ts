@@ -44,7 +44,7 @@ describe('public Entity motion API', () => {
 
   test('keeps canonical normalization helpers off the package entry', () => {
     expect(publicApi).toHaveProperty('validateEntityMotionConfig')
-    expect(publicApi).toHaveProperty('validateEntityTransformUpdate')
+    expect(publicApi).not.toHaveProperty('validateEntityTransformUpdate')
     expect(publicApi).not.toHaveProperty('EntityAnimationObject')
     expect(publicApi).not.toHaveProperty('normalizeEntityMotionConfig')
     expect(publicApi).not.toHaveProperty('serializeEntityMotionTimeline')
