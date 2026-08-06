@@ -17,6 +17,17 @@ type PlaybackCommandType = 'play' | 'pause' | 'stop' | 'reset' | 'finish'
 
 type EntityMotionCommand = { type: PlaybackCommandType }
 
+/** Removes top-level boundaries that Core ignores when a timeline is present. */
+function removeIgnoredPrecedenceBoundaries(
+  config: EntityMotionConfig,
+): EntityMotionConfig {
+  if (config.timeline === undefined) return config
+  const sanitized = { ...config }
+  delete sanitized.from
+  delete sanitized.to
+  return sanitized
+}
+
 declare const entityMotionAnimationBrand: unique symbol
 
 /** Opaque Entity animation prop consumed by Reality Entity components. */
@@ -134,11 +145,16 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     const object = this.animationObject
     const generation = this.generation
     try {
-      void object.update(this.config).catch(error => {
-        if (generation === this.generation && this.animationObject === object) {
-          this.reportCommandError(error)
-        }
-      })
+      void object
+        .update(removeIgnoredPrecedenceBoundaries(this.config))
+        .catch(error => {
+          if (
+            generation === this.generation &&
+            this.animationObject === object
+          ) {
+            this.reportCommandError(error)
+          }
+        })
     } catch (error) {
       this.pendingSynchronousError =
         error instanceof Error ? error : new Error(String(error))
@@ -219,7 +235,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     const creationConfigRevision = this.configRevision
     let creationErrorReported = false
     const creationConfig: EntityMotionConfig = {
-      ...config,
+      ...removeIgnoredPrecedenceBoundaries(config),
       onError: error => {
         if (generation !== this.generation || creationErrorReported) return
         creationErrorReported = true

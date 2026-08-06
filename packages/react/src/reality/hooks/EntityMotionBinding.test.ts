@@ -236,6 +236,47 @@ describe('EntityMotionBinding', () => {
     expect(binding.api.playState).toBe('idle')
   })
 
+  test('passes timeline precedence to Core without duplicate warnings on create or update', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { object } = createMockAnimationObject()
+    const precedenceConfig = createConfig({
+      timeline: {
+        from: { position: { x: 0 } },
+        to: { position: { x: 1 } },
+      },
+      duration: 1,
+    })
+    const entity = {
+      id: 'entity-1',
+      createAnimation: vi.fn(async (config: EntityMotionConfig) => {
+        if (config.from !== undefined || config.to !== undefined) {
+          console.warn('[Core] duplicate precedence warning')
+        }
+        return object
+      }),
+    }
+    const binding = new EntityMotionBinding(createConfig({ autoStart: false }))
+
+    binding.updateConfig(precedenceConfig)
+    expect(warning).toHaveBeenCalledOnce()
+    binding.__bind(entity as any)
+    await flushPromises()
+    expect(warning).toHaveBeenCalledOnce()
+
+    object.update.mockImplementation(async (...args: unknown[]) => {
+      const config = args[0] as EntityMotionConfig
+      if (config.from !== undefined || config.to !== undefined) {
+        console.warn('[Core] duplicate precedence warning')
+      }
+    })
+    binding.updateConfig({ duration: 2 })
+    binding.updateConfig({ ...precedenceConfig, duration: 2 })
+    binding.reconcileConfig()
+    await flushPromises()
+    expect(warning).toHaveBeenCalledTimes(2)
+    warning.mockRestore()
+  })
+
   test('enters queued when playback waits for object creation', async () => {
     const creation = deferred<any>()
     const binding = new EntityMotionBinding(createConfig())
