@@ -1,6 +1,5 @@
 import Combine
 import Foundation
-import QuartzCore
 import RealityKit
 import simd
 
@@ -105,7 +104,7 @@ final class EntityMotionAnimationObject: SpatialObject {
     }
 
     /// Starts fresh playback or resumes paused playback.
-    func play(at timestamp: CFTimeInterval = CACurrentMediaTime()) throws {
+    func play() throws {
         if playState == .paused {
             if let preparedPausedPlayback {
                 self.preparedPausedPlayback = nil
@@ -135,7 +134,7 @@ final class EntityMotionAnimationObject: SpatialObject {
     }
 
     /// Stops playback at the current transform and releases transform write ownership.
-    func stop(at timestamp: CFTimeInterval = CACurrentMediaTime()) {
+    func stop() {
         guard playState == .running || playState == .paused else {
             return
         }

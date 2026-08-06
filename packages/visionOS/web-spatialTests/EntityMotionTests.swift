@@ -1093,7 +1093,7 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
             )
         )
 
-        try animation.play(at: 10)
+        try animation.play()
 
         XCTAssertEqual(animation.playState, .running)
         XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
@@ -1277,7 +1277,7 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         XCTAssertEqual(confirmed.rotation.y, 45, accuracy: 1e-6)
         XCTAssertEqual(confirmed.scale.z, 2, accuracy: 1e-6)
 
-        try animation.play(at: 0)
+        try animation.play()
         XCTAssertThrowsError(
             try animation.set(EntityMotionTransformPayload(position: .init(x: 2, y: nil, z: nil), rotation: nil, scale: nil))
         ) { error in
@@ -1307,7 +1307,7 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
             }
         )
 
-        try animation.play(at: 0)
+        try animation.play()
         try assertConfirmed(messages.last, matches: entity, action: .start)
         XCTAssertNotEqual(
             try XCTUnwrap(messages.last?.detail.values).position.x,
@@ -1325,7 +1325,7 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         try animation.finish()
         try assertConfirmed(messages.last, matches: entity, action: .complete)
 
-        try animation.play(at: 1)
+        try animation.play()
         animation.completeNaturally()
         try assertConfirmed(messages.last, matches: entity, action: .complete)
 
@@ -1351,28 +1351,28 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
             timeline: timeline()
         )
 
-        try animation.play(at: 0)
-        animation.stop(at: 0.5)
+        try animation.play()
+        animation.stop()
         XCTAssertEqual(animation.playState, .idle)
         XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
         XCTAssertTrue(entity.updateTransform(translationMatrix(x: 10)))
         XCTAssertEqual(entity.transform.translation.x, 10, accuracy: 1e-6)
 
-        try animation.play(at: 1)
+        try animation.play()
         try animation.reset()
         XCTAssertEqual(animation.playState, .idle)
         XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
         XCTAssertTrue(entity.updateTransform(translationMatrix(x: 20)))
         XCTAssertEqual(entity.transform.translation.x, 20, accuracy: 1e-6)
 
-        try animation.play(at: 2)
+        try animation.play()
         try animation.finish()
         XCTAssertEqual(animation.playState, .finished)
         XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
         XCTAssertTrue(entity.updateTransform(translationMatrix(x: 30)))
         XCTAssertEqual(entity.transform.translation.x, 30, accuracy: 1e-6)
 
-        try animation.play(at: 3)
+        try animation.play()
         animation.completeNaturally()
         XCTAssertEqual(animation.playState, .finished)
         XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
