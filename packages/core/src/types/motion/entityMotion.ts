@@ -1,9 +1,6 @@
 import type { Vec3 } from '../types'
 import type { TimingFunction } from '../animation'
-import type {
-  SpatializedMotionPlayState,
-  SpatializedPlaybackApi,
-} from './spatializedMotion'
+import type { SpatializedPlaybackApi } from './spatializedMotion'
 
 /** Transform values confirmed by the native Entity motion implementation. */
 export interface EntityMotionProps {
@@ -105,7 +102,7 @@ export const ENTITY_MOTION_PROPERTIES = [
   'scale.z',
 ] as const
 
-/** Scalar Entity transform property accepted by the canonical timeline. */
+/** Union of scalar Entity transform properties accepted by the canonical timeline. */
 export type EntityMotionProperty = (typeof ENTITY_MOTION_PROPERTIES)[number]
 
 /** One canonical numeric Entity motion keyframe. */
@@ -146,8 +143,6 @@ export interface EntityMotionTimelinePayload {
 export interface EntityPlaybackApi extends SpatializedPlaybackApi {
   /** Commits a sparse transform update; confirmed values arrive through `entityProps`. */
   set(update: EntityTransformUpdate): void
-  /** Current React or native Entity motion state. */
-  readonly playState: SpatializedMotionPlayState
 }
 
 /** Wire request for creating an Entity animation on a target Entity id. */

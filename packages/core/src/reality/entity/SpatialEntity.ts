@@ -34,7 +34,10 @@ import {
   SpatialTapMsg,
   SpatialWebMsgType,
 } from '../../WebMsgCommand'
-import type { EntityMotionConfig } from '../../types/motion/entityMotion'
+import type {
+  CreateEntityAnimationResult,
+  EntityMotionConfig,
+} from '../../types/motion/entityMotion'
 import {
   createEntityAnimationObject,
   EntityAnimationObject,
@@ -158,7 +161,7 @@ export class SpatialEntity extends SpatialObject {
       })
       throw new Error(reason)
     }
-    const data = ret.data as { id?: string } | undefined
+    const data = ret.data as Partial<CreateEntityAnimationResult> | undefined
     if (!data?.id) {
       throw new Error('CreateEntityAnimation did not return an id')
     }
