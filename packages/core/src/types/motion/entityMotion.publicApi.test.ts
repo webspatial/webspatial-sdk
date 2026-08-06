@@ -6,7 +6,6 @@ import type {
   EntityPlaybackApi,
   EntityTransformUpdate,
 } from '../../index'
-import { EntityAnimationObject } from '../../index'
 import type { SpatialEntity } from '../../index'
 // @ts-expect-error Legacy Entity animation types are removed from the public API.
 import type { AnimateTransformResult } from '../../index'
@@ -20,7 +19,13 @@ import type { AnimationConfig } from '../../index'
 import type { EntityMotionTimelinePayload } from '../../index'
 // @ts-expect-error Entity animation construction options are internal-only.
 import type { EntityAnimationObjectOptions } from '../../index'
+// @ts-expect-error EntityAnimationObject is an internal Core implementation.
+import type { EntityAnimationObject as PublicEntityAnimationObject } from '../../index'
 import * as publicApi from '../../index'
+
+type EntityAnimationObject = Awaited<
+  ReturnType<SpatialEntity['createAnimation']>
+>
 
 // @ts-expect-error SpatialEntity no longer exposes the legacy animation entry.
 type LegacyAnimateTransform = SpatialEntity['animateTransform']
@@ -32,9 +37,6 @@ describe('public Entity motion API', () => {
     expectTypeOf<EntityMotionProps>().toBeObject()
     expectTypeOf<EntityTransformUpdate>().toBeObject()
     expectTypeOf<EntityPlaybackApi>().toBeObject()
-    expectTypeOf<
-      ConstructorParameters<typeof EntityAnimationObject>
-    >().toEqualTypeOf<[id: string]>()
     expectTypeOf<ReturnType<SpatialEntity['createAnimation']>>().toEqualTypeOf<
       Promise<EntityAnimationObject>
     >()
@@ -43,6 +45,7 @@ describe('public Entity motion API', () => {
   test('keeps canonical normalization helpers off the package entry', () => {
     expect(publicApi).toHaveProperty('validateEntityMotionConfig')
     expect(publicApi).toHaveProperty('validateEntityTransformUpdate')
+    expect(publicApi).not.toHaveProperty('EntityAnimationObject')
     expect(publicApi).not.toHaveProperty('normalizeEntityMotionConfig')
     expect(publicApi).not.toHaveProperty('serializeEntityMotionTimeline')
     expect(publicApi).not.toHaveProperty('createEntityAnimationObject')
@@ -51,6 +54,7 @@ describe('public Entity motion API', () => {
 
 void (undefined as unknown as EntityMotionTimelinePayload)
 void (undefined as unknown as EntityAnimationObjectOptions)
+void (undefined as unknown as PublicEntityAnimationObject)
 void (undefined as unknown as LegacyAnimateTransform)
 void (undefined as unknown as AnimateTransformResult)
 void (undefined as unknown as AnimatedPropsInternal)

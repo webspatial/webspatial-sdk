@@ -49,7 +49,6 @@ export {
   validateEntityTransformUpdate,
   validateSpatializedMotionConfig,
 } from './motion'
-export { EntityAnimationObject } from './motion'
 export * from './runtime'
 
 export { composeSRT, decomposeSRT } from './utils'

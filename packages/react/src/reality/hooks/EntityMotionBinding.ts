@@ -1,5 +1,4 @@
 import type {
-  EntityAnimationObject,
   EntityMotionConfig,
   EntityMotionProps,
   EntityPlaybackApi,
@@ -9,6 +8,11 @@ import type {
   SpatializedMotionPlayState,
 } from '@webspatial/core-sdk'
 import { validateEntityTransformUpdate } from '@webspatial/core-sdk'
+
+/** Core animation handle type inferred from the target creation entry. */
+type EntityAnimationObject = Awaited<
+  ReturnType<SpatialEntity['createAnimation']>
+>
 
 type PlaybackCommandType = 'play' | 'pause' | 'stop' | 'reset' | 'finish'
 
