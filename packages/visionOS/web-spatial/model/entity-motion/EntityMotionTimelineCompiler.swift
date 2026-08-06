@@ -141,8 +141,22 @@ enum EntityMotionCompilationError: Error, Equatable {
 
 /// Pure validator and full-pose timeline compiler.
 enum EntityMotionTimelineCompiler {
+    /// Validated timeline data reused by validation and compilation.
+    private struct ParsedTimeline {
+        let tracks: [EntityMotionProperty: EntityMotionTrackPayload]
+        let times: [Double]
+        let defaultTiming: EntityMotionTimingFunction
+    }
+
     /// Fallback-validates a canonical payload without reading a run baseline.
     static func validate(_ timeline: EntityMotionTimelinePayload) throws {
+        _ = try parse(timeline)
+    }
+
+    /// Validates timeline-only data and prepares values consumed by compilation.
+    private static func parse(
+        _ timeline: EntityMotionTimelinePayload
+    ) throws -> ParsedTimeline {
         guard timeline.duration.isFinite, timeline.duration > 0,
               timeline.delay.isFinite, timeline.delay >= 0,
               timeline.playbackRate.isFinite, timeline.playbackRate > 0,
@@ -153,12 +167,12 @@ enum EntityMotionTimelineCompiler {
             )
         }
 
-        var properties = Set<EntityMotionProperty>()
+        var validatedTracks: [EntityMotionProperty: EntityMotionTrackPayload] = [:]
         var unionTimes = Set<Double>()
         var defaultTimings = Set<EntityMotionTimingFunction>()
         for track in timeline.tracks {
             guard let property = EntityMotionProperty(rawValue: track.property),
-                  properties.insert(property).inserted,
+                  validatedTracks[property] == nil,
                   !track.keyframes.isEmpty
             else {
                 throw EntityMotionCompilationError.invalidTimeline(
@@ -181,14 +195,22 @@ enum EntityMotionTimelineCompiler {
                 previousTime = keyframe.at
                 unionTimes.insert(keyframe.at)
             }
+            validatedTracks[property] = track
         }
         guard unionTimes.contains(0), unionTimes.contains(timeline.duration),
-              defaultTimings.count == 1
+              defaultTimings.count == 1,
+              let defaultTiming = defaultTimings.first
         else {
             throw EntityMotionCompilationError.invalidTimeline(
                 "Timeline requires both boundaries and one global timing default."
             )
         }
+
+        return ParsedTimeline(
+            tracks: validatedTracks,
+            times: unionTimes.sorted(),
+            defaultTiming: defaultTiming
+        )
     }
 
     /// Validates a canonical payload and builds full-pose union slices.
@@ -196,66 +218,17 @@ enum EntityMotionTimelineCompiler {
         _ timeline: EntityMotionTimelinePayload,
         baseline: EntityMotionPose
     ) throws -> EntityMotionCompiledTimeline {
-        try validate(timeline)
-        guard timeline.duration.isFinite, timeline.duration > 0,
-              timeline.delay.isFinite, timeline.delay >= 0,
-              timeline.playbackRate.isFinite, timeline.playbackRate > 0,
-              !timeline.tracks.isEmpty,
-              poseIsValid(baseline)
-        else {
+        let parsed = try parse(timeline)
+        guard poseIsValid(baseline) else {
             throw EntityMotionCompilationError.invalidTimeline(
                 "Timeline timing, tracks, or baseline is invalid."
             )
         }
 
-        var validatedTracks: [EntityMotionProperty: EntityMotionTrackPayload] = [:]
-        var unionTimes = Set<Double>()
-        for track in timeline.tracks {
-            guard let property = EntityMotionProperty(rawValue: track.property),
-                  validatedTracks[property] == nil,
-                  !track.keyframes.isEmpty
-            else {
-                throw EntityMotionCompilationError.invalidTimeline(
-                    "Track property is unsupported, duplicated, or empty."
-                )
-            }
-
-            var previousTime: Double?
-            for keyframe in track.keyframes {
-                guard keyframe.at.isFinite,
-                      keyframe.value.isFinite,
-                      (0 ... timeline.duration).contains(keyframe.at),
-                      previousTime.map({ keyframe.at > $0 }) ?? true,
-                      !property.requiresNonnegativeValue || keyframe.value >= 0
-                else {
-                    throw EntityMotionCompilationError.invalidTimeline(
-                        "Keyframes must be finite, ordered, unique, and in range."
-                    )
-                }
-                previousTime = keyframe.at
-                unionTimes.insert(keyframe.at)
-            }
-            validatedTracks[property] = track
-        }
-
-        guard unionTimes.contains(0), unionTimes.contains(timeline.duration) else {
-            throw EntityMotionCompilationError.invalidTimeline(
-                "Timeline requires zero and duration boundaries."
-            )
-        }
-
-        let defaults = Set(validatedTracks.values.map(\.timingFunction))
-        guard defaults.count == 1, let defaultTiming = defaults.first else {
-            throw EntityMotionCompilationError.invalidTimeline(
-                "All track timing defaults must match."
-            )
-        }
-
-        let times = unionTimes.sorted()
         var slices = [EntityMotionCompiledSlice]()
-        for time in times {
+        for time in parsed.times {
             var pose = baseline
-            for (property, track) in validatedTracks {
+            for (property, track) in parsed.tracks {
                 pose = pose.replacing(
                     property,
                     with: sample(
@@ -282,7 +255,7 @@ enum EntityMotionTimelineCompiler {
                     "Compiled segments require positive duration."
                 )
             }
-            let overrides = Set(validatedTracks.values.compactMap {
+            let overrides = Set(parsed.tracks.values.compactMap {
                 timingOverride(for: $0, segmentStart: start)
             })
             guard overrides.count <= 1 else {
@@ -294,7 +267,7 @@ enum EntityMotionTimelineCompiler {
                 .init(
                     start: start,
                     end: end,
-                    timing: overrides.first ?? defaultTiming,
+                    timing: overrides.first ?? parsed.defaultTiming,
                     from: from.pose,
                     to: to.pose
                 )

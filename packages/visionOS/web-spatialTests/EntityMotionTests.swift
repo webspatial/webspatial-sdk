@@ -592,6 +592,78 @@ final class EntityMotionSpatialSceneHandlerTests: XCTestCase {
 }
 
 final class EntityMotionTimelineCompilerTests: XCTestCase {
+    /// Keeps validation and compilation aligned on timeline contract failures.
+    func testValidateAndCompileReportTheSameTimelineErrors() {
+        let valid = makeTimeline()
+        let cases: [(EntityMotionTimelinePayload, String)] = [
+            (
+                valid.replacing(duration: 0),
+                "Timeline timing or tracks are invalid."
+            ),
+            (
+                valid.replacing(property: "opacity"),
+                "Track property is unsupported, duplicated, or empty."
+            ),
+            (
+                valid.replacingKeyframe(at: .nan),
+                "Keyframes must be finite, ordered, unique, and in range."
+            ),
+            (
+                valid.removingStartBoundary(),
+                "Timeline requires both boundaries and one global timing default."
+            ),
+            (
+                valid.replacing(tracks: [
+                    track("position.x", [(0, 0), (2, 2)], timing: .linear),
+                    track("position.y", [(0, 0), (2, 2)], timing: .easeIn),
+                ]),
+                "Timeline requires both boundaries and one global timing default."
+            ),
+        ]
+
+        for (timeline, reason) in cases {
+            let expected = EntityMotionCompilationError.invalidTimeline(reason)
+            XCTAssertThrowsError(
+                try EntityMotionTimelineCompiler.validate(timeline)
+            ) { error in
+                XCTAssertEqual(error as? EntityMotionCompilationError, expected)
+            }
+            XCTAssertThrowsError(
+                try EntityMotionTimelineCompiler.compile(
+                    timeline,
+                    baseline: .identity
+                )
+            ) { error in
+                XCTAssertEqual(error as? EntityMotionCompilationError, expected)
+            }
+        }
+    }
+
+    /// Keeps baseline validation in compilation rather than timeline validation.
+    func testCompileRejectsInvalidBaselineAfterTimelineValidation() throws {
+        let timeline = makeTimeline()
+        XCTAssertNoThrow(try EntityMotionTimelineCompiler.validate(timeline))
+        let baseline = EntityMotionPose(
+            position: .init(.nan, 0, 0),
+            rotation: .zero,
+            scale: .one
+        )
+
+        XCTAssertThrowsError(
+            try EntityMotionTimelineCompiler.compile(
+                timeline,
+                baseline: baseline
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? EntityMotionCompilationError,
+                .invalidTimeline(
+                    "Timeline timing, tracks, or baseline is invalid."
+                )
+            )
+        }
+    }
+
     /// Rejects unsupported properties and malformed numeric timeline inputs.
     func testCompilerRejectsMalformedNativePayloads() {
         let valid = makeTimeline()
