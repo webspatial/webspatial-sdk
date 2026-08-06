@@ -732,7 +732,9 @@ function TestSurfaceStyle() {
           </div>
         </AttachmentAsset>
         <SceneGraph>
-          <Entity position={{ x: 0, y: 0, z: 0.1 }}>
+          {/* Offset right and down so the floating attachment doesn't cover
+              the slider/material controls above the Reality frame. */}
+          <Entity position={{ x: 0.08, y: -0.12, z: 0.1 }}>
             <BoxEntity
               width={0.1}
               height={0.1}
@@ -741,7 +743,7 @@ function TestSurfaceStyle() {
             />
             <AttachmentEntity
               attachment="surface-style"
-              position={{ x: 0, y: 0.17, z: 0 }}
+              position={{ x: 0, y: 0.16, z: 0 }}
               width={0.3}
               height={0.15}
               cornerRadius={cornerRadius}
