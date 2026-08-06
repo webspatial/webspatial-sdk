@@ -21,6 +21,8 @@ import type { EntityMotionTimelinePayload } from '../../index'
 import type { EntityAnimationObjectOptions } from '../../index'
 // @ts-expect-error EntityAnimationObject is an internal Core implementation.
 import type { EntityAnimationObject as PublicEntityAnimationObject } from '../../index'
+// @ts-expect-error Entity motion validation is an internal Core implementation.
+import type { validateEntityMotionConfig as PublicValidateEntityMotionConfig } from '../../index'
 import * as publicApi from '../../index'
 
 type EntityAnimationObject = Awaited<
@@ -43,7 +45,7 @@ describe('public Entity motion API', () => {
   })
 
   test('keeps canonical normalization helpers off the package entry', () => {
-    expect(publicApi).toHaveProperty('validateEntityMotionConfig')
+    expect(publicApi).not.toHaveProperty('validateEntityMotionConfig')
     expect(publicApi).not.toHaveProperty('validateEntityTransformUpdate')
     expect(publicApi).not.toHaveProperty('EntityAnimationObject')
     expect(publicApi).not.toHaveProperty('normalizeEntityMotionConfig')
@@ -55,6 +57,7 @@ describe('public Entity motion API', () => {
 void (undefined as unknown as EntityMotionTimelinePayload)
 void (undefined as unknown as EntityAnimationObjectOptions)
 void (undefined as unknown as PublicEntityAnimationObject)
+void (undefined as unknown as PublicValidateEntityMotionConfig)
 void (undefined as unknown as LegacyAnimateTransform)
 void (undefined as unknown as AnimateTransformResult)
 void (undefined as unknown as AnimatedPropsInternal)

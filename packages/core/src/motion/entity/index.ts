@@ -1,7 +1,4 @@
-export {
-  normalizeEntityMotionConfig,
-  validateEntityMotionConfig,
-} from './normalizeEntityMotionConfig'
+export { normalizeEntityMotionConfig } from './normalizeEntityMotionConfig'
 export {
   createEntityAnimationObject,
   EntityAnimationObject,

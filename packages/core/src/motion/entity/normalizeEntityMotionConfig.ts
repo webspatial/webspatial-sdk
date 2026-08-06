@@ -331,15 +331,6 @@ export function normalizeEntityMotionConfig(
 }
 
 /**
- * Validates public Entity motion configuration synchronously.
- *
- * @param config - Configuration to validate.
- */
-export function validateEntityMotionConfig(config: EntityMotionConfig): void {
-  normalizeEntityMotionConfig(config, false)
-}
-
-/**
  * Validates one sparse committed-transform update.
  *
  * @param update - Sparse update supplied to `EntityPlaybackApi.set`.

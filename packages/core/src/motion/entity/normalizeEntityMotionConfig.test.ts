@@ -1,8 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import {
-  normalizeEntityMotionConfig,
-  validateEntityMotionConfig,
-} from './index'
+import { normalizeEntityMotionConfig } from './index'
 import { validateEntityTransformUpdate } from './normalizeEntityMotionConfig'
 
 describe('normalizeEntityMotionConfig', () => {
@@ -190,12 +187,12 @@ describe('Entity motion validation', () => {
       'at least one transform scalar',
     ],
   ] as const)('rejects invalid config %#', (config, message) => {
-    expect(() => validateEntityMotionConfig(config as never)).toThrow(message)
+    expect(() => normalizeEntityMotionConfig(config as never)).toThrow(message)
   })
 
   test('rejects legacy and unsupported authoring', () => {
     expect(() =>
-      validateEntityMotionConfig({
+      normalizeEntityMotionConfig({
         to: { opacity: 1 },
       } as never),
     ).toThrow('unsupported')
@@ -229,7 +226,9 @@ describe('Entity motion validation', () => {
   ])(
     'rejects missing, empty, or duplicate boundaries %#',
     (config, message) => {
-      expect(() => validateEntityMotionConfig(config as never)).toThrow(message)
+      expect(() => normalizeEntityMotionConfig(config as never)).toThrow(
+        message,
+      )
     },
   )
 
@@ -280,7 +279,7 @@ describe('Entity motion validation', () => {
       'must be a boolean',
     ],
   ])('rejects invalid numeric and option values %#', (config, message) => {
-    expect(() => validateEntityMotionConfig(config as never)).toThrow(message)
+    expect(() => normalizeEntityMotionConfig(config as never)).toThrow(message)
   })
 
   test.each([
@@ -300,7 +299,7 @@ describe('Entity motion validation', () => {
     ['playbackRate', Number.NEGATIVE_INFINITY, 'finite'],
   ])('rejects config.%s=%s', (key, value, message) => {
     expect(() =>
-      validateEntityMotionConfig({
+      normalizeEntityMotionConfig({
         from: { position: { x: 0 } },
         to: { position: { x: 1 } },
         [key]: value,
@@ -310,7 +309,7 @@ describe('Entity motion validation', () => {
 
   test('accepts zero delay', () => {
     expect(() =>
-      validateEntityMotionConfig({
+      normalizeEntityMotionConfig({
         from: { position: { x: 0 } },
         to: { position: { x: 1 } },
         delay: 0,
@@ -320,7 +319,7 @@ describe('Entity motion validation', () => {
 
   test('rejects legacy transform nesting', () => {
     expect(() =>
-      validateEntityMotionConfig({
+      normalizeEntityMotionConfig({
         from: { transform: { position: { x: 0 } } },
         to: { transform: { position: { x: 1 } } },
       } as never),
@@ -331,7 +330,7 @@ describe('Entity motion validation', () => {
     'rejects legacy transform.%s nesting',
     legacyKey => {
       expect(() =>
-        validateEntityMotionConfig({
+        normalizeEntityMotionConfig({
           from: {
             transform: {
               [legacyKey]: { x: 0, y: 0, z: 0 },
