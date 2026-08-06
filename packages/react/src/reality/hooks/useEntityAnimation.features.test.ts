@@ -61,7 +61,7 @@ describe('Entity motion playback features', () => {
     expect(object.destroy).not.toHaveBeenCalled()
   })
 
-  test('delegates consecutive config updates to the Core queue', async () => {
+  test('delegates consecutive config updates to Core in call order', async () => {
     const updatedTargets: number[] = []
     const object = {
       id: 'animation-1',
@@ -111,7 +111,7 @@ describe('Entity motion playback features', () => {
     expect(updatedTargets).toEqual([2, 3, 4])
   })
 
-  test('continues the FIFO after update failure without replaying autoStart', async () => {
+  test('continues after update failure without replaying autoStart', async () => {
     const calls: string[] = []
     const onError = vi.fn()
     const object = {

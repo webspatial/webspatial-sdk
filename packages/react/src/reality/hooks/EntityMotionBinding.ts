@@ -346,7 +346,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     })
   }
 
-  /** Delegates one playback command to the Core-owned object queue. */
+  /** Delegates one playback command to the Core object after creation. */
   private runPlaybackCommand(
     type: PlaybackCommandType,
     object: EntityAnimationObject,
@@ -366,7 +366,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     })
   }
 
-  /** Reports one asynchronous rejected command without terminating the FIFO. */
+  /** Reports one asynchronous rejected command. */
   private reportCommandError(error: unknown): void {
     const playbackError: EntityPlaybackError = {
       code: 'COMPILATION_FAILED',

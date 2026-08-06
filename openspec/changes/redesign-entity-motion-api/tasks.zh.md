@@ -26,11 +26,11 @@
 
 - [x] 4.1 先编写红灯测试,覆盖 `entityProps` 在 `start`、`complete`、`stop`、`reset`、`finish` 和原生层接受 `api.set(update)` 后包含完整的 `position`、`rotation`、`scale`,`set` 确认值来自 `SetEntityAnimationResult.values` 且不产生状态事件,React 更新时机限定为生命周期节点或成功设置回执,`onStart` / `onComplete` / `onStop` / `onReset` 接收精确的 `EntityMotionProps` 参数、`onError` 接收精确的 `EntityPlaybackError` 参数、callback 返回值被忽略,`idle → finish → finished` 触发一次 `onComplete` 并保持现有 `onStart` 次数,以及终态由配置或 `api.set` 决定
 - [x] 4.2 实现 React/Core 状态消息、设置回执和独立错误事件消费,完成调试 `onXXX`、用户 callback 分发和 `entityProps` 完整已提交变换持久化,保持原生层已确认状态的单向流动
-- [x] 4.3 先编写红灯测试,覆盖公开播放接口、每个绑定对象独立的 FIFO 命令链与完整 transform 写入保护:原生动画对象创建期间没有待执行播放命令时保持 `idle`;播放命令等待创建时公开 `queued`,`autoStart` 生成的隐式 `play` 也属于待执行命令;创建前的播放命令按顺序执行,`autoStart` 产生的 `play` 排在已有待执行命令之前;命令排队期间 `isAnimating`、`isPaused`、`finished` 保持 `false`;创建成功回执在执行待处理命令前确认 `idle`;待处理的 `pause` 或 `stop` 保持 `idle`;创建失败回执使状态收敛为 `idle`、终止当前绑定生命周期、清空对象状态、待处理命令和 `entityProps`,由其余 React 属性继续控制并分发一次分类错误;创建前的 `set` 和绑定终止后的所有 API 保持控制台警告与空操作;创建后的 `set → play`、`stop → play`、`play → pause` 等待前一条内部 JSB 回执后再执行;活跃期 `set` 按 FIFO 抵达 Native,并把 `INVALID_CONTROL_STATE` 映射为 warning + no-op;普通命令失败继续执行后续队列;解绑、替换和销毁使尚未发送的命令失效;动画活跃期间的写入保持动画和最新 `entityProps`;fresh play 启用保护、暂停保持保护、停止/重置/结束/自然完成解除保护,播放空闲期间普通 React transform 更新抵达 Native;终态填充通过完整 `entityProps` 保持已提交姿态
-- [x] 4.4 复用 Element 动画在对象创建前暂存播放命令、创建后逐条执行的机制,为每个 Entity motion 绑定对象实现带队列批次失效保护的 FIFO 命令链;使用 `CreateEntityAnimation` 回执在执行待处理命令前确认 `idle`,或在创建失败时终止当前绑定生命周期;创建前的 `set` 和终止后的所有命令输出控制台警告、执行空操作并保持在队列之外,创建后所有命令串行执行;同时实现 React/Core 播放接口、JSB 命令发起和完整 transform `entityProps` 更新,使组合后的 React 属性控制播放空闲状态;原生层的 `set` 合并、状态机、终态提交和 transform 写入保护由第 5 节实现
-- [x] 4.4b 先编写 Core/React 红灯测试,覆盖同一种状态消息、`playState` 权威更新、`callbackAction` 与完整 `values` 成对消费、暂停和恢复只更新状态、`finish()` 与自然完成统一触发 `onComplete`、控制成功回执只允许发送下一条等待命令,以及状态消息与回执竞态保持最新状态
-- [x] 4.4c 实现 Core/React 状态消息消费:`playState` 更新公开状态,可选 `callbackAction` 分发 callback 和确认姿态,控制成功回执确认当前命令处理完成并允许发送下一条等待命令
-- [x] 4.4d 先编写 Core/React target 销毁红灯测试,覆盖 animation id 对应的 `objectdestroy`、已销毁状态、该 id 的事件接收器注销、后续 playback 本地空操作、后续 `set` 本地 warning + 空操作、JSB 命令数稳定和 `onError` 次数稳定
+- [x] 4.3 先编写红灯测试,覆盖公开播放接口、创建前 playback 队列与完整 transform 写入保护:原生动画对象创建期间没有待执行播放命令时保持 `idle`;播放命令等待创建时公开 `queued`,`autoStart` 生成的隐式 `play` 也属于待执行命令;创建前的播放命令按调用顺序刷新,`autoStart` 产生的 `play` 排在已有待执行命令之前;命令排队期间 `isAnimating`、`isPaused`、`finished` 保持 `false`;创建成功回执在执行待处理命令前确认 `idle`;待处理的 `pause` 或 `stop` 保持 `idle`;创建失败回执使状态收敛为 `idle`、终止当前绑定生命周期、清空对象状态、待处理命令和 `entityProps`,由其余 React 属性继续控制并分发一次分类错误;创建前的 `set` 和绑定终止后的所有 API 保持控制台警告与空操作;创建后的 `set → play`、`stop → play`、`play → pause` 立即按调用顺序提交并由 JSB/Native FIFO 保序;活跃期 `set` 按 FIFO 抵达 Native,并把 `INVALID_CONTROL_STATE` 映射为 warning + no-op;每条命令错误各自报告且后续命令继续;解绑、替换和销毁清空创建前待处理 playback 命令;动画活跃期间的写入保持动画和最新 `entityProps`;fresh play 启用保护、暂停保持保护、停止/重置/结束/自然完成解除保护,播放空闲期间普通 React transform 更新抵达 Native;终态填充通过完整 `entityProps` 保持已提交姿态
+- [x] 4.4 实现 React 创建前 playback 队列和 Core 直接命令提交;使用 `CreateEntityAnimation` 回执在刷新待处理命令前确认 `idle`,或在创建失败时终止当前绑定生命周期;创建前的 `set` 和终止后的所有命令输出控制台警告、执行空操作并保持在队列之外,创建后的所有命令立即提交并由 JSB/Native FIFO 保序;同时实现 React/Core 播放接口、JSB 命令发起和完整 transform `entityProps` 更新,使组合后的 React 属性控制播放空闲状态;原生层的 `set` 合并、状态机、终态提交和 transform 写入保护由第 5 节实现
+- [x] 4.4b 先编写 Core/React 红灯测试,覆盖同一种状态消息、`playState` 权威更新、`callbackAction` 与完整 `values` 成对消费、暂停和恢复只更新状态、`finish()` 与自然完成统一触发 `onComplete`、命令立即提交并由 JSB/Native FIFO 保序,以及状态消息与回执竞态保持最新状态
+- [x] 4.4c 实现 Core/React 状态消息消费:`playState` 更新公开状态,可选 `callbackAction` 分发 callback 和确认姿态,控制成功回执确认已提交命令并由 JSB/Native FIFO 保持顺序
+- [x] 4.4d 先编写 Core/React target 销毁红灯测试,覆盖 animation id 对应的 `objectdestroy`、已销毁状态、该 id 的事件接收器注销、后续 playback 本地空操作、后续 `set` 本地 warning + 空操作、JSB 调用数稳定和 `onError` 次数稳定
 - [x] 4.4e 实现 Core 对 animation id `objectdestroy` 的消费、销毁状态同步、该 id 的事件接收器注销及销毁后本地 API 行为
 - [x] 4.5 先编写失败测试,覆盖 `normalizeEntityMotionConfig` 对顶层 `from` / `to`、`timeline.from` / `timeline.to` 和百分比关键帧的等价折叠、`timeline` 优先告警、公开默认值、timeline config 要求 `duration` 且纯顶层 `from` / `to` 默认 0.3 秒、finite 与范围校验、起止边界必填、空 timeline 与 frame 拒绝、归一化后重复百分比拒绝、属性白名单与字段级稀疏保留
 - [x] 4.6 在 Core 实现归一化与同步 programmer-error 校验,将 `EntityMotionTimelinePayload` 通过 Entity 专属创建命令传输;命令回执错误和异步错误事件分别通过一次 `onError` 抵达用户;Native 对该 payload 的编译与执行由第 5 节实现
@@ -85,7 +85,7 @@ Native 状态实现：
 ## 8. 验证与跨端验收
 
 - [x] 8.1 严格按 TDD 顺序执行实现：每组行为先写失败测试，再做最小实现使其通过，最后在测试持续通过前提下重构
-- [x] 8.2 运行 React/Core 定向单测,覆盖 tuple、binding、归一化、能力检测、`callbackAction`、状态消息与控制回执竞态、target `objectdestroy`、销毁后 FIFO 失效、`entityProps`、transform 写入保护、播放空闲期间 React transform 更新和 `api.set` 命令发起
+- [x] 8.2 运行 React/Core 定向单测,覆盖 tuple、binding、归一化、能力检测、`callbackAction`、状态消息与控制回执竞态、target `objectdestroy`、销毁后本地空操作门、`entityProps`、transform 写入保护、播放空闲期间 React transform 更新和 `api.set` 命令发起
 Bridge 与集成验收：
   - [x] 8.3a 运行新 Bridge 契约下的 Core Entity motion 定向测试
   - [x] 8.3b 运行新 Bridge 契约下的完整 visionOS `xcodebuild test`
@@ -99,18 +99,18 @@ Bridge 与集成验收：
 ## 9. 原地配置更新与重新定向
 
 - [x] 9.1 先编写 Core 红灯测试,覆盖 `update(config)` 内化校验、等价配置、成功提交、失败回滚、销毁后调用,以及具体 `set(update)` Promise 返回确认姿态
-- [x] 9.2 添加 React 测试，覆盖对象与 id 稳定、统一 FIFO、安全合并、回调更新、`autoStart` 和失败恢复；版本过滤由 Core 测试验证
+- [x] 9.2 添加 React 测试，覆盖对象与 id 稳定、创建前 playback 队列、创建后直接提交、回调更新、`autoStart` 和失败恢复；版本过滤由 Core 测试验证
 - [x] 9.3 先编写 Core 与 visionOS 桥接红灯测试,覆盖 `UpdateEntityAnimation` 编解码、结果、错误和消息顺序
 - [x] 9.4 只读验证 RealityKit 读取当前姿态、准备资源、切换控制器、过滤旧完成事件和保持暂停的能力;无法满足原子回滚时返回设计评审
 - [x] 9.5 添加 visionOS 重新定向测试，覆盖当前姿态临时起点、基准姿态、缓动与播放参数、配置边界、中间关键帧、旧完成事件和写入保护
 - [x] 9.6 添加 visionOS 状态与失败测试，覆盖暂停、空闲和完成状态更新、回调、确认值、非活跃基准延迟读取和原子回滚
 - [x] 9.7 最小实现 Core `update(config)`、`UpdateEntityAnimationJSBCommand`、快照提交和执行版本;把配置校验与执行定义比较内化到创建和更新入口;让具体 `set(update)` 返回确认姿态 Promise
-- [x] 9.8 最小实现 React 原地更新、FIFO 和安全合并,删除同目标销毁重建、姿态交接和替换代次
+- [x] 9.8 最小实现 React 原地更新与创建前 playback 队列;创建后 update 直接通过 Core 提交,删除同目标销毁重建、姿态交接和替换代次
 - [x] 9.9 最小实现 visionOS 更新入口、事务更新、重新定向、暂停定义、旧事件过滤和确认姿态回传
 - [x] 9.10 在测试持续通过时重构,删除已取代的替换代码和测试夹具,以及 Entity motion internal 子路径的导出、映射、引用和测试;保留目标替换、解绑和销毁流程
 - [x] 9.13 删除已被取代的 visionOS `AnimateTransform` 命令、会话管理器、Bridge 监听器和生命周期清理
 
 ## 10. Review 修复
 
-- [x] 10.1 添加 Core 红灯测试,覆盖对象销毁中和 `objectdestroy` 后的 `api.set`,验证非法与合法 update 都本地 warning + no-op,且 JSB、`onError` 和 FIFO 计数保持稳定。
+- [x] 10.1 添加 Core 红灯测试,覆盖对象销毁中和 `objectdestroy` 后的 `api.set`,验证非法与合法 update 都本地 warning + no-op,且 JSB 调用和 `onError` 计数保持稳定。
 - [x] 10.2 将 Core 销毁保护移到姿态校验前,保持 React 生命周期 no-op 行为,运行定向测试和 OpenSpec 严格校验。

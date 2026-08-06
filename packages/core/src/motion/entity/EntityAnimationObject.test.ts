@@ -95,7 +95,7 @@ describe('EntityAnimationObject', () => {
     expect(SpatialWebEvent.eventReceiver['animation-1']).toBeUndefined()
   })
 
-  it('serializes commands inside each Core animation object', async () => {
+  it('submits concurrent commands immediately in call order', async () => {
     const playReply =
       deferred<ReturnType<typeof ok> extends Promise<infer T> ? T : never>()
     const calls: string[] = []
@@ -114,7 +114,9 @@ describe('EntityAnimationObject', () => {
     const play = animation.play()
     const set = animation.set({ position: { x: 2 } })
     const finish = animation.finish()
-    await vi.waitFor(() => expect(calls).toEqual(['play']))
+    await vi.waitFor(() =>
+      expect(calls).toEqual(['play', 'SetEntityAnimation', 'finish']),
+    )
 
     playReply.resolve(await ok())
     await Promise.all([play, set, finish])
@@ -122,37 +124,60 @@ describe('EntityAnimationObject', () => {
     expect(calls).toEqual(['play', 'SetEntityAnimation', 'finish'])
   })
 
-  it('continues the Core queue after one command rejects', async () => {
+  it('reports one error for each in-flight failure and continues later calls', async () => {
     const calls: string[] = []
+    const replies = [
+      deferred<Awaited<ReturnType<typeof ok>>>(),
+      deferred<Awaited<ReturnType<typeof ok>>>(),
+      deferred<Awaited<ReturnType<typeof ok>>>(),
+    ]
     platformSpy.callJSB.mockImplementation((name: string, payload: string) => {
       const command = JSON.parse(payload) as { type?: string }
       calls.push(command.type ?? name)
-      if (command.type === 'play') {
-        return Promise.reject(new Error('play failed'))
-      }
-      return ok()
+      return replies[calls.length - 1].promise
     })
     const animation = createEntityAnimationObject('animation-1', {
       config,
       timeline,
     })
+    const errorListener = vi.fn()
+    animation.onError(errorListener)
 
     const play = animation.play()
     const finish = animation.finish()
+    const pause = animation.pause()
 
-    await expect(play).rejects.toThrow('play failed')
-    await expect(finish).resolves.toBeUndefined()
-    expect(calls).toEqual(['play', 'finish'])
+    await vi.waitFor(() => expect(calls).toEqual(['play', 'finish', 'pause']))
+
+    const failure = {
+      success: false,
+      data: undefined,
+      errorCode: 'COMPILATION_FAILED',
+      errorMessage: 'command failed',
+    } as const
+    replies[0].resolve(failure)
+    replies[1].resolve(failure)
+    replies[2].resolve(await ok())
+
+    await Promise.all([play, finish, pause])
+    expect(errorListener).toHaveBeenCalledTimes(2)
+    expect(calls).toEqual(['play', 'finish', 'pause'])
   })
 
-  it('invalidates unsent Core commands when destroy starts', async () => {
+  it('submits play, finish, and destroy in call order', async () => {
     const playReply =
+      deferred<ReturnType<typeof ok> extends Promise<infer T> ? T : never>()
+    const finishReply =
+      deferred<ReturnType<typeof ok> extends Promise<infer T> ? T : never>()
+    const destroyReply =
       deferred<ReturnType<typeof ok> extends Promise<infer T> ? T : never>()
     const calls: string[] = []
     platformSpy.callJSB.mockImplementation((name: string, payload: string) => {
       const command = JSON.parse(payload) as { type?: string }
       calls.push(command.type ?? name)
       if (command.type === 'play') return playReply.promise
+      if (command.type === 'finish') return finishReply.promise
+      if (command.type === 'destroy') return destroyReply.promise
       return ok()
     })
     const animation = createEntityAnimationObject('animation-1', {
@@ -162,12 +187,16 @@ describe('EntityAnimationObject', () => {
 
     const play = animation.play()
     const finish = animation.finish()
-    await vi.waitFor(() => expect(calls).toEqual(['play']))
     const destroy = animation.destroy()
+
+    await vi.waitFor(() => expect(calls).toEqual(['play', 'finish', 'destroy']))
+
     playReply.resolve(await ok())
+    finishReply.resolve(await ok())
+    destroyReply.resolve(await ok())
     await Promise.all([play, finish, destroy])
 
-    expect(calls).toEqual(['play', 'destroy'])
+    expect(calls).toEqual(['play', 'finish', 'destroy'])
   })
 
   it('returns confirmed set values without changing playback state', async () => {
@@ -302,7 +331,7 @@ describe('EntityAnimationObject', () => {
     expect(animation.playState).toBe('finished')
   })
 
-  it('deduplicates the same reply and asynchronous error in either order', async () => {
+  it('reports one asynchronous error event after a successful command reply', async () => {
     let resolveReply!: (value: unknown) => void
     platformSpy.callJSB.mockImplementation(
       () => new Promise(resolve => (resolveReply = resolve)),
@@ -327,21 +356,12 @@ describe('EntityAnimationObject', () => {
       },
     })
     resolveReply({
-      success: false,
-      errorCode: 'COMPILATION_FAILED',
-      errorMessage: 'resource generation failed',
+      success: true,
+      data: undefined,
+      errorCode: '',
+      errorMessage: '',
     })
     await play
-    SpatialWebEvent.eventReceiver['animation-1']?.({
-      type: 'entityanimationerror',
-      detail: {
-        id: 'animation-1',
-        error: {
-          code: 'COMPILATION_FAILED',
-          reason: 'resource generation failed',
-        },
-      },
-    })
 
     expect(errorListener).toHaveBeenCalledOnce()
   })
@@ -625,6 +645,10 @@ describe('EntityAnimationObject', () => {
     await animation.stop()
     await animation.reset()
     await animation.finish()
+    await animation.update({
+      from: { position: { x: 0 } },
+      to: { position: { x: 2 } },
+    })
     expect(() => animation.set({} as never)).not.toThrow()
     expect(() => animation.set({ position: { w: 1 } } as never)).not.toThrow()
     await animation.set({ position: { x: 2 } })
@@ -657,6 +681,11 @@ describe('EntityAnimationObject', () => {
     const destroy = animation.destroy()
     await vi.waitFor(() => expect(platformSpy.callJSB).toHaveBeenCalledOnce())
 
+    await animation.play()
+    await animation.update({
+      from: { position: { x: 0 } },
+      to: { position: { x: 2 } },
+    })
     expect(() => animation.set({} as never)).not.toThrow()
     await animation.set({ position: { x: 2 } })
 
@@ -870,6 +899,37 @@ describe('EntityAnimationObject', () => {
     )
     expect(valuesListener).toHaveBeenCalledOnce()
     expect(valuesListener).toHaveBeenCalledWith(values)
+  })
+
+  it('submits consecutive config updates in call order', async () => {
+    const replies = [
+      deferred<Awaited<ReturnType<typeof ok>>>(),
+      deferred<Awaited<ReturnType<typeof ok>>>(),
+    ]
+    const calls: string[] = []
+    platformSpy.callJSB.mockImplementation((name: string) => {
+      calls.push(name)
+      return replies[calls.length - 1].promise
+    })
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+    const nextConfig: EntityMotionConfig = {
+      from: { position: { x: 0 } },
+      to: { position: { x: 2 } },
+      duration: 1,
+    }
+
+    const firstUpdate = animation.update(nextConfig)
+    const secondUpdate = animation.update(nextConfig)
+    await vi.waitFor(() =>
+      expect(calls).toEqual(['UpdateEntityAnimation', 'UpdateEntityAnimation']),
+    )
+
+    replies[0].resolve(await ok({ values, revision: 1 }))
+    replies[1].resolve(await ok({ values, revision: 2 }))
+    await Promise.all([firstUpdate, secondUpdate])
   })
 
   it('keeps the committed config when an update fails', async () => {

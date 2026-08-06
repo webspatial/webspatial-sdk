@@ -247,45 +247,47 @@ Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`�
 - **THEN** 原生层 MUST 分别使用 `stop`、`reset`、`complete` 作为 `callbackAction`,并携带确认姿态
 - **AND** 自然 `complete` MUST 由当前业务播放控制器唯一产生
 
-### Requirement: Entity motion 命令保持 binding 级 FIFO 顺序
+### Requirement: Entity motion 命令保持 Native FIFO 顺序
 
-公开 `EntityPlaybackApi` 方法 MAY 返回 `void`。具体的 Core `EntityAnimationObject.set(update)` MUST 返回 `Promise<EntityMotionProps | void>`,供绑定等待 `SetEntityAnimation` 回执。该 Promise MUST NOT 通过公开 `EntityPlaybackApi.set(update)` 暴露。每个 Entity motion 绑定 MUST 使用独立 FIFO 队列。原生动画对象创建后,绑定 MUST 等待当前 JSB 回执完成,再发送下一条 `update`、播放或 `set` 命令。失败只结束当前队列项,后续顺序保持不变。
+公开 `EntityPlaybackApi` 方法 MAY 返回 `void`。具体的 Core `EntityAnimationObject.set(update)` MUST 返回 `Promise<EntityMotionProps | void>`,供绑定消费 `SetEntityAnimation` 回执。该 Promise MUST NOT 通过公开 `EntityPlaybackApi.set(update)` 暴露。每个 Entity motion 绑定只在 Native 创建动画对象前保存 pending playback 队列。创建后,Core MUST 按调用顺序立即提交每条 `update`、播放和 `set` 命令,JSB/Native MUST 按 FIFO 保序。每条命令回执只结算自身 Promise,不得阻塞后续提交。
 
-播放控制命令产生状态消息时,Native MUST 先提交消息,再通过空成功回执确认当前命令完成;绑定对象 MUST 据此发送下一条命令。自然完成 MUST 产生独立的异步完成状态消息。
+播放控制命令产生状态消息时,Native MUST 先提交消息,再返回成功回执。自然完成 MUST 产生独立的异步完成状态消息。
 
 #### Scenario: Native object 创建前的 playback 命令按顺序 flush
 - **GIVEN** Entity motion binding 的 Native animation object 尚未创建
 - **WHEN** 应用调用 `play`、`pause`、`stop`、`reset` 或 `finish`
 - **THEN** binding MUST 按调用顺序把这些 playback 命令追加到 pending 队列
 - **AND** 创建成功后,原生层创建回执 MUST 首先确认公开 `idle`
-- **AND** binding MUST 随后按 FIFO 每次只发送一条命令
+- **AND** binding MUST 随后按调用顺序立即提交全部 pending playback 命令
+- **AND** JSB 与 Native MUST 保持该 FIFO 顺序
 - **AND** `autoStart` 开启时,其生成的 `play` MUST 排在创建完成时已有的 pending playback 命令之前
 
-#### Scenario: 原生对象创建后的命令串行执行
+#### Scenario: 原生对象创建后的命令使用 JSB 与 Native FIFO
 - **GIVEN** 原生动画对象已创建
 - **WHEN** 应用连续产生 `update`、播放或 `set` 命令
-- **THEN** 绑定 MUST 按 FIFO 顺序逐条发送命令
-- **AND** 每条命令 MUST 等待上一条 JSB 回执完成
+- **THEN** Core MUST 按调用顺序立即提交命令
+- **AND** JSB 与 Native MUST 按 FIFO 处理命令
+- **AND** 每条命令回执只结算自身 Promise
 
-#### Scenario: 连续配置更新只在安全位置合并
+#### Scenario: 连续配置更新全部按顺序提交
 - **GIVEN** 原生动画对象已创建
-- **WHEN** 队尾有连续且未发送的多个配置更新
-- **THEN** 绑定 MUST 只保留最新更新
-- **AND** 被其它命令分隔的更新 MUST 保持原顺序
-- **AND** 当前更新完成后,绑定 MUST 再次协调最新配置
+- **WHEN** 应用连续产生配置更新
+- **THEN** Core MUST 按调用顺序提交每条更新
+- **AND** JSB 与 Native MUST 按 FIFO 处理每条更新
 
-#### Scenario: 连续 set 后 play 使用已提交的 set 结果
+#### Scenario: 连续 set 后 play 使用 Native FIFO
 - **GIVEN** Native animation object 已创建且播放处于非活跃状态
 - **WHEN** 应用调用 `api.set(update)` 后立即调用 `api.play()`
-- **THEN** binding MUST 等待 `set` 回执后再发送 `play`
+- **THEN** Core MUST 按调用顺序立即提交 `set` 与 `play`
+- **AND** JSB 与 Native MUST 先处理 `set` 再处理 `play`
 - **AND** 成功回执中的 `values` MUST 包含完整的已确认 `position`、`rotation` 和 `scale`
 - **AND** fresh play MUST 把该 `set` 已提交的 Native transform 作为最新 baseline
 
-#### Scenario: 解绑或销毁使 pending 命令失效
-- **GIVEN** binding 存在 in-flight 命令或尚未发送的命令
+#### Scenario: 解绑或销毁使 pending playback 命令失效
+- **GIVEN** binding 存在等待 Native 创建动画对象的 playback 命令
 - **WHEN** binding 被移除、target 被替换、animation object 被销毁,或 binding 被销毁
-- **THEN** SDK MUST 丢弃该队列 generation 中所有尚未发送的命令
-- **AND** in-flight 命令 settled 后 MUST NOT 派发失效 generation 中的下一条命令
+- **THEN** SDK MUST 丢弃这些 pending playback 命令
+- **AND** 已提交给 JSB 的命令 MAY 继续由 Native FIFO 处理
 
 ### Requirement: 同一目标的配置更新原地提交并具有确定的 retarget 语义
 
@@ -304,7 +306,7 @@ Entity motion 绑定 MUST 根据规范时间轴和播放参数比较执行定义
 #### Scenario: 同一目标的执行配置变化原地更新对象
 - **GIVEN** 当前绑定生命周期正常,且 Entity motion 绑定继续连接同一个目标
 - **WHEN** 规范执行定义发生变化
-- **THEN** SDK MUST 在现有 FIFO 中发送原地更新
+- **THEN** SDK MUST 通过当前 Core object 提交原地更新
 - **AND** Core 对象、原生对象、id 和绑定代次 MUST 保持不变
 - **AND** 成功更新 MUST 保存新配置、规范时间轴和执行版本
 - **AND** 成功回执 MUST 携带完整确认姿态并更新 `entityProps`
@@ -312,7 +314,7 @@ Entity motion 绑定 MUST 根据规范时间轴和播放参数比较执行定义
 #### Scenario: 仅更新回调时保持当前播放对象
 - **GIVEN** 当前绑定生命周期正常且规范执行定义保持相同
 - **WHEN** 一个或多个生命周期回调引用发生变化
-- **THEN** 绑定 MUST 保持当前对象、控制器、队列、状态和 `entityProps`
+- **THEN** 绑定 MUST 保持当前对象、控制器、创建前播放队列、状态和 `entityProps`
 - **AND** 后续已接受事件 MUST 使用最新回调引用
 - **AND** SDK MUST 仅更新回调引用
 
@@ -487,7 +489,7 @@ Entity motion 的生命周期 callback MUST 只是通知。它们的返回值 MU
 
 ### Requirement: `api.set` 是已提交 transform 状态的命令式写入入口
 
-SDK MUST 提供 `api.set` 作为 `entityProps` 所镜像的已提交 Entity transform 状态的命令式写入入口。`api.set` 返回 `void`,并接受稀疏的 `EntityTransformUpdate` object(与读取侧 `EntityMotionProps` 同为 `{ position?, rotation?, scale? }` 形态,但命名区分);updater 函数属于 programmer error。绑定不可用、创建中、绑定已终止以及 Core object 销毁中和已销毁时,对应生命周期门各输出一次 warning,在本地完成 no-op,JSB、`onError` 和 FIFO 计数保持为零。Core object 存活时同步校验参数;非法 update 抛出内置 `Error`,合法 update 进入 Core FIFO。Core object 存活时,包含至少一个 transform 标量的 update 可以写入;空 update 或只包含空嵌套对象的 update 同步抛出内置 `Error`。`api.set` 是保持播放进度与 `playState` 的状态写入口。
+SDK MUST 提供 `api.set` 作为 `entityProps` 所镜像的已提交 Entity transform 状态的命令式写入入口。`api.set` 返回 `void`,并接受稀疏的 `EntityTransformUpdate` object(与读取侧 `EntityMotionProps` 同为 `{ position?, rotation?, scale? }` 形态,但命名区分);updater 函数属于 programmer error。绑定不可用、创建中、绑定已终止以及 Core object 销毁中和已销毁时,对应生命周期门各输出一次 warning,在本地完成 no-op,JSB 调用和 `onError` 计数保持为零。Core object 存活时同步校验参数;非法 update 抛出内置 `Error`,合法 update 立即提交给 Core 并由 JSB/Native FIFO 保序。Core object 存活时,包含至少一个 transform 标量的 update 可以写入;空 update 或只包含空嵌套对象的 update 同步抛出内置 `Error`。`api.set` 是保持播放进度与 `playState` 的状态写入口。
 
 物体变换写入 MUST 按完整 transform 统一仲裁。播放空闲期间,组件组合后的 React 属性控制 transform。动画处于活跃状态(`delay`、`running`、`paused`)时,Native animation 控制完整 transform 并阻止普通 React transform 写入;配置字段执行动画,其余字段保持基准姿态。`stop`、`reset`、`finish` 和自然完成 MUST 在提交对应姿态后解除保护。活跃 retarget MUST 保持完整 transform 写入保护连续生效。播放空闲状态下,`api.set` 更新 Native 已提交 transform,Core 使用 Native 返回的完整结果更新 `entityProps`。初次创建失败终止当前绑定生命周期并清空 `entityProps`;配置 update 失败保留现有保护与镜像。解绑也清空 `entityProps`。
 
@@ -503,7 +505,7 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 - **AND** native 拒绝时 `entityProps` MUST NOT 更新,且该拒绝 MUST 输出一条 console warning,而不是触发 `onError`
 - **WHEN** 应用以空 update 或只包含空嵌套对象的 update 调用 `api.set`
 - **THEN** 调用 MUST 同步抛出内置 `Error`
-- **AND** warning、`onError`、JSB 和 FIFO 计数 MUST 保持为零
+- **AND** warning、`onError` 和 JSB 调用计数 MUST 保持为零
 
 #### Scenario: set 执行稀疏合并
 - **WHEN** 应用调用 `api.set` 只传入部分 transform 字段，例如 `{ position: { y: 0.3 } }`
@@ -536,7 +538,7 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 - **GIVEN** Native animation object 已创建且播放处于非活跃状态
 - **WHEN** 应用先调用 `api.set` 再调用 `api.play()`
 - **THEN** 播放 MUST 从 config 声明的起始边界（顶层 `from`、`timeline.from` 或 `0%` 帧）开始
-- **AND** binding MUST 等待 `api.set` 的 JSB reply 后再发送 `api.play()`
+- **AND** Core MUST 按调用顺序提交 `api.set()` 与 `api.play()`
 - **AND** 本次 `api.play()` MUST 作为 fresh play 读取 `api.set` 后的最新 native transform
 - **AND** config 未声明的字段 MUST 使用该最新 transform 作为本轮 baseline
 - **AND** 由于起始边界是必填项，不存在“未声明起始帧”的合法 config；缺少起始边界的 config 在归一化阶段已被拒绝
@@ -563,7 +565,7 @@ SDK MUST 对公开 config 或方法参数中可直接检测的 programmer error 
 - **WHEN** Entity target 在关联 native animation object 之前销毁
 - **THEN** Native MUST 销毁全部关联动画并为每个 animation id 发送 `objectdestroy`
 - **AND** Core MUST 标记对象已销毁、注销事件接收器,并在本地完成后续 playback
-- **AND** 后续以非法或合法稀疏 update 调用 `api.set` 时,每次调用 MUST 返回 `void`、输出一次 warning、在本地完成,且 JSB、`onError` 和 FIFO 计数 MUST 保持为零
+- **AND** 后续以非法或合法稀疏 update 调用 `api.set` 时,每次调用 MUST 返回 `void`、输出一次 warning、在本地完成,且 JSB 调用和 `onError` 计数 MUST 保持为零
 
 #### Scenario: 控制命令与销毁竞态
 - **WHEN** 控制命令与 animation object 销毁发生竞态

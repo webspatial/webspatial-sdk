@@ -36,7 +36,7 @@ The public API surface covers animation binding, playback control, and confirmed
 - **spherical linear interpolation (slerp)**: the interpolation RealityKit uses for rotation, always taking the shortest path between two orientations.
 - **no-op**: after the command is received, the entity and `entityProps` retain their current values.
 - **registry**: the table the native layer uses to look up entities or animation objects by id.
-- **binding command queue**: the per-binding FIFO that serializes playback commands and `set` before they enter the JS Bridge. It is a React/Core ordering mechanism, not a second native animation queue.
+- **creation-pending playback queue**: the React Binding queue that stores playback commands until Native creates the animation object. After creation, Core submits commands directly and JSB/Native preserve call order.
 - **command reply**: the JSB success or failure receipt returned after Native has finished the command's synchronous state and transform commit work. When a command emits a state event, Native emits that event before returning the success reply.
 
 ## 3. Design Goals
@@ -180,7 +180,7 @@ flowchart TB
 
 **Responsibilities per layer:**
 
-- **React layer** handles the Hook API, target-binding coordination, the `entityProps` mirror, command queuing, callback dispatch, and re-render. `useEntityAnimation` creates one `EntityMotionBinding` and one stable `EntityPlaybackApi` facade; `useEntity` calls the binding's `__bind` and `__unbind` entries. As the React glue layer, `EntityMotionBinding` stores the latest desired config, connects the current target to the Core animation object, and calls `SpatialEntity.createAnimation(config)`.
+- **React layer** handles the Hook API, target-binding coordination, the `entityProps` mirror, creation-pending playback commands, callback dispatch, and re-render. `useEntityAnimation` creates one `EntityMotionBinding` and one stable `EntityPlaybackApi` facade; `useEntity` calls the binding's `__bind` and `__unbind` entries. As the React glue layer, `EntityMotionBinding` stores the latest desired config, connects the current target to the Core animation object, and calls `SpatialEntity.createAnimation(config)`.
 - **Shared logic layer** uses the target's own `SpatialObject.id` in `SpatialEntity.createAnimation(config)`, performs Entity-specific normalization and validation, sends the create command, and returns an `EntityAnimationObject`. `EntityPlaybackApi` extends the existing `SpatializedPlaybackApi` and adds `set` only for Entity; `EntityAnimationObject` and the ordinary `AnimationObject` implement their respective interfaces without inheriting from each other. Normalization folds the three public authoring forms into internal canonical entity tracks; when `timeline` and top-level `from` / `to` are both present, `timeline` is the sole effective input and development mode logs a duplicate-declaration warning.
 - **Native layer** stores animation objects in `SpatialScene.spatialObjects` and reuses the `SpatialObject` lifecycle. `SpatialScene` resolves create targets and animation objects; the target Entity creates an `EntityMotionAnimationObject` through `createAnimation(config)`, and the animation object owns its state machine, fresh-play compilation, RealityKit execution, and confirmed-pose reporting.
 
@@ -420,16 +420,16 @@ Native decides whether `api.set` takes effect: it accepts updates while playback
 ### 5.1 React SDK
 
 - **Public interface:** `useEntityAnimation` creates one `EntityMotionBinding` and one stable `EntityPlaybackApi` facade, reads the binding's current confirmed-pose mirror, and returns `[animation, api, entityProps]`; the entity component receives `EntityMotionBinding` through its `animation` property.
-- **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`, delegating commands to `EntityMotionBinding`; the binding delegates them to the current `EntityAnimationObject` in FIFO order. `api.set(update)` submits a sparse transform update to native.
-- **Set lifecycle gate:** `EntityMotionBinding` owns the binding, creation-pending, and terminated lifecycle gates. Each gate logs one warning, discards the update locally, and completes a local no-op. The Core object owns the destroying and destroyed gates with the same warning and local no-op result. A live Core object validates synchronously before appending a valid update to its FIFO.
+- **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`, delegating creation-pending playback commands to `EntityMotionBinding` and later commands directly to `EntityAnimationObject`. JSB/Native preserve call order. `api.set(update)` submits a sparse transform update to native.
+- **Set lifecycle gate:** `EntityMotionBinding` owns the binding, creation-pending, and terminated lifecycle gates. Each gate logs one warning, discards the update locally, and completes a local no-op. The Core object owns the destroying and destroyed gates with the same warning and local no-op result. A live Core object validates synchronously before submitting a valid update.
 - **Target binding:** `useEntity` consumes the entity component's `animation` property and calls the binding's `__bind(target)` and `__unbind()` entries during effect setup and cleanup. `EntityMotionBinding` ensures that it connects to at most one `SpatialEntity` at a time and calls `target.createAnimation(config)` after binding. On unbinding or target replacement, the binding performs cleanup and clears its owned `entityProps` mirror to `{}`. Continuing to spread the returned object then restores control to ordinary React transform props.
-- **Command sequencing:** `EntityMotionBinding` reuses the Element animation binding's pending-command and sequential-flush model. It serializes commands per binding and does not send the next command until the current JSB reply settles.
+- **Command sequencing:** `EntityMotionBinding` stores only playback commands received before Native animation-object creation and flushes them in call order after creation. Core submits every post-creation update, playback, and `set` immediately in call order; JSB/Native FIFO preserves that order and each reply settles independently.
 - **Result mirror:** `EntityMotionBinding` owns `entityProps`, consumes confirmed values from the current `EntityAnimationObject`, and schedules React re-render. `useEntityAnimation` reads the current mirror on every render and returns it as the third tuple item. `entityProps` contains native-confirmed `position`, `rotation`, and `scale`.
 
 #### Object responsibilities and call relationships
 
 - **`useEntityAnimation`:** Owns `EntityMotionBinding`, creates stable `EntityPlaybackApi`, submits the latest config, subscribes to state, and returns `entityProps`.
-- **`EntityMotionBinding`:** Stores the desired config, target, animation object, confirmed pose, and command queue. It binds targets, creates or updates objects, serializes commands, and notifies React. `playState` is `queued` while commands await an object, reads the object state when present, and is `idle` otherwise.
+- **`EntityMotionBinding`:** Stores the desired config, target, animation object, confirmed pose, and creation-pending playback queue. It binds targets, creates or updates objects, flushes pending playback commands, and notifies React. `playState` is `queued` while commands await an object, reads the object state when present, and is `idle` otherwise.
 - **`EntityPlaybackApi`:** Delegates playback, `set`, and state reads to `EntityMotionBinding`. Config updates preserve this object.
 - **`useEntity`:** Provides the component's `animation` property and resolved `SpatialEntity`, then uses a React effect to call the binding's internal `__bind(target)` and `__unbind()` entries.
 - **`EntityMotionProps`:** Is the read-only confirmed-pose snapshot owned by `EntityMotionBinding`. Applications read the snapshot through the `useEntityAnimation` return value.
@@ -440,20 +440,20 @@ Native decides whether `api.set` takes effect: it accepts updates while playback
 
 In this document, “binding lifecycle” means the React target-attachment session. `EntityAnimationObject` owns the playback state machine and manages the playback lifecycle.
 
-#### Binding command queue and completion semantics
+#### Creation-pending playback and command ordering
 
-The public `EntityPlaybackApi` remains a `void` command surface. The concrete `EntityAnimationObject.set(update)` returns `Promise<EntityMotionProps | void>` so the binding can await the Native reply and update `entityProps`. Each `EntityMotionBinding` owns one FIFO command chain without exposing that promise to application code.
+The public `EntityPlaybackApi` remains a `void` command surface. The concrete `EntityAnimationObject.set(update)` returns `Promise<EntityMotionProps | void>` so the binding can update `entityProps` from the Native reply. React owns one playback queue only while the animation object is being created.
 
 - During native animation-object creation, `play`, `pause`, `stop`, `reset`, and `finish` queue in call order. The `play` generated by `autoStart` goes first.
 - The state is `idle` while the Native animation object is being created. If playback is requested during creation, the command waits to run and the state changes to `queued`.
-- After creation succeeds, Native first confirms `idle`, then the binding runs the queue in order. Each command completes before the next command runs.
+- After creation succeeds, Native first confirms `idle`, then React flushes the pending playback queue in order. Core submits the flushed commands immediately; JSB/Native FIFO preserves order.
 - `api.set` before binding, before native animation-object creation, or after the current binding lifecycle terminates never enters the queue. It remains a console warning plus no-op.
-- After the native animation object exists, `update`, playback commands, and `set` share one queue. Failure settles only the current item.
+- After the native animation object exists, Core submits `update`, playback, and `set` directly in call order. JSB/Native FIFO preserves order; each command reply settles its own promise independently.
 - When a control command produces a state message, Native submits the message before completing an empty success reply. `SetEntityAnimation` returns the complete confirmed transform in its success reply. Natural completion produces an independent asynchronous completion state message.
-- Unbinding or target replacement invalidates the current binding generation and drops unsent commands. Native object destruction is detected before each dequeue; the binding clears the unsent queue and advances its command epoch, so an in-flight command cannot dispatch another command after settling. Same-target updates preserve the generation.
-- Callback-only updates replace references immediately. Equivalent configs send no command. Consecutive unsent tail updates coalesce to the latest value; all other commands preserve FIFO order.
+- Unbinding or target replacement invalidates the current binding generation and drops creation-pending playback commands. Native object destruction leaves already submitted commands to finish their native FIFO; later Core calls are local no-ops. Same-target updates preserve the generation.
+- Callback-only updates replace references immediately. Equivalent committed configs send no command. Consecutive config updates are all submitted in call order.
 
-This ordering makes consecutive calls deterministic. In particular, `set → play` waits for the accepted `set` reply before fresh play reads its baseline; `stop → play` waits for the stopped transform commit; and `play → pause` waits until Native has accepted the play command.
+This ordering makes consecutive calls deterministic. In particular, `set → play`, `stop → play`, and `play → pause` reach JSB/Native in call order, where Native applies its FIFO command processing.
 
 #### Unbinding, rebinding, and config updates
 
@@ -461,9 +461,9 @@ Unbinding or target replacement destroys the object. Same-target config changes 
 
 - Unbinding increments the binding generation, retires the current `EntityAnimationObject`, destroys its native object, clears `entityProps` to `{}`, and schedules a React render. The returned empty object remains safe to spread after static/base props.
 - Rebinding to a different target performs the same cleanup before creating the new target's animation object. The new target begins with an empty mirror and establishes its own confirmed values.
-- An execution-config change appends `update` to the existing FIFO. It preserves the Core object, Native object, id, and binding generation. Success commits the new config, execution revision, and confirmed pose. Failure preserves the old run, fires `onError` once, and continues the queue.
-- A callback-only update preserves the object, queue, state, and `entityProps`; later events use the latest callbacks.
-- `update A → pause → update B` preserves order. Only adjacent unsent updates coalesce. After an in-flight update settles, the binding reconciles the latest config again.
+- An execution-config change submits `update` directly to the existing Core object. It preserves the Core object, Native object, id, and binding generation. Success commits the new config, execution revision, and confirmed pose. Failure preserves the old run and fires `onError` for that command.
+- A callback-only update preserves the object, creation-pending playback queue, state, and `entityProps`; later events use the latest callbacks.
+- `update A → pause → update B` preserves order. Every config update is submitted in call order.
 - Replies and events must match the binding generation, id, and execution revision. A new run drops late completion from the old controller.
 - Initial creation failure terminates the binding. Update failure preserves the binding and `entityProps`.
 
@@ -501,8 +501,6 @@ classDiagram
             +api EntityPlaybackApi
             -target SpatialEntity
             -animationObject EntityAnimationObject
-            -commandQueue
-            -commandEpoch number
             +currentEntityProps EntityMotionProps
             +playState EntityMotionPlayState
             +__bind(target SpatialEntity)
@@ -716,7 +714,7 @@ ControlEntityAnimation {
 }
 ```
 
-A successful control reply uses an empty payload to confirm current-command completion. The binding then sends the next waiting command, while `EntityMotionStateChangedMsg` updates public `playState`.
+A successful control reply uses an empty payload to confirm current-command completion. Core submits each command without waiting for earlier replies; JSB/Native FIFO preserves call order, while `EntityMotionStateChangedMsg` updates public `playState`.
 
 ##### Set animation transform command
 

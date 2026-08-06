@@ -36,7 +36,7 @@
 - **球面线性插值(slerp)**:RealityKit 对旋转采用的插值方式,总是走两个朝向之间的最短路径。
 - **空操作(no-op)**:命令被接收后,物体和 `entityProps` 保持原值。
 - **注册表(registry)**:原生层用来按 id 查找物体或动画对象的表。
-- **绑定命令队列(binding command queue)**:每个绑定对象独立持有的 FIFO 队列。该队列在命令进入 JS Bridge 前,依次执行播放命令和 `set`。它属于 React/Core 的顺序控制机制,不是第二套原生动画队列。
+- **创建前播放队列(creation-pending playback queue)**:React Binding 在 Native 创建动画对象前保存播放命令的队列。创建后由 Core 直接提交命令,JSB/Native 按调用顺序保序。
 - **命令回执(command reply)**:原生层完成命令的同步状态变更和姿态提交后,通过 JSB 返回的成功或失败结果。命令需要产生状态事件时,原生层先发出事件,再返回成功回执。
 
 ## 3. 设计目标
@@ -180,7 +180,7 @@ flowchart TB
 
 **各层职责:**
 
-- **React 层**负责 Hook API、目标绑定协调、`entityProps` 镜像、命令排队、回调分发和重渲染。`useEntityAnimation` 创建一个 `EntityMotionBinding` 和一个稳定的 `EntityPlaybackApi` 控制门面;`useEntity` 调用绑定对象的 `__bind` 和 `__unbind` 入口。`EntityMotionBinding` 作为 React 胶水层保存最新期望配置、连接当前目标与 Core 动画对象,并调用 `SpatialEntity.createAnimation(config)`。
+- **React 层**负责 Hook API、目标绑定协调、`entityProps` 镜像、创建前播放命令、回调分发和重渲染。`useEntityAnimation` 创建一个 `EntityMotionBinding` 和一个稳定的 `EntityPlaybackApi` 控制门面;`useEntity` 调用绑定对象的 `__bind` 和 `__unbind` 入口。`EntityMotionBinding` 作为 React 胶水层保存最新期望配置、连接当前目标与 Core 动画对象,并调用 `SpatialEntity.createAnimation(config)`。
 - **公共逻辑层**由 `SpatialEntity.createAnimation(config)` 使用目标自身的 `SpatialObject.id`,执行 Entity 专属归一化与校验,发送创建命令并返回 `EntityAnimationObject`。`EntityPlaybackApi` 扩展现有 `SpatializedPlaybackApi` 并只为 Entity 增加 `set`;`EntityAnimationObject` 与普通 `AnimationObject` 分别实现对应接口,两个具体类之间没有继承关系。归一化会把对外的三种书写形态折叠成内部规范物体轨道;当 `timeline` 与顶层 `from` / `to` 同时出现时,`timeline` 是唯一生效输入,开发模式同时打印重复声明警告。
 - **原生层**由 `SpatialScene.spatialObjects` 统一持有动画对象并复用 `SpatialObject` 生命周期。`SpatialScene` 负责创建目标查找和动画对象查找;目标 Entity 通过 `createAnimation(config)` 创建 `EntityMotionAnimationObject`;动画对象负责单对象状态机、fresh play 编译、RealityKit 执行和确认姿态回传。
 
@@ -420,16 +420,16 @@ sequenceDiagram
 ### 5.1 React SDK
 
 - **公开接口:** `useEntityAnimation` 创建一个 `EntityMotionBinding` 和一个稳定的 `EntityPlaybackApi` 控制门面,读取绑定对象的当前确认姿态镜像,并返回 `[animation, api, entityProps]`;物体组件通过 `animation` 属性接收 `EntityMotionBinding`。
-- **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`,并把命令委派给 `EntityMotionBinding`;绑定对象按照 FIFO 顺序把命令委派给当前 `EntityAnimationObject`。`api.set(update)` 把稀疏 transform 更新提交给原生。
-- **set 生命周期门:** `EntityMotionBinding` 负责绑定、创建中和已终止生命周期门。每个门输出一次 warning,在本地丢弃 update 并完成 no-op。Core object 负责销毁中和已销毁门,使用相同的 warning 与本地 no-op 结果。Core object 存活时同步校验参数,再把合法 update 加入自身 FIFO。
+- **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`;创建前的播放命令委派给 `EntityMotionBinding`,创建后的命令直接委派给 `EntityAnimationObject`。JSB/Native 按调用顺序保序。`api.set(update)` 把稀疏 transform 更新提交给原生。
+- **set 生命周期门:** `EntityMotionBinding` 负责绑定、创建中和已终止生命周期门。每个门输出一次 warning,在本地丢弃 update 并完成 no-op。Core object 负责销毁中和已销毁门,使用相同的 warning 与本地 no-op 结果。Core object 存活时同步校验参数,再直接提交合法 update。
 - **目标绑定:** `useEntity` 消费物体组件的 `animation` 属性,并在 effect 建立和清理时调用绑定对象的 `__bind(target)` 和 `__unbind()` 入口。`EntityMotionBinding` 保证自身在同一时刻最多连接一个 `SpatialEntity`,绑定完成后调用 `target.createAnimation(config)`。解绑或目标替换时,绑定对象执行清理并把自身持有的 `entityProps` 镜像清空为 `{}`。应用继续展开返回对象时,普通 React 变换属性恢复控制。
-- **命令顺序:** `EntityMotionBinding` 复用 Element 动画绑定在对象创建前暂存命令、创建后逐条执行的机制。每个绑定对象独立串行执行命令,当前命令收到 JSB 回执后才发送下一条命令。
+- **命令顺序:** `EntityMotionBinding` 只在对象创建前暂存播放命令,创建成功后按调用顺序刷新。Core 对象创建后立即按调用顺序提交每条 update、播放和 set,JSB/Native FIFO 负责保序。
 - **结果镜像:** `EntityMotionBinding` 持有 `entityProps`,消费当前 `EntityAnimationObject` 的确认值并通知 React 重渲染。`useEntityAnimation` 在每次渲染中读取当前镜像并作为第三项返回。`entityProps` 包含原生确认的 `position`、`rotation` 和 `scale`。
 
 #### 对象职责与调用关系
 
 - **`useEntityAnimation`:** 管理 `EntityMotionBinding`,创建稳定的 `EntityPlaybackApi`,提交最新配置,订阅状态,并返回 `entityProps`。
-- **`EntityMotionBinding`:** 保存期望配置、目标、动画对象、确认姿态和命令队列。它负责绑定目标、创建或更新对象、串行执行命令和通知 React。命令等待对象时 `playState` 为 `queued`;对象存在时读取对象状态;其它情况为 `idle`。
+- **`EntityMotionBinding`:** 保存期望配置、目标、动画对象、确认姿态和创建前播放队列。它负责绑定目标、创建或更新对象、刷新待处理播放命令和通知 React。命令等待对象时 `playState` 为 `queued`;对象存在时读取对象状态;其它情况为 `idle`。
 - **`EntityPlaybackApi`:** 把播放、`set` 和状态读取委派给 `EntityMotionBinding`。配置更新不改变该对象。
 - **`useEntity`:** 提供组件的 `animation` 属性和已解析的 `SpatialEntity`,再通过 React effect 调用绑定对象的内部 `__bind(target)` 和 `__unbind()` 入口。
 - **`EntityMotionProps`:** 表示 `EntityMotionBinding` 持有的只读确认姿态快照。应用通过 `useEntityAnimation` 返回值读取该快照。
@@ -440,20 +440,20 @@ sequenceDiagram
 
 本文中的“绑定生命周期”表示 React 目标连接会话。`EntityAnimationObject` 持有播放状态机并管理播放生命周期。
 
-#### 绑定命令队列与完成语义
+#### 创建前播放与命令顺序
 
-公开的 `EntityPlaybackApi` 保持 `void` 命令接口。具体的 `EntityAnimationObject.set(update)` 返回 `Promise<EntityMotionProps | void>`,供绑定对象等待原生回执并更新 `entityProps`。每个 `EntityMotionBinding` 持有一条 FIFO 命令链,但不向应用暴露该 Promise。
+公开的 `EntityPlaybackApi` 保持 `void` 命令接口。具体的 `EntityAnimationObject.set(update)` 返回 `Promise<EntityMotionProps | void>`,供绑定对象根据原生回执更新 `entityProps`。React 只在动画对象创建期间持有播放队列。
 
 - 原生动画对象创建期间,`play`、`pause`、`stop`、`reset`、`finish` 按调用顺序排队。`autoStart` 生成的 `play` 排在队首。
 - Native 动画对象创建期间为 `idle`;如果此时调用播放,命令等待执行,状态变为 `queued`。
-- 创建成功后,原生层先确认 `idle`,再按顺序执行队列。每条命令完成后执行下一条。
+- 创建成功后,原生层先确认 `idle`,再由 React 按顺序刷新待处理播放队列。Core 立即提交每条命令,JSB/Native FIFO 负责保序。
 - 绑定、原生动画对象创建前或当前绑定生命周期终止后调用 `api.set` 时,该命令不进入队列。SDK 输出控制台警告并执行空操作。
-- 原生动画对象创建后,`update`、播放命令和 `set` 共用一条队列。失败只结束当前项。
+- 原生动画对象创建后,Core 按调用顺序直接提交 `update`、播放命令和 `set`。JSB/Native FIFO 负责保序,每条回执独立结算自身 Promise。
 - 控制命令产生状态消息时,原生层先提交消息,再完成空成功回执。`SetEntityAnimation` 通过成功回执返回完整确认姿态。自然完成产生独立的异步完成状态消息。
-- 解绑或目标替换会使当前绑定代次失效并丢弃未发送命令。每次出队前检查 Native 对象是否已销毁;销毁后清空未发送队列并推进命令 epoch,在途命令结算后不再派发下一条命令。同一目标的更新保留绑定代次。
-- 只更新回调时立即替换引用。等价配置不发送命令。队尾连续且未发送的更新只保留最新值;其它命令保持 FIFO。
+- 解绑或目标替换会使当前绑定代次失效并丢弃创建前待处理的播放命令。已经提交给 Native 的命令按 Native FIFO 结算;销毁后的 Core 新调用在本地空操作。同一目标的更新保留绑定代次。
+- 只更新回调时立即替换引用。等价的已提交配置不发送命令。连续配置更新全部按调用顺序提交。
 
-该顺序保证连续调用具有确定行为。`set → play` 会等待已接受的 `set` 返回回执,再由 fresh play 读取基准值;`stop → play` 会等待停止后的姿态提交完成;`play → pause` 会等待原生层接受 `play` 命令。
+该顺序保证连续调用具有确定行为。`set → play`、`stop → play` 和 `play → pause` 按调用顺序抵达 JSB/Native,由 Native FIFO 处理。
 
 #### 解绑、重新绑定与配置更新
 
@@ -461,9 +461,9 @@ sequenceDiagram
 
 - 解绑时,绑定对象推进绑定代次、注销当前 `EntityAnimationObject`、销毁对应原生对象、把 `entityProps` 清空为 `{}`,并触发 React 渲染。返回的空对象可以继续安全地展开在基础属性之后。
 - 重新绑定不同目标时,绑定对象先完成同一套清理,再为新目标创建动画对象。新目标从空镜像开始,并建立自身的确认值。
-- 执行配置变化时,绑定对象把 `update` 加入现有 FIFO。更新保持 Core 对象、Native 对象、id 和绑定代次。成功后提交新配置、执行版本和确认姿态。失败时保留旧执行,触发一次 `onError`,并继续队列。
-- 只更新回调时保留对象、队列、状态和 `entityProps`,后续事件使用最新回调。
-- `update A → pause → update B` 保持原顺序。只有相邻且未发送的更新可以合并。正在执行的更新结束后,绑定对象再次协调最新配置。
+- 执行配置变化时,绑定对象直接向现有 Core object 提交 `update`。更新保持 Core 对象、Native 对象、id 和绑定代次。成功后提交新配置、执行版本和确认姿态。失败时保留旧执行并为该命令触发 `onError`。
+- 只更新回调时保留对象、创建前播放队列、状态和 `entityProps`,后续事件使用最新回调。
+- `update A → pause → update B` 保持原顺序。每条配置更新都按调用顺序提交。
 - 回执和事件必须匹配绑定代次、id 和执行版本。新执行会丢弃旧控制器的迟到完成事件。
 - 初次创建失败会终止绑定。更新失败保留绑定和 `entityProps`。
 
@@ -501,8 +501,6 @@ classDiagram
             +api EntityPlaybackApi
             -target SpatialEntity
             -animationObject EntityAnimationObject
-            -commandQueue
-            -commandEpoch number
             +currentEntityProps EntityMotionProps
             +playState EntityMotionPlayState
             +__bind(target SpatialEntity)
@@ -716,7 +714,7 @@ ControlEntityAnimation {
 }
 ```
 
-控制成功回执使用空 payload 确认当前命令处理完成。绑定对象收到该回执后发送下一条等待命令;公开 `playState` 由 `EntityMotionStateChangedMsg` 更新。
+控制成功回执使用空 payload 确认当前命令处理完成。Core 直接按调用顺序提交后续命令;JSB/Native FIFO 负责保持顺序,公开 `playState` 由 `EntityMotionStateChangedMsg` 更新。
 
 ##### 设置动画姿态命令
 

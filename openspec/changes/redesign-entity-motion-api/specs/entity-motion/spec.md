@@ -247,45 +247,47 @@ Each `EntityMotionAnimationObject` MUST scope cleanup to the animation controlle
 - **THEN** Native MUST respectively use `stop`, `reset`, or `complete` as `callbackAction` and carry the confirmed transform
 - **AND** natural `complete` MUST remain exclusive to the current business playback controller
 
-### Requirement: Entity motion commands preserve per-binding FIFO order
+### Requirement: Entity motion commands preserve Native FIFO order
 
-Public `EntityPlaybackApi` methods MAY return `void`. The concrete Core `EntityAnimationObject.set(update)` MUST return `Promise<EntityMotionProps | void>` so the binding can await the `SetEntityAnimation` reply. This promise MUST NOT be exposed through public `EntityPlaybackApi.set(update)`. Each Entity motion binding MUST use an independent FIFO queue. After the Native animation object exists, the binding MUST wait for the current JSB reply before sending the next `update`, playback, or `set` command. Failure settles only the current item and preserves later order.
+Public `EntityPlaybackApi` methods MAY return `void`. The concrete Core `EntityAnimationObject.set(update)` MUST return `Promise<EntityMotionProps | void>` so the binding can consume the `SetEntityAnimation` reply. This promise MUST NOT be exposed through public `EntityPlaybackApi.set(update)`. Each Entity motion binding MUST keep a pending playback queue only until Native creates its animation object. After creation, Core MUST submit every `update`, playback, and `set` command immediately in call order, and JSB/Native MUST preserve that FIFO order. A command reply MUST settle only its own promise and MUST NOT gate later submissions.
 
-When a playback control command produces a state message, Native MUST submit that message before confirming current-command completion with an empty success reply; the binding MUST then send the next command. Natural completion MUST produce an independent asynchronous completion state message.
+When a playback control command produces a state message, Native MUST submit that message before its success reply. Natural completion MUST produce an independent asynchronous completion state message.
 
 #### Scenario: Playback commands before native object creation are flushed in order
 - **GIVEN** an Entity motion binding whose native animation object has not been created
 - **WHEN** application code calls `play`, `pause`, `stop`, `reset`, or `finish`
 - **THEN** the binding MUST append those playback commands to its pending queue in call order
 - **AND** after creation succeeds, the native creation reply MUST first confirm public `idle`
-- **AND** the binding MUST then send them one at a time in FIFO order
+- **AND** the binding MUST then submit all pending playback commands immediately in call order
+- **AND** JSB and Native MUST preserve that FIFO order
 - **AND** when `autoStart` is enabled, its generated `play` MUST precede the playback commands already pending at creation time
 
-#### Scenario: Commands after Native object creation are serialized
+#### Scenario: Commands after Native object creation use JSB and Native FIFO
 - **GIVEN** the native animation object exists
 - **WHEN** application code produces consecutive `update`, playback, or `set` commands
-- **THEN** the binding MUST send them one at a time in FIFO order
-- **AND** each command MUST wait for the previous JSB reply
+- **THEN** Core MUST submit them immediately in call order
+- **AND** JSB and Native MUST process them in FIFO order
+- **AND** each command reply MUST settle only its own promise
 
-#### Scenario: Consecutive config updates coalesce only at a safe position
+#### Scenario: Consecutive config updates are all submitted in order
 - **GIVEN** the native animation object exists
-- **WHEN** the queue tail contains consecutive unsent config updates
-- **THEN** the binding MUST retain only the latest update
-- **AND** updates separated by another command MUST preserve their original order
-- **AND** after the current update settles, the binding MUST reconcile the latest config again
+- **WHEN** application code produces consecutive config updates
+- **THEN** Core MUST submit every update in call order
+- **AND** JSB and Native MUST process every update in FIFO order
 
-#### Scenario: Consecutive set then play uses the committed set result
+#### Scenario: Consecutive set then play uses Native FIFO
 - **GIVEN** the native animation object exists and playback is inactive
 - **WHEN** application code calls `api.set(update)` and immediately calls `api.play()`
-- **THEN** the binding MUST wait for the `set` reply before sending `play`
+- **THEN** Core MUST submit `set` and `play` immediately in call order
+- **AND** JSB and Native MUST process `set` before `play`
 - **AND** the success reply `values` MUST contain complete confirmed `position`, `rotation`, and `scale`
 - **AND** fresh play MUST read the native transform committed by that `set` as its latest baseline
 
-#### Scenario: Unbind or destruction invalidates pending commands
-- **GIVEN** a binding has an in-flight command or commands that have not been sent
+#### Scenario: Unbind or destruction invalidates pending playback commands
+- **GIVEN** a binding has playback commands waiting for native animation-object creation
 - **WHEN** the binding is removed, its target is replaced, its animation object is destroyed, or the binding is destroyed
-- **THEN** the SDK MUST discard all commands that have not been sent from that queue generation
-- **AND** settlement of an in-flight command MUST NOT dispatch another command from the invalidated generation
+- **THEN** the SDK MUST discard those pending playback commands
+- **AND** commands already submitted to JSB MAY finish their Native FIFO processing
 
 ### Requirement: Same-target config updates commit in place with deterministic retarget semantics
 
@@ -304,7 +306,7 @@ Unbinding and target replacement MUST advance the binding generation, destroy th
 #### Scenario: Execution config change updates the same-target object in place
 - **GIVEN** the current binding lifecycle is healthy and an Entity motion binding remains attached to the same target
 - **WHEN** its canonical execution definition changes
-- **THEN** the SDK MUST enqueue an in-place update in the existing FIFO
+- **THEN** the SDK MUST submit an in-place update through the current Core object
 - **AND** the Core object, Native object, animation id, and binding generation MUST remain unchanged
 - **AND** a successful update MUST store the new config, canonical timeline, and execution revision
 - **AND** its success reply MUST carry the complete confirmed pose and update `entityProps`
@@ -312,7 +314,7 @@ Unbinding and target replacement MUST advance the binding generation, destroy th
 #### Scenario: Callback-only update keeps the current playback object
 - **GIVEN** the current binding lifecycle is healthy and the canonical execution definition remains equal
 - **WHEN** one or more lifecycle callback references change
-- **THEN** the binding MUST preserve the current object, controller, queue, state, and `entityProps`
+- **THEN** the binding MUST preserve the current object, controller, creation-pending playback queue, state, and `entityProps`
 - **AND** subsequent accepted events MUST use the latest callback references
 - **AND** the SDK MUST update only the callback references
 
@@ -487,7 +489,7 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 
 ### Requirement: `api.set` is the imperative write entry for committed transform state
 
-The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` returns `void` and accepts the sparse object form `EntityTransformUpdate` (the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly); updater functions are programmer errors. Binding, creation-pending, and terminated lifecycle gates, plus Core destroying and destroyed gates, each produce one warning and complete a local no-op with stable zero counts for JSB traffic, `onError`, and FIFO entries. A live Core object validates synchronously; invalid updates throw a built-in `Error`, while valid updates enter the Core FIFO. A live Core object accepts an update with at least one transform scalar, and synchronously throws a built-in `Error` for an empty update or an update whose nested objects are empty. `api.set` is a state write entry that preserves playback progress and `playState`.
+The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` returns `void` and accepts the sparse object form `EntityTransformUpdate` (the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly); updater functions are programmer errors. Binding, creation-pending, and terminated lifecycle gates, plus Core destroying and destroyed gates, each produce one warning and complete a local no-op with stable zero counts for JSB calls and `onError`. A live Core object validates synchronously; invalid updates throw a built-in `Error`, while valid updates are submitted immediately to Core and its JSB/Native FIFO. A live Core object accepts an update with at least one transform scalar, and synchronously throws a built-in `Error` for an empty update or an update whose nested objects are empty. `api.set` is a state write entry that preserves playback progress and `playState`.
 
 Entity transform writes MUST be arbitrated as one whole. During inactive playback, the component's combined React props control the transform. While the animation is active (`delay` / `running` / `paused`), Native animation controls the entire transform and blocks ordinary React transform writes; configured fields animate and the remaining fields hold their baseline values. Stop, reset, finish, and natural completion MUST remove that protection after committing the corresponding pose. Active retarget MUST keep whole-transform write protection continuously active. During inactive states, `api.set` updates the native committed transform and Core updates `entityProps` from Native's complete result. Initial creation failure terminates the current binding lifecycle and clears `entityProps`; config-update failure preserves current protection and mirror. Removing the binding also clears `entityProps`.
 
@@ -503,7 +505,7 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 - **AND** when native rejects, `entityProps` MUST NOT update, and the rejection MUST surface a console warning rather than an `onError` event
 - **WHEN** application code calls `api.set` with an empty update or an update whose nested objects are empty
 - **THEN** the call MUST synchronously throw the built-in `Error`
-- **AND** warning, `onError`, JSB, and FIFO counts MUST remain at zero
+- **AND** warning, `onError`, and JSB call counts MUST remain at zero
 
 #### Scenario: set performs a sparse merge
 - **WHEN** application code calls `api.set` with only some transform fields, such as `{ position: { y: 0.3 } }`
@@ -536,7 +538,7 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 - **GIVEN** the native animation object exists and playback is inactive
 - **WHEN** application code calls `api.set` and then `api.play()`
 - **THEN** playback MUST start from the start boundary declared by the config (top-level `from`, `timeline.from`, or the `0%` frame)
-- **AND** the binding MUST wait for the `api.set` JSB reply before sending `api.play()`
+- **AND** Core MUST submit `api.set()` and `api.play()` in call order
 - **AND** this `api.play()` MUST act as a fresh play and read the latest native transform after `api.set`
 - **AND** fields omitted from the config MUST use that latest transform as this run's baseline
 - **AND** because the start boundary is required, there is no valid config with "no start frame"; a config missing the start boundary has already been rejected during normalization
@@ -563,7 +565,7 @@ If an Entity target is destroyed first, the SDK MUST destroy its associated anim
 - **WHEN** an Entity target is destroyed before its associated native animation objects
 - **THEN** Native MUST destroy every associated animation and send `objectdestroy` for each animation id
 - **AND** Core MUST mark the object destroyed, unregister its event receiver, and complete later playback locally
-- **AND** later `api.set` calls with invalid or valid sparse updates MUST each return `void`, emit one warning, complete locally, and keep JSB, `onError`, and FIFO counts at zero
+- **AND** later `api.set` calls with invalid or valid sparse updates MUST each return `void`, emit one warning, complete locally, and keep JSB call and `onError` counts at zero
 
 #### Scenario: Control command races teardown
 - **WHEN** a control command races with animation-object teardown

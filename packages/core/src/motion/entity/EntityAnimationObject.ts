@@ -100,16 +100,8 @@ export class EntityAnimationObject
   private valuesListener?: (values: EntityMotionProps) => void
   /** Registered Native playback-state observer. */
   private playStateListener?: (state: EntityMotionNativePlayState) => void
-  /** Error fingerprints already reported during the current command cycle. */
-  private reportedErrors = new Set<string>()
   /** Latest execution revision committed by Native. */
   private executionRevision = 0
-  /** Native command starters waiting behind the active operation. */
-  private commandQueue: Array<() => void> = []
-  /** Whether one Native command is currently awaiting its reply. */
-  private commandRunning = false
-  /** Epoch used to invalidate commands that have not started. */
-  private commandEpoch = 0
   /** Whether explicit destruction has started. */
   private isDestroying = false
 
@@ -141,27 +133,27 @@ export class EntityAnimationObject
 
   /** Starts fresh playback or resumes paused playback. */
   play(): Promise<void> {
-    return this.enqueueCommand(() => this.control('play'))
+    return this.control('play')
   }
 
   /** Pauses running playback. */
   pause(): Promise<void> {
-    return this.enqueueCommand(() => this.control('pause'))
+    return this.control('pause')
   }
 
   /** Stops playback at the current transform. */
   stop(): Promise<void> {
-    return this.enqueueCommand(() => this.control('stop'))
+    return this.control('stop')
   }
 
   /** Resets playback to its starting transform. */
   reset(): Promise<void> {
-    return this.enqueueCommand(() => this.control('reset'))
+    return this.control('reset')
   }
 
   /** Commits the terminal transform and finishes playback. */
   finish(): Promise<void> {
-    return this.enqueueCommand(() => this.control('finish'))
+    return this.control('finish')
   }
 
   /** Handles a sparse transform update through the live Native object. */
@@ -171,8 +163,8 @@ export class EntityAnimationObject
       return Promise.resolve()
     }
     validateEntityTransformUpdate(update)
-    return this.enqueueCommand(() => this.performSet(update)).catch(error => {
-      this.reportErrorOnce({
+    return this.performSet(update).catch(error => {
+      this.errorListener?.({
         code: 'COMPILATION_FAILED',
         reason:
           error instanceof Error
@@ -187,11 +179,11 @@ export class EntityAnimationObject
   update(config: EntityMotionConfig): Promise<void> {
     const timeline = normalizeEntityMotionConfig(config)
     if (this.isDestroyed || this.isDestroying) return Promise.resolve()
-    return this.enqueueCommand(() => {
-      const current = entityAnimationObjectOptions.get(this)
-      if (current && this.timelinesEqual(current.timeline, timeline)) return
-      return this.performUpdate(config, timeline)
-    })
+    const current = entityAnimationObjectOptions.get(this)
+    if (current && this.timelinesEqual(current.timeline, timeline)) {
+      return Promise.resolve()
+    }
+    return this.performUpdate(config, timeline)
   }
 
   /** Registers the start observer used by Core consumers. */
@@ -239,7 +231,6 @@ export class EntityAnimationObject
   override async destroy(): Promise<void> {
     if (this.isDestroyed || this.isDestroying) return
     this.isDestroying = true
-    ++this.commandEpoch
     try {
       const ret = await new ControlEntityAnimationJSBCommand({
         id: this.id,
@@ -258,58 +249,12 @@ export class EntityAnimationObject
 
   /** Removes the event receiver owned by this animation object. */
   protected override onDestroy(): void {
-    ++this.commandEpoch
     SpatialWebEvent.removeEventReceiver(this.id)
-  }
-
-  /** Appends one Native operation while keeping later commands runnable after failure. */
-  private enqueueCommand<T>(command: () => Promise<T> | T): Promise<T | void> {
-    const commandEpoch = this.commandEpoch
-    return new Promise<T | void>((resolve, reject) => {
-      this.commandQueue.push(() => {
-        if (
-          commandEpoch !== this.commandEpoch ||
-          this.isDestroyed ||
-          this.isDestroying
-        ) {
-          resolve()
-          this.finishCommand()
-          return
-        }
-        try {
-          Promise.resolve(command())
-            .then(resolve, reject)
-            .finally(() => {
-              this.finishCommand()
-            })
-        } catch (error) {
-          reject(error)
-          this.finishCommand()
-        }
-      })
-      this.runNextCommand()
-    })
-  }
-
-  /** Starts the next queued command if this object has no active operation. */
-  private runNextCommand(): void {
-    if (this.commandRunning) return
-    const next = this.commandQueue.shift()
-    if (!next) return
-    this.commandRunning = true
-    next()
-  }
-
-  /** Releases the active slot and continues the per-object FIFO. */
-  private finishCommand(): void {
-    this.commandRunning = false
-    this.runNextCommand()
   }
 
   /** Sends one ordered playback control to the dedicated Native protocol. */
   private async control(type: EntityAnimationControlType): Promise<void> {
-    if (this.isDestroyed) return
-    this.reportedErrors.clear()
+    if (this.isDestroyed || this.isDestroying) return
     const ret = await new ControlEntityAnimationJSBCommand({
       id: this.id,
       type,
@@ -324,11 +269,10 @@ export class EntityAnimationObject
   private async performSet(
     update: EntityTransformUpdate,
   ): Promise<EntityMotionProps | void> {
-    if (this.isDestroyed) {
+    if (this.isDestroyed || this.isDestroying) {
       console.warn('Entity animation set ignored after destroy')
       return
     }
-    this.reportedErrors.clear()
     const ret = await new SetEntityAnimationJSBCommand({
       id: this.id,
       update,
@@ -345,7 +289,7 @@ export class EntityAnimationObject
     const confirmedValues = result?.values
     const validationError = this.getConfirmedValuesError(confirmedValues)
     if (validationError) {
-      this.reportErrorOnce({
+      this.errorListener?.({
         code: 'INVALID_SET_VALUES',
         reason: validationError,
       })
@@ -360,7 +304,6 @@ export class EntityAnimationObject
     config: EntityMotionConfig,
     timeline: EntityMotionTimelinePayload,
   ): Promise<void> {
-    this.reportedErrors.clear()
     try {
       const ret = await new UpdateEntityAnimationJSBCommand({
         id: this.id,
@@ -378,7 +321,7 @@ export class EntityAnimationObject
         !Number.isSafeInteger(result?.revision) ||
         result!.revision <= this.executionRevision
       ) {
-        this.reportErrorOnce({
+        this.errorListener?.({
           code: 'COMPILATION_FAILED',
           reason:
             validationError ??
@@ -390,7 +333,7 @@ export class EntityAnimationObject
       this.executionRevision = result!.revision
       this.valuesListener?.(confirmedValues!)
     } catch (error) {
-      this.reportErrorOnce({
+      this.errorListener?.({
         code: 'COMPILATION_FAILED',
         reason:
           error instanceof Error
@@ -417,16 +360,8 @@ export class EntityAnimationObject
       code: this.toPlaybackErrorCode(ret.errorCode),
       reason: ret.errorMessage ?? 'Entity animation command failed',
     }
-    this.reportErrorOnce(error)
-    return error
-  }
-
-  /** Reports one error fingerprint at most once in the current command cycle. */
-  private reportErrorOnce(error: EntityPlaybackError): void {
-    const fingerprint = `${error.code}\0${error.reason}`
-    if (this.reportedErrors.has(fingerprint)) return
-    this.reportedErrors.add(fingerprint)
     this.errorListener?.(error)
+    return error
   }
 
   /** Narrows a bridge error code to the closed public error-code set. */
@@ -457,7 +392,6 @@ export class EntityAnimationObject
     if (this.isStateChangedMsg(data)) {
       if (data.detail.id !== this.id) return
       if (data.detail.revision < this.executionRevision) return
-      this.reportedErrors.clear()
       this._playState = data.detail.playState
       this.playStateListener?.(data.detail.playState)
       const callbackAction = data.detail.callbackAction
@@ -481,7 +415,7 @@ export class EntityAnimationObject
       }
     }
     if (this.isErrorMsg(data) && data.detail.id === this.id) {
-      this.reportErrorOnce(data.detail.error)
+      this.errorListener?.(data.detail.error)
     }
   }
 
