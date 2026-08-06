@@ -487,19 +487,23 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 
 ### Requirement: `api.set` is the imperative write entry for committed transform state
 
-The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` MUST only accept a sparse `EntityTransformUpdate` object (the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly) and MUST NOT support the updater function form `(prev) => next`. A valid update MUST contain at least one transform scalar; `api.set({})` and updates containing only empty nested objects MUST synchronously throw. `api.set` MUST NOT be a playback command and MUST NOT seek, start, change playback progress, or change `playState`.
+The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` returns `void` and accepts the sparse object form `EntityTransformUpdate` (the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly); updater functions are programmer errors. Binding, creation-pending, and terminated lifecycle gates, plus Core destroying and destroyed gates, each produce one warning and complete a local no-op with stable zero counts for JSB traffic, `onError`, and FIFO entries. A live Core object validates synchronously; invalid updates throw a built-in `Error`, while valid updates enter the Core FIFO. A live Core object accepts an update with at least one transform scalar, and synchronously throws a built-in `Error` for an empty update or an update whose nested objects are empty. `api.set` is a state write entry that preserves playback progress and `playState`.
 
 Entity transform writes MUST be arbitrated as one whole. During inactive playback, the component's combined React props control the transform. While the animation is active (`delay` / `running` / `paused`), Native animation controls the entire transform and blocks ordinary React transform writes; configured fields animate and the remaining fields hold their baseline values. Stop, reset, finish, and natural completion MUST remove that protection after committing the corresponding pose. Active retarget MUST keep whole-transform write protection continuously active. During inactive states, `api.set` updates the native committed transform and Core updates `entityProps` from Native's complete result. Initial creation failure terminates the current binding lifecycle and clears `entityProps`; config-update failure preserves current protection and mirror. Removing the binding also clears `entityProps`.
 
 The SDK MUST NOT provide a bare `api.get`. Application code that needs to read the current committed value MUST read declarative `entityProps`, compute its own update, and pass it to `api.set(update)`. `entityProps` MAY be empty before the first native-confirmed state and MUST NOT be promised readable at mount: creating or binding the animation MUST NOT emit an extra initial confirmed value. To read a meaningful native pose, application code MUST first trigger a lifecycle that commits a confirmed value (a `play` that reaches a terminal / lifecycle node, or an accepted `api.set`).
 
 #### Scenario: set updates committed state and entityProps
+- **GIVEN** a live Core animation object
 - **WHEN** application code calls `api.set(update)` with an Entity transform update
 - **THEN** the SDK MUST send the write to native, which decides whether to accept it
 - **AND** when native accepts, it MUST update the Entity and return its complete current `position`, `rotation`, and `scale` through `SetEntityAnimationResult.values`
 - **AND** Core MUST update `entityProps` from that success reply
 - **AND** `set` MUST NOT produce `EntityMotionStateChangedMsg`
 - **AND** when native rejects, `entityProps` MUST NOT update, and the rejection MUST surface a console warning rather than an `onError` event
+- **WHEN** application code calls `api.set` with an empty update or an update whose nested objects are empty
+- **THEN** the call MUST synchronously throw the built-in `Error`
+- **AND** warning, `onError`, JSB, and FIFO counts MUST remain at zero
 
 #### Scenario: set performs a sparse merge
 - **WHEN** application code calls `api.set` with only some transform fields, such as `{ position: { y: 0.3 } }`
@@ -521,12 +525,12 @@ The SDK MUST NOT provide a bare `api.get`. Application code that needs to read t
 - **AND** `entityProps` MUST NOT update due to that write
 - **AND** the rejected write MUST be a no-op that surfaces a console warning, and MUST NOT be delivered through `onError`
 
-#### Scenario: set before binding, before native object creation, or after binding termination is invalid
-- **GIVEN** the Entity motion binding is not bound yet, the corresponding native object has not been created, or the current binding lifecycle has terminated
-- **WHEN** application code calls `api.set`
-- **THEN** the SDK MUST NOT create a pending write
-- **AND** the write MUST NOT be replayed after later binding or native object creation
-- **AND** the rejected write MUST be a no-op that surfaces a console warning, and MUST NOT be delivered through `onError`
+#### Scenario: set before binding, during creation, or after termination uses a local no-op
+- **GIVEN** the Entity motion binding is unavailable, creation is pending, or the current binding lifecycle has terminated
+- **WHEN** application code calls `api.set` with an invalid update or a valid sparse update
+- **THEN** each call MUST return `void`, emit one warning, and complete locally
+- **AND** pending-write and `onError` counts MUST remain at zero
+- **AND** later binding or native object creation MUST observe zero `object.set` calls from these updates
 
 #### Scenario: Start point after set then play
 - **GIVEN** the native animation object exists and playback is inactive
@@ -558,7 +562,8 @@ If an Entity target is destroyed first, the SDK MUST destroy its associated anim
 #### Scenario: Target-first destruction cascades animation cleanup
 - **WHEN** an Entity target is destroyed before its associated native animation objects
 - **THEN** Native MUST destroy every associated animation and send `objectdestroy` for each animation id
-- **AND** Core MUST mark the object destroyed, unregister its event receiver, and complete later playback and `api.set` locally
+- **AND** Core MUST mark the object destroyed, unregister its event receiver, and complete later playback locally
+- **AND** later `api.set` calls with invalid or valid sparse updates MUST each return `void`, emit one warning, complete locally, and keep JSB, `onError`, and FIFO counts at zero
 
 #### Scenario: Control command races teardown
 - **WHEN** a control command races with animation-object teardown

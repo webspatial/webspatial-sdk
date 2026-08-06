@@ -355,6 +355,8 @@ A few rules:
 4. **For an update based on the current pose**, read `entityProps`, calculate the new value, then pass it to `api.set`. `entityProps` is the current-pose data source.
 5. **`api.set` sets the static pose** and preserves the current playback progress.
 
+`api.set` returns `void`. When the binding is unavailable, creation is pending, the binding lifecycle is terminated, or object destruction is in progress or complete, the SDK logs one warning and completes a local no-op. A successful write updates `entityProps` with the confirmed complete pose.
+
 ### Where Playback Starts After api.set
 
 - Playback starts from the start frame declared by the config (top-level `from`, `timeline.from`, or the `0%` frame). Because every animation must declare a start, there is no "no start frame" case — a config missing the start is rejected during validation.

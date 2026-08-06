@@ -310,12 +310,13 @@ describe('EntityMotionBinding', () => {
       createAnimation: () => creation.promise,
     } as any)
 
+    expect(() => binding.api.set({} as never)).not.toThrow()
     binding.api.set({ position: { x: 2 } })
 
     const { object } = createMockAnimationObject()
     creation.resolve(object)
     await flushPromises()
-    expect(warning).toHaveBeenCalledOnce()
+    expect(warning).toHaveBeenCalledTimes(2)
     expect(object.set).not.toHaveBeenCalled()
     warning.mockRestore()
   })

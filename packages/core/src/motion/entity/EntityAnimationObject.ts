@@ -164,13 +164,13 @@ export class EntityAnimationObject
     return this.enqueueCommand(() => this.control('finish'))
   }
 
-  /** Validates and sends a sparse transform update through Native. */
+  /** Handles a sparse transform update through the live Native object. */
   set(update: EntityTransformUpdate): Promise<EntityMotionProps | void> {
-    validateEntityTransformUpdate(update)
     if (this.isDestroyed || this.isDestroying) {
       console.warn('Entity animation set ignored after destroy')
       return Promise.resolve()
     }
+    validateEntityTransformUpdate(update)
     return this.enqueueCommand(() => this.performSet(update)).catch(error => {
       this.reportErrorOnce({
         code: 'COMPILATION_FAILED',

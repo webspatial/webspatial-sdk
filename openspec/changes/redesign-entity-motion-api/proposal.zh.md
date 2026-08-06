@@ -355,6 +355,8 @@ api.set({ position: { y: 0.3 } })
 4. **基于当前姿态更新时**,读取 `entityProps`、计算新值,再传给 `api.set`。`entityProps` 是当前姿态的数据来源。
 5. **`api.set` 设置静止姿态**,播放进度沿用当前值。
 
+`api.set` 返回 `void`。绑定不可用、正在创建、绑定生命周期已终止或 object 正在销毁与已经销毁时,SDK 输出一次 warning 并在本地完成 no-op。写入成功后,`entityProps` 更新为原生确认的完整姿态。
+
 ### api.set 之后再播放的起点
 
 - 从 config 声明的起始帧(顶层 `from`、`timeline.from` 或 `0%` 帧)开始播。由于每个动画都必须写起点,不存在"没声明起始帧"的情况——缺起点的 config 在校验阶段就会被拒绝。

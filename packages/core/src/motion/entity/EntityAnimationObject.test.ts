@@ -625,11 +625,47 @@ describe('EntityAnimationObject', () => {
     await animation.stop()
     await animation.reset()
     await animation.finish()
+    expect(() => animation.set({} as never)).not.toThrow()
+    expect(() => animation.set({ position: { w: 1 } } as never)).not.toThrow()
     await animation.set({ position: { x: 2 } })
 
     expect(platformSpy.callJSB).not.toHaveBeenCalled()
-    expect(warning).toHaveBeenCalledOnce()
+    expect(warning).toHaveBeenCalledTimes(3)
     expect(errorListener).not.toHaveBeenCalled()
+    warning.mockRestore()
+  })
+
+  it('keeps set local while the Core object is being destroyed', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const destroyReply = deferred<Awaited<ReturnType<typeof ok>>>()
+    platformSpy.callJSB.mockImplementation((name, payload) => {
+      if (
+        name === 'ControlEntityAnimation' &&
+        JSON.parse(payload).type === 'destroy'
+      ) {
+        return destroyReply.promise
+      }
+      return ok()
+    })
+    const animation = createEntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+    const errorListener = vi.fn()
+    animation.onError(errorListener)
+
+    const destroy = animation.destroy()
+    await vi.waitFor(() => expect(platformSpy.callJSB).toHaveBeenCalledOnce())
+
+    expect(() => animation.set({} as never)).not.toThrow()
+    await animation.set({ position: { x: 2 } })
+
+    expect(platformSpy.callJSB).toHaveBeenCalledOnce()
+    expect(warning).toHaveBeenCalledTimes(2)
+    expect(errorListener).not.toHaveBeenCalled()
+
+    destroyReply.resolve(await ok())
+    await destroy
     warning.mockRestore()
   })
 

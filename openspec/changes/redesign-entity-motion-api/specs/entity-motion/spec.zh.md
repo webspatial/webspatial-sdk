@@ -487,19 +487,23 @@ Entity motion 的生命周期 callback MUST 只是通知。它们的返回值 MU
 
 ### Requirement: `api.set` 是已提交 transform 状态的命令式写入入口
 
-SDK MUST 提供 `api.set` 作为 `entityProps` 所镜像的已提交 Entity transform 状态的命令式写入入口。`api.set` MUST 只接受一个稀疏的 `EntityTransformUpdate` object(与读取侧 `EntityMotionProps` 同为 `{ position?, rotation?, scale? }` 形态,但命名区分),MUST NOT 支持 updater 函数 `(prev) => next`。合法 update MUST 至少包含一个 transform 标量;`api.set({})` 和只包含空嵌套对象的 update MUST 同步抛错。`api.set` MUST NOT 是 playback 命令,MUST NOT seek、start、改变播放进度或改变 `playState`。
+SDK MUST 提供 `api.set` 作为 `entityProps` 所镜像的已提交 Entity transform 状态的命令式写入入口。`api.set` 返回 `void`,并接受稀疏的 `EntityTransformUpdate` object(与读取侧 `EntityMotionProps` 同为 `{ position?, rotation?, scale? }` 形态,但命名区分);updater 函数属于 programmer error。绑定不可用、创建中、绑定已终止以及 Core object 销毁中和已销毁时,对应生命周期门各输出一次 warning,在本地完成 no-op,JSB、`onError` 和 FIFO 计数保持为零。Core object 存活时同步校验参数;非法 update 抛出内置 `Error`,合法 update 进入 Core FIFO。Core object 存活时,包含至少一个 transform 标量的 update 可以写入;空 update 或只包含空嵌套对象的 update 同步抛出内置 `Error`。`api.set` 是保持播放进度与 `playState` 的状态写入口。
 
 物体变换写入 MUST 按完整 transform 统一仲裁。播放空闲期间,组件组合后的 React 属性控制 transform。动画处于活跃状态(`delay`、`running`、`paused`)时,Native animation 控制完整 transform 并阻止普通 React transform 写入;配置字段执行动画,其余字段保持基准姿态。`stop`、`reset`、`finish` 和自然完成 MUST 在提交对应姿态后解除保护。活跃 retarget MUST 保持完整 transform 写入保护连续生效。播放空闲状态下,`api.set` 更新 Native 已提交 transform,Core 使用 Native 返回的完整结果更新 `entityProps`。初次创建失败终止当前绑定生命周期并清空 `entityProps`;配置 update 失败保留现有保护与镜像。解绑也清空 `entityProps`。
 
 SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码 MUST 读取声明式的 `entityProps`,并在需要写入时自行计算 update 后调用 `api.set(update)`。首个 native confirmed state 之前 `entityProps` MAY 为空,且 MUST NOT 承诺在 mount 时可读:创建或绑定动画 MUST NOT 额外 emit 一个初始 confirmed value。要读取有意义的 native 姿态,应用代码 MUST 先触发一次提交 confirmed value 的 lifecycle(一次到达终态 / lifecycle 节点的 `play`,或一次被接受的 `api.set`)。
 
 #### Scenario: set 更新已提交状态与 entityProps
+- **GIVEN** 一个存活的 Core animation object
 - **WHEN** 应用调用 `api.set(update)` 并传入 Entity transform 更新
 - **THEN** SDK MUST 把该写入下发 native,由 native 决定是否接受
 - **AND** 原生层接受后 MUST 更新 Entity,通过 `SetEntityAnimationResult.values` 返回 Entity 当前完整的 `position`、`rotation`、`scale`
 - **AND** Core MUST 使用该成功回执更新 `entityProps`
 - **AND** `set` MUST NOT 产生 `EntityMotionStateChangedMsg`
 - **AND** native 拒绝时 `entityProps` MUST NOT 更新,且该拒绝 MUST 输出一条 console warning,而不是触发 `onError`
+- **WHEN** 应用以空 update 或只包含空嵌套对象的 update 调用 `api.set`
+- **THEN** 调用 MUST 同步抛出内置 `Error`
+- **AND** warning、`onError`、JSB 和 FIFO 计数 MUST 保持为零
 
 #### Scenario: set 执行稀疏合并
 - **WHEN** 应用调用 `api.set` 只传入部分 transform 字段，例如 `{ position: { y: 0.3 } }`
@@ -521,12 +525,12 @@ SDK MUST NOT 提供裸 `api.get`。需要读取当前已提交值的应用代码
 - **AND** `entityProps` MUST NOT 因该写入更新
 - **AND** 被拒绝的写入 MUST 是一次 no-op,并输出一条 console warning,MUST NOT 通过 `onError` 抵达用户
 
-#### Scenario: 未绑定、native object 未创建或绑定终止后调用 set 无效
-- **GIVEN** Entity motion binding 尚未绑定、对应 native object 尚未创建,或当前绑定生命周期已经终止
-- **WHEN** 应用调用 `api.set`
-- **THEN** SDK MUST NOT 创建 pending write
-- **AND** 该写入 MUST NOT 在后续绑定或 native object 创建后 replay
-- **AND** 被拒绝的写入 MUST 是一次 no-op,并输出一条 console warning,MUST NOT 通过 `onError` 抵达用户
+#### Scenario: 未绑定、创建中或终止后调用 set 执行本地 no-op
+- **GIVEN** Entity motion binding 不可用、正在创建或当前绑定生命周期已经终止
+- **WHEN** 应用以非法或合法稀疏 update 调用 `api.set`
+- **THEN** 每次调用 MUST 返回 `void`、输出一次 warning 并在本地完成
+- **AND** pending write 与 `onError` 计数 MUST 保持为零
+- **AND** 后续绑定或 native object 创建 MUST 观察到这些 update 对应的 `object.set` 调用数为零
 
 #### Scenario: set 之后 play 的起点
 - **GIVEN** Native animation object 已创建且播放处于非活跃状态
@@ -558,7 +562,8 @@ SDK MUST 对公开 config 或方法参数中可直接检测的 programmer error 
 #### Scenario: target 先销毁时级联清理动画
 - **WHEN** Entity target 在关联 native animation object 之前销毁
 - **THEN** Native MUST 销毁全部关联动画并为每个 animation id 发送 `objectdestroy`
-- **AND** Core MUST 标记对象已销毁、注销事件接收器,并在本地完成后续 playback 与 `api.set`
+- **AND** Core MUST 标记对象已销毁、注销事件接收器,并在本地完成后续 playback
+- **AND** 后续以非法或合法稀疏 update 调用 `api.set` 时,每次调用 MUST 返回 `void`、输出一次 warning、在本地完成,且 JSB、`onError` 和 FIFO 计数 MUST 保持为零
 
 #### Scenario: 控制命令与销毁竞态
 - **WHEN** 控制命令与 animation object 销毁发生竞态

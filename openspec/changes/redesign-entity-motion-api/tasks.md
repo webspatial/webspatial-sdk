@@ -109,3 +109,8 @@ Bridge and integration acceptance:
 - [x] 9.9 Minimally implement visionOS update handling, transaction, retarget, paused definition, stale-event filtering, and confirmed-pose reporting
 - [x] 9.10 Refactor with tests green, deleting superseded replacement code and fixtures plus Entity motion internal-subpath exports, mappings, references, and tests while preserving target replacement, unbind, and destruction
 - [x] 9.13 Remove the superseded visionOS `AnimateTransform` command, session manager, bridge listener, and lifecycle cleanup
+
+## 10. Review Fixes
+
+- [x] 10.1 Add Core red tests for `api.set` during object destruction and after `objectdestroy`, covering local warning + no-op behavior for invalid and valid updates with stable JSB, `onError`, and FIFO counts.
+- [x] 10.2 Move the Core destruction guard before transform validation, preserve React lifecycle no-op behavior, and run targeted tests plus strict OpenSpec validation.

@@ -421,6 +421,7 @@ sequenceDiagram
 
 - **公开接口:** `useEntityAnimation` 创建一个 `EntityMotionBinding` 和一个稳定的 `EntityPlaybackApi` 控制门面,读取绑定对象的当前确认姿态镜像,并返回 `[animation, api, entityProps]`;物体组件通过 `animation` 属性接收 `EntityMotionBinding`。
 - **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`,并把命令委派给 `EntityMotionBinding`;绑定对象按照 FIFO 顺序把命令委派给当前 `EntityAnimationObject`。`api.set(update)` 把稀疏 transform 更新提交给原生。
+- **set 生命周期门:** `EntityMotionBinding` 负责绑定、创建中和已终止生命周期门。每个门输出一次 warning,在本地丢弃 update 并完成 no-op。Core object 负责销毁中和已销毁门,使用相同的 warning 与本地 no-op 结果。Core object 存活时同步校验参数,再把合法 update 加入自身 FIFO。
 - **目标绑定:** `useEntity` 消费物体组件的 `animation` 属性,并在 effect 建立和清理时调用绑定对象的 `__bind(target)` 和 `__unbind()` 入口。`EntityMotionBinding` 保证自身在同一时刻最多连接一个 `SpatialEntity`,绑定完成后调用 `target.createAnimation(config)`。解绑或目标替换时,绑定对象执行清理并把自身持有的 `entityProps` 镜像清空为 `{}`。应用继续展开返回对象时,普通 React 变换属性恢复控制。
 - **命令顺序:** `EntityMotionBinding` 复用 Element 动画绑定在对象创建前暂存命令、创建后逐条执行的机制。每个绑定对象独立串行执行命令,当前命令收到 JSB 回执后才发送下一条命令。
 - **结果镜像:** `EntityMotionBinding` 持有 `entityProps`,消费当前 `EntityAnimationObject` 的确认值并通知 React 重渲染。`useEntityAnimation` 在每次渲染中读取当前镜像并作为第三项返回。`entityProps` 包含原生确认的 `position`、`rotation` 和 `scale`。
@@ -435,7 +436,7 @@ sequenceDiagram
 - **`SpatialEntity`:** 提供 `createAnimation(config)` 创建入口。`EntityMotionBinding` 使用最新期望配置调用该入口。
 - **`EntityAnimationObject`:** 保存已提交的配置、规范时间轴、执行版本和播放状态。它执行更新、播放和 `set`,并上报状态、姿态和错误。更新保持对象和 id 不变。
 
-`EntityMotionBinding` 保存期望配置。`EntityAnimationObject` 保存 Native 已提交的配置。绑定代次隔离目标连接;执行版本隔离同一对象的不同执行。
+`EntityMotionBinding` 保存期望配置。`EntityAnimationObject` 保存 Native 已提交的配置。绑定代次隔离目标连接;执行版本隔离同一对象的不同执行。把校验集中在存活的 Core object 中,同时保持销毁阶段的 no-op 行为与现有包边界。
 
 本文中的“绑定生命周期”表示 React 目标连接会话。`EntityAnimationObject` 持有播放状态机并管理播放生命周期。
 

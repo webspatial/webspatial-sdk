@@ -109,3 +109,8 @@ Bridge 与集成验收：
 - [x] 9.9 最小实现 visionOS 更新入口、事务更新、重新定向、暂停定义、旧事件过滤和确认姿态回传
 - [x] 9.10 在测试持续通过时重构,删除已取代的替换代码和测试夹具,以及 Entity motion internal 子路径的导出、映射、引用和测试;保留目标替换、解绑和销毁流程
 - [x] 9.13 删除已被取代的 visionOS `AnimateTransform` 命令、会话管理器、Bridge 监听器和生命周期清理
+
+## 10. Review 修复
+
+- [x] 10.1 添加 Core 红灯测试,覆盖对象销毁中和 `objectdestroy` 后的 `api.set`,验证非法与合法 update 都本地 warning + no-op,且 JSB、`onError` 和 FIFO 计数保持稳定。
+- [x] 10.2 将 Core 销毁保护移到姿态校验前,保持 React 生命周期 no-op 行为,运行定向测试和 OpenSpec 严格校验。
