@@ -264,7 +264,7 @@ final class EntityMotionAnimationObject: SpatialObject {
         let resource = try Self.makeAnimationResource(
             compiled: compiled,
             timeline: candidate
-        ).resource
+        )
         let previousState = playState
 
         stopController()
@@ -311,7 +311,7 @@ final class EntityMotionAnimationObject: SpatialObject {
         do {
             let baseline = try Self.currentPose(for: target)
             let compiled = try EntityMotionTimelineCompiler.compile(timeline, baseline: baseline)
-            let resourceBuild = try Self.makeAnimationResource(
+            let resource = try Self.makeAnimationResource(
                 compiled: compiled,
                 timeline: timeline
             )
@@ -326,7 +326,7 @@ final class EntityMotionAnimationObject: SpatialObject {
                 callbackAction: .start,
                 values: confirmedValues
             )
-            playbackController = target.playAnimation(resourceBuild.resource, startsPaused: false)
+            playbackController = target.playAnimation(resource, startsPaused: false)
             observeCompletion(on: target)
         } catch {
             releaseTransformWrite()
@@ -570,7 +570,7 @@ final class EntityMotionAnimationObject: SpatialObject {
     static func makeAnimationResource(
         compiled: EntityMotionCompiledTimeline,
         timeline: EntityMotionTimelinePayload
-    ) throws -> (resource: AnimationResource, usesSequence: Bool) {
+    ) throws -> AnimationResource {
         let segmentResources = try compiled.segments.map { segment in
             let animation = FromToByAnimation<Transform>(
                 from: transform(from: segment.from),
@@ -597,10 +597,7 @@ final class EntityMotionAnimationObject: SpatialObject {
             delay: timeline.delay,
             speed: Float(timeline.playbackRate)
         )
-        return try (
-            resource: AnimationResource.generate(with: view),
-            usesSequence: segmentResources.count > 1
-        )
+        return try AnimationResource.generate(with: view)
     }
 
     /// Maps Entity motion loop mode to RealityKit repeat mode.

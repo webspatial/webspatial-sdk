@@ -732,11 +732,14 @@ final class EntityMotionTimelineCompilerTests: XCTestCase {
                 baseline: .identity
             )
             XCTAssertEqual(compiled.segments[0].timing, timing)
-            let resourceBuild = try EntityMotionAnimationObject.makeAnimationResource(
+            let resource = try EntityMotionAnimationObject.makeAnimationResource(
                 compiled: compiled,
                 timeline: timeline
             )
-            XCTAssertFalse(resourceBuild.usesSequence)
+            let animation = try XCTUnwrap(
+                resource.definition as? FromToByAnimation<Transform>
+            )
+            XCTAssertEqual(animation.bindTarget, .transform)
         }
 
         let sparse = EntityMotionTimelinePayload(
@@ -1162,15 +1165,16 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
             baseline: .identity
         )
 
-        let build = try EntityMotionAnimationObject.makeAnimationResource(
+        let resource = try EntityMotionAnimationObject.makeAnimationResource(
             compiled: compiled,
             timeline: payload
         )
 
-        XCTAssertTrue(build.usesSequence)
-        let view = try XCTUnwrap(build.resource.definition as? AnimationView)
+        let view = try XCTUnwrap(resource.definition as? AnimationView)
         XCTAssertNotEqual(view.bindTarget, .transform)
-        _ = try XCTUnwrap(view.source as? AnimationGroup)
+        let group = try XCTUnwrap(view.source as? AnimationGroup)
+        XCTAssertEqual(group.group.count, compiled.segments.count)
+        XCTAssertEqual(view.repeatMode, .none)
         XCTAssertEqual(view.delay, 0.25, accuracy: 1e-9)
         XCTAssertEqual(view.speed, 1.5, accuracy: 1e-6)
     }
