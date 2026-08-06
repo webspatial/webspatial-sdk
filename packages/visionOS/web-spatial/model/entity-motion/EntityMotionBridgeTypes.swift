@@ -341,7 +341,7 @@ struct EntityMotionStateChangedDetail: Codable, Equatable {
 }
 
 /// Dedicated entity-motion state event.
-struct EntityMotionStateChangedMessage: Codable, Equatable {
+struct EntityMotionStateChangedMessage: Encodable, Equatable {
     /// Event channel name.
     let type: SpatialWebMsgType
     /// Event detail.
@@ -351,28 +351,6 @@ struct EntityMotionStateChangedMessage: Codable, Equatable {
     init(detail: EntityMotionStateChangedDetail) {
         type = .spatialanimationstatechanged
         self.detail = detail
-    }
-
-    /// Decodes only the canonical state-event channel.
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        type = try container.decode(SpatialWebMsgType.self, forKey: .type)
-        guard type == .spatialanimationstatechanged else {
-            throw DecodingError.dataCorruptedError(
-                forKey: .type,
-                in: container,
-                debugDescription: "Unexpected entity-motion state channel."
-            )
-        }
-        detail = try container.decode(EntityMotionStateChangedDetail.self, forKey: .detail)
-    }
-
-    /// State-event wire keys.
-    private enum CodingKeys: String, CodingKey {
-        /// Event channel key.
-        case type
-        /// Event detail key.
-        case detail
     }
 }
 
@@ -393,7 +371,7 @@ struct EntityAnimationErrorDetail: Codable, Equatable {
 }
 
 /// Dedicated asynchronous entity-motion error event.
-struct EntityAnimationErrorMessage: Codable, Equatable {
+struct EntityAnimationErrorMessage: Encodable, Equatable {
     /// Event channel name.
     let type: SpatialWebMsgType
     /// Event detail.
@@ -403,27 +381,5 @@ struct EntityAnimationErrorMessage: Codable, Equatable {
     init(detail: EntityAnimationErrorDetail) {
         type = .entityanimationerror
         self.detail = detail
-    }
-
-    /// Decodes only the canonical asynchronous error channel.
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        type = try container.decode(SpatialWebMsgType.self, forKey: .type)
-        guard type == .entityanimationerror else {
-            throw DecodingError.dataCorruptedError(
-                forKey: .type,
-                in: container,
-                debugDescription: "Unexpected entity-motion error channel."
-            )
-        }
-        detail = try container.decode(EntityAnimationErrorDetail.self, forKey: .detail)
-    }
-
-    /// Asynchronous error-event wire keys.
-    private enum CodingKeys: String, CodingKey {
-        /// Event channel key.
-        case type
-        /// Event detail key.
-        case detail
     }
 }

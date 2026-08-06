@@ -147,8 +147,8 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
         XCTAssertEqual(result.revision, 1)
     }
 
-    /// Confirms lifecycle state and asynchronous errors use separate closed channels.
-    func testStateAndErrorMessagesRoundTripOnDedicatedChannels() throws {
+    /// Confirms lifecycle state and asynchronous errors encode their dedicated channels.
+    func testStateAndErrorMessagesEncodeDedicatedChannels() throws {
         let values = EntityMotionConfirmedTransformPayload(
             position: .init(x: 1, y: 2, z: 3),
             rotation: .init(x: 4, y: 5, z: 6),
@@ -180,13 +180,22 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            try JSONDecoder().decode(
-                EntityMotionStateChangedMessage.self,
-                from: JSONEncoder().encode(state)
-            ),
-            state
+            try jsonObject(JSONEncoder().encode(state)),
+            [
+                "type": "spatialanimationstatechanged",
+                "detail": [
+                    "id": "animation-1",
+                    "revision": 1,
+                    "playState": "finished",
+                    "callbackAction": "complete",
+                    "values": [
+                        "position": ["x": 1, "y": 2, "z": 3],
+                        "rotation": ["x": 4, "y": 5, "z": 6],
+                        "scale": ["x": 1, "y": 1, "z": 1],
+                    ],
+                ],
+            ]
         )
-        XCTAssertEqual(state.type, .spatialanimationstatechanged)
         XCTAssertEqual(
             try jsonObject(JSONEncoder().encode(stateOnly)),
             [
@@ -195,50 +204,17 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
             ]
         )
         XCTAssertEqual(
-            try JSONDecoder().decode(
-                EntityAnimationErrorMessage.self,
-                from: JSONEncoder().encode(error)
-            ),
-            error
-        )
-        XCTAssertEqual(error.type, .entityanimationerror)
-
-        let wrongStateChannel = #"""
-        {
-          "type":"entityanimationerror",
-          "detail":{
-            "id":"animation-1",
-            "callbackAction":"complete",
-            "playState":"finished",
-            "values":{
-              "position":{"x":1,"y":2,"z":3},
-              "rotation":{"x":4,"y":5,"z":6},
-              "scale":{"x":1,"y":1,"z":1}
-            }
-          }
-        }
-        """#
-        XCTAssertThrowsError(
-            try JSONDecoder().decode(
-                EntityMotionStateChangedMessage.self,
-                from: Data(wrongStateChannel.utf8)
-            )
-        )
-
-        let wrongErrorChannel = #"""
-        {
-          "type":"spatialanimationstatechanged",
-          "detail":{
-            "id":"animation-1",
-            "error":{"code":"COMPILATION_FAILED","reason":"failed"}
-          }
-        }
-        """#
-        XCTAssertThrowsError(
-            try JSONDecoder().decode(
-                EntityAnimationErrorMessage.self,
-                from: Data(wrongErrorChannel.utf8)
-            )
+            try jsonObject(JSONEncoder().encode(error)),
+            [
+                "type": "entityanimationerror",
+                "detail": [
+                    "id": "animation-1",
+                    "error": [
+                        "code": "COMPILATION_FAILED",
+                        "reason": "failed",
+                    ],
+                ],
+            ]
         )
 
         let incompleteConfirmation = #"""
@@ -270,23 +246,6 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
             try JSONDecoder().decode(
                 UpdateEntityAnimationResult.self,
                 from: Data(incompleteUpdateConfirmation.utf8)
-            )
-        )
-
-        let unsupportedCallbackAction = #"""
-        {
-          "type":"spatialanimationstatechanged",
-          "detail":{
-            "id":"animation-1",
-            "playState":"paused",
-            "callbackAction":"pause"
-          }
-        }
-        """#
-        XCTAssertThrowsError(
-            try JSONDecoder().decode(
-                EntityMotionStateChangedMessage.self,
-                from: Data(unsupportedCallbackAction.utf8)
             )
         )
     }
