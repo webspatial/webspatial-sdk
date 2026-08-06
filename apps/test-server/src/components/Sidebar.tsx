@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { entityAnimationRoutes } from '../pages/entity-animation/routes'
 import { spatialElementMotionRoutes } from '../pages/spatial-element-motion/routes'
@@ -78,13 +79,13 @@ export const routes = [
     ],
   },
   { path: '/unit-convert', label: 'Unit Convert' },
-  { path: '/scene/ornament-test', label: 'Ornament Test' },
   {
     path: '/scene',
     label: 'Scene',
     children: [
       { path: '/scene', label: 'Scene Landing' },
       { path: '/scene/volume', label: 'Volume' },
+      { path: '/scene/ornament-test', label: 'Ornament Test' },
       { path: '/scene/xrapp', label: 'XR App' },
       { path: '/scene/nosdk', label: 'No SDK' },
     ],
@@ -159,6 +160,41 @@ export default function Sidebar() {
         typeof child.path === 'string' &&
         location.pathname === child.path,
     )
+  const [expandedRoutes, setExpandedRoutes] = useState<Set<string>>(
+    () => new Set(items.filter(isRouteActive).map(route => route.path)),
+  )
+
+  useEffect(() => {
+    const activeParents = items
+      .filter(route => route.children && isRouteActive(route))
+      .map(route => route.path)
+
+    if (activeParents.length === 0) return
+
+    setExpandedRoutes(prev => {
+      const next = new Set(prev)
+      let changed = false
+      activeParents.forEach(path => {
+        if (!next.has(path)) {
+          next.add(path)
+          changed = true
+        }
+      })
+      return changed ? next : prev
+    })
+  }, [items, location.pathname])
+
+  const toggleRoute = (path: string) => {
+    setExpandedRoutes(prev => {
+      const next = new Set(prev)
+      if (next.has(path)) {
+        next.delete(path)
+      } else {
+        next.add(path)
+      }
+      return next
+    })
+  }
 
   return (
     <div className={containerClass}>
@@ -171,17 +207,40 @@ export default function Sidebar() {
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
         {items.map(route => (
           <div key={route.path}>
-            <Link
-              to={route.path}
-              className={`block px-4 py-2 rounded-lg text-sm transition-colors ${
-                isRouteActive(route)
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-              }`}
-            >
-              {route.label}
-            </Link>
-            {route.children && (
+            {route.children ? (
+              <div
+                className={`flex items-center rounded-lg text-sm transition-colors ${
+                  isRouteActive(route)
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                <Link to={route.path} className="min-w-0 flex-1 px-4 py-2">
+                  {route.label}
+                </Link>
+                <button
+                  type="button"
+                  aria-label={`${expandedRoutes.has(route.path) ? 'Collapse' : 'Expand'} ${route.label}`}
+                  aria-expanded={expandedRoutes.has(route.path)}
+                  onClick={() => toggleRoute(route.path)}
+                  className="px-3 py-2 text-xs text-current/80 hover:text-white"
+                >
+                  {expandedRoutes.has(route.path) ? '▾' : '▸'}
+                </button>
+              </div>
+            ) : (
+              <Link
+                to={route.path}
+                className={`block px-4 py-2 rounded-lg text-sm transition-colors ${
+                  isRouteActive(route)
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                {route.label}
+              </Link>
+            )}
+            {route.children && expandedRoutes.has(route.path) && (
               <div className="ml-4 mt-1 space-y-1">
                 {route.children.map(child => {
                   const key = (child as any).path || (child as any).href
