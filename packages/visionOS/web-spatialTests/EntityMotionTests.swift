@@ -773,7 +773,11 @@ final class EntityMotionTimelineCompilerTests: XCTestCase {
                 baseline: .identity
             )
             XCTAssertEqual(compiled.segments[0].timing, timing)
-            XCTAssertTrue(timing.evaluate(0.5).isFinite)
+            let resourceBuild = try EntityMotionAnimationObject.makeAnimationResource(
+                compiled: compiled,
+                timeline: timeline
+            )
+            XCTAssertFalse(resourceBuild.usesSequence)
         }
 
         let sparse = EntityMotionTimelinePayload(
