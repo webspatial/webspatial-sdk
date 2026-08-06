@@ -130,6 +130,70 @@ describe('JSBCommand', () => {
     )
   })
 
+  it('emits inspect-change events for structural commands only', async () => {
+    const mod = await import('./JSBCommand')
+    const {
+      InspectCommand,
+      DestroyCommand,
+      AddSpatializedElementToSpatialScene,
+      AddSpatializedElementToSpatialized2DElement,
+      AddOrnamentToSceneCommand,
+      AddComponentToEntityCommand,
+      SetParentForEntityCommand,
+      RemoveEntityFromParentCommand,
+      UpdateSpatialized2DElementProperties,
+    } = mod
+    const listener = vi.fn()
+    document.addEventListener('webspatialinspectchange', listener)
+
+    await new InspectCommand().execute()
+    expect(listener).not.toHaveBeenCalled()
+
+    await new UpdateSpatialized2DElementProperties(
+      { id: 'obj-1' } as any,
+      {
+        width: 100,
+      } as any,
+    ).execute()
+    expect(listener).not.toHaveBeenCalled()
+
+    await new AddComponentToEntityCommand(
+      { id: 'entity-1' } as any,
+      { id: 'component-1' } as any,
+    ).execute()
+    expect(listener).not.toHaveBeenCalled()
+
+    const spatialObject = { id: 'parent-1' } as any
+    const element = { id: 'element-1' } as any
+    const entity = { id: 'entity-1' } as any
+    const structuralCommands = [
+      new AddSpatializedElementToSpatialScene(element),
+      new AddSpatializedElementToSpatialized2DElement(spatialObject, element),
+      new AddOrnamentToSceneCommand('ornament-1'),
+      new SetParentForEntityCommand('entity-1', 'parent-1'),
+      new RemoveEntityFromParentCommand(entity),
+      new DestroyCommand('obj-1'),
+    ]
+
+    for (const command of structuralCommands) {
+      await command.execute()
+    }
+    expect(listener).toHaveBeenCalledTimes(structuralCommands.length)
+
+    platformSpy.callJSB.mockImplementationOnce(() =>
+      Promise.resolve({
+        success: false,
+        data: undefined,
+        errorCode: 'E_TEST',
+        errorMessage: 'failed',
+      }),
+    )
+    await new DestroyCommand('obj-2').execute()
+    expect(listener).toHaveBeenCalledTimes(structuralCommands.length)
+
+    document.removeEventListener('webspatialinspectchange', listener)
+  })
+
   it('builds element commands payloads', async () => {
     const mod = await import('./JSBCommand')
     const {

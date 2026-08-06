@@ -85,6 +85,10 @@ export const routes = [
     children: [
       { path: '/scene', label: 'Scene Landing' },
       { path: '/scene/volume', label: 'Volume' },
+      {
+        path: '/scene/webspatial-inspector',
+        label: 'WebSpatial Inspector',
+      },
       { path: '/scene/xrapp', label: 'XR App' },
       { path: '/scene/nosdk', label: 'No SDK' },
     ],

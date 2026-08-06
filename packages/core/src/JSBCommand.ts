@@ -5,6 +5,7 @@ import { SpatialMaterial } from './reality/material/SpatialMaterial'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
 import { SpatializedElement } from './SpatializedElement'
 import { SpatialObject } from './SpatialObject'
+import { emitWebSpatialInspectChange } from './inspectEvents'
 
 import {
   Spatialized2DElementProperties,
@@ -43,9 +44,22 @@ abstract class JSBCommand {
     const param = this.getParams()
     const msg = param ? JSON.stringify(param) : ''
     const platform = await getPlatform()
-    return platform.callJSB(this.commandType, msg)
+    const result = await platform.callJSB(this.commandType, msg)
+    if (result.success && INSPECT_CHANGE_COMMANDS.has(this.commandType)) {
+      emitWebSpatialInspectChange()
+    }
+    return result
   }
 }
+
+const INSPECT_CHANGE_COMMANDS = new Set([
+  'AddSpatializedElementToSpatialScene',
+  'AddSpatializedElementToSpatialized2DElement',
+  'AddOrnamentToScene',
+  'SetParentToEntity',
+  'RemoveEntityFromParent',
+  'Destroy',
+])
 
 export class UpdateEntityPropertiesCommand extends JSBCommand {
   commandType = 'UpdateEntityProperties'
