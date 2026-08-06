@@ -1,10 +1,6 @@
 import { useState } from 'react'
-import {
-  BoxEntity,
-  Reality,
-  SceneGraph,
-  useAnimation,
-} from '@webspatial/react-sdk'
+import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
   Log,
@@ -25,7 +21,7 @@ function EntranceAnimationScene({
   }) => void
   onError: (error: { command: string; reason: string }) => void
 }) {
-  const [animation] = useAnimation({
+  const [animation] = useEntityAnimation({
     from: {
       position: { x: 0, y: 0, z: 0 },
       scale: { x: 0.1, y: 0.1, z: 0.1 },

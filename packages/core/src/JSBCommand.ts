@@ -27,8 +27,13 @@ import {
   ModelSource,
   SpatialTextureResourceOptions,
 } from './types/types'
+import type { OrnamentOptions } from './Ornament'
 import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
+import type {
+  ControlSpatializedElementAnimationCommand,
+  CreateSpatializedElementAnimationCommand,
+} from './types/motion/spatializedElementMotion'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -283,6 +288,38 @@ export class AddSpatializedElementToSpatialScene extends JSBCommand {
   protected getParams() {
     return {
       spatializedElementId: this.spatializedElement.id,
+    }
+  }
+}
+
+export class AddOrnamentToSceneCommand extends JSBCommand {
+  commandType = 'AddOrnamentToScene'
+
+  constructor(readonly ornamentId: string) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      ornamentId: this.ornamentId,
+    }
+  }
+}
+
+export class UpdateOrnamentCommand extends JSBCommand {
+  commandType = 'UpdateOrnament'
+
+  constructor(
+    readonly id: string,
+    readonly options: OrnamentOptions,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      id: this.id,
+      ...this.options,
     }
   }
 }
@@ -697,6 +734,38 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     return {
       id: this.attachmentId,
       ...this.options,
+    }
+  }
+}
+
+export class CreateSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'CreateSpatializedElementAnimation'
+
+  constructor(private command: CreateSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { elementId, timeline } = this.command
+    return {
+      elementId,
+      timeline,
+    }
+  }
+}
+
+export class ControlSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'ControlSpatializedElementAnimation'
+
+  constructor(private command: ControlSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { animationId, type } = this.command
+    return {
+      animationId,
+      type,
     }
   }
 }

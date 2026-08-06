@@ -6,15 +6,31 @@ import {
 import { buildSpatialSceneQuery } from '../spatialSceneQuery'
 import type { SpatialSceneCreationOptionsInternal } from '../../types/internal'
 import type { AttachmentEntityOptions } from '../../types/types'
+import type { OrnamentOptions, OrnamentProtocolOptions } from '../../Ornament'
 import {
   CommandResultFailure,
   CommandResultSuccess,
 } from '../CommandResultUtils'
+import {
+  buildSpatialRequestQuery,
+  createSpatialRequestId,
+} from '../spatialRequestMetadata'
 
 // add window interface for JSB call
 declare global {
   interface Window {
     __handleJSBMessage: (message: string) => any
+    __handleOrnamentWindowOpen?: (data: {
+      id: string
+      url: string
+      attachmentAnchor?: OrnamentOptions['attachmentAnchor']
+      contentAlignment?: OrnamentOptions['contentAlignment']
+      visibility?: OrnamentOptions['visibility']
+      width?: number
+      height?: number
+      cornerRadius?: OrnamentOptions['cornerRadius']
+      backgroundMaterial?: OrnamentOptions['backgroundMaterial']
+    }) => any
     SpatialId?: string
   }
 
@@ -86,6 +102,25 @@ export class PuppeteerPlatform implements PlatformAbility {
     }
   }
 
+  private async syncOrnamentWindowOpen(
+    spatialId: string,
+    webspatialUrl: string,
+    options?: OrnamentOptions,
+  ): Promise<void> {
+    try {
+      const win = window
+      if (win.__handleOrnamentWindowOpen) {
+        await win.__handleOrnamentWindowOpen({
+          id: spatialId,
+          url: webspatialUrl,
+          ...options,
+        })
+      }
+    } catch (error) {
+      console.error('Error creating ornament sync:', error)
+    }
+  }
+
   openSpatialSceneSync(
     url: string,
     config: SpatialSceneCreationOptionsInternal | undefined,
@@ -99,7 +134,9 @@ export class PuppeteerPlatform implements PlatformAbility {
   createNativeSpatialDiv(): Promise<WebSpatialProtocolResult> {
     return this.runProtocolAsync(
       'createSpatialized2DElement',
-      '',
+      buildSpatialRequestQuery(createSpatialRequestId(), undefined, {
+        command: 'createSpatialized2DElement',
+      }),
       undefined,
       undefined,
     )
@@ -108,10 +145,31 @@ export class PuppeteerPlatform implements PlatformAbility {
   createNativeAttachment(
     _options?: AttachmentEntityOptions,
   ): Promise<WebSpatialProtocolResult> {
-    return this.runProtocolAsync('createAttachment', '', undefined, undefined)
+    return this.runProtocolAsync(
+      'createAttachment',
+      buildSpatialRequestQuery(createSpatialRequestId(), undefined, {
+        command: 'createAttachment',
+      }),
+      undefined,
+      undefined,
+    )
   }
 
-  private runProtocolAsync(
+  createNativeOrnament(
+    options?: OrnamentProtocolOptions,
+  ): Promise<WebSpatialProtocolResult> {
+    return this.runProtocolAsync(
+      'createOrnament',
+      buildSpatialRequestQuery(createSpatialRequestId(), undefined, {
+        command: 'createOrnament',
+        ...options,
+      }),
+      undefined,
+      undefined,
+    )
+  }
+
+  private async runProtocolAsync(
     command: string,
     query?: string,
     target?: string,
@@ -120,34 +178,59 @@ export class PuppeteerPlatform implements PlatformAbility {
     console.log(
       `PuppeteerPlatform: Calling webspatial protocol: webspatial://${command}${query ? `?${query}` : ''}`,
     )
-    return new Promise(resolve => {
-      try {
-        // create complete webspatial URL
-        const webspatialUrl = `webspatial://${command}${query ? `?${query}` : ''}`
-        // use iframe to create new window
-        const { spatialId, iframe, windowProxy } = this.createIframeWindow(
-          webspatialUrl,
-          target,
-          features,
-        )
+    try {
+      // create complete webspatial URL
+      const webspatialUrl = `webspatial://${command}${query ? `?${query}` : ''}`
+      // use iframe to create new window
+      const { spatialId, iframe, windowProxy } = this.createIframeWindow(
+        webspatialUrl,
+        target,
+        features,
+      )
 
-        // 对于createSpatialized2DElement命令，同步创建元素
-        if (command === 'createSpatialized2DElement') {
-          this.createSpatializedElementSync(spatialId, webspatialUrl)
-        }
-        console.log(
-          `[Puppeteer Platform] iframe created with spatialId: ${spatialId}`,
-        )
-        // store iframe instance
-        this.iframeRegistry.set(spatialId, iframe)
-        resolve(CommandResultSuccess({ windowProxy, id: spatialId }))
-      } catch (error) {
-        console.error('Error calling webspatial protocol:', error)
-        resolve(
-          CommandResultFailure('500', 'Failed to call webspatial protocol'),
-        )
+      // 对于createSpatialized2DElement命令，同步创建元素
+      if (command === 'createSpatialized2DElement') {
+        this.createSpatializedElementSync(spatialId, webspatialUrl)
       }
-    })
+      if (command === 'createOrnament') {
+        const protocolUrl = new URL(webspatialUrl)
+        const attachmentAnchor =
+          protocolUrl.searchParams.get('attachmentAnchor') ?? undefined
+        const contentAlignment =
+          protocolUrl.searchParams.get('contentAlignment') ?? undefined
+        const visibility =
+          protocolUrl.searchParams.get('visibility') ?? undefined
+        const width = protocolUrl.searchParams.get('width')
+        const height = protocolUrl.searchParams.get('height')
+        const cornerRadius = protocolUrl.searchParams.get('cornerRadius')
+        const backgroundMaterial =
+          protocolUrl.searchParams.get('backgroundMaterial') ?? undefined
+        await this.syncOrnamentWindowOpen(spatialId, webspatialUrl, {
+          attachmentAnchor:
+            attachmentAnchor as OrnamentOptions['attachmentAnchor'],
+          contentAlignment:
+            contentAlignment as OrnamentOptions['contentAlignment'],
+          visibility: visibility as OrnamentOptions['visibility'],
+          width: width === null ? undefined : Number(width),
+          height: height === null ? undefined : Number(height),
+          cornerRadius:
+            cornerRadius === null
+              ? undefined
+              : (JSON.parse(cornerRadius) as OrnamentOptions['cornerRadius']),
+          backgroundMaterial:
+            backgroundMaterial as OrnamentOptions['backgroundMaterial'],
+        })
+      }
+      console.log(
+        `[Puppeteer Platform] iframe created with spatialId: ${spatialId}`,
+      )
+      // store iframe instance
+      this.iframeRegistry.set(spatialId, iframe)
+      return CommandResultSuccess({ windowProxy, id: spatialId })
+    } catch (error) {
+      console.error('Error calling webspatial protocol:', error)
+      return CommandResultFailure('500', 'Failed to call webspatial protocol')
+    }
   }
 
   private runProtocolSync(
@@ -274,8 +357,12 @@ export class PuppeteerPlatform implements PlatformAbility {
       },
 
       // document access
-      document: iframe.contentDocument || ({} as Document),
-      contentWindow: iframe.contentWindow || ({} as Window),
+      get document() {
+        return iframe.contentDocument || ({} as Document)
+      },
+      get contentWindow() {
+        return iframe.contentWindow || ({} as Window)
+      },
 
       // add message communication method
       postMessage: (message: any, targetOrigin?: string) => {

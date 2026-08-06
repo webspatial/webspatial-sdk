@@ -5,6 +5,43 @@ import SwiftUI
 /// zIndex() have some bug, so use zOrderBias to simulate zIndex effect
 let zOrderBias = 0.001
 
+struct SpatializedElementAnimatingMask {
+    var transformAnimationId: String?
+    var opacityAnimationId: String?
+}
+
+extension SpatializedElementAnimatingMask {
+    mutating func acquire(transform animationId: String?) {
+        transformAnimationId = animationId
+    }
+
+    mutating func acquire(opacity animationId: String?) {
+        opacityAnimationId = animationId
+    }
+
+    mutating func release(animationId: String) {
+        if transformAnimationId == animationId {
+            transformAnimationId = nil
+        }
+        if opacityAnimationId == animationId {
+            opacityAnimationId = nil
+        }
+    }
+
+    mutating func clear() {
+        transformAnimationId = nil
+        opacityAnimationId = nil
+    }
+
+    var locksTransform: Bool {
+        transformAnimationId != nil
+    }
+
+    var locksOpacity: Bool {
+        opacityAnimationId != nil
+    }
+}
+
 enum SpatializedElementType: String, Codable {
     case Spatialized2DElement
     case SpatializedStatic3DElement
@@ -25,6 +62,7 @@ class SpatializedElement: SpatialObject {
     var visible = true
     var scrollWithParent = true
     var zIndex: Double = 0
+    var animatingMask = SpatializedElementAnimatingMask()
 
     var enableDragStartGesture: Bool = false
     var enableDragGesture: Bool = false

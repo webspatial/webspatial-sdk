@@ -14,6 +14,8 @@
 //                       family, materials/assets, real `useMetrics`, real
 //                       containers, real monitor) + the `initPolyfill()`
 //                       bootstrap moved out of the default entry by PR 4.
+// - `dist/experimental.js` — opt-in public entry for APIs whose names or
+//                            parameters may still change before graduation.
 // - `dist/jsx/jsx-runtime.js` and `dist/jsx/jsx-dev-runtime.js` — single
 //   unified JSX runtime serving plain web, AVP, SSR, and RSC consumers (per
 //   spec "JSX runtime strips spatial markers and wraps with facade HOCs"
@@ -170,6 +172,10 @@ export default defineConfig([
       // common chunk and the eager entry does NOT duplicate code that the
       // default entry already ships.
       eager: 'src/eager.ts',
+      // Opt-in public surface for unstable APIs. Publishing it as a subpath
+      // keeps experiments available to npm consumers without widening the
+      // default-entry semver contract.
+      experimental: 'src/experimental.ts',
       // Emitted as its OWN entry (not inlined into `eager.js`) so the eager
       // mixed-entry registration runs during the import-evaluation phase —
       // before `eager.js` evaluates its `./spatial` import. If this module
@@ -228,6 +234,11 @@ export default defineConfig([
       // the directive the RSC compiler would attempt server execution
       // of the underlying hook code and fail at the first hook call.
       ensureRscClientBoundary(resolve(__dirname, 'dist/eager.js'), {
+        stampVersion: true,
+      })
+      // Experimental entry — public opt-in RSC boundary. It may expose hooks
+      // or components before their default-entry API is stable.
+      ensureRscClientBoundary(resolve(__dirname, 'dist/experimental.js'), {
         stampVersion: true,
       })
       // Spatial entry — no RSC directive (dynamic-import target), but it

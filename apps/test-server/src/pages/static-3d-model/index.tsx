@@ -48,7 +48,7 @@ function App() {
         }}
         ref={modelRef}
         onError={e => logLine(`Model error ${modelRef.current?.currentSrc}`)}
-        onLoad={e => logLine(`Model success ${e.target.currentSrc}`)}
+        onLoad={e => logLine(`Model success ${e.currentTarget.currentSrc}`)}
         onSpatialTap={e => {
           logLine('model onSpatialTap', e.detail.location3D)
         }}

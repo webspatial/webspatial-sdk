@@ -24,7 +24,7 @@ vi.mock('@webspatial/core-sdk', async () => {
   }
 })
 
-const { useAnimation } = await import('./useAnimation')
+const { useEntityAnimation: useAnimation } = await import('./useAnimation')
 
 // ---- Mock Entity Factory ----
 
@@ -349,7 +349,7 @@ describe('5.1.2 React playback lifecycle', () => {
       await flushPromises()
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[useAnimation]'),
+        expect.stringContaining('[useEntityAnimation]'),
         expect.anything(),
       )
       consoleSpy.mockRestore()

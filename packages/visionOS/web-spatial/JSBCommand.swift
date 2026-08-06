@@ -18,6 +18,11 @@ struct AddSpatializedElementToSpatialScene: CommandDataProtocol {
     let spatializedElementId: String
 }
 
+struct AddOrnamentToSceneCommand: CommandDataProtocol {
+    static let commandType: String = "AddOrnamentToScene"
+    let ornamentId: String
+}
+
 struct CreateSpatializedStatic3DElement: CommandDataProtocol {
     static let commandType: String = "CreateSpatializedStatic3DElement"
     let modelURL: String?
@@ -183,6 +188,18 @@ struct SetMaterialsOnEntity: CommandDataProtocol {
 struct DestroyCommand: CommandDataProtocol {
     static let commandType: String = "Destroy"
     var id: String
+}
+
+struct UpdateOrnamentCommand: CommandDataProtocol {
+    static let commandType: String = "UpdateOrnament"
+    let id: String
+    let attachmentAnchor: String?
+    let contentAlignment: String?
+    let visibility: String?
+    let width: Double?
+    let height: Double?
+    let cornerRadius: CornerRadius?
+    let backgroundMaterial: BackgroundMaterial?
 }
 
 protocol SpatializedElementProperties: SpatialObjectCommand {

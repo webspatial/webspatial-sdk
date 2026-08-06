@@ -91,6 +91,7 @@ describe('packages/react/package.json — published shape (spec tasks.md §8.7 /
         expect.arrayContaining([
           './dist/index.js',
           './dist/eager.js',
+          './dist/experimental.js',
           './dist/spatial.js',
           './src/eager.ts',
           './src/spatial/index.ts',
@@ -122,6 +123,19 @@ describe('packages/react/package.json — published shape (spec tasks.md §8.7 /
         | undefined
       const file = typeof sub === 'string' ? sub : sub?.default
       expect(file).toBe('./dist/spatial.js')
+    })
+
+    it('exports["./experimental"] resolves to dist/experimental.js (opt-in unstable surface)', () => {
+      const pkg = loadPackageJson()
+      const sub = pkg.exports?.['./experimental'] as
+        | Record<string, string>
+        | string
+        | undefined
+      expect(sub).toBeDefined()
+      const file = typeof sub === 'string' ? sub : sub?.default
+      const types = typeof sub === 'string' ? undefined : sub?.types
+      expect(file).toBe('./dist/experimental.js')
+      expect(types).toBe('./dist/experimental.d.ts')
     })
 
     it('exports["./jsx-runtime"] is a single mapping (NO `react-server` conditional)', () => {
