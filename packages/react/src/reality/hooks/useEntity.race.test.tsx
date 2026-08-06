@@ -55,6 +55,108 @@ describe('useEntity pending addEntity cleanup', () => {
     vi.restoreAllMocks()
   })
 
+  test('binds only the committed animation after async Entity creation', async () => {
+    const insertion = deferred<{ success: boolean }>()
+    const addEntity = vi.fn(() => insertion.promise)
+    const entity = {
+      id: 'entity-1',
+      updateTransform: vi.fn(async () => undefined),
+      destroy: vi.fn(),
+    }
+    const animationA = {
+      __bind: vi.fn(),
+      __unbind: vi.fn(),
+    }
+    const animationB = {
+      __bind: vi.fn(),
+      __unbind: vi.fn(),
+    }
+    const realityContext = {
+      reality: { addEntity },
+      resourceRegistry: {},
+      attachmentRegistry: {},
+    } as unknown as RealityContextValue
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <RealityContext.Provider value={realityContext}>
+        {children}
+      </RealityContext.Provider>
+    )
+
+    const { rerender, unmount } = renderHook(
+      ({ animation }) =>
+        useEntity({
+          ref: createRef<EntityRefShape>(),
+          animation: animation as never,
+          createEntity: vi.fn(async () => entity as never),
+        }),
+      {
+        initialProps: { animation: animationA },
+        wrapper,
+      },
+    )
+
+    await waitFor(() => expect(addEntity).toHaveBeenCalledOnce())
+    rerender({ animation: animationB })
+    insertion.resolve({ success: true })
+
+    await waitFor(() => expect(animationB.__bind).toHaveBeenCalledOnce())
+    expect(animationA.__bind).not.toHaveBeenCalled()
+    expect(animationA.__unbind).not.toHaveBeenCalled()
+
+    unmount()
+    expect(animationB.__unbind).toHaveBeenCalledOnce()
+    expect(entity.destroy).toHaveBeenCalledOnce()
+  })
+
+  test('does not bind an animation removed before async Entity creation completes', async () => {
+    const insertion = deferred<{ success: boolean }>()
+    const addEntity = vi.fn(() => insertion.promise)
+    const entity = {
+      id: 'entity-1',
+      updateTransform: vi.fn(async () => undefined),
+      destroy: vi.fn(),
+    }
+    const animationA = {
+      __bind: vi.fn(),
+      __unbind: vi.fn(),
+    }
+    const ref = createRef<EntityRefShape>()
+    const realityContext = {
+      reality: { addEntity },
+      resourceRegistry: {},
+      attachmentRegistry: {},
+    } as unknown as RealityContextValue
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <RealityContext.Provider value={realityContext}>
+        {children}
+      </RealityContext.Provider>
+    )
+
+    const { rerender, unmount } = renderHook(
+      ({ animation }) =>
+        useEntity({
+          ref,
+          animation: animation as never,
+          createEntity: vi.fn(async () => entity as never),
+        }),
+      {
+        initialProps: { animation: animationA as object | undefined },
+        wrapper,
+      },
+    )
+
+    await waitFor(() => expect(addEntity).toHaveBeenCalledOnce())
+    rerender({ animation: undefined })
+    insertion.resolve({ success: true })
+
+    await waitFor(() => expect(ref.current?.entity).toBe(entity))
+    expect(animationA.__bind).not.toHaveBeenCalled()
+    expect(animationA.__unbind).not.toHaveBeenCalled()
+
+    unmount()
+    expect(entity.destroy).toHaveBeenCalledOnce()
+  })
+
   test.each([
     ['parent', true],
     ['parent', false],

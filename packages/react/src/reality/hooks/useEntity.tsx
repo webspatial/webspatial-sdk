@@ -84,20 +84,6 @@ export const useEntity = ({
         }
 
         instanceRef.current?.updateEntity(ent)
-
-        // Bind animation if present
-        if (animation) {
-          try {
-            ;(animation as unknown as EntityMotionBindingInternal).__bind(ent)
-            prevAnimationRef.current = animation
-          } catch (error) {
-            setBindingError(
-              error instanceof Error ? error : new Error(String(error)),
-            )
-            return
-          }
-        }
-
         forceUpdate()
       } catch (error) {
         console.error('useEntity init ~ error:', error)
@@ -119,9 +105,10 @@ export const useEntity = ({
     }
   }, [ctx, parent, recreateKey])
 
+  const entity = instanceRef.current.entity
+
   // Handle animation prop changes after initial mount
   useEffect(() => {
-    const entity = instanceRef.current.entity
     if (!entity) return
 
     const prevAnimation = prevAnimationRef.current
@@ -131,15 +118,21 @@ export const useEntity = ({
     // Unbind old animation
     if (prevAnimation) {
       ;(prevAnimation as unknown as EntityMotionBindingInternal).__unbind()
+      prevAnimationRef.current = undefined
     }
 
     // Bind new animation
     if (animation) {
-      ;(animation as unknown as EntityMotionBindingInternal).__bind(entity)
+      try {
+        ;(animation as unknown as EntityMotionBindingInternal).__bind(entity)
+        prevAnimationRef.current = animation
+      } catch (error) {
+        setBindingError(
+          error instanceof Error ? error : new Error(String(error)),
+        )
+      }
     }
-
-    prevAnimationRef.current = animation
-  }, [animation, instanceRef.current.entity])
+  }, [animation, entity])
 
   useEntityId({ id, entity: instanceRef.current.entity })
   useEntityTransform(instanceRef.current.entity, {
