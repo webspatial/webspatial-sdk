@@ -1024,8 +1024,12 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         try animation.play(at: 10)
 
         XCTAssertEqual(animation.playState, .running)
-        XCTAssertTrue(entity.entityMotionLocksTransformWrite(animationId: "animation-1"))
         XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
+        let protectedTranslation = entity.transform.translation
+        XCTAssertFalse(entity.updateTransform(translationMatrix(x: 20, y: 30, z: 40)))
+        XCTAssertEqual(entity.transform.translation.x, protectedTranslation.x, accuracy: 1e-6)
+        XCTAssertEqual(entity.transform.translation.y, protectedTranslation.y, accuracy: 1e-6)
+        XCTAssertEqual(entity.transform.translation.z, protectedTranslation.z, accuracy: 1e-6)
         XCTAssertEqual(animation.confirmedValues.position.x, 0, accuracy: 1e-6)
         XCTAssertEqual(animation.confirmedValues.position.y, 3, accuracy: 1e-6)
         XCTAssertEqual(animation.confirmedValues.position.z, 4, accuracy: 1e-6)
@@ -1279,21 +1283,29 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         animation.stop(at: 0.5)
         XCTAssertEqual(animation.playState, .idle)
         XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
+        XCTAssertTrue(entity.updateTransform(translationMatrix(x: 10)))
+        XCTAssertEqual(entity.transform.translation.x, 10, accuracy: 1e-6)
 
         try animation.play(at: 1)
         try animation.reset()
         XCTAssertEqual(animation.playState, .idle)
         XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
+        XCTAssertTrue(entity.updateTransform(translationMatrix(x: 20)))
+        XCTAssertEqual(entity.transform.translation.x, 20, accuracy: 1e-6)
 
         try animation.play(at: 2)
         try animation.finish()
         XCTAssertEqual(animation.playState, .finished)
         XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
+        XCTAssertTrue(entity.updateTransform(translationMatrix(x: 30)))
+        XCTAssertEqual(entity.transform.translation.x, 30, accuracy: 1e-6)
 
         try animation.play(at: 3)
         animation.completeNaturally()
         XCTAssertEqual(animation.playState, .finished)
         XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
+        XCTAssertTrue(entity.updateTransform(translationMatrix(x: 40)))
+        XCTAssertEqual(entity.transform.translation.x, 40, accuracy: 1e-6)
     }
 
     /// Confirms stopping or destroying one Entity motion object preserves unrelated target and descendant controllers.
@@ -1761,6 +1773,20 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
             },
             timingFunction: timing
         )
+    }
+
+    /// Creates a complete column-major translation matrix for external writes.
+    private func translationMatrix(
+        x: Float,
+        y: Float = 0,
+        z: Float = 0
+    ) -> [String: Float] {
+        [
+            "0": 1, "1": 0, "2": 0, "3": 0,
+            "4": 0, "5": 1, "6": 0, "7": 0,
+            "8": 0, "9": 0, "10": 1, "11": 0,
+            "12": x, "13": y, "14": z, "15": 1,
+        ]
     }
 
     /// Asserts one callback message contains the target's complete current Transform.

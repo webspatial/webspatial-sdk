@@ -153,11 +153,6 @@ class SpatialEntity: Entity, SpatialObjectProtocol {
         }
     }
 
-    /// Returns whether the supplied Entity motion animation owns transform writes.
-    func entityMotionLocksTransformWrite(animationId: String) -> Bool {
-        entityMotionTransformOwnerId == animationId
-    }
-
     func updateGesture(_ type: String, _ isEable: Bool) {
         switch WebSpatialGestureType(rawValue: type) {
         case .spatialtap:
