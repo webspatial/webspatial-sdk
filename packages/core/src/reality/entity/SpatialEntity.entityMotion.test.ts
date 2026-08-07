@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const platformSpy = {
   callJSB: vi.fn(),
@@ -25,6 +25,10 @@ describe('SpatialEntity Entity motion', () => {
       errorMessage: '',
     })
     SpatialWebEvent.eventReceiver = {}
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
   })
 
   it('normalizes config and creates an animation with the target entity id', async () => {
@@ -115,5 +119,24 @@ describe('SpatialEntity Entity motion', () => {
     ).toThrow('both from and to')
     expect(onError).not.toHaveBeenCalled()
     expect(platformSpy.callJSB).not.toHaveBeenCalled()
+  })
+
+  it('keeps timeline precedence silent in production', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const entity = new SpatialEntity('entity-1')
+
+    await entity.createAnimation({
+      from: { position: { x: 10 } },
+      to: { position: { x: 20 } },
+      timeline: {
+        from: { position: { x: 0 } },
+        to: { position: { x: 1 } },
+      },
+      duration: 1,
+    })
+
+    expect(warning).not.toHaveBeenCalled()
+    warning.mockRestore()
   })
 })

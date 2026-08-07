@@ -63,6 +63,19 @@ const entityAnimationObjectOptions = new WeakMap<
   EntityAnimationObjectOptions
 >()
 
+/** Tracks whether the latest public config already declared timeline precedence. */
+const entityAnimationPrecedenceDeclarations = new WeakMap<
+  EntityAnimationObject,
+  boolean
+>()
+
+function hasTimelinePrecedenceDeclaration(config: EntityMotionConfig): boolean {
+  return (
+    config.timeline !== undefined &&
+    (config.from !== undefined || config.to !== undefined)
+  )
+}
+
 /**
  * Creates an Entity animation object through the package-internal canonical path.
  *
@@ -76,6 +89,10 @@ export function createEntityAnimationObject(
 ): EntityAnimationObject {
   const animation = new EntityAnimationObject(id)
   entityAnimationObjectOptions.set(animation, options)
+  entityAnimationPrecedenceDeclarations.set(
+    animation,
+    hasTimelinePrecedenceDeclaration(options.config),
+  )
   return animation
 }
 
@@ -177,7 +194,13 @@ export class EntityAnimationObject
 
   /** Validates and commits a changed execution definition in place. */
   update(config: EntityMotionConfig): Promise<void> {
-    const timeline = normalizeEntityMotionConfig(config)
+    const hasPrecedenceDeclaration = hasTimelinePrecedenceDeclaration(config)
+    const timeline = normalizeEntityMotionConfig(
+      config,
+      hasPrecedenceDeclaration &&
+        !entityAnimationPrecedenceDeclarations.get(this),
+    )
+    entityAnimationPrecedenceDeclarations.set(this, hasPrecedenceDeclaration)
     if (this.isDestroyed || this.isDestroying) return Promise.resolve()
     const current = entityAnimationObjectOptions.get(this)
     if (current && this.timelinesEqual(current.timeline, timeline)) {

@@ -236,7 +236,7 @@ describe('EntityMotionBinding', () => {
     expect(binding.api.playState).toBe('idle')
   })
 
-  test('passes timeline precedence to Core without duplicate warnings on create or update', async () => {
+  test('passes timeline precedence declarations to Core on create and update', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { object } = createMockAnimationObject()
     const precedenceConfig = createConfig({
@@ -257,24 +257,41 @@ describe('EntityMotionBinding', () => {
     }
     const binding = new EntityMotionBinding(createConfig({ autoStart: false }))
 
-    binding.updateConfig(precedenceConfig)
-    expect(warning).toHaveBeenCalledOnce()
-    binding.__bind(entity as any)
-    await flushPromises()
-    expect(warning).toHaveBeenCalledOnce()
+    try {
+      binding.updateConfig(precedenceConfig)
+      expect(warning).not.toHaveBeenCalled()
+      binding.__bind(entity as any)
+      await flushPromises()
+      expect(warning).toHaveBeenCalledOnce()
+      expect(entity.createAnimation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: precedenceConfig.from,
+          to: precedenceConfig.to,
+          timeline: precedenceConfig.timeline,
+        }),
+      )
 
-    object.update.mockImplementation(async (...args: unknown[]) => {
-      const config = args[0] as EntityMotionConfig
-      if (config.from !== undefined || config.to !== undefined) {
-        console.warn('[Core] duplicate precedence warning')
-      }
-    })
-    binding.updateConfig({ duration: 2 })
-    binding.updateConfig({ ...precedenceConfig, duration: 2 })
-    binding.reconcileConfig()
-    await flushPromises()
-    expect(warning).toHaveBeenCalledTimes(2)
-    warning.mockRestore()
+      object.update.mockImplementation(async (...args: unknown[]) => {
+        const config = args[0] as EntityMotionConfig
+        if (config.from !== undefined || config.to !== undefined) {
+          console.warn('[Core] duplicate precedence warning')
+        }
+      })
+      binding.updateConfig({ duration: 2 })
+      binding.updateConfig({ ...precedenceConfig, duration: 2 })
+      binding.reconcileConfig()
+      await flushPromises()
+      expect(warning).toHaveBeenCalledTimes(2)
+      expect(object.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: precedenceConfig.from,
+          to: precedenceConfig.to,
+          timeline: precedenceConfig.timeline,
+        }),
+      )
+    } finally {
+      warning.mockRestore()
+    }
   })
 
   test('enters queued when playback waits for object creation', async () => {

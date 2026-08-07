@@ -872,6 +872,39 @@ describe('EntityAnimationObject', () => {
     expect(platformSpy.callJSB).not.toHaveBeenCalled()
   })
 
+  it('warns once per timeline precedence declaration lifecycle', async () => {
+    const precedenceConfig: EntityMotionConfig = {
+      from: { position: { x: 10 } },
+      to: { position: { x: 20 } },
+      timeline: {
+        from: { position: { x: 0 } },
+        to: { position: { x: 1 } },
+      },
+      duration: 1,
+    }
+    const animation = createEntityAnimationObject('animation-1', {
+      config: precedenceConfig,
+      timeline: normalizeEntityMotionConfig(precedenceConfig, false),
+    })
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    try {
+      await animation.update(precedenceConfig)
+      expect(warning).not.toHaveBeenCalled()
+
+      await animation.update({
+        timeline: precedenceConfig.timeline,
+        duration: 1,
+      })
+      await animation.update(precedenceConfig)
+
+      expect(warning).toHaveBeenCalledOnce()
+      expect(platformSpy.callJSB).not.toHaveBeenCalled()
+    } finally {
+      warning.mockRestore()
+    }
+  })
+
   it('commits a successful config update and confirmed pose', async () => {
     platformSpy.callJSB.mockImplementation(() => ok({ values, revision: 1 }))
     const animation = createEntityAnimationObject('animation-1', {

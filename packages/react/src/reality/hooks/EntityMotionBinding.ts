@@ -17,17 +17,6 @@ type PlaybackCommandType = 'play' | 'pause' | 'stop' | 'reset' | 'finish'
 
 type EntityMotionCommand = { type: PlaybackCommandType }
 
-/** Removes top-level boundaries that Core ignores when a timeline is present. */
-function removeIgnoredPrecedenceBoundaries(
-  config: EntityMotionConfig,
-): EntityMotionConfig {
-  if (config.timeline === undefined) return config
-  const sanitized = { ...config }
-  delete sanitized.from
-  delete sanitized.to
-  return sanitized
-}
-
 declare const entityMotionAnimationBrand: unique symbol
 
 /** Opaque Entity animation prop consumed by Reality Entity components. */
@@ -65,8 +54,6 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
   private generation = 0
   /** Whether creation failure terminated the current binding lifecycle. */
   private terminated = false
-  /** Whether the latest committed config contains an already-warned declaration conflict. */
-  private precedenceDeclarationActive = false
   /** Native-confirmed or creation-pending playback state. */
   private state: SpatializedMotionPlayState = 'idle'
   /** Complete Native-confirmed Entity transform mirror. */
@@ -116,15 +103,6 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
 
   /** Replaces authoring and callback references for subsequent work. */
   updateConfig(config: EntityMotionConfig): void {
-    const hasPrecedenceDeclaration =
-      config.timeline !== undefined &&
-      (config.from !== undefined || config.to !== undefined)
-    if (hasPrecedenceDeclaration && !this.precedenceDeclarationActive) {
-      console.warn(
-        '[useEntityAnimation] timeline takes precedence; top-level from/to are ignored',
-      )
-    }
-    this.precedenceDeclarationActive = hasPrecedenceDeclaration
     if (this.config !== config) {
       this.configRevision += 1
     }
@@ -145,16 +123,11 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     const object = this.animationObject
     const generation = this.generation
     try {
-      void object
-        .update(removeIgnoredPrecedenceBoundaries(this.config))
-        .catch(error => {
-          if (
-            generation === this.generation &&
-            this.animationObject === object
-          ) {
-            this.reportCommandError(error)
-          }
-        })
+      void object.update(this.config).catch(error => {
+        if (generation === this.generation && this.animationObject === object) {
+          this.reportCommandError(error)
+        }
+      })
     } catch (error) {
       this.pendingSynchronousError =
         error instanceof Error ? error : new Error(String(error))
@@ -235,7 +208,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     const creationConfigRevision = this.configRevision
     let creationErrorReported = false
     const creationConfig: EntityMotionConfig = {
-      ...removeIgnoredPrecedenceBoundaries(config),
+      ...config,
       onError: error => {
         if (generation !== this.generation || creationErrorReported) return
         creationErrorReported = true

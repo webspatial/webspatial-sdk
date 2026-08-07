@@ -401,7 +401,7 @@ describe('useEntityAnimation redesign', () => {
     warning.mockRestore()
   })
 
-  test('warns once per committed precedence declaration lifecycle in StrictMode', async () => {
+  test('leaves timeline precedence handling to Core in StrictMode', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const wrapper = ({ children }: { children: ReactNode }) =>
       createElement(StrictMode, null, children)
@@ -424,16 +424,18 @@ describe('useEntityAnimation redesign', () => {
       { initialProps: { declareBoth: true }, wrapper },
     )
 
-    await vi.waitFor(() => expect(warning).toHaveBeenCalledOnce())
+    await Promise.resolve()
+    expect(warning).not.toHaveBeenCalled()
     rerender({ declareBoth: true })
     rerender({ declareBoth: true })
     await Promise.resolve()
-    expect(warning).toHaveBeenCalledOnce()
+    expect(warning).not.toHaveBeenCalled()
 
     rerender({ declareBoth: false })
     await Promise.resolve()
     rerender({ declareBoth: true })
-    await vi.waitFor(() => expect(warning).toHaveBeenCalledTimes(2))
+    await Promise.resolve()
+    expect(warning).not.toHaveBeenCalled()
     warning.mockRestore()
   })
 
