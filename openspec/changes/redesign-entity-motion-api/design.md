@@ -131,17 +131,15 @@ flowchart TB
 
     subgraph Core["shared logic layer (packages/core)"]
         EntityCreate["SpatialEntity.createAnimation(config)<br/>encapsulates target id and Entity-specific creation"]
-        Normalize["normalizeEntityMotionConfig(config)<br/>unify top-level from/to, timeline.from/to and percentages into internal tracks"]
+        Normalize["normalizeEntityMotionConfig(config)<br/>validate public config and normalize canonical tracks"]
         Tracks["canonical tracks<br/>position.* / rotation.* / scale.*"]
-        Validate["validateEntityMotionConfig()<br/>validate the transform property allowlist"]
         PlaybackApi["SpatializedPlaybackApi<br/>shared playback interface"]
         EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>adds set(EntityTransformUpdate)"]
         CoreAnimationObject["EntityAnimationObject<br/>implements EntityPlaybackApi"]
 
         EntityCreate --> Normalize
         Normalize --> Tracks
-        Tracks --> Validate
-        Validate -->|"return canonical payload"| EntityCreate
+        Tracks -->|"return canonical payload"| EntityCreate
         EntityCreate -->|"return after create succeeds"| CoreAnimationObject
         PlaybackApi --> EntityApi
         EntityApi --> CoreAnimationObject
@@ -211,7 +209,6 @@ classDiagram
         }
         class EntityMotionNormalizer {
             +normalizeEntityMotionConfig(config)
-            +validateEntityMotionConfig(tracks)
         }
         class SpatializedPlaybackApi {
             <<interface>>
@@ -623,7 +620,6 @@ classDiagram
         }
         class EntityMotionNormalizer {
             +normalizeEntityMotionConfig(config)
-            +validateEntityMotionConfig(tracks)
         }
         class EntityMotionTimelinePayload {
             +duration number

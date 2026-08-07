@@ -131,17 +131,15 @@ flowchart TB
 
     subgraph Core["公共逻辑层 (packages/core)"]
         EntityCreate["SpatialEntity.createAnimation(config)<br/>封装目标 id 与 Entity 专属创建逻辑"]
-        Normalize["normalizeEntityMotionConfig(config)<br/>把顶层 from/to、timeline.from/to 与百分比统一成内部轨道"]
+        Normalize["normalizeEntityMotionConfig(config)<br/>校验公开配置并归一化规范轨道"]
         Tracks["规范轨道<br/>position.* / rotation.* / scale.*"]
-        Validate["validateEntityMotionConfig()<br/>校验 transform 属性白名单"]
         PlaybackApi["SpatializedPlaybackApi<br/>通用播放接口"]
         EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>增加 set(EntityTransformUpdate)"]
         CoreAnimationObject["EntityAnimationObject<br/>implements EntityPlaybackApi"]
 
         EntityCreate --> Normalize
         Normalize --> Tracks
-        Tracks --> Validate
-        Validate -->|"返回规范 payload"| EntityCreate
+        Tracks -->|"返回规范 payload"| EntityCreate
         EntityCreate -->|"创建成功后返回"| CoreAnimationObject
         PlaybackApi --> EntityApi
         EntityApi --> CoreAnimationObject
@@ -211,7 +209,6 @@ classDiagram
         }
         class EntityMotionNormalizer {
             +normalizeEntityMotionConfig(config)
-            +validateEntityMotionConfig(tracks)
         }
         class SpatializedPlaybackApi {
             <<interface>>
@@ -623,7 +620,6 @@ classDiagram
         }
         class EntityMotionNormalizer {
             +normalizeEntityMotionConfig(config)
-            +validateEntityMotionConfig(tracks)
         }
         class EntityMotionTimelinePayload {
             +duration number
