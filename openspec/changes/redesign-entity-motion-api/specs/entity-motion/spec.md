@@ -247,9 +247,9 @@ Each `EntityMotionAnimationObject` MUST scope cleanup to the animation controlle
 - **THEN** Native MUST respectively use `stop`, `reset`, or `complete` as `callbackAction` and carry the confirmed transform
 - **AND** natural `complete` MUST remain exclusive to the current business playback controller
 
-### Requirement: Entity motion commands preserve Native FIFO order
+### Requirement: Entity motion commands submit without Core serialization
 
-Public `EntityPlaybackApi` methods MAY return `void`. The concrete Core `EntityAnimationObject.set(update)` MUST return `Promise<EntityMotionProps | void>` so the binding can consume the `SetEntityAnimation` reply. This promise MUST NOT be exposed through public `EntityPlaybackApi.set(update)`. Each Entity motion binding MUST keep a pending playback queue only until Native creates its animation object. After creation, Core MUST submit every `update`, playback, and `set` command immediately in call order, and JSB/Native MUST preserve that FIFO order. A command reply MUST settle only its own promise and MUST NOT gate later submissions.
+Public `EntityPlaybackApi` methods MAY return `void`. The concrete Core `EntityAnimationObject.set(update)` MUST return `Promise<EntityMotionProps | void>` so the binding can consume the `SetEntityAnimation` reply. This promise MUST NOT be exposed through public `EntityPlaybackApi.set(update)`. Each Entity motion binding MUST keep a pending playback queue only until Native creates its animation object. After creation, Core MUST submit every `update`, playback, and `set` command immediately. A command reply MUST settle only its own promise and MUST NOT gate later submissions.
 
 When a playback control command produces a state message, Native MUST submit that message before its success reply. Natural completion MUST produce an independent asynchronous completion state message.
 
@@ -259,35 +259,19 @@ When a playback control command produces a state message, Native MUST submit tha
 - **THEN** the binding MUST append those playback commands to its pending queue in call order
 - **AND** after creation succeeds, the native creation reply MUST first confirm public `idle`
 - **AND** the binding MUST then submit all pending playback commands immediately in call order
-- **AND** JSB and Native MUST preserve that FIFO order
 - **AND** when `autoStart` is enabled, its generated `play` MUST precede the playback commands already pending at creation time
 
-#### Scenario: Commands after Native object creation use JSB and Native FIFO
+#### Scenario: Commands after Native object creation submit immediately
 - **GIVEN** the native animation object exists
 - **WHEN** application code produces consecutive `update`, playback, or `set` commands
-- **THEN** Core MUST submit them immediately in call order
-- **AND** JSB and Native MUST process them in FIFO order
+- **THEN** Core MUST submit each command immediately without waiting for an earlier reply
 - **AND** each command reply MUST settle only its own promise
-
-#### Scenario: Consecutive config updates are all submitted in order
-- **GIVEN** the native animation object exists
-- **WHEN** application code produces consecutive config updates
-- **THEN** Core MUST submit every update in call order
-- **AND** JSB and Native MUST process every update in FIFO order
-
-#### Scenario: Consecutive set then play uses Native FIFO
-- **GIVEN** the native animation object exists and playback is inactive
-- **WHEN** application code calls `api.set(update)` and immediately calls `api.play()`
-- **THEN** Core MUST submit `set` and `play` immediately in call order
-- **AND** JSB and Native MUST process `set` before `play`
-- **AND** the success reply `values` MUST contain complete confirmed `position`, `rotation`, and `scale`
-- **AND** fresh play MUST read the native transform committed by that `set` as its latest baseline
 
 #### Scenario: Unbind or destruction invalidates pending playback commands
 - **GIVEN** a binding has playback commands waiting for native animation-object creation
 - **WHEN** the binding is removed, its target is replaced, its animation object is destroyed, or the binding is destroyed
 - **THEN** the SDK MUST discard those pending playback commands
-- **AND** commands already submitted to JSB MAY finish their Native FIFO processing
+- **AND** commands already submitted to JSB MAY finish processing
 
 ### Requirement: Same-target config updates commit in place with deterministic retarget semantics
 
@@ -359,7 +343,7 @@ Unbinding and target replacement MUST advance the binding generation, destroy th
 - **THEN** a Core-detectable argument error MUST throw locally and synchronously, with the Bridge command count unchanged
 - **AND** a Native asynchronous failure MUST preserve the old config, timeline, execution revision, controller, state, pose, write protection, and `entityProps`
 - **AND** the Native asynchronous failure MUST fire the latest `onError` exactly once
-- **AND** the binding and later FIFO commands MUST continue
+- **AND** the binding and later commands MUST continue
 
 #### Scenario: Update accepts only current execution results
 - **GIVEN** a successful update has advanced the execution revision
@@ -428,7 +412,7 @@ When no config update succeeded while paused, a `play` after `pause` MUST resume
 
 ### Requirement: Active animation protects the entire Entity transform
 
-During `delay`, `running`, and `paused`, the animation system MUST control the entire Entity transform. The underlying platforms (visionOS / picoOS) bind the whole `.transform`; configured components animate and the remaining components MUST hold their baseline values. Native MUST enable whole-transform write protection for each fresh play and keep it through pause. While that protection is active, the latest confirmed `entityProps` values MUST remain stable, and the SDK MUST discard direct React prop writes immediately. An `api.set` call made after native object creation MUST retain FIFO ordering, reach Native, receive `INVALID_CONTROL_STATE`, and map that result to one warning plus no-op without `onError`. Native `SpatialScene` MUST perform whole-transform animating-mask arbitration at the ordinary Entity transform update entry, returning success while preserving the current native transform.
+During `delay`, `running`, and `paused`, the animation system MUST control the entire Entity transform. The underlying platforms (visionOS / picoOS) bind the whole `.transform`; configured components animate and the remaining components MUST hold their baseline values. Native MUST enable whole-transform write protection for each fresh play and keep it through pause. While that protection is active, the latest confirmed `entityProps` values MUST remain stable, and the SDK MUST discard direct React prop writes immediately. An `api.set` call made after native object creation MUST reach Native, receive `INVALID_CONTROL_STATE`, and map that result to one warning plus no-op without `onError`. Native `SpatialScene` MUST perform whole-transform animating-mask arbitration at the ordinary Entity transform update entry, returning success while preserving the current native transform.
 
 For `stop`, `reset`, `finish`, and natural completion, Native MUST commit the corresponding pose, obtain the Entity's complete current transform, remove whole-transform write protection, and then emit the state event carrying that transform. Unbinding, binding termination, and animation-object destruction MUST also remove the protection as cleanup paths. While playback is inactive and no protection is present, ordinary Entity transform updates MUST update the native transform.
 
@@ -489,7 +473,7 @@ Entity motion lifecycle callbacks MUST be notifications only. Their return value
 
 ### Requirement: `api.set` is the imperative write entry for committed transform state
 
-The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` returns `void` and accepts the sparse object form `EntityTransformUpdate` (the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly); updater functions are programmer errors. Binding, creation-pending, and terminated lifecycle gates, plus Core destroying and destroyed gates, each produce one warning and complete a local no-op with stable zero counts for JSB calls and `onError`. A live Core object validates synchronously; invalid updates throw a built-in `Error`, while valid updates are submitted immediately to Core and its JSB/Native FIFO. A live Core object accepts an update with at least one transform scalar, and synchronously throws a built-in `Error` for an empty update or an update whose nested objects are empty. `api.set` is a state write entry that preserves playback progress and `playState`.
+The SDK MUST provide `api.set` as the imperative write entry for the committed Entity transform state that `entityProps` mirrors. `api.set` returns `void` and accepts the sparse object form `EntityTransformUpdate` (the same `{ position?, rotation?, scale? }` shape as the read-side `EntityMotionProps`, but named distinctly); updater functions are programmer errors. Binding, creation-pending, and terminated lifecycle gates, plus Core destroying and destroyed gates, each produce one warning and complete a local no-op with stable zero counts for JSB calls and `onError`. A live Core object validates synchronously; invalid updates throw a built-in `Error`, while valid updates are submitted immediately to Core. A live Core object accepts an update with at least one transform scalar, and synchronously throws a built-in `Error` for an empty update or an update whose nested objects are empty. `api.set` is a state write entry that preserves playback progress and `playState`.
 
 Entity transform writes MUST be arbitrated as one whole. During inactive playback, the component's combined React props control the transform. While the animation is active (`delay` / `running` / `paused`), Native animation controls the entire transform and blocks ordinary React transform writes; configured fields animate and the remaining fields hold their baseline values. Stop, reset, finish, and natural completion MUST remove that protection after committing the corresponding pose. Active retarget MUST keep whole-transform write protection continuously active. During inactive states, `api.set` updates the native committed transform and Core updates `entityProps` from Native's complete result. Initial creation failure terminates the current binding lifecycle and clears `entityProps`; config-update failure preserves current protection and mirror. Removing the binding also clears `entityProps`.
 

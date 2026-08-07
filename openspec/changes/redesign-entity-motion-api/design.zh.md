@@ -36,7 +36,7 @@
 - **球面线性插值(slerp)**:RealityKit 对旋转采用的插值方式,总是走两个朝向之间的最短路径。
 - **空操作(no-op)**:命令被接收后,物体和 `entityProps` 保持原值。
 - **注册表(registry)**:原生层用来按 id 查找物体或动画对象的表。
-- **创建前播放队列(creation-pending playback queue)**:React Binding 在 Native 创建动画对象前保存播放命令的队列。创建后由 Core 直接提交命令,JSB/Native 按调用顺序保序。
+- **创建前播放队列(creation-pending playback queue)**:React Binding 在 Native 创建动画对象前保存播放命令的队列。创建后由 Core 直接提交命令。
 - **命令回执(command reply)**:原生层完成命令的同步状态变更和姿态提交后,通过 JSB 返回的成功或失败结果。命令需要产生状态事件时,原生层先发出事件,再返回成功回执。
 
 ## 3. 设计目标
@@ -420,10 +420,10 @@ sequenceDiagram
 ### 5.1 React SDK
 
 - **公开接口:** `useEntityAnimation` 创建一个 `EntityMotionBinding` 和一个稳定的 `EntityPlaybackApi` 控制门面,读取绑定对象的当前确认姿态镜像,并返回 `[animation, api, entityProps]`;物体组件通过 `animation` 属性接收 `EntityMotionBinding`。
-- **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`;创建前的播放命令委派给 `EntityMotionBinding`,创建后的命令直接委派给 `EntityAnimationObject`。JSB/Native 按调用顺序保序。`api.set(update)` 把稀疏 transform 更新提交给原生。
+- **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`;创建前的播放命令委派给 `EntityMotionBinding`,创建后的命令直接委派给 `EntityAnimationObject`。`api.set(update)` 把稀疏 transform 更新提交给原生。
 - **set 生命周期门:** `EntityMotionBinding` 负责绑定、创建中和已终止生命周期门。每个门输出一次 warning,在本地丢弃 update 并完成 no-op。Core object 负责销毁中和已销毁门,使用相同的 warning 与本地 no-op 结果。Core object 存活时同步校验参数,再直接提交合法 update。
 - **目标绑定:** `useEntity` 消费物体组件的 `animation` 属性,并在 effect 建立和清理时调用绑定对象的 `__bind(target)` 和 `__unbind()` 入口。`EntityMotionBinding` 保证自身在同一时刻最多连接一个 `SpatialEntity`,绑定完成后调用 `target.createAnimation(config)`。解绑或目标替换时,绑定对象执行清理并把自身持有的 `entityProps` 镜像清空为 `{}`。应用继续展开返回对象时,普通 React 变换属性恢复控制。
-- **命令顺序:** `EntityMotionBinding` 只在对象创建前暂存播放命令,创建成功后按调用顺序刷新。Core 对象创建后立即按调用顺序提交每条 update、播放和 set,JSB/Native FIFO 负责保序。
+- **命令提交:** `EntityMotionBinding` 只在对象创建前暂存播放命令,创建成功后按调用顺序刷新。Core 对象创建后立即提交每条 update、播放和 set,每条回执独立结算。
 - **结果镜像:** `EntityMotionBinding` 持有 `entityProps`,消费当前 `EntityAnimationObject` 的确认值并通知 React 重渲染。`useEntityAnimation` 在每次渲染中读取当前镜像并作为第三项返回。`entityProps` 包含原生确认的 `position`、`rotation` 和 `scale`。
 
 #### 对象职责与调用关系
@@ -440,20 +440,18 @@ sequenceDiagram
 
 本文中的“绑定生命周期”表示 React 目标连接会话。`EntityAnimationObject` 持有播放状态机并管理播放生命周期。
 
-#### 创建前播放与命令顺序
+#### 创建前播放与命令提交
 
 公开的 `EntityPlaybackApi` 保持 `void` 命令接口。具体的 `EntityAnimationObject.set(update)` 返回 `Promise<EntityMotionProps | void>`,供绑定对象根据原生回执更新 `entityProps`。React 只在动画对象创建期间持有播放队列。
 
 - 原生动画对象创建期间,`play`、`pause`、`stop`、`reset`、`finish` 按调用顺序排队。`autoStart` 生成的 `play` 排在队首。
 - Native 动画对象创建期间为 `idle`;如果此时调用播放,命令等待执行,状态变为 `queued`。
-- 创建成功后,原生层先确认 `idle`,再由 React 按顺序刷新待处理播放队列。Core 立即提交每条命令,JSB/Native FIFO 负责保序。
+- 创建成功后,原生层先确认 `idle`,再由 React 按顺序刷新待处理播放队列。Core 立即提交每条命令。
 - 绑定、原生动画对象创建前或当前绑定生命周期终止后调用 `api.set` 时,该命令不进入队列。SDK 输出控制台警告并执行空操作。
-- 原生动画对象创建后,Core 按调用顺序直接提交 `update`、播放命令和 `set`。JSB/Native FIFO 负责保序,每条回执独立结算自身 Promise。
+- 原生动画对象创建后,Core 直接提交 `update`、播放命令和 `set`,无需等待此前命令的回执。每条回执独立结算自身 Promise。
 - 控制命令产生状态消息时,原生层先提交消息,再完成空成功回执。`SetEntityAnimation` 通过成功回执返回完整确认姿态。自然完成产生独立的异步完成状态消息。
-- 解绑或目标替换会使当前绑定代次失效并丢弃创建前待处理的播放命令。已经提交给 Native 的命令按 Native FIFO 结算;销毁后的 Core 新调用在本地空操作。同一目标的更新保留绑定代次。
-- 只更新回调时立即替换引用。等价的已提交配置不发送命令。连续配置更新全部按调用顺序提交。
-
-该顺序保证连续调用具有确定行为。`set → play`、`stop → play` 和 `play → pause` 按调用顺序抵达 JSB/Native,由 Native FIFO 处理。
+- 解绑或目标替换会使当前绑定代次失效并丢弃创建前待处理的播放命令。已经提交给 Native 的命令继续结算;销毁后的 Core 新调用在本地空操作。同一目标的更新保留绑定代次。
+- 只更新回调时立即替换引用。等价的已提交配置不发送命令。配置更新立即提交。
 
 #### 解绑、重新绑定与配置更新
 
@@ -463,7 +461,7 @@ sequenceDiagram
 - 重新绑定不同目标时,绑定对象先完成同一套清理,再为新目标创建动画对象。新目标从空镜像开始,并建立自身的确认值。
 - 执行配置变化时,绑定对象直接向现有 Core object 提交 `update`。更新保持 Core 对象、Native 对象、id 和绑定代次。成功后提交新配置、执行版本和确认姿态。失败时保留旧执行并为该命令触发 `onError`。
 - 只更新回调时保留对象、创建前播放队列、状态和 `entityProps`,后续事件使用最新回调。
-- `update A → pause → update B` 保持原顺序。每条配置更新都按调用顺序提交。
+- 每条配置更新都立即提交。
 - 回执和事件必须匹配绑定代次、id 和执行版本。新执行会丢弃旧控制器的迟到完成事件。
 - 初次创建失败会终止绑定。更新失败保留绑定和 `entityProps`。
 
@@ -714,7 +712,7 @@ ControlEntityAnimation {
 }
 ```
 
-控制成功回执使用空 payload 确认当前命令处理完成。Core 直接按调用顺序提交后续命令;JSB/Native FIFO 负责保持顺序,公开 `playState` 由 `EntityMotionStateChangedMsg` 更新。
+控制成功回执使用空 payload 确认当前命令处理完成。Core 提交每条命令时不等待此前命令的回执,公开 `playState` 由 `EntityMotionStateChangedMsg` 更新。
 
 ##### 设置动画姿态命令
 
