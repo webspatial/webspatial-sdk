@@ -531,7 +531,7 @@ describe('EntityMotionBinding', () => {
     expect(onError).toHaveBeenCalledWith(error)
   })
 
-  test('delegates created commands while Core owns serialization', async () => {
+  test('delegates created commands immediately in call order', async () => {
     const first = deferred<undefined>()
     const calls: string[] = []
     const onError = vi.fn()

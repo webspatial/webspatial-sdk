@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { EntityMotionBinding } from './EntityMotionBinding'
 
 describe('Entity motion playback features', () => {
-  test('serializes in-place updates with playback and set commands', async () => {
+  test('submits updates, playback, and set immediately in call order', async () => {
     const calls: string[] = []
     const object = {
       id: 'animation-1',
