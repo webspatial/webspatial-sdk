@@ -5,7 +5,6 @@ export type {
   EntityMotionProps,
   EntityPlaybackApi,
   EntityPlaybackError,
-  EntityPlaybackErrorCode,
 } from './entityMotion'
 export type {
   SpatializedMotionKind,

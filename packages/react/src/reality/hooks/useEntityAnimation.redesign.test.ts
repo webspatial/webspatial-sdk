@@ -12,10 +12,9 @@ import {
   type EntityMotionAnimation,
   useEntityAnimation,
 } from './useEntityAnimation'
-import type {
-  EntityPlaybackError,
-  EntityPlaybackErrorCode,
-} from '../../experimental'
+import type { EntityPlaybackError } from '../../experimental'
+// @ts-expect-error EntityPlaybackErrorCode is intentionally not exported.
+import type { EntityPlaybackErrorCode } from '../../experimental'
 
 class TestErrorBoundary extends Component<
   { children?: ReactNode; onError: (error: Error) => void },
@@ -169,12 +168,12 @@ describe('useEntityAnimation redesign', () => {
     expectTypeOf<EntityMotionAnimation>().not.toHaveProperty('__unbind')
   })
 
-  test('exports Entity playback error types from the experimental entry', () => {
+  test('exports the Entity playback error from the experimental entry', () => {
     expectTypeOf<EntityPlaybackError>().toEqualTypeOf<{
-      code: EntityPlaybackErrorCode
+      code: EntityPlaybackError['code']
       reason: string
     }>()
-    expectTypeOf<EntityPlaybackErrorCode>().toEqualTypeOf<
+    expectTypeOf<EntityPlaybackError['code']>().toEqualTypeOf<
       | 'TARGET_NOT_FOUND'
       | 'UNSUPPORTED_TARGET'
       | 'ANIMATION_NOT_FOUND'
