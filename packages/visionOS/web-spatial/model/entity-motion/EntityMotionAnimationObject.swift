@@ -99,7 +99,7 @@ final class EntityMotionAnimationObject: SpatialObject {
     }
 
     /// Reports whether the object currently controls the target transform.
-    var isActive: Bool {
+    private var isActive: Bool {
         playState == .running || playState == .paused
     }
 
@@ -183,7 +183,7 @@ final class EntityMotionAnimationObject: SpatialObject {
     }
 
     /// Handles the current RealityKit controller's natural completion.
-    func completeNaturally(revision: Int? = nil) {
+    private func completeNaturally(revision: Int? = nil) {
         guard acceptsCompletionEvent,
               revision ?? executionRevision == executionRevision
         else {
@@ -566,7 +566,7 @@ final class EntityMotionAnimationObject: SpatialObject {
     }
 
     /// Generates one complete-transform RealityKit animation resource.
-    static func makeAnimationResource(
+    private static func makeAnimationResource(
         compiled: EntityMotionCompiledTimeline,
         timeline: EntityMotionTimelinePayload
     ) throws -> AnimationResource {

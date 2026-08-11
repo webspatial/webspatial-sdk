@@ -790,14 +790,14 @@ final class EntityMotionTimelineCompilerTests: XCTestCase {
                 baseline: .identity
             )
             XCTAssertEqual(compiled.segments[0].timing, timing)
-            let resource = try EntityMotionAnimationObject.makeAnimationResource(
-                compiled: compiled,
+            let entity = SpatialEntity("entity-motion-target")
+            let animationObject = try EntityMotionAnimationObject(
+                target: entity,
                 timeline: timeline
             )
-            let animation = try XCTUnwrap(
-                resource.definition as? FromToByAnimation<Transform>
-            )
-            XCTAssertEqual(animation.bindTarget, .transform)
+            try animationObject.play()
+            XCTAssertEqual(animationObject.playState, .running)
+            XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
         }
 
         let sparse = EntityMotionTimelinePayload(
@@ -1130,13 +1130,12 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         XCTAssertEqual(animation.confirmedValues.position.z, 12, accuracy: 1e-6)
     }
 
-    /// Confirms every terminal state starts a fresh run from the latest native baseline.
-    func testReplayAfterEveryTerminalStateReadsLatestBaseline() throws {
+    /// Confirms every explicit terminal state starts a fresh run from the latest native baseline.
+    func testReplayAfterEveryExplicitTerminalStateReadsLatestBaseline() throws {
         let terminalTransitions: [(EntityMotionAnimationObject) throws -> Void] = [
             { $0.stop() },
             { try $0.reset() },
             { try $0.finish() },
-            { $0.completeNaturally() },
         ]
 
         for (index, transition) in terminalTransitions.enumerated() {
@@ -1187,8 +1186,8 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
     }
 
-    /// Confirms a looping run keeps its current resource and ignores terminal completion delivery.
-    func testLoopRunReusesCurrentResourceUntilExplicitControl() throws {
+    /// Confirms a looping run stays active until an explicit control command.
+    func testLoopRunStaysActiveUntilExplicitControl() throws {
         let entity = SpatialEntity("entity-motion-target")
         var actions: [EntityMotionCallbackAction?] = []
         let animation = try EntityMotionAnimationObject(
@@ -1203,16 +1202,14 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         )
 
         try animation.play()
-        animation.completeNaturally()
-        try animation.play()
 
         XCTAssertEqual(animation.playState, .running)
         XCTAssertEqual(actions, [.start])
         XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
     }
 
-    /// Confirms adjacent full-pose segments compile through one RealityKit sequence.
-    func testMultiSegmentResourceUsesSequenceAndWholeTransform() throws {
+    /// Confirms adjacent full-pose segments start through the production playback path.
+    func testMultiSegmentTimelineStartsWholeTransformPlayback() throws {
         let payload = timeline(
             duration: 2,
             delay: 0.25,
@@ -1226,19 +1223,19 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
             payload,
             baseline: .identity
         )
-
-        let resource = try EntityMotionAnimationObject.makeAnimationResource(
-            compiled: compiled,
+        let entity = SpatialEntity("entity-motion-target")
+        let animation = try EntityMotionAnimationObject(
+            target: entity,
             timeline: payload
         )
 
-        let view = try XCTUnwrap(resource.definition as? AnimationView)
-        XCTAssertNotEqual(view.bindTarget, .transform)
-        let group = try XCTUnwrap(view.source as? AnimationGroup)
-        XCTAssertEqual(group.group.count, compiled.segments.count)
-        XCTAssertEqual(view.repeatMode, .none)
-        XCTAssertEqual(view.delay, 0.25, accuracy: 1e-9)
-        XCTAssertEqual(view.speed, 1.5, accuracy: 1e-6)
+        try animation.play()
+
+        XCTAssertEqual(compiled.segments.count, 2)
+        XCTAssertEqual(animation.playState, .running)
+        XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
+        XCTAssertEqual(animation.confirmedValues.position.x, 0, accuracy: 1e-6)
+        XCTAssertEqual(animation.confirmedValues.rotation.y, 0, accuracy: 1e-6)
     }
 
     /// Confirms inactive `set` merges sparse values and active `set` is rejected.
@@ -1312,7 +1309,7 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         try assertConfirmed(messages.last, matches: entity, action: .complete)
 
         try animation.play()
-        animation.completeNaturally()
+        try animation.finish()
         try assertConfirmed(messages.last, matches: entity, action: .complete)
 
         let setResult = try animation.set(
@@ -1328,8 +1325,8 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         XCTAssertEqual(setResult.rotation.z, 0, accuracy: 1e-5)
     }
 
-    /// Confirms stop/reset/finish and natural completion release transform write ownership.
-    func testTerminalTransitionsReleaseTransformWriteProtection() throws {
+    /// Confirms explicit stop/reset/finish release transform write ownership.
+    func testExplicitTerminalTransitionsReleaseTransformWriteProtection() throws {
         let entity = SpatialEntity("entity-motion-target")
         let animation = try EntityMotionAnimationObject(
             id: "animation-1",
@@ -1357,13 +1354,6 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
         XCTAssertTrue(entity.updateTransform(translationMatrix(x: 30)))
         XCTAssertEqual(entity.transform.translation.x, 30, accuracy: 1e-6)
-
-        try animation.play()
-        animation.completeNaturally()
-        XCTAssertEqual(animation.playState, .finished)
-        XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
-        XCTAssertTrue(entity.updateTransform(translationMatrix(x: 40)))
-        XCTAssertEqual(entity.transform.translation.x, 40, accuracy: 1e-6)
     }
 
     /// Confirms stopping or destroying one Entity motion object preserves unrelated target and descendant controllers.
@@ -1667,8 +1657,8 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         )
     }
 
-    /// Confirms completion from the replaced execution cannot finish the new run.
-    func testRunningUpdateIgnoresStaleCompletionRevision() throws {
+    /// Confirms a running update can complete the replacement execution through the command boundary.
+    func testRunningUpdateCompletesReplacementExecution() throws {
         let entity = SpatialEntity("entity-motion-target")
         var messages: [EntityMotionStateChangedMessage] = []
         let animation = try EntityMotionAnimationObject(
@@ -1684,14 +1674,12 @@ final class EntityMotionAnimationObjectTests: XCTestCase {
         try animation.play()
         let result = try animation.update(timeline(duration: 2))
 
-        animation.completeNaturally(revision: 0)
-
         XCTAssertEqual(result.revision, 1)
         XCTAssertEqual(animation.playState, .running)
         XCTAssertFalse(entity.entityMotionAllowsExternalTransformWrite)
         XCTAssertEqual(messages.map(\.detail.callbackAction), [.start, .start])
 
-        animation.completeNaturally(revision: 1)
+        try animation.finish()
 
         XCTAssertEqual(animation.playState, .finished)
         XCTAssertTrue(entity.entityMotionAllowsExternalTransformWrite)
