@@ -2,11 +2,16 @@ import { describe, expect, expectTypeOf, test } from 'vitest'
 import type {
   EntityMotionConfig,
   EntityMotionProps,
-  EntityMotionTimeline,
   EntityPlaybackApi,
   EntityTransformUpdate,
 } from '../../index'
 import type { SpatialEntity } from '../../index'
+// @ts-expect-error Entity motion frame authoring type is not exported from the package entry.
+import type { EntityMotionFrame } from '../../index'
+// @ts-expect-error Entity motion patch type is not exported from the package entry.
+import type { EntityMotionPatch } from '../../index'
+// @ts-expect-error Entity motion timeline type is not exported from the package entry.
+import type { EntityMotionTimeline } from '../../index'
 // @ts-expect-error Legacy Entity animation types are removed from the public API.
 import type { AnimateTransformResult } from '../../index'
 // @ts-expect-error Legacy Entity animation types are removed from the public API.
@@ -35,7 +40,6 @@ type LegacyAnimateTransform = SpatialEntity['animateTransform']
 describe('public Entity motion API', () => {
   test('exports authoring and playback types from the package entry', () => {
     expectTypeOf<EntityMotionConfig>().toBeObject()
-    expectTypeOf<EntityMotionTimeline>().toBeObject()
     expectTypeOf<EntityMotionProps>().toBeObject()
     expectTypeOf<EntityTransformUpdate>().toBeObject()
     expectTypeOf<EntityPlaybackApi>().toBeObject()
@@ -63,3 +67,6 @@ void (undefined as unknown as AnimateTransformResult)
 void (undefined as unknown as AnimatedPropsInternal)
 void (undefined as unknown as AnimationApi)
 void (undefined as unknown as AnimationConfig)
+void (undefined as unknown as EntityMotionFrame)
+void (undefined as unknown as EntityMotionPatch)
+void (undefined as unknown as EntityMotionTimeline)

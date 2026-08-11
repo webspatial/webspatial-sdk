@@ -2,10 +2,7 @@ export * from './spatializedVisual'
 export * from './spatializedPlayback'
 export type {
   EntityMotionConfig,
-  EntityMotionFrame,
-  EntityMotionPatch,
   EntityMotionProps,
-  EntityMotionTimeline,
   EntityPlaybackApi,
   EntityPlaybackError,
   EntityPlaybackErrorCode,
