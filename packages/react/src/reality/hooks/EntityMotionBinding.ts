@@ -3,7 +3,6 @@ import type {
   EntityMotionProps,
   EntityPlaybackApi,
   EntityPlaybackError,
-  EntityTransformUpdate,
   SpatialEntity,
   SpatializedMotionPlayState,
 } from '@webspatial/core-sdk'
@@ -315,7 +314,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
   }
 
   /** Dispatches a set command only after native object creation. */
-  private dispatchSet(update: EntityTransformUpdate): void {
+  private dispatchSet(update: Parameters<EntityPlaybackApi['set']>[0]): void {
     if (this.terminated) {
       console.warn('[useEntityAnimation] set ignored after creation failure')
       return

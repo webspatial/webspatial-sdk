@@ -18,7 +18,6 @@ export type {
   EntityPlaybackApi,
   EntityPlaybackError,
   EntityPlaybackErrorCode,
-  EntityTransformUpdate,
 } from '@webspatial/core-sdk'
 export type {
   EntityMotionAnimation,

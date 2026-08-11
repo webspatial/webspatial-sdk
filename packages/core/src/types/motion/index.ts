@@ -6,7 +6,6 @@ export type {
   EntityPlaybackApi,
   EntityPlaybackError,
   EntityPlaybackErrorCode,
-  EntityTransformUpdate,
 } from './entityMotion'
 export type {
   SpatializedMotionKind,

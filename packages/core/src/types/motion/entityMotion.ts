@@ -22,9 +22,6 @@ export interface EntityMotionPatch {
   scale?: Partial<Vec3>
 }
 
-/** Sparse committed-transform update accepted by `EntityPlaybackApi.set`. */
-export interface EntityTransformUpdate extends EntityMotionPatch {}
-
 /** One public Entity motion timeline frame. */
 export interface EntityMotionFrame extends EntityMotionPatch {
   /** Easing for the segment beginning at this frame. */
@@ -142,7 +139,7 @@ export interface EntityMotionTimelinePayload {
 /** Entity playback controls and committed-transform setter. */
 export interface EntityPlaybackApi extends SpatializedPlaybackApi {
   /** Commits a sparse transform update; confirmed values arrive through `entityProps`. */
-  set(update: EntityTransformUpdate): void
+  set(update: EntityMotionPatch): void
 }
 
 /** Wire request for creating an Entity animation on a target Entity id. */
@@ -197,7 +194,7 @@ export interface SetEntityAnimationCommand {
   /** Entity animation object's `SpatialObject.id`. */
   id: string
   /** Sparse transform update merged by Native. */
-  update: EntityTransformUpdate
+  update: EntityMotionPatch
 }
 
 /** Successful Entity transform update result. */

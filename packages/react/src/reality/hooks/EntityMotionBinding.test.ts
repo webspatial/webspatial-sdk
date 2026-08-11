@@ -2,8 +2,8 @@ import { describe, expect, test, vi } from 'vitest'
 import type {
   EntityMotionConfig,
   EntityMotionProps,
+  EntityPlaybackApi,
   EntityPlaybackError,
-  EntityTransformUpdate,
   SpatializedMotionPlayState,
 } from '@webspatial/core-sdk'
 import { EntityMotionBinding } from './EntityMotionBinding'
@@ -41,7 +41,9 @@ function createMockAnimationObject(id = 'animation-1') {
     reset: vi.fn(async () => undefined),
     finish: vi.fn(async () => undefined),
     set: vi.fn<
-      (update: EntityTransformUpdate) => Promise<EntityMotionProps | void>
+      (
+        update: Parameters<EntityPlaybackApi['set']>[0],
+      ) => Promise<EntityMotionProps | void>
     >(async () => undefined),
     update: vi.fn(async () => undefined),
     destroy: vi.fn(async () => undefined),

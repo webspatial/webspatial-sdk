@@ -2,9 +2,9 @@ import type { TimingFunction } from '../../types/animation'
 import {
   ENTITY_MOTION_PROPERTIES,
   type EntityMotionConfig,
+  type EntityMotionPatch,
   type EntityMotionProperty,
   type EntityMotionTimelinePayload,
-  type EntityTransformUpdate,
 } from '../../types/motion/entityMotion'
 
 declare const process: { env?: { NODE_ENV?: string } } | undefined
@@ -335,8 +335,6 @@ export function normalizeEntityMotionConfig(
  *
  * @param update - Sparse update supplied to `EntityPlaybackApi.set`.
  */
-export function validateEntityTransformUpdate(
-  update: EntityTransformUpdate,
-): void {
+export function validateEntityTransformUpdate(update: EntityMotionPatch): void {
   collectPatch(update, 'update', false)
 }

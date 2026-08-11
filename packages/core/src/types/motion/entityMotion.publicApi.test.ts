@@ -3,9 +3,10 @@ import type {
   EntityMotionConfig,
   EntityMotionProps,
   EntityPlaybackApi,
-  EntityTransformUpdate,
 } from '../../index'
 import type { SpatialEntity } from '../../index'
+// @ts-expect-error Entity transform update type was removed from the package entry.
+import type { EntityTransformUpdate } from '../../index'
 // @ts-expect-error Entity motion frame authoring type is not exported from the package entry.
 import type { EntityMotionFrame } from '../../index'
 // @ts-expect-error Entity motion patch type is not exported from the package entry.
@@ -41,7 +42,6 @@ describe('public Entity motion API', () => {
   test('exports authoring and playback types from the package entry', () => {
     expectTypeOf<EntityMotionConfig>().toBeObject()
     expectTypeOf<EntityMotionProps>().toBeObject()
-    expectTypeOf<EntityTransformUpdate>().toBeObject()
     expectTypeOf<EntityPlaybackApi>().toBeObject()
     expectTypeOf<ReturnType<SpatialEntity['createAnimation']>>().toEqualTypeOf<
       Promise<EntityAnimationObject>

@@ -4,7 +4,6 @@ import type {
   EntityMotionProps,
   EntityPlaybackError,
   EntityPlaybackApi,
-  EntityTransformUpdate,
   SpatializedPlaybackError,
 } from '../../types/motion'
 
@@ -17,12 +16,9 @@ describe('Entity motion public types', () => {
     expectTypeOf<EntityMotionProps>().toMatchTypeOf<{
       position?: { x: number; y: number; z: number }
     }>()
-    expectTypeOf<EntityTransformUpdate>().toMatchTypeOf<{
+    expectTypeOf<EntityPlaybackApi['set']>().parameter(0).toMatchTypeOf<{
       rotation?: { x?: number; y?: number; z?: number }
     }>()
-    expectTypeOf<EntityPlaybackApi['set']>()
-      .parameter(0)
-      .toEqualTypeOf<EntityTransformUpdate>()
     expectTypeOf<EntityPlaybackApi['set']>().returns.toEqualTypeOf<void>()
     expectTypeOf<EntityPlaybackApi>().toHaveProperty('play')
     expectTypeOf<EntityPlaybackApi>().toHaveProperty('finish')

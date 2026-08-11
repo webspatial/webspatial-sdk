@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 import { act, render, renderHook, waitFor } from '@testing-library/react'
-import type { EntityTransformUpdate } from '@webspatial/core-sdk'
 import {
   Component,
   createElement,
@@ -226,9 +225,11 @@ describe('useEntityAnimation redesign', () => {
     })
     await waitFor(() => expect(result.current[1].playState).toBe('idle'))
 
-    expectTypeOf(result.current[1].set)
-      .parameter(0)
-      .toEqualTypeOf<EntityTransformUpdate>()
+    expectTypeOf(result.current[1].set).parameter(0).toEqualTypeOf<{
+      position?: { x?: number; y?: number; z?: number }
+      rotation?: { x?: number; y?: number; z?: number }
+      scale?: { x?: number; y?: number; z?: number }
+    }>()
     expect(() => result.current[1].set({})).toThrow(
       'Core set validation failed',
     )

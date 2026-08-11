@@ -13,12 +13,12 @@ import type {
   EntityMotionCallbackAction,
   EntityMotionConfig,
   EntityMotionNativePlayState,
+  EntityMotionPatch,
   EntityMotionProps,
   EntityMotionStateChangedMsg,
   EntityMotionTimelinePayload,
   EntityPlaybackApi,
   EntityPlaybackError,
-  EntityTransformUpdate,
   SetEntityAnimationResult,
   UpdateEntityAnimationResult,
 } from '../../types/motion/entityMotion'
@@ -149,7 +149,7 @@ export class EntityAnimationObject
   }
 
   /** Handles a sparse transform update through the live Native object. */
-  set(update: EntityTransformUpdate): Promise<EntityMotionProps | void> {
+  set(update: EntityMotionPatch): Promise<EntityMotionProps | void> {
     if (this.isDestroyed || this.isDestroying) {
       console.warn('Entity animation set ignored after destroy')
       return Promise.resolve()
@@ -263,7 +263,7 @@ export class EntityAnimationObject
 
   /** Sends one validated transform update and forwards confirmed values. */
   private async performSet(
-    update: EntityTransformUpdate,
+    update: EntityMotionPatch,
   ): Promise<EntityMotionProps | void> {
     if (this.isDestroyed || this.isDestroying) {
       console.warn('Entity animation set ignored after destroy')
