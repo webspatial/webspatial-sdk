@@ -119,7 +119,7 @@ export const routes = [
       { path: '/display-test', label: 'Display Test' },
       { path: '/memory-stats', label: 'Memory Stats' },
       { path: '/nested-fix-position', label: 'Nested Fix Position' },
-      { path: '/nested-scroll', label: 'Nested Scroll' },
+      { path: '/nested-scroll', label: 'SpatialDiv Scroll Sync' },
       {
         path: '/nested-spatial-overflow',
         label: 'Nested Spatial Overflow',
