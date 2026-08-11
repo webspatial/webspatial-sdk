@@ -19,10 +19,7 @@ import type {
   EntityMotionProps,
   EntityMotionTimelinePayload,
 } from '../../types/motion/entityMotion'
-import {
-  createEntityAnimationObject,
-  EntityAnimationObject,
-} from './EntityAnimationObject'
+import { EntityAnimationObject } from './EntityAnimationObject'
 import { normalizeEntityMotionConfig } from './normalizeEntityMotionConfig'
 
 const config: EntityMotionConfig = {
@@ -73,7 +70,7 @@ describe('EntityAnimationObject', () => {
   })
 
   it('uses the animation object id for every control and destroy command', async () => {
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -106,7 +103,7 @@ describe('EntityAnimationObject', () => {
       if (name === 'SetEntityAnimation') return ok({ values })
       return ok()
     })
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -136,7 +133,7 @@ describe('EntityAnimationObject', () => {
       calls.push(command.type ?? name)
       return replies[calls.length - 1].promise
     })
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -180,7 +177,7 @@ describe('EntityAnimationObject', () => {
       if (command.type === 'destroy') return destroyReply.promise
       return ok()
     })
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -201,7 +198,7 @@ describe('EntityAnimationObject', () => {
 
   it('returns confirmed set values without changing playback state', async () => {
     platformSpy.callJSB.mockImplementation(() => ok({ values }))
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -230,7 +227,7 @@ describe('EntityAnimationObject', () => {
       errorMessage: 'animation is active',
     })
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -251,7 +248,7 @@ describe('EntityAnimationObject', () => {
       errorCode: 'ANIMATION_NOT_FOUND',
       errorMessage: 'animation was removed',
     })
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -268,7 +265,7 @@ describe('EntityAnimationObject', () => {
   })
 
   it('keeps state authoritative to messages when a control reply is empty', async () => {
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -294,7 +291,7 @@ describe('EntityAnimationObject', () => {
     platformSpy.callJSB.mockImplementation(
       () => new Promise(resolve => (resolveReply = resolve)),
     )
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -336,7 +333,7 @@ describe('EntityAnimationObject', () => {
     platformSpy.callJSB.mockImplementation(
       () => new Promise(resolve => (resolveReply = resolve)),
     )
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -367,7 +364,7 @@ describe('EntityAnimationObject', () => {
   })
 
   it('consumes state and dedicated error events addressed by id', () => {
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -437,7 +434,7 @@ describe('EntityAnimationObject', () => {
   })
 
   it('maps an idle finish to completion without changing the start count', () => {
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -468,7 +465,7 @@ describe('EntityAnimationObject', () => {
   })
 
   it('consumes state-only pause and resume without values or callbacks', () => {
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -509,7 +506,7 @@ describe('EntityAnimationObject', () => {
 
   it('ignores missing and stale state revisions after an update commits', async () => {
     platformSpy.callJSB.mockImplementation(() => ok({ values, revision: 1 }))
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -556,7 +553,7 @@ describe('EntityAnimationObject', () => {
   })
 
   it('ignores invalid event envelopes and unpaired callback values', () => {
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -627,7 +624,7 @@ describe('EntityAnimationObject', () => {
 
   it('consumes objectdestroy and keeps later APIs local without reporting errors', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -671,7 +668,7 @@ describe('EntityAnimationObject', () => {
       }
       return ok()
     })
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -703,7 +700,7 @@ describe('EntityAnimationObject', () => {
     platformSpy.callJSB.mockImplementation(
       () => new Promise(resolve => (resolveReply = resolve)),
     )
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -792,7 +789,7 @@ describe('EntityAnimationObject', () => {
     'rejects incomplete confirmed set values %#',
     async (resultValues, reason) => {
       platformSpy.callJSB.mockImplementation(() => ok({ values: resultValues }))
-      const animation = createEntityAnimationObject('animation-1', {
+      const animation = new EntityAnimationObject('animation-1', {
         config,
         timeline,
       })
@@ -821,7 +818,7 @@ describe('EntityAnimationObject', () => {
       errorCode: 'ANIMATION_NOT_FOUND',
       errorMessage: 'destroy failed',
     })
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -840,7 +837,7 @@ describe('EntityAnimationObject', () => {
   })
 
   it('validates update config synchronously without sending a command', () => {
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -854,7 +851,7 @@ describe('EntityAnimationObject', () => {
   })
 
   it('skips equivalent execution config including callback and autoStart changes', async () => {
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -882,7 +879,7 @@ describe('EntityAnimationObject', () => {
       },
       duration: 1,
     }
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config: precedenceConfig,
       timeline: normalizeEntityMotionConfig(precedenceConfig, false),
     })
@@ -907,7 +904,7 @@ describe('EntityAnimationObject', () => {
 
   it('commits a successful config update and confirmed pose', async () => {
     platformSpy.callJSB.mockImplementation(() => ok({ values, revision: 1 }))
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -944,7 +941,7 @@ describe('EntityAnimationObject', () => {
       calls.push(name)
       return replies[calls.length - 1].promise
     })
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -972,7 +969,7 @@ describe('EntityAnimationObject', () => {
       errorCode: 'COMPILATION_FAILED',
       errorMessage: 'update failed',
     })
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })
@@ -994,7 +991,7 @@ describe('EntityAnimationObject', () => {
   })
 
   it('keeps update local after object destruction', async () => {
-    const animation = createEntityAnimationObject('animation-1', {
+    const animation = new EntityAnimationObject('animation-1', {
       config,
       timeline,
     })

@@ -58,42 +58,11 @@ export interface EntityAnimationObjectOptions {
   timeline: EntityMotionTimelinePayload
 }
 
-const entityAnimationObjectOptions = new WeakMap<
-  EntityAnimationObject,
-  EntityAnimationObjectOptions
->()
-
-/** Tracks whether the latest public config already declared timeline precedence. */
-const entityAnimationPrecedenceDeclarations = new WeakMap<
-  EntityAnimationObject,
-  boolean
->()
-
-function hasTimelinePrecedenceDeclaration(config: EntityMotionConfig): boolean {
+function hasMixedTimelineDeclaration(config: EntityMotionConfig): boolean {
   return (
     config.timeline !== undefined &&
     (config.from !== undefined || config.to !== undefined)
   )
-}
-
-/**
- * Creates an Entity animation object through the package-internal canonical path.
- *
- * @param id - Native Entity animation object's `SpatialObject.id`.
- * @param options - Internal config and canonical timeline snapshots.
- * @returns Core Entity animation object with private internal snapshots.
- */
-export function createEntityAnimationObject(
-  id: string,
-  options: EntityAnimationObjectOptions,
-): EntityAnimationObject {
-  const animation = new EntityAnimationObject(id)
-  entityAnimationObjectOptions.set(animation, options)
-  entityAnimationPrecedenceDeclarations.set(
-    animation,
-    hasTimelinePrecedenceDeclaration(options.config),
-  )
-  return animation
 }
 
 /** Core playback object for one Native Entity animation object. */
@@ -101,6 +70,10 @@ export class EntityAnimationObject
   extends SpatialObject
   implements EntityPlaybackApi
 {
+  /** Latest config and canonical timeline confirmed by Native. */
+  private confirmedOptions: EntityAnimationObjectOptions
+  /** Whether the current mixed timeline declaration already emitted a warning. */
+  private didWarnMixedTimeline: boolean
   /** Current Native-confirmed playback state. */
   private _playState: SpatializedMotionPlayState = 'idle'
   /** Registered start observer. */
@@ -123,8 +96,10 @@ export class EntityAnimationObject
   private isDestroying = false
 
   /** Creates a public Core handle and begins receiving events addressed by its id. */
-  constructor(id: string) {
+  constructor(id: string, options: EntityAnimationObjectOptions) {
     super(id)
+    this.confirmedOptions = options
+    this.didWarnMixedTimeline = hasMixedTimelineDeclaration(options.config)
     SpatialWebEvent.addEventReceiver(id, data => this.onReceiveEvent(data))
   }
 
@@ -194,16 +169,14 @@ export class EntityAnimationObject
 
   /** Validates and commits a changed execution definition in place. */
   update(config: EntityMotionConfig): Promise<void> {
-    const hasPrecedenceDeclaration = hasTimelinePrecedenceDeclaration(config)
+    const hasMixedTimeline = hasMixedTimelineDeclaration(config)
     const timeline = normalizeEntityMotionConfig(
       config,
-      hasPrecedenceDeclaration &&
-        !entityAnimationPrecedenceDeclarations.get(this),
+      hasMixedTimeline && !this.didWarnMixedTimeline,
     )
-    entityAnimationPrecedenceDeclarations.set(this, hasPrecedenceDeclaration)
+    this.didWarnMixedTimeline = hasMixedTimeline
     if (this.isDestroyed || this.isDestroying) return Promise.resolve()
-    const current = entityAnimationObjectOptions.get(this)
-    if (current && this.timelinesEqual(current.timeline, timeline)) {
+    if (this.timelinesEqual(this.confirmedOptions.timeline, timeline)) {
       return Promise.resolve()
     }
     return this.performUpdate(config, timeline)
@@ -352,7 +325,7 @@ export class EntityAnimationObject
         })
         return
       }
-      entityAnimationObjectOptions.set(this, { config, timeline })
+      this.confirmedOptions = { config, timeline }
       this.executionRevision = result!.revision
       this.valuesListener?.(confirmedValues!)
     } catch (error) {

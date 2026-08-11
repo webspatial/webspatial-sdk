@@ -38,10 +38,7 @@ import type {
   CreateEntityAnimationResult,
   EntityMotionConfig,
 } from '../../types/motion/entityMotion'
-import {
-  createEntityAnimationObject,
-  EntityAnimationObject,
-} from '../../motion/entity/EntityAnimationObject'
+import { EntityAnimationObject } from '../../motion/entity/EntityAnimationObject'
 import { normalizeEntityMotionConfig } from '../../motion/entity/normalizeEntityMotionConfig'
 
 export class SpatialEntity extends SpatialObject {
@@ -165,7 +162,7 @@ export class SpatialEntity extends SpatialObject {
     if (!data?.id) {
       throw new Error('CreateEntityAnimation did not return an id')
     }
-    return createEntityAnimationObject(data.id, { config, timeline })
+    return new EntityAnimationObject(data.id, { config, timeline })
   }
 
   async addEvent(type: SpatialEntityEventType, callback: (data: any) => void) {
