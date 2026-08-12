@@ -31,6 +31,7 @@ enum SpatialWebMsgType: String, Codable {
     case spatialanimationstatechanged
     /// Entity-motion asynchronous failure channel.
     case entityanimationerror
+    case modelblobrequest
 }
 
 struct WebSpatialTapGuestureEventDetail: Encodable {
@@ -159,4 +160,17 @@ struct EntityTransformChangeEvent: Encodable {
 
 struct SpatialObjectDestroiedEvent: Encodable {
     let type: SpatialWebMsgType = .objectdestroy
+}
+
+struct ModelBlobRequestDetail: Encodable {
+    /// Unique, non-reused identifier for this source attempt.
+    let requestId: String
+    /// The `blob:` URL whose bytes JS should ship over.
+    let src: String
+}
+
+/// Asks JS to stream a `blob:` source's bytes (native cannot fetch blobs).
+struct ModelBlobRequestEvent: Encodable {
+    let type: SpatialWebMsgType = .modelblobrequest
+    let detail: ModelBlobRequestDetail
 }
