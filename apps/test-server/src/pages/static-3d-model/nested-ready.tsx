@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Logger, useLogger } from './Logger'
 
 const MODEL_SRC =
-  'https://developer.apple.com/augmented-reality/quick-look/models/drummertoy/toy_drummer.usdz'
+  'https://developer.apple.com/quick-look-gallery/models/drummertoy/toy_drummer.usdz'
 
 function describeCurrentTarget(event: ModelLoadEvent) {
   return {
@@ -143,6 +143,56 @@ export default function NestedStatic3DModelReady() {
       </div>
 
       <Logger logs={logs} clearLog={clearLog} />
+      <h1>Model with blob URL</h1>
+      <BlobModel src="/modelasset/cone.usdz">
+        <source
+          src="/modelasset/MaterialsVariantsShoe.glb"
+          type="model/gltf-binary"
+        />
+      </BlobModel>
     </div>
+  )
+}
+
+type BlobModelProps = React.PropsWithChildren<{
+  src: string
+  poster?: string
+  type?: string
+}>
+function BlobModel({ src, poster, type, children }: BlobModelProps) {
+  const [blobSrc, setBlobSrc] = useState<string>()
+  const [isFetching, setIsFetching] = useState(false)
+  useEffect(() => {
+    let objectURL: string | undefined
+    let cancelled = false
+    setIsFetching(true)
+    fetch(src)
+      .then(res => res.blob())
+      .then(blob => {
+        if (cancelled) return
+        objectURL = URL.createObjectURL(blob)
+        setBlobSrc(objectURL)
+        setIsFetching(false)
+      })
+    return () => {
+      cancelled = true
+      if (objectURL) URL.revokeObjectURL(objectURL)
+    }
+  }, [])
+  return isFetching ? (
+    <p style={{ height: 200 }}>Is fetching {`${isFetching}`}</p>
+  ) : (
+    <Model
+      poster={poster}
+      enable-xr
+      style={{
+        height: '200px',
+        '--xr-depth': '100px',
+        '--xr-back': '50px',
+      }}
+    >
+      <source src={blobSrc} type={type} />
+      {children}
+    </Model>
   )
 }
