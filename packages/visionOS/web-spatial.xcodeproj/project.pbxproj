@@ -89,6 +89,7 @@
 				"element-motion/SpatializedElementMotionTimelineSampler.swift",
 				"element-motion/SpatializedElementMotionTiming.swift",
 				"element-motion/SpatializedElementMotionTransformTypes.swift",
+				blob/BlobTransfer.swift,
 				MaterialSceneRefresh.swift,
 				OrnamentElement.swift,
 				SpatialApp.swift,
