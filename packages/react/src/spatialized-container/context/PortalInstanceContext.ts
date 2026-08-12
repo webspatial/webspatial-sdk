@@ -117,11 +117,11 @@ export class PortalInstanceObject {
       transformMatrix: new DOMMatrix(spatialTransform.transform),
       visibility: spatialTransform.visibility,
     }
-    this.updateSpatializedElementProperties()
+    void this.updateSpatializedElementProperties()
   }
 
   // called when 2D frame change
-  notify2DFrameChange() {
+  async notify2DFrameChange() {
     const dom = this.spatializedContainerObject.querySpatialDomBySpatialId(
       this.spatialId,
     )
@@ -135,13 +135,22 @@ export class PortalInstanceObject {
       isFixedPosition: computedStyle.getPropertyValue('position') === 'fixed',
     }
 
-    this.updateSpatializedElementProperties()
-
     const __innerSpatializedElement = () => this.spatializedElement
+    const __syncSpatializedElement = () => this.syncSpatializedElement()
 
     Object.assign(dom, {
       __innerSpatializedElement,
+      __syncSpatializedElement,
     })
+
+    await this.updateSpatializedElementProperties()
+  }
+
+  private syncSpatializedElement = async () => {
+    await new Promise<void>(resolve => {
+      requestAnimationFrame(() => resolve())
+    })
+    await this.notify2DFrameChange()
   }
 
   private async getSpatializedElement() {
@@ -155,7 +164,7 @@ export class PortalInstanceObject {
     this.addToParent(spatializedElement)
     this.spatializedElementResolver?.(spatializedElement)
 
-    this.updateSpatializedElementProperties()
+    void this.updateSpatializedElementProperties()
   }
 
   private inAddingToParent: boolean = false
@@ -179,7 +188,7 @@ export class PortalInstanceObject {
     this.inAddingToParent = false
   }
 
-  private updateSpatializedElementProperties() {
+  private async updateSpatializedElementProperties() {
     // console.log('updateSpatializedElement', this.spatializedElement)
     // read from spatializedContainerContext
     const dom = this.dom
@@ -249,28 +258,27 @@ export class PortalInstanceObject {
     const extraProperties =
       this.getExtraSpatializedElementProperties?.(computedStyle) || {}
 
-    spatializedElement.updateProperties({
-      clientX: x,
-      clientY: y,
-      width,
-      height,
-      depth,
-      opacity,
-      scrollWithParent,
-      zIndex,
-      visible,
-      backOffset,
-      rotationAnchor,
-      ...extraProperties,
-    })
-
-    // update transform
-    spatializedElement.updateTransform(this.transformMatrix!)
-
-    // assign spatializedElement to dom
-    Object.assign(this.dom, {
+    Object.assign(dom, {
       __spatializedElement: spatializedElement,
     })
+
+    await Promise.all([
+      spatializedElement.updateProperties({
+        clientX: x,
+        clientY: y,
+        width,
+        height,
+        depth,
+        opacity,
+        scrollWithParent,
+        zIndex,
+        visible,
+        backOffset,
+        rotationAnchor,
+        ...extraProperties,
+      }),
+      spatializedElement.updateTransform(this.transformMatrix!),
+    ])
   }
 }
 
