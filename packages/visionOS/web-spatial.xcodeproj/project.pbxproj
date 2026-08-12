@@ -97,6 +97,7 @@
 				"entity-motion/EntityMotionBridgeTypes.swift",
 				"entity-motion/EntityMotionTimelineCompiler.swift",
 				"entity-motion/EntityMotionTransformValues.swift",
+				blob/BlobTransfer.swift,
 				MaterialSceneRefresh.swift,
 				OrnamentElement.swift,
 				SpatialApp.swift,

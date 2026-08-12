@@ -439,3 +439,33 @@ struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     let cornerRadius: CornerRadius?
     let backgroundMaterial: BackgroundMaterial?
 }
+
+struct StartBlobTransfer: CommandDataProtocol {
+    static let commandType = "StartBlobTransfer"
+    let id: String
+    let requestId: String
+    let src: String
+    let mimeType: String
+    let size: Int
+}
+
+struct TransferBlobChunk: CommandDataProtocol {
+    static let commandType = "TransferBlobChunk"
+    let id: String
+    let requestId: String
+    let offset: Int
+    let data: String
+}
+
+struct CompleteBlobTransfer: CommandDataProtocol {
+    static let commandType = "CompleteBlobTransfer"
+    let id: String
+    let requestId: String
+}
+
+struct FailBlobTransfer: CommandDataProtocol {
+    static let commandType = "FailBlobTransfer"
+    let id: String
+    let requestId: String
+    let message: String?
+}
