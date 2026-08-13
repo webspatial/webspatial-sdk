@@ -53,7 +53,7 @@ The SDK MUST use a runtime manifest only when its schema version is supported, i
 #### Scenario: Build ID generation
 
 - **WHEN** a visionOS runtime artifact is built
-- **THEN** its manifest MUST contain a non-empty build ID generated from available build provenance
+- **THEN** its manifest MUST contain a non-empty build ID generated from explicit trusted runtime provenance or the installed platform package version
 - **AND** the checked-in capability source MUST NOT hard-code a preview or stable build ID
 - **AND** the checked-in generated capability provider MUST obtain runtime version and build ID from build metadata rather than embedding package semver
 

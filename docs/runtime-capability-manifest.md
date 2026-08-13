@@ -61,8 +61,11 @@ the capability provider reads it while constructing the injected manifest:
 - `manifestVersion` is maintained manually and changes only for an incompatible
   schema revision.
 - `runtime.version` comes from `@webspatial/platform-visionos`.
-- `runtime.buildId` uses `WEBSPATIAL_RUNTIME_BUILD_ID` when provided, otherwise
-  GitHub build provenance or the installed platform package version.
+- `runtime.buildId` uses trusted runtime provenance from
+  `WEBSPATIAL_RUNTIME_BUILD_ID` when provided, otherwise the installed platform
+  package version. The builder does not infer runtime provenance from generic
+  GitHub environment variables because they normally describe the consuming
+  application repository.
 
 Runtime version and build ID are diagnostic only. Capability truth comes only
 from the complete `supported` allowlist.
@@ -77,6 +80,7 @@ The Environment view reports:
 - manifest version, runtime version, and build ID
 - the complete supported allowlist
 
-For a feature PR, verify the preview SDK and preview visionOS runtime report the
-PR build ID and the new capability. Also verify a legacy visionOS runtime has no
-manifest and continues to use the table fallback.
+For a feature PR, set `WEBSPATIAL_RUNTIME_BUILD_ID` in the runtime build pipeline
+and verify the preview SDK and preview visionOS runtime report that PR build ID
+and the new capability. Also verify a legacy visionOS runtime has no manifest
+and continues to use the table fallback.

@@ -71,7 +71,7 @@ The builder writes `runtime.version` and `runtime.buildId` into `manifest.swift`
 
 `manifestVersion` is an integer protocol version maintained deliberately in source. It changes only when parsing semantics become incompatible; adding backward-compatible optional metadata does not require a bump.
 
-`buildId` is generated, non-empty diagnostic metadata. CI uses a channel plus source revision, for example `pr-1234-a1b2c3d`, `main-a1b2c3d`, or `stable-v2.0.0-a1b2c3d`. Local builds fall back to `local-<short-sha>` when Git metadata is available and a deterministic local fallback otherwise. Neither `runtime.version` nor `buildId` participates in capability resolution.
+`buildId` is generated, non-empty diagnostic metadata. A build pipeline that owns trusted runtime provenance can set `WEBSPATIAL_RUNTIME_BUILD_ID` to a channel plus source revision, for example `pr-1234-a1b2c3d`, `main-a1b2c3d`, or `stable-v2.0.0-a1b2c3d`. Otherwise, the builder uses `package-<platform-version>` as a deterministic artifact identifier. It deliberately does not infer runtime provenance from generic GitHub environment variables because the builder normally runs in a consuming application's repository, where those variables identify the application rather than the WebSpatial runtime source. Neither `runtime.version` nor `buildId` participates in capability resolution.
 
 A content-derived `capabilitySetId` is deferred. It can be added as optional metadata later if cross-build equality of capability sets becomes operationally useful.
 

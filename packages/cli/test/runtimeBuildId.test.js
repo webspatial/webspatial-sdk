@@ -19,20 +19,20 @@ test('createRuntimeBuildId prefers an explicit build ID', () => {
   )
 })
 
-test('createRuntimeBuildId derives PR and stable provenance', () => {
+test('createRuntimeBuildId falls back to the platform package version', () => {
   assert.equal(
     createRuntimeBuildId('1.8.0', {
       GITHUB_REF_NAME: '1331/merge',
       GITHUB_SHA: 'abcdef1234567890',
     }),
-    'pr-1331-abcdef123456',
+    'package-1.8.0',
   )
   assert.equal(
     createRuntimeBuildId('2.0.0', {
       GITHUB_REF_NAME: 'stable',
       GITHUB_SHA: '0123456789abcdef',
     }),
-    'stable-v2.0.0-0123456789ab',
+    'package-2.0.0',
   )
   assert.equal(createRuntimeBuildId('1.8.0', {}), 'package-1.8.0')
 })
