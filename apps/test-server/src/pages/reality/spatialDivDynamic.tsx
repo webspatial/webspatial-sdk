@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
 import { enableDebugTool } from '@webspatial/react-sdk'
+import React, { useEffect, useRef, useState } from 'react'
 
 enableDebugTool()
 

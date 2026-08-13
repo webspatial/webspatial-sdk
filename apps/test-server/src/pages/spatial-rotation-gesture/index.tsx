@@ -1,5 +1,3 @@
-import { useRef, useState } from 'react'
-import './index.css'
 import {
   enableDebugTool,
   Model,
@@ -7,6 +5,8 @@ import {
   SpatialRotateEndEvent,
   SpatialRotateEvent,
 } from '@webspatial/react-sdk'
+import { useState } from 'react'
+import './index.css'
 
 enableDebugTool()
 
@@ -22,30 +22,6 @@ function quatNormalize(quat: { x: number; y: number; z: number; w: number }) {
   const mag = Math.sqrt(x ** 2 + y ** 2 + z ** 2 + w ** 2)
   if (mag < 1e-9) return [0, 0, 0, 1] // 避免除零，返回恒等四元数
   return [x / mag, y / mag, z / mag, w / mag]
-}
-
-/**
- * Multiplies two quaternions using the Hamilton product (q = q1 ⊗ q2).
- *
- * When applying an incremental rotation to an existing rotation, callers often
- * use: newRotation = delta ⊗ current.
- *
- * @param q1 - Left operand quaternion in (x, y, z, w) form.
- * @param q2 - Right operand quaternion in (x, y, z, w) form.
- * @returns The product quaternion as an object { x, y, z, w } (not normalized).
- */
-function quatMultiply(
-  q1: { x: number; y: number; z: number; w: number },
-  q2: { x: number; y: number; z: number; w: number },
-) {
-  const { x: x1, y: y1, z: z1, w: w1 } = q1
-  const { x: x2, y: y2, z: z2, w: w2 } = q2
-  // 核心乘法公式（x,y,z,w格式）
-  const x = x1 * w2 + w1 * x2 + y1 * z2 - z1 * y2
-  const y = y1 * w2 + w1 * y2 + z1 * x2 - x1 * z2
-  const z = z1 * w2 + w1 * z2 + x1 * y2 - y1 * x2
-  const w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
-  return { x, y, z, w }
 }
 
 /**

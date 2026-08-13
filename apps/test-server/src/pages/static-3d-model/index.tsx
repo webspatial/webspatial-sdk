@@ -1,8 +1,6 @@
-import ReactDOM from 'react-dom/client'
-
 import { enableDebugTool, Model, ModelRef } from '@webspatial/react-sdk'
-import { useEffect, useRef, useState, RefObject } from 'react'
-import { useLogger, Logger } from './Logger'
+import { RefObject, useEffect, useRef, useState } from 'react'
+import { Logger, useLogger } from './Logger'
 
 enableDebugTool()
 
@@ -14,6 +12,8 @@ function App() {
   const [currentTime, setCurrentTime] = useState(0.0)
   const [playbackRate, setPlaybackRate] = useState(1.0)
   const [loop, setLoop] = useState(true)
+  const [loading, setLoading] = useState<'eager' | 'lazy'>('eager')
+  const [isOrbit, setIsOrbit] = useState(true)
   useEffect(() => {
     modelRef
       .current!.ready?.then(() => logLine('ref.current.ready success'))
@@ -36,8 +36,9 @@ function App() {
         // src="/modelasset/cone.usdz"
         poster="/img/toy_drummer.png"
         enable-xr
-        autoPlay
+        autoPlay={false}
         loop={loop}
+        stagemode={isOrbit ? 'orbit' : 'none'}
         style={{
           height: '200px',
           '--xr-depth': '100px',
@@ -47,7 +48,7 @@ function App() {
         }}
         ref={modelRef}
         onError={e => logLine(`Model error ${modelRef.current?.currentSrc}`)}
-        onLoad={e => logLine(`Model success ${modelRef.current?.currentSrc}`)}
+        onLoad={e => logLine(`Model success ${e.currentTarget.currentSrc}`)}
         onSpatialTap={e => {
           logLine('model onSpatialTap', e.detail.location3D)
         }}
@@ -92,7 +93,7 @@ function App() {
         <button
           className="btn m-1"
           onClick={() => {
-            if (modelRef.current?.currentTime) {
+            if (modelRef.current?.currentTime != undefined) {
               modelRef.current.currentTime -= 10
             }
           }}
@@ -114,7 +115,7 @@ function App() {
         <button
           className="btn m-1"
           onClick={() => {
-            if (modelRef.current?.currentTime) {
+            if (modelRef.current?.currentTime != undefined) {
               modelRef.current.currentTime += 10
             }
           }}
@@ -129,6 +130,24 @@ function App() {
             onChange={() => setLoop(!loop)}
           />
           <span className="label-text m-1">Loop</span>
+        </label>
+        <label className="inline-flex items-center align-middle">
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={loading === 'eager'}
+            onChange={() => setLoading(loading === 'eager' ? 'lazy' : 'eager')}
+          />
+          <span className="label-text m-1">Eager</span>
+        </label>
+        <label className="inline-flex items-center align-middle">
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={isOrbit}
+            onChange={() => setIsOrbit(!isOrbit)}
+          />
+          <span className="label-text m-1">Orbit</span>
         </label>
         <select
           className="select m-1"
@@ -153,6 +172,37 @@ function App() {
         </span>
       </section>
       <Logger logs={logs} clearLog={clearLog} />
+      <Model
+        enable-xr
+        autoPlay
+        loading={loading}
+        stagemode="orbit"
+        style={{
+          height: '200px',
+          '--xr-depth': '100px',
+          '--xr-back': '50px',
+          marginBottom: '20px',
+        }}
+      >
+        <source
+          src="https://developer.apple.com/augmented-reality/quick-look/models/drummertoy/toy_drummer.usdz"
+          type="model/vnd.usdz+zip"
+        />
+        <img
+          src="/img/toy_drummer.png"
+          className="w-full h-[200px] object-contain"
+        />
+      </Model>
+      <Model
+        poster="/img/toy_drummer.png"
+        enable-xr
+        style={{
+          height: '200px',
+          '--xr-depth': '100px',
+          '--xr-back': '50px',
+          marginBottom: '20px',
+        }}
+      />
     </div>
   )
 }

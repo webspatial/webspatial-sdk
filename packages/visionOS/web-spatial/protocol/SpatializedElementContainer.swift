@@ -4,5 +4,5 @@ protocol SpatializedElementContainer {
     func addChild(_ spatializedElement: SpatializedElement)
     func removeChild(_ spatializedElement: SpatializedElement)
     func getChildren() -> [String: SpatializedElement]
-    func getChildrenOfType(_ type: SpatializedElementType) -> [String: SpatializedElement]
+    func getChildren<T: SpatializedElement>(ofType type: T.Type) -> [T]
 }

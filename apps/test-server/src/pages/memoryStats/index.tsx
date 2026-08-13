@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react'
 import { Spatial } from '@webspatial/core-sdk'
-import ReactDOM from 'react-dom/client'
+import { useEffect, useState } from 'react'
 
 interface MemoryStats {
   backend: string

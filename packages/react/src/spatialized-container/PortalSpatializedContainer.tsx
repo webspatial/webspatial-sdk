@@ -5,10 +5,11 @@ import {
 } from './context/PortalInstanceContext'
 import {
   PortalSpatializedContainerProps,
+  SpatialContentReadyCallback,
   SpatialEventOptions,
   SpatializedElementRef,
+  Vec3,
 } from './types'
-import type { Vec3 } from '@webspatial/core-sdk'
 
 function constrainedAxisToVec3(
   input: SpatialEventOptions['constrainedToAxis'] | undefined,
@@ -31,6 +32,7 @@ function constrainedAxisKey(
 import { SpatialID } from './SpatialID'
 import { useSync2DFrame } from './hooks/useSync2DFrame'
 import { useSpatializedElement } from './hooks/useSpatializedElement'
+import { useBindSpatializedMotion } from './motion/useBindSpatializedMotion'
 import {
   SpatializedContainerContext,
   SpatializedContainerObject,
@@ -76,12 +78,16 @@ function renderPlaceholderInSubPortal(
 }
 
 export function PortalSpatializedContainer<T extends SpatializedElementRef>(
-  props: PortalSpatializedContainerProps<T>,
+  props: PortalSpatializedContainerProps<T> & {
+    /** Forwarded to 2D `SpatializedContent` only (SpatialDiv). Ignored elsewhere. */
+    onSpatialContentReady?: SpatialContentReadyCallback
+  },
 ) {
   const {
     spatializedContent: Content,
     createSpatializedElement,
     getExtraSpatializedElementProperties,
+    'xr-animation': xrAnimation,
     onSpatialTap,
     onSpatialDragStart,
     onSpatialDrag,
@@ -117,12 +123,22 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
     }
   }, [])
 
-  useSync2DFrame(spatialId, portalInstanceObject, spatializedContainerObject)
-
   const spatializedElement = useSpatializedElement(
     createSpatializedElement,
     portalInstanceObject,
   )
+
+  useSync2DFrame(
+    spatialId,
+    portalInstanceObject,
+    spatializedContainerObject,
+    spatializedElement,
+  )
+
+  useBindSpatializedMotion({
+    binding: xrAnimation,
+    element: spatializedElement,
+  })
 
   const PlaceholderEl = renderPlaceholderInSubPortal(
     portalInstanceObject,
@@ -197,8 +213,12 @@ export function PortalSpatializedContainer<T extends SpatializedElementRef>(
 
   return (
     <PortalInstanceContext.Provider value={portalInstanceObject}>
-      {spatializedElement && portalInstanceObject.dom && (
-        <Content spatializedElement={spatializedElement} {...restProps} />
+      {spatializedElement && (
+        <Content
+          spatializedElement={spatializedElement}
+          portalInstanceObject={portalInstanceObject}
+          {...restProps}
+        />
       )}
       {PlaceholderEl}
     </PortalInstanceContext.Provider>

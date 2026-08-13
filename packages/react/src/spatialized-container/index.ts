@@ -1,4 +1,3 @@
-import { hijackGetComputedStyle } from './hooks/useDomProxy'
 import { injectSpatialDefaultStyle } from './StandardSpatializedContainer'
 import { initCSSParserDivContainer } from './TransformVisibilityTaskContainer'
 
@@ -6,6 +5,7 @@ export { SpatializedContainer } from './SpatializedContainer'
 export { Spatialized2DElementContainer } from './Spatialized2DElementContainer'
 export { SpatializedStatic3DElementContainer } from './SpatializedStatic3DElementContainer'
 export { withSpatialized2DElementContainer } from './Spatialized2DElementContainerFactory'
+export { useAnimation } from './motion'
 export {
   type Point3D,
   type Vec3,
@@ -31,10 +31,11 @@ export {
   type ModelSpatialMagnifyEndEvent,
   type ModelLoadEvent,
   type SpatialEventOptions,
+  type SpatialContentReadyContext,
+  type SpatialContentReadyCallback,
 } from './types'
 
 export function initPolyfill() {
-  hijackGetComputedStyle()
   injectSpatialDefaultStyle()
   initCSSParserDivContainer()
 }

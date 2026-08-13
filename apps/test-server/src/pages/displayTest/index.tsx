@@ -1,6 +1,5 @@
-import ReactDOM from 'react-dom/client'
-import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { enableDebugTool } from '@webspatial/react-sdk'
+import { CSSProperties, useEffect, useRef, useState } from 'react'
 
 enableDebugTool()
 

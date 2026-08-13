@@ -1,3 +1,14 @@
+import { supports } from '@webspatial/core-sdk'
+import {
+  ELEMENT_DOM_DEPTH_KEYS,
+  SUB_TOKENS_BY_NAME,
+  WINDOW_DOM_DEPTH_KEYS,
+} from '@webspatial/core-sdk/runtime/keys'
+import {
+  Model,
+  type ModelRef,
+  type SpatializedElementRef,
+} from '@webspatial/react-sdk'
 import React, {
   useEffect,
   useLayoutEffect,
@@ -5,17 +16,6 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import {
-  ELEMENT_DOM_DEPTH_KEYS,
-  SUB_TOKENS_BY_NAME,
-  supports,
-  WINDOW_DOM_DEPTH_KEYS,
-} from '@webspatial/core-sdk'
-import {
-  Model,
-  type ModelRef,
-  type SpatializedElementRef,
-} from '@webspatial/react-sdk'
 
 /**
  * Same partition as `openspec/.../review.md` §3.6 — first six Model sub-tokens are HTML-oriented,

@@ -40,6 +40,9 @@ var main = async () => {
   var citestDeps = await getLicense(
     'cd tests/ci-test && npx license-checker --json && cd ../..',
   )
+  var autotestDeps = await getLicense(
+    'cd tests/autoTest && npx license-checker --json && cd ../..',
+  )
 
   var rootDeps = await getLicense('npx license-checker --json')
 
@@ -49,6 +52,7 @@ var main = async () => {
     ...cliDeps,
     ...testServerDeps,
     ...citestDeps,
+    ...autotestDeps,
     ...rootDeps,
   }
   let attributionText =

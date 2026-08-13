@@ -9,8 +9,10 @@ import {
   SpatialMagnifyEvent,
   SpatialMagnifyEndEvent,
   SpatialEventOptions,
-  //@ts-ignore bypass ts check for external
+  type SpatialContentReadyCallback,
+  // @ts-ignore bypass ts check for external
 } from '@webspatial/react-sdk'
+import type { SpatializedMotionBinding } from '../spatialized-container/motion/motionBindingTypes'
 
 import 'react'
 
@@ -106,20 +108,27 @@ export namespace WebSpatialJSX {
   export interface IntrinsicClassAttributes<T>
     extends ReactJSXIntrinsicClassAttributes<T> {}
 
+  type BaseSpatialIntrinsic = {
+    style?: React.CSSProperties
+    'enable-xr'?: boolean
+    'xr-animation'?: SpatializedMotionBinding
+    onSpatialTap?: (e: SpatialTapEvent) => void
+    onSpatialDragStart?: (e: SpatialDragStartEvent) => void
+    onSpatialDrag?: (e: SpatialDragEvent) => void
+    onSpatialDragEnd?: (e: SpatialDragEndEvent) => void
+    onSpatialRotate?: (e: SpatialRotateEvent) => void
+    onSpatialRotateEnd?: (e: SpatialRotateEndEvent) => void
+    onSpatialMagnify?: (e: SpatialMagnifyEvent) => void
+    onSpatialMagnifyEnd?: (e: SpatialMagnifyEndEvent) => void
+    spatialEventOptions?: SpatialEventOptions
+  }
+
   export type IntrinsicElements = {
-    [K in keyof ReactJSXIntrinsicElements]: ReactJSXIntrinsicElements[K] & {
-      style?: React.CSSProperties
-      'enable-xr'?: boolean
-      onSpatialTap?: (e: SpatialTapEvent) => void
-      onSpatialDragStart?: (e: SpatialDragStartEvent) => void
-      onSpatialDrag?: (e: SpatialDragEvent) => void
-      onSpatialDragEnd?: (e: SpatialDragEndEvent) => void
-      onSpatialRotate?: (e: SpatialRotateEvent) => void
-      onSpatialRotateEnd?: (e: SpatialRotateEndEvent) => void
-      onSpatialMagnify?: (e: SpatialMagnifyEvent) => void
-      onSpatialMagnifyEnd?: (e: SpatialMagnifyEndEvent) => void
-      spatialEventOptions?: SpatialEventOptions
-    }
+    [K in keyof ReactJSXIntrinsicElements]: ReactJSXIntrinsicElements[K] &
+      BaseSpatialIntrinsic &
+      (K extends 'div'
+        ? { onSpatialContentReady?: SpatialContentReadyCallback }
+        : {})
   }
 }
 

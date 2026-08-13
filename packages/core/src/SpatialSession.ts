@@ -14,19 +14,19 @@ import {
   SpatialBoxGeometryOptions,
   SpatialConeGeometryOptions,
   SpatialCylinderGeometryOptions,
-  SpatialGeometryOptions,
   SpatialModelEntityCreationOptions,
   SpatialPlaneGeometryOptions,
-  SpatialSceneCreationOptions,
   SpatialSphereGeometryOptions,
   SpatialUnlitMaterialOptions,
   SpatialPBRMaterialOptions,
   SpatialTextureResourceOptions,
   SpatialEntityUserData,
   AttachmentEntityOptions,
+  ModelLoadingMode,
   ModelSource,
 } from './types/types'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
+import { createOrnament, Ornament, OrnamentOptions } from './Ornament'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
 import {
   createModelAsset,
@@ -74,13 +74,16 @@ export class SpatialSession {
    * Creates a new static 3D element with an optional model URL.
    * Static 3D elements represent pre-built 3D models that can be loaded from a URL.
    * @param modelURL Optional URL to the 3D model to load
+   * @param sources Optional list of fallback model sources
+   * @param loading Whether the asset should fetch eagerly or be deferred (`'lazy'`)
    * @returns Promise resolving to a new SpatializedStatic3DElement instance
    */
   createSpatializedStatic3DElement(
     modelURL?: string,
     sources?: ModelSource[],
+    loading: ModelLoadingMode = 'eager',
   ): Promise<SpatializedStatic3DElement> {
-    return createSpatializedStatic3DElement(modelURL, sources)
+    return createSpatializedStatic3DElement(modelURL, sources, loading)
   }
 
   /**
@@ -227,5 +230,14 @@ export class SpatialSession {
     options: AttachmentEntityOptions,
   ): Promise<Attachment> {
     return createAttachmentEntity(options)
+  }
+
+  /**
+   * Creates a new window-level Ornament content container.
+   * @param options Ornament anchor, alignment, visibility, and size options
+   * @returns Promise resolving to a new Ornament runtime handle
+   */
+  createOrnament(options: OrnamentOptions = {}): Promise<Ornament> {
+    return createOrnament(options)
   }
 }

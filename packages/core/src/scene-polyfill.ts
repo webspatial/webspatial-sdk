@@ -1,10 +1,8 @@
 import { FocusScene } from './JSBCommand'
 import { openSpatialSceneSync } from './spatial-host'
-import { SpatialScene } from './SpatialScene'
 import {
   SpatialSceneCreationOptions,
   SpatialSceneType,
-  SpatialSceneState,
   isValidSceneUnit,
   isValidSpatialSceneType,
   isValidWorldScalingType,
@@ -41,6 +39,26 @@ let xr_volume_defaults: SpatialSceneCreationOptions = {
 }
 
 const INTERNAL_SCHEMA_PREFIX = 'webspatial://'
+const SPATIAL_CONTENT_COMMANDS = new Set([
+  'createSpatialized2DElement',
+  'createAttachment',
+  'createOrnament',
+])
+
+function getSpatialContentCommand(url: string): string | undefined {
+  try {
+    const parsed = new URL(url)
+    const queryCommand = parsed.searchParams.get('command') || undefined
+    const hostCommand =
+      parsed.protocol === 'webspatial:' ? parsed.host || undefined : undefined
+    const command = queryCommand || hostCommand
+    return command && SPATIAL_CONTENT_COMMANDS.has(command)
+      ? command
+      : undefined
+  } catch {
+    return [...SPATIAL_CONTENT_COMMANDS].find(command => url.includes(command))
+  }
+}
 
 /**
  * Deep-merge two plain object trees (no arrays, no special classes).
@@ -75,32 +93,92 @@ function deepMergePlain<
 }
 
 /**
+ * Pick a value from a manifest-like object where both snake_case and camelCase may exist.
+ *
+ * Rule: if both keys exist on the same object, snake_case wins.
+ */
+function preferSnake<T>(
+  src: Record<string, any> | undefined,
+  snakeKey: string,
+  camelKey: string,
+): T | undefined {
+  if (!src) return undefined
+  if (src[snakeKey] !== undefined) return src[snakeKey] as T
+  if (src[camelKey] !== undefined) return src[camelKey] as T
+  return undefined
+}
+
+/**
+ * Normalize resizability keys from manifest input into the runtime camelCase shape.
+ *
+ * Accepts both:
+ * - camelCase: minWidth/minHeight/maxWidth/maxHeight
+ * - snake_case: min_width/min_height/max_width/max_height
+ *
+ * Rule: if both exist on the same object, snake_case wins.
+ */
+function normalizeResizability(
+  src: Record<string, any> | undefined,
+): SpatialSceneCreationOptions['resizability'] | undefined {
+  if (!src || typeof src !== 'object' || Array.isArray(src)) return undefined
+  const out: any = {}
+  const minWidth = preferSnake<any>(src, 'min_width', 'minWidth')
+  if (minWidth !== undefined) out.minWidth = minWidth
+  const minHeight = preferSnake<any>(src, 'min_height', 'minHeight')
+  if (minHeight !== undefined) out.minHeight = minHeight
+  const maxWidth = preferSnake<any>(src, 'max_width', 'maxWidth')
+  if (maxWidth !== undefined) out.maxWidth = maxWidth
+  const maxHeight = preferSnake<any>(src, 'max_height', 'maxHeight')
+  if (maxHeight !== undefined) out.maxHeight = maxHeight
+  return Object.keys(out).length > 0 ? out : undefined
+}
+
+/**
  * Normalize XRSpatialSceneDefaults (manifest shape) into SpatialSceneCreationOptions (runtime shape).
- * - Only remap default_size -> defaultSize when present.
- * - Leaves other keys (resizability, worldScaling, etc.) unchanged.
- * - Units are left as-is; downstream formatting is handled by formatSceneConfig.
+ *
+ * - Remaps supported snake_case aliases into camelCase keys.
+ * - Keeps output camelCase-only (snake_case keys are treated as input aliases).
+ * - Units are not formatted here; downstream formatting is handled by formatSceneConfig.
+ *
+ * Rule: if both snake_case and camelCase are present on the same object, snake_case wins.
  */
 function normalizeXRDefaultsToSceneOptions(
   src: XRSpatialSceneDefaults | Record<string, any>,
 ): SpatialSceneCreationOptions {
-  const out: any = { ...(src || {}) }
-  const ds =
-    (src as any).defaultSize !== undefined
-      ? (src as any).defaultSize
-      : (src as any).default_size
-  if (ds !== undefined) {
-    out.defaultSize = ds
-  }
-  if ('default_size' in out) {
-    delete out.default_size
-  }
+  const input: any = src || {}
+  const out: any = {}
+
+  const ds = preferSnake<any>(input, 'default_size', 'defaultSize')
+  if (ds !== undefined) out.defaultSize = ds
+
+  const res = input.resizability
+  const normalizedRes = normalizeResizability(res)
+  if (normalizedRes) out.resizability = normalizedRes
+
+  const worldScaling = preferSnake<any>(input, 'world_scaling', 'worldScaling')
+  if (worldScaling !== undefined) out.worldScaling = worldScaling
+
+  const worldAlignment = preferSnake<any>(
+    input,
+    'world_alignment',
+    'worldAlignment',
+  )
+  if (worldAlignment !== undefined) out.worldAlignment = worldAlignment
+
+  const baseplateVisibility = preferSnake<any>(
+    input,
+    'baseplate_visibility',
+    'baseplateVisibility',
+  )
+  if (baseplateVisibility !== undefined)
+    out.baseplateVisibility = baseplateVisibility
+
   return out
 }
 
 class SceneManager {
   private originalOpen: any
   private static instance: SceneManager
-  private manifestReady: Promise<void> | null = null
   static getInstance() {
     if (!SceneManager.instance) {
       SceneManager.instance = new SceneManager()
@@ -109,7 +187,9 @@ class SceneManager {
   }
 
   init(window: WindowProxy) {
-    this.manifestReady = this.setupManifest()
+    // Load manifest defaults in the background; scene creation reads the
+    // resolved xr_window_defaults / xr_volume_defaults once available.
+    void this.setupManifest()
     this.originalOpen = window.open.bind(window)
     ;(window as any).open = this.open
   }
@@ -123,10 +203,6 @@ class SceneManager {
   private getConfig(name?: string) {
     if (name === undefined || !this.configMap[name]) return undefined
     return this.configMap[name]
-  }
-
-  waitManifest(): Promise<void> {
-    return this.manifestReady ?? Promise.resolve()
   }
 
   // Ensure URL is absolute; only convert when a relative path is provided
@@ -158,12 +234,41 @@ class SceneManager {
       const xr = manifest?.xr_spatial_scene
       if (!xr || typeof xr !== 'object') return
       const { overrides, ...topLevel } = xr as XRSpatialSceneConfig
-      // Merge top-level defaults with per-scene overrides.
-      const windowRaw = deepMergePlain(topLevel, overrides?.window_scene)
-      const volumeRaw = deepMergePlain(topLevel, overrides?.volume_scene)
-      const windowNext = normalizeXRDefaultsToSceneOptions(windowRaw)
 
-      const volumeNext = normalizeXRDefaultsToSceneOptions(volumeRaw)
+      // Normalize top-level defaults and per-type overrides separately, then deep-merge.
+      // - Ensures overrides keep higher priority than top-level defaults.
+      // - Ensures snake_case vs camelCase resolution is applied within the same object only.
+      // - This affects only manifest-resolved defaults; initScene callback chaining remains unchanged
+      //   because callbackReturnMap stores the raw callback return values.
+      const normalizedTopLevel = normalizeXRDefaultsToSceneOptions(
+        topLevel as any,
+      )
+      const overrideObj: any = overrides as any
+      const windowOverrideSrc = preferSnake<any>(
+        overrideObj,
+        'window_scene',
+        'windowScene',
+      )
+      const volumeOverrideSrc = preferSnake<any>(
+        overrideObj,
+        'volume_scene',
+        'volumeScene',
+      )
+      const normalizedWindowOverride = windowOverrideSrc
+        ? normalizeXRDefaultsToSceneOptions(windowOverrideSrc)
+        : undefined
+      const normalizedVolumeOverride = volumeOverrideSrc
+        ? normalizeXRDefaultsToSceneOptions(volumeOverrideSrc)
+        : undefined
+
+      const windowNext = deepMergePlain(
+        normalizedTopLevel,
+        normalizedWindowOverride,
+      )
+      const volumeNext = deepMergePlain(
+        normalizedTopLevel,
+        normalizedVolumeOverride,
+      )
       if (windowNext && Object.keys(windowNext).length > 0) {
         xr_window_defaults = windowNext
       }
@@ -181,22 +286,20 @@ class SceneManager {
   private open = (url?: string, target?: string, features?: string) => {
     // bypass internal
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
-      if (
-        url.includes('createSpatialized2DElement') ||
-        url.includes('createAttachment')
-      ) {
+      const spatialContentCommand = getSpatialContentCommand(url)
+      if (spatialContentCommand) {
         const token = //@ts-ignore
           (window.webSpatial || window.__webspatialShell__)?.genToken?.()
         if (token) {
-          const command = url.includes('createAttachment')
-            ? 'createAttachment'
-            : 'createSpatialized2DElement'
           const host = window.location.host
           const protocol = window.location.protocol
-          const finalURL = `${protocol}//${host}/${token}/?command=${command}`
-          const rid = new URL(url).searchParams.get('rid')
+          const finalURL = `${protocol}//${host}/${token}/`
+          const sourceParams = new URL(url).searchParams
           const final = new URL(finalURL)
-          if (rid) final.searchParams.set('rid', rid)
+          sourceParams.forEach((value, key) => {
+            final.searchParams.set(key, value)
+          })
+          final.searchParams.set('command', spatialContentCommand)
           return this.originalOpen(final.toString(), target, features)
         }
       }
@@ -434,8 +537,6 @@ export function formatSceneConfig(
   // defaultSize should format into px if window
   // defaultSize should format into m if volume
 
-  const defaultSceneConfig = getSceneDefaultConfig(sceneType)
-
   const errors: string[] = []
 
   const isWindow = sceneType === 'window'
@@ -572,65 +673,7 @@ function getSceneDefaultConfig(sceneType: SpatialSceneType) {
     : xr_volume_defaults || defaultSceneConfigVolume
 }
 
-async function injectScenePolyfill() {
-  if (!window.opener) return
-
-  const state = await SpatialScene.getInstance().getState()
-
-  // only run this in pending state
-  if (state !== SpatialSceneState.pending) return
-
-  function onContentLoaded(callback: any) {
-    if (
-      document.readyState === 'interactive' ||
-      document.readyState === 'complete'
-    ) {
-      callback()
-    } else {
-      document.addEventListener('DOMContentLoaded', callback)
-    }
-  }
-
-  onContentLoaded(async () => {
-    await SceneManager.getInstance().waitManifest()
-    const sceneType = window.xrCurrentSceneType ?? 'window'
-    const rawDefault = getSceneDefaultConfig(sceneType)
-    // Provide a formatted 'pre' to the callback for consistent units and types.
-    const pre = deepCloneJSON(rawDefault)
-
-    let cfg = pre
-    if (typeof window.xrCurrentSceneDefaults === 'function') {
-      try {
-        cfg = await window.xrCurrentSceneDefaults?.(pre)
-      } catch (error) {
-        console.error(error)
-      }
-    }
-    // fixme: this duration is too short so that hide and show is at racing, so add a little delay to avoid
-    await new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve(null)
-      }, 1000)
-    })
-
-    // Merge callback return with base defaults to ensure missing fields are filled.
-    const mergedCfg = deepMergePlain(deepCloneJSON(rawDefault), cfg)
-    const [formattedConfig, errors] = formatSceneConfig(mergedCfg, sceneType)
-    if (errors.length > 0) {
-      console.warn(
-        `window.xrCurrentSceneDefaults with errors: ${errors.join(', ')}`,
-      )
-    }
-    const finalCfg = {
-      ...formattedConfig,
-      type: sceneType,
-    }
-    await SpatialScene.getInstance().updateSceneCreationConfig(finalCfg)
-  })
-}
-
 export function injectSceneHook() {
   hijackWindowOpen(window)
   hijackWindowATag(window)
-  injectScenePolyfill()
 }

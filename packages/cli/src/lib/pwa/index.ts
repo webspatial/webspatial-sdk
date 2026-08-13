@@ -30,8 +30,6 @@ export class PWAGenerator {
     scope: '/',
   }
 
-  private static useDefaultManifestJson = false
-
   public static async generator(
     args: PWAInitArgs,
     isDev: boolean = false,
@@ -80,7 +78,6 @@ export class PWAGenerator {
         : await loadJsonFromDisk(url)
       manifest =
         isDev && !useDefault ? this.compareManifest(manifest) : manifest
-      this.useDefaultManifestJson = useDefault
     }
     // check manifest.json
     checkManifestJson(manifest, isDev)

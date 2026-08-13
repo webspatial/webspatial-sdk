@@ -3,6 +3,8 @@ enableDebugTool()
 
 declare global {
   interface Window {
-    inspectCurrentSpatialScene: () => Promise<any>
+    inspectCurrentSpatialScene: () => Promise<{
+      children: Record<string, unknown>
+    }>
   }
 }

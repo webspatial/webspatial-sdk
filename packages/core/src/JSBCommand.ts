@@ -24,10 +24,17 @@ import {
   Vec3,
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
+  ModelLoadingMode,
   ModelSource,
   SpatialTextureResourceOptions,
 } from './types/types'
+import type { OrnamentOptions } from './Ornament'
+import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
+import type {
+  ControlSpatializedElementAnimationCommand,
+  CreateSpatializedElementAnimationCommand,
+} from './types/motion/spatializedElementMotion'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -303,20 +310,58 @@ export class AddSpatializedElementToSpatialScene extends JSBCommand {
   }
 }
 
+export class AddOrnamentToSceneCommand extends JSBCommand {
+  commandType = 'AddOrnamentToScene'
+
+  constructor(readonly ornamentId: string) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      ornamentId: this.ornamentId,
+    }
+  }
+}
+
+export class UpdateOrnamentCommand extends JSBCommand {
+  commandType = 'UpdateOrnament'
+
+  constructor(
+    readonly id: string,
+    readonly options: OrnamentOptions,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      id: this.id,
+      ...this.options,
+    }
+  }
+}
+
 export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
   commandType = 'CreateSpatializedStatic3DElement'
 
   constructor(
     readonly modelURL?: string,
     readonly sources?: ModelSource[],
+    readonly loading: ModelLoadingMode = 'eager',
   ) {
     super()
     this.modelURL = modelURL
     this.sources = sources
+    this.loading = loading
   }
 
   protected getParams() {
-    return { modelURL: this.modelURL, sources: this.sources }
+    return {
+      modelURL: this.modelURL,
+      sources: this.sources,
+      loading: this.loading,
+    }
   }
 }
 
@@ -649,6 +694,39 @@ export class CheckWebViewCanCreateCommand extends JSBCommand {
   }
 }
 
+export class AnimateTransformJSBCommand extends JSBCommand {
+  commandType = 'AnimateTransform'
+
+  constructor(private command: AnimateTransformCommand) {
+    super()
+  }
+
+  protected getParams(): Record<string, any> | undefined {
+    const { type, animationId, entityId } = this.command
+    const params: Record<string, any> = { type, animationId }
+
+    if (entityId !== undefined) params.entityId = entityId
+
+    if (type === 'play') {
+      if (this.command.toTransform) {
+        params.toTransform = Array.from(this.command.toTransform)
+      }
+      if (this.command.fromTransform) {
+        params.fromTransform = Array.from(this.command.fromTransform)
+      }
+      if (this.command.duration !== undefined)
+        params.duration = this.command.duration
+      if (this.command.timingFunction !== undefined)
+        params.timingFunction = this.command.timingFunction
+      if (this.command.delay !== undefined) params.delay = this.command.delay
+      if (this.command.loop !== undefined) params.loop = this.command.loop
+      if (this.command.playbackRate !== undefined)
+        params.playbackRate = this.command.playbackRate
+    }
+
+    return params
+  }
+}
 export class InitializeAttachmentCommand extends JSBCommand {
   commandType = 'InitializeAttachment'
   constructor(
@@ -660,9 +738,12 @@ export class InitializeAttachmentCommand extends JSBCommand {
   protected getParams() {
     return {
       id: this.attachmentId,
-      parentEntityId: this.options.parentEntityId,
-      position: this.options.position ?? [0, 0, 0],
-      size: this.options.size,
+      placementId: this.options.placement.id,
+      position: this.options.position ?? { x: 0, y: 0, z: 0 },
+      rotation: this.options.rotation ?? { x: 0, y: 0, z: 0 },
+      scale: this.options.scale ?? { x: 1, y: 1, z: 1 },
+      width: this.options.width,
+      height: this.options.height,
       ownerViewId: this.options.ownerViewId,
     }
   }
@@ -684,10 +765,34 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
   }
 }
 
-// TODO: Can crypto.randomUUID be used instead including in dev environments without https
-function uuid(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = (Math.random() * 16) | 0
-    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
-  })
+export class CreateSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'CreateSpatializedElementAnimation'
+
+  constructor(private command: CreateSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { elementId, timeline } = this.command
+    return {
+      elementId,
+      timeline,
+    }
+  }
+}
+
+export class ControlSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'ControlSpatializedElementAnimation'
+
+  constructor(private command: ControlSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { animationId, type } = this.command
+    return {
+      animationId,
+      type,
+    }
+  }
 }

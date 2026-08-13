@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom/client'
 import { Spatial } from '@webspatial/core-sdk'
 import { initScene } from '@webspatial/react-sdk'
+import { useEffect, useRef, useState } from 'react'
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
@@ -169,45 +168,7 @@ function App() {
         window.open fixed size
       </button>
 
-      <h1 className="text-2xl text-black">a tag</h1>
-      <a className={btnCls} href={`/pages/scene/hook.html`}>
-        open in place
-      </a>
-      <a className={btnCls} href={`/pages/scene/hook.html`} target="_blank">
-        open _blank
-      </a>
-      <a
-        className={btnCls}
-        href={`/pages/scene/hook.html`}
-        target="_blank"
-        onClick={e => {
-          console.log('click on', e)
-        }}
-      >
-        open _blank with onClick
-      </a>
       <h1 className="text-2xl text-black">openscene</h1>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open no name')
-          winARef.current = window.open(
-            '/pages/scene/loading.html',
-            // 'http://localhost:5173/src/scene/xrapp.html',
-          )
-        }}
-      >
-        open loading
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open no name')
-          winARef.current = window.open('/pages/scene/hook.html')
-        }}
-      >
-        open hook
-      </button>
 
       <button
         className={btnCls}

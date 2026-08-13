@@ -8,7 +8,7 @@ import {
 import { clean } from 'semver'
 import { copyDir } from '../resource/file'
 
-const { execSync, exec } = require('child_process')
+const { execSync } = require('child_process')
 
 export default class Xcodebuild {
   static async project() {

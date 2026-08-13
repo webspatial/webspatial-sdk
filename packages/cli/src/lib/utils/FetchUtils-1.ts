@@ -1,11 +1,7 @@
 class FetchUtils {
-  private fetchEngine = null
   public fetch: any = null
   public downloadFile: any = null
   public decompressResponseBuffer: any = null
-  setFetchEngine(newFetchEngine: any): void {
-    this.fetchEngine = newFetchEngine
-  }
   setFetch(newFetch: any): void {
     this.fetch = newFetch
   }

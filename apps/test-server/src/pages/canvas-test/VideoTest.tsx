@@ -1,5 +1,3 @@
-import React, { useEffect, useRef } from 'react'
-
 const VideoTest = () => {
   return (
     <div>

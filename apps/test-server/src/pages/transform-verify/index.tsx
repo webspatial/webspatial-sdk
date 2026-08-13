@@ -12,8 +12,8 @@
  * - Various --xr-back depths (0, small, large)
  * - Nested SpatialDiv with independent transforms
  */
-import React, { useState } from 'react'
 import { enableDebugTool } from '@webspatial/react-sdk'
+import React, { useState } from 'react'
 
 enableDebugTool()
 

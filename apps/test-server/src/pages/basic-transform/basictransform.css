@@ -1,0 +1,5 @@
+/* Tag + class selector: must match the spatial <h1 enable-xr> probe (same intrinsic tag). */
+h1.basicTransform {
+  --xr-back: 250px;
+  transform: translateZ(120px) rotateZ(30deg);
+}

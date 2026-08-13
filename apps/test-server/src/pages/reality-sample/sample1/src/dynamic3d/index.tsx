@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react'
 import {
   BoxEntity,
   ModelAsset,
@@ -7,6 +6,7 @@ import {
   SceneGraph,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
+import { useEffect, useRef, useState } from 'react'
 
 interface MaterialInfo {
   id: string

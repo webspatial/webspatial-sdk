@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0  # Use full git history to enable tagging
 
@@ -30,7 +30,7 @@ jobs:
       - name: Setup node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version: 22
           cache: 'pnpm'
       
       - name: Install dependencies and build
