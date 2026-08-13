@@ -81,6 +81,8 @@ The visionOS application does not open the source JSON from the filesystem. The 
 
 The generated Xcode project and the checked-in platform project must consume the same generated representation. CI verifies generation is deterministic and that checked-in generated output, if any, is not stale.
 
+The source JSON remains Git-managed for development and review but is not included in the published npm package. The builder consumes the generated Swift representation, so publishing the source would only duplicate the allowlist in installed package contents.
+
 This avoids runtime path and bundle-resource failures and ensures the manifest being injected is the one reviewed with the native implementation.
 
 ### 4. Inject before application scripts in application WebViews
@@ -133,7 +135,7 @@ QA surfaces the parsed runtime type, version, build ID, manifest version, provid
 ## Risks / Trade-offs
 
 - **[Risk] Source capability declarations drift from native implementation** → Validate keys and generated output in CI, require native feature PRs to update the source, and cover declared capabilities with targeted integration tests.
-- **[Risk] Application and portal WebView creation paths are confused** → Give WebView models an explicit role, inject only for application roles, and test both sides of that boundary.
+- **[Risk] Application and portal WebView creation paths are confused** → Give WebView models an explicit documented content role, inject only for application roles, and test both sides of that boundary.
 - **[Risk] Authored JavaScript tampers with the internal global** → Inject first, freeze the manifest, define the property as non-writable/non-configurable where practical, and snapshot validated data. Capability detection remains advisory rather than a security boundary.
 - **[Risk] A malformed manifest hides all new capabilities** → Fall back without throwing and expose the selected provider source in the diagnostic test page.
 - **[Risk] Older SDKs do not understand manifests** → They retain their existing table behavior; newer capability names are already unknown/false to them.

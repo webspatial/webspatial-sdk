@@ -32,13 +32,13 @@ final class RuntimeCapabilityManifestTests: XCTestCase {
         let applicationController = WKUserContentController()
         WKWebViewManager.Instance.installRuntimeCapabilityManifestIfNeeded(
             into: applicationController,
-            role: .application
+            contentRole: .application
         )
 
         let portalController = WKUserContentController()
         WKWebViewManager.Instance.installRuntimeCapabilityManifestIfNeeded(
             into: portalController,
-            role: .portal
+            contentRole: .portal
         )
 
         XCTAssertTrue(containsRuntimeCapabilityManifest(applicationController))

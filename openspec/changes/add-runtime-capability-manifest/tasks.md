@@ -3,7 +3,7 @@
 - [x] 1.1 Define Runtime Capability Manifest v1 TypeScript types, validation rules, and canonical serialization helpers in the core runtime module.
 - [x] 1.2 Add `packages/visionOS/runtime-capabilities.json` with the complete current visionOS allowlist and validate every entry against the SDK key/token registry.
 - [x] 1.3 Add deterministic generation for static manifest data while sourcing runtime version and build provenance from builder-generated `pwaManager` metadata.
-- [x] 1.4 Ensure the visionOS package publishes the source/generated inputs required by the builder and add a CI drift/validation check.
+- [x] 1.4 Keep the source JSON Git-managed, publish the generated provider required by the builder, and add a CI drift/validation check.
 
 ## 2. SDK Capability Resolution
 
@@ -16,7 +16,7 @@
 
 - [x] 3.1 Make the checked-in visionOS Xcode project and builder-generated project consume the same generated manifest representation.
 - [x] 3.2 Add a centralized document-start `WKUserScript` provider that installs a frozen, non-writable manifest value before authored application scripts.
-- [x] 3.3 Apply the provider to every application-hosting Scene WebView and exclude SpatialDiv/Attachment portal WebViews through an explicit WebView role.
+- [x] 3.3 Apply the provider to every application-hosting Scene WebView and exclude SpatialDiv/Attachment portal WebViews through an explicit documented WebView content role.
 - [x] 3.4 Add native/builder tests that verify direct and generated Xcode projects combine the expected runtime type and capability allowlist with `pwaManager` package version and build ID metadata.
 
 ## 4. Preview QA and Maintenance Workflow

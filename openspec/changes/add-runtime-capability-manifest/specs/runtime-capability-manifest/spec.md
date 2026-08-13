@@ -91,6 +91,7 @@ The visionOS platform package MUST contain a Git-managed current-capability sour
 - **WHEN** the visionOS platform package is converted into an Xcode project or built directly
 - **THEN** the resulting artifact MUST contain manifest data generated from the checked-in source
 - **AND** the result MUST not depend on the source JSON being accessible from a repository filesystem at runtime
+- **AND** the published npm package MUST contain the generated provider but need not contain the source JSON
 
 ### Requirement: visionOS document-start injection
 

@@ -45,7 +45,8 @@ pnpm test:runtime-capabilities
 The generated Swift file is checked in and included in the published visionOS
 platform package. It contains only the static manifest version, runtime type, and
 capability allowlist. The runtime does not read repository JSON at execution
-time, and Changesets package-version updates do not require regeneration.
+time, and Changesets package-version updates do not require regeneration. The
+source JSON remains Git-managed but is not included in the published npm package.
 
 The runtime injects the generated manifest into each Scene WebView that loads
 authored application code. SpatialDiv and Attachment WebViews only receive
