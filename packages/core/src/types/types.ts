@@ -275,8 +275,6 @@ export interface SpatialPBRMaterialOptions {
   textureId?: string
   metalness?: number
   roughness?: number
-  emissiveColor?: string
-  emissiveIntensity?: number
   transparent?: boolean
   opacity?: number
 }

@@ -65,8 +65,6 @@ struct CreatePBRMaterial: CommandDataProtocol {
     let textureId: String?
     let metalness: Float?
     let roughness: Float?
-    let emissiveColor: String?
-    let emissiveIntensity: Float?
     let transparent: Bool?
     let opacity: Float?
 }
@@ -192,8 +190,6 @@ struct UpdatePBRMaterialProperties: CommandDataProtocol {
     let textureId: String?
     let metalness: Float?
     let roughness: Float?
-    let emissiveColor: String?
-    let emissiveIntensity: Float?
     let transparent: Bool?
     let opacity: Float?
 }

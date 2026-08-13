@@ -178,8 +178,8 @@ export class SpatialSession {
 
   /**
    * Creates a physically-based material that responds to scene lighting.
-   * Supports `metalness`, `roughness`, and emissive properties on top of
-   * the base color/texture/transparency surface controls.
+   * Supports `metalness` and `roughness` on top of the base
+   * color/texture/transparency surface controls.
    * @param options Configuration options for the PBR material
    * @returns Promise resolving to a new SpatialPBRMaterial instance
    */

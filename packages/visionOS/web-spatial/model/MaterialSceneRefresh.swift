@@ -1,8 +1,8 @@
 import Foundation
 
 /// Scene-level helpers for keeping RealityKit model components in sync after material / texture changes.
-/// Per-material mutation lives on `SpatialUnlitMaterial` in `dynamic3d/SpatialMaterial.swift`; this type only
-/// orchestrates lookups across `spatialObjects`.
+/// Per-material mutation lives on `SpatialUnlitMaterial` / `SpatialPBRMaterial` in
+/// `dynamic3d/SpatialMaterial.swift`; this type only orchestrates lookups across `spatialObjects`.
 enum MaterialSceneRefresh {
     /// After `SpatialUnlitMaterial.updateProperties`, `ModelComponent` may still hold a stale material copy —
     /// refresh every component and entity that references `materialId`.
@@ -22,8 +22,8 @@ enum MaterialSceneRefresh {
         }
     }
 
-    /// After `SpatialTextureResource` reloads from a new URL, push `texture.resource` into every bound unlit material and return their ids for `refreshComponentsUsingMaterial`.
-    static func pushReloadedTextureToBoundUnlitMaterials(
+    /// After `SpatialTextureResource` reloads from a new URL, push `texture.resource` into every bound material and return their ids for `refreshComponentsUsingMaterial`.
+    static func pushReloadedTextureToBoundMaterials(
         texture: SpatialTextureResource,
         textureSpatialId: String,
         spatialObjects: [String: any SpatialObjectProtocol]
@@ -45,8 +45,6 @@ enum MaterialSceneRefresh {
                     texture: .some(texture.resource),
                     metalness: nil,
                     roughness: nil,
-                    emissiveColor: nil,
-                    emissiveIntensity: nil,
                     transparent: nil,
                     opacity: nil
                 )

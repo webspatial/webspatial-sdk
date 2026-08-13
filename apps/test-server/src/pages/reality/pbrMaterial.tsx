@@ -29,23 +29,21 @@ export default function PBRMaterialTest() {
   const [tint, setTint] = useState('#ffffff')
   const [roughness, setRoughness] = useState(0.5)
   const [metalness, setMetalness] = useState(0)
-  const [emissiveColor, setEmissiveColor] = useState('#000000')
-  const [emissiveIntensity, setEmissiveIntensity] = useState(0)
+  const [transparent, setTransparent] = useState(false)
 
   return (
     <div className="p-10 text-white min-h-full">
-      <h1 className="text-2xl mb-2">PBR primitives + presets + emissive</h1>
+      <h1 className="text-2xl mb-2">PBR primitives + presets</h1>
       <p className="text-sm text-gray-400 mb-4 max-w-3xl">
         Loads a <code className="text-gray-300">Texture</code>, then creates
-        several <code className="text-gray-300">PBRMaterial</code>s — including
-        preset spreads from{' '}
-        <code className="text-gray-300">MaterialPresets</code> and a tunable
-        material whose <code className="text-gray-300">roughness</code>,{' '}
+        several <code className="text-gray-300">PBRMaterial</code>s — one sphere
+        per <code className="text-gray-300">MaterialPresets</code> entry and a
+        tunable material whose <code className="text-gray-300">roughness</code>,{' '}
         <code className="text-gray-300">metalness</code>, base{' '}
         <code className="text-gray-300">color</code>, and{' '}
-        <code className="text-gray-300">emissiveColor</code>/
-        <code className="text-gray-300">emissiveIntensity</code> update
-        reactively. Also exercises{' '}
+        <code className="text-gray-300">transparent</code>/
+        <code className="text-gray-300">opacity</code> update reactively. Also
+        exercises{' '}
         <code className="text-gray-300">{'<Material type="pbr">'}</code>.
         Status: {status}
       </p>
@@ -78,18 +76,9 @@ export default function PBRMaterialTest() {
           <button
             type="button"
             className={btnCls}
-            onClick={() =>
-              setEmissiveColor(c => (c === '#000000' ? '#ff5500' : '#000000'))
-            }
+            onClick={() => setTransparent(t => !t)}
           >
-            Emissive color ({emissiveColor})
-          </button>
-          <button
-            type="button"
-            className={btnCls}
-            onClick={() => setEmissiveIntensity(i => (i > 0 ? 0 : 2))}
-          >
-            Emissive intensity {emissiveIntensity}
+            Transparent: {transparent ? 'on (opacity 0.35)' : 'off'}
           </button>
         </div>
       ) : null}
@@ -120,24 +109,29 @@ export default function PBRMaterialTest() {
 
           {textureReady ? (
             <>
-              {/* Tunable PBR — reactively updates color / roughness / metalness / emissive */}
+              {/* Tunable PBR — reactively updates color / roughness / metalness / blending */}
               <PBRMaterial
                 id="pbrTunable"
                 color={tint}
                 textureId="pbrTexGrid"
                 roughness={roughness}
                 metalness={metalness}
-                emissiveColor={emissiveColor}
-                emissiveIntensity={emissiveIntensity}
+                transparent={transparent}
+                opacity={transparent ? 0.35 : 1}
               />
 
-              {/* Preset spreads (color overridden where useful) */}
+              {/* One material per preset (color overridden where useful) */}
               <PBRMaterial
                 id="pbrMetal"
                 {...MaterialPresets.metal}
                 color="#c0c0c0"
               />
-              <PBRMaterial id="pbrGold" {...MaterialPresets.gold} />
+              <PBRMaterial id="pbrGlossy" {...MaterialPresets.glossy} />
+              <PBRMaterial
+                id="pbrPlastic"
+                {...MaterialPresets.plastic}
+                color="#e04444"
+              />
               <PBRMaterial
                 id="pbrMatte"
                 {...MaterialPresets.matte}
@@ -147,13 +141,6 @@ export default function PBRMaterialTest() {
                 id="pbrGlass"
                 {...MaterialPresets.glass}
                 color="#aaddff"
-              />
-              {/* Pure-emissive preset (e.g. a "lantern" surface) */}
-              <PBRMaterial
-                id="pbrEmissive"
-                {...MaterialPresets.emissive}
-                emissiveColor="#ffaa33"
-                emissiveIntensity={3}
               />
 
               {/* Material dispatcher: same as <PBRMaterial> via type="pbr" */}
@@ -180,32 +167,32 @@ export default function PBRMaterialTest() {
                     materials={['pbrMetal']}
                   />
                   <SphereEntity
-                    id="pbrSphereGold"
-                    name="pbrSphereGold"
+                    id="pbrSphereGlossy"
+                    name="pbrSphereGlossy"
                     radius={0.07}
                     position={{ x: -0.18, y: 0, z: 0 }}
-                    materials={['pbrGold']}
+                    materials={['pbrGlossy']}
+                  />
+                  <SphereEntity
+                    id="pbrSpherePlastic"
+                    name="pbrSpherePlastic"
+                    radius={0.07}
+                    position={{ x: 0, y: 0, z: 0 }}
+                    materials={['pbrPlastic']}
                   />
                   <SphereEntity
                     id="pbrSphereMatte"
                     name="pbrSphereMatte"
                     radius={0.07}
-                    position={{ x: 0, y: 0, z: 0 }}
+                    position={{ x: 0.18, y: 0, z: 0 }}
                     materials={['pbrMatte']}
                   />
                   <SphereEntity
                     id="pbrSphereGlass"
                     name="pbrSphereGlass"
                     radius={0.07}
-                    position={{ x: 0.18, y: 0, z: 0 }}
-                    materials={['pbrGlass']}
-                  />
-                  <SphereEntity
-                    id="pbrSphereEmissive"
-                    name="pbrSphereEmissive"
-                    radius={0.07}
                     position={{ x: 0.36, y: 0, z: 0 }}
-                    materials={['pbrEmissive']}
+                    materials={['pbrGlass']}
                   />
                 </Entity>
 

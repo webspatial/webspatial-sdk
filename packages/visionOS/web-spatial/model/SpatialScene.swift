@@ -1418,7 +1418,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         Task {
             do {
                 try await texture.updateURL(newURL)
-                let refreshedMaterialIds = MaterialSceneRefresh.pushReloadedTextureToBoundUnlitMaterials(
+                let refreshedMaterialIds = MaterialSceneRefresh.pushReloadedTextureToBoundMaterials(
                     texture: texture,
                     textureSpatialId: command.id,
                     spatialObjects: spatialObjects
@@ -1548,8 +1548,6 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             texture: texture,
             metalness: command.metalness,
             roughness: command.roughness,
-            emissiveColor: command.emissiveColor,
-            emissiveIntensity: command.emissiveIntensity,
             transparent: command.transparent,
             opacity: command.opacity
         )

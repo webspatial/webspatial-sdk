@@ -169,8 +169,6 @@ class Dynamic3DManager {
             tex,
             props.metalness ?? 0,
             props.roughness ?? 0.5,
-            props.emissiveColor ?? "#000000",
-            props.emissiveIntensity ?? 0,
             props.transparent ?? false,
             props.opacity ?? 1,
             textureSpatialId: textureSpatialId

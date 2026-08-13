@@ -1,7 +1,10 @@
 'use client'
 
 import { ComponentType, ReactNode } from 'react'
-import type { SpatialUnlitMaterialOptions } from '@webspatial/core-sdk'
+import type {
+  SpatialPBRMaterialOptions,
+  SpatialUnlitMaterialOptions,
+} from '@webspatial/core-sdk'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { warnBootForgotten } from './shared/warnBootForgotten'
@@ -42,7 +45,14 @@ export type UnlitMaterialProps = {
   id: string
 } & SpatialUnlitMaterialOptions
 
-export type MaterialProps = { type: 'unlit' } & UnlitMaterialProps
+export type PBRMaterialProps = {
+  children?: ReactNode
+  id: string
+} & SpatialPBRMaterialOptions
+
+export type MaterialProps =
+  | ({ type: 'unlit' } & UnlitMaterialProps)
+  | ({ type: 'pbr' } & PBRMaterialProps)
 
 export type TextureProps = {
   children?: ReactNode
@@ -74,6 +84,11 @@ export const UnlitMaterial =
     'UnlitMaterial',
     impl => impl.UnlitMaterial,
   )
+
+export const PBRMaterial = /* @__PURE__ */ createNullFacade<PBRMaterialProps>(
+  'PBRMaterial',
+  impl => impl.PBRMaterial,
+)
 
 export const Material = /* @__PURE__ */ createNullFacade<MaterialProps>(
   'Material',
