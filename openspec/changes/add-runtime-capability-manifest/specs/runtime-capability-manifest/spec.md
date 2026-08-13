@@ -2,17 +2,18 @@
 
 ### Requirement: Runtime Capability Manifest v1 schema
 
-A WebSpatial runtime capability provider MUST expose a manifest with `manifestVersion: 1`, a runtime descriptor, and a complete `supported` allowlist. The runtime descriptor MUST contain a provider type of `visionos` or `picoos` and a non-empty diagnostic `buildId`; it MAY contain a diagnostic runtime version. Each allowlist entry MUST be either a canonical top-level capability name or a canonical `name:token` compound key defined by the SDK capability registry.
+A WebSpatial runtime capability provider MUST expose a manifest with `manifestVersion: 1`, a runtime descriptor, and a complete `supported` allowlist. The runtime descriptor MUST contain a provider type of `visionos` or `picoos` and a non-empty diagnostic `buildId`; it MAY contain a diagnostic runtime version. A provider MUST emit entries that are canonical top-level capability names or canonical `name:token` compound keys according to the registry used to build that provider. A consumer MUST accept non-empty string entries and MUST NOT invalidate the manifest solely because an entry is unknown to the consuming SDK.
 
 #### Scenario: Valid v1 manifest
 
-- **WHEN** a manifest has `manifestVersion: 1`, a supported runtime type, a non-empty `buildId`, and only canonical allowlist entries
+- **WHEN** a manifest has `manifestVersion: 1`, a supported runtime type, a non-empty `buildId`, and a `supported` array containing only non-empty strings
 - **THEN** the SDK MUST accept it as a valid candidate for the matching detected runtime
 
 #### Scenario: Unknown future capability entry
 
 - **WHEN** a valid manifest contains an allowlist entry not known by the consuming SDK
-- **THEN** the SDK MUST ignore that entry without invalidating known entries
+- **THEN** the SDK MUST ignore that entry for capability resolution without invalidating the manifest or changing results for known entries
+- **AND** the SDK MAY retain the unknown entry for diagnostics
 
 #### Scenario: Complete allowlist semantics
 

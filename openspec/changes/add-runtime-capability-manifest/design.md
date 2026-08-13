@@ -47,7 +47,7 @@ Manifest v1 contains:
 }
 ```
 
-`supported` is a complete allowlist for capability names known by the consuming SDK. A known top-level key or compound `name:token` entry absent from the list is false. Unknown entries are ignored so a newer runtime can be consumed safely by an older SDK.
+`supported` is a complete allowlist for capability names known by the consuming SDK. A known top-level key or compound `name:token` entry absent from the list is false. Provider generation validates entries strictly against the provider's build-time registry, while consumers accept any non-empty string and interpret only keys known to their own registry. Unknown entries do not invalidate the manifest, so a newer runtime can be consumed safely by an older SDK; consumers may retain those entries for diagnostics.
 
 A complete allowlist is preferred over partial overrides because partial data can inherit stale `true` values from a historical table row when a runtime removes or temporarily disables support.
 
