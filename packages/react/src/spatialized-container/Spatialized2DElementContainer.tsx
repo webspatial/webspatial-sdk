@@ -4,8 +4,9 @@ import React, {
   ElementType,
   ForwardedRef,
   forwardRef,
-  useContext,
+  useCallback,
   useEffect,
+  useState,
 } from 'react'
 
 import { Spatialized2DElement } from '@webspatial/core-sdk'
@@ -24,19 +25,43 @@ import {
   SpatializedDivElementRef,
 } from './types'
 import { SpatializedContainer } from './SpatializedContainer'
-import {
-  PortalInstanceContext,
-  PortalInstanceObject,
-} from './context/PortalInstanceContext'
+import type { PortalInstanceObject } from './context/PortalInstanceContext'
 import { getSession } from '../utils'
+import { detectSpatialRuntime } from '../runtime/detect'
+import { useSpatialContentReady } from './hooks/useSpatialContentReady'
+
+function mergeRefs<T>(
+  ...refs: Array<React.Ref<T> | undefined | null>
+): React.RefCallback<T> {
+  return value => {
+    for (const ref of refs) {
+      if (ref == null) continue
+      if (typeof ref === 'function') {
+        ref(value)
+      } else {
+        ;(ref as React.MutableRefObject<T | null>).current = value
+      }
+    }
+  }
+}
+
 function getJSXPortalInstance<P extends ElementType>(
   inProps: Omit<
     SpatializedContentProps<SpatializedElementRef, P>,
-    'spatializedElement'
+    'spatializedElement' | 'onSpatialContentReady' | 'portalInstanceObject'
   >,
   portalInstanceObject: PortalInstanceObject,
+  hostRef?: React.RefCallback<HTMLElement | null>,
 ) {
-  const { component: El, style: inStyle = {}, ...props } = inProps
+  const {
+    component: El,
+    style: inStyle = {},
+    ref: userRef,
+    ...props
+  } = inProps as React.ComponentPropsWithRef<P> & {
+    component: P
+  }
+  const isVisionOSRuntime = detectSpatialRuntime() === 'visionos'
   const extraStyle: CSSProperties = {
     visibility: 'visible',
     position: 'relative',
@@ -48,13 +73,20 @@ function getJSXPortalInstance<P extends ElementType>(
     marginTop: '0px',
     marginBottom: '0px',
     borderRadius: '0px',
+    ...(isVisionOSRuntime
+      ? {
+          // Root opacity remains native-owned on the spatial host, not the portal DOM.
+          opacity: 1,
+        }
+      : {}),
     // overflow: '',
     transform: 'none',
   }
 
-  const computedStyle = portalInstanceObject.computedStyle!
-  const inheritedPortalStyle: CSSProperties =
-    getInheritedStyleProps(computedStyle)
+  const computedStyle = portalInstanceObject.computedStyle
+  const inheritedPortalStyle: CSSProperties = computedStyle
+    ? getInheritedStyleProps(computedStyle)
+    : {}
 
   const style = {
     ...inStyle,
@@ -62,7 +94,9 @@ function getJSXPortalInstance<P extends ElementType>(
     ...extraStyle,
   }
 
-  return <El style={style} {...props} />
+  const mergedRef = hostRef != null ? mergeRefs(hostRef, userRef) : userRef
+
+  return <El ref={mergedRef} style={style} {...props} />
 }
 
 function useSyncDocumentTitle(
@@ -81,21 +115,37 @@ function useSyncDocumentTitle(
 function SpatializedContent<P extends ElementType>(
   props: SpatializedContentProps<SpatializedElementRef, P>,
 ) {
-  const { spatializedElement, ...restProps } = props
+  const {
+    spatializedElement,
+    portalInstanceObject,
+    onSpatialContentReady,
+    ...restProps
+  } = props
   const spatialized2DElement = spatializedElement as Spatialized2DElement
   const { windowProxy } = spatialized2DElement
+
+  const [hostEl, setHostEl] = useState<HTMLElement | null>(null)
+
+  useSpatialContentReady({
+    spatializedElement,
+    portalInstanceObject,
+    hostElement: hostEl,
+    onSpatialContentReady,
+  })
 
   useSyncHeadStyles(windowProxy)
 
   const name: string = (restProps as any)['data-name'] || ''
   useSyncDocumentTitle(windowProxy, spatialized2DElement, name)
 
-  const portalInstanceObject: PortalInstanceObject = useContext(
-    PortalInstanceContext,
-  )!
+  const setHostCallback = useCallback((el: HTMLElement | null) => {
+    setHostEl(el)
+  }, [])
+
   const JSXPortalInstance = getJSXPortalInstance(
     restProps,
     portalInstanceObject,
+    setHostCallback,
   )
 
   return createPortal(JSXPortalInstance, windowProxy.document.body)

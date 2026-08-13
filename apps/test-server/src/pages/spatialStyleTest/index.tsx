@@ -1,10 +1,9 @@
-import React from 'react'
-import { CSSModelSample } from './CSSModelSample'
 import { enableDebugTool } from '@webspatial/react-sdk'
-import { SpatialTagComponent } from './SpatialTagComponent'
-import { NestedComponent } from './NestedComponent'
+import { CSSModelSample } from './CSSModelSample'
 import { CubeComponent } from './CubeComponent'
+import { NestedComponent } from './NestedComponent'
 import { SimpleSpatialComponent } from './SimpleSpatialComponent'
+import { SpatialTagComponent } from './SpatialTagComponent'
 import { StyledTitleComponent } from './StyledTitleComponent'
 import { StyledVisibilityComponent } from './StyledVisibilityComponent'
 

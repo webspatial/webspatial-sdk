@@ -100,17 +100,23 @@ export interface ModelSource {
   type?: string
 }
 
+export type ModelLoadingMode = 'eager' | 'lazy'
+
+export type StageMode = 'orbit' | 'none'
+
 export interface SpatializedStatic3DElementProperties
   extends SpatializedElementProperties {
   modelURL: string
   sources?: ModelSource[]
   modelTransform?: number[]
+  stagemode?: StageMode
   autoplay?: boolean
   loop?: boolean
   animationPaused?: boolean
   playbackRate?: number
   currentTime?: number
   posterURL?: string
+  loading?: ModelLoadingMode
 }
 
 export interface SpatialSceneCreationOptions {
@@ -269,8 +275,6 @@ export interface SpatialPBRMaterialOptions {
   textureId?: string
   metalness?: number
   roughness?: number
-  emissiveColor?: string
-  emissiveIntensity?: number
   transparent?: boolean
   opacity?: number
 }
@@ -427,16 +431,26 @@ export type SpatialMagnifyEndEvent = CustomEvent<SpatialMagnifyEndEventDetail>
 
 export type SpatialEntityOrReality = SpatialEntity | SpatializedDynamic3DElement
 
+export interface AttachmentEntityPlacement {
+  id: string
+}
+
 export interface AttachmentEntityOptions {
-  parentEntityId: string
-  position?: [number, number, number]
-  size: { width: number; height: number }
+  placement: AttachmentEntityPlacement
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+  width?: number
+  height?: number
   ownerViewId: string
 }
 
 export interface AttachmentEntityUpdateOptions {
-  position?: [number, number, number]
-  size?: { width: number; height: number }
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+  width?: number
+  height?: number
 }
 
 // manifest

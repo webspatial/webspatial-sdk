@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react'
 import {
-  Reality,
-  SceneGraph,
-  Entity,
   BoxEntity,
-  PlaneEntity,
-  SphereEntity,
   ConeEntity,
   CylinderEntity,
+  Entity,
+  PlaneEntity,
+  Reality,
+  SceneGraph,
+  SphereEntity,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
+import { useEffect, useRef, useState } from 'react'
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
@@ -18,8 +18,8 @@ export default function RealityDynamic3D() {
   const [boxPos, setBoxPos] = useState({ x: -0.22, y: 0.12, z: 0 })
   const [planePos, setPlanePos] = useState({ x: 0.22, y: -0.12, z: 0 })
   const [spherePos, setSpherePos] = useState({ x: 0.22, y: 0.12, z: 0 })
-  const [conePos, setConePos] = useState({ x: -0.22, y: -0.12, z: 0 })
-  const [cylinderPos, setCylinderPos] = useState({ x: 0, y: -0.12, z: 0 })
+  const [conePos] = useState({ x: -0.22, y: -0.12, z: 0 })
+  const [cylinderPos] = useState({ x: 0, y: -0.12, z: 0 })
 
   const [boxRot, setBoxRot] = useState({ x: 0, y: 0, z: 0 })
   const [planeRot, setPlaneRot] = useState({ x: 0, y: 0, z: 0 })
@@ -30,8 +30,8 @@ export default function RealityDynamic3D() {
   const [boxSpin, setBoxSpin] = useState(false)
   const [planeSpin, setPlaneSpin] = useState(false)
   const [sphereSpin, setSphereSpin] = useState(false)
-  const [coneSpin, setConeSpin] = useState(false)
-  const [cylinderSpin, setCylinderSpin] = useState(false)
+  const [coneSpin] = useState(false)
+  const [cylinderSpin] = useState(false)
 
   const boxAnimRef = useRef<number | null>(null)
   const planeAnimRef = useRef<number | null>(null)

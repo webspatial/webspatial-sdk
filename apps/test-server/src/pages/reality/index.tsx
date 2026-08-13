@@ -1,4 +1,3 @@
-import React, { useEffect, useRef, useState } from 'react'
 import {
   BoxEntity,
   enableDebugTool,
@@ -11,6 +10,7 @@ import {
   SpatializedElementRef,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
+import { useEffect, useRef, useState } from 'react'
 
 const btnCls =
   'select-none px-4 py-1 text-s font-semibold rounded-full border border-gray-700 hover:text-white bg-gray-700 hover:bg-gray-700 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2'
@@ -75,7 +75,7 @@ export default function RealityTest() {
 
   const realityRef = useRef<SpatializedElementRef<HTMLDivElement>>(null)
 
-  const [showModelEntity, setShowModelEntity] = useState(true)
+  const [showModelEntity] = useState(true)
 
   return (
     <div className="p-4 overflow-auto h-full text-white">

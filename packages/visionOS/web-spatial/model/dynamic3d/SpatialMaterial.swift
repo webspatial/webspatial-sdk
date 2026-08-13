@@ -82,8 +82,6 @@ class SpatialPBRMaterial: SpatialMaterial {
     private(set) var currentTexture: TextureResource?
     private(set) var currentMetalness: Float
     private(set) var currentRoughness: Float
-    private(set) var currentEmissiveColor: UIColor
-    private(set) var currentEmissiveIntensity: Float
     private(set) var currentTransparent: Bool
     private(set) var currentOpacity: Float
     /// Spatial id of the bound `SpatialTextureResource`, when this material displays a base-color texture.
@@ -94,8 +92,6 @@ class SpatialPBRMaterial: SpatialMaterial {
         _ texture: TextureResource? = nil,
         _ metalness: Float = 0,
         _ roughness: Float = 0.5,
-        _ emissiveColor: String = "#000000",
-        _ emissiveIntensity: Float = 0,
         _ transparent: Bool = false,
         _ opacity: Float = 1,
         textureSpatialId: String? = nil
@@ -104,8 +100,6 @@ class SpatialPBRMaterial: SpatialMaterial {
         currentTexture = texture
         currentMetalness = metalness
         currentRoughness = roughness
-        currentEmissiveColor = UIColor(Color(hex: emissiveColor))
-        currentEmissiveIntensity = emissiveIntensity
         currentTransparent = transparent
         currentOpacity = opacity
         self.textureSpatialId = textureSpatialId
@@ -123,8 +117,6 @@ class SpatialPBRMaterial: SpatialMaterial {
         )
         _mat.metallic = .init(floatLiteral: currentMetalness)
         _mat.roughness = .init(floatLiteral: currentRoughness)
-        _mat.emissiveColor = .init(color: currentEmissiveColor)
-        _mat.emissiveIntensity = currentEmissiveIntensity
         _mat.blending = currentTransparent
             ? .transparent(opacity: .init(floatLiteral: currentOpacity))
             : .opaque
@@ -136,8 +128,6 @@ class SpatialPBRMaterial: SpatialMaterial {
         texture: TextureResource?? = nil,
         metalness: Float?,
         roughness: Float?,
-        emissiveColor: String?,
-        emissiveIntensity: Float?,
         transparent: Bool?,
         opacity: Float?
     ) {
@@ -152,12 +142,6 @@ class SpatialPBRMaterial: SpatialMaterial {
         }
         if let roughness = roughness {
             currentRoughness = roughness
-        }
-        if let emissiveColor = emissiveColor {
-            currentEmissiveColor = UIColor(Color(hex: emissiveColor))
-        }
-        if let emissiveIntensity = emissiveIntensity {
-            currentEmissiveIntensity = emissiveIntensity
         }
         if let transparent = transparent {
             currentTransparent = transparent

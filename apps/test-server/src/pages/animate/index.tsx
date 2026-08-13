@@ -1,12 +1,12 @@
-import ReactDOM from 'react-dom/client'
+import { Link } from 'react-router-dom'
 import { enableDebugTool } from '@webspatial/react-sdk'
-import './style.scss'
-import { PopmotionTest } from './PopmotionTest'
-import { TeenjsTest } from './TeenjsTest'
-import { GSAPTest } from './GSAPTest'
 import { AnimeTest } from './AnimeTest'
-import { ReactSpringTest } from './ReactSpringTest'
+import { GSAPTest } from './GSAPTest'
+import { PopmotionTest } from './PopmotionTest'
 import { ReactSpringModel3DTest } from './ReactSpringModel3DTest'
+import { ReactSpringTest } from './ReactSpringTest'
+import './style.scss'
+import { TeenjsTest } from './TeenjsTest'
 
 enableDebugTool()
 
@@ -14,6 +14,15 @@ export default function AnimateTest() {
   return (
     <div className="w-full h-full ">
       <div className="m-10">
+        <p className="text-gray-300 mb-4 text-sm">
+          Plan B RFC:{' '}
+          <Link
+            className="text-blue-400 underline"
+            to="/spatial-element-motion"
+          >
+            Spatialized Element Motion (2D + 3D containers)
+          </Link>
+        </p>
         <PopmotionTest />
 
         <TeenjsTest />

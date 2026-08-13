@@ -21,11 +21,12 @@ import { SpatialID } from './SpatialID'
 import { TransformVisibilityTaskContainer } from './TransformVisibilityTaskContainer'
 import { useDomProxy } from './hooks/useDomProxy'
 import { useInsideAttachment } from '../reality/context/InsideAttachmentContext'
+import { useInsideOrnament } from '../ornament/InsideOrnamentContext'
 import {
   useSpatialEvents,
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
-import { withSSRSupported } from '../ssr'
+import type { SpatializedMotionBinding } from './motion/motionBindingTypes'
 
 /**
  * Degraded fallback: strips spatial-only props and renders plain HTML.
@@ -41,6 +42,7 @@ function DegradedContainer<T extends SpatializedElementRef>({
   type DegradedProps = SpatializedContainerProps<T> & {
     'enable-xr'?: unknown
     sizingMode?: unknown
+    'xr-animation'?: SpatializedMotionBinding
   }
   const {
     component: Component,
@@ -60,8 +62,17 @@ function DegradedContainer<T extends SpatializedElementRef>({
     getExtraSpatializedElementProperties: _getExtra,
     extraRefProps: _extraRef,
     sizingMode: _sizingMode,
+    // `onSpatialContentReady` is destructured out (NOT spread to the DOM
+    // element) so it never leaks as an attribute. Per the product-confirmed
+    // semantics it fires ONLY when a real WebSpatial spatial content host
+    // exists (the portal path via `useSpatialContentReady`); a degraded plain
+    // HTML host has no such host, so the callback MUST NOT be invoked here —
+    // this covers both the non-WebSpatial and attachment-degraded paths.
+    onSpatialContentReady: _onSpatialContentReady,
+    'xr-animation': xrAnimation,
     ...restProps
   } = inprops as DegradedProps
+
   return (
     <Component ref={innerRef} {...restProps}>
       {children}
@@ -75,11 +86,17 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
 ) {
   const isWebSpatialEnv = getSession() !== null
   const insideAttachment = useInsideAttachment()
+  const insideOrnament = useInsideOrnament()
 
-  if (!isWebSpatialEnv || insideAttachment) {
+  if (!isWebSpatialEnv || insideAttachment || insideOrnament) {
     if (insideAttachment) {
       console.warn(
         `[WebSpatial] ${inprops.component || 'Spatial element'} cannot be used inside AttachmentAsset. Rendering as plain HTML.`,
+      )
+    }
+    if (insideOrnament) {
+      console.warn(
+        `[WebSpatial] ${inprops.component || 'Spatial element'} cannot be used inside Ornament content. Rendering as plain HTML.`,
       )
     }
     return <DegradedContainer {...inprops} innerRef={ref} />
@@ -176,9 +193,12 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
         spatializedContent,
         createSpatializedElement,
         getExtraSpatializedElementProperties,
+        'xr-animation': _xrAnimation,
         spatialEventOptions: _nestedSpatialEventOptions,
+        onSpatialContentReady: _nestedOnSpatialContentReady,
         ...restProps
       } = props
+      void _xrAnimation
       return (
         <SpatialLayerContext.Provider value={layer}>
           <StandardSpatializedContainer<T>
@@ -190,6 +210,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
           <TransformVisibilityTaskContainer
             ref={transformVisibilityTaskContainerCallback}
             {...spatialIdProps}
+            component={props.component}
             className={probeClassName}
             style={props.style}
           />
@@ -239,9 +260,12 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
       spatializedContent,
       createSpatializedElement,
       getExtraSpatializedElementProperties,
+      'xr-animation': _xrAnimation,
       spatialEventOptions: _rootSpatialEventOptions,
+      onSpatialContentReady: _rootOnSpatialContentReady,
       ...restProps
     } = props
+    void _xrAnimation
 
     return (
       <SpatialLayerContext.Provider value={layer}>
@@ -262,6 +286,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
           <TransformVisibilityTaskContainer
             ref={transformVisibilityTaskContainerCallback}
             {...spatialIdProps}
+            component={props.component}
             className={probeClassName}
             style={props.style}
           />
@@ -271,9 +296,15 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
   }
 }
 
-export const SpatializedContainer = withSSRSupported(
-  forwardRef(SpatializedContainerBase),
-) as <T extends SpatializedElementRef>(
+// No `withSSRSupported` wrapper: on the default entry this container is reached
+// only via the facade HOC delegate (`facades/withSpatialized2DElementContainer`)
+// once `useSpatialReady()` is ready — i.e. as a fresh client mount AFTER
+// hydration commits, never during the SSR or hydration pass. The eager entry is
+// CSR-only for spatial primitives (see `spatial-lazy-load` spec "Entry
+// routing"); SSR safety in mixed eager setups is the consumer's responsibility.
+export const SpatializedContainer = forwardRef(SpatializedContainerBase) as <
+  T extends SpatializedElementRef,
+>(
   props: SpatializedContainerProps<T> & {
     ref?: ForwardedRef<SpatializedElementRef<T>>
   },

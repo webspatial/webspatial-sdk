@@ -136,6 +136,16 @@ The SDK supports various spatial events:
 - Rotate events (start, rotate, end)
 - Magnify events (start, magnify, end)
 
+## SSR and server bundles
+
+`@webspatial/core-sdk` targets **client** WebSpatial shells. Do not run spatial side effects (session creation, JSB commands, `openSpatialSceneSync`) during SSR or in Node without `window`.
+
+`createPlatformSync()` throws when `typeof window === 'undefined'` so misconfigured server imports fail fast instead of returning fake `{ success: true }` bridge results.
+
+For SSR pages, use [`@webspatial/react-sdk`](https://github.com/webspatial/webspatial-sdk/tree/main/packages/react) default-entry facades and `bootSpatial()` on the client. See [Migrating to lazy-load `@webspatial/react-sdk`](../../docs/migration/lazy-load-spatial-runtime.md).
+
+Polyfills are opt-in via `import '@webspatial/core-sdk/install-polyfills'` (typically from the React SDK spatial chunk); that module skips installation when `window` is unavailable.
+
 ## Advanced Usage
 
 For more advanced usage and detailed API documentation, please refer to the [official documentation](https://github.com/webspatial/webspatial-sdk).

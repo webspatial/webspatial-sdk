@@ -1,41 +1,30 @@
 import { defineConfig } from 'vite'
-import path from 'path'
 import react from '@vitejs/plugin-react'
 
-const packagesBasePath = '../../packages'
-const XRSDKBaseDir = path.join(__dirname, packagesBasePath)
-
-const corePkg = require(`../../packages/core/package.json`)
-const reactPkg = require(`../../packages/react/package.json`)
-
-const tsconfig: any = {
-  compilerOptions: {
-    jsx: 'react-jsx',
-    jsxImportSource: '@webspatial/react-sdk/jsx',
-  },
-}
-
+// Consumer-shaped config: resolve `@webspatial/*` through workspace
+// package exports (built `dist/`), not monorepo source aliases. Aliasing
+// SDK source + applying the WebSpatial JSX transform to those files
+// re-enters the SDK's own jsx-runtime through pre-compiled component
+// modules and produces Rollup circular-chunk warnings at build time.
+//
+// JSX runtime resolution: `tsconfig.app.json` sets
+// `"jsxImportSource": "@webspatial/react-sdk"`, so only this fixture's
+// app/spec TSX is compiled through the published jsx-runtime subpath.
 export default defineConfig({
-  // root: './',
-  // logLevel: 'silent',
   server: {
     port: 4000,
     open: false,
   },
 
-  plugins: [react()],
+  plugins: [
+    react({
+      // SDK dist is already compiled JS; never re-run the spatial JSX
+      // transform over workspace package files.
+      exclude: /node_modules\/@webspatial\//,
+    }),
+  ],
 
-  resolve: {
-    alias: {
-      '@webspatial/react-sdk': path.join(XRSDKBaseDir, 'react/src'),
-      '@webspatial/core-sdk': path.join(XRSDKBaseDir, 'core/src'),
-    },
-  },
-  define: {
-    __WEBSPATIAL_CORE_SDK_VERSION__: JSON.stringify(corePkg.version),
-    __WEBSPATIAL_REACT_SDK_VERSION__: JSON.stringify(reactPkg.version),
-  },
-  esbuild: {
-    tsconfigRaw: tsconfig,
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
   },
 })

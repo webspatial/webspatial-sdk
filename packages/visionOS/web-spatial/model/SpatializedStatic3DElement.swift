@@ -6,11 +6,29 @@ struct ModelSource: Codable, Equatable {
     let type: String?
 }
 
+enum Loading: String {
+    case eager
+    case lazy
+
+    init(stringValue value: String) {
+        self = Loading(rawValue: value) ?? .eager
+    }
+}
+
+enum StageMode: String {
+    case none
+    case orbit
+
+    init(stringValue value: String) {
+        self = StageMode(rawValue: value) ?? .none
+    }
+}
+
 @Observable
 class SpatializedStatic3DElement: SpatializedElement {
     var modelURL: String?
     var sources: [ModelSource] = []
-    var modelTransform: AffineTransform3D = .identity
+    var entityTransform: AffineTransform3D = .identity
     var autoplay: Bool = false
     var loop: Bool = false
     var animationPaused: Bool = true
@@ -19,10 +37,15 @@ class SpatializedStatic3DElement: SpatializedElement {
     /// `SpatializedStatic3DView`, which clears it back to `nil`.
     var pendingSeekTime: Double?
     var posterURL: String?
+    var loading: Loading = .eager
+    var stagemode: StageMode = .none
     var allSources: [ModelSource] {
-        return if let modelURL {
-            [ModelSource(src: modelURL, type: nil)] + sources
-        } else { sources }
+        if let modelURL { [ModelSource(src: modelURL, type: nil)] + sources }
+        else { sources }
+    }
+
+    override var enableGesture: Bool {
+        stagemode == .orbit || super.enableGesture
     }
 
     enum CodingKeys: String, CodingKey {

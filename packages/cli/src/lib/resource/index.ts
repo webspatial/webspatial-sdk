@@ -2,7 +2,6 @@ import * as fs from 'fs'
 import { join } from 'path'
 import { clearDir, copyDir } from './file'
 import { ManifestInfo } from '../types'
-import * as Jimp from 'jimp'
 import { loadImageFromDisk, loadImageFromNet } from './load'
 import { execSync } from 'child_process'
 export let PROJECT_DIRECTORY = ''
@@ -40,13 +39,13 @@ export class ResourceManager {
     }
   }
 
-  public static async generateIcon(info: ManifestInfo): Promise<Jimp> {
+  public static async generateIcon(info: ManifestInfo) {
     const manifestJson = info.json
     const imgUrl = manifestJson.icons[0].src
     const icon = !imgUrl.startsWith('http')
       ? await loadImageFromDisk(imgUrl)
       : await loadImageFromNet(imgUrl)
-    icon.resize(1024, 1024)
+    icon.resize({ w: 1024, h: 1024 })
     return icon
   }
 

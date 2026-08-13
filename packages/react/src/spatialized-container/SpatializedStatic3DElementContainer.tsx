@@ -19,10 +19,7 @@ import {
   SpatializedStatic3DElementRef,
 } from './types'
 import { ModelSource, SpatializedStatic3DElement } from '@webspatial/core-sdk'
-import {
-  PortalInstanceObject,
-  PortalInstanceContext,
-} from './context/PortalInstanceContext'
+import { PortalInstanceContext } from './context/PortalInstanceContext'
 
 function getAbsoluteURL(url: string): string
 function getAbsoluteURL(url: undefined): undefined
@@ -46,7 +43,7 @@ function createLoadEvent(
   })
   const proxyEvent = new Proxy(event, {
     get(target, prop) {
-      if (prop === 'target') {
+      if (prop === 'target' || prop === 'currentTarget') {
         return targetGetter()
       }
       return Reflect.get(target, prop)
@@ -85,6 +82,20 @@ function collectSources(children: React.ReactNode): ModelSource[] {
   return sources
 }
 
+type Static3DDomProxy = SpatializedStatic3DElementRef & {
+  __spatializedElement?: SpatializedStatic3DElement
+  __innerSpatializedElement?: () => SpatializedStatic3DElement | undefined
+}
+
+function getDomSpatializedStaticElement(
+  domProxy: SpatializedStatic3DElementRef,
+): SpatializedStatic3DElement | undefined {
+  const proxy = domProxy as Static3DDomProxy
+  // Nested standard branches expose the DOM/ref while the portal branch owns
+  // the actual static 3D element, so resolve through either DOM binding.
+  return proxy.__spatializedElement ?? proxy.__innerSpatializedElement?.()
+}
+
 function SpatializedContent(props: SpatializedStatic3DContentProps) {
   const {
     src,
@@ -95,15 +106,46 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
     onError,
     autoPlay,
     loop,
+    loading = 'eager',
+    stagemode = 'none',
   } = props
-
-  const portalInstanceObject = useContext(PortalInstanceContext)!
+  const portalInstanceObject = useContext(PortalInstanceContext)
+  const wasVisible = useRef(false)
 
   const modelURL = useMemo(() => getAbsoluteURL(src), [src])
   const posterURL = useMemo(() => getAbsoluteURL(poster), [poster])
   const sources = useMemo(() => collectSources(children), [children])
+  const sourcesKey = useMemo(() => JSON.stringify(sources), [sources])
+
+  // Observe when model becomes visible and then stop until sources change
+  useEffect(() => {
+    const target = portalInstanceObject?.dom
+    wasVisible.current = false
+    if (loading !== 'lazy') {
+      wasVisible.current = true
+      return
+    }
+    if (!target) {
+      return
+    }
+    if (typeof IntersectionObserver === 'undefined') {
+      wasVisible.current = true
+      spatializedElement.updateProperties({ loading: 'eager' })
+      return
+    }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        wasVisible.current = true
+        observer.disconnect()
+        spatializedElement.updateProperties({ loading: 'eager' })
+      }
+    })
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [modelURL, sourcesKey, portalInstanceObject?.dom])
 
   useEffect(() => {
+    if (loading !== 'lazy') wasVisible.current = true
     // If modelURL was previously set and now is undefined then a dummy
     // value needs to be sent to clear the old value
     // TODO: Can native side handle null instead of ''
@@ -113,36 +155,36 @@ function SpatializedContent(props: SpatializedStatic3DContentProps) {
       autoplay: autoPlay,
       loop,
       posterURL: posterURL ?? '',
+      loading: loading === 'lazy' && wasVisible.current ? 'eager' : loading,
+      stagemode,
     })
-  }, [modelURL, JSON.stringify(sources), autoPlay, loop, posterURL])
+  }, [modelURL, sourcesKey, autoPlay, loop, posterURL, loading, stagemode])
 
   useEffect(() => {
-    if (onLoad) {
+    const dom = portalInstanceObject?.dom
+    if (onLoad && dom) {
       spatializedElement.onLoadCallback = () => {
         onLoad(
-          createLoadSuccessEvent(
-            () => (portalInstanceObject.dom as any).__targetProxy,
-          ),
+          createLoadSuccessEvent(() => dom as SpatializedStatic3DElementRef),
         )
       }
     } else {
       spatializedElement.onLoadCallback = undefined
     }
-  }, [onLoad])
+  }, [onLoad, portalInstanceObject?.dom])
 
   useEffect(() => {
-    if (onError) {
+    const dom = portalInstanceObject?.dom
+    if (onError && dom) {
       spatializedElement.onLoadFailureCallback = () => {
         onError(
-          createLoadFailureEvent(
-            () => (portalInstanceObject.dom as any).__targetProxy,
-          ),
+          createLoadFailureEvent(() => dom as SpatializedStatic3DElementRef),
         )
       }
     } else {
       spatializedElement.onLoadFailureCallback = undefined
     }
-  }, [onError])
+  }, [onError, portalInstanceObject?.dom])
 
   return <></>
 }
@@ -157,85 +199,74 @@ function SpatializedStatic3DElementContainerBase(
     promiseRef.current = getSession()!.createSpatializedStatic3DElement(
       getAbsoluteURL(props.src),
       collectSources(props.children),
+      props.loading === 'lazy' ? 'lazy' : 'eager',
     )
     return promiseRef.current
   }, [])
   const extraRefProps = useCallback(
     (domProxy: SpatializedStatic3DElementRef) => {
-      let modelTransform = new DOMMatrixReadOnly()
       return {
         get currentSrc(): string {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.currentSrc ?? ''
         },
         get ready(): Promise<ModelLoadEvent> {
-          return promiseRef
-            .current!.then(spatializedElement => spatializedElement.ready)
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
+          const readySource = spatializedElement
+            ? Promise.resolve(spatializedElement)
+            : promiseRef.current
+          if (!readySource) {
+            return Promise.reject(createLoadFailureEvent(() => domProxy))
+          }
+          return readySource
+            .then(element => element.ready)
             .then(success => {
               if (success) return createLoadSuccessEvent(() => domProxy)
               throw createLoadFailureEvent(() => domProxy)
             })
         },
         get entityTransform(): DOMMatrixReadOnly {
-          return modelTransform
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
+          return spatializedElement?.entityTransform ?? new DOMMatrixReadOnly()
         },
         set entityTransform(value: DOMMatrixReadOnly) {
-          modelTransform = value
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
-          spatializedElement?.updateModelTransform(modelTransform)
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
+          if (spatializedElement) {
+            spatializedElement.entityTransform = value
+          }
         },
         async play(): Promise<void> {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           await spatializedElement?.play()
         },
         async pause(): Promise<void> {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           await spatializedElement?.pause()
         },
         get paused(): boolean {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.paused ?? true
         },
         get duration(): number {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.duration ?? 0
         },
         get playbackRate(): number {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.playbackRate ?? 1
         },
         set playbackRate(value: number) {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           if (spatializedElement) {
             spatializedElement.playbackRate = value
           }
         },
         get currentTime(): number {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.currentTime ?? 0
         },
         set currentTime(value: number) {
-          const spatializedElement = (domProxy as any).__spatializedElement as
-            | SpatializedStatic3DElement
-            | undefined
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
           if (spatializedElement) {
             spatializedElement.currentTime = value
           }

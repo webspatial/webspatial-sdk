@@ -1,7 +1,9 @@
 import React, { ElementType } from 'react'
+import type { PortalInstanceObject } from './context/PortalInstanceContext'
+import type { SpatializedMotionBinding } from './motion/motionBindingTypes'
 import { SpatialID } from './SpatialID'
 import {
-  CubeInfo,
+  ModelLoadingMode,
   SpatializedElement,
   SpatialTapEvent as CoreSpatialTapEvent,
   SpatialDragEvent as CoreSpatialDragEvent,
@@ -12,11 +14,21 @@ import {
   SpatialMagnifyEvent as CoreSpatialMagnifyEvent,
   SpatialMagnifyEndEvent as CoreSpatialMagnifyEndEvent,
   SpatializedStatic3DElement,
+  type StageMode,
   type Vec3,
 } from '@webspatial/core-sdk'
 
 export type { Point3D, Vec3 } from '@webspatial/core-sdk'
 export type { Quaternion } from '@webspatial/core-sdk'
+
+/** Connected content root for imperative mounting (portal root or web fallback host). */
+export type SpatialContentReadyContext = {
+  host: HTMLElement
+}
+
+export type SpatialContentReadyCallback = (
+  ctx: SpatialContentReadyContext,
+) => void | (() => void)
 
 /** Options for spatial pointer/gesture behavior (not DOM attributes). */
 export type SpatialEventOptions = {
@@ -55,6 +67,7 @@ export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
         computedStyle: CSSStyleDeclaration,
       ) => Record<string, any>
       spatialEventOptions?: SpatialEventOptions
+      'xr-animation'?: SpatializedMotionBinding
 
       [SpatialID]: string
     }
@@ -64,6 +77,11 @@ export type SpatializedContainerProps<T extends SpatializedElementRef> = Omit<
   typeof SpatialID | 'onLoad' | 'onError'
 > & {
   extraRefProps?: (domProxy: T) => Record<string, unknown>
+  /**
+   * SpatialDiv only — fired when `ctx.host` is connected (portal root or web fallback host).
+   * Not part of `Model` / `Reality` public APIs.
+   */
+  onSpatialContentReady?: SpatialContentReadyCallback
 }
 
 export type SpatializedContentProps<
@@ -71,6 +89,9 @@ export type SpatializedContentProps<
   P extends ElementType,
 > = Omit<PortalSpatializedContainerProps<T>, 'spatializedContent'> & {
   spatializedElement: SpatializedElement
+  portalInstanceObject: PortalInstanceObject
+  /** SpatialDiv (2D) portal content only. */
+  onSpatialContentReady?: SpatialContentReadyCallback
 }
 
 export type Spatialized2DElementContainerProps<P extends ElementType> =
@@ -78,6 +99,7 @@ export type Spatialized2DElementContainerProps<P extends ElementType> =
     React.ComponentPropsWithRef<'div'> & {
       component: P
       spatialEventOptions?: SpatialEventOptions
+      onSpatialContentReady?: SpatialContentReadyCallback
     }
 
 export type SpatializedStatic3DContainerProps =
@@ -87,10 +109,14 @@ export type SpatializedStatic3DContainerProps =
       poster?: string
       autoPlay?: boolean
       loop?: boolean
+      loading?: ModelLoadingMode
+      stagemode?: StageMode
       children?: React.ReactNode
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
       spatialEventOptions?: SpatialEventOptions
+      /** Native root-transform motion binding from `useAnimation()` via `xr-animation`. */
+      'xr-animation'?: SpatializedMotionBinding
     }
 
 export type SpatializedStatic3DContentProps = {
@@ -99,9 +125,12 @@ export type SpatializedStatic3DContentProps = {
   poster?: string
   autoPlay?: boolean
   loop?: boolean
+  loading?: ModelLoadingMode
+  stagemode?: StageMode
   children?: React.ReactNode
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void
+  'xr-animation'?: SpatializedMotionBinding
 }
 
 export const SpatialCustomStyleVars = {
@@ -213,6 +242,8 @@ export type ModelSpatialMagnifyEvent =
 export type ModelSpatialMagnifyEndEvent =
   SpatialMagnifyEndEvent<SpatializedStatic3DElementRef>
 
-export type ModelLoadEvent = CustomEvent & {
-  target: SpatializedStatic3DElementRef
-}
+export type ModelLoadEvent<T extends EventTarget = EventTarget> =
+  CustomEvent & {
+    target: T
+    currentTarget: SpatializedStatic3DElementRef
+  }

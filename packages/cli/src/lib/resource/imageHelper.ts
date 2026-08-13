@@ -1,10 +1,14 @@
-import Jimp = require('jimp')
+import * as JimpModule from 'jimp'
 import sharp = require('sharp')
 import { Resvg, ResvgRenderOptions } from '@resvg/resvg-js'
 
 export class ImageHelper {
-  public static createImg(size: number): Jimp {
-    return new Jimp(size, size, 0x00000000)
+  public static createImg(size: number): any {
+    return new JimpModule.Jimp({
+      width: size,
+      height: size,
+      color: 0x00000000,
+    })
   }
   public static async webp2PngBuffer(buffer: Buffer): Promise<Buffer> {
     return await sharp(buffer).toFormat('png').toBuffer()
@@ -23,8 +27,8 @@ export class ImageHelper {
     return pngBuffer
   }
 
-  public static isFullyOpaque(image: Jimp): boolean {
-    const pixelNum = image.getWidth() * image.getHeight()
+  public static isFullyOpaque(image: any): boolean {
+    const pixelNum = image.width * image.height
     for (var i = 0; i < pixelNum; i++) {
       const idx = i * 4 + 3
       if (image.bitmap.data[idx] < 255) {

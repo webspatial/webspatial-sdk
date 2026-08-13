@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react'
-import './index.css'
 import {
   enableDebugTool,
   Model,
-  SpatialMagnifyEvent,
   ModelSpatialMagnifyEvent,
+  SpatialMagnifyEvent,
 } from '@webspatial/react-sdk'
+import { useState } from 'react'
+import './index.css'
 
 enableDebugTool()
 

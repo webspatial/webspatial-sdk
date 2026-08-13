@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 export function useLogger(initialLog = []) {
   const [logs, setLogs] = useState<string[]>(initialLog)

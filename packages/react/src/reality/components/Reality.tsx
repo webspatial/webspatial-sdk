@@ -8,23 +8,39 @@ import React, {
 import { SpatializedContainer } from '../../spatialized-container/SpatializedContainer'
 import { RealityContext, RealityContextValue } from '../context'
 import { useInsideAttachment } from '../context/InsideAttachmentContext'
+import { useInsideOrnament } from '../../ornament/InsideOrnamentContext'
 import { getSession } from '../../utils/getSession'
 import { ResourceRegistry } from '../utils'
 import { AttachmentRegistry } from '../context/AttachmentContext'
 import { SpatializedElementRef } from '../../spatialized-container/types'
 import { SpatializedElement } from '@webspatial/core-sdk'
+import type { SpatializedMotionBinding } from '../../spatialized-container/motion/motionBindingTypes'
 import { EntityEventHandler } from '../type'
 import { useRealityEvents } from '../hooks'
+import { markWebSpatialPrimitive } from '../../jsx/primitive-marker'
 
-export type RealityProps = React.ComponentPropsWithRef<'div'> &
-  EntityEventHandler
+export type RealityProps = Omit<
+  React.ComponentPropsWithRef<'div'>,
+  'onSpatialContentReady'
+> &
+  EntityEventHandler & {
+    /** Native root-transform motion on the Reality container (`SpatializedDynamic3DElement`). */
+    'xr-animation'?: SpatializedMotionBinding
+  }
 
 export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
   function RealityBase({ children, ...inProps }, ref) {
     const insideAttachment = useInsideAttachment()
+    const insideOrnament = useInsideOrnament()
     if (insideAttachment) {
       console.warn(
         '[WebSpatial] Reality cannot be used inside AttachmentAsset.',
+      )
+      return null
+    }
+    if (insideOrnament) {
+      console.warn(
+        '[WebSpatial] Reality cannot be used inside Ornament content.',
       )
       return null
     }
@@ -37,6 +53,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       onSpatialRotateEnd,
       onSpatialMagnify,
       onSpatialMagnifyEnd,
+      'xr-animation': xrAnimation,
       ...props
     } = inProps
     const ctxRef = useRef<RealityContextValue | null>(null)
@@ -64,7 +81,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
       const id = ++creationId.current
       const resourceRegistry = new ResourceRegistry()
       const attachmentRegistry = new AttachmentRegistry()
-      const session = await getSession()
+      const session = getSession()
       if (!session) {
         resourceRegistry.destroy()
         attachmentRegistry.destroy()
@@ -132,6 +149,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
         <SpatializedContainer<SpatializedElementRef>
           component="div"
           ref={ref}
+          xr-animation={xrAnimation}
           // @ts-ignore
           createSpatializedElement={createReality}
           spatializedContent={content}
@@ -142,3 +160,6 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     )
   },
 )
+// Brand the real implementation too: the eager entry exports THIS `Reality`,
+// and the JSX runtime must short-circuit it rather than wrapping it.
+markWebSpatialPrimitive(Reality, 'Reality')

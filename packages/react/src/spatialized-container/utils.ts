@@ -5,7 +5,6 @@ export function getInheritedStyleProps(
 ): CSSProperties {
   //https://stackoverflow.com/questions/5612302/which-css-properties-are-inherited
   var propNames: (keyof CSSProperties)[] = [
-    'azimuth',
     'borderCollapse',
     'borderSpacing',
     'captionSide',

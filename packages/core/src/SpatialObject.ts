@@ -38,6 +38,16 @@ export class SpatialObject {
       return
     }
 
+    const errorMessage =
+      typeof ret.errorMessage === 'string' ? ret.errorMessage.toLowerCase() : ''
+    const isMissingNativeObject = errorMessage.includes('not exsit')
+    if (isMissingNativeObject) {
+      // Treat native pre-teardown as an idempotent destroy during page back navigation.
+      this.onDestroy()
+      this.isDestroyed = true
+      return
+    }
+
     throw new Error(ret.errorMessage)
   }
 

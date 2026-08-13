@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { useRealityContext } from '../context'
 import { SpatialModelAsset } from '@webspatial/core-sdk'
-import { getAbsoluteUrl } from '../../utils/urlUtils'
+import { getAbsoluteUrl } from '../../internal/urlUtils'
 
 type Props = {
   children?: React.ReactNode
@@ -17,7 +17,7 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
   useEffect(() => {
     const controller = new AbortController()
     if (!ctx) return
-    const { session, reality, resourceRegistry } = ctx
+    const { session, resourceRegistry } = ctx
     const init = async () => {
       try {
         const resolvedUrl = getAbsoluteUrl(options.src)

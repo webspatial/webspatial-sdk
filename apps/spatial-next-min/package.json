@@ -1,0 +1,26 @@
+{
+  "name": "spatial-next-min",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Minimal Next.js 15 App Router + React 18 + @webspatial/react-sdk lazy-entry example.",
+  "scripts": {
+    "dev": "next dev --port 3030",
+    "build": "next build",
+    "start": "next start --port 3030",
+    "lint": "next lint",
+    "test": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@webspatial/core-sdk": "workspace:*",
+    "@webspatial/react-sdk": "workspace:*",
+    "next": "^15.5.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.5",
+    "@types/react": "^18.3.21",
+    "@types/react-dom": "^18.3.7",
+    "typescript": "^5.7.3"
+  }
+}

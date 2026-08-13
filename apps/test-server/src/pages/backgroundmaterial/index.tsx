@@ -1,9 +1,5 @@
-import {
-  Spatialized2DElement,
-  type BackgroundMaterialType,
-} from '@webspatial/core-sdk'
-import ReactDOM from 'react-dom/client'
-import { useEffect, useRef, useState } from 'react'
+import { type BackgroundMaterialType } from '@webspatial/core-sdk'
+import { useEffect, useState } from 'react'
 
 import { enableDebugTool } from '@webspatial/react-sdk'
 

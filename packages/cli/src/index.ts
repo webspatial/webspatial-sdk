@@ -12,11 +12,13 @@ import { launch } from './lib/cmds/launch'
 import { shutdown } from './lib/cmds/shutdown'
 import { test } from './lib/cmds/test'
 
+const MIN_SUPPORTED_NODE_MAJOR = 22
+
 module.exports = async (): Promise<void> => {
-  if (major(process.versions.node) < 14) {
+  if (major(process.versions.node) < MIN_SUPPORTED_NODE_MAJOR) {
     throw new Error(
       `Current Node.js version is ${process.versions.node}.` +
-        ' Node.js version 14 or above is required to run XRAPP BUILDER.',
+        ` Node.js version ${MIN_SUPPORTED_NODE_MAJOR} or above is required to run XRAPP BUILDER.`,
     )
   }
   const program = new Command()

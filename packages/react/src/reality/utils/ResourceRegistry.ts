@@ -8,12 +8,16 @@ import { SpatialObject } from '@webspatial/core-sdk'
  * JSX order does not need to match registration order. Callers are responsible for using the
  * correct id for each resource kind (same as with string ids today).
  *
- * Callers can `await get(id)` before `add(id, promise)` runs: `get` returns a promise that
- * settles when something later calls `add` with the same id.
+ * `get(id)` before `add()` is fine — resolves when `add()` runs.
+ * `has(id)` is true only after `add()`, not after `get()` alone.
+ *
+ * `subscribe` / `notify`: run when a resource settles, is removed, or updates in place (e.g. texture URL).
  */
 export class ResourceRegistry {
   /** Every id maps to a promise — either the real resource from add(), or a placeholder until then. */
   private resources: Map<string, Promise<SpatialObject>> = new Map()
+  /** ids registered via add(), not get()-only waiters */
+  private registered = new Set<string>()
   /** If get() ran first, we stash resolve/reject so add() can complete the waiting promise. */
   private deferreds = new Map<
     string,
@@ -22,8 +26,11 @@ export class ResourceRegistry {
       reject: (error: Error) => void
     }
   >()
+  /** Subscribers are notified whenever an id gets a fresh resolved or failed resource attempt. */
+  private listeners = new Map<string, Set<() => void>>()
 
   add<T extends SpatialObject>(id: string, resource: Promise<T>): void {
+    this.registered.add(id)
     this.resources.set(id, resource)
 
     // Anyone who awaited get(id) early is still holding the placeholder; wire them to this promise.
@@ -36,6 +43,35 @@ export class ResourceRegistry {
         )
       this.deferreds.delete(id)
     }
+
+    // Resource users (e.g. materials bound to a texture id) may need to retry or refresh when
+    // a creation attempt settles, even if the id string itself did not change.
+    resource.then(() => this.notify(id)).catch(() => this.notify(id))
+  }
+
+  subscribe(id: string, listener: () => void): () => void {
+    const listeners = this.listeners.get(id) ?? new Set<() => void>()
+    listeners.add(listener)
+    this.listeners.set(id, listeners)
+
+    return () => {
+      listeners.delete(listener)
+      if (listeners.size === 0) {
+        this.listeners.delete(id)
+      }
+    }
+  }
+
+  notify(id: string): void {
+    const listeners = this.listeners.get(id)
+    if (!listeners) return
+    for (const listener of Array.from(listeners)) {
+      listener()
+    }
+  }
+
+  has(id: string): boolean {
+    return this.registered.has(id)
   }
 
   get(id: string): Promise<SpatialObject> {
@@ -53,8 +89,10 @@ export class ResourceRegistry {
   }
 
   remove(id: string): void {
+    this.registered.delete(id)
     this.resources.delete(id)
     this.deferreds.delete(id)
+    this.notify(id)
   }
 
   // Same as remove, but when the promise resolves, destroy the spatial object (best-effort).
@@ -63,8 +101,10 @@ export class ResourceRegistry {
     if (p) {
       p.then(obj => obj.destroy()).catch(() => {})
     }
+    this.registered.delete(id)
     this.resources.delete(id)
     this.deferreds.delete(id)
+    this.notify(id)
   }
 
   destroy(): void {
@@ -75,6 +115,13 @@ export class ResourceRegistry {
       )
     }
     this.deferreds.clear()
+
+    const ids = Array.from(this.resources.keys())
+    for (const id of ids) {
+      this.notify(id)
+    }
+    this.listeners.clear()
+    this.registered.clear()
 
     const pending = Array.from(this.resources.values())
     this.resources.clear()

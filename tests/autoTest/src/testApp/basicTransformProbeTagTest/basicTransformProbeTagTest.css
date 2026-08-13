@@ -1,0 +1,4 @@
+/* Tag + class: probe must be <h1> (not <div>) for spatial transform sampling. */
+h1.basicTransformProbe {
+  transform: translateZ(120px) rotateZ(30deg);
+}

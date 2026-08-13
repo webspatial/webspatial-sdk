@@ -1,14 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
 import {
+  BoxEntity,
+  Entity,
+  ModelAsset,
+  ModelEntity,
   Reality,
   SceneGraph,
-  Entity,
-  BoxEntity,
-  UnlitMaterial,
   SpatializedElementRef,
-  ModelEntity,
-  ModelAsset,
+  UnlitMaterial,
 } from '@webspatial/react-sdk'
+import { useEffect, useRef, useState } from 'react'
 
 // Use DaisyUI button styles for consistency across test-server pages.
 const btnCls = 'btn btn-sm btn-neutral'
