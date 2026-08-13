@@ -49,13 +49,16 @@ struct SpatializedStatic3DView: View {
                             .if(enableGesture) { view in view.hoverEffect() }
                     }
                 case .failed:
-                    posterView {}
+                    posterView {
+                        // Transparent view is required so that lifecycle modifiers like .task still work
+                        Color.clear
+                    }
                 }
             }
             .scaleEffect(scale)
             .rotation3DEffect(rotation)
             .orbit(
-                enabled: spatializedStatic3DElement.stagemode == .orbit,
+                enabled: spatializedStatic3DElement.stagemode == .orbit && asset != nil,
                 entityTransform: $spatializedStatic3DElement.entityTransform,
                 onChange: onOrbit
             )

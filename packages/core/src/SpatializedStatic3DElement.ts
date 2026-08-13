@@ -22,6 +22,11 @@ import {
  */
 export class SpatializedStatic3DElement extends SpatializedElement {
   /**
+   * Identifies the motion target kind supported by this element.
+   */
+  override readonly kind = 'static3d' as const
+
+  /**
    * Creates a new spatialized static 3D element with the specified ID and URL.
    * Registers the element to receive spatial events.
    * @param id Unique identifier for this element

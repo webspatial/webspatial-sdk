@@ -27,8 +27,13 @@ import {
   ModelSource,
   SpatialTextureResourceOptions,
 } from './types/types'
+import type { OrnamentOptions } from './Ornament'
 import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
+import type {
+  ControlSpatializedElementAnimationCommand,
+  CreateSpatializedElementAnimationCommand,
+} from './types/motion/spatializedElementMotion'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -283,6 +288,38 @@ export class AddSpatializedElementToSpatialScene extends JSBCommand {
   protected getParams() {
     return {
       spatializedElementId: this.spatializedElement.id,
+    }
+  }
+}
+
+export class AddOrnamentToSceneCommand extends JSBCommand {
+  commandType = 'AddOrnamentToScene'
+
+  constructor(readonly ornamentId: string) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      ornamentId: this.ornamentId,
+    }
+  }
+}
+
+export class UpdateOrnamentCommand extends JSBCommand {
+  commandType = 'UpdateOrnament'
+
+  constructor(
+    readonly id: string,
+    readonly options: OrnamentOptions,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      id: this.id,
+      ...this.options,
     }
   }
 }
@@ -673,9 +710,12 @@ export class InitializeAttachmentCommand extends JSBCommand {
   protected getParams() {
     return {
       id: this.attachmentId,
-      parentEntityId: this.options.parentEntityId,
-      position: this.options.position ?? [0, 0, 0],
-      size: this.options.size,
+      placementId: this.options.placement.id,
+      position: this.options.position ?? { x: 0, y: 0, z: 0 },
+      rotation: this.options.rotation ?? { x: 0, y: 0, z: 0 },
+      scale: this.options.scale ?? { x: 1, y: 1, z: 1 },
+      width: this.options.width,
+      height: this.options.height,
       ownerViewId: this.options.ownerViewId,
     }
   }
@@ -693,6 +733,38 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     return {
       id: this.attachmentId,
       ...this.options,
+    }
+  }
+}
+
+export class CreateSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'CreateSpatializedElementAnimation'
+
+  constructor(private command: CreateSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { elementId, timeline } = this.command
+    return {
+      elementId,
+      timeline,
+    }
+  }
+}
+
+export class ControlSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'ControlSpatializedElementAnimation'
+
+  constructor(private command: ControlSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { animationId, type } = this.command
+    return {
+      animationId,
+      type,
     }
   }
 }

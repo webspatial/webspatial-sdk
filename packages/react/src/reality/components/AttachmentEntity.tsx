@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Attachment } from '@webspatial/core-sdk'
+import type { Vec3 } from '@webspatial/core-sdk'
 
 import { useRealityContext, useParentContext } from '../context'
 import { setOpenWindowStyle } from '../../utils/windowStyleSync'
@@ -9,14 +10,20 @@ let instanceCounter = 0
 
 type AttachmentEntityProps = {
   attachment: string
-  position?: [number, number, number]
-  size: { width: number; height: number }
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+  width?: number
+  height?: number
 }
 
 export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   attachment: attachmentName,
   position,
-  size,
+  rotation,
+  scale,
+  width,
+  height,
 }) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
@@ -40,9 +47,12 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     const init = async () => {
       try {
         const att = await ctx.session.createAttachmentEntity({
-          parentEntityId: parentId,
-          position: position ?? [0, 0, 0],
-          size,
+          placement: { id: parentId },
+          position,
+          rotation,
+          scale,
+          width,
+          height,
           ownerViewId: ctx.reality.id,
         })
         if (cancelled) {
@@ -126,11 +136,23 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 
   useSyncHeadStyles(childWindow)
 
-  // Update position/size when they change
+  // Update transform and meter dimensions when they change
   useEffect(() => {
     if (!attachmentRef.current) return
-    attachmentRef.current.update({ position, size })
-  }, [position?.[0], position?.[1], position?.[2], size?.width, size?.height])
+    attachmentRef.current.update({ position, rotation, scale, width, height })
+  }, [
+    position?.x,
+    position?.y,
+    position?.z,
+    rotation?.x,
+    rotation?.y,
+    rotation?.z,
+    scale?.x,
+    scale?.y,
+    scale?.z,
+    width,
+    height,
+  ])
 
   return null
 }

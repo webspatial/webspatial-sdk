@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 @preconcurrency import WebKit
 
 /// Describes the JavaScript content hosted by a WebSpatial WKWebView.
@@ -60,14 +61,14 @@ class SpatialWebViewModel {
                 spatialId: spatialId
             )
             controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
-            controller!.webview?.isOpaque = backgroundTransparent
+            applyBackgroundTransparency()
         }
         if url.count > 0 {
             controller?.webview!.load(URLRequest(url: URL(string: url)!))
             controller?.startObserving()
         } else {
             controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
-            controller!.webview?.isOpaque = backgroundTransparent
+            applyBackgroundTransparency()
         }
     }
 
@@ -78,7 +79,7 @@ class SpatialWebViewModel {
                 contentRole: contentRole
             )
             controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
-            controller!.webview?.isOpaque = backgroundTransparent
+            applyBackgroundTransparency()
         }
         controller?.webview!.loadHTMLString(htmlText, baseURL: nil)
     }
@@ -104,8 +105,18 @@ class SpatialWebViewModel {
     }
 
     func setBackgroundTransparent(_ transparent: Bool) {
-        controller!.webview?.isOpaque = !transparent
         backgroundTransparent = !transparent
+        applyBackgroundTransparency()
+    }
+
+    private func applyBackgroundTransparency() {
+        guard let webview = controller?.webview else { return }
+        webview.isOpaque = backgroundTransparent
+        if !backgroundTransparent {
+            webview.backgroundColor = .clear
+            webview.scrollView.isOpaque = false
+            webview.scrollView.backgroundColor = .clear
+        }
     }
 
     func stopScrolling() {

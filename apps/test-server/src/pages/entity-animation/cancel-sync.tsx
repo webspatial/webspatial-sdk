@@ -1,10 +1,6 @@
 import { useState } from 'react'
-import {
-  BoxEntity,
-  Reality,
-  SceneGraph,
-  useAnimation,
-} from '@webspatial/react-sdk'
+import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
   Log,
@@ -19,7 +15,7 @@ export default function EntityAnimationCancelSyncPage() {
   const logger = useLog()
   const [position, setPosition] = useState<Vec3>({ x: 0, y: 0, z: 0 })
 
-  const [animation, api] = useAnimation({
+  const [animation, api] = useEntityAnimation({
     from: { position: { x: -0.1, y: 0, z: 0 } },
     to: { position: { x: 0.1, y: 0, z: 0 } },
     duration: 3.0,

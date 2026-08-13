@@ -28,11 +28,23 @@ export { SpatializedElement } from './SpatializedElement'
 export { Spatialized2DElement } from './Spatialized2DElement'
 export { SpatializedStatic3DElement } from './SpatializedStatic3DElement'
 export { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
+export {
+  Ornament,
+  DEFAULT_ORNAMENT_OPTIONS,
+  ORNAMENT_POINT_3D_VALUES,
+  normalizeOrnamentOptions,
+  type NormalizedOrnamentOptions,
+  type OrnamentOptions,
+  type OrnamentPoint3D,
+  type OrnamentVisibility,
+} from './Ornament'
 export * as PhysicalMetrics from './physicalMetrics'
 
 export * from './reality'
 export * from './types/types'
 export * from './types/animation'
+export * from './types/motion'
+export { validateSpatializedMotionConfig } from './motion'
 export * from './runtime'
 
 export { composeSRT, decomposeSRT } from './utils'

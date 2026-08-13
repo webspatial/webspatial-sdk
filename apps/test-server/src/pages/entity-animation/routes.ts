@@ -29,7 +29,7 @@ export const entityAnimationRoutes: EntityAnimationRoute[] = [
   {
     path: '/entity-animation/capability-check',
     label: 'Capability Detection',
-    description: 'Verify runtime support for useAnimation.',
+    description: 'Verify runtime support for useEntityAnimation.',
   },
   {
     path: '/entity-animation/reset-loop',

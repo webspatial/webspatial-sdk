@@ -24,7 +24,7 @@ vi.mock('@webspatial/core-sdk', async () => {
   }
 })
 
-const { useAnimation } = await import('./useAnimation')
+const { useEntityAnimation: useAnimation } = await import('./useAnimation')
 
 // ---- Mock Entity Factory ----
 

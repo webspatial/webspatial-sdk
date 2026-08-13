@@ -5,6 +5,7 @@ import {
   SpatializedStatic3DElementRef,
 } from './spatialized-container'
 import { useInsideAttachment } from './reality/context/InsideAttachmentContext'
+import { useInsideOrnament } from './ornament/InsideOrnamentContext'
 import { markWebSpatialPrimitive } from './jsx/primitive-marker'
 
 import { Spatial } from '@webspatial/core-sdk'
@@ -19,11 +20,22 @@ const spatial = new Spatial()
 
 function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const insideAttachment = useInsideAttachment()
+  const insideOrnament = useInsideOrnament()
   const { 'enable-xr': enableXR, ...restProps } = props
   // Model must handle insideAttachment itself because
   // SpatializedStatic3DElementContainer passes component="div" to the base,
   // but the correct degraded element for a Model is a <model> tag, not a <div>.
-  if (!enableXR || !spatial.runInSpatialWeb() || insideAttachment) {
+  if (
+    !enableXR ||
+    !spatial.runInSpatialWeb() ||
+    insideAttachment ||
+    insideOrnament
+  ) {
+    if (insideOrnament) {
+      console.warn(
+        '[WebSpatial] Model cannot be used as a spatial Model inside Ornament content. Rendering the native <model> fallback.',
+      )
+    }
     const {
       onSpatialTap,
       onSpatialDragStart,
@@ -34,8 +46,10 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
       onSpatialMagnify,
       onSpatialMagnifyEnd,
       spatialEventOptions: _spatialEventOptions,
+      'xr-animation': _xrAnimation,
       ...modelProps
     } = restProps
+    void _xrAnimation
     // map to VisionOS26 model tag outside attachments
     // @ts-ignore
     return <model ref={ref} {...modelProps} />

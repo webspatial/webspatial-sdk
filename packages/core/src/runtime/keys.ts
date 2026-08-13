@@ -8,6 +8,7 @@
  */
 
 export const COMPONENT_KEYS = [
+  'Ornament',
   'Model',
   'Reality',
   'Entity',
@@ -107,6 +108,10 @@ export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
     'baseplateVisibility',
   ],
   SpatialRotateEvent: ['constrainedToAxis'],
+  // Placement-shaped attachment JSB protocol (placementId + Vec3 transform +
+  // meter width/height). Runtimes without it take the legacy payload
+  // (parentEntityId + tuple position + point size).
+  AttachmentEntity: ['placement'],
   useAnimation: ['entity'],
   Model: [
     'autoplay',

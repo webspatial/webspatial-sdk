@@ -1,5 +1,11 @@
 import SwiftUI
 
+struct JSBVec3: Codable {
+    let x: Double
+    let y: Double
+    let z: Double
+}
+
 struct UpdateSpatialSceneProperties: CommandDataProtocol {
     static let commandType: String = "UpdateSpatialSceneProperties"
     let cornerRadius: CornerRadius?
@@ -10,6 +16,11 @@ struct UpdateSpatialSceneProperties: CommandDataProtocol {
 struct AddSpatializedElementToSpatialScene: CommandDataProtocol {
     static let commandType: String = "AddSpatializedElementToSpatialScene"
     let spatializedElementId: String
+}
+
+struct AddOrnamentToSceneCommand: CommandDataProtocol {
+    static let commandType: String = "AddOrnamentToScene"
+    let ornamentId: String
 }
 
 struct CreateSpatializedStatic3DElement: CommandDataProtocol {
@@ -177,6 +188,18 @@ struct SetMaterialsOnEntity: CommandDataProtocol {
 struct DestroyCommand: CommandDataProtocol {
     static let commandType: String = "Destroy"
     var id: String
+}
+
+struct UpdateOrnamentCommand: CommandDataProtocol {
+    static let commandType: String = "UpdateOrnament"
+    let id: String
+    let attachmentAnchor: String?
+    let contentAlignment: String?
+    let visibility: String?
+    let width: Double?
+    let height: Double?
+    let cornerRadius: CornerRadius?
+    let backgroundMaterial: BackgroundMaterial?
 }
 
 protocol SpatializedElementProperties: SpatialObjectCommand {
@@ -394,20 +417,21 @@ struct GetSpatialSceneStateCommand: CommandDataProtocol {
 struct InitializeAttachmentCommand: CommandDataProtocol {
     static let commandType = "InitializeAttachment"
     let id: String
-    let parentEntityId: String
-    let position: [Float]?
-    let size: AttachmentSize?
+    let placementId: String
+    let position: JSBVec3?
+    let rotation: JSBVec3?
+    let scale: JSBVec3?
+    let width: Double?
+    let height: Double?
     let ownerViewId: String
 }
 
 struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     static let commandType = "UpdateAttachmentEntity"
     let id: String
-    let position: [Float]?
-    let size: AttachmentSize?
-}
-
-struct AttachmentSize: Codable {
-    let width: Double
-    let height: Double
+    let position: JSBVec3?
+    let rotation: JSBVec3?
+    let scale: JSBVec3?
+    let width: Double?
+    let height: Double?
 }
