@@ -2,6 +2,7 @@
 
 import { ComponentType, ReactNode } from 'react'
 import type { SpatialUnlitMaterialOptions } from '@webspatial/core-sdk'
+import type { ModelAssetLoadEvent } from '../reality/type'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { warnBootForgotten } from './shared/warnBootForgotten'
@@ -56,7 +57,11 @@ export type ModelAssetProps = {
   children?: ReactNode
   id: string
   src: string
-  onLoad?: () => void
+  /**
+   * Fired once the asset loads, with the discovered animation clip catalog.
+   * No-argument callbacks remain assignable for backward compatibility.
+   */
+  onLoad?: (event: ModelAssetLoadEvent) => void
   onError?: (error: unknown) => void
 }
 

@@ -121,6 +121,9 @@ struct AnimationStateChangeDetail: Encodable {
     let currentTime: Double
     /// Unix epoch time in milliseconds
     let timestamp: Double
+    /// Id of the clip the sample refers to (ModelEntity built-in animation).
+    /// Nil for the static `<Model>` element, which has no clip catalog.
+    var clipId: String? = nil
 }
 
 struct AnimationStateChangeEvent: Encodable {

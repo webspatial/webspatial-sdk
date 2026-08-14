@@ -266,6 +266,11 @@ export type {
 export type {
   EntityEventHandler,
   EntityProps,
+  ModelAnimationClip,
+  ModelAnimationController,
+  ModelAssetLoadEvent,
+  ModelEntityRef,
+  PlayModelAnimationOptions,
   SpatialDragEndEntityEvent,
   SpatialDragEntityEvent,
   SpatialDragStartEntityEvent,

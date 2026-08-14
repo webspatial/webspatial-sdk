@@ -1,10 +1,11 @@
 import React, { forwardRef, useEffect, useRef } from 'react'
 import {
   SpatialMaterial,
+  SpatialModelAsset,
   SpatialModelEntity as CoreSpatialModelEntity,
 } from '@webspatial/core-sdk'
 import { EntityProps, EntityEventHandler } from '../type'
-import { EntityRefShape } from '../hooks'
+import { ModelEntityRef } from '../hooks'
 import { BaseEntity } from './BaseEntity'
 import { useRealityContext } from '../context'
 import { shallowEqualArray } from '../utils'
@@ -16,7 +17,7 @@ type Props = EntityProps & {
     children?: React.ReactNode
   }
 
-export const ModelEntity = forwardRef<EntityRefShape, Props>(
+export const ModelEntity = forwardRef<ModelEntityRef, Props>(
   ({ id, model, children, name, materials, ...rest }, ref) => {
     const ctx = useRealityContext()
     const entityRef = useRef<CoreSpatialModelEntity | null>(null)
@@ -65,6 +66,12 @@ export const ModelEntity = forwardRef<EntityRefShape, Props>(
               {
                 modelAssetId: modelAsset.id,
                 name,
+                // Seed the animation controller with the asset's clip catalog
+                // so play()/clip lookup work without an async round-trip.
+                clips:
+                  modelAsset instanceof SpatialModelAsset
+                    ? modelAsset.animations
+                    : undefined,
               },
               { id, name },
             )

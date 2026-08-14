@@ -209,6 +209,68 @@ describe('JSBCommand', () => {
       JSON.stringify({ id: 'so-1', color: '#fff' }),
     )
   })
+
+  it('builds ControlModelEntityAnimation payloads per control type', async () => {
+    const { ControlModelEntityAnimationCommand } = await import('./JSBCommand')
+    const entity = { id: 'ent-1' } as any
+
+    await new ControlModelEntityAnimationCommand(entity, {
+      type: 'play',
+      clipId: 'clip_0',
+      playbackRate: 2,
+      loop: true,
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'ControlModelEntityAnimation',
+      JSON.stringify({
+        entityId: 'ent-1',
+        type: 'play',
+        clipId: 'clip_0',
+        playbackRate: 2,
+        loop: true,
+      }),
+    )
+
+    await new ControlModelEntityAnimationCommand(entity, {
+      type: 'pause',
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'ControlModelEntityAnimation',
+      JSON.stringify({ entityId: 'ent-1', type: 'pause' }),
+    )
+
+    await new ControlModelEntityAnimationCommand(entity, {
+      type: 'seek',
+      time: 1.5,
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'ControlModelEntityAnimation',
+      JSON.stringify({ entityId: 'ent-1', type: 'seek', time: 1.5 }),
+    )
+
+    await new ControlModelEntityAnimationCommand(entity, {
+      type: 'setPlaybackRate',
+      rate: 0.5,
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'ControlModelEntityAnimation',
+      JSON.stringify({ entityId: 'ent-1', type: 'setPlaybackRate', rate: 0.5 }),
+    )
+  })
+
+  it('strips the JS-only clips field from CreateSpatialModelEntity', async () => {
+    const { CreateSpatialModelEntityCommand } = await import('./JSBCommand')
+
+    await new CreateSpatialModelEntityCommand({
+      modelAssetId: 'asset-1',
+      name: 'robot',
+      clips: [{ id: 'clip_0', name: 'Walk', duration: 2 }],
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'CreateSpatialModelEntity',
+      JSON.stringify({ modelAssetId: 'asset-1', name: 'robot' }),
+    )
+  })
 })
 
 describe('SpatialObject', () => {

@@ -9,7 +9,10 @@ import type {
   SpatialSphereGeometryOptions,
   Vec3,
 } from '@webspatial/core-sdk'
-import type { EntityRefShape } from '../reality/hooks/useEntityRef'
+import type {
+  EntityRefShape,
+  ModelEntityRef,
+} from '../reality/hooks/useEntityRef'
 import type { EntityEventHandler, EntityProps } from '../reality/type'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
@@ -36,11 +39,11 @@ type SpatialImpl = ReturnType<typeof requireSpatialImpl>
  * Do not modify this Path 1 `null` fallback without first aligning the
  * real-impl branch.
  */
-function createEntityRefFacade<P>(
+function createEntityRefFacade<P, R extends EntityRefShape = EntityRefShape>(
   componentName: string,
   pickReal: (impl: SpatialImpl) => unknown,
 ) {
-  function Impl(props: P, ref: ForwardedRef<EntityRefShape>) {
+  function Impl(props: P, ref: ForwardedRef<R>) {
     const ready = useSpatialReady()
     if (!ready) {
       warnBootForgotten(componentName)
@@ -51,7 +54,7 @@ function createEntityRefFacade<P>(
     >
     return <RealComponent {...(props as P)} ref={ref as any} />
   }
-  const Facade = forwardRef<EntityRefShape, P>(Impl as any)
+  const Facade = forwardRef<R, P>(Impl as any)
   Facade.displayName = componentName
   return Facade
 }
@@ -140,11 +143,10 @@ export const PlaneEntity =
     'PlaneEntity',
     impl => impl.PlaneEntity,
   )
-export const ModelEntity =
-  /* @__PURE__ */ createEntityRefFacade<ModelEntityProps>(
-    'ModelEntity',
-    impl => impl.ModelEntity,
-  )
+export const ModelEntity = /* @__PURE__ */ createEntityRefFacade<
+  ModelEntityProps,
+  ModelEntityRef
+>('ModelEntity', impl => impl.ModelEntity)
 
 export const AttachmentEntity =
   /* @__PURE__ */ createNullFacade<AttachmentEntityProps>(

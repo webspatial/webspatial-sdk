@@ -287,10 +287,68 @@ export interface SpatialEntityUserData {
 export interface SpatialModelEntityCreationOptions {
   modelAssetId: string
   name?: string
+  /**
+   * Animation clip catalog of the source asset, used to seed the entity's
+   * animation controller. JS-side only — stripped before sending to native.
+   */
+  clips?: readonly ModelAnimationClipData[]
 }
 
 export interface ModelAssetOptions {
   url: string
+}
+
+/**
+ * Metadata for a single animation clip embedded in a loaded model asset.
+ */
+export interface ModelAnimationClipData {
+  /** Stable and unique within this loaded ModelAsset (e.g. `clip_0`). */
+  id: string
+  /** Authored name when preserved by the importer; null otherwise. */
+  name: string | null
+  /** Unscaled duration in seconds. */
+  duration: number
+}
+
+export interface PlayModelAnimationOptions {
+  /** Playback speed multiplier. Defaults to 1. */
+  playbackRate?: number
+  /** Whether the clip should loop continuously. Defaults to false. */
+  loop?: boolean
+}
+
+export type ModelAnimationControlType =
+  | 'play'
+  | 'pause'
+  | 'seek'
+  | 'setPlaybackRate'
+
+/**
+ * Per-instance playback controller for built-in model animation clips.
+ * Obtained from a ModelEntity; implemented by `SpatialModelEntity`.
+ */
+export interface ModelAnimationController {
+  readonly currentClip: ModelAnimationClipData | null
+  readonly currentTime: number
+  readonly duration: number
+  readonly paused: boolean
+  readonly playbackRate: number
+  play(
+    clip?: string | ModelAnimationClipData,
+    options?: PlayModelAnimationOptions,
+  ): Promise<void>
+  pause(): void
+  seek(time: number): void
+  setPlaybackRate(rate: number): void
+}
+
+/**
+ * Native reply shape for the CreateModelAsset command.
+ * `animations` is omitted by old runtimes and treated as empty.
+ */
+export interface CreateModelAssetReplyData {
+  id: string
+  animations?: ModelAnimationClipData[]
 }
 
 export enum SpatialSceneState {

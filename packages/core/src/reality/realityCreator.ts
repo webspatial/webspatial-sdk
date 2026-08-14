@@ -15,6 +15,7 @@ import {
   SpatialUnlitMaterialOptions,
   SpatialEntityUserData,
   SpatialTextureResourceOptions,
+  CreateModelAssetReplyData,
 } from '../types/types'
 import { SpatialEntity, SpatialModelEntity } from './entity'
 import { ModelComponent } from './component'
@@ -90,8 +91,9 @@ export async function createModelAsset(options: ModelAssetOptions) {
   if (!result.success) {
     throw new Error('createModelAsset failed:' + result?.errorMessage)
   } else {
-    const { id } = result.data
-    return new SpatialModelAsset(id, options)
+    // Old runtimes omit `animations` — treated as an empty clip catalog.
+    const { id, animations } = result.data as CreateModelAssetReplyData
+    return new SpatialModelAsset(id, options, animations ?? [])
   }
 }
 

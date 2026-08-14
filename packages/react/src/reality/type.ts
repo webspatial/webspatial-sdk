@@ -1,6 +1,26 @@
 import type { Quaternion, Vec3 } from '@webspatial/core-sdk'
 import type { AnimatedProps } from '@webspatial/core-sdk'
+import type { ModelAnimationClipData } from '@webspatial/core-sdk'
 import { EntityRefShape } from './hooks'
+
+/**
+ * Metadata for a single animation clip embedded in a loaded model asset.
+ */
+export type ModelAnimationClip = ModelAnimationClipData
+
+export type {
+  PlayModelAnimationOptions,
+  ModelAnimationController,
+} from '@webspatial/core-sdk'
+
+export type { ModelEntityRef } from './hooks'
+
+/**
+ * Payload passed to `<ModelAsset onLoad>` once the asset finishes loading.
+ */
+export interface ModelAssetLoadEvent {
+  animations: readonly ModelAnimationClip[]
+}
 import { SpatialTapEvent as CoreSpatialTapEvent } from '@webspatial/core-sdk'
 import { SpatialDragStartEvent as CoreSpatialDragStartEvent } from '@webspatial/core-sdk'
 import { SpatialDragEvent as CoreSpatialDragEvent } from '@webspatial/core-sdk'

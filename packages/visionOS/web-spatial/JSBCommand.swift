@@ -81,6 +81,18 @@ struct CreateSpatialModelEntity: CommandDataProtocol {
     let name: String?
 }
 
+struct ControlModelEntityAnimation: CommandDataProtocol {
+    static let commandType: String = "ControlModelEntityAnimation"
+    let entityId: String
+    /// "play" | "pause" | "seek" | "setPlaybackRate"
+    let type: String
+    let clipId: String?
+    let loop: Bool?
+    let playbackRate: Double?
+    let time: Double?
+    let rate: Double?
+}
+
 struct CreateModelComponent: CommandDataProtocol {
     static let commandType: String = "CreateModelComponent"
     let geometryId: String

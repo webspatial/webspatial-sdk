@@ -1,5 +1,10 @@
 import { useImperativeHandle } from 'react'
-import { Vec3, SpatialEntity } from '@webspatial/core-sdk'
+import {
+  Vec3,
+  SpatialEntity,
+  SpatialModelEntity as CoreSpatialModelEntity,
+} from '@webspatial/core-sdk'
+import type { ModelAnimationController } from '@webspatial/core-sdk'
 import { RealityContextValue } from '../context'
 
 export interface EntityRefShape {
@@ -19,6 +24,14 @@ export interface EntityRefShape {
   id: string | undefined
   name: string | undefined
   entity: SpatialEntity | null
+}
+
+/**
+ * Ref shape exposed by `<ModelEntity>`. Extends the base entity ref with a
+ * per-instance controller for the built-in animation clips of the model.
+ */
+export interface ModelEntityRef extends EntityRefShape {
+  readonly modelAnimation: ModelAnimationController
 }
 
 export const useEntityRef = (
@@ -60,6 +73,20 @@ export class EntityRef implements EntityRefShape {
   }
   get name() {
     return this._entity?.userData?.name
+  }
+
+  /**
+   * Built-in model animation controller. Only available when the underlying
+   * entity is a `SpatialModelEntity` (i.e. the ref belongs to a
+   * `<ModelEntity>`); throws before the entity finishes creating.
+   */
+  get modelAnimation(): ModelAnimationController {
+    const ent = this._entity
+    if (!ent) throw new Error('Entity not ready')
+    if (!(ent instanceof CoreSpatialModelEntity)) {
+      throw new Error('modelAnimation is only available on ModelEntity refs')
+    }
+    return ent
   }
 
   async convertFromEntityToEntity(

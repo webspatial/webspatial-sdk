@@ -14,6 +14,11 @@ struct AddSpatializedElementReply: Codable {
     let id: String
 }
 
+struct CreateModelAssetReply: Codable {
+    let id: String
+    let animations: [AnimationClipInfo]
+}
+
 struct ResizeRange: Codable {
     var minWidth: Double?
     var minHeight: Double?
@@ -345,6 +350,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(UpdateOrnamentCommand.self, onUpdateOrnament)
 
         spatialWebViewModel.addJSBListener(AnimateTransformCommand.self, onAnimateTransform)
+
+        spatialWebViewModel.addJSBListener(ControlModelEntityAnimation.self, onControlModelEntityAnimation)
 
         spatialWebViewModel.addJSBListener(CreateSpatializedElementAnimationCommand.self, onCreateSpatializedElementAnimation)
         spatialWebViewModel.addJSBListener(ControlSpatializedElementAnimationCommand.self, onControlSpatializedElementAnimation)
@@ -1226,11 +1233,41 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             switch onload {
             case let .success(modelResource):
                 self.addSpatialObject(modelResource)
-                resolve(.success(AddSpatializedElementReply(id: modelResource.id)))
+                resolve(.success(CreateModelAssetReply(
+                    id: modelResource.id,
+                    animations: modelResource.clips
+                )))
             case let .failure(error):
                 resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Failed to download model: \(error)")))
             }
         }
+    }
+
+    private func onControlModelEntityAnimation(command: ControlModelEntityAnimation, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let entity = spatialObjects[command.entityId] as? SpatialModelEntity else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "ModelEntity not found: \(command.entityId)")))
+            return
+        }
+        // The entity streams animationstatechange samples through this scene.
+        entity.animationEventScene = self
+        switch command.type {
+        case "play":
+            entity.playAnimation(
+                clipId: command.clipId,
+                loop: command.loop ?? false,
+                rate: Float(command.playbackRate ?? 1.0)
+            )
+        case "pause":
+            entity.pauseAnimation()
+        case "seek":
+            entity.seekAnimation(to: command.time ?? 0)
+        case "setPlaybackRate":
+            entity.setAnimationPlaybackRate(Float(command.rate ?? 1.0))
+        default:
+            resolve(.failure(JsbError(code: .CommandError, message: "Unknown animation control: \(command.type)")))
+            return
+        }
+        resolve(.success(baseReplyData))
     }
 
     private func onCreateSpatialModelEntity(command: CreateSpatialModelEntity, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {

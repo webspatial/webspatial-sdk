@@ -43,6 +43,8 @@ import {
   AnimationCompletedEventPayload,
   AnimationCanceledEventPayload,
   AnimationFailedEventPayload,
+  AnimationStateChangeMsg,
+  AnimationStateChangeDetail,
 } from '../../WebMsgCommand'
 
 export class SpatialEntity extends SpatialObject {
@@ -286,12 +288,15 @@ export class SpatialEntity extends SpatialObject {
       | SpatialMagnifyEndMsg
       | SpatialRotateMsg
       | SpatialRotateEndMsg
-      | ObjectDestroyMsg,
+      | ObjectDestroyMsg
+      | AnimationStateChangeMsg,
   ) => {
     // console.log('SpatialEntityEvent', data)
     const { type } = data
     if (type === SpatialWebMsgType.objectdestroy) {
       this.isDestroyed = true
+    } else if (type === SpatialWebMsgType.animationstatechange) {
+      this.onReceiveAnimationState(data.detail)
     }
     // tap
     else if (type === SpatialWebMsgType.spatialtap) {
@@ -342,6 +347,15 @@ export class SpatialEntity extends SpatialObject {
       this.dispatchEvent(evt)
     }
   }
+
+  /**
+   * Hook for native `animationstatechange` samples (built-in model
+   * animation). No-op on the base entity; `SpatialModelEntity` overrides
+   * this to sync its playback controller state.
+   */
+  protected onReceiveAnimationState(
+    _detail: AnimationStateChangeDetail,
+  ): void {}
 
   dispatchEvent(evt: CustomEvent) {
     // Set origin once at the first dispatch in the bubbling chain

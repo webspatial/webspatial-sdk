@@ -99,6 +99,11 @@ export interface AnimationStateChangeDetail {
    * Used to extrapolate `currentTime` between samples while playing.
    */
   timestamp?: number
+  /**
+   * Id of the clip the sample refers to (ModelEntity built-in animation).
+   * Optional for backward compatibility with older native runtimes.
+   */
+  clipId?: string
 }
 
 export interface AnimationStateChangeMsg {

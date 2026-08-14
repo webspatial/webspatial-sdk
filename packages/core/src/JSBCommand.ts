@@ -26,6 +26,7 @@ import {
   ModelLoadingMode,
   ModelSource,
   SpatialTextureResourceOptions,
+  ModelAnimationControlType,
 } from './types/types'
 import type { OrnamentOptions } from './Ornament'
 import type { AnimateTransformCommand } from './types/animation'
@@ -381,9 +382,36 @@ export class CreateSpatialModelEntityCommand extends JSBCommand {
     super()
   }
   protected getParams(): Record<string, any> | undefined {
-    return this.options
+    // `clips` is JS-side metadata used to seed the entity's animation
+    // controller; native already knows the clips from the asset.
+    const { clips: _clips, ...params } = this.options
+    return params
   }
   commandType = 'CreateSpatialModelEntity'
+}
+
+interface ControlModelEntityAnimationParams {
+  type: ModelAnimationControlType
+  clipId?: string
+  loop?: boolean
+  playbackRate?: number
+  time?: number
+  rate?: number
+}
+
+export class ControlModelEntityAnimationCommand extends JSBCommand {
+  commandType = 'ControlModelEntityAnimation'
+
+  constructor(
+    private entity: SpatialEntity,
+    private params: ControlModelEntityAnimationParams,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    return { entityId: this.entity.id, ...this.params }
+  }
 }
 
 export class CreateModelAssetCommand extends JSBCommand {

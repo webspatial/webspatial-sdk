@@ -2,12 +2,13 @@ import React, { useEffect, useRef } from 'react'
 import { useRealityContext } from '../context'
 import { SpatialModelAsset } from '@webspatial/core-sdk'
 import { getAbsoluteUrl } from '../../internal/urlUtils'
+import type { ModelAssetLoadEvent } from '../type'
 
 type Props = {
   children?: React.ReactNode
   id: string // user id
   src: string // model url
-  onLoad?: () => void
+  onLoad?: (event: ModelAssetLoadEvent) => void
   onError?: (error: unknown) => void
 }
 
@@ -30,7 +31,7 @@ export const ModelAsset: React.FC<Props> = ({ children, ...options }) => {
           return
         }
         materialRef.current = mat
-        options.onLoad?.()
+        options.onLoad?.({ animations: mat.animations })
       } catch (error: any) {
         options.onError?.(error)
       }
