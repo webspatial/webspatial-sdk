@@ -10,19 +10,6 @@ import { SpatialObject } from '../SpatialObject'
 const CHUNK_SIZE = 2 * 1024 * 1024 // 2 MiB
 const MAX_IN_FLIGHT = 4
 
-export interface TransferBlobOptions {
-  /** The element whose transfer this is; supplies the id native routes chunks on. */
-  element: SpatialObject
-  /** Which native source attempt these bytes belong to. */
-  requestId: string
-  /** The `blob:` URL to ship. */
-  src: string
-}
-
-interface TransferBlobDependencies {
-  encodeChunk: (slice: Blob) => Promise<string>
-}
-
 /**
  * Fetches a blob URL and streams it to native with bounded parallelism.
  *
@@ -34,9 +21,10 @@ interface TransferBlobDependencies {
  * can back blob transfers for components other than `<Model>` later.
  */
 export async function transferBlob(
-  { element, requestId, src }: TransferBlobOptions,
-  { encodeChunk = encodeBase64 }: Partial<TransferBlobDependencies> = {},
-): Promise<void> {
+  element: SpatialObject,
+  requestId: string,
+  src: string,
+) {
   try {
     const response = await fetch(src)
     const blob = await response.blob()
@@ -63,9 +51,8 @@ export async function transferBlob(
         nextOffset += CHUNK_SIZE
 
         try {
-          const data = await encodeChunk(
-            blob.slice(offset, offset + CHUNK_SIZE),
-          )
+          let slice = blob.slice(offset, offset + CHUNK_SIZE)
+          const data = await encodeBase64(slice)
           ensureSuccess(
             await new TransferBlobChunkCommand(element, {
               requestId,
@@ -88,7 +75,8 @@ export async function transferBlob(
       }).execute(),
     )
   } catch (error) {
-    await sendError(element, requestId, toError(error).message)
+    let message = toError(error).message
+    await new FailBlobTransferCommand(element, { requestId, message }).execute()
   }
 }
 
