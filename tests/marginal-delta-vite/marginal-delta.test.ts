@@ -106,7 +106,7 @@ async function buildApp(name: AppName): Promise<AppMeasurement> {
       outDir,
       emptyOutDir: true,
       minify: 'esbuild',
-      target: 'es2022',
+      target: 'es2025',
       sourcemap: false,
       reportCompressedSize: false,
       lib: {

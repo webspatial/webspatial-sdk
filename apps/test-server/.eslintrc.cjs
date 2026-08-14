@@ -1,6 +1,7 @@
 module.exports = {
   root: true,
-  env: { browser: true, es2020: true },
+  env: { browser: true },
+  parserOptions: { ecmaVersion: 2025 },
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',

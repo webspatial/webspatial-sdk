@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
+    "target": "ES2025",
     "useDefineForClassFields": true,
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": ["ES2025", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     "allowJs": false,
@@ -10,9 +10,12 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "noUncheckedSideEffectImports": false,
     "noEmit": false,
     "declaration": true,
     "declarationMap": true,
+    // TypeScript 6 requires this explicitly because path aliases include ../core/src.
+    "rootDir": "..",
     /* Linting */
     "strict": true,
     "noUnusedLocals": false,
@@ -21,6 +24,10 @@
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
     "jsx": "react-jsx",
+    // Tests and esbuild.mjs use Node globals and built-in node: modules.
+    "types": ["node"],
+    // Keep the existing node resolver while TypeScript 6 deprecates its alias.
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@webspatial/react-sdk": ["./src"],
       "@webspatial/react-sdk/internal/facades-client": [

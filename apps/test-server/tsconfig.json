@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2025",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2025", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     "allowJs": false,
@@ -11,6 +11,7 @@
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "noUncheckedSideEffectImports": false,
     "noEmit": true,
     "jsx": "react-jsx",
     "jsxImportSource": "@webspatial/react-sdk",
@@ -47,12 +48,7 @@
       "web-spatial": ["../npmLib/src"]
     }
   },
-  "include": [
-    "index.tsx",
-    "src",
-    "../../packages/react/src/types/global.d.ts",
-    "../../packages/core/src/types/global.d.ts"
-  ],
+  "include": ["index.tsx", "src", "../../packages/react/src/types/global.d.ts"],
   "exclude": ["node_modules"]
   // "references": [{ "path": "./tsconfig.node.json" }]
 }
