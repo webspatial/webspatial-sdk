@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
 import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
@@ -12,6 +13,7 @@ import {
 
 export default function EntityAnimationReverseLoopPage() {
   const logger = useLog()
+  const [delay, setDelay] = useState<0 | 2>(2)
 
   const [animation, api, entityProps] = useEntityAnimation({
     timeline: {
@@ -27,6 +29,8 @@ export default function EntityAnimationReverseLoopPage() {
       },
     },
     duration: 2.0,
+    delay,
+    autoStart: false,
     timingFunction: 'linear',
     loop: { reverse: true },
     onStart: () => logger.log('onStart (loop)'),
@@ -67,6 +71,22 @@ export default function EntityAnimationReverseLoopPage() {
           className="rounded-xl border border-gray-800 p-3"
         >
           <div className="flex flex-wrap gap-2">
+            {/* Keep delay choices aligned with the scenarios under test. */}
+            <label className="flex items-center gap-2 text-sm text-gray-300">
+              Delay
+              <select
+                className={btnCls}
+                value={delay}
+                onChange={event => {
+                  const nextDelay = Number(event.target.value) as 0 | 2
+                  setDelay(nextDelay)
+                  logger.log(`delay=${nextDelay}s`)
+                }}
+              >
+                <option value={0}>0s</option>
+                <option value={2}>2s</option>
+              </select>
+            </label>
             <button className={btnPrimary} onClick={toggle}>
               {api.isPaused ? 'Resume' : api.isAnimating ? 'Pause' : 'Play'}
             </button>
@@ -78,6 +98,25 @@ export default function EntityAnimationReverseLoopPage() {
               }}
             >
               Stop
+            </button>
+            {/* Exercise terminal state transitions for the reverse loop. */}
+            <button
+              className={btnCls}
+              onClick={() => {
+                api.reset()
+                logger.log('reset()')
+              }}
+            >
+              Reset
+            </button>
+            <button
+              className={btnCls}
+              onClick={() => {
+                api.finish()
+                logger.log('finish()')
+              }}
+            >
+              Finish
             </button>
             <button
               className={btnCls}
