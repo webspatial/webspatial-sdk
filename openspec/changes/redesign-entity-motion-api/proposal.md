@@ -90,13 +90,8 @@ type EntityMotionProps = {
   scale?: Vec3
 }
 
+// Internal SDK type; not exported from the package public entry.
 type EntityMotionPatch = {
-  position?: Partial<Vec3>
-  rotation?: Partial<Vec3>
-  scale?: Partial<Vec3>
-}
-
-type EntityTransformUpdate = {
   position?: Partial<Vec3>
   rotation?: Partial<Vec3>
   scale?: Partial<Vec3>
@@ -350,7 +345,7 @@ api.set({ position: { y: 0.3 } })
 A few rules:
 
 1. **Call during the idle phase after the `animation` binding is ready**. Call it after completion, `stop()`, or `reset()`. During playback, call `stop()` first, followed by `api.set()`.
-2. **Pass the fields to update**; every other field keeps its current value. For example, `api.set({ position: { y: 0.3 } })` updates `position.y` while keeping the current `rotation` and `scale`.
+2. **Pass at least one supported transform scalar under `position`, `rotation`, and/or `scale`**; every other field keeps its current value. For example, `api.set({ position: { y: 0.3 } })` updates `position.y` while keeping the current `rotation` and `scale`.
 3. **After a successful write, `entityProps` updates to the Entity's complete current pose**.
 4. **For an update based on the current pose**, read `entityProps`, calculate the new value, then pass it to `api.set`. `entityProps` is the current-pose data source.
 5. **`api.set` sets the static pose** and preserves the current playback progress.
@@ -414,7 +409,7 @@ interface EntityPlaybackApi {
   stop(): void
   reset(): void
   finish(): void
-  set(update: EntityTransformUpdate): void
+  set(update: EntityMotionPatch): void
   readonly playState: 'queued' | 'idle' | 'running' | 'paused' | 'finished'
   readonly isAnimating: boolean
   readonly isPaused: boolean

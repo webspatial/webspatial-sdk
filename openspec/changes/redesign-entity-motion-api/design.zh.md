@@ -134,7 +134,7 @@ flowchart TB
         Normalize["normalizeEntityMotionConfig(config)<br/>校验公开配置并归一化规范轨道"]
         Tracks["规范轨道<br/>position.* / rotation.* / scale.*"]
         PlaybackApi["SpatializedPlaybackApi<br/>通用播放接口"]
-        EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>增加 set(EntityTransformUpdate)"]
+        EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>增加 set(EntityMotionPatch)"]
         CoreAnimationObject["EntityAnimationObject<br/>implements EntityPlaybackApi"]
 
         EntityCreate --> Normalize
@@ -220,7 +220,7 @@ classDiagram
         }
         class EntityPlaybackApi {
             <<interface>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class AnimationObject {
             +play()
@@ -240,7 +240,7 @@ classDiagram
             +reset()
             +finish()
             +update(config EntityMotionConfig)
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
             +onStart(callback)
             +onComplete(callback)
             +onStop(callback)
@@ -408,7 +408,7 @@ sequenceDiagram
 - **承担 fresh play 的原生编译成本。** 每次 fresh play 都由物体动画对象读取当前 baseline,再调用编译器完成多关键帧、稀疏关键帧、旋转换算和整姿态串联编译,换取最新 baseline、RealityKit 原生播放、系统合成和统一播放语义。
 - **切片为整姿态串联。** 把时间轴切成若干节点、每个节点携带完整的 `position` / `rotation` / `scale`,再按先后顺序串联成一条整姿态动画播放。visionOS(RealityKit)的动画绑定粒度是整个 `.transform`,当前缓动需求也以整段为单位。因此采用整姿态串联,天然对齐 visionOS 与 picoOS(两端原生都绑定整 transform);同一区间内各通道共用一个 `timingFunction`。
 - **只在播放活跃期间保护完整 transform。** 每次 fresh play 时,Native 在提交起始姿态前启用完整 transform 写入保护。例如只动画 `position.y` 时,`position.x`、`position.z`、`rotation`、`scale` 在播放期间都保持本轮基准姿态。延迟、运行和暂停期间持续保护,因此 `SpatialScene` 接受普通 React transform 更新但不应用。停止、重置、结束和自然完成会提交对应姿态、解除保护,并返回 Entity 当前的完整 transform,供 Core 更新 `entityProps`。播放空闲期间,普通 React transform 更新恢复生效。解绑、绑定终止和销毁动画对象也会作为清理路径解除保护。该行为与 Element 动画的 Native animating mask 一致。
-- **`set` 使用稀疏更新对象。** v1 的 `api.set` 接受 `EntityTransformUpdate`,当前确认姿态通过 `entityProps` 读取。
+- **`set` 使用稀疏更新对象。** v1 的 `api.set` 接受 `EntityMotionPatch`,当前确认姿态通过 `entityProps` 读取。
 - **Entity handler 直接分发。** `SpatialScene` 的四条 Entity 专属 handler 分别完成创建、原地配置更新、播放控制和姿态设置,不经过 Element 动画管理器。
 - **并发性能需要实测。** RealityKit 原生播放优于 JS 逐帧写入,但海量物体并发仍需专项性能验证。
 
@@ -489,7 +489,7 @@ classDiagram
         class EntityPlaybackApi {
             <<interface>>
             <<public>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class EntityMotionBinding {
             <<opaque>>
@@ -538,7 +538,7 @@ classDiagram
             +reset()
             +finish()
             +update(config EntityMotionConfig)
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
             +destroy()
             +onStart(callback)
             +onComplete(callback)
@@ -580,9 +580,9 @@ Core `EntityAnimationObject` 直接消费同一种 `EntityMotionStateChangedMsg`
 ### 5.2 Core SDK
 
 - **目标创建入口:** `SpatialEntity.createAnimation(config)` 使用自身 id,执行 Entity 专属归一化与校验,发送 `CreateEntityAnimation` 并返回 `EntityAnimationObject`。普通 `SpatializedElement.createAnimation(config)` 仍返回 `AnimationObject`。
-- **播放接口:** 现有 `SpatializedPlaybackApi` 保持通用播放方法与状态,不包含 `set`;`EntityPlaybackApi extends SpatializedPlaybackApi`,只增加 `set(EntityTransformUpdate)`。
+- **播放接口:** 现有 `SpatializedPlaybackApi` 保持通用播放方法与状态,不包含 `set`;`EntityPlaybackApi extends SpatializedPlaybackApi`,只增加 `set(EntityMotionPatch)`。
 - **动画对象:** `AnimationObject` 和 `EntityAnimationObject` 分别实现对应播放接口,两者没有继承关系。`EntityAnimationObject` 使用 `SpatialObject.id`,保存已提交的配置、规范时间轴和执行版本,并提供 `update(config)` 与 `onXXX` 调试监听方法。`finish` 和自然完成都会触发 `onComplete`。
-- **类型与函数:** Core 定义物体运动类型、`EntityTransformUpdate`、`EntityMotionProps`、属性白名单、归一化函数、校验函数以及内部规范时间轴。
+- **类型与函数:** Core 定义物体运动类型、`EntityMotionPatch`(内部类型,不公开导出)、`EntityMotionProps`、属性白名单、归一化函数、校验函数以及内部规范时间轴。
 
 `EntityAnimationObject` 的 `onXXX` 方法只注册观察回调,不发送控制或更新命令,也不改变动画配置。参数与 React callback 保持一致:
 
@@ -613,7 +613,7 @@ classDiagram
         }
         class EntityPlaybackApi {
             <<interface>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class SpatialEntity {
             +createAnimation(config) EntityAnimationObject
@@ -639,7 +639,7 @@ classDiagram
             +reset()
             +finish()
             +update(config EntityMotionConfig)
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
             +onStart(callback)
             +onComplete(callback)
             +onStop(callback)
@@ -715,7 +715,7 @@ ControlEntityAnimation {
 ```text
 SetEntityAnimation {
   id: string
-  update: EntityTransformUpdate
+  update: EntityMotionPatch
 }
 
 SetEntityAnimationResult {
@@ -723,7 +723,7 @@ SetEntityAnimationResult {
 }
 ```
 
-`api.set` 使用独立设置命令,接受深度稀疏的 `EntityTransformUpdate`。Native 合并更新并修改 Entity,再通过 `SetEntityAnimationResult` 返回 Entity 当前的完整 transform;Core 使用 `values` 更新 `entityProps`,不发送状态事件。绑定前或原生动画对象创建前的调用归类为空操作并打印控制台警告,也不会暂存为后续命令。JSB 不提供 `resume`;paused 后调用 `play` 时由 Native 动画对象内部恢复未更新的当前 controller,或在 paused update 后启动保存的新定义。
+`api.set` 使用独立设置命令,接受深度稀疏的 `EntityMotionPatch`。Native 合并更新并修改 Entity,再通过 `SetEntityAnimationResult` 返回 Entity 当前的完整 transform;Core 使用 `values` 更新 `entityProps`,不发送状态事件。绑定前或原生动画对象创建前的调用归类为空操作并打印控制台警告,也不会暂存为后续命令。JSB 不提供 `resume`;paused 后调用 `play` 时由 Native 动画对象内部恢复未更新的当前 controller,或在 paused update 后启动保存的新定义。
 
 ```text
 type EntityMotionProps = {
@@ -732,14 +732,14 @@ type EntityMotionProps = {
   scale?: Vec3
 }
 
-type EntityTransformUpdate = {
+type EntityMotionPatch = {
   position?: Partial<Vec3>
   rotation?: Partial<Vec3>
   scale?: Partial<Vec3>
 }
 ```
 
-`EntityTransformUpdate` 表示 `EntityMotionProps` 的任意深度子集。原生层按轴合并更新;播放状态事件中的确认值和 `SetEntityAnimationResult.values` 都携带完整的 `position`、`rotation`、`scale`,且每项都是完整的 `Vec3`。
+`EntityMotionPatch` 表示 `EntityMotionProps` 的任意深度子集。原生层按轴合并更新;播放状态事件中的确认值和 `SetEntityAnimationResult.values` 都携带完整的 `position`、`rotation`、`scale`,且每项都是完整的 `Vec3`。
 
 ##### 状态变化事件
 
@@ -814,7 +814,7 @@ type EntityPlaybackError = {
 | `INVALID_TIMELINE` | 修正动画配置中的时间、属性、关键帧或取值。公开配置通常由 Core 同步拦截。 |
 | `COMPILATION_FAILED` | 简化或调整 Native 无法编译的关键帧组合,并记录 `reason` 用于问题定位。 |
 | `INVALID_CONTROL_STATE` | 等待当前状态允许该操作,或先停止动画。活跃期间的 `set` 由 SDK 转换为 warning + no-op。 |
-| `INVALID_SET_VALUES` | 修正 `EntityTransformUpdate`,确保至少包含一个合法的 transform 标量。 |
+| `INVALID_SET_VALUES` | 修正 `EntityMotionPatch`,确保至少包含一个合法的 transform 标量。 |
 
 #### 类型、归一化与校验
 
@@ -1233,7 +1233,7 @@ type EntityMotionProps = {
 - `scale` 来自原生姿态的缩放部分。
 - `rotation` 使用角度制欧拉角和 Entity 相对父节点的局部右手坐标系，其中 +X 向右、+Y 向上、+Z 朝向观察者。旋转按 ZYX intrinsic 顺序组合，等价于 XYZ extrinsic，矩阵顺序为 `Rz × Ry × Rx`。原生层确认的旋转通过旋转矩阵拆解，`y` 位于 `[-90°, 90°]`，`x` 和 `z` 位于 `(-180°, 180°]`；gimbal lock 时固定 `z = 0°`，并从矩阵计算 `x`。等价 quaternion 因此产生相同的欧拉角结果。`api.set` 的稀疏 rotation update 先合并到这份规范化完整欧拉角基准，再重新组合姿态。
 - 拆解结果始终包含完整的已提交变换,其范围独立于动画配置和 `api.set` 写入字段。
-- 回调值和 `entityProps` 都采用 `EntityMotionProps` 形态;每个已确认值都包含完整的 `position`、`rotation`、`scale`,且每项都是完整的 `Vec3`。`api.set(update)` 接受深度稀疏的 `EntityTransformUpdate`。例如 `set({ position: { y: 0.3 } })` 按轴合并后,确认结果包含完整的位置、旋转和缩放。
+- 回调值和 `entityProps` 都采用 `EntityMotionProps` 形态;每个已确认值都包含完整的 `position`、`rotation`、`scale`,且每项都是完整的 `Vec3`。`api.set(update)` 接受深度稀疏的 `EntityMotionPatch`。例如 `set({ position: { y: 0.3 } })` 按轴合并后,确认结果包含完整的位置、旋转和缩放。
 
 #### Native 内部时序
 

@@ -90,13 +90,8 @@ type EntityMotionProps = {
   scale?: Vec3
 }
 
+// SDK 内部类型,不从 package public entry 导出。
 type EntityMotionPatch = {
-  position?: Partial<Vec3>
-  rotation?: Partial<Vec3>
-  scale?: Partial<Vec3>
-}
-
-type EntityTransformUpdate = {
   position?: Partial<Vec3>
   rotation?: Partial<Vec3>
   scale?: Partial<Vec3>
@@ -350,7 +345,7 @@ api.set({ position: { y: 0.3 } })
 几条规则:
 
 1. **在 `animation` 绑定完成后的空闲阶段调用**。播放完成、停止或重置后可以直接调用;播放期间先调用 `stop()`,随后调用 `api.set()`。
-2. **传入需要更新的字段**,其余字段沿用当前值。例如 `api.set({ position: { y: 0.3 } })` 更新 `position.y`,同时沿用当前 `rotation` 和 `scale`。
+2. **在 `position`、`rotation` 和/或 `scale` 中传入至少一个受支持的 transform 标量**,其余字段沿用当前值。例如 `api.set({ position: { y: 0.3 } })` 更新 `position.y`,同时沿用当前 `rotation` 和 `scale`。
 3. **写入成功后,`entityProps` 更新为 Entity 的完整当前姿态**。
 4. **基于当前姿态更新时**,读取 `entityProps`、计算新值,再传给 `api.set`。`entityProps` 是当前姿态的数据来源。
 5. **`api.set` 设置静止姿态**,播放进度沿用当前值。
@@ -414,7 +409,7 @@ interface EntityPlaybackApi {
   stop(): void
   reset(): void
   finish(): void
-  set(update: EntityTransformUpdate): void
+  set(update: EntityMotionPatch): void
   readonly playState: 'queued' | 'idle' | 'running' | 'paused' | 'finished'
   readonly isAnimating: boolean
   readonly isPaused: boolean

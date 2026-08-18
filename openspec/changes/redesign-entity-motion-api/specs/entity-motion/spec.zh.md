@@ -473,7 +473,7 @@ Entity motion 的生命周期 callback MUST 只是通知。它们的返回值 MU
 
 ### Requirement: `api.set` 是已提交 transform 状态的命令式写入入口
 
-SDK MUST 提供 `api.set` 作为 `entityProps` 所镜像的已提交 Entity transform 状态的命令式写入入口。`api.set` 返回 `void`,并接受稀疏的 `EntityTransformUpdate` object(与读取侧 `EntityMotionProps` 同为 `{ position?, rotation?, scale? }` 形态,但命名区分);updater 函数属于 programmer error。绑定不可用、创建中、绑定已终止以及 Core object 销毁中和已销毁时,对应生命周期门各输出一次 warning,在本地完成 no-op,JSB 调用和 `onError` 计数保持为零。Core object 存活时同步校验参数;非法 update 抛出内置 `Error`,合法 update 立即提交给 Core。Core object 存活时,包含至少一个 transform 标量的 update 可以写入;空 update 或只包含空嵌套对象的 update 同步抛出内置 `Error`。`api.set` 是保持播放进度与 `playState` 的状态写入口。
+SDK MUST 提供 `api.set` 作为 `entityProps` 所镜像的已提交 Entity transform 状态的命令式写入入口。`api.set` 返回 `void`,并接受稀疏的 Entity transform patch,其中包含 `position`、`rotation`、`scale` 中的一个或多个字段;updater 函数属于 programmer error。绑定不可用、创建中、绑定已终止以及 Core object 销毁中和已销毁时,对应生命周期门各输出一次 warning,在本地完成 no-op,JSB 调用和 `onError` 计数保持为零。Core object 存活时同步校验参数;非法 update 抛出内置 `Error`,合法 update 立即提交给 Core。Core object 存活时,包含至少一个 transform 标量的 update 可以写入;空 update 或只包含空嵌套对象的 update 同步抛出内置 `Error`。`api.set` 是保持播放进度与 `playState` 的状态写入口。
 
 物体变换写入 MUST 按完整 transform 统一仲裁。播放空闲期间,组件组合后的 React 属性控制 transform。动画处于活跃状态(`delay`、`running`、`paused`)时,Native animation 控制完整 transform 并阻止普通 React transform 写入;配置字段执行动画,其余字段保持基准姿态。`stop`、`reset`、`finish` 和自然完成 MUST 在提交对应姿态后解除保护。活跃 retarget MUST 保持完整 transform 写入保护连续生效。播放空闲状态下,`api.set` 更新 Native 已提交 transform,Core 使用 Native 返回的完整结果更新 `entityProps`。初次创建失败终止当前绑定生命周期并清空 `entityProps`;配置 update 失败保留现有保护与镜像。解绑也清空 `entityProps`。
 

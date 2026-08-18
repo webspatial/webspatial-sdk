@@ -7,10 +7,10 @@
 
 ## 2. Type and Contract Redesign
 
-- [x] 2.1 Add failing tests for the new `useEntityAnimation` tuple `[animation, api, entityProps]`, the public playback surface (`play`, `pause`, `stop`, `reset`, `finish`), and `api.set` accepting only an `EntityTransformUpdate` object
+- [x] 2.1 Add failing tests for the new `useEntityAnimation` tuple `[animation, api, entityProps]`, the public playback surface (`play`, `pause`, `stop`, `reset`, `finish`), and `api.set` accepting only an `EntityMotionPatch` object
 - [x] 2.2 Add failing tests for the complete public config contract; `position` / `rotation` / `scale` authoring; top-level `from` / `to`; `timeline.from` / `timeline.to`; percentage keyframes; public defaults; finite and range validation; required start/end boundaries; empty timeline, frame, and `api.set` update rejection; sparse fields inside boundary frames; legacy-config rejection; and unsupported targets such as `opacity`
 - [x] 2.2a Add failing tests covering built-in `Error` throws with stable `onError` counts for Core-detectable public config and method-argument errors; one `onError(EntityPlaybackError)` delivery for command-reply errors and one for dedicated `entityanimationerror` events; state events carrying no errors; and warning + no-op behavior for `api.set` state rejection
-- [x] 2.3 Redesign Core and React type surfaces to implement the Entity motion config above, transform-only callback values, playback API, write-side `EntityTransformUpdate`, and Core `EntityAnimationObject` debug `onXXX` listeners
+- [x] 2.3 Redesign Core and React type surfaces to implement the Entity motion config above, transform-only callback values, playback API, write-side `EntityMotionPatch` (internal, not publicly exported), and Core `EntityAnimationObject` debug `onXXX` listeners
 
 ## 3. Entity Binding Migration
 

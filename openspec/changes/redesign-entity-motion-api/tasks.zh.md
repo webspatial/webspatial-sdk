@@ -7,10 +7,10 @@
 
 ## 2. 类型与契约重设计
 
-- [x] 2.1 先编写失败测试,覆盖新的 `useEntityAnimation` 返回三元组 `[animation, api, entityProps]`、公开 playback surface(`play`、`pause`、`stop`、`reset`、`finish`)以及只接受 `EntityTransformUpdate` object 的 `api.set`
+- [x] 2.1 先编写失败测试,覆盖新的 `useEntityAnimation` 返回三元组 `[animation, api, entityProps]`、公开 playback surface(`play`、`pause`、`stop`、`reset`、`finish`)以及只接受 `EntityMotionPatch` object 的 `api.set`
 - [x] 2.2 先编写失败测试,覆盖完整公开 config 契约、`position` / `rotation` / `scale` authoring、顶层 `from` / `to`、`timeline.from` / `timeline.to`、百分比关键帧、公开默认值、finite 与范围校验、起止边界必填、空 timeline、frame 与 `api.set` update 拒绝、边界帧内部字段稀疏、旧 config 拒绝和 `opacity` 等不支持目标
 - [x] 2.2a 先编写失败测试,覆盖 Core 可检测的公开 config 与方法参数错误同步抛出内置 `Error` 且保持 `onError` 次数、命令回执错误与独立 `entityanimationerror` 事件分别通过一次 `onError(EntityPlaybackError)` 返回、状态事件不携带错误,以及 `api.set` 状态拒绝保持 warning + no-op
-- [x] 2.3 重设计 Core 和 React 类型面,实现上述 Entity motion config、transform-only callback values、playback API、写入侧 `EntityTransformUpdate` 与 Core `EntityAnimationObject` 调试 `onXXX`
+- [x] 2.3 重设计 Core 和 React 类型面,实现上述 Entity motion config、transform-only callback values、playback API、写入侧 `EntityMotionPatch`(内部类型,不公开导出)与 Core `EntityAnimationObject` 调试 `onXXX`
 
 ## 3. Entity 绑定迁移
 

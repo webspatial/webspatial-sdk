@@ -134,7 +134,7 @@ flowchart TB
         Normalize["normalizeEntityMotionConfig(config)<br/>validate public config and normalize canonical tracks"]
         Tracks["canonical tracks<br/>position.* / rotation.* / scale.*"]
         PlaybackApi["SpatializedPlaybackApi<br/>shared playback interface"]
-        EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>adds set(EntityTransformUpdate)"]
+        EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>adds set(EntityMotionPatch)"]
         CoreAnimationObject["EntityAnimationObject<br/>implements EntityPlaybackApi"]
 
         EntityCreate --> Normalize
@@ -220,7 +220,7 @@ classDiagram
         }
         class EntityPlaybackApi {
             <<interface>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class AnimationObject {
             +play()
@@ -240,7 +240,7 @@ classDiagram
             +reset()
             +finish()
             +update(config EntityMotionConfig)
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
             +onStart(callback)
             +onComplete(callback)
             +onStop(callback)
@@ -408,7 +408,7 @@ Native decides whether `api.set` takes effect: it accepts updates while playback
 - **Accept native compilation cost on fresh play.** Each fresh play makes the entity animation object read the current baseline and invoke the compiler for multi-keyframe handling, sparse keyframes, rotation conversion, and whole-transform serial compilation in exchange for an up-to-date baseline, native RealityKit playback, system compositing, and one execution model.
 - **Slice into a serial chain of full poses.** Cut the timeline into a set of nodes, each carrying a complete `position` / `rotation` / `scale`, then chain them in order into one whole-transform animation. The visionOS RealityKit animation binding granularity is the whole `.transform`, and current easing requirements apply per segment. A serial chain of full poses therefore aligns visionOS and picoOS, where native animation binds the whole transform; all channels within one segment share a single `timingFunction`.
 - **Protect the whole transform only while playback is active.** On each fresh play, Native enables whole-transform write protection before committing the start pose. For example, animating only `position.y` freezes `position.x` / `position.z` — and `rotation` / `scale` too — at baseline during playback. Delay, running, and pause keep this protection, so `SpatialScene` accepts ordinary React transform updates without applying them. Stop, reset, finish, and natural completion commit the corresponding pose, remove the protection, and report the Entity's complete current transform so Core can update `entityProps`. Ordinary React transform updates apply again while playback is inactive. Unbinding, binding termination, and animation-object destruction also remove the protection as cleanup paths. This matches the Element animation's native animating-mask behavior.
-- **`set` uses a sparse update object.** In v1, `api.set` accepts `EntityTransformUpdate`, and consumers read the latest confirmed transform through `entityProps`.
+- **`set` uses a sparse update object.** In v1, `api.set` accepts `EntityMotionPatch`, and consumers read the latest confirmed transform through `entityProps`.
 - **Entity handlers dispatch directly.** The four Entity-specific handlers on `SpatialScene` independently perform create, in-place config update, playback control, and transform set without entering the Element animation manager.
 - **Measure large-scale concurrency.** Native RealityKit playback is preferable to per-frame JS writes, but high entity counts still require dedicated performance validation.
 
@@ -489,7 +489,7 @@ classDiagram
         class EntityPlaybackApi {
             <<interface>>
             <<public>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class EntityMotionBinding {
             <<opaque>>
@@ -538,7 +538,7 @@ classDiagram
             +reset()
             +finish()
             +update(config EntityMotionConfig)
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
             +destroy()
             +onStart(callback)
             +onComplete(callback)
@@ -580,9 +580,9 @@ Core `EntityAnimationObject` directly consumes one `EntityMotionStateChangedMsg`
 ### 5.2 Core SDK
 
 - **Target creation entry:** `SpatialEntity.createAnimation(config)` uses its own id, performs Entity-specific normalization and validation, sends `CreateEntityAnimation`, and returns an `EntityAnimationObject`. Ordinary `SpatializedElement.createAnimation(config)` still returns `AnimationObject`.
-- **Playback interfaces:** the existing `SpatializedPlaybackApi` keeps common playback methods and state and does not contain `set`; `EntityPlaybackApi extends SpatializedPlaybackApi` and adds only `set(EntityTransformUpdate)`.
+- **Playback interfaces:** the existing `SpatializedPlaybackApi` keeps common playback methods and state and does not contain `set`; `EntityPlaybackApi extends SpatializedPlaybackApi` and adds only `set(EntityMotionPatch)`.
 - **Animation objects:** `AnimationObject` and `EntityAnimationObject` implement their respective playback interfaces without inheriting from each other. `EntityAnimationObject` uses `SpatialObject.id`, stores the committed config, canonical timeline, and execution revision, and exposes `update(config)` plus `onXXX` debug listeners. Both `finish` and natural completion fire `onComplete`.
-- **Types and functions:** Core defines entity-motion types, `EntityTransformUpdate`, `EntityMotionProps`, the property allowlist, normalization and validation functions, and the internal canonical timeline.
+- **Types and functions:** Core defines entity-motion types, `EntityMotionPatch` (internal, not publicly exported), `EntityMotionProps`, the property allowlist, normalization and validation functions, and the internal canonical timeline.
 
 The `onXXX` methods on `EntityAnimationObject` only register observers; they send no control or update commands and do not change animation configuration. Their parameters align with React callbacks:
 
@@ -613,7 +613,7 @@ classDiagram
         }
         class EntityPlaybackApi {
             <<interface>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class SpatialEntity {
             +createAnimation(config) EntityAnimationObject
@@ -639,7 +639,7 @@ classDiagram
             +reset()
             +finish()
             +update(config EntityMotionConfig)
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
             +onStart(callback)
             +onComplete(callback)
             +onStop(callback)
@@ -715,7 +715,7 @@ A successful control reply uses an empty payload to confirm current-command comp
 ```text
 SetEntityAnimation {
   id: string
-  update: EntityTransformUpdate
+  update: EntityMotionPatch
 }
 
 SetEntityAnimationResult {
@@ -723,7 +723,7 @@ SetEntityAnimationResult {
 }
 ```
 
-`api.set` uses the dedicated set command and accepts a deeply sparse `EntityTransformUpdate`. Native merges the update, changes the Entity, and returns its complete current transform through `SetEntityAnimationResult`; Core updates `entityProps` from `values` without a state event. Calls before binding or before native animation-object creation are classified as no-ops, log a console warning, and are not stashed as later commands. JSB does not expose `resume`; a `play` received while paused makes the Native animation object resume an unchanged current controller or start the saved new definition after a paused update.
+`api.set` uses the dedicated set command and accepts a deeply sparse `EntityMotionPatch`. Native merges the update, changes the Entity, and returns its complete current transform through `SetEntityAnimationResult`; Core updates `entityProps` from `values` without a state event. Calls before binding or before native animation-object creation are classified as no-ops, log a console warning, and are not stashed as later commands. JSB does not expose `resume`; a `play` received while paused makes the Native animation object resume an unchanged current controller or start the saved new definition after a paused update.
 
 ```text
 type EntityMotionProps = {
@@ -732,14 +732,14 @@ type EntityMotionProps = {
   scale?: Vec3
 }
 
-type EntityTransformUpdate = {
+type EntityMotionPatch = {
   position?: Partial<Vec3>
   rotation?: Partial<Vec3>
   scale?: Partial<Vec3>
 }
 ```
 
-`EntityTransformUpdate` represents any deep subset of `EntityMotionProps`. Native merges the supplied axes. Confirmed values in playback state events and `SetEntityAnimationResult.values` both contain complete `position`, `rotation`, and `scale`, each as a complete `Vec3`.
+`EntityMotionPatch` represents any deep subset of `EntityMotionProps`. Native merges the supplied axes. Confirmed values in playback state events and `SetEntityAnimationResult.values` both contain complete `position`, `rotation`, and `scale`, each as a complete `Vec3`.
 
 ##### State-changed event
 
@@ -814,7 +814,7 @@ Users handle codes as follows:
 | `INVALID_TIMELINE` | Correct timeline times, properties, keyframes, or values. Core normally catches public-config errors synchronously. |
 | `COMPILATION_FAILED` | Simplify or adjust the keyframe combination Native cannot compile and record `reason` for diagnosis. |
 | `INVALID_CONTROL_STATE` | Wait for an allowed state or stop playback first. The SDK converts active-playback `set` to warning + no-op. |
-| `INVALID_SET_VALUES` | Correct `EntityTransformUpdate` so it contains at least one valid transform scalar. |
+| `INVALID_SET_VALUES` | Correct `EntityMotionPatch` so it contains at least one valid transform scalar. |
 
 #### Types, normalization, and validation
 
@@ -1233,7 +1233,7 @@ Decomposition rules:
 - `scale` comes from the scale part of the native transform.
 - `rotation` uses Euler degrees in the Entity's parent-relative local, right-handed coordinate system, where +X points right, +Y points up, and +Z points toward the viewer. Composition uses ZYX intrinsic rotation, equivalent to XYZ extrinsic rotation, with matrix order `Rz × Ry × Rx`. Confirmed native rotation is decomposed from its rotation matrix with `y` in `[-90°, 90°]` and `x` / `z` in `(-180°, 180°]`; at gimbal lock, `z` is fixed to `0°` and `x` is derived from the matrix. Equivalent quaternions therefore produce the same Euler result. A sparse `api.set` rotation update merges onto this canonical complete Euler baseline before recomposition.
 - After decomposition, report the complete committed transform independently of the animation config and the fields written by `api.set`.
-- Both callback values and `entityProps` use `EntityMotionProps`; every confirmed value contains complete `position`, `rotation`, and `scale` values, each as a complete `Vec3`. `api.set(update)` accepts a deeply sparse `EntityTransformUpdate`. For example, after axis-wise merging `set({ position: { y: 0.3 } })`, the confirmed result contains the complete position, rotation, and scale.
+- Both callback values and `entityProps` use `EntityMotionProps`; every confirmed value contains complete `position`, `rotation`, and `scale` values, each as a complete `Vec3`. `api.set(update)` accepts a deeply sparse `EntityMotionPatch`. For example, after axis-wise merging `set({ position: { y: 0.3 } })`, the confirmed result contains the complete position, rotation, and scale.
 
 #### Native Internal Sequences
 
