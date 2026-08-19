@@ -768,3 +768,86 @@ export class ControlSpatializedElementAnimationJSBCommand extends JSBCommand {
     }
   }
 }
+
+export interface StartBlobTransferParams {
+  requestId: string
+  src: string
+  mimeType: string
+  size: number
+}
+
+export class StartBlobTransferCommand extends SpatializedElementCommand {
+  commandType = 'StartBlobTransfer'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: StartBlobTransferParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
+
+export interface TransferBlobChunkParams {
+  requestId: string
+  /** Byte offset of this base64-encoded chunk in the Blob. */
+  offset: number
+  data: string
+}
+
+export class TransferBlobChunkCommand extends SpatializedElementCommand {
+  commandType = 'TransferBlobChunk'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: TransferBlobChunkParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
+
+export interface CompleteBlobTransferParams {
+  requestId: string
+}
+
+export class CompleteBlobTransferCommand extends SpatializedElementCommand {
+  commandType = 'CompleteBlobTransfer'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: CompleteBlobTransferParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
+
+export interface FailBlobTransferParams {
+  requestId: string
+  message?: string
+}
+
+export class FailBlobTransferCommand extends SpatializedElementCommand {
+  commandType = 'FailBlobTransfer'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: FailBlobTransferParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
