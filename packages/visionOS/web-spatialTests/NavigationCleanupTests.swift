@@ -34,3 +34,51 @@ final class NavigationCleanupTests: XCTestCase {
         XCTAssertNil(SpatialObject.get(panel.id))
     }
 }
+
+final class SpatialOpenWindowCommandTests: XCTestCase {
+    func test_parsesLegacyWebSpatialCommands() throws {
+        let commands: [SpatialOpenWindowCommand] = [
+            .createSpatialScene,
+            .createSpatialized2DElement,
+            .createAttachment,
+            .createOrnament,
+        ]
+
+        for command in commands {
+            let url = try XCTUnwrap(URL(string: "webspatial://\(command.rawValue)?rid=req_1"))
+            XCTAssertEqual(SpatialOpenWindowCommand(url: url), command)
+        }
+    }
+
+    func test_parsesAboutBlankSpatialContentCommands() throws {
+        let commands: [SpatialOpenWindowCommand] = [
+            .createSpatialized2DElement,
+            .createAttachment,
+            .createOrnament,
+        ]
+
+        for command in commands {
+            let url = try XCTUnwrap(URL(string: "about:blank?command=\(command.rawValue)&rid=req_2&wsepoch=9"))
+            XCTAssertEqual(SpatialOpenWindowCommand(url: url), command)
+        }
+    }
+
+    func test_prefersQueryCommandOverLegacyHost() throws {
+        let url = try XCTUnwrap(URL(string: "webspatial://createOrnament?command=createAttachment"))
+        XCTAssertEqual(SpatialOpenWindowCommand(url: url), .createAttachment)
+    }
+
+    func test_rejectsUnsupportedCommands() throws {
+        let urls = [
+            "about:blank",
+            "about:blank?command=createSpatialScene",
+            "about:blank?command=unknown",
+            "https://example.com/?command=createOrnament",
+        ]
+
+        for value in urls {
+            let url = try XCTUnwrap(URL(string: value))
+            XCTAssertNil(SpatialOpenWindowCommand(url: url))
+        }
+    }
+}
