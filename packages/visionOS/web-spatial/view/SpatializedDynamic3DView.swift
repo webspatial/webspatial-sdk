@@ -173,6 +173,11 @@ struct SpatializedDynamic3DView: View {
             ForEach(Array(spatialScene.attachmentManager.attachments.values)) { info in
                 Attachment(id: info.id) {
                     info.webViewModel.getView()
+                        .materialWithBorderCorner(
+                            info.backgroundMaterial,
+                            info.cornerRadius,
+                            spatialScene.windowStyle
+                        )
                         .frame(
                             width: info.frameSize.width,
                             height: info.frameSize.height

@@ -23,11 +23,17 @@ import {
   Vec3,
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
+  BackgroundMaterialType,
+  CornerRadius,
   ModelLoadingMode,
   ModelSource,
   SpatialTextureResourceOptions,
 } from './types/types'
 import type { OrnamentOptions } from './Ornament'
+import {
+  normalizeAttachmentBackgroundMaterial,
+  normalizeAttachmentCornerRadius,
+} from './reality/attachmentSurface'
 import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
 import type {
@@ -717,6 +723,10 @@ export class InitializeAttachmentCommand extends JSBCommand {
       width: this.options.width,
       height: this.options.height,
       ownerViewId: this.options.ownerViewId,
+      cornerRadius: normalizeAttachmentCornerRadius(this.options.cornerRadius),
+      backgroundMaterial: normalizeAttachmentBackgroundMaterial(
+        this.options.backgroundMaterial,
+      ),
     }
   }
 }
@@ -730,10 +740,28 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     super()
   }
   protected getParams() {
-    return {
+    // Omitted fields stay omitted so the native side preserves the
+    // attachment's existing effective values on partial updates.
+    const { cornerRadius, backgroundMaterial, ...rest } = this.options
+    const params: {
+      id: string
+      cornerRadius?: CornerRadius
+      backgroundMaterial?: BackgroundMaterialType
+    } & Omit<
+      AttachmentEntityUpdateOptions,
+      'cornerRadius' | 'backgroundMaterial'
+    > = {
       id: this.attachmentId,
-      ...this.options,
+      ...rest,
     }
+    if (cornerRadius !== undefined) {
+      params.cornerRadius = normalizeAttachmentCornerRadius(cornerRadius)
+    }
+    if (backgroundMaterial !== undefined) {
+      params.backgroundMaterial =
+        normalizeAttachmentBackgroundMaterial(backgroundMaterial)
+    }
+    return params
   }
 }
 
