@@ -1,14 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
-import { SpatialObject, SpatialSession } from '@webspatial/core-sdk'
+import {
+  SpatialMaterial,
+  SpatialPBRMaterialOptions,
+  SpatialSession,
+  SpatialUnlitMaterialOptions,
+} from '@webspatial/core-sdk'
 import { useRealityContext } from '../context'
 
-interface SpatialMaterialOptionsBase {
-  textureId?: string
-}
-
-/** Structural — the abstract `SpatialMaterial` base types `updateProperties` as `void`. */
-type UpdatableMaterial<O> = SpatialObject & {
-  updateProperties(properties: Partial<O>): Promise<unknown>
+function assignDefinedOptions<O extends object>(
+  source: O,
+  keys: readonly (keyof O)[],
+): Partial<O> {
+  const out: Partial<O> = {}
+  for (const key of keys) {
+    const value = source[key]
+    if (value !== undefined) {
+      out[key] = value
+    }
+  }
+  return out
 }
 
 /**
@@ -27,18 +37,23 @@ type UpdatableMaterial<O> = SpatialObject & {
  *
  * `optionKeys` must be a module-level constant: it sizes the update effect's
  * dependency array, so its length and order have to be stable across renders.
+ *
+ * Omitted option keys stay `undefined` and are not serialized, so native keeps
+ * its current value. Explicit values (including `0` and `''`) are sent through.
  */
-export function useSpatialMaterial<O extends SpatialMaterialOptionsBase>(
+export function useSpatialMaterial<
+  O extends SpatialUnlitMaterialOptions | SpatialPBRMaterialOptions,
+>(
   id: string,
   options: O,
   optionKeys: readonly (keyof O & string)[],
   create: (
     session: SpatialSession,
-    options: O,
-  ) => Promise<UpdatableMaterial<O>>,
+    options: Partial<O>,
+  ) => Promise<SpatialMaterial>,
 ): void {
   const ctx = useRealityContext()
-  const materialRef = useRef<UpdatableMaterial<O> | undefined>(undefined)
+  const materialRef = useRef<SpatialMaterial | undefined>(undefined)
   const [isInitialized, setIsInitialized] = useState(false)
   const [textureRevision, setTextureRevision] = useState(0)
 
@@ -73,10 +88,7 @@ export function useSpatialMaterial<O extends SpatialMaterialOptionsBase>(
           textureIdForNative = ''
         }
         if (cancelled) return
-        const commandOptions = {} as O
-        for (const key of optionKeys) {
-          if (options[key] !== undefined) commandOptions[key] = options[key]
-        }
+        const commandOptions = assignDefinedOptions(options, optionKeys)
         commandOptions.textureId = textureIdForNative
         const materialPromise = create(session, commandOptions)
         resourceRegistry.add(materialId, materialPromise)
@@ -104,11 +116,10 @@ export function useSpatialMaterial<O extends SpatialMaterialOptionsBase>(
     if (!ctx || !isInitialized || !materialRef.current) return
     let cancelled = false
     void (async () => {
-      const updates: Partial<O> = {}
-      for (const key of optionKeys) {
-        if (key === 'textureId') continue
-        if (options[key] !== undefined) updates[key] = options[key]
-      }
+      const updates = assignDefinedOptions(
+        options,
+        optionKeys.filter(key => key !== 'textureId'),
+      )
       if (options.textureId !== undefined) {
         if (options.textureId === '') {
           updates.textureId = ''

@@ -227,7 +227,7 @@ export type {
 // safe to export from the default entry: `./MaterialPresets` has no runtime
 // imports, so it adds nothing to the static spatial module graph.
 export { MaterialPresets } from './MaterialPresets'
-export type { MaterialPreset } from './MaterialPresets'
+export type { MaterialPreset, MaterialPresetName } from './MaterialPresets'
 
 // --- Hooks (placeholder / ready-gated per spec "Hook placeholders") ---------
 export { useMetrics } from './hooks-web/useMetrics'

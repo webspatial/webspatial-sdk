@@ -43,4 +43,12 @@ export const MaterialPresets = {
     transparent: true,
     opacity: 0.1,
   },
-} as const satisfies Record<string, MaterialPreset>
+} as const satisfies {
+  readonly matte: MaterialPreset
+  readonly glossy: MaterialPreset
+  readonly plastic: MaterialPreset
+  readonly metal: MaterialPreset
+  readonly glass: MaterialPreset
+}
+
+export type MaterialPresetName = keyof typeof MaterialPresets

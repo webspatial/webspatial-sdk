@@ -2,6 +2,7 @@
 
 import { ComponentType, ReactNode } from 'react'
 import type {
+  SpatialMaterialType,
   SpatialPBRMaterialOptions,
   SpatialUnlitMaterialOptions,
 } from '@webspatial/core-sdk'
@@ -50,9 +51,14 @@ export type PBRMaterialProps = {
   id: string
 } & SpatialPBRMaterialOptions
 
-export type MaterialProps =
-  | ({ type: 'unlit' } & UnlitMaterialProps)
-  | ({ type: 'pbr' } & PBRMaterialProps)
+type MaterialPropsByType = {
+  unlit: UnlitMaterialProps
+  pbr: PBRMaterialProps
+}
+
+export type MaterialProps = {
+  [K in SpatialMaterialType]: { type: K } & MaterialPropsByType[K]
+}[SpatialMaterialType]
 
 export type TextureProps = {
   children?: ReactNode

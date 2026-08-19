@@ -1,8 +1,5 @@
 import React from 'react'
-import {
-  SpatialPBRMaterialOptions,
-  SpatialPBRMaterial,
-} from '@webspatial/core-sdk'
+import { SpatialPBRMaterialOptions } from '@webspatial/core-sdk'
 import { useSpatialMaterial } from '../hooks/useSpatialMaterial'
 
 const PBR_OPTION_KEYS = [
@@ -33,12 +30,8 @@ export const PBRMaterial: React.FC<PBRMaterialProps> = ({
   id,
   ...options
 }) => {
-  useSpatialMaterial(
-    id,
-    options,
-    PBR_OPTION_KEYS,
-    (session, commandOptions): Promise<SpatialPBRMaterial> =>
-      session.createPBRMaterial(commandOptions),
+  useSpatialMaterial(id, options, PBR_OPTION_KEYS, (session, commandOptions) =>
+    session.createPBRMaterial(commandOptions),
   )
   return null
 }

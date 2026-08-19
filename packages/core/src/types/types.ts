@@ -261,7 +261,8 @@ export type SpatialGeometryOptions =
   | SpatialCylinderGeometryOptions
   | SpatialConeGeometryOptions
 
-export type SpatialMaterialType = 'unlit' | 'pbr'
+export const SpatialMaterialTypeValues = ['unlit', 'pbr'] as const
+export type SpatialMaterialType = (typeof SpatialMaterialTypeValues)[number]
 
 export interface SpatialUnlitMaterialOptions {
   color?: string

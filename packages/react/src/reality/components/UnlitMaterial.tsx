@@ -1,8 +1,5 @@
 import React from 'react'
-import {
-  SpatialUnlitMaterialOptions,
-  SpatialUnlitMaterial,
-} from '@webspatial/core-sdk'
+import { SpatialUnlitMaterialOptions } from '@webspatial/core-sdk'
 import { useSpatialMaterial } from '../hooks/useSpatialMaterial'
 
 const UNLIT_OPTION_KEYS = [
@@ -30,8 +27,7 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
     id,
     options,
     UNLIT_OPTION_KEYS,
-    (session, commandOptions): Promise<SpatialUnlitMaterial> =>
-      session.createUnlitMaterial(commandOptions),
+    (session, commandOptions) => session.createUnlitMaterial(commandOptions),
   )
   return null
 }
