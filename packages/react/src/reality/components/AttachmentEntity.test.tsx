@@ -198,36 +198,23 @@ describe('AttachmentEntity', () => {
     )
   })
 
-  it('normalizes invalid values and warns about invalid materials in development', async () => {
+  it('normalizes invalid cornerRadius values to 0', async () => {
     const { session, ctx, parent } = makeHarness()
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
-    try {
-      render(
-        <RealityContext.Provider value={ctx}>
-          <ParentContext.Provider value={parent}>
-            <AttachmentEntity
-              attachment="panel"
-              cornerRadius={-5}
-              backgroundMaterial={'frosted' as any}
-            />
-          </ParentContext.Provider>
-        </RealityContext.Provider>,
-      )
+    render(
+      <RealityContext.Provider value={ctx}>
+        <ParentContext.Provider value={parent}>
+          <AttachmentEntity attachment="panel" cornerRadius={-5} />
+        </ParentContext.Provider>
+      </RealityContext.Provider>,
+    )
 
-      await act(async () => {})
+    await act(async () => {})
 
-      expect(session.createAttachmentEntity).toHaveBeenCalledWith(
-        expect.objectContaining({
-          cornerRadius: 0,
-          backgroundMaterial: 'transparent',
-        }),
-      )
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid backgroundMaterial "frosted"'),
-      )
-    } finally {
-      warn.mockRestore()
-    }
+    expect(session.createAttachmentEntity).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cornerRadius: 0,
+      }),
+    )
   })
 })

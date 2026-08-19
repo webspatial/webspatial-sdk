@@ -23,6 +23,8 @@ import {
   Vec3,
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
+  BackgroundMaterialType,
+  CornerRadius,
   ModelLoadingMode,
   ModelSource,
   SpatialTextureResourceOptions,
@@ -740,19 +742,24 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
   protected getParams() {
     // Omitted fields stay omitted so the native side preserves the
     // attachment's existing effective values on partial updates.
-    const params: Record<string, unknown> = {
+    const { cornerRadius, backgroundMaterial, ...rest } = this.options
+    const params: {
+      id: string
+      cornerRadius?: CornerRadius
+      backgroundMaterial?: BackgroundMaterialType
+    } & Omit<
+      AttachmentEntityUpdateOptions,
+      'cornerRadius' | 'backgroundMaterial'
+    > = {
       id: this.attachmentId,
-      ...this.options,
+      ...rest,
     }
-    if (this.options.cornerRadius !== undefined) {
-      params.cornerRadius = normalizeAttachmentCornerRadius(
-        this.options.cornerRadius,
-      )
+    if (cornerRadius !== undefined) {
+      params.cornerRadius = normalizeAttachmentCornerRadius(cornerRadius)
     }
-    if (this.options.backgroundMaterial !== undefined) {
-      params.backgroundMaterial = normalizeAttachmentBackgroundMaterial(
-        this.options.backgroundMaterial,
-      )
+    if (backgroundMaterial !== undefined) {
+      params.backgroundMaterial =
+        normalizeAttachmentBackgroundMaterial(backgroundMaterial)
     }
     return params
   }

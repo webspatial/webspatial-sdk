@@ -16,8 +16,6 @@ struct AttachmentInfo: Identifiable, Equatable {
         lhs.id == rhs.id
     }
 
-    /// Missing corner radii fall back to 0; individual invalid values
-    /// (negative or non-finite) are clamped to 0.
     static func clampedCornerRadius(_ value: CornerRadius?) -> CornerRadius {
         guard let value else { return CornerRadius() }
         return CornerRadius(
@@ -32,9 +30,6 @@ struct AttachmentInfo: Identifiable, Equatable {
         value.isFinite && value >= 0 ? value : 0
     }
 
-    /// Missing materials fall back to transparent. Invalid raw values decode
-    /// to `.None`, which renders with the same transparent surface behavior
-    /// as `.Transparent` (mirroring Ornament's material handling).
     static func effectiveBackgroundMaterial(_ value: BackgroundMaterial?) -> BackgroundMaterial {
         value ?? .Transparent
     }

@@ -1,6 +1,6 @@
 import type { BackgroundMaterialType, CornerRadius } from '../types/types'
 
-export const ATTACHMENT_BACKGROUND_MATERIAL_VALUES = new Set<string>([
+export const ATTACHMENT_BACKGROUND_MATERIAL_VALUES = new Set([
   'none',
   'transparent',
   'translucent',
@@ -12,12 +12,9 @@ export const ATTACHMENT_BACKGROUND_MATERIAL_VALUES = new Set<string>([
 export const DEFAULT_ATTACHMENT_BACKGROUND_MATERIAL: BackgroundMaterialType =
   'transparent'
 
-/**
- * Expands the public single-number attachment corner radius into the internal
- * four-corner CornerRadius command shape. Missing, negative, or non-finite
- * values fall back to 0 for all corners.
- */
-export function normalizeAttachmentCornerRadius(value: unknown): CornerRadius {
+export function normalizeAttachmentCornerRadius(
+  value: number | undefined,
+): CornerRadius {
   const radius =
     typeof value === 'number' && Number.isFinite(value) && value >= 0
       ? value
@@ -30,14 +27,11 @@ export function normalizeAttachmentCornerRadius(value: unknown): CornerRadius {
   }
 }
 
-/**
- * Missing or invalid materials fall back to 'transparent'.
- */
 export function normalizeAttachmentBackgroundMaterial(
-  value: unknown,
+  value: BackgroundMaterialType | undefined,
 ): BackgroundMaterialType {
   return typeof value === 'string' &&
     ATTACHMENT_BACKGROUND_MATERIAL_VALUES.has(value)
-    ? (value as BackgroundMaterialType)
+    ? value
     : DEFAULT_ATTACHMENT_BACKGROUND_MATERIAL
 }

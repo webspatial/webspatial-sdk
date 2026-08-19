@@ -8,37 +8,9 @@ import { useSyncHeadStyles } from '../../utils/useSyncHeadStyles'
 
 let instanceCounter = 0
 
-const ATTACHMENT_BACKGROUND_MATERIALS = new Set<string>([
-  'none',
-  'transparent',
-  'translucent',
-  'thin',
-  'regular',
-  'thick',
-])
-
 function normalizeCornerRadiusProp(value: number | undefined) {
   if (value === undefined) return undefined
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0
-    ? value
-    : 0
-}
-
-function normalizeBackgroundMaterialProp(
-  value: BackgroundMaterialType | undefined,
-): BackgroundMaterialType | undefined {
-  if (value === undefined) return undefined
-  if (typeof value === 'string' && ATTACHMENT_BACKGROUND_MATERIALS.has(value)) {
-    return value
-  }
-  if (typeof process === 'undefined' || process.env.NODE_ENV !== 'production') {
-    console.warn(
-      `[AttachmentEntity] Invalid backgroundMaterial "${String(value)}"; ` +
-        `falling back to "transparent". Supported values: ` +
-        `'none' | 'transparent' | 'translucent' | 'thin' | 'regular' | 'thick'.`,
-    )
-  }
-  return 'transparent'
+  return Number.isFinite(value) && value >= 0 ? value : 0
 }
 
 type AttachmentEntityProps = {
@@ -71,10 +43,6 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   const [childWindow, setChildWindow] = useState<WindowProxy | null>(null)
 
   const normalizedCornerRadius = normalizeCornerRadiusProp(cornerRadius)
-  const normalizedBackgroundMaterial = React.useMemo(
-    () => normalizeBackgroundMaterialProp(backgroundMaterial),
-    [backgroundMaterial],
-  )
 
   // Create the attachment when the parent entity is ready
   useEffect(() => {
@@ -97,7 +65,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
           width,
           height,
           cornerRadius: normalizedCornerRadius,
-          backgroundMaterial: normalizedBackgroundMaterial,
+          backgroundMaterial,
           ownerViewId: ctx.reality.id,
         })
         if (cancelled) {
@@ -192,7 +160,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
       width,
       height,
       cornerRadius: normalizedCornerRadius,
-      backgroundMaterial: normalizedBackgroundMaterial,
+      backgroundMaterial,
     })
   }, [
     position?.x,
@@ -207,7 +175,7 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     width,
     height,
     normalizedCornerRadius,
-    normalizedBackgroundMaterial,
+    backgroundMaterial,
   ])
 
   return null
