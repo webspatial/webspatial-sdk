@@ -21,7 +21,10 @@ final class NavigationCleanupTests: XCTestCase {
             rotation: SIMD3<Float>(0, 0, 0),
             scale: SIMD3<Float>(1, 1, 1),
             frameSize: CGSize(width: 100, height: 100),
-            webViewModel: SpatialWebViewModel(url: "http://localhost:5173/")
+            webViewModel: SpatialWebViewModel(
+                url: "http://localhost:5173/",
+                contentRole: .portal
+            )
         )
         XCTAssertFalse(scene.attachmentManager.attachments.isEmpty)
 

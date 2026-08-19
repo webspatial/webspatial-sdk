@@ -153,7 +153,7 @@ describe('supports("useAnimation", target tokens)', () => {
     expect(supports('useAnimation', ['dynamic3d'])).toBe(false)
   })
 
-  test('Puppeteer UA: supports("useAnimation") is true while all sub-tokens are false', async () => {
+  test('Puppeteer UA: supports("useAnimation") and entity are true', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Puppeteer WSAppShell/1.5.0 WebSpatial/1.5.0',
@@ -161,13 +161,13 @@ describe('supports("useAnimation", target tokens)', () => {
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
     expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(true)
     expect(supports('useAnimation', ['element'])).toBe(false)
     expect(supports('useAnimation', ['static3d'])).toBe(false)
     expect(supports('useAnimation', ['dynamic3d'])).toBe(false)
   })
 
-  test('visionOS WS_SHELL_VERSION placeholder: supports("useAnimation") is true while all sub-tokens are false', async () => {
+  test('visionOS WS_SHELL_VERSION placeholder: useAnimation entity is supported', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/WS_SHELL_VERSION WebSpatial/1.5.0 Safari/537.36',
@@ -175,7 +175,7 @@ describe('supports("useAnimation", target tokens)', () => {
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
     expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(true)
     expect(supports('useAnimation', ['element'])).toBe(false)
     expect(supports('useAnimation', ['static3d'])).toBe(false)
     expect(supports('useAnimation', ['dynamic3d'])).toBe(false)
@@ -223,7 +223,7 @@ describe('supports("useAnimation", target tokens)', () => {
     expect(supports('useAnimation', ['dynamic3d'])).toBe(false)
   })
 
-  test('visionOS WSAppShell/1.8.0: supports("useAnimation") is true while all sub-tokens are false', async () => {
+  test('visionOS WSAppShell/1.8.0: useAnimation entity is supported', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 (KHTML, like Gecko) WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
@@ -231,7 +231,7 @@ describe('supports("useAnimation", target tokens)', () => {
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
     expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(true)
     expect(supports('useAnimation', ['element'])).toBe(false)
     expect(supports('useAnimation', ['static3d'])).toBe(false)
     expect(supports('useAnimation', ['dynamic3d'])).toBe(false)
@@ -257,7 +257,7 @@ describe('useAnimation sub-tokens', () => {
     vi.resetModules()
   })
 
-  test('all useAnimation sub-tokens return false', async () => {
+  test('only the registered useAnimation entity sub-token returns true', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Puppeteer WSAppShell/1.5.0 WebSpatial/1.5.0',
@@ -265,7 +265,7 @@ describe('useAnimation sub-tokens', () => {
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
     expect(supports('useAnimation')).toBe(true)
-    expect(supports('useAnimation', ['entity'])).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(true)
     expect(supports('useAnimation', ['element'])).toBe(false)
     expect(supports('useAnimation', ['static3d'])).toBe(false)
     expect(supports('useAnimation', ['dynamic3d'])).toBe(false)

@@ -1,8 +1,11 @@
 /**
- * Versioned capability rows transcribed from the product matrix (`capability-matrix.template.md`).
+ * Legacy/fallback capability rows transcribed from the product matrix (`capability-matrix.template.md`).
  * visionOS **WSAppShell/1.5.0** & **1.6.0** & **1.7.0** & **1.8.0**; picoOS **PicoWebApp/0.1.1** & **0.1.2** & **0.2.2** & **0.3.1** & **0.4.90** — see matrix in OpenSpec / product docs.
  *
- * **picoOS** rows use dedicated builders (alpha2.0 / alpha2.1 subtokens); visionOS rows are separate.
+ * Manifest-capable visionOS runtimes declare their current complete capability
+ * set in `packages/visionOS/runtime-capabilities.json`; do not guess a future
+ * stable shell version here. **picoOS** remains table-based until its runtime
+ * provides the same manifest protocol.
  */
 import { SUB_TOKENS_BY_NAME, TOP_LEVEL_KEYS } from './keys'
 
