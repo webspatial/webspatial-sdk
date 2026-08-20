@@ -7,7 +7,7 @@ import type {
 } from '../spatialized-container/types'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
-import { getBootForgottenDiagnostic } from './shared/warnBootForgotten'
+import { BootForgottenDiagnostic } from './shared/BootForgottenDiagnostic'
 
 const SPATIAL_EVENT_PROPS = [
   'onSpatialTap',
@@ -74,7 +74,7 @@ export function withSpatialized2DElementContainer<P extends ElementType>(
       const Element = Component as ElementType
       return (
         <>
-          {getBootForgottenDiagnostic('withSpatialized2DElementContainer')}
+          <BootForgottenDiagnostic componentName="withSpatialized2DElementContainer" />
           <Element {...(passthrough as any)} ref={ref as any} />
         </>
       )

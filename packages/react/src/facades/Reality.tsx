@@ -6,7 +6,7 @@ import type { SpatializedElementRef } from '../spatialized-container/types'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { markWebSpatialPrimitive } from '../jsx/primitive-marker'
-import { getBootForgottenDiagnostic } from './shared/warnBootForgotten'
+import { BootForgottenDiagnostic } from './shared/BootForgottenDiagnostic'
 
 export type { RealityProps }
 
@@ -34,7 +34,7 @@ function RealityFacadeImpl(
   if (!ready) {
     return (
       <>
-        {getBootForgottenDiagnostic('Reality')}
+        <BootForgottenDiagnostic componentName="Reality" />
         {renderRealityFallback(props, ref)}
       </>
     )

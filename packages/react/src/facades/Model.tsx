@@ -5,7 +5,7 @@ import type { ModelProps, ModelRef } from '../Model'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { markWebSpatialPrimitive } from '../jsx/primitive-marker'
-import { getBootForgottenDiagnostic } from './shared/warnBootForgotten'
+import { BootForgottenDiagnostic } from './shared/BootForgottenDiagnostic'
 
 export type { ModelProps, ModelRef }
 
@@ -24,7 +24,7 @@ function ModelFacadeImpl(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   if (!ready) {
     return (
       <>
-        {getBootForgottenDiagnostic('Model')}
+        <BootForgottenDiagnostic componentName="Model" />
         {renderModelFallback(props, ref)}
       </>
     )

@@ -446,19 +446,20 @@ describe('lazy-load facades', () => {
       expect(warnSpy.mock.calls[0][0]).toMatch(/bootSpatial\(\)/)
     })
 
-    it('shows a page-visible diagnostic in a WebSpatial runtime when a facade renders before bootSpatial() is called', () => {
+    it('shows one page-visible diagnostic in React StrictMode when multiple facades render before bootSpatial() is called', () => {
       setPuppeteerUserAgent()
       render(
-        <>
+        <React.StrictMode>
           <Model src="x" />
-          <Model src="y" />
-        </>,
+          <Reality />
+        </React.StrictMode>,
       )
 
       const diagnostics = document.querySelectorAll(
         '[data-webspatial-boot-forgotten]',
       )
       expect(diagnostics).toHaveLength(1)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
       expect(diagnostics[0].textContent).toMatch(/WebSpatial/)
       expect(diagnostics[0].textContent).toMatch(/SpatialBoot/)
       expect(diagnostics[0].textContent).toMatch(/bootSpatial\(\)/)
