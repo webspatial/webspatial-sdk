@@ -42,6 +42,7 @@ import {
   __resetWithSpatialMonitorCacheForTests,
   withSpatialMonitor,
 } from './withSpatialMonitor'
+import { resetRuntimeCacheForTests } from '@webspatial/core-sdk/runtime'
 import { __resetBootForgottenWarningForTests } from './shared/warnBootForgotten'
 
 function setUserAgent(userAgent: string): void {
@@ -149,6 +150,7 @@ describe('lazy-load facades', () => {
     __resetWithSpatialized2DElementContainerCacheForTests()
     __resetWithSpatialMonitorCacheForTests()
     setPlainWebUserAgent()
+    resetRuntimeCacheForTests()
     warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     // The native HTML <model> element is part of a future spec and not
     // recognized by jsdom / React's intrinsic table; React logs an "unknown
@@ -168,6 +170,7 @@ describe('lazy-load facades', () => {
     __resetBootForgottenWarningForTests()
     __resetWithSpatialized2DElementContainerCacheForTests()
     __resetWithSpatialMonitorCacheForTests()
+    resetRuntimeCacheForTests()
   })
 
   describe('Model facade — plain web fallback (per "Model fallback renders degraded <model> tag" Scenario)', () => {
@@ -268,6 +271,20 @@ describe('lazy-load facades', () => {
       )
       expect(container.children.length).toBe(0)
       expect(queryByTestId('ornament-child')).toBeNull()
+    })
+
+    it('shows a page-visible diagnostic in a WebSpatial runtime when bootSpatial() has not been called', () => {
+      setPuppeteerUserAgent()
+      resetRuntimeCacheForTests()
+      render(
+        <Ornament>
+          <span />
+        </Ornament>,
+      )
+      expect(
+        document.querySelector('[data-webspatial-boot-forgotten]'),
+      ).not.toBeNull()
+      expect(warnSpy).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -496,6 +513,9 @@ describe('lazy-load facades', () => {
         <React.StrictMode>
           <Model src="x" />
           <Reality />
+          <Ornament>
+            <span />
+          </Ornament>
         </React.StrictMode>,
       )
 
