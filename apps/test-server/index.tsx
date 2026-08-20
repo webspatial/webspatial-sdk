@@ -78,6 +78,7 @@ import OrnamentTestPage from './src/pages/ornament-test/index'
 import EntityAnimationPage from './src/pages/entity-animation/index'
 import EntityAnimationEntrancePage from './src/pages/entity-animation/entrance'
 import EntityAnimationManualTriggerPage from './src/pages/entity-animation/manual-trigger'
+import EntityAnimationTransformCacheReproPage from './src/pages/entity-animation/transform-cache-repro'
 import EntityAnimationReverseLoopPage from './src/pages/entity-animation/reverse-loop'
 import EntityAnimationCancelSyncPage from './src/pages/entity-animation/cancel-sync'
 import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/capability-check'
@@ -234,6 +235,10 @@ function App() {
                 <Route
                   path="/entity-animation/manual-trigger"
                   element={<EntityAnimationManualTriggerPage />}
+                />
+                <Route
+                  path="/entity-animation/transform-cache-repro"
+                  element={<EntityAnimationTransformCacheReproPage />}
                 />
                 <Route
                   path="/entity-animation/reverse-loop"

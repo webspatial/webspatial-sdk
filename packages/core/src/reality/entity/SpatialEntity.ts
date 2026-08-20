@@ -162,7 +162,14 @@ export class SpatialEntity extends SpatialObject {
     if (!data?.id) {
       throw new Error('CreateEntityAnimation did not return an id')
     }
-    return new EntityAnimationObject(data.id, { config, timeline })
+    const animation = new EntityAnimationObject(data.id, { config, timeline })
+    animation.onValuesChange(values => {
+      // Keep ordinary partial transform commands aligned with Native-confirmed state.
+      this.position = values.position!
+      this.rotation = values.rotation!
+      this.scale = values.scale!
+    })
+    return animation
   }
 
   async addEvent(type: SpatialEntityEventType, callback: (data: any) => void) {

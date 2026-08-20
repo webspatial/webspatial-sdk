@@ -16,6 +16,12 @@ export const entityAnimationRoutes: EntityAnimationRoute[] = [
     description: 'Manual play, stop, reset, finish, and api.set controls.',
   },
   {
+    path: '/entity-animation/transform-cache-repro',
+    label: 'Transform Cache Repro',
+    description:
+      'Reproduce stale SpatialEntity transform values after native animation completion.',
+  },
+  {
     path: '/entity-animation/reverse-loop',
     label: 'Reverse Loop',
     description: 'Percentage timeline rotation with reverse loop controls.',

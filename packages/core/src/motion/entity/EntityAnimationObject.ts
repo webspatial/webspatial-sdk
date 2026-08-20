@@ -86,8 +86,10 @@ export class EntityAnimationObject
   private resetListener?: (values: EntityMotionProps) => void
   /** Registered error observer. */
   private errorListener?: (error: EntityPlaybackError) => void
-  /** Registered confirmed-values observer. */
-  private valuesListener?: (values: EntityMotionProps) => void
+  /** Registered confirmed-values observers. */
+  private readonly valuesListeners = new Set<
+    (values: EntityMotionProps) => void
+  >()
   /** Registered Native playback-state observer. */
   private playStateListener?: (state: EntityMotionNativePlayState) => void
   /** Latest execution revision committed by Native. */
@@ -207,9 +209,14 @@ export class EntityAnimationObject
     this.errorListener = listener
   }
 
-  /** Registers the confirmed-transform observer used by bindings. */
+  /** Adds a confirmed-transform observer used by Core consumers. */
   onValuesChange(listener: (values: EntityMotionProps) => void): void {
-    this.valuesListener = listener
+    this.valuesListeners.add(listener)
+  }
+
+  /** Removes one registered confirmed-transform observer. */
+  offValuesChange(listener: (values: EntityMotionProps) => void): void {
+    this.valuesListeners.delete(listener)
   }
 
   /**
@@ -245,6 +252,7 @@ export class EntityAnimationObject
 
   /** Removes the event receiver owned by this animation object. */
   protected override onDestroy(): void {
+    this.valuesListeners.clear()
     SpatialWebEvent.removeEventReceiver(this.id)
   }
 
@@ -291,7 +299,7 @@ export class EntityAnimationObject
       })
       return
     }
-    this.valuesListener?.(confirmedValues!)
+    this.publishConfirmedValues(confirmedValues!)
     return confirmedValues!
   }
 
@@ -327,7 +335,7 @@ export class EntityAnimationObject
       }
       this.confirmedOptions = { config, timeline }
       this.executionRevision = result!.revision
-      this.valuesListener?.(confirmedValues!)
+      this.publishConfirmedValues(confirmedValues!)
     } catch (error) {
       this.errorListener?.({
         code: 'COMPILATION_FAILED',
@@ -345,6 +353,11 @@ export class EntityAnimationObject
     right: EntityMotionTimelinePayload,
   ): boolean {
     return JSON.stringify(left) === JSON.stringify(right)
+  }
+
+  /** Notifies confirmed-transform observers in registration order. */
+  private publishConfirmedValues(values: EntityMotionProps): void {
+    for (const listener of this.valuesListeners) listener(values)
   }
 
   /** Converts one failed command reply into one public playback error. */
@@ -394,7 +407,7 @@ export class EntityAnimationObject
       if (!callbackAction) return
       const values = data.detail.values
       if (!values) return
-      this.valuesListener?.(values)
+      this.publishConfirmedValues(values)
       switch (callbackAction) {
         case 'start':
           this.startListener?.(values)

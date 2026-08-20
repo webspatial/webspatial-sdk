@@ -464,6 +464,62 @@ describe('EntityAnimationObject', () => {
     expect(animation.finished).toBe(true)
   })
 
+  it('publishes every confirmed pose to additive value observers', async () => {
+    const notifications: string[] = []
+    const animation = new EntityAnimationObject('animation-1', {
+      config,
+      timeline,
+    })
+    const firstListener = () => notifications.push('first')
+    const secondListener = () => notifications.push('second')
+    animation.onValuesChange(firstListener)
+    animation.onValuesChange(secondListener)
+
+    SpatialWebEvent.eventReceiver['animation-1']?.({
+      type: 'spatialanimationstatechanged',
+      detail: {
+        id: 'animation-1',
+        revision: 0,
+        callbackAction: 'complete',
+        playState: 'finished',
+        values,
+      },
+    })
+
+    platformSpy.callJSB.mockImplementation(() => ok({ values }))
+    await animation.set({ position: { x: 2 } })
+
+    platformSpy.callJSB.mockImplementation(() => ok({ values, revision: 1 }))
+    await animation.update({
+      from: { position: { x: 0 } },
+      to: { position: { x: 2 } },
+    })
+
+    expect(notifications).toEqual([
+      'first',
+      'second',
+      'first',
+      'second',
+      'first',
+      'second',
+    ])
+
+    animation.offValuesChange(firstListener)
+    notifications.length = 0
+    SpatialWebEvent.eventReceiver['animation-1']?.({
+      type: 'spatialanimationstatechanged',
+      detail: {
+        id: 'animation-1',
+        revision: 1,
+        callbackAction: 'stop',
+        playState: 'idle',
+        values,
+      },
+    })
+
+    expect(notifications).toEqual(['second'])
+  })
+
   it('consumes state-only pause and resume without values or callbacks', () => {
     const animation = new EntityAnimationObject('animation-1', {
       config,

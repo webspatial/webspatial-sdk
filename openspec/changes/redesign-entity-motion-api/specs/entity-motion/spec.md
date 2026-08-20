@@ -111,10 +111,18 @@ The SDK MUST use `entityProps` as the React-side persistence outlet for the comp
 
 `entityProps` MUST update when the animation system commits a meaningful lifecycle value, including start, complete, stop, reset, finish, successful config update, and native-accepted `api.set(update)` writes. Initial creation failure MUST clear it to `{}`; config-update failure MUST preserve its current value. An empty `entityProps` object MUST be valid before the first confirmed state. Once native returns a confirmed state, `entityProps` MUST mirror the complete committed transform with complete `position`, `rotation`, and `scale` values. The complete mirror MUST be independent of the fields present in the animation config or an `api.set` update. During inactive playback, spreading `entityProps` after static/base props MUST make that complete committed transform the effective React transform input.
 
+Native MUST remain the sole authority for the committed Entity transform. Core MUST refresh the target `SpatialEntity`'s internal command-side `position`, `rotation`, and `scale` shadow from each complete Native-confirmed transform before notifying lifecycle callbacks or declarative observers. This shadow MUST be used only to compose complete SRT matrices for ordinary partial transform writes and MUST remain distinct from the declarative `entityProps` mirror.
+
 #### Scenario: Complete writes terminal transform to `entityProps`
 - **WHEN** a non-looping Entity animation completes naturally
 - **THEN** `entityProps` MUST reflect the complete completed transform state, including `position`, `rotation`, and `scale`
 - **AND** subsequent React renders can preserve that terminal state by spreading `entityProps` onto the Entity component
+
+#### Scenario: Ordinary partial transform writes preserve confirmed components
+- **GIVEN** Native has confirmed a complete Entity transform through a lifecycle event, successful config update, or accepted `api.set`
+- **WHEN** application code later calls `setPosition`, `setRotation`, `setScale`, or partial `updateTransform`
+- **THEN** Core MUST compose the ordinary transform write from the newly supplied component and the latest Native-confirmed omitted components
+- **AND** the write MUST preserve every confirmed transform component omitted by the application
 
 #### Scenario: Removing the binding returns control to React props
 - **GIVEN** `entityProps` contains a native-confirmed transform

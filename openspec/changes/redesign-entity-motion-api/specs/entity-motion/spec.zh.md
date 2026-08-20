@@ -111,10 +111,18 @@ SDK MUST 使用 `entityProps` 作为 Native 返回的物体完整已提交变换
 
 `entityProps` MUST 在动画系统提交生命周期值时更新,包括 `start`、`complete`、`stop`、`reset`、`finish`、成功配置 update 以及原生层接受的 `api.set(update)` 写入。初次创建失败 MUST 把它清空为 `{}`;配置 update 失败 MUST 保持现有值。首个已确认状态产生前,SDK MUST 接受空的 `entityProps` 对象。首个已确认状态产生后,它 MUST 以完整的 `position`、`rotation`、`scale` 值镜像完整的已提交变换。每次确认后的字段集合 MUST 固定为完整的 `position`、`rotation`、`scale`。播放空闲期间,把 `entityProps` 展开在基础属性之后 MUST 使完整的已提交变换成为 React 最终传入的 transform。
 
+Native MUST 始终作为 Entity 已提交变换的唯一权威数据源。Core MUST 使用每次 Native 确认的完整 transform 刷新目标 `SpatialEntity` 内部命令侧的 `position`、`rotation`、`scale` 影子值,并在刷新后通知生命周期 callback 与声明式观察者。该影子值 MUST 只用于普通稀疏 transform 写入时组合完整 SRT matrix,其语义 MUST 与声明式 `entityProps` 镜像保持区分。
+
 #### Scenario: complete 把终态写入 `entityProps`
 - **WHEN** 一个非循环 Entity 动画自然完成
 - **THEN** `entityProps` MUST 反映完成后的完整变换终态,包括 `position`、`rotation` 和 `scale`
 - **AND** 后续 React render 可以通过把 `entityProps` spread 到 Entity 组件上来保留该终态
+
+#### Scenario: 普通稀疏 transform 写入保留已确认分量
+- **GIVEN** Native 已通过生命周期事件、成功配置 update 或已接受的 `api.set` 确认完整 Entity transform
+- **WHEN** 应用随后调用 `setPosition`、`setRotation`、`setScale` 或稀疏 `updateTransform`
+- **THEN** Core MUST 使用本次提供的分量与 Native 最近确认的其余分量组合普通 transform 写入
+- **AND** 该写入 MUST 保留应用未提供的全部已确认 transform 分量
 
 #### Scenario: 解绑后 React 属性恢复控制
 - **GIVEN** `entityProps` 已包含原生层确认的变换
