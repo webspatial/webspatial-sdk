@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { entityAnimationRoutes } from '../pages/entity-animation/routes'
+import { spatialElementMotionRoutes } from '../pages/spatial-element-motion/routes'
 
 export const routes = [
   { path: '/', label: 'Home' },
@@ -65,20 +66,25 @@ export const routes = [
     ],
   },
   { path: '/runtime-capabilities', label: 'Runtime capabilities' },
+  {
+    path: '/spatial-element-motion',
+    label: 'Spatialized Element Motion',
+    children: [
+      { path: '/spatial-element-motion', label: 'Overview' },
+      ...spatialElementMotionRoutes.map(route => ({
+        path: route.path,
+        label: route.label,
+      })),
+    ],
+  },
   { path: '/unit-convert', label: 'Unit Convert' },
+  { path: '/scene/ornament-test', label: 'Ornament Test' },
   {
     path: '/scene',
     label: 'Scene',
     children: [
       { path: '/scene', label: 'Scene Landing' },
-      { href: '/pages/scene/hook.html', label: 'Hook', external: true },
-      { href: '/pages/scene/loading.html', label: 'Loading', external: true },
       { path: '/scene/volume', label: 'Volume' },
-      {
-        href: '/pages/scene/volumeHook.html',
-        label: 'Volume Hook',
-        external: true,
-      },
       { path: '/scene/xrapp', label: 'XR App' },
       { path: '/scene/nosdk', label: 'No SDK' },
     ],

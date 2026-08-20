@@ -77,9 +77,9 @@ In addition to the DOM API relating to the source, animation, and environment ma
 
 `entityTransform` a read-write `DOMMatrixReadOnly` that expresses the current mapping of the view of the model contents to the view displayed in the browser.
 
-`boundingBoxCenter` a read-only `DOMPoint` that indicates the center of the axis-aligned bounding box (AABB) of the model contents. If there is an animation present, the bounding box is computed based on the bind pose of the animation and remains static for the lifetime of the model. It does not update based on a change of the `entityTransform`.
+`boundingBoxCenter` a read-only `DOMPointReadOnly` that indicates the center of the axis-aligned bounding box (AABB) of the model contents. If there is an animation present, the bounding box is computed based on the bind pose of the animation and remains static for the lifetime of the model. It does not update based on a change of the `entityTransform`.
 
-`boundingBoxExtents` a read-only `DOMPoint` that indicates the extents of the bounding box of the model contents.
+`boundingBoxExtents` a read-only `DOMPointReadOnly` that indicates the extents of the axis-aligned bounding box of the model contents. Like `boundingBoxCenter`, it is computed once when the model loads and remains static for the lifetime of the model.
 
 `duration` a read-only `double` reflecting the un-scaled total duration of the animation in seconds. If there is no animation on this model, the value is 0.
 
@@ -97,7 +97,7 @@ In addition to the DOM API relating to the source, animation, and environment ma
 
 The <source> HTML element specifies one or more media resources for the <Model> element. It is a void element, which means that it has no content and does not require a closing tag. Browsers don't all support the same 3D model formats; you can provide multiple sources and the browser will then use the first one it understands. The browser attempts to load each source sequentially, if a source fails the next source is attempted. An `error` event fires on the `<Model>` element after all sources have failed; `error` events are not fired on each individual `<source>` element.
 
-`src` The URL of the 3D model. This attribute has the highest priority when multiple sources are provided. If `src` is specified, it will be the first source attempted for loading.
+`src` The URL of the 3D model.
 
 `type` Specifies the MIME media type of the Model. Currently supported [MIME model types](https://www.iana.org/assignments/media-types/media-types.xhtml#model) are `model/vnd.usdz+zip` and `model/gltf-binary`.
 
@@ -278,6 +278,70 @@ This feature provides a built-in, intuitive way for users to inspect a 3D model 
 - **Interaction with&nbsp;entityTransform**: `entityTransform` will not be updated when the model is rotated using the orbit gesture. Similarly updates to `entityTransform` will not affect the model's orientation.
 
 - **Gesture Conflict Resolution**: `onSpatial*` will be disabled when stagemode is set to orbit. This restriction can be loosened in the future based if there are no gesture conflicts.
+
+### 6. Bounding Box Geometry (`boundingBoxCenter` / `boundingBoxExtents`)
+
+These read-only properties expose the axis-aligned bounding box (AABB) of the loaded model contents. Both are `DOMPointReadOnly` values expressed in the model's local right-handed, Y-up space. The box is computed once when the model loads — from the animation bind pose if the model is animated — and is **static for the lifetime of the model**. It is unaffected by `entityTransform` changes.
+
+#### 6.1. Native visionOS Layer (`packages/visionOS`)
+
+1. `Model3DAsset` does not expose its underlying entity, so the bounds are computed by **loading the same model file twice** as a RealityKit `Entity` (`try await Entity(contentsOf: localURL)`) and reading `entity.visualBounds(relativeTo: nil)` (`BoundingBox.center` and `.extents`). The view already resolves a local file URL during load.
+2. Extend `ModelLoadSuccessDetail` in `WebMsgCommand.swift` with `boundingBoxCenter` and `boundingBoxExtents` (each `{ x, y, z }`), and populate them when constructing `ModelLoadSuccess`.
+
+#### 6.2. Core SDK (`@webspatial/core-sdk`)
+
+1. Extend the `ModelLoadSuccess.detail` interface in `WebMsgCommand.ts` with optional `boundingBoxCenter?: { x, y, z }` and `boundingBoxExtents?: { x, y, z }` (optional for back-compat with older native runtimes that do not send them).
+2. In `SpatializedStatic3DElement.onReceiveEvent`, in the `modelloaded` branch, cache the two values into private fields as `DOMPointReadOnly` instances (mirroring how `_currentSrc` is cached).
+3. Add read-only `boundingBoxCenter` / `boundingBoxExtents` getters (mirroring the `currentSrc` getter — no setter). Default to a zero `DOMPointReadOnly` before the model has loaded.
+
+#### 6.3. React SDK (`@webspatial/react-sdk`)
+
+1. Add `readonly boundingBoxCenter: DOMPointReadOnly` and `readonly boundingBoxExtents: DOMPointReadOnly` to `SpatializedStatic3DElementRef` in `spatialized-container/types.ts`.
+2. Expose them as getters in `extraRefProps` in `SpatializedStatic3DElementContainer.tsx`, delegating to the core element getters (mirroring the existing `duration` getters).
+
+### 7. `blob:` URL Support for `<Model>` Sources
+
+`<Model>` should accept `blob:` URLs on `src` and child `<source>` elements. Today source URLs are sent to native as strings, and native downloads them — which cannot resolve `blob` URL since it's local to the WebView. So the bytes must be shipped from JS → native. The bridge is string-only, so we transfer chunked base64 into a native temp file; the existing local-file load path handles the rest. The blob URL is created via
+
+```js
+const resp = await fetch(src)
+const blob = await resp.blob()
+const blobURL = URL.createObjectURL(blob)
+// "blob:https://webspatial-hackathon.vercel.app/ef1ac2cd-0f6a-4e1a-861a-dac5427e7c29"
+```
+
+#### Design
+
+Blob URLs pass through the existing create/update flow unchanged. When native's source-fallback loop reaches a `blob:` source:
+
+1. **Native → JS**: new WebMsg `modelblobrequest` `{ requestId, src }`. Native creates a unique, non-reused `requestId` for each source attempt, including reloads of the same `src`.
+2. **JS** (pure transport — no format logic): `fetch(src)` → blob, then send `StartBlobTransfer` `{ id, requestId, src, mimeType, size }` and await its acknowledgement. JS splits the blob into 2 MiB slices and keeps at most four `TransferBlobChunk` `{ id, requestId, offset, data }` operations in flight. Each operation reads and base64-encodes its slice on the main thread, sends the chunk, and occupies its slot until native acknowledges it. After every chunk acknowledgement succeeds, JS sends `CompleteBlobTransfer` `{ id, requestId }`; a zero-byte blob sends start followed immediately by complete.
+3. **Native**: routes each command to the element by `id`, then to that element's transfer by `requestId`; unknown, cancelled, or completed request IDs are rejected so chunks from an earlier same-URL load cannot enter a newer transfer. Chunk arrival order is not significant. Base64 decoding and random-access `FileHandle` writes use each chunk's `offset` and run through a serialized background actor or queue. `CompleteBlobTransfer` closes the file, resolves its extension from the `<source type>` value, then `mimeType`, then USDZ as a last resort, and loads it with `Model3DAsset(url:)`. A successful load reports the original blob URL rather than the temp file URL.
+4. **Failure and cancellation**: a fetch, read, or bridge failure stops new chunk scheduling and sends a best-effort `FailBlobTransfer` `{ id, requestId, message? }` after already-started operations settle. A one-second inactivity timeout, explicit failure, element destruction, or model source replacement invalidates the native request and deletes its incomplete temp file. Later commands for an invalid request receive failed acknowledgements, which stop the JS transfer loop.
+
+The four-in-flight window bounds transport memory while allowing bridge delivery and native writing to overlap. The transport and its commands contain no model-format logic and can be reused by other spatial components. Temp files are deleted on failure, source replacement, and element destruction. No caching in v1: two elements sharing a blob URL transfer twice.
+
+#### 7.1. Core SDK (`@webspatial/core-sdk`)
+
+1. `WebMsgCommand.ts` — new `modelblobrequest` WebMsg type with detail `{ requestId, src }`, sent by native to request transfer of a blob source. `requestId` uniquely identifies this source attempt even when the same `src` is reloaded.
+2. `JSBCommand.ts` — add four command classes extending `SpatializedElementCommand`. Their serialized payloads are:
+   - `StartBlobTransfer` — `{ id, requestId, src, mimeType, size }`
+   - `TransferBlobChunk` — `{ id, requestId, offset, data }`
+   - `CompleteBlobTransfer` — `{ id, requestId }`
+   - `FailBlobTransfer` — `{ id, requestId, message? }`
+3. New `blob/blobTransfer.ts` — component-agnostic orchestration for fetching the blob; sending start, chunk, complete, and failure commands; splitting the blob into 2 MiB slices; and maintaining a four-operation sliding window. Each slot remains occupied until its JSB acknowledgement settles, and `CompleteBlobTransfer` is sent only after all chunk acknowledgements succeed. The helper takes only the element (a `SpatialObject`), request ID, and blob URL, so it remains reusable by other components.
+4. `SpatializedStatic3DElement.ts` — handles `modelblobrequest` in `onReceiveEvent` and delegates the requested URL, request ID, and element to the transfer helper. A rejected acknowledgement from native cancellation stops the helper without requiring source-change detection in JavaScript.
+5. The bounded sliding window allows up to four chunk commands to be sent concurrently.
+
+#### 7.2. Native visionOS Layer (`packages/visionOS`)
+
+1. `WebMsgCommand.swift` / `JSBCommand.swift` — mirror `modelblobrequest` and the four blob transfer command types with their required fields.
+2. New `blob/BlobTransfer.swift` — component-agnostic request state that creates and owns a temp file, stores `src`, `mimeType`, and `size`, and serializes background base64 decode plus random-access `FileHandle` writes. Each chunk seeks to its supplied `offset`, so chunks may arrive out of order. `CompleteBlobTransfer` closes and returns the file, while `FailBlobTransfer` or cancellation closes and deletes it. Accepted commands reset a one-second inactivity timer.
+3. `model/SpatializedStatic3DElement.swift` — creates a unique `requestId` for each blob source attempt, sends `modelblobrequest`, owns the active generic `BlobTransfer`, exposes an async fetch returning its temp file URL, and rejects commands for unknown, completed, or cancelled requests. It also retains completed temp files only for their required lifetime and removes them on replacement or destruction.
+4. `model/SpatialScene.swift` — registers all four blob transfer JSB commands and routes them to their owning element by `id`; the element resolves the transfer by `requestId`. Each chunk acknowledgement is sent only after its background write finishes.
+5. In `onUpdateSpatializedStatic3DElementProperties`, compare incoming `modelURL` and `sources` with the element's current values. If either actually changes, cancel the active transfer and clean up its temporary data before applying the new source values. Late chunks are rejected, causing the JS transfer loop to stop.
+6. `view/SpatializedStatic3DView.swift` — in the fallback loop, if `source.src` starts with `blob:`, await the element's fetch while passing the `<source type>` value, load the returned temp file via `Model3DAsset(url:)`, and return the original blob URL so `currentSrc` never exposes the temp path.
+7. No caching in v1 — two elements sharing the same blob URL transfer independently.
 
 ## Risks
 

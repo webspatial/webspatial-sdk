@@ -58,6 +58,7 @@ const platformSpy = {
   openSpatialSceneSync: vi.fn(),
   createNativeSpatialDiv: vi.fn(),
   createNativeAttachment: vi.fn(),
+  createNativeOrnament: vi.fn(),
 }
 
 vi.mock('./platform-adapter', () => ({
@@ -80,12 +81,16 @@ describe('JSBCommand', () => {
     platformSpy.openSpatialSceneSync.mockReset()
     platformSpy.createNativeSpatialDiv.mockReset()
     platformSpy.createNativeAttachment.mockReset()
+    platformSpy.createNativeOrnament.mockReset()
     platformSpy.callJSB.mockImplementation(() => ok({ id: 'id-1' }))
     platformSpy.createNativeSpatialDiv.mockImplementation(() =>
       ok({ windowProxy: {}, id: 'spatial-1' }),
     )
     platformSpy.createNativeAttachment.mockImplementation(() =>
       ok({ windowProxy: {}, id: 'spatial-1' }),
+    )
+    platformSpy.createNativeOrnament.mockImplementation(() =>
+      ok({ windowProxy: {}, id: 'ornament-1' }),
     )
     platformSpy.openSpatialSceneSync.mockImplementation(() => ({
       success: true,
@@ -128,6 +133,7 @@ describe('JSBCommand', () => {
   it('builds element commands payloads', async () => {
     const mod = await import('./JSBCommand')
     const {
+      CreateSpatializedElementAnimationJSBCommand,
       UpdateSpatializedElementTransform,
       UpdateSpatialized2DElementProperties,
       UpdateSpatializedDynamic3DElementProperties,
@@ -135,6 +141,10 @@ describe('JSBCommand', () => {
       AddSpatializedElementToSpatialScene,
       AddSpatializedElementToSpatialized2DElement,
       UpdateUnlitMaterialProperties,
+      StartBlobTransferCommand,
+      TransferBlobChunkCommand,
+      CompleteBlobTransferCommand,
+      FailBlobTransferCommand,
     } = mod
 
     const obj = { id: 'so-1' } as any
@@ -185,10 +195,75 @@ describe('JSBCommand', () => {
       JSON.stringify({ id: 'so-1', spatializedElementId: 'ele-1' }),
     )
 
+    await new CreateSpatializedElementAnimationJSBCommand({
+      elementId: 'ele-1',
+      timeline: { duration: 1, tracks: [] },
+    } as any).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'CreateSpatializedElementAnimation',
+      JSON.stringify({
+        elementId: 'ele-1',
+        timeline: { duration: 1, tracks: [] },
+      }),
+    )
+
     await new UpdateUnlitMaterialProperties(obj, { color: '#fff' }).execute()
     expect(platformSpy.callJSB).toHaveBeenCalledWith(
       'UpdateUnlitMaterialProperties',
       JSON.stringify({ id: 'so-1', color: '#fff' }),
+    )
+
+    await new StartBlobTransferCommand(obj, {
+      requestId: 'request-1',
+      src: 'blob:https://example.com/model',
+      mimeType: 'model/gltf-binary',
+      size: 6,
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'StartBlobTransfer',
+      JSON.stringify({
+        id: 'so-1',
+        requestId: 'request-1',
+        src: 'blob:https://example.com/model',
+        mimeType: 'model/gltf-binary',
+        size: 6,
+      }),
+    )
+
+    await new TransferBlobChunkCommand(obj, {
+      requestId: 'request-1',
+      offset: 3,
+      data: 'ZGVm',
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'TransferBlobChunk',
+      JSON.stringify({
+        id: 'so-1',
+        requestId: 'request-1',
+        offset: 3,
+        data: 'ZGVm',
+      }),
+    )
+
+    await new CompleteBlobTransferCommand(obj, {
+      requestId: 'request-1',
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'CompleteBlobTransfer',
+      JSON.stringify({ id: 'so-1', requestId: 'request-1' }),
+    )
+
+    await new FailBlobTransferCommand(obj, {
+      requestId: 'request-1',
+      message: 'failed',
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'FailBlobTransfer',
+      JSON.stringify({
+        id: 'so-1',
+        requestId: 'request-1',
+        message: 'failed',
+      }),
     )
   })
 })
@@ -412,12 +487,17 @@ describe('SpatializedElement', () => {
     SpatialWebEvent.init()
 
     class TestElement extends SpatializedElement {
+      /** Identifies the supported motion target kind for this test element. */
+      readonly kind = 'spatialized2d' as const
+
       updateProperties = vi.fn().mockResolvedValue({
         success: true,
         data: undefined,
         errorCode: '',
         errorMessage: '',
       })
+
+      motion = vi.fn()
     }
 
     const e = new TestElement('el3')
@@ -440,12 +520,17 @@ describe('SpatializedElement', () => {
     SpatialWebEvent.init()
 
     class TestElement extends SpatializedElement {
+      /** Identifies the supported motion target kind for this test element. */
+      readonly kind = 'spatialized2d' as const
+
       updateProperties = vi.fn().mockResolvedValue({
         success: true,
         data: undefined,
         errorCode: '',
         errorMessage: '',
       })
+
+      motion = vi.fn()
     }
 
     const e = new TestElement('el4')

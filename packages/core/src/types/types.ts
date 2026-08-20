@@ -433,6 +433,8 @@ export interface AttachmentEntityOptions {
   scale?: Vec3
   width?: number
   height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
   ownerViewId: string
 }
 
@@ -442,6 +444,8 @@ export interface AttachmentEntityUpdateOptions {
   scale?: Vec3
   width?: number
   height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
 }
 
 // manifest

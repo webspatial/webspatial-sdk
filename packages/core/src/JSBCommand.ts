@@ -23,12 +23,23 @@ import {
   Vec3,
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
+  BackgroundMaterialType,
+  CornerRadius,
   ModelLoadingMode,
   ModelSource,
   SpatialTextureResourceOptions,
 } from './types/types'
+import type { OrnamentOptions } from './Ornament'
+import {
+  normalizeAttachmentBackgroundMaterial,
+  normalizeAttachmentCornerRadius,
+} from './reality/attachmentSurface'
 import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
+import type {
+  ControlSpatializedElementAnimationCommand,
+  CreateSpatializedElementAnimationCommand,
+} from './types/motion/spatializedElementMotion'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -283,6 +294,38 @@ export class AddSpatializedElementToSpatialScene extends JSBCommand {
   protected getParams() {
     return {
       spatializedElementId: this.spatializedElement.id,
+    }
+  }
+}
+
+export class AddOrnamentToSceneCommand extends JSBCommand {
+  commandType = 'AddOrnamentToScene'
+
+  constructor(readonly ornamentId: string) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      ornamentId: this.ornamentId,
+    }
+  }
+}
+
+export class UpdateOrnamentCommand extends JSBCommand {
+  commandType = 'UpdateOrnament'
+
+  constructor(
+    readonly id: string,
+    readonly options: OrnamentOptions,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      id: this.id,
+      ...this.options,
     }
   }
 }
@@ -680,6 +723,10 @@ export class InitializeAttachmentCommand extends JSBCommand {
       width: this.options.width,
       height: this.options.height,
       ownerViewId: this.options.ownerViewId,
+      cornerRadius: normalizeAttachmentCornerRadius(this.options.cornerRadius),
+      backgroundMaterial: normalizeAttachmentBackgroundMaterial(
+        this.options.backgroundMaterial,
+      ),
     }
   }
 }
@@ -693,9 +740,142 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     super()
   }
   protected getParams() {
-    return {
+    // Omitted fields stay omitted so the native side preserves the
+    // attachment's existing effective values on partial updates.
+    const { cornerRadius, backgroundMaterial, ...rest } = this.options
+    const params: {
+      id: string
+      cornerRadius?: CornerRadius
+      backgroundMaterial?: BackgroundMaterialType
+    } & Omit<
+      AttachmentEntityUpdateOptions,
+      'cornerRadius' | 'backgroundMaterial'
+    > = {
       id: this.attachmentId,
-      ...this.options,
+      ...rest,
     }
+    if (cornerRadius !== undefined) {
+      params.cornerRadius = normalizeAttachmentCornerRadius(cornerRadius)
+    }
+    if (backgroundMaterial !== undefined) {
+      params.backgroundMaterial =
+        normalizeAttachmentBackgroundMaterial(backgroundMaterial)
+    }
+    return params
+  }
+}
+
+export class CreateSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'CreateSpatializedElementAnimation'
+
+  constructor(private command: CreateSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { elementId, timeline } = this.command
+    return {
+      elementId,
+      timeline,
+    }
+  }
+}
+
+export class ControlSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'ControlSpatializedElementAnimation'
+
+  constructor(private command: ControlSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { animationId, type } = this.command
+    return {
+      animationId,
+      type,
+    }
+  }
+}
+
+export interface StartBlobTransferParams {
+  requestId: string
+  src: string
+  mimeType: string
+  size: number
+}
+
+export class StartBlobTransferCommand extends SpatializedElementCommand {
+  commandType = 'StartBlobTransfer'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: StartBlobTransferParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
+
+export interface TransferBlobChunkParams {
+  requestId: string
+  /** Byte offset of this base64-encoded chunk in the Blob. */
+  offset: number
+  data: string
+}
+
+export class TransferBlobChunkCommand extends SpatializedElementCommand {
+  commandType = 'TransferBlobChunk'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: TransferBlobChunkParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
+
+export interface CompleteBlobTransferParams {
+  requestId: string
+}
+
+export class CompleteBlobTransferCommand extends SpatializedElementCommand {
+  commandType = 'CompleteBlobTransfer'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: CompleteBlobTransferParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
+
+export interface FailBlobTransferParams {
+  requestId: string
+  message?: string
+}
+
+export class FailBlobTransferCommand extends SpatializedElementCommand {
+  commandType = 'FailBlobTransfer'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: FailBlobTransferParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
   }
 }

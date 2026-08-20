@@ -2,6 +2,7 @@ import { SpatialSceneProperties, Vec3 } from './types/types'
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import {
   AddSpatializedElementToSpatialScene,
+  AddOrnamentToSceneCommand,
   GetSpatialSceneState,
   UpdateSceneConfig,
   UpdateSpatialSceneProperties,
@@ -68,6 +69,15 @@ export class SpatialScene extends SpatialObject {
    */
   async addSpatializedElement(element: SpatializedElement) {
     return new AddSpatializedElementToSpatialScene(element).execute()
+  }
+
+  /**
+   * Adds a registered Ornament to the active scene host list.
+   * @param id The Ornament id returned from SpatialSession.createOrnament
+   * @returns Promise resolving when the Ornament is added
+   */
+  async addOrnament(id: string) {
+    return new AddOrnamentToSceneCommand(id).execute()
   }
 
   /**
