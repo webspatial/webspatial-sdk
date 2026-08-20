@@ -282,6 +282,19 @@ describe('Entity motion validation', () => {
     expect(() => normalizeEntityMotionConfig(config as never)).toThrow(message)
   })
 
+  test.each(['onStart', 'onComplete', 'onStop', 'onReset', 'onError'])(
+    'rejects a non-function config.%s callback',
+    callback => {
+      expect(() =>
+        normalizeEntityMotionConfig({
+          from: { position: { x: 0 } },
+          to: { position: { x: 1 } },
+          [callback]: true,
+        } as never),
+      ).toThrow(`[useEntityAnimation] config.${callback} must be a function`)
+    },
+  )
+
   test.each([
     ['duration', 0, 'positive'],
     ['duration', -1, 'positive'],

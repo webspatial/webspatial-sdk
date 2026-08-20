@@ -138,6 +138,8 @@ Entity motion MUST align with the newer motion-family playback surface and lifec
 
 The target callback signatures MUST be `onStart(values: EntityMotionProps)`, `onComplete(values: EntityMotionProps)`, `onStop(values: EntityMotionProps)`, `onReset(values: EntityMotionProps)`, and `onError(error: EntityPlaybackError)`. Each lifecycle `values` argument MUST contain the complete confirmed `position`, `rotation`, and `scale`. Callback return values MUST be ignored.
 
+Every callback field present in public config MUST be a function. Core MUST reject a non-function `onStart`, `onComplete`, `onStop`, `onReset`, or `onError` value synchronously during normalization.
+
 Core `EntityAnimationObject` MUST provide `onStart`, `onComplete`, `onStop`, `onReset`, and `onError` debug-listener methods aligned with those callbacks. These methods MUST only register observers and MUST NOT send playback control or config-update commands. `pause` MUST NOT add `onPause`.
 
 `api.set` is a settled requirement. It is the imperative write entry for committed transform state and is specified in the dedicated `api.set` requirement below. It MUST NOT be treated as a playback command.
@@ -158,6 +160,11 @@ Core `EntityAnimationObject` MUST provide `onStart`, `onComplete`, `onStop`, `on
 - **WHEN** Entity motion has an asynchronous playback or fallback-validation failure in Bridge or Native
 - **THEN** `onError` MUST receive the failure information
 - **AND** no callback value payload in the Entity motion API may include unsupported fields such as `opacity`
+
+#### Scenario: Non-function callbacks fail synchronously
+- **WHEN** public Entity motion config provides a non-function lifecycle or error callback
+- **THEN** normalization MUST synchronously throw the built-in `Error`
+- **AND** the SDK MUST NOT create a Native animation object
 
 ### Requirement: Entity motion has deterministic state and lifecycle transitions
 

@@ -138,6 +138,8 @@ Entity motion MUST 在保持 transform-only 约束的前提下，对齐新的 mo
 
 目标 callback 签名 MUST 为 `onStart(values: EntityMotionProps)`、`onComplete(values: EntityMotionProps)`、`onStop(values: EntityMotionProps)`、`onReset(values: EntityMotionProps)` 和 `onError(error: EntityPlaybackError)`。每个生命周期 `values` 参数 MUST 包含完整的已确认 `position`、`rotation` 和 `scale`。callback 返回值 MUST 被忽略。
 
+公开配置中存在的每个 callback 字段 MUST 为函数。Core MUST 在归一化阶段同步拒绝非函数的 `onStart`、`onComplete`、`onStop`、`onReset` 或 `onError` 值。
+
 Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`、`onComplete`、`onStop`、`onReset` 和 `onError` 调试监听方法。这些方法 MUST 只注册观察回调,MUST NOT 发送播放控制或配置 update 命令。`pause` MUST NOT 增加 `onPause`。
 
 `api.set` 是已确定的 requirement。它是已提交 transform 状态的命令式写入入口，并在下面专门的 `api.set` requirement 中定义。它 MUST NOT 被当作 playback 命令。
@@ -158,6 +160,11 @@ Core `EntityAnimationObject` MUST 提供与上述 callback 对齐的 `onStart`�
 - **WHEN** Entity motion 在 Bridge 或 Native 阶段发生异步播放失败或兜底校验失败
 - **THEN** `onError` MUST 接收到失败信息
 - **AND** Entity motion API 的任何 callback value payload 都 MUST NOT 包含 `opacity` 这类不支持字段
+
+#### Scenario: 非函数 callback 同步失败
+- **WHEN** 公开 Entity motion 配置提供非函数的生命周期 callback 或错误 callback
+- **THEN** 归一化 MUST 同步抛出内置 `Error`
+- **AND** SDK MUST NOT 创建 Native animation object
 
 ### Requirement: Entity motion 具有确定的状态与生命周期转换
 

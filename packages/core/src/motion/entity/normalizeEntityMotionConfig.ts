@@ -12,6 +12,13 @@ declare const process: { env?: { NODE_ENV?: string } } | undefined
 const TIMING_FUNCTIONS = ['linear', 'easeIn', 'easeOut', 'easeInOut'] as const
 const AXES = ['x', 'y', 'z'] as const
 const COMPONENTS = ['position', 'rotation', 'scale'] as const
+const CALLBACK_KEYS = [
+  'onStart',
+  'onComplete',
+  'onStop',
+  'onReset',
+  'onError',
+] as const
 const CONFIG_KEYS = new Set([
   'from',
   'to',
@@ -175,6 +182,16 @@ function validateCommonConfig(config: Record<string, unknown>): {
   }
   if (config.autoStart !== undefined && typeof config.autoStart !== 'boolean') {
     throw new Error('[useEntityAnimation] config.autoStart must be a boolean')
+  }
+  for (const callback of CALLBACK_KEYS) {
+    if (
+      config[callback] !== undefined &&
+      typeof config[callback] !== 'function'
+    ) {
+      throw new Error(
+        `[useEntityAnimation] config.${callback} must be a function`,
+      )
+    }
   }
 
   return {
