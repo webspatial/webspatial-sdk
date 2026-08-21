@@ -1,7 +1,7 @@
 {
   "name": "marginal-delta-vite",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "description": "Consumer-side marginal-delta + tree-shake fixture for spatial-lazy-load tasks.md §9.2 / §9.3.",
   "scripts": {

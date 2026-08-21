@@ -1,7 +1,7 @@
 {
   "name": "spatial-vite-min",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "description": "Minimal Vite + React 18 + WebSpatial SDK example. Lazy default entry + eager subpath, no @webspatial/vite-plugin.",
   "scripts": {

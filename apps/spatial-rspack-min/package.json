@@ -1,7 +1,7 @@
 {
   "name": "spatial-rspack-min",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "description": "Minimal Rspack + React fixture for WebSpatial SDK lazy entry.",
   "scripts": {
