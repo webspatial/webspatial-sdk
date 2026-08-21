@@ -34,12 +34,17 @@ import {
   normalizeAttachmentBackgroundMaterial,
   normalizeAttachmentCornerRadius,
 } from './reality/attachmentSurface'
-import type { AnimateTransformCommand } from './types/animation'
 import { composeSRT } from './utils'
 import type {
   ControlSpatializedElementAnimationCommand,
   CreateSpatializedElementAnimationCommand,
 } from './types/motion/spatializedElementMotion'
+import type {
+  ControlEntityAnimationCommand,
+  CreateEntityAnimationCommand,
+  SetEntityAnimationCommand,
+  UpdateEntityAnimationCommand,
+} from './types/motion/entityMotion'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -672,39 +677,6 @@ export class CheckWebViewCanCreateCommand extends JSBCommand {
   }
 }
 
-export class AnimateTransformJSBCommand extends JSBCommand {
-  commandType = 'AnimateTransform'
-
-  constructor(private command: AnimateTransformCommand) {
-    super()
-  }
-
-  protected getParams(): Record<string, any> | undefined {
-    const { type, animationId, entityId } = this.command
-    const params: Record<string, any> = { type, animationId }
-
-    if (entityId !== undefined) params.entityId = entityId
-
-    if (type === 'play') {
-      if (this.command.toTransform) {
-        params.toTransform = Array.from(this.command.toTransform)
-      }
-      if (this.command.fromTransform) {
-        params.fromTransform = Array.from(this.command.fromTransform)
-      }
-      if (this.command.duration !== undefined)
-        params.duration = this.command.duration
-      if (this.command.timingFunction !== undefined)
-        params.timingFunction = this.command.timingFunction
-      if (this.command.delay !== undefined) params.delay = this.command.delay
-      if (this.command.loop !== undefined) params.loop = this.command.loop
-      if (this.command.playbackRate !== undefined)
-        params.playbackRate = this.command.playbackRate
-    }
-
-    return params
-  }
-}
 export class InitializeAttachmentCommand extends JSBCommand {
   commandType = 'InitializeAttachment'
   constructor(
@@ -877,5 +849,69 @@ export class FailBlobTransferCommand extends SpatializedElementCommand {
 
   protected getExtraParams() {
     return { ...this.params }
+  }
+}
+
+/** Sends a canonical Entity animation timeline for a target Entity id. */
+export class CreateEntityAnimationJSBCommand extends JSBCommand {
+  /** Native bridge command name. */
+  commandType = 'CreateEntityAnimation'
+
+  /** Creates a bridge command from its complete wire request. */
+  constructor(private command: CreateEntityAnimationCommand) {
+    super()
+  }
+
+  /** Returns the dedicated Entity animation create payload. */
+  protected getParams() {
+    return this.command
+  }
+}
+
+/** Sends a candidate timeline to an existing Entity animation object. */
+export class UpdateEntityAnimationJSBCommand extends JSBCommand {
+  /** Native bridge command name. */
+  commandType = 'UpdateEntityAnimation'
+
+  /** Creates a bridge command from its complete wire request. */
+  constructor(private command: UpdateEntityAnimationCommand) {
+    super()
+  }
+
+  /** Returns the dedicated Entity animation update payload. */
+  protected getParams() {
+    return this.command
+  }
+}
+
+/** Sends a playback or lifecycle command to an Entity animation object. */
+export class ControlEntityAnimationJSBCommand extends JSBCommand {
+  /** Native bridge command name. */
+  commandType = 'ControlEntityAnimation'
+
+  /** Creates a bridge command from its complete wire request. */
+  constructor(private command: ControlEntityAnimationCommand) {
+    super()
+  }
+
+  /** Returns the dedicated Entity animation control payload. */
+  protected getParams() {
+    return this.command
+  }
+}
+
+/** Sends a sparse committed-transform update to an Entity animation object. */
+export class SetEntityAnimationJSBCommand extends JSBCommand {
+  /** Native bridge command name. */
+  commandType = 'SetEntityAnimation'
+
+  /** Creates a bridge command from its complete wire request. */
+  constructor(private command: SetEntityAnimationCommand) {
+    super()
+  }
+
+  /** Returns the dedicated Entity animation set payload. */
+  protected getParams() {
+    return this.command
   }
 }

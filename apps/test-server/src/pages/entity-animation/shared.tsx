@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { enableDebugTool } from '@webspatial/react-sdk'
+import type { EntityMotionProps } from '@webspatial/core-sdk'
 import { entityAnimationRoutes } from './routes'
 
 enableDebugTool()
@@ -21,13 +22,47 @@ export function fmtVec3(v: Vec3 | undefined): string {
 
 export function Log({ lines }: { lines: string[] }) {
   return (
-    <div className="mt-3 max-h-40 overflow-y-auto rounded-lg bg-black/40 border border-gray-800 p-3 text-xs font-mono text-gray-400">
+    <div
+      data-testid="entity-motion-callback-log"
+      className="mt-3 max-h-40 overflow-y-auto rounded-lg bg-black/40 border border-gray-800 p-3 text-xs font-mono text-gray-400"
+    >
       {lines.length === 0 && (
         <span className="text-gray-600">No events yet</span>
       )}
       {lines.map((line, index) => (
         <div key={index}>{line}</div>
       ))}
+    </div>
+  )
+}
+
+/** Displays the complete Entity transform confirmed by Native. */
+export function EntityPropsPanel({
+  entityProps,
+}: {
+  entityProps: EntityMotionProps
+}) {
+  const hasConfirmedValues =
+    entityProps.position && entityProps.rotation && entityProps.scale
+
+  return (
+    <div
+      data-testid="entity-motion-props"
+      className="mt-3 rounded-lg border border-gray-800 bg-black/30 p-3 text-xs text-gray-400"
+    >
+      <div className="mb-2 font-semibold text-gray-300">
+        Native-confirmed entityProps
+      </div>
+      {!hasConfirmedValues && (
+        <div className="text-gray-600">Waiting for native confirmation</div>
+      )}
+      {hasConfirmedValues && (
+        <div className="grid gap-1 font-mono sm:grid-cols-3">
+          <div>position={fmtVec3(entityProps.position)}</div>
+          <div>rotation={fmtVec3(entityProps.rotation)}</div>
+          <div>scale={fmtVec3(entityProps.scale)}</div>
+        </div>
+      )}
     </div>
   )
 }
@@ -55,8 +90,26 @@ export function EntityAnimationPageShell({
   description: ReactNode
   children: ReactNode
 }) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const pageName = title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+
+  useEffect(() => {
+    rootRef.current?.querySelectorAll('button').forEach(button => {
+      const label = button.textContent?.trim().replace(/\s+/g, ' ') || 'action'
+      const actionName = label.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      // Keep generated metadata in sync with dynamic button text.
+      button.dataset.name = `entity-motion-${pageName}-${actionName}`
+      button.setAttribute('aria-label', label)
+    })
+  })
+
   return (
-    <div className="min-h-full bg-[#0d0d0d] p-6 text-white">
+    <div
+      ref={rootRef}
+      data-name={`entity-motion-${pageName}`}
+      data-testid="entity-motion-page"
+      className="min-h-full bg-[#0d0d0d] p-6 text-white"
+    >
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4 border-b border-gray-800 pb-4">
           <div className="space-y-2">
@@ -87,6 +140,7 @@ export function EntityAnimationOverview() {
         <Link
           key={route.path}
           to={route.path}
+          data-name={`entity-motion-route-${route.path.split('/').at(-1)}`}
           className="rounded-2xl border border-gray-800 bg-[#111] p-5 transition-colors hover:border-blue-700 hover:bg-[#141414]"
         >
           <div className="text-lg font-semibold text-gray-100">

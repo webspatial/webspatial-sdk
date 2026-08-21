@@ -19,6 +19,7 @@
 		2B1008A92F0B000800000009 /* AttachmentSurfaceNormalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A82F0B000800000008 /* AttachmentSurfaceNormalizationTests.swift */; };
 		2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D702BEBFAAC006897EE /* Assets.xcassets */; };
 		2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */; };
+		2B3000022F0C000800000002 /* EntityMotionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3000012F0C000800000001 /* EntityMotionTests.swift */; };
 		2B89E38C2E699104004079AA /* WebMsgCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B89E38B2E699104004079AA /* WebMsgCommand.swift */; };
 		2BDBF9B62C4ED9F600D269D7 /* static-web in Resources */ = {isa = PBXBuildFile; fileRef = 2BDBF9B52C4ED9F600D269D7 /* static-web */; };
 /* End PBXBuildFile section */
@@ -50,6 +51,7 @@
 		2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2B2F1D752BEBFAAC006897EE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2B2F1D7A2BEBFAAD006897EE /* WebSpatial.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = WebSpatial.xctest; path = "web-spatialTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B3000012F0C000800000001 /* EntityMotionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityMotionTests.swift; sourceTree = "<group>"; };
 		2B89E38B2E699104004079AA /* WebMsgCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebMsgCommand.swift; sourceTree = "<group>"; };
 		2BDBF9B52C4ED9F600D269D7 /* static-web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "static-web"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -70,8 +72,6 @@
 		2B06AF312E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				dynamic3d/EntityAnimationManager.swift,
-				dynamic3d/EntityAnimationSession.swift,
 				dynamic3d/Geometry.swift,
 				dynamic3d/SpatialComponent.swift,
 				dynamic3d/SpatialEntity.swift,
@@ -89,6 +89,10 @@
 				"element-motion/SpatializedElementMotionTimelineSampler.swift",
 				"element-motion/SpatializedElementMotionTiming.swift",
 				"element-motion/SpatializedElementMotionTransformTypes.swift",
+				"entity-motion/EntityMotionAnimationObject.swift",
+				"entity-motion/EntityMotionBridgeTypes.swift",
+				"entity-motion/EntityMotionTimelineCompiler.swift",
+				"entity-motion/EntityMotionTransformValues.swift",
 				MaterialSceneRefresh.swift,
 				OrnamentElement.swift,
 				SpatialApp.swift,
@@ -183,6 +187,7 @@
 				2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */,
 				2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */,
 				2B1008A82F0B000800000008 /* AttachmentSurfaceNormalizationTests.swift */,
+				2B3000012F0C000800000001 /* EntityMotionTests.swift */,
 			);
 			path = "web-spatialTests";
 			sourceTree = "<group>";
@@ -373,6 +378,7 @@
 				2B1008A52F0B000800000005 /* SpatializedElementMotionTimelineSamplerTests.swift in Sources */,
 				2B1008A72F0B000800000007 /* SpatializedElementAnimationManagerTests.swift in Sources */,
 				2B1008A92F0B000800000009 /* AttachmentSurfaceNormalizationTests.swift in Sources */,
+				2B3000022F0C000800000002 /* EntityMotionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

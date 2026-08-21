@@ -258,6 +258,48 @@ describe('getRuntime / supports', () => {
     expect(supports('useAnimation', ['element'])).toBe(false)
   })
 
+  test('visionOS WSAppShell/1.9.0: useEntityAnimation is true as a top-level key', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.9.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useEntityAnimation')).toBe(true)
+    expect(supports('useEntityAnimation', [])).toBe(true)
+    expect(supports('useEntityAnimation', ['entity'])).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
+  })
+
+  test('visionOS WSAppShell/1.8.x: useEntityAnimation remains false', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.9 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useEntityAnimation')).toBe(false)
+    expect(supports('useEntityAnimation', ['entity'])).toBe(false)
+  })
+
+  test.each([
+    ['0.6.99', false],
+    ['0.7.0', true],
+    ['1.0.0', true],
+  ] as const)(
+    'picoOS PicoWebApp/%s reports useEntityAnimation=%s',
+    async (version, expected) => {
+      vi.stubGlobal('navigator', {
+        userAgent: `Mozilla/5.0 (X11; Linux x86_64; swan OS6.1.0 like Quest) AppleWebKit/537.36 PicoWebApp/${version} (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0`,
+      } as Navigator)
+      const { supports, resetRuntimeCacheForTests } = await import('./supports')
+      resetRuntimeCacheForTests()
+      expect(supports('useEntityAnimation')).toBe(expected)
+      expect(supports('useEntityAnimation', [])).toBe(expected)
+      expect(supports('useEntityAnimation', ['entity'])).toBe(false)
+    },
+  )
+
   test('useAnimation rejects all sub-tokens', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
