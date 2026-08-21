@@ -314,6 +314,11 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
 
         spatialWebViewModel.addJSBListener(CreateSpatializedStatic3DElement.self, onCreateSpatializedStatic3DElement)
 
+        spatialWebViewModel.addJSBListener(StartBlobTransfer.self, onStartBlobTransfer)
+        spatialWebViewModel.addJSBListener(TransferBlobChunk.self, onTransferBlobChunk)
+        spatialWebViewModel.addJSBListener(CompleteBlobTransfer.self, onCompleteBlobTransfer)
+        spatialWebViewModel.addJSBListener(FailBlobTransfer.self, onFailBlobTransfer)
+
         spatialWebViewModel.addJSBListener(CreateSpatializedDynamic3DElement.self, onCreateSpatializedDynamic3DElement)
         spatialWebViewModel.addJSBListener(UpdateSpatializedDynamic3DElementProperties.self, onUpdateSpatializedDynamic3DElementProperties)
         spatialWebViewModel.addJSBListener(CreateSpatialEntity.self, onCreateEntity)
@@ -640,6 +645,57 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
     }
 
+    private func onStartBlobTransfer(command: StartBlobTransfer, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        handleBlobTransferCommand(id: command.id, name: StartBlobTransfer.commandType, resolve: resolve) {
+            try await $0.startBlobTransfer(command)
+        }
+    }
+
+    /// Acknowledges each chunk only after its background decode and write finish.
+    private func onTransferBlobChunk(command: TransferBlobChunk, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        handleBlobTransferCommand(id: command.id, name: TransferBlobChunk.commandType, resolve: resolve) {
+            try await $0.receiveBlobChunk(command)
+        }
+    }
+
+    private func onCompleteBlobTransfer(command: CompleteBlobTransfer, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        handleBlobTransferCommand(id: command.id, name: CompleteBlobTransfer.commandType, resolve: resolve) {
+            try await $0.completeBlobTransfer(command)
+        }
+    }
+
+    private func onFailBlobTransfer(command: FailBlobTransfer, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        handleBlobTransferCommand(id: command.id, name: FailBlobTransfer.commandType, resolve: resolve) {
+            try await $0.failBlobTransfer(command)
+        }
+    }
+
+    private func handleBlobTransferCommand(
+        id: String,
+        name: String,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>,
+        operation: @escaping (SpatializedStatic3DElement) async throws -> Void
+    ) {
+        guard let element: SpatializedStatic3DElement = findSpatialObject(id) else {
+            resolve(.failure(JsbError(
+                code: .InvalidSpatialObject,
+                message: "invalid \(name) spatial object id does not exist"
+            )))
+            return
+        }
+        Task {
+            do {
+                try await operation(element)
+                resolve(.success(nil))
+            } catch {
+                resolve(.failure(JsbError(
+                    code: .CommandError,
+                    message: "\(name) failed: \(error)"
+                )))
+            }
+        }
+    }
+
     private func onCreateSpatializedDynamic3DElement(command: CreateSpatializedDynamic3DElement, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         let spatialObject: SpatializedDynamic3DElement = createSpatializedElement(.SpatializedDynamic3DElement)
 
@@ -674,6 +730,12 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         guard let spatializedElement: SpatializedStatic3DElement = findSpatialObject(command.id) else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "invalid updateSpatializedStatic3DElement spatial object id not exsit!")))
             return
+        }
+
+        let modelURLChanged = command.modelURL.map { $0 != spatializedElement.modelURL } ?? false
+        let sourcesChanged = command.sources.map { $0 != spatializedElement.sources } ?? false
+        if modelURLChanged || sourcesChanged {
+            spatializedElement.cancelBlobTransfersAndCleanup()
         }
 
         updateSpatializedElementProperties(spatializedElement, command)
