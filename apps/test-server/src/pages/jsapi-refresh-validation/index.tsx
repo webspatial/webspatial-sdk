@@ -468,7 +468,7 @@ export default function SpatialDivRefreshValidation() {
       ? current
       : (history.find(item => snapshotKey(item) === selectedHistoryKey) ??
         current ??
-        history.at(-1) ??
+        history[history.length - 1] ??
         null)
   const selectedSnapshotKey =
     selectedHistoryKey === CURRENT_LIVE_KEY
@@ -604,7 +604,7 @@ export default function SpatialDivRefreshValidation() {
       setSelectedHistoryKey(CURRENT_LIVE_KEY)
       return
     }
-    const latest = history.at(-1)
+    const latest = history[history.length - 1]
     setSelectedHistoryKey(latest ? snapshotKey(latest) : null)
   }, [history, current, selectedHistoryKey])
 
