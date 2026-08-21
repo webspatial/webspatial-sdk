@@ -104,12 +104,17 @@ export {
   AttachmentAsset,
   Material,
   ModelAsset,
+  PBRMaterial,
   Texture,
   UnlitMaterial,
   SceneGraph,
   World,
   useMetrics,
 } from './spatial'
+
+// Pure data (no spatial-chunk dependency) — same module the default entry
+// exports; listed separately because it is not a facade-resolved component.
+export { MaterialPresets } from './MaterialPresets'
 
 // --- Step 3: lazy-load runtime API as no-op compatibility stubs ------------
 // Per the "`bootSpatial()` compatibility stub is a no-op",

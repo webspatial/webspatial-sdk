@@ -38,6 +38,10 @@ export const routes = [
         path: '/reality/textured-unlit-box',
         label: 'Textures',
       },
+      {
+        path: '/reality/pbr-material',
+        label: 'PBR material + presets',
+      },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
   },

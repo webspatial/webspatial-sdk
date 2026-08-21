@@ -108,6 +108,7 @@ export type {
   // Material / texture options.
   SpatialMaterialType,
   SpatialUnlitMaterialOptions,
+  SpatialPBRMaterialOptions,
   SpatialTextureResourceOptions,
   // Model / asset options.
   ModelSource,
@@ -194,6 +195,7 @@ export {
   AttachmentAsset,
   Material,
   ModelAsset,
+  PBRMaterial,
   Texture,
   UnlitMaterial,
   World,
@@ -211,6 +213,7 @@ export type {
   ModelEntityProps,
   ModelProps,
   ModelRef,
+  PBRMaterialProps,
   PlaneEntityProps,
   RealityProps,
   SceneGraphProps,
@@ -218,6 +221,13 @@ export type {
   TextureProps,
   UnlitMaterialProps,
 } from './facades'
+
+// --- Material presets (pure data, no spatial-chunk dependency) --------------
+// JS-only tuned starting points for `<PBRMaterial>` — a plain frozen record,
+// safe to export from the default entry: `./MaterialPresets` has no runtime
+// imports, so it adds nothing to the static spatial module graph.
+export { MaterialPresets } from './MaterialPresets'
+export type { MaterialPreset, MaterialPresetName } from './MaterialPresets'
 
 // --- Hooks (placeholder / ready-gated per spec "Hook placeholders") ---------
 export { useMetrics } from './hooks-web/useMetrics'

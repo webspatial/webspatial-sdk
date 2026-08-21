@@ -5,6 +5,7 @@ import {
   CreateSpatialGeometryCommand,
   CreateSpatialModelEntityCommand,
   CreateSpatialUnlitMaterialCommand,
+  CreateSpatialPBRMaterialCommand,
   CreateTextureCommand,
 } from '../JSBCommand'
 import {
@@ -13,13 +14,14 @@ import {
   SpatialGeometryOptions,
   SpatialModelEntityCreationOptions,
   SpatialUnlitMaterialOptions,
+  SpatialPBRMaterialOptions,
   SpatialEntityUserData,
   SpatialTextureResourceOptions,
 } from '../types/types'
 import { SpatialEntity, SpatialModelEntity } from './entity'
 import { ModelComponent } from './component'
 import { SpatialGeometry } from './geometry'
-import { SpatialUnlitMaterial } from './material'
+import { SpatialUnlitMaterial, SpatialPBRMaterial } from './material'
 import { SpatialModelAsset, SpatialTextureResource } from './resource'
 
 export async function createSpatialEntity(
@@ -59,6 +61,18 @@ export async function createSpatialUnlitMaterial(
   } else {
     const { id } = result.data
     return new SpatialUnlitMaterial(id, options)
+  }
+}
+
+export async function createSpatialPBRMaterial(
+  options: SpatialPBRMaterialOptions,
+) {
+  const result = await new CreateSpatialPBRMaterialCommand(options).execute()
+  if (!result.success) {
+    throw new Error('createSpatialPBRMaterial failed:' + result?.errorMessage)
+  } else {
+    const { id } = result.data
+    return new SpatialPBRMaterial(id, options)
   }
 }
 
