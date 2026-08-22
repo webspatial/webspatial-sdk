@@ -7,7 +7,11 @@ import { WebSpatialRuntime } from '../webSpatialRuntime'
 import { BootForgottenDiagnostic } from './shared/BootForgottenDiagnostic'
 import type { OrnamentProps } from '../ornament'
 
-export type { OrnamentProps }
+export type {
+  OrnamentPoint3D,
+  OrnamentProps,
+  OrnamentVisibility,
+} from '../ornament'
 
 export function Ornament(props: OrnamentProps): React.ReactElement | null {
   const ready = useSpatialReady()
