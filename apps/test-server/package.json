@@ -10,7 +10,7 @@
     "dev:web": "node esbuild.mjs",
     "start": "npm run dev",
     "deployAppCode": "cp -r dist/ ../visionOSApp/web-spatial/static-web/dist/ && cp -r src/ ../visionOSApp/web-spatial/static-web/src/ && cp -r public/ ../visionOSApp/web-spatial/static-web/public/",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "pnpm --workspace-root exec eslint apps/test-server --report-unused-disable-directives",
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true"
   },
   "dependencies": {
@@ -55,8 +55,6 @@
     "@types/react-dom": "^18.2.22",
     "@types/redux": "^3.6.0",
     "@types/redux-state-sync": "^3.1.10",
-    "@typescript-eslint/eslint-plugin": "^7.2.0",
-    "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.2.1",
     "concurrently": "^8.2.2",
     "daisyui": "^4.12.10",
@@ -64,16 +62,8 @@
     "esbuild-css-modules-plugin": "^3.1.2",
     "esbuild-plugin-tailwindcss": "^1.2.0",
     "esbuild-sass-plugin": "^3.3.1",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.6",
     "postcss-modules": "^6.0.0",
     "typescript": "^5.2.2",
     "vite": "6.4.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   }
 }
