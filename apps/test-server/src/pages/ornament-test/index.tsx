@@ -4,10 +4,12 @@ import {
   Reality,
   type BackgroundMaterialType,
   type CornerRadius,
+} from '@webspatial/react-sdk'
+import {
+  Ornament,
   type OrnamentPoint3D,
   type OrnamentVisibility,
-} from '@webspatial/react-sdk'
-import { Ornament } from '@webspatial/react-sdk/experimental'
+} from '@webspatial/react-sdk/experimental'
 
 const POINTS: OrnamentPoint3D[] = [
   'topLeadingFront',

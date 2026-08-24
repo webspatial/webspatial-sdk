@@ -14,6 +14,8 @@
 		2B06AEE62E4C1AE8000327E9 /* JSBCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC02E4C1AE8000327E9 /* JSBCommand.swift */; };
 		2B06AEE92E4C1AE8000327E9 /* EventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEBF2E4C1AE8000327E9 /* EventEmitter.swift */; };
 		2B1008A22F0B000800000002 /* NavigationCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */; };
+		2BCA00022F18000000000002 /* RuntimeCapabilityManifest.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA00012F18000000000001 /* RuntimeCapabilityManifest.generated.swift */; };
+		2BCA00042F18000000000004 /* RuntimeCapabilityManifestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA00032F18000000000003 /* RuntimeCapabilityManifestTests.swift */; };
 		2B1008A52F0B000800000005 /* SpatializedElementMotionTimelineSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */; };
 		2B1008A72F0B000800000007 /* SpatializedElementAnimationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */; };
 		2B1008A92F0B000800000009 /* AttachmentSurfaceNormalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A82F0B000800000008 /* AttachmentSurfaceNormalizationTests.swift */; };
@@ -42,6 +44,8 @@
 		2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSpatialApp.swift; sourceTree = "<group>"; };
 		2B06AEC42E4C1AE8000327E9 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationCleanupTests.swift; sourceTree = "<group>"; };
+		2BCA00012F18000000000001 /* RuntimeCapabilityManifest.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeCapabilityManifest.generated.swift; sourceTree = "<group>"; };
+		2BCA00032F18000000000003 /* RuntimeCapabilityManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeCapabilityManifestTests.swift; sourceTree = "<group>"; };
 		2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatializedElementMotionTimelineSamplerTests.swift; sourceTree = "<group>"; };
 		2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatializedElementAnimationManagerTests.swift; sourceTree = "<group>"; };
 		2B1008A82F0B000800000008 /* AttachmentSurfaceNormalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentSurfaceNormalizationTests.swift; sourceTree = "<group>"; };
@@ -184,6 +188,7 @@
 			isa = PBXGroup;
 			children = (
 				2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */,
+				2BCA00032F18000000000003 /* RuntimeCapabilityManifestTests.swift */,
 				2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */,
 				2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */,
 				2B1008A82F0B000800000008 /* AttachmentSurfaceNormalizationTests.swift */,
@@ -229,6 +234,7 @@
 				2B06AEC02E4C1AE8000327E9 /* JSBCommand.swift */,
 				2B89E38B2E699104004079AA /* WebMsgCommand.swift */,
 				2B06AEC12E4C1AE8000327E9 /* manifest.swift */,
+				2BCA00012F18000000000001 /* RuntimeCapabilityManifest.generated.swift */,
 				2B06AEC22E4C1AE8000327E9 /* SpatialObject.swift */,
 				2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */,
 				2B06AEC42E4C1AE8000327E9 /* Window.swift */,
@@ -364,6 +370,7 @@
 				2B06AEDE2E4C1AE8000327E9 /* WebSpatialApp.swift in Sources */,
 				2B06AEE12E4C1AE8000327E9 /* SpatialObject.swift in Sources */,
 				2B06AEE42E4C1AE8000327E9 /* manifest.swift in Sources */,
+				2BCA00022F18000000000002 /* RuntimeCapabilityManifest.generated.swift in Sources */,
 				2B89E38C2E699104004079AA /* WebMsgCommand.swift in Sources */,
 				2B06AEE62E4C1AE8000327E9 /* JSBCommand.swift in Sources */,
 				2B06AEE92E4C1AE8000327E9 /* EventEmitter.swift in Sources */,
@@ -375,6 +382,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B1008A22F0B000800000002 /* NavigationCleanupTests.swift in Sources */,
+				2BCA00042F18000000000004 /* RuntimeCapabilityManifestTests.swift in Sources */,
 				2B1008A52F0B000800000005 /* SpatializedElementMotionTimelineSamplerTests.swift in Sources */,
 				2B1008A72F0B000800000007 /* SpatializedElementAnimationManagerTests.swift in Sources */,
 				2B1008A92F0B000800000009 /* AttachmentSurfaceNormalizationTests.swift in Sources */,
