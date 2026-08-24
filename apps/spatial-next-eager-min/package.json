@@ -1,7 +1,7 @@
 {
   "name": "spatial-next-eager-min",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Minimal Next.js 15 App Router + React 18 + @webspatial/react-sdk/eager example.",
   "scripts": {
     "dev": "next dev --port 3031",

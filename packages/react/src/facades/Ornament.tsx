@@ -4,7 +4,7 @@ import type { ComponentType } from 'react'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { WebSpatialRuntime } from '../webSpatialRuntime'
-import { warnBootForgotten } from './shared/warnBootForgotten'
+import { BootForgottenDiagnostic } from './shared/BootForgottenDiagnostic'
 import type { OrnamentProps } from '../ornament'
 
 export type { OrnamentProps }
@@ -17,8 +17,7 @@ export function Ornament(props: OrnamentProps): React.ReactElement | null {
   }
 
   if (!ready) {
-    warnBootForgotten('Ornament')
-    return null
+    return <BootForgottenDiagnostic componentName="Ornament" />
   }
 
   const RealOrnament = requireSpatialImpl()

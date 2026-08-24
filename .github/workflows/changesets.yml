@@ -43,7 +43,8 @@ jobs:
           cache: "pnpm"
 
       - name: Update npm
-        run: npm install -g npm@'>=11.5.1'
+        # npm 12 doesn't work with pnpm 9
+        run: npm install -g npm@'^11.5.1'
 
       - name: Install dependencies and build
         run: pnpm run setup
