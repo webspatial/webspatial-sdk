@@ -1,4 +1,9 @@
-import { CAPABILITY_TABLE, getRuntime, supports } from '@webspatial/core-sdk'
+import {
+  CAPABILITY_TABLE,
+  getRuntime,
+  getRuntimeCapabilityManifest,
+  supports,
+} from '@webspatial/core-sdk'
 import {
   COMPONENT_KEYS,
   CSS_KEYS,
@@ -94,6 +99,21 @@ export default function RuntimeCapabilitiesPage() {
     typeof navigator !== 'undefined' ? navigator.userAgent : '(no navigator)'
 
   const rt = useMemo(() => getRuntime(), [])
+  const runtimeManifest = useMemo(
+    () =>
+      rt.type === 'visionos' || rt.type === 'picoos'
+        ? getRuntimeCapabilityManifest(rt.type)
+        : null,
+    [rt.type],
+  )
+  const capabilitySource =
+    rt.type === 'puppeteer'
+      ? 'Puppeteer override'
+      : runtimeManifest
+        ? 'Runtime manifest'
+        : rt.type === 'visionos' || rt.type === 'picoos'
+          ? 'CAPABILITY_TABLE fallback'
+          : 'None'
 
   const liveTopLevel = useMemo(
     () =>
@@ -211,7 +231,7 @@ export default function RuntimeCapabilitiesPage() {
             })}
           </div>
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <div className="rounded-xl border border-gray-800 bg-black/30 px-4 py-3 backdrop-blur-sm">
               <div className="text-xs font-medium text-gray-500">
                 Runtime type
@@ -230,6 +250,27 @@ export default function RuntimeCapabilitiesPage() {
             </div>
             <div className="rounded-xl border border-gray-800 bg-black/30 px-4 py-3 backdrop-blur-sm">
               <div className="text-xs font-medium text-gray-500">
+                Capability source
+              </div>
+              <div
+                className="mt-1 truncate font-mono text-sm text-white"
+                title={capabilitySource}
+              >
+                {capabilitySource}
+              </div>
+            </div>
+            <div className="rounded-xl border border-gray-800 bg-black/30 px-4 py-3 backdrop-blur-sm">
+              <div className="text-xs font-medium text-gray-500">Build ID</div>
+              <div
+                className="mt-1 truncate font-mono text-sm text-white"
+                title={runtimeManifest?.runtime.buildId ?? 'n/a'}
+                data-testid="runtime-capability-build-id"
+              >
+                {runtimeManifest?.runtime.buildId ?? 'n/a'}
+              </div>
+            </div>
+            <div className="rounded-xl border border-gray-800 bg-black/30 px-4 py-3 backdrop-blur-sm">
+              <div className="text-xs font-medium text-gray-500">
                 Live top-level Yes
               </div>
               <div className="mt-1 text-lg font-semibold text-emerald-400">
@@ -242,11 +283,9 @@ export default function RuntimeCapabilitiesPage() {
             </div>
             <div className="rounded-xl border border-gray-800 bg-black/30 px-4 py-3 backdrop-blur-sm">
               <div className="text-xs font-medium text-gray-500">
-                Matrix mismatches
+                vision vs pico differences
               </div>
-              <div
-                className={`mt-1 text-lg font-semibold ${mismatchCount ? 'text-rose-400' : 'text-emerald-400'}`}
-              >
+              <div className="mt-1 text-lg font-semibold text-amber-300">
                 {mismatchCount}
               </div>
             </div>
@@ -266,7 +305,7 @@ export default function RuntimeCapabilitiesPage() {
             title="Environment"
             subtitle="User agent and internal runtime snapshot (getRuntime is not a public app API)."
           >
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-3">
               <div className="rounded-xl border border-gray-800/80 bg-[#0f0f0f] p-4">
                 <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
                   navigator.userAgent
@@ -281,6 +320,19 @@ export default function RuntimeCapabilitiesPage() {
                 </div>
                 <pre className="max-h-48 overflow-auto text-sm leading-relaxed text-sky-100/90 font-mono">
                   {JSON.stringify(rt, null, 2)}
+                </pre>
+              </div>
+              <div className="rounded-xl border border-gray-800/80 bg-[#0f0f0f] p-4">
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Runtime capability manifest
+                </div>
+                <pre
+                  className="max-h-48 overflow-auto text-sm leading-relaxed text-violet-100/90 font-mono"
+                  data-testid="runtime-capability-manifest"
+                >
+                  {runtimeManifest
+                    ? JSON.stringify(runtimeManifest, null, 2)
+                    : `${capabilitySource}\nNo valid matching manifest.`}
                 </pre>
               </div>
             </div>

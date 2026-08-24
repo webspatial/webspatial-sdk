@@ -112,6 +112,7 @@ export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
   // meter width/height). Runtimes without it take the legacy payload
   // (parentEntityId + tuple position + point size).
   AttachmentEntity: ['placement'],
+  useAnimation: ['entity'],
   Model: [
     'autoplay',
     'loop',
