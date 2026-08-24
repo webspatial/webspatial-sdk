@@ -50,6 +50,10 @@ export const useEntity = ({
 
   // Track the current animation prop for bind/unbind
   const prevAnimationRef = useRef<EntityMotionAnimation | undefined>(undefined)
+  // Reject delayed unbind completions after a newer binding transition.
+  const bindingTransitionRef = useRef(0)
+  // Force one declared-transform submission after the final animation unbind.
+  const transformSyncRevisionRef = useRef(0)
 
   useEffect(() => {
     if (!ctx) return
@@ -94,9 +98,10 @@ export const useEntity = ({
 
     return () => {
       controller.abort()
+      bindingTransitionRef.current += 1
       // Unbind animation on cleanup
       if (prevAnimationRef.current) {
-        ;(
+        void (
           prevAnimationRef.current as unknown as EntityMotionBindingInternal
         ).__unbind()
         prevAnimationRef.current = undefined
@@ -114,10 +119,14 @@ export const useEntity = ({
     const prevAnimation = prevAnimationRef.current
 
     if (prevAnimation === animation) return
+    const transition = ++bindingTransitionRef.current
+    let unbindCompletion: Promise<void> | undefined
 
     // Unbind old animation
     if (prevAnimation) {
-      ;(prevAnimation as unknown as EntityMotionBindingInternal).__unbind()
+      unbindCompletion = (
+        prevAnimation as unknown as EntityMotionBindingInternal
+      ).__unbind()
       prevAnimationRef.current = undefined
     }
 
@@ -132,14 +141,32 @@ export const useEntity = ({
         )
       }
     }
+
+    if (!animation && unbindCompletion) {
+      void unbindCompletion.then(() => {
+        if (
+          transition !== bindingTransitionRef.current ||
+          prevAnimationRef.current ||
+          instanceRef.current.entity !== entity
+        ) {
+          return
+        }
+        transformSyncRevisionRef.current += 1
+        forceUpdate()
+      })
+    }
   }, [animation, entity])
 
   useEntityId({ id, entity: instanceRef.current.entity })
-  useEntityTransform(instanceRef.current.entity, {
-    position,
-    rotation,
-    scale,
-  })
+  useEntityTransform(
+    instanceRef.current.entity,
+    {
+      position,
+      rotation,
+      scale,
+    },
+    transformSyncRevisionRef.current,
+  )
   useEntityRef(ref, instanceRef.current)
 
   useEntityEvent({

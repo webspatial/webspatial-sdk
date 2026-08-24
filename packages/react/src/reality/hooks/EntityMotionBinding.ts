@@ -28,8 +28,8 @@ export interface EntityMotionAnimation {
 export interface EntityMotionBindingInternal {
   /** Binds this animation to one Core SpatialEntity. */
   __bind(entity: SpatialEntity): void
-  /** Unbinds the current Core SpatialEntity and releases the native object. */
-  __unbind(): void
+  /** Unbinds the current Core SpatialEntity and resolves after releasing the native object. */
+  __unbind(): Promise<void>
 }
 
 /** React coordination object for one Entity motion hook instance. */
@@ -182,7 +182,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
   }
 
   /** Unbinds the target, invalidates queued work, clears values, and destroys Native state. */
-  __unbind(): void {
+  async __unbind(): Promise<void> {
     ++this.generation
     const object = this.animationObject
     this.target = null
@@ -194,7 +194,7 @@ export class EntityMotionBinding implements EntityMotionBindingInternal {
     this.pendingSynchronousError = null
     this.notify()
     if (object) {
-      void object.destroy().catch(() => {})
+      await object.destroy().catch(() => {})
     }
   }
 

@@ -59,4 +59,27 @@ describe('useEntityTransform', () => {
 
     expect(entity.updateTransform).not.toHaveBeenCalled()
   })
+
+  test('rewrites declared React transform values when sync revision changes', () => {
+    const entity = createMockEntity()
+    const position = { x: 1, y: 2, z: 3 }
+    const { rerender } = renderHook(
+      ({ syncRevision }) =>
+        useEntityTransform(
+          entity,
+          {
+            position,
+            rotation: undefined,
+            scale: undefined,
+          },
+          syncRevision,
+        ),
+      { initialProps: { syncRevision: 0 } },
+    )
+    entity.updateTransform.mockClear()
+
+    rerender({ syncRevision: 1 })
+
+    expect(entity.updateTransform).toHaveBeenCalledWith({ position })
+  })
 })

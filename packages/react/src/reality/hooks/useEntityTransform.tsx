@@ -17,28 +17,33 @@ interface EntityTransformProps {
  *
  * @param entity - Current Core Entity target.
  * @param props - React-declared transform values.
+ * @param syncRevision - Revision that forces declared values to be submitted again.
  */
 export function useEntityTransform(
   entity: SpatialEntity | null,
   { position, rotation, scale }: EntityTransformProps,
+  syncRevision = 0,
 ) {
   const last = useRef<{
     position?: EntityProps['position']
     rotation?: EntityProps['rotation']
     scale?: EntityProps['scale']
   }>({})
+  const lastSyncRevision = useRef(syncRevision)
 
   useEffect(() => {
     if (!entity) return
 
-    const positionChanged = !shallowEqualVec3(last.current.position, position)
-    const rotationChanged = !shallowEqualRotation(
-      last.current.rotation,
-      rotation,
-    )
-    const scaleChanged = !shallowEqualVec3(last.current.scale, scale)
+    const forceSync = lastSyncRevision.current !== syncRevision
+    const positionChanged =
+      forceSync || !shallowEqualVec3(last.current.position, position)
+    const rotationChanged =
+      forceSync || !shallowEqualRotation(last.current.rotation, rotation)
+    const scaleChanged =
+      forceSync || !shallowEqualVec3(last.current.scale, scale)
 
     last.current = { position, rotation, scale }
+    lastSyncRevision.current = syncRevision
     const update: Partial<
       Pick<EntityProps, 'position' | 'rotation' | 'scale'>
     > = {}
@@ -50,5 +55,5 @@ export function useEntityTransform(
     void entity.updateTransform(update).catch(error => {
       console.error('[useEntityTransform] Failed to update transform:', error)
     })
-  }, [entity, position, rotation, scale])
+  }, [entity, position, rotation, scale, syncRevision])
 }

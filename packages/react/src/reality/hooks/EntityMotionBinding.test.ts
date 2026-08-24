@@ -674,8 +674,10 @@ describe('EntityMotionBinding', () => {
 
   test('unbind clears the mirror and delegates invalidation to Core destroy', async () => {
     const first = deferred<undefined>()
+    const destroyed = deferred<undefined>()
     const { object, listeners } = createMockAnimationObject()
     object.play.mockImplementation(() => first.promise)
+    object.destroy.mockImplementation(() => destroyed.promise)
     const binding = new EntityMotionBinding(createConfig())
     binding.__bind({
       id: 'entity-1',
@@ -690,13 +692,23 @@ describe('EntityMotionBinding', () => {
 
     binding.api.play()
     binding.api.finish()
-    binding.__unbind()
+    const unbind = binding.__unbind()
     first.resolve(undefined)
     await flushPromises()
 
     expect(binding.entityProps).toEqual({})
     expect(object.finish).toHaveBeenCalledOnce()
     expect(object.destroy).toHaveBeenCalledOnce()
+
+    let didUnbind = false
+    void unbind.then(() => {
+      didUnbind = true
+    })
+    await flushPromises()
+    expect(didUnbind).toBe(false)
+
+    destroyed.resolve(undefined)
+    await expect(unbind).resolves.toBeUndefined()
   })
 
   test('delegates commands immediately so Core handles native destruction', async () => {
