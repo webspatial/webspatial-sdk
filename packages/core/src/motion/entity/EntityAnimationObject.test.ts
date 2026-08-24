@@ -433,6 +433,65 @@ describe('EntityAnimationObject', () => {
     })
   })
 
+  it.each(['start', 'complete', 'stop', 'reset'] as const)(
+    'isolates %s callback values from confirmed-value observers',
+    callbackAction => {
+      const animation = new EntityAnimationObject('animation-1', {
+        config,
+        timeline,
+      })
+      const confirmedValues: EntityMotionProps = {
+        position: { x: 1, y: 2, z: 3 },
+        rotation: { x: 4, y: 5, z: 6 },
+        scale: { x: 1, y: 1, z: 1 },
+      }
+      let observedValues: EntityMotionProps | undefined
+      const callback = vi.fn((callbackValues: EntityMotionProps) => {
+        callbackValues.rotation!.y = 100
+        callbackValues.scale!.x = 10
+      })
+      animation.onValuesChange(nextValues => {
+        observedValues = nextValues
+      })
+      switch (callbackAction) {
+        case 'start':
+          animation.onStart(callback)
+          break
+        case 'complete':
+          animation.onComplete(callback)
+          break
+        case 'stop':
+          animation.onStop(callback)
+          break
+        case 'reset':
+          animation.onReset(callback)
+          break
+      }
+
+      SpatialWebEvent.eventReceiver['animation-1']?.({
+        type: 'spatialanimationstatechanged',
+        detail: {
+          id: 'animation-1',
+          revision: 0,
+          callbackAction,
+          playState: callbackAction === 'start' ? 'running' : 'idle',
+          values: confirmedValues,
+        },
+      })
+
+      expect(callback).toHaveBeenCalledOnce()
+      expect(observedValues).toEqual({
+        position: { x: 1, y: 2, z: 3 },
+        rotation: { x: 4, y: 5, z: 6 },
+        scale: { x: 1, y: 1, z: 1 },
+      })
+      expect(observedValues).not.toBe(callback.mock.calls[0][0])
+      expect(observedValues!.rotation).not.toBe(
+        callback.mock.calls[0][0].rotation,
+      )
+    },
+  )
+
   it('maps an idle finish to completion without changing the start count', () => {
     const animation = new EntityAnimationObject('animation-1', {
       config,

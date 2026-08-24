@@ -50,6 +50,15 @@ const ENTITY_MOTION_ERROR_CODES = [
   'INVALID_SET_VALUES',
 ] as const
 
+/** Creates a detached copy of one confirmed Entity transform. */
+function cloneEntityMotionProps(values: EntityMotionProps): EntityMotionProps {
+  const clone: EntityMotionProps = {}
+  if (values.position) clone.position = { ...values.position }
+  if (values.rotation) clone.rotation = { ...values.rotation }
+  if (values.scale) clone.scale = { ...values.scale }
+  return clone
+}
+
 /** Immutable inputs retained by one Core Entity animation object. */
 export interface EntityAnimationObjectOptions {
   /** Public config snapshot used to create this object. */
@@ -407,19 +416,20 @@ export class EntityAnimationObject
       if (!callbackAction) return
       const values = data.detail.values
       if (!values) return
+      const callbackValues = cloneEntityMotionProps(values)
       this.publishConfirmedValues(values)
       switch (callbackAction) {
         case 'start':
-          this.startListener?.(values)
+          this.startListener?.(callbackValues)
           return
         case 'complete':
-          this.completeListener?.(values)
+          this.completeListener?.(callbackValues)
           return
         case 'stop':
-          this.stopListener?.(values)
+          this.stopListener?.(callbackValues)
           return
         case 'reset':
-          this.resetListener?.(values)
+          this.resetListener?.(callbackValues)
           return
       }
     }
