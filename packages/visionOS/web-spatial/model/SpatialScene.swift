@@ -1630,7 +1630,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         try container.encode(childrenIds, forKey: .childrenIds)
         let sceneSpatialObjectIds = spatialObjects.map { $0.key }
         try container.encode(sceneSpatialObjectIds, forKey: .sceneSpatialObjectIds)
-        try container.encode(ornamentManager.ornaments, forKey: .ornaments)
+        let activeOrnaments = Dictionary(
+            uniqueKeysWithValues: ornamentManager.activeOrnaments.map { ($0.id, $0) }
+        )
+        try container.encode(activeOrnaments, forKey: .ornaments)
         try container.encode(spatialWebViewModel.getController().webview?.isOpaque, forKey: .webviewIsOpaque)
         try container.encode(SpatialObject.objects.count, forKey: .spatialObjectCount)
 

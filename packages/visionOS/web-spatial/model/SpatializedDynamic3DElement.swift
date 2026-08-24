@@ -5,7 +5,7 @@ import RealityKit
 @Observable
 class SpatializedDynamic3DElement: SpatializedElement {
     private var rootEntity = SpatialRootEntity()
-    private var viewContent: RealityViewContent? = nil
+    private var viewContent: RealityViewContent?
 
     override init() {
         super.init()
@@ -17,11 +17,11 @@ class SpatializedDynamic3DElement: SpatializedElement {
     }
 
     func addEntity(_ entity: SpatialEntity) {
-        rootEntity.addChild(entity)
+        rootEntity.addChild(entity: entity)
     }
 
     func removeEntity(_ entity: SpatialEntity) {
-        rootEntity.removeChild(entity)
+        rootEntity.removeChild(id: entity.spatialId)
     }
 
     func getViewContent() -> RealityViewContent? {

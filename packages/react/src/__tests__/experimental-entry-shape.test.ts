@@ -7,6 +7,11 @@ describe('experimental-entry public surface', () => {
       expect(ExperimentalEntry.Ornament).toBeDefined()
       expect(typeof ExperimentalEntry.Ornament).toBe('function')
     })
+
+    it('exports `WebSpatialInspector` as a defined runtime value', () => {
+      expect(ExperimentalEntry.WebSpatialInspector).toBeDefined()
+      expect(typeof ExperimentalEntry.WebSpatialInspector).toBe('function')
+    })
   })
 
   describe('Does not accidentally re-export stable entry internals', () => {
