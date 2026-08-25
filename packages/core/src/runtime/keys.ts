@@ -44,7 +44,7 @@ export const GESTURE_KEYS = [
   'SpatialMagnifyEndEvent',
 ] as const
 
-export const ANIMATION_KEYS = ['useAnimation'] as const
+export const ANIMATION_KEYS = ['useAnimation', 'useEntityAnimation'] as const
 
 export const JS_SCENE_KEYS = [
   'useMetrics',
@@ -112,7 +112,6 @@ export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
   // meter width/height). Runtimes without it take the legacy payload
   // (parentEntityId + tuple position + point size).
   AttachmentEntity: ['placement'],
-  useAnimation: ['entity'],
   Model: [
     'autoplay',
     'loop',

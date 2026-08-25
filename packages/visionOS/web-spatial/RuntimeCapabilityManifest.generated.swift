@@ -63,7 +63,7 @@ enum RuntimeCapabilityManifestProvider {
         "convertCoordinate",
         "initScene",
         "useAnimation",
-        "useAnimation:entity",
+        "useEntityAnimation",
         "useMetrics",
         "xrClientDepth",
         "xrInnerDepth",

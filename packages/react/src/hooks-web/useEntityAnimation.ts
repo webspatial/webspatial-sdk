@@ -1,10 +1,11 @@
 'use client'
 
 import type {
-  AnimatedProps,
-  AnimationApi,
-  AnimationConfig,
+  EntityMotionConfig,
+  EntityMotionProps,
+  EntityPlaybackApi,
 } from '@webspatial/core-sdk'
+import type { EntityMotionAnimation } from '../reality/hooks/EntityMotionBinding'
 import { WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
 import { getSpatialImpl } from '../runtime/bridge'
 
@@ -29,8 +30,8 @@ function throwAnimationUnavailable(capability: string): never {
  * @returns The animated props tuple backed by the spatial implementation.
  */
 export function useEntityAnimation(
-  config: AnimationConfig,
-): [AnimatedProps, AnimationApi] {
+  config: EntityMotionConfig,
+): [EntityMotionAnimation, EntityPlaybackApi, EntityMotionProps] {
   const real = getSpatialImpl()?.useEntityAnimation
   if (!real) return throwAnimationUnavailable('useEntityAnimation')
   return real(config)

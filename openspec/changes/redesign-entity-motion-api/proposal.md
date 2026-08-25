@@ -8,6 +8,8 @@
 2. **Result write-back (`entityProps`)**: the Hook hands the animation's final pose back to you, so the object stays put at the end instead of snapping back.
 3. **Binding (`animation`)**: bind the animation to the object through the component's `animation` prop.
 
+`useEntityAnimation` remains an experimental API and is imported from `@webspatial/react-sdk/experimental`.
+
 > **A few basic terms** (used throughout):
 > - **Entity**: a 3D object in the scene, e.g. a box `<BoxEntity>`.
 > - **transform**: the object's spatial pose, made of three parts — position `position` (unit: meters), rotation `rotation` (unit: degrees), and scale `scale` (a multiplier, 1 = original size).
@@ -36,7 +38,7 @@
 ## Quick Start: A Complete Example
 
 ```tsx
-import { useEntityAnimation } from '...'
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 
 function MyBox() {
   // Move the box up by 0.25m and scale it to 1.1x over 0.8s
@@ -88,13 +90,8 @@ type EntityMotionProps = {
   scale?: Vec3
 }
 
+// Internal SDK type; not exported from the package public entry.
 type EntityMotionPatch = {
-  position?: Partial<Vec3>
-  rotation?: Partial<Vec3>
-  scale?: Partial<Vec3>
-}
-
-type EntityTransformUpdate = {
   position?: Partial<Vec3>
   rotation?: Partial<Vec3>
   scale?: Partial<Vec3>
@@ -109,7 +106,7 @@ type EntityMotionTimeline = {
   to?: EntityMotionFrame
 } & Partial<Record<`${number}%`, EntityMotionFrame>>
 
-type SpatializedPlaybackError = {
+type EntityPlaybackError = {
   code:
     | 'TARGET_NOT_FOUND'
     | 'UNSUPPORTED_TARGET'
@@ -135,11 +132,11 @@ type EntityMotionConfig = {
   onComplete?: (values: EntityMotionProps) => void
   onStop?: (values: EntityMotionProps) => void
   onReset?: (values: EntityMotionProps) => void
-  onError?: (error: SpatializedPlaybackError) => void
+  onError?: (error: EntityPlaybackError) => void
 }
 ```
 
-Defaults are `autoStart: true`, `timingFunction: 'easeInOut'`, `delay: 0`, `playbackRate: 1`, and `loop: false`. Every config containing `timeline` must provide `duration`; only pure top-level `from` / `to` uses the 0.3-second default. Invalid config is a programmer error and throws synchronously.
+Defaults are `autoStart: true`, `timingFunction: 'easeInOut'`, `delay: 0`, `playbackRate: 1`, and `loop: false`. Every fresh execution waits for the global `delay` once, then plays the motion; `playbackRate` and `loop` affect only that motion, so the delay is neither rate-scaled nor repeated at loop boundaries. Every config containing `timeline` must provide `duration`; only pure top-level `from` / `to` uses the 0.3-second default. Invalid config is a programmer error and throws synchronously.
 
 ### Option 0: top-level from / to (simplest form)
 
@@ -310,11 +307,29 @@ return (
 )
 ```
 
-**After the animation completes**, `entityProps` updates to the complete end pose (`position`, `rotation`, and `scale`). Native animation stops blocking ordinary React transform writes, and the combined React props keep the object on that pose. Animation-object creation or same-target config-replacement handoff failure clears the mirror and terminates that lifecycle.
+**After the animation completes**, `entityProps` updates to the complete end pose, and the combined React props keep the object there. Initial creation failure clears `entityProps`; config-update failure preserves the current animation and `entityProps`.
 
-**When it updates**: `entityProps` does not update every frame. It only updates at key moments: when playback starts, completes, stops, resets, finishes, when an `api.set` write succeeds, and when creation or handoff failure clears it.
+**When it updates**: `entityProps` updates on start, completion, stop, reset, finish, successful config update, or successful `api.set`. Initial creation failure clears it.
 
 > **Note**: before the first playback, or before the first successful `api.set`, `entityProps` may be empty. Do not assume it already has a value right when the component mounts — play the animation once, or call `api.set` successfully once, and it will then hold a value.
+
+---
+
+## Updating config During Playback
+
+Config changes on the same Entity update the current animation:
+
+| State at update | Behavior |
+|---|---|
+| `delay` or `running` | Retarget from the current pose and run the new delay and full duration from the beginning |
+| `paused` | Remain paused; the next `play` runs the new timeline from the paused pose |
+| `idle` or `finished` | Preserve the state; the next `play` uses the new config's start |
+
+- Timeline or playback-option changes trigger retargeting.
+- The current pose temporarily starts this run to avoid a jump. Later `reset` and replay use the new config's declared start.
+- The new timeline starts from the beginning. The old run fires neither `onStop` nor `onComplete`; the new run fires `onStart` once.
+- Callback-only changes do not affect playback. `autoStart` applies only to initial creation.
+- Update failure preserves the current animation and state and fires the latest `onError` once.
 
 ---
 
@@ -323,17 +338,19 @@ return (
 Once the animation is done, if you want to move the object to a new pose from code, call `api.set`:
 
 ```tsx
-// Raise the box to y = 0.3 (everything else unchanged)
+// Raise the box to y = 0.3 (other fields keep their current values)
 api.set({ position: { y: 0.3 } })
 ```
 
 A few rules:
 
-1. **Use it only after the native animation object exists and while the animation is not playing** (this includes: never played, already finished, stopped / reset). When playback is active (including delay and paused), the native object has not been created, or the current binding lifecycle has terminated after creation / handoff failure, `api.set` is rejected as a **noop** (it neither interrupts the animation nor gets queued for later replay; the object stays unchanged and `entityProps` does not update) and logs a warning to the console; it does **not** trigger `onError`. To take over the object mid-animation, stop the animation first, or wait until it ends.
-2. **Pass only the fields you want to change**; the rest stay as they are. For example, `api.set({ position: { y: 0.3 } })` does not touch `rotation` or `scale`.
-3. **On a successful write, `entityProps` updates** to the new pose. Native updates the Entity and returns its complete current transform in the set command's success reply; Core uses that value to update `entityProps`. `set` emits no playback state event and does not change `playState`. If the write is not accepted (e.g. called during playback), it is a noop — `entityProps` stays unchanged and a warning is logged to the console; `onError` does not fire.
-4. **Want to change based on the current value?** Read `entityProps` to get the current pose, compute the new value yourself, then pass it to `api.set`. There is no `api.get` here — in React, an imperative getter tends to read stale values and cause read-then-write conflicts.
-5. **It is not a playback command**: `api.set` does not start playback or change playback progress.
+1. **Call during the idle phase after the `animation` binding is ready**. Call it after completion, `stop()`, or `reset()`. During playback, call `stop()` first, followed by `api.set()`.
+2. **Pass at least one supported transform scalar under `position`, `rotation`, and/or `scale`**; every other field keeps its current value. For example, `api.set({ position: { y: 0.3 } })` updates `position.y` while keeping the current `rotation` and `scale`.
+3. **After a successful write, `entityProps` updates to the Entity's complete current pose**.
+4. **For an update based on the current pose**, read `entityProps`, calculate the new value, then pass it to `api.set`. `entityProps` is the current-pose data source.
+5. **`api.set` sets the static pose** and preserves the current playback progress.
+
+`api.set` returns `void`. When the binding is unavailable, creation is pending, the binding lifecycle is terminated, or object destruction is in progress or complete, the SDK logs one warning and completes a local no-op. A successful write updates `entityProps` with the confirmed complete pose.
 
 ### Where Playback Starts After api.set
 
@@ -351,7 +368,8 @@ The component combines static/base props and `entityProps` as ordinary React pro
 |---|---|
 | Playback is inactive | The combined React props. Before the first confirmed value, `entityProps` is empty and the base props determine the pose. After confirmation, spreading complete `entityProps` last preserves that pose. |
 | The animation is playing, delayed, or paused | Native animation controls the whole transform and blocks ordinary React transform writes; components omitted from the config hold their baseline values. |
-| Animation-object creation or pose handoff fails | The current binding lifecycle terminates, `entityProps` clears, and the remaining React props control. |
+| Initial animation-object creation fails | The current binding lifecycle terminates, `entityProps` clears, and the remaining React props control. |
+| Same-target config update fails | The old execution, current state, and `entityProps` remain unchanged. |
 | The animation binding is removed | `entityProps` clears and the remaining React props control. |
 
 This matches visionOS / picoOS natively: the underlying runtime binds the whole transform. During active animation, configured components animate and the remaining components hold their baseline values. Pause keeps the write protection. Stop, reset, finish, and natural completion commit the corresponding pose, remove the write protection, and report the Entity's complete current transform so Core can update `entityProps`.
@@ -360,7 +378,8 @@ A few practical takeaways follow:
 
 - **While the animation is playing**, the entire transform is taken over by the animation, so writing any component via props or `api.set` has no effect; components not in the config are frozen at baseline.
 - **While playback is inactive**, the combined React props control the transform. Use `api.set` to update the Native committed transform and receive the resulting complete pose through `entityProps`.
-- **After animation-object creation or pose handoff fails**, the current binding terminates and ordinary React transform props regain control. Restarting requires an explicit unbind followed by rebind, or a new binding.
+- **After initial animation-object creation fails**, the current binding terminates and ordinary React transform props regain control. Restarting requires an explicit unbind followed by rebind, or a new binding.
+- **After a same-target config update fails**, the binding remains valid and the old animation continues without rebinding.
 - **After the binding is removed**, `entityProps` clears and the remaining React transform props continue to control the Entity.
 
 ### Recommended Pattern
@@ -390,7 +409,7 @@ interface EntityPlaybackApi {
   stop(): void
   reset(): void
   finish(): void
-  set(update: EntityTransformUpdate): void
+  set(update: EntityMotionPatch): void
   readonly playState: 'queued' | 'idle' | 'running' | 'paused' | 'finished'
   readonly isAnimating: boolean
   readonly isPaused: boolean
@@ -398,7 +417,7 @@ interface EntityPlaybackApi {
 }
 ```
 
-The first five are **playback controls** that operate the animation's playback progress; `api.set` is a **pose setter** that changes the object's static pose directly and does not affect playback progress. All of them live on `api` but serve different purposes: use the first five to control the animation, and use `api.set` to place the object by hand after the animation ends.
+The first five methods control animation playback progress. `api.set` sets the object's static pose while preserving current playback progress. Use the first five methods for playback control and `api.set` for pose changes after the animation.
 
 ---
 
@@ -409,8 +428,8 @@ During its lifecycle an animation moves through the states below. Reading this d
 ```mermaid
 stateDiagram-v2
     [*] --> idle
-    idle --> queued: playback command before native creation
-    queued --> idle: native creation reply
+    idle --> queued: playback request queued
+    queued --> idle: playback ready
     idle --> running: play() / autoStart
     idle --> finished: finish()
     running --> paused: pause()
@@ -423,9 +442,9 @@ stateDiagram-v2
     finished --> idle: reset()
 ```
 
-`running` includes the start delay. `queued` only means playback commands are waiting for native animation-object creation. All three booleans remain `false` while commands are queued. The native creation reply confirms `idle` before the binding flushes pending commands; subsequent control replies and state events keep the public state synchronized to native-confirmed values.
+`running` includes the start delay. `queued` means the playback request has been submitted and awaits execution. `autoStart` and `play()` calls during initialization enter this state. Playback start changes the state to `running`.
 
-If animation-object creation or same-target config-replacement pose handoff fails, `onError` reports one classified error, the public state settles to `idle`, `entityProps` clears, and the current binding lifecycle terminates. Every later API call on that binding logs a warning and performs a no-op; config and callback updates only refresh the latest values stored by the binding. Application code starts a new lifecycle by explicitly unbinding and rebinding, or by creating a new binding.
+If initial creation fails, `onError` fires once, the state becomes `idle`, and `entityProps` clears. Later calls log a warning. Rebinding allows another attempt. If a config update fails, the current animation remains valid.
 
 | `playState` | `isAnimating` | `isPaused` | `finished` |
 |---|---|---|---|
@@ -442,9 +461,11 @@ If animation-object creation or same-target config-replacement pose handoff fail
 | **Initial** | Before the first confirmed value | ✅ Usable after native object creation | Filled at the first confirmation | Combined React props; `entityProps` is empty |
 | **Playing** (incl. delay, paused) | `play()` / `autoStart`; still counts after `pause()` | ❌ Rejected (noop + warning) | Only once, at the moment playback starts | Native animation controls the whole transform; fields omitted from the config freeze at this run's fresh-play baseline |
 | **Inactive with confirmed state** | `complete` / `stop` / `reset` / `finish`, or successful `api.set` | ✅ Usable | ✅ Contains the complete committed transform | Combined React props; spread `entityProps` last |
-| **Terminated binding** | Animation-object creation or pose handoff failure | ❌ Every API is warning + no-op | Cleared to `{}` | Remaining React props; restart requires explicit rebinding |
+| **Terminated binding** | Initial animation-object creation failure | ❌ Every API is warning + no-op | Cleared to `{}` | Remaining React props; restart requires explicit rebinding |
 
 > **Note**: a looping animation has no natural "reaches end", so `entityProps` does not update and the baseline is not reread at each loop boundary. `stop()`, `reset()`, or `finish()` updates `entityProps`; after the animation becomes inactive, a successful `api.set()` also updates `entityProps`.
+
+The documented capability becomes available in WSAppShell `1.9.0` on visionOS and PicoWebApp `0.7.0` on picoOS.
 
 ---
 

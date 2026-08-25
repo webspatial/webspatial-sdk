@@ -13,18 +13,23 @@ export const entityAnimationRoutes: EntityAnimationRoute[] = [
   {
     path: '/entity-animation/manual-trigger',
     label: 'Manual Trigger',
-    description: 'Manual play and cancel controls for a single animation.',
+    description: 'Manual play, stop, reset, finish, and api.set controls.',
+  },
+  {
+    path: '/entity-animation/transform-cache-repro',
+    label: 'Transform Cache Repro',
+    description:
+      'Reproduce stale SpatialEntity transform values after native animation completion.',
   },
   {
     path: '/entity-animation/reverse-loop',
     label: 'Reverse Loop',
-    description: 'Reverse loop rotation with pause/play (resume) and cancel.',
+    description: 'Percentage timeline rotation with reverse loop controls.',
   },
   {
     path: '/entity-animation/cancel-sync',
-    label: 'Cancel and Sync State',
-    description:
-      'Sync React state with the cancel restore point to avoid jumps.',
+    label: 'Stop and Sync State',
+    description: 'Sync React state with the native-confirmed stop pose.',
   },
   {
     path: '/entity-animation/capability-check',
@@ -40,5 +45,22 @@ export const entityAnimationRoutes: EntityAnimationRoute[] = [
     path: '/entity-animation/play-state',
     label: 'PlayState Inspector',
     description: 'Verify api.playState transitions across the full lifecycle.',
+  },
+  {
+    path: '/entity-animation/binding-ownership',
+    label: 'Binding and Ownership',
+    description:
+      'Verify unbind takeover and reject one animation bound to two Entities.',
+  },
+  {
+    path: '/entity-animation/config-replacement',
+    label: 'In-place Config Update',
+    description:
+      'Retarget the current binding, refresh callbacks, and start a new lifecycle on remount.',
+  },
+  {
+    path: '/entity-animation/isolation-cleanup',
+    label: 'Isolation and Cleanup',
+    description: 'Run, stop, and destroy two independent Entity animations.',
   },
 ]

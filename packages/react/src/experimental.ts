@@ -17,6 +17,16 @@ export type {
 export { useAnimation } from './hooks-web/useAnimation'
 export { useEntityAnimation } from './hooks-web/useEntityAnimation'
 export type {
+  EntityMotionConfig,
+  EntityMotionProps,
+  EntityPlaybackApi,
+  EntityPlaybackError,
+} from '@webspatial/core-sdk'
+export type {
+  EntityMotionAnimation,
+  UseEntityAnimationResult,
+} from './reality/hooks/useEntityAnimation'
+export type {
   UseAnimationResult,
   SpatializedMotionConfig,
   SpatializedMotionSegmentConfig,

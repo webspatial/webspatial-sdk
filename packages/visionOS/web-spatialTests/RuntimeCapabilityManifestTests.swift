@@ -13,7 +13,7 @@ final class RuntimeCapabilityManifestTests: XCTestCase {
         XCTAssertEqual(runtime?["version"], pwaManager.getShellVersion())
         XCTAssertEqual(runtime?["buildId"], pwaManager.getRuntimeBuildId())
         XCTAssertTrue(supported?.contains("Model") ?? false)
-        XCTAssertTrue(supported?.contains("useAnimation:entity") ?? false)
+        XCTAssertTrue(supported?.contains("useEntityAnimation") ?? false)
     }
 
     func test_userScriptInjectsFrozenManifestAtDocumentStart() {
