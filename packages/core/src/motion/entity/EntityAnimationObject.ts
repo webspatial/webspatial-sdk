@@ -366,7 +366,9 @@ export class EntityAnimationObject
 
   /** Notifies confirmed-transform observers in registration order. */
   private publishConfirmedValues(values: EntityMotionProps): void {
-    for (const listener of this.valuesListeners) listener(values)
+    for (const listener of this.valuesListeners) {
+      listener(cloneEntityMotionProps(values))
+    }
   }
 
   /** Converts one failed command reply into one public playback error. */

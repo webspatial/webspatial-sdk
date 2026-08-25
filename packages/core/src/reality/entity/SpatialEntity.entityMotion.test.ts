@@ -166,6 +166,52 @@ describe('SpatialEntity Entity motion', () => {
     )
   })
 
+  it('keeps the transform shadow isolated from mutated confirmed-value observers', async () => {
+    const entity = new SpatialEntity('entity-1')
+    const animation = await entity.createAnimation({
+      from: { position: { x: 0 } },
+      to: { position: { x: 1 } },
+      autoStart: false,
+    })
+    animation.onValuesChange(values => {
+      values.rotation!.y = 100
+      values.scale!.x = 10
+    })
+    const confirmed = {
+      position: { x: 1, y: 2, z: 3 },
+      rotation: { x: 10, y: 20, z: 30 },
+      scale: { x: 2, y: 3, z: 4 },
+    }
+
+    SpatialWebEvent.eventReceiver[animation.id]?.({
+      type: 'spatialanimationstatechanged',
+      detail: {
+        id: animation.id,
+        revision: 0,
+        callbackAction: 'complete',
+        playState: 'finished',
+        values: confirmed,
+      },
+    })
+    platformSpy.callJSB.mockClear()
+
+    await entity.setPosition({ x: 7, y: 8, z: 9 })
+
+    expect(entity.rotation).toEqual({ x: 10, y: 20, z: 30 })
+    expect(entity.scale).toEqual({ x: 2, y: 3, z: 4 })
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'UpdateEntityProperties',
+      JSON.stringify({
+        entityId: 'entity-1',
+        transform: composeSRT(
+          { x: 7, y: 8, z: 9 },
+          { x: 10, y: 20, z: 30 },
+          { x: 2, y: 3, z: 4 },
+        ).toFloat64Array(),
+      }),
+    )
+  })
+
   it('throws when create succeeds without an animation object id', async () => {
     platformSpy.callJSB.mockResolvedValue({
       success: true,
