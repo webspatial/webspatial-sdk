@@ -7,7 +7,7 @@
     "dev": "tsx scripts/dev.ts",
     "test": "mocha",
     "runbuilder": "tsx scripts/runbuilder.ts",
-    "lint": "eslint .",
+    "lint": "pnpm --workspace-root exec eslint tests/ci-test",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -22,19 +22,13 @@
     "@webspatial/builder": "workspace:^"
   },
   "devDependencies": {
-    "@eslint/js": "^9.22.0",
     "@types/chai": "^5.2.1",
     "@types/mocha": "^10.0.10",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@types/express": "^5.0.1",
     "@vitejs/plugin-react": "^4.3.4",
-    "eslint": "^9.22.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
-    "globals": "^16.0.0",
     "typescript": "~5.7.2",
-    "typescript-eslint": "^8.26.1",
     "vite": "^6.3.1"
   }
 }
