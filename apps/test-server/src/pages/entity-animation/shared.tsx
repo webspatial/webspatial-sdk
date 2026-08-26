@@ -140,7 +140,7 @@ export function EntityAnimationOverview() {
         <Link
           key={route.path}
           to={route.path}
-          data-name={`entity-motion-route-${route.path.split('/').at(-1)}`}
+          data-name={`entity-motion-route-${route.path.split('/').slice(-1)[0]}`}
           className="rounded-2xl border border-gray-800 bg-[#111] p-5 transition-colors hover:border-blue-700 hover:bg-[#141414]"
         >
           <div className="text-lg font-semibold text-gray-100">
