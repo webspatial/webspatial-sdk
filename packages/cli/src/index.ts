@@ -11,6 +11,7 @@ import {
 import { launch } from './lib/cmds/launch'
 import { shutdown } from './lib/cmds/shutdown'
 import { test } from './lib/cmds/test'
+import { DEFAULT_PICO_BASE, runPico } from './lib/cmds/runPico'
 
 const MIN_SUPPORTED_NODE_MAJOR = 22
 
@@ -55,6 +56,21 @@ async function setupCommands(program: Command) {
     .option('--tryWithoutBuild <tryWithoutBuild>', 'run without build')
     .action(async options => {
       await run(options)
+    })
+
+  // run-pico command
+  program
+    .command('run-pico')
+    .description('Launch a WebSpatial App on PICO OS 6')
+    .option('--manifest <manifest>', 'manifest path')
+    .option('--manifest-url <manifestUrl>', 'manifest url')
+    .option(
+      '--base <base>',
+      'base URL hosting the WebSpatial App',
+      DEFAULT_PICO_BASE,
+    )
+    .action(async options => {
+      await runPico(options)
     })
 
   // build command
