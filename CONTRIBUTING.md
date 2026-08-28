@@ -6,7 +6,7 @@ Thank you for your interest in contributing to WebSpatial! This document provide
 
 ### Required Tools
 
-- [Node.js 22+](https://nodejs.org/en/download/package-manager) and pnpm 9+ to install dependencies and run the local test website
+- [Node.js 24+](https://nodejs.org/en/download/package-manager) and pnpm 9+ to install dependencies and run the local test website
 - [Xcode 26.x](https://apps.apple.com/us/app/xcode/id497799835?mt=12) with the Apple Vision Pro simulator (current CI selects Xcode 26.3 for visionOS builds)
 - [VSCode](https://code.visualstudio.com/) Text editor (recommended)
 
