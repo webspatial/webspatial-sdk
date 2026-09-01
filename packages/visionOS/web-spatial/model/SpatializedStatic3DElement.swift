@@ -39,6 +39,7 @@ class SpatializedStatic3DElement: SpatializedElement {
     var posterURL: String?
     var loading: Loading = .eager
     var stagemode: StageMode = .none
+    @ObservationIgnored private(set) var blobTransfer: BlobTransfer?
     var allSources: [ModelSource] {
         if let modelURL { [ModelSource(src: modelURL, type: nil)] + sources }
         else { sources }
@@ -46,6 +47,35 @@ class SpatializedStatic3DElement: SpatializedElement {
 
     override var enableGesture: Bool {
         stagemode == .orbit || super.enableGesture
+    }
+
+    func fetchBlob(_ source: ModelSource, from scene: SpatialScene) async throws -> URL {
+        let transfer = BlobTransfer(source: source)
+        let previousTransfer = blobTransfer
+        blobTransfer = transfer
+        if let previousTransfer {
+            await previousTransfer.cancel()
+        }
+
+        defer {
+            if blobTransfer === transfer {
+                blobTransfer = nil
+            }
+        }
+
+        scene.sendWebMsg(
+            id,
+            ModelBlobRequestEvent(
+                detail: ModelBlobRequestDetail(requestId: transfer.requestId, src: source.src)
+            )
+        )
+
+        do {
+            return try await transfer.file()
+        } catch {
+            await transfer.cancel()
+            throw error
+        }
     }
 
     enum CodingKeys: String, CodingKey {
@@ -57,5 +87,13 @@ class SpatializedStatic3DElement: SpatializedElement {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(modelURL, forKey: .modelURL)
         try container.encode(SpatializedElementType.SpatializedStatic3DElement, forKey: .type)
+    }
+
+    override func onDestroy() {
+        if let blobTransfer {
+            self.blobTransfer = nil
+            Task { await blobTransfer.cancel() }
+        }
+        super.onDestroy()
     }
 }

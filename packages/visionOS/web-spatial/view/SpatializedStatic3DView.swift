@@ -198,8 +198,15 @@ struct SpatializedStatic3DView: View {
     /// Attempts to load from each source in order, returning the first success.
     private func loadSources(_ sources: [ModelSource]) async -> (url: URL, asset: Model3DAsset)? {
         for source in sources {
-            guard let url = localOrRemoteURL(url: source.src) else { continue }
             do {
+                if source.src.hasPrefix("blob:") {
+                    let fileURL = try await spatializedStatic3DElement.fetchBlob(source, from: spatialScene)
+                    defer { try? FileManager.default.removeItem(at: fileURL) }
+                    guard let sourceURL = URL(string: source.src) else { continue }
+                    return try (sourceURL, await loadAsset(from: fileURL))
+                }
+
+                guard let url = localOrRemoteURL(url: source.src) else { continue }
                 return try (url, await loadAsset(from: url))
             } catch {
                 continue
