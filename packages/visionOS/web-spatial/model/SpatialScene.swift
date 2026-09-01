@@ -328,6 +328,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(RemoveEntityFromParent.self, onRemoveEntityFromParent)
         spatialWebViewModel.addJSBListener(UpdateEntityProperties.self, onUpdateEntityProperties)
         spatialWebViewModel.addJSBListener(CreateModelAsset.self, onCreateModelAsset)
+        spatialWebViewModel.addJSBListener(StartBlobTransfer.self, onStartBlobTransfer)
+        spatialWebViewModel.addJSBListener(TransferBlobChunk.self, onTransferBlobChunk)
+        spatialWebViewModel.addJSBListener(CompleteBlobTransfer.self, onCompleteBlobTransfer)
+        spatialWebViewModel.addJSBListener(FailBlobTransfer.self, onFailBlobTransfer)
         spatialWebViewModel.addJSBListener(CreateSpatialModelEntity.self, onCreateSpatialModelEntity)
         spatialWebViewModel.addJSBListener(UpdateEntityEvent.self, onUpdateEntityEvent)
         spatialWebViewModel.addJSBListener(ConvertFromEntityToEntity.self, onConvertFromEntityToEntity)
@@ -644,6 +648,72 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         let spatialObject: SpatializedDynamic3DElement = createSpatializedElement(.SpatializedDynamic3DElement)
 
         resolve(.success(AddSpatializedElementReply(id: spatialObject.id)))
+    }
+
+    private func onStartBlobTransfer(
+        command: StartBlobTransfer,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        withBlobTransfer(command, resolve: resolve) { transfer in
+            try await transfer.start(src: command.src, mimeType: command.mimeType, size: command.size)
+        }
+    }
+
+    private func onTransferBlobChunk(
+        command: TransferBlobChunk,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        withBlobTransfer(command, resolve: resolve) { transfer in
+            try await transfer.write(offset: command.offset, base64Data: command.data)
+        }
+    }
+
+    private func onCompleteBlobTransfer(
+        command: CompleteBlobTransfer,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        withBlobTransfer(command, resolve: resolve) { transfer in
+            try await transfer.complete()
+        }
+    }
+
+    private func onFailBlobTransfer(
+        command: FailBlobTransfer,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>
+    ) {
+        withBlobTransfer(command, resolve: resolve) { transfer in
+            await transfer.cancel(reason: command.message)
+        }
+    }
+
+    private func withBlobTransfer<Command: BlobTransferCommand>(
+        _ command: Command,
+        resolve: @escaping JSBManager.ResolveHandler<Encodable>,
+        operation: @escaping (BlobTransfer) async throws -> Void
+    ) {
+        guard let element: SpatializedStatic3DElement = findSpatialObject(command.id) else {
+            resolve(.failure(JsbError(
+                code: .InvalidSpatialObject,
+                message: "Blob transfer element \(command.id) does not exist"
+            )))
+            return
+        }
+        guard let transfer = element.blobTransfer, transfer.requestId == command.requestId else {
+            resolve(.failure(JsbError(
+                code: .CommandError,
+                message: "No active blob transfer for requestId=\(command.requestId)"
+            )))
+            return
+        }
+
+        Task {
+            do {
+                try await operation(transfer)
+                resolve(.success(baseReplyData))
+            } catch {
+                resolve(.failure(JsbError(code: .CommandError, message: error.localizedDescription)))
+            }
+        }
     }
 
     private func onUpdateSpatializedDynamic3DElementProperties(command: UpdateSpatializedDynamic3DElementProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
