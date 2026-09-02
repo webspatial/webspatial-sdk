@@ -171,4 +171,7 @@ struct ModelBlobRequestDetail: Encodable {
 struct ModelBlobRequestEvent: Encodable {
     let type: SpatialWebMsgType = .modelblobrequest
     let detail: ModelBlobRequestDetail
+    init(requestId: String, src: String) {
+        detail = ModelBlobRequestDetail(requestId: requestId, src: src)
+    }
 }

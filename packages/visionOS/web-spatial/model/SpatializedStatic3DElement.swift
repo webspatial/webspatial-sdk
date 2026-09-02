@@ -39,12 +39,12 @@ class SpatializedStatic3DElement: SpatializedElement {
     var posterURL: String?
     var loading: Loading = .eager
     var stagemode: StageMode = .none
-    @ObservationIgnored private(set) var blobTransfer: BlobTransfer?
     var allSources: [ModelSource] {
         if let modelURL { [ModelSource(src: modelURL, type: nil)] + sources }
         else { sources }
     }
 
+    @ObservationIgnored private(set) var blobTransfer: BlobTransfer?
     override var enableGesture: Bool {
         stagemode == .orbit || super.enableGesture
     }
@@ -56,19 +56,8 @@ class SpatializedStatic3DElement: SpatializedElement {
         if let previousTransfer {
             await previousTransfer.cancel()
         }
-
-        defer {
-            if blobTransfer === transfer {
-                blobTransfer = nil
-            }
-        }
-
-        scene.sendWebMsg(
-            id,
-            ModelBlobRequestEvent(
-                detail: ModelBlobRequestDetail(requestId: transfer.requestId, src: source.src)
-            )
-        )
+        defer { if blobTransfer === transfer { blobTransfer = nil } }
+        scene.sendWebMsg(id, ModelBlobRequestEvent(requestId: transfer.requestId, src: source.src))
 
         do {
             return try await transfer.file()
