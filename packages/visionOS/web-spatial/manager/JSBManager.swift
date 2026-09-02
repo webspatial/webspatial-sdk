@@ -64,6 +64,17 @@ class JSBManager {
 
     private let encoder = JSONEncoder()
 
+    /// Serial so decode order - and therefore command execution order - still
+    /// matches the order messages arrived from the web view.
+    private let decodeQueue = DispatchQueue(
+        label: "com.xrsdk.jsbDecodeQueue",
+        qos: .userInitiated
+    )
+
+    /// Bounds the separator scan. Command keys are 43 characters at most, so a
+    /// multi-megabyte blob chunk is never walked on the main thread.
+    private static let maxCommandKeyLength = 128
+
     func register<T: CommandDataProtocol>(_ type: T.Type) {
         typeMap[T.commandType] = type
     }
@@ -93,58 +104,50 @@ class JSBManager {
     }
 
     func handlerMessage(_ message: String, _ replyHandler: ((Any?, String?) -> Void)? = nil) {
-        let actionKey = message.components(separatedBy: "::").first ?? ""
-        do {
-            let jsbInfo = message.components(separatedBy: "::")
-            let hasData = jsbInfo.count == 2 && jsbInfo[1] != ""
-            let requiresEntityPayload = actionKey == CreateEntityAnimationCommand.commandType
-                || actionKey == UpdateEntityAnimationCommand.commandType
-                || actionKey == ControlEntityAnimationCommand.commandType
-                || actionKey == SetEntityAnimationCommand.commandType
-            if requiresEntityPayload, !hasData {
-                throw DecodingError.dataCorrupted(
-                    .init(
-                        codingPath: [],
-                        debugDescription: "Entity command payload is required."
-                    )
-                )
+        let header = message.prefix(Self.maxCommandKeyLength)
+        let separator = header.range(of: "::")
+        let actionKey = String(header[header.startIndex ..< (separator?.lowerBound ?? header.endIndex)])
+        let payloadStart = separator?.upperBound
+
+        let requiresEntityPayload = actionKey == CreateEntityAnimationCommand.commandType
+            || actionKey == UpdateEntityAnimationCommand.commandType
+            || actionKey == ControlEntityAnimationCommand.commandType
+            || actionKey == SetEntityAnimationCommand.commandType
+
+        // Resolved here so the registration maps stay confined to the main thread.
+        let type = typeMap[actionKey]
+        let dataAction = actionWithDataMap[actionKey]
+        let voidAction = actionWithoutDataMap[actionKey]
+
+        // Decoding a blob chunk means parsing megabytes of Base64. Keeping it off
+        // the main thread stops model transfers from dropping scroll frames.
+        decodeQueue.async {
+            // First separator only: JSON payloads may legitimately contain "::".
+            let payload = payloadStart.map { message[$0...] } ?? ""
+
+            if payload.isEmpty {
+                if requiresEntityPayload {
+                    self.replyInvalidPayload(actionKey: actionKey, replyHandler: replyHandler)
+                } else if let voidAction {
+                    self.handleAction(action: voidAction, replyHandler: replyHandler)
+                } else {
+                    self.replyInvalidCommand(actionKey: actionKey, replyHandler: replyHandler)
+                }
+                return
             }
 
-            if hasData {
-                let data = try deserialize(cmdType: actionKey, cmdContent: jsbInfo[1])
-                if let action = actionWithDataMap[actionKey] {
-                    handleAction(action: { callback in
-                        action(data!, callback)
-                    }, replyHandler: replyHandler)
-                } else {
-                    print("Invalid JSB!!!", message)
-                    replyHandler?(nil, "Invalid JSB!!! \(message)")
-                }
-            } else {
-                if let action = actionWithoutDataMap[actionKey] {
-                    handleAction(action: action, replyHandler: replyHandler)
-                } else {
-                    print("Invalid JSB!!!", message)
-                    replyHandler?(nil, "Invalid JSB!!! \(message)")
-                }
+            guard let type, let dataAction else {
+                self.replyInvalidCommand(actionKey: actionKey, replyHandler: replyHandler)
+                return
             }
-        } catch {
-            let code: ReplyCode
-            switch actionKey {
-            case CreateEntityAnimationCommand.commandType,
-                 UpdateEntityAnimationCommand.commandType:
-                code = .INVALID_TIMELINE
-            case ControlEntityAnimationCommand.commandType:
-                code = .INVALID_CONTROL_STATE
-            case SetEntityAnimationCommand.commandType:
-                code = .INVALID_SET_VALUES
-            default:
-                code = .TypeError
+            do {
+                let data = try JSONDecoder().decode(type.self, from: Data(payload.utf8))
+                self.handleAction(action: { callback in
+                    dataAction(data, callback)
+                }, replyHandler: replyHandler)
+            } catch {
+                self.replyInvalidPayload(actionKey: actionKey, replyHandler: replyHandler)
             }
-            let resultString = parseData(
-                JsbErrorData(code: code, message: "Invalid command payload.")
-            )
-            replyHandler?(nil, resultString)
         }
     }
 
@@ -172,21 +175,34 @@ class JSBManager {
         }
     }
 
-    private func deserialize(cmdType: String, cmdContent: String?) throws -> CommandDataProtocol? {
-        let decoder = JSONDecoder()
-
-        guard let type = typeof(for: cmdType) else {
-            print("unknownType")
-            return nil
+    /// Both reply helpers hop to main: WebKit expects reply handlers there, and
+    /// `parseData` shares one encoder with the `handleAction` path.
+    private func replyInvalidPayload(actionKey: String, replyHandler: ((Any?, String?) -> Void)?) {
+        DispatchQueue.main.async {
+            let code: ReplyCode
+            switch actionKey {
+            case CreateEntityAnimationCommand.commandType,
+                 UpdateEntityAnimationCommand.commandType:
+                code = .INVALID_TIMELINE
+            case ControlEntityAnimationCommand.commandType:
+                code = .INVALID_CONTROL_STATE
+            case SetEntityAnimationCommand.commandType:
+                code = .INVALID_SET_VALUES
+            default:
+                code = .TypeError
+            }
+            replyHandler?(nil, self.parseData(
+                JsbErrorData(code: code, message: "Invalid command payload.")
+            ))
         }
-        if cmdContent == nil {
-            return nil
-        }
-        return try decoder.decode(type.self, from: cmdContent!.data(using: .utf8)!)
     }
 
-    private func typeof(for key: String) -> CommandDataProtocol.Type? {
-        return typeMap[key]
+    private func replyInvalidCommand(actionKey: String, replyHandler: ((Any?, String?) -> Void)?) {
+        DispatchQueue.main.async {
+            // Logs the key only - a blob chunk message is megabytes long.
+            print("Invalid JSB!!!", actionKey)
+            replyHandler?(nil, "Invalid JSB!!! \(actionKey)")
+        }
     }
 
     private func parseData(_ data: Encodable) -> String? {
