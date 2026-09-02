@@ -1,4 +1,3 @@
-import AsyncAlgorithms
 import Foundation
 
 /// Reassembles the chunks of a JavaScript `Blob` into a temporary file.
@@ -6,25 +5,22 @@ actor BlobTransfer {
     nonisolated let requestId: String
 
     private let source: ModelSource
-    private let timeout: Duration
-    private let chunks = AsyncChannel<Chunk>()
+    private let chunks: AsyncStream<Chunk>
+    private let chunkContinuation: AsyncStream<Chunk>.Continuation
 
     private var metadata: Metadata?
     private var metadataContinuation: CheckedContinuation<Metadata, Error>?
     private var receivedByteCount = 0
     private var terminalError: Error?
     private var isFinished = false
-    private var timeoutTask: Task<Void, Never>?
-    private var timeoutGeneration = 0
 
     init(
         source: ModelSource,
-        requestId: String = UUID().uuidString,
-        timeout: Duration = .seconds(1)
+        requestId: String = UUID().uuidString
     ) {
         self.source = source
         self.requestId = requestId
-        self.timeout = timeout
+        (chunks, chunkContinuation) = AsyncStream<Chunk>.makeStream()
     }
 
     /// Waits for transfer metadata, then writes chunks at their declared offsets.
@@ -36,18 +32,15 @@ actor BlobTransfer {
             .appendingPathExtension(source.fileExtension(mimeType: source.type ?? metadata.mimeType))
 
         do {
-            try Data().write(to: fileURL, options: .withoutOverwriting)
+            FileManager.default.createFile(atPath: fileURL.path, contents: nil)
             let file = try FileHandle(forWritingTo: fileURL)
             defer { try? file.close() }
 
-            armTimeout()
             for await chunk in chunks {
                 try Task.checkCancellation()
                 try file.seek(toOffset: UInt64(chunk.offset))
                 try file.write(contentsOf: chunk.data)
-                armTimeout()
             }
-            disarmTimeout()
 
             if let terminalError {
                 throw terminalError
@@ -95,7 +88,7 @@ actor BlobTransfer {
         }
 
         receivedByteCount += data.count
-        await chunks.send(Chunk(offset: offset, data: data))
+        chunkContinuation.yield(Chunk(offset: offset, data: data))
 
         if let terminalError {
             throw terminalError
@@ -117,8 +110,7 @@ actor BlobTransfer {
         }
 
         isFinished = true
-        disarmTimeout()
-        chunks.finish()
+        chunkContinuation.finish()
     }
 
     func cancel(reason: String? = nil) {
@@ -132,8 +124,6 @@ actor BlobTransfer {
         if let terminalError {
             throw terminalError
         }
-
-        armTimeout()
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
                 if let metadata {
@@ -149,37 +139,13 @@ actor BlobTransfer {
         }
     }
 
-    private func armTimeout() {
-        timeoutGeneration += 1
-        let generation = timeoutGeneration
-        timeoutTask?.cancel()
-        timeoutTask = Task { [weak self, timeout] in
-            do {
-                try await Task.sleep(for: timeout)
-                await self?.timeOut(generation: generation)
-            } catch {}
-        }
-    }
-
-    private func disarmTimeout() {
-        timeoutGeneration += 1
-        timeoutTask?.cancel()
-        timeoutTask = nil
-    }
-
-    private func timeOut(generation: Int) {
-        guard generation == timeoutGeneration, !isFinished else { return }
-        finish(throwing: BlobTransferError.timedOut)
-    }
-
     private func finish(throwing error: Error) {
         guard !isFinished else { return }
         isFinished = true
         terminalError = error
-        disarmTimeout()
         metadataContinuation?.resume(throwing: error)
         metadataContinuation = nil
-        chunks.finish()
+        chunkContinuation.finish()
     }
 }
 
@@ -204,7 +170,6 @@ enum BlobTransferError: LocalizedError, Equatable {
     case chunkOutOfBounds(offset: Int, byteCount: Int, expectedByteCount: Int)
     case byteCountMismatch(expected: Int, received: Int)
     case cancelled(String?)
-    case timedOut
 
     var errorDescription: String? {
         switch self {
@@ -224,8 +189,6 @@ enum BlobTransferError: LocalizedError, Equatable {
             "Expected \(expected) blob bytes, received \(received)"
         case let .cancelled(reason):
             reason ?? "Blob transfer was cancelled"
-        case .timedOut:
-            "Blob transfer timed out while waiting for data"
         }
     }
 }
