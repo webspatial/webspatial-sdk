@@ -4,6 +4,19 @@ import SwiftUI
 struct ModelSource: Codable, Equatable {
     let src: String
     let type: String?
+    var fileExtension: String {
+        switch type {
+        case "model/gltf+json": return "gltf"
+        case "model/gltf-binary": return "glb"
+        case "model/obj": return "obj"
+        case "model/stl": return "stl"
+        case "model/vnd.usda": return "usda"
+        case "model/vnd.usdz+zip": return "usdz"
+        default:
+            let pathExtension = URL(string: src)?.pathExtension ?? ""
+            return pathExtension.isEmpty ? "usdz" : pathExtension
+        }
+    }
 }
 
 enum Loading: String {

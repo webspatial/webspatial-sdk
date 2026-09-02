@@ -27,9 +27,10 @@ actor BlobTransfer {
     /// The caller owns the returned temporary file and must remove it after use.
     func file() async throws -> URL {
         let metadata = try await awaitMetadata()
+        let type = source.type ?? metadata.mimeType
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("BlobTransfer-\(UUID().uuidString)")
-            .appendingPathExtension(source.fileExtension(mimeType: source.type ?? metadata.mimeType))
+            .appendingPathExtension(ModelSource(src: source.src, type: type).fileExtension)
 
         do {
             FileManager.default.createFile(atPath: fileURL.path, contents: nil)
@@ -190,27 +191,5 @@ enum BlobTransferError: LocalizedError, Equatable {
         case let .cancelled(reason):
             reason ?? "Blob transfer was cancelled"
         }
-    }
-}
-
-extension ModelSource {
-    func fileExtension(mimeType: String?) -> String {
-        let typeExtension: String? = switch mimeType {
-        case "model/gltf+json": "gltf"
-        case "model/gltf-binary": "glb"
-        case "model/obj": "obj"
-        case "model/stl": "stl"
-        case "model/vnd.usda": "usda"
-        case "model/vnd.usdz+zip": "usdz"
-        default: nil
-        }
-
-        if let typeExtension {
-            return typeExtension
-        }
-        if let sourceExtension = URL(string: src)?.pathExtension, !sourceExtension.isEmpty {
-            return sourceExtension
-        }
-        return "usdz"
     }
 }
