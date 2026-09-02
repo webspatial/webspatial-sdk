@@ -8,18 +8,18 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
     "@webspatial/core-sdk": "workspace:*",
     "@webspatial/react-sdk": "workspace:*",
-    "@vitejs/plugin-react": "^4.3.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "vite": "^6.2.4",
-    "vitest": "^3.1.2"
+    "vite": "^6.4.2",
+    "vitest": "^3.2.7"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
-    "@types/react": "^18.3.21",
+    "@types/node": "^24.13.3",
+    "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
-    "typescript": "^5.7.3"
+    "typescript": "^5.9.3"
   }
 }

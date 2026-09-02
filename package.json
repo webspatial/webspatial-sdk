@@ -66,16 +66,16 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
-    "@changesets/cli": "^2.29.2",
-    "@fission-ai/openspec": "^1.4.0",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@changesets/cli": "^2.31.1",
+    "@fission-ai/openspec": "^1.12.0",
+    "@vitest/coverage-v8": "^4.1.11",
     "concurrently": "^8.2.2",
-    "lint-staged": "^15.2.10",
-    "prettier": "^3.3.3",
-    "simple-git-hooks": "^2.11.1",
-    "typescript": "^5.7.3",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.9.6",
+    "simple-git-hooks": "^2.14.0",
+    "typescript": "^5.9.3",
     "vite": "6.4.2",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.11"
   },
   "packageManager": "pnpm@11.25.0"
 }
