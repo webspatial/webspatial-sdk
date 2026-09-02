@@ -66,18 +66,12 @@ class SpatializedStatic3DElement: SpatializedElement {
         let transfer = BlobTransfer(source: source)
         let previousTransfer = blobTransfer
         blobTransfer = transfer
-        if let previousTransfer {
-            await previousTransfer.cancel()
-        }
+        await previousTransfer?.cancel()
         defer { if blobTransfer === transfer { blobTransfer = nil } }
-        scene.sendWebMsg(id, ModelBlobRequestEvent(requestId: transfer.requestId, src: source.src))
 
-        do {
-            return try await transfer.file()
-        } catch {
-            await transfer.cancel()
-            throw error
-        }
+        // `BlobTransfer` cleans up its temporary file on every failure path.
+        scene.sendWebMsg(id, ModelBlobRequestEvent(requestId: transfer.requestId, src: source.src))
+        return try await transfer.file()
     }
 
     enum CodingKeys: String, CodingKey {

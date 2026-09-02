@@ -20,14 +20,23 @@ export async function transferBlob(
   try {
     const response = await fetch(src)
     const blob = await response.blob()
-    const params = { requestId, src, mimeType: blob.type, size: blob.size }
-    await execute(new StartBlobTransferCommand(element, params))
+    await execute(
+      new StartBlobTransferCommand(element, {
+        requestId,
+        src,
+        mimeType: blob.type,
+        size: blob.size,
+      }),
+    )
 
+    // Workers share one iterator, so each pulls the next unsent chunk.
     const chunks = chunkBlob(blob)
     const transferChunks = async () => {
-      for await (const { offset, slice } of chunks) {
-        const params = { requestId, offset, data: await encodeBase64(slice) }
-        await execute(new TransferBlobChunkCommand(element, params))
+      for (const { offset, slice } of chunks) {
+        const data = await encodeBase64(slice)
+        await execute(
+          new TransferBlobChunkCommand(element, { requestId, offset, data }),
+        )
       }
     }
 
@@ -39,10 +48,9 @@ export async function transferBlob(
   }
 }
 
-async function* chunkBlob(blob: Blob) {
+function* chunkBlob(blob: Blob) {
   for (let offset = 0; offset < blob.size; offset += CHUNK_SIZE) {
-    const slice = blob.slice(offset, offset + CHUNK_SIZE)
-    yield { offset, slice }
+    yield { offset, slice: blob.slice(offset, offset + CHUNK_SIZE) }
   }
 }
 
