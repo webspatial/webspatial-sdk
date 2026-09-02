@@ -31,7 +31,9 @@ jobs:
           fetch-depth: 1000
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/setup@v2
+        with:
+          install: false
 
       - name: Setup node.js
         uses: actions/setup-node@v4
