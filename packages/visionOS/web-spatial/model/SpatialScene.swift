@@ -36,6 +36,50 @@ let defaultSceneConfig = SceneOptions(
     baseplateVisibility: .automatic
 )
 
+func webSpatialQueryItems(from url: URL) -> [URLQueryItem] {
+    let absoluteString = url.absoluteString
+    guard absoluteString.hasPrefix("about:blank?") else {
+        return URLComponents(string: absoluteString)?.queryItems ?? []
+    }
+
+    // For the opaque about: URL supplied by WKNavigationAction on visionOS,
+    // absoluteString retains the query while both url.query and
+    // URLComponents(string: absoluteString)?.queryItems are nil.
+    let queryAndFragment = absoluteString.dropFirst("about:blank?".count)
+    let percentEncodedQuery = queryAndFragment.split(
+        separator: "#",
+        maxSplits: 1,
+        omittingEmptySubsequences: false
+    ).first.map(String.init) ?? ""
+
+    var components = URLComponents()
+    components.percentEncodedQuery = percentEncodedQuery
+    return components.queryItems ?? []
+}
+
+enum SpatialOpenWindowCommand: String {
+    case createSpatialScene
+    case createSpatialized2DElement
+    case createAttachment
+    case createOrnament
+
+    init?(url: URL) {
+        let rawCommand = webSpatialQueryItems(from: url)
+            .first { $0.name == "command" }?
+            .value
+            ?? url.host
+
+        guard let rawCommand,
+              let command = SpatialOpenWindowCommand(rawValue: rawCommand),
+              url.scheme == "webspatial"
+              || (url.absoluteString.starts(with: "about:blank?") && command != .createSpatialScene)
+        else {
+            return nil
+        }
+        self = command
+    }
+}
+
 @Observable
 class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSender {
     var parent: (any ScrollAbleSpatialElementContainer)?
@@ -351,6 +395,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(CreateSpatializedElementAnimationCommand.self, onCreateSpatializedElementAnimation)
         spatialWebViewModel.addJSBListener(ControlSpatializedElementAnimationCommand.self, onControlSpatializedElementAnimation)
         spatialWebViewModel.addOpenWindowListener(protocal: "webspatial", onOpenWindowHandler)
+        spatialWebViewModel.addOpenWindowListener(protocal: "about:blank?", onOpenWindowHandler)
 
         spatialWebViewModel
             .addNavigationListener(protocal: SpatialApp.Instance.scope, event: handleNavigationCheck)
@@ -421,24 +466,26 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func onOpenWindowHandler(url: URL) -> WebViewElementInfo? {
-        let host = url.host ?? ""
-        if host == "createSpatialScene" {
+        guard let command = SpatialOpenWindowCommand(url: url) else {
+            logger.warning("Unknown spatial open-window request: scheme=\(url.scheme ?? "nil"), host=\(url.host ?? "nil")")
+            return nil
+        }
+
+        switch command {
+        case .createSpatialScene:
             return handleWindowOpenCustom(url)
-        } else if host == "createAttachment" {
+        case .createAttachment:
             return handleCreateAttachment(url)
-        } else if host == "createOrnament" {
+        case .createOrnament:
             return handleOrnamentWindowOpen(url)
-        } else if host == "createSpatialized2DElement" {
-            guard shouldAcceptSpatialRequest(url, command: host) else {
+        case .createSpatialized2DElement:
+            guard shouldAcceptSpatialRequest(url, command: command.rawValue) else {
                 return nil
             }
             let spatialized2DElement: Spatialized2DElement = createSpatializedElement(
                 .Spatialized2DElement
             )
             return WebViewElementInfo(id: spatialized2DElement.id, element: spatialized2DElement.getWebViewModel())
-        } else {
-            logger.warning("Unknown webspatial open-window command: \(host)")
-            return nil
         }
     }
 
@@ -540,7 +587,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
     }
 
     private func parseSpatialRequestMetadata(_ url: URL) -> SpatialRequestMetadata {
-        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        let items = webSpatialQueryItems(from: url)
         let rid = items.first { $0.name == "rid" }?.value
         let pageEpoch = items.first { $0.name == "wsepoch" }?.value
         return SpatialRequestMetadata(rid: rid, pageEpoch: pageEpoch)
