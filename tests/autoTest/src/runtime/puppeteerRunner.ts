@@ -6,6 +6,7 @@ import puppeteer, {
   type FrameWaitForFunctionOptions,
   Page,
   Viewport,
+  SetContentWaitForOptions,
 } from 'puppeteer'
 import { WebSpatial } from '../WebSpatial'
 import { BackgroundMaterial, WindowStyle, SpatialScene } from '../types/types'
@@ -213,7 +214,10 @@ export class PuppeteerRunner {
    * @param html HTML content
    * @param options Content loading options
    */
-  async setContent(html: string, options?: PageContentOptions): Promise<void> {
+  async setContent(
+    html: string,
+    options?: SetContentWaitForOptions,
+  ): Promise<void> {
     if (!this.page) throw new Error('Puppeteer runner not started')
 
     console.log('Setting page content')
@@ -224,7 +228,7 @@ export class PuppeteerRunner {
       }
     }
     await this.page.setContent(html, {
-      waitUntil: options?.waitUntil || 'networkidle0',
+      waitUntil: options?.waitUntil,
       timeout: options?.timeout,
     })
   }
