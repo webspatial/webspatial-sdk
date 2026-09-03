@@ -189,14 +189,14 @@ private extension BlobTransfer {
         let mimeType: String
         let byteCount: Int
     }
-
-    struct Chunk {
-        let offset: Int
-        let data: Data
-    }
 }
 
-enum BlobTransferError: LocalizedError, Equatable {
+private struct Chunk {
+    let offset: Int
+    let data: Data
+}
+
+enum BlobTransferError: Error {
     case sourceMismatch(expected: String, actual: String)
     case negativeSize(Int)
     case alreadyStarted
@@ -206,27 +206,4 @@ enum BlobTransferError: LocalizedError, Equatable {
     case byteCountMismatch(expected: Int, received: Int)
     case cancelled(String?)
     case timedOut
-
-    var errorDescription: String? {
-        switch self {
-        case let .sourceMismatch(expected, actual):
-            "Blob source mismatch: expected \(expected), received \(actual)"
-        case let .negativeSize(size):
-            "Blob size must not be negative: \(size)"
-        case .alreadyStarted:
-            "Blob transfer has already started"
-        case .notActive:
-            "Blob transfer is not active"
-        case .invalidBase64:
-            "Blob chunk is not valid Base64 data"
-        case let .chunkOutOfBounds(offset, byteCount, expectedByteCount):
-            "Blob chunk at offset \(offset) with \(byteCount) bytes exceeds the expected file size of \(expectedByteCount)"
-        case let .byteCountMismatch(expected, received):
-            "Expected \(expected) blob bytes, received \(received)"
-        case let .cancelled(reason):
-            reason ?? "Blob transfer was cancelled"
-        case .timedOut:
-            "Blob transfer timed out while waiting for data"
-        }
-    }
 }
