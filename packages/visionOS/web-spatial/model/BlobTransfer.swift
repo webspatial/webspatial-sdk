@@ -1,12 +1,13 @@
 import AsyncAlgorithms
 import Foundation
 
+private let tag = "BlobTransfer"
+
 /// Reassembles the chunks of a JavaScript `Blob` into a temporary file.
 actor BlobTransfer {
     nonisolated let requestId: String
 
     private let source: ModelSource
-    private let timeout: Duration
     private let chunks = AsyncChannel<Chunk>()
 
     private var metadata: Metadata?
@@ -14,17 +15,10 @@ actor BlobTransfer {
     private var receivedByteCount = 0
     private var terminalError: Error?
     private var isFinished = false
-    private var timeoutTask: Task<Void, Never>?
-    private var timeoutGeneration = 0
 
-    init(
-        source: ModelSource,
-        requestId: String = UUID().uuidString,
-        timeout: Duration = .seconds(1)
-    ) {
+    init(source: ModelSource, requestId: String = UUID().uuidString) {
         self.source = source
         self.requestId = requestId
-        self.timeout = timeout
     }
 
     /// Waits for transfer metadata, then writes chunks at their declared offsets.
@@ -33,7 +27,7 @@ actor BlobTransfer {
         let metadata = try await awaitMetadata()
         let type = source.type ?? metadata.mimeType
         let fileURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("BlobTransfer-\(UUID().uuidString)")
+            .appendingPathComponent("\(tag)-\(requestId)")
             .appendingPathExtension(ModelSource(src: source.src, type: type).fileExtension)
 
         do {
@@ -41,14 +35,11 @@ actor BlobTransfer {
             let file = try FileHandle(forWritingTo: fileURL)
             defer { try? file.close() }
 
-            armTimeout()
             for await chunk in chunks {
                 try Task.checkCancellation()
                 try file.seek(toOffset: UInt64(chunk.offset))
                 try file.write(contentsOf: chunk.data)
-                armTimeout()
             }
-            disarmTimeout()
 
             if let terminalError {
                 throw terminalError
@@ -61,16 +52,10 @@ actor BlobTransfer {
         }
     }
 
-    func start(src: String, mimeType: String, size: Int) throws {
-        guard src == source.src else {
-            throw BlobTransferError.sourceMismatch(expected: source.src, actual: src)
-        }
-        guard size >= 0 else {
-            throw BlobTransferError.negativeSize(size)
-        }
-        guard metadata == nil, !isFinished else {
-            throw BlobTransferError.alreadyStarted
-        }
+    func start(src: String, mimeType: String, size: Int) throws(BlobTransferError) {
+        guard src == source.src else { throw .sourceMismatch(expected: source.src, actual: src) }
+        guard size >= 0 else { throw .negativeSize(size) }
+        guard metadata == nil, !isFinished else { throw .alreadyStarted }
 
         let metadata = Metadata(mimeType: mimeType, byteCount: size)
         self.metadata = metadata
@@ -118,7 +103,6 @@ actor BlobTransfer {
         }
 
         isFinished = true
-        disarmTimeout()
         chunks.finish()
     }
 
@@ -134,7 +118,6 @@ actor BlobTransfer {
             throw terminalError
         }
 
-        armTimeout()
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
                 if let metadata {
@@ -150,34 +133,10 @@ actor BlobTransfer {
         }
     }
 
-    private func armTimeout() {
-        timeoutGeneration += 1
-        let generation = timeoutGeneration
-        timeoutTask?.cancel()
-        timeoutTask = Task { [weak self, timeout] in
-            do {
-                try await Task.sleep(for: timeout)
-                await self?.timeOut(generation: generation)
-            } catch {}
-        }
-    }
-
-    private func disarmTimeout() {
-        timeoutGeneration += 1
-        timeoutTask?.cancel()
-        timeoutTask = nil
-    }
-
-    private func timeOut(generation: Int) {
-        guard generation == timeoutGeneration, !isFinished else { return }
-        finish(throwing: BlobTransferError.timedOut)
-    }
-
     private func finish(throwing error: Error) {
         guard !isFinished else { return }
         isFinished = true
         terminalError = error
-        disarmTimeout()
         metadataContinuation?.resume(throwing: error)
         metadataContinuation = nil
         chunks.finish()
@@ -205,5 +164,4 @@ enum BlobTransferError: Error {
     case chunkOutOfBounds(offset: Int, byteCount: Int, expectedByteCount: Int)
     case byteCountMismatch(expected: Int, received: Int)
     case cancelled(String?)
-    case timedOut
 }
