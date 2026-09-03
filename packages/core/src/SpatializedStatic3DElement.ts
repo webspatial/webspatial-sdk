@@ -41,8 +41,9 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     modelURL?: string,
     sources?: ModelSource[],
     loading: ModelLoadingMode = 'eager',
+    anchorUid?: string,
   ) {
-    super(id)
+    super(id, anchorUid)
     this.modelURL = modelURL
     this.sources = sources
     this._loading = loading

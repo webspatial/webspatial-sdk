@@ -54,8 +54,18 @@ export abstract class SpatializedElement extends SpatialObject {
    * Registers the element to receive spatial events.
    * @param id Unique identifier for this element
    */
-  constructor(public readonly id: string) {
+  /**
+   * Joins the placeholder DOM node with the JSB content object.
+   * Written to `data-webspatial-anchor-uid` and the create command.
+   */
+  readonly anchorUid?: string
+
+  constructor(
+    public readonly id: string,
+    anchorUid?: string,
+  ) {
     super(id)
+    this.anchorUid = anchorUid
 
     SpatialWebEvent.addEventReceiver(id, this.onReceiveEvent.bind(this))
   }

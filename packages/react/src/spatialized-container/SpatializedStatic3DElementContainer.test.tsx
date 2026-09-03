@@ -35,6 +35,7 @@ const portalInstanceValue = {
 let lastExtraRefProps:
   | ((domProxy: unknown) => Record<string, unknown>)
   | undefined
+let lastContainerProps: Record<string, unknown> | undefined
 
 vi.mock('@webspatial/core-sdk', () => ({
   SpatializedStatic3DElement: class {},
@@ -48,6 +49,7 @@ vi.mock('./SpatializedContainer', () => ({
     spatializedContent: React.ComponentType<Record<string, unknown>>
   } & Record<string, unknown>) => {
     lastExtraRefProps = props.extraRefProps as typeof lastExtraRefProps
+    lastContainerProps = props
     return (
       <PortalInstanceContext.Provider
         value={portalInstanceValue as unknown as PortalInstanceObject}
@@ -85,10 +87,19 @@ describe('SpatializedStatic3DElementContainer lazy/eager loading behavior', () =
   beforeEach(() => {
     updateProperties.mockClear()
     lastExtraRefProps = undefined
+    lastContainerProps = undefined
     IntersectionObserverMock.instances = []
     portalInstanceValue.dom = document.createElement('div')
     globalThis.IntersectionObserver =
       IntersectionObserverMock as unknown as typeof IntersectionObserver
+  })
+
+  it('uses an embed placeholder host for Model layout binding', () => {
+    render(
+      <SpatializedStatic3DElementContainer src="https://example.test/duck.glb" />,
+    )
+    expect(lastContainerProps?.component).toBe('embed')
+    expect(lastContainerProps?.src).toBe('https://example.test/duck.glb')
   })
 
   it('does not load until visible when loading="lazy"', () => {

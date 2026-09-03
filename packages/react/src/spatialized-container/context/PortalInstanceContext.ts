@@ -135,6 +135,7 @@ export class PortalInstanceObject {
       isFixedPosition: computedStyle.getPropertyValue('position') === 'fixed',
     }
 
+    this.bindAnchorUidAttribute()
     this.updateSpatializedElementProperties()
 
     const __innerSpatializedElement = () => this.spatializedElement
@@ -151,11 +152,26 @@ export class PortalInstanceObject {
   // called when SpatializedElement is created
   attachSpatializedElement(spatializedElement: SpatializedElement) {
     this.spatializedElement = spatializedElement
+    this.bindAnchorUidAttribute()
     // attach to spatializedContainerObject
     this.addToParent(spatializedElement)
     this.spatializedElementResolver?.(spatializedElement)
 
     this.updateSpatializedElementProperties()
+  }
+
+  private bindAnchorUidAttribute() {
+    const uid = this.spatializedElement?.anchorUid
+    const dom = this.cachedDomInfo?.dom
+    if (!uid || !dom) {
+      return
+    }
+    if (dom.getAttribute('data-webspatial-anchor-uid') !== uid) {
+      dom.setAttribute('data-webspatial-anchor-uid', uid)
+    }
+    if (dom.tagName === 'EMBED' && !dom.hasAttribute('src')) {
+      dom.setAttribute('src', '')
+    }
   }
 
   private inAddingToParent: boolean = false

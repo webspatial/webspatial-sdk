@@ -342,11 +342,13 @@ export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
     readonly modelURL?: string,
     readonly sources?: ModelSource[],
     readonly loading: ModelLoadingMode = 'eager',
+    readonly anchorUid?: string,
   ) {
     super()
     this.modelURL = modelURL
     this.sources = sources
     this.loading = loading
+    this.anchorUid = anchorUid
   }
 
   protected getParams() {
@@ -354,13 +356,17 @@ export class CreateSpatializedStatic3DElementCommand extends JSBCommand {
       modelURL: this.modelURL,
       sources: this.sources,
       loading: this.loading,
+      anchorUid: this.anchorUid,
     }
   }
 }
 
 export class CreateSpatializedDynamic3DElementCommand extends JSBCommand {
+  constructor(readonly anchorUid?: string) {
+    super()
+  }
   protected getParams(): Record<string, any> | undefined {
-    return { test: true }
+    return { test: true, anchorUid: this.anchorUid }
   }
   commandType = 'CreateSpatializedDynamic3DElement'
 }

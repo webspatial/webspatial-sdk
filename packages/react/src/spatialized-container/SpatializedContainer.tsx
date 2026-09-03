@@ -27,6 +27,7 @@ import {
   useSpatialEventsWhenSpatializedContainerExist,
 } from './hooks/useSpatialEvents'
 import type { SpatializedMotionBinding } from './motion/motionBindingTypes'
+import { embedPlaceholderHostProps } from './embedPlaceholderHostProps'
 
 /**
  * Degraded fallback: strips spatial-only props and renders plain HTML.
@@ -204,7 +205,10 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
           <StandardSpatializedContainer<T>
             ref={standardSpatializedContainerCallback}
             {...spatialIdProps}
-            {...restProps}
+            {...embedPlaceholderHostProps(
+              props.component,
+              restProps as Record<string, unknown>,
+            )}
             inStandardSpatializedContainer={true}
           />
           <TransformVisibilityTaskContainer
@@ -213,6 +217,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
             component={props.component}
             className={probeClassName}
             style={props.style}
+            {...(props.component === 'embed' ? { src: '' } : {})}
           />
         </SpatialLayerContext.Provider>
       )
@@ -275,7 +280,10 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
           <StandardSpatializedContainer<T>
             ref={standardSpatializedContainerCallback}
             {...spatialIdProps}
-            {...restProps}
+            {...embedPlaceholderHostProps(
+              props.component,
+              restProps as Record<string, unknown>,
+            )}
             inStandardSpatializedContainer={false}
           />
           <PortalSpatializedContainer<T>
@@ -289,6 +297,7 @@ export function SpatializedContainerBase<T extends SpatializedElementRef>(
             component={props.component}
             className={probeClassName}
             style={props.style}
+            {...(props.component === 'embed' ? { src: '' } : {})}
           />
         </SpatializedContainerContext.Provider>
       </SpatialLayerContext.Provider>

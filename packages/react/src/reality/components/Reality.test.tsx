@@ -60,6 +60,7 @@ describe('Reality', () => {
     )?.[0] as Record<string, unknown> | undefined
 
     expect(containerCall?.['xr-animation']).toBe(xrAnimation)
+    expect(containerCall?.component).toBe('embed')
     expect(getByTestId('spatialized-content').innerHTML).toBe('')
   })
 })

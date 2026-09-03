@@ -147,7 +147,7 @@ export const Reality = forwardRef<SpatializedElementRef, RealityProps>(
     return (
       <RealityContext.Provider value={ctxRef.current}>
         <SpatializedContainer<SpatializedElementRef>
-          component="div"
+          component="embed"
           ref={ref}
           xr-animation={xrAnimation}
           // @ts-ignore

@@ -23,8 +23,8 @@ function ModelBase(props: ModelProps, ref: ForwardedRef<ModelRef>) {
   const insideOrnament = useInsideOrnament()
   const { 'enable-xr': enableXR, ...restProps } = props
   // Model must handle insideAttachment itself because
-  // SpatializedStatic3DElementContainer passes component="div" to the base,
-  // but the correct degraded element for a Model is a <model> tag, not a <div>.
+  // SpatializedStatic3DElementContainer passes component="embed" to the base,
+  // but the correct degraded element for a Model is a <model> tag, not embed.
   if (
     !enableXR ||
     !spatial.runInSpatialWeb() ||

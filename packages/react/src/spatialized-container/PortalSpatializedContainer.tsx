@@ -66,6 +66,7 @@ function renderPlaceholderInSubPortal(
   return (
     <El
       {...spatialIdProps}
+      {...(El === 'embed' ? { src: '' } : {})}
       style={{
         position: 'relative',
         width: `${width}px`,

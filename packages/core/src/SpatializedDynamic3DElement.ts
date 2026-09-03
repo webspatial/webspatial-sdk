@@ -19,8 +19,8 @@ export class SpatializedDynamic3DElement extends SpatializedElement {
   children: SpatialEntityOrReality[] = []
   events: Record<string, (data: any) => void> = {}
 
-  constructor(id: string) {
-    super(id)
+  constructor(id: string, anchorUid?: string) {
+    super(id, anchorUid)
   }
 
   async addEntity(entity: SpatialEntity) {

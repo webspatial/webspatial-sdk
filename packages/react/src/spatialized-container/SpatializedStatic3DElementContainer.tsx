@@ -279,7 +279,7 @@ function SpatializedStatic3DElementContainerBase(
   return (
     <SpatializedContainer<SpatializedStatic3DElementRef>
       ref={ref}
-      component="div"
+      component="embed"
       createSpatializedElement={createSpatializedElement}
       spatializedContent={SpatializedContent}
       extraRefProps={extraRefProps}
