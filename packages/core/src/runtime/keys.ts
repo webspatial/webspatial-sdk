@@ -1,3 +1,5 @@
+import type { SpatialMaterialType } from '../types/types'
+
 /**
  * Canonical `supports(name)` key registry (OpenSpec `review.md` §3).
  * Aliases are normalized before lookup (see `normalizeCapabilityName`).
@@ -21,6 +23,7 @@ export const COMPONENT_KEYS = [
   'ModelAsset',
   'ModelEntity',
   'UnlitMaterial',
+  'PBRMaterial',
   'Material',
   'AttachmentAsset',
   'AttachmentEntity',
@@ -98,7 +101,7 @@ export function normalizeCapabilityName(name: string): string {
 
 /** Known sub-tokens per canonical top-level `name` (AND semantics). */
 export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
-  Material: ['unlit'],
+  Material: ['unlit', 'pbr'] as const satisfies readonly SpatialMaterialType[],
   WindowScene: ['defaultSize', 'resizability'],
   VolumeScene: [
     'defaultSize',

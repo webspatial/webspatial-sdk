@@ -72,6 +72,88 @@ class SpatialUnlitMaterial: SpatialMaterial {
     }
 }
 
+@Observable
+class SpatialPBRMaterial: SpatialMaterial {
+    /// Single RealityKit `PhysicallyBasedMaterial` mutated in place. RealityKit's
+    /// blending mode is set at construction, so flipping `transparent` requires
+    /// rebuilding `_mat`.
+    private var _mat: PhysicallyBasedMaterial
+    private(set) var currentColor: UIColor
+    private(set) var currentTexture: TextureResource?
+    private(set) var currentMetalness: Float
+    private(set) var currentRoughness: Float
+    private(set) var currentTransparent: Bool
+    private(set) var currentOpacity: Float
+    /// Spatial id of the bound `SpatialTextureResource`, when this material displays a base-color texture.
+    var textureSpatialId: String?
+
+    init(
+        _ color: String,
+        _ texture: TextureResource? = nil,
+        _ metalness: Float = 0,
+        _ roughness: Float = 0.5,
+        _ transparent: Bool = false,
+        _ opacity: Float = 1,
+        textureSpatialId: String? = nil
+    ) {
+        currentColor = UIColor(Color(hex: color))
+        currentTexture = texture
+        currentMetalness = metalness
+        currentRoughness = roughness
+        currentTransparent = transparent
+        currentOpacity = opacity
+        self.textureSpatialId = textureSpatialId
+        _mat = PhysicallyBasedMaterial()
+        super.init(.PBRMaterial)
+        applyProperties()
+    }
+
+    /// Pushes the current property snapshot into `_mat` and exposes it as `resource`.
+    /// ModelComponent still holds its own copy, so callers must `refreshMaterials()` on affected components after this.
+    private func applyProperties() {
+        _mat.baseColor = .init(
+            tint: currentColor,
+            texture: currentTexture.map { .init($0) }
+        )
+        _mat.metallic = .init(floatLiteral: currentMetalness)
+        _mat.roughness = .init(floatLiteral: currentRoughness)
+        _mat.blending = currentTransparent
+            ? .transparent(opacity: .init(floatLiteral: currentOpacity))
+            : .opaque
+        _resource = _mat
+    }
+
+    func updateProperties(
+        color: String?,
+        texture: TextureResource?? = nil,
+        metalness: Float?,
+        roughness: Float?,
+        transparent: Bool?,
+        opacity: Float?
+    ) {
+        if let color = color {
+            currentColor = UIColor(Color(hex: color))
+        }
+        if let tex = texture {
+            currentTexture = tex
+        }
+        if let metalness = metalness {
+            currentMetalness = metalness
+        }
+        if let roughness = roughness {
+            currentRoughness = roughness
+        }
+        if let transparent = transparent {
+            currentTransparent = transparent
+        }
+        if let opacity = opacity {
+            currentOpacity = opacity
+        }
+        applyProperties()
+    }
+}
+
 enum SpatialMaterialType: String {
     case UnlitMaterial
+    case PBRMaterial
 }

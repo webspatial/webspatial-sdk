@@ -1,5 +1,10 @@
+import type { CommandResult } from '../../platform-adapter/interface'
 import { SpatialObject } from '../../SpatialObject'
-import { SpatialMaterialType } from '../../types/types'
+import type {
+  SpatialMaterialType,
+  SpatialPBRMaterialOptions,
+  SpatialUnlitMaterialOptions,
+} from '../../types/types'
 
 export abstract class SpatialMaterial extends SpatialObject {
   constructor(
@@ -10,5 +15,9 @@ export abstract class SpatialMaterial extends SpatialObject {
     this.type = type
   }
 
-  abstract updateProperties(properties: any): void
+  abstract updateProperties(
+    properties: Partial<
+      SpatialUnlitMaterialOptions & SpatialPBRMaterialOptions
+    >,
+  ): Promise<CommandResult>
 }
