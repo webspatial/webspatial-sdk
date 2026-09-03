@@ -48,6 +48,10 @@ struct SpatializedStatic3DView: View {
                             .if(!depth.isZero) { view in view.scaledToFit3D() }
                             .if(enableGesture) { view in view.hoverEffect() }
                     }
+                    .scaleEffect(scale)
+                    .rotation3DEffect(rotation)
+                    .offset(x: x, y: y)
+                    .offset(z: z)
                 case .failed:
                     posterView {
                         // Transparent view is required so that lifecycle modifiers like .task still work
@@ -55,15 +59,11 @@ struct SpatializedStatic3DView: View {
                     }
                 }
             }
-            .scaleEffect(scale)
-            .rotation3DEffect(rotation)
             .orbit(
                 enabled: spatializedStatic3DElement.stagemode == .orbit && asset != nil,
                 entityTransform: $spatializedStatic3DElement.entityTransform,
                 onChange: onOrbit
             )
-            .offset(x: x, y: y)
-            .offset(z: z)
             .onChange(of: asset?.animationPlaybackController?.isComplete) { _, isComplete in
                 guard isComplete == true else { return }
                 if spatializedStatic3DElement.loop,

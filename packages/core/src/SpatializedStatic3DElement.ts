@@ -313,13 +313,7 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     } else if (data.type === SpatialWebMsgType.entitytransformchange) {
       this._entityTransform = new DOMMatrixReadOnly(data.detail.transform)
     } else if (data.type === SpatialWebMsgType.modelblobrequest) {
-      // Ship the blob bytes to native on demand. Fire-and-forget: the transfer
-      // reports progress and errors over its own JSB channel.
-      void transferBlob({
-        element: this,
-        requestId: data.detail.requestId,
-        src: data.detail.src,
-      })
+      transferBlob(this, data.detail.requestId, data.detail.src)
     } else {
       // Handle other spatial events using the base class implementation
       super.onReceiveEvent(data)

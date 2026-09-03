@@ -2,3 +2,28 @@ packages:
   - 'packages/*'
   - 'apps/*'
   - 'tests/*'
+
+overrides:
+  'prismjs@<1.30.0': '>=1.30.0'
+  'ip-address@<=10.1.0': '>=10.1.1'
+  'path-to-regexp@<0.1.13': '0.1.13'
+  'serialize-javascript@<7.0.5': '>=7.0.5'
+  'postcss@<8.5.10': '>=8.5.10'
+  'qs@<6.14.2': '>=6.14.2'
+  '@eslint/plugin-kit@<0.3.4': '>=0.3.4'
+  'uuid@<11.1.1': '11.1.1'
+  'tmp@<0.2.6': '>=0.2.6'
+
+# pnpm >= 10 does not run dependency build scripts unless they are approved here.
+# Approved: native/binary packages that need their install script to link a
+# prebuilt binary, plus puppeteer (downloads the Chrome build used by tests/autoTest).
+# Denied: reviewed and unnecessary (banner/tip printers, and simple-git-hooks,
+# whose hooks this repo installs itself from the root "postinstall" script).
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  puppeteer: true
+  sharp: true
+  '@fission-ai/openspec': false
+  javascript-obfuscator: false
+  simple-git-hooks: false

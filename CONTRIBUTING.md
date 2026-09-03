@@ -6,7 +6,7 @@ Thank you for your interest in contributing to WebSpatial! This document provide
 
 ### Required Tools
 
-- [Node.js 24+](https://nodejs.org/en/download/package-manager) and pnpm 9+ to install dependencies and run the local test website
+- [Node.js 24+](https://nodejs.org/en/download/package-manager) and pnpm 11+ to install dependencies and run the local test website
 - [Xcode 26.x](https://apps.apple.com/us/app/xcode/id497799835?mt=12) with the Apple Vision Pro simulator (current CI selects Xcode 26.3 for visionOS builds)
 - [VSCode](https://code.visualstudio.com/) Text editor (recommended)
 
@@ -35,7 +35,7 @@ cd webspatial-sdk
 
 ```sh
 corepack enable
-corepack prepare pnpm@9.0.0 --activate
+corepack prepare pnpm@11.25.0 --activate
 ```
 
 3. Install packages and link to workspace for local development:
