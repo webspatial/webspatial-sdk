@@ -28,7 +28,7 @@
     "chai": "^5.3.3",
     "mocha": "^11.8.0",
     "mochawesome": "^7.1.4",
-    "puppeteer": "^24.43.1",
+    "puppeteer": "^25.10.0",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
