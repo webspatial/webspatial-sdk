@@ -11,7 +11,6 @@ actor BlobTransfer {
     private let chunks = AsyncThrowingChannel<Chunk, Error>()
 
     private var metadata: Metadata?
-    private var metadataContinuation: CheckedContinuation<Metadata, Error>?
     private var receivedByteCount = 0
     private var isFinished = false
 
@@ -20,11 +19,20 @@ actor BlobTransfer {
         self.requestId = requestId
     }
 
-    /// Waits for transfer metadata, then writes chunks at their declared offsets.
+    /// Waits for the transfer start chunk, then writes chunks at their declared offsets.
     /// The caller owns the returned temporary file and must remove it after use.
     func file() async throws -> URL {
-        let metadata = try await awaitMetadata()
-        let type = source.type ?? metadata.mimeType
+        var iterator = chunks.makeAsyncIterator()
+        guard let firstChunk = try await iterator.next() else {
+            throw BlobTransferError.notActive
+        }
+        let type: String
+        switch firstChunk {
+        case let .start(mimeType, _):
+            type = source.type ?? mimeType
+        case .data:
+            throw BlobTransferError.notActive
+        }
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("\(tag)-\(requestId)")
             .appendingPathExtension(ModelSource(src: source.src, type: type).fileExtension)
@@ -34,10 +42,15 @@ actor BlobTransfer {
             let file = try FileHandle(forWritingTo: fileURL)
             defer { try? file.close() }
 
-            for try await chunk in chunks {
+            while let chunk = try await iterator.next() {
                 try Task.checkCancellation()
-                try file.seek(toOffset: UInt64(chunk.offset))
-                try file.write(contentsOf: chunk.data)
+                switch chunk {
+                case .start:
+                    throw BlobTransferError.alreadyStarted
+                case let .data(offset, data):
+                    try file.seek(toOffset: UInt64(offset))
+                    try file.write(contentsOf: data)
+                }
             }
 
             try Task.checkCancellation()
@@ -48,39 +61,22 @@ actor BlobTransfer {
         }
     }
 
-    func start(src: String, mimeType: String, size: Int) throws(BlobTransferError) {
+    func start(src: String, mimeType: String, size: Int) async throws(BlobTransferError) {
         guard src == source.src else { throw .sourceMismatch(expected: source.src, actual: src) }
         guard size >= 0 else { throw .negativeSize(size) }
         guard metadata == nil, !isFinished else { throw .alreadyStarted }
-
-        let metadata = Metadata(mimeType: mimeType, byteCount: size)
-        self.metadata = metadata
-        metadataContinuation?.resume(returning: metadata)
-        metadataContinuation = nil
+        metadata = Metadata(mimeType: mimeType, byteCount: size)
+        await chunks.send(.start(mimeType: mimeType, size: size))
     }
 
-    func write(offset: Int, base64Data: String) async throws {
-        guard let metadata, !isFinished else {
-            throw BlobTransferError.notActive
-        }
-        guard let data = Data(base64Encoded: base64Data) else {
-            throw BlobTransferError.invalidBase64
-        }
-        guard offset >= 0, offset <= metadata.byteCount,
-              data.count <= metadata.byteCount - offset
-        else {
-            throw BlobTransferError.chunkOutOfBounds(
-                offset: offset,
-                byteCount: data.count,
-                expectedByteCount: metadata.byteCount
-            )
-        }
+    func write(offset: Int, base64Data: String) async throws(BlobTransferError) {
+        guard let metadata, !isFinished else { throw .notActive }
+        guard let data = Data(base64Encoded: base64Data) else { throw .invalidBase64 }
+        guard offset >= 0, offset <= metadata.byteCount, data.count <= metadata.byteCount - offset
+        else { throw .chunkOutOfBounds(offset: offset, byteCount: data.count, size: metadata.byteCount) }
 
         receivedByteCount += data.count
-        await chunks.send(Chunk(offset: offset, data: data))
-        guard !isFinished else {
-            throw BlobTransferError.notActive
-        }
+        await chunks.send(.data(offset: offset, data: data))
     }
 
     func complete() throws {
@@ -102,34 +98,9 @@ actor BlobTransfer {
         finish(throwing: BlobTransferError.cancelled(reason))
     }
 
-    private func awaitMetadata() async throws -> Metadata {
-        if let metadata {
-            return metadata
-        }
-        if isFinished {
-            throw BlobTransferError.notActive
-        }
-
-        return try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { continuation in
-                if let metadata {
-                    continuation.resume(returning: metadata)
-                } else if isFinished {
-                    continuation.resume(throwing: BlobTransferError.notActive)
-                } else {
-                    metadataContinuation = continuation
-                }
-            }
-        } onCancel: {
-            Task { await self.cancel() }
-        }
-    }
-
     private func finish(throwing error: Error) {
         guard !isFinished else { return }
         isFinished = true
-        metadataContinuation?.resume(throwing: error)
-        metadataContinuation = nil
         chunks.fail(error)
     }
 }
@@ -141,9 +112,9 @@ private extension BlobTransfer {
     }
 }
 
-private struct Chunk {
-    let offset: Int
-    let data: Data
+private enum Chunk {
+    case start(mimeType: String, size: Int)
+    case data(offset: Int, data: Data)
 }
 
 enum BlobTransferError: Error {
@@ -152,7 +123,7 @@ enum BlobTransferError: Error {
     case alreadyStarted
     case notActive
     case invalidBase64
-    case chunkOutOfBounds(offset: Int, byteCount: Int, expectedByteCount: Int)
+    case chunkOutOfBounds(offset: Int, byteCount: Int, size: Int)
     case byteCountMismatch(expected: Int, received: Int)
     case cancelled(String?)
 }
