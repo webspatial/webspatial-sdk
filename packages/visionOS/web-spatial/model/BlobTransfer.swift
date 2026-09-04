@@ -8,12 +8,11 @@ actor BlobTransfer {
     nonisolated let requestId: String
 
     private let source: ModelSource
-    private let chunks = AsyncChannel<Chunk>()
+    private let chunks = AsyncThrowingChannel<Chunk, Error>()
 
     private var metadata: Metadata?
     private var metadataContinuation: CheckedContinuation<Metadata, Error>?
     private var receivedByteCount = 0
-    private var terminalError: Error?
     private var isFinished = false
 
     init(source: ModelSource, requestId: String = UUID().uuidString) {
@@ -35,15 +34,12 @@ actor BlobTransfer {
             let file = try FileHandle(forWritingTo: fileURL)
             defer { try? file.close() }
 
-            for await chunk in chunks {
+            for try await chunk in chunks {
                 try Task.checkCancellation()
                 try file.seek(toOffset: UInt64(chunk.offset))
                 try file.write(contentsOf: chunk.data)
             }
 
-            if let terminalError {
-                throw terminalError
-            }
             try Task.checkCancellation()
             return fileURL
         } catch {
@@ -82,10 +78,6 @@ actor BlobTransfer {
 
         receivedByteCount += data.count
         await chunks.send(Chunk(offset: offset, data: data))
-
-        if let terminalError {
-            throw terminalError
-        }
         guard !isFinished else {
             throw BlobTransferError.notActive
         }
@@ -114,16 +106,16 @@ actor BlobTransfer {
         if let metadata {
             return metadata
         }
-        if let terminalError {
-            throw terminalError
+        if isFinished {
+            throw BlobTransferError.notActive
         }
 
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
                 if let metadata {
                     continuation.resume(returning: metadata)
-                } else if let terminalError {
-                    continuation.resume(throwing: terminalError)
+                } else if isFinished {
+                    continuation.resume(throwing: BlobTransferError.notActive)
                 } else {
                     metadataContinuation = continuation
                 }
@@ -136,10 +128,9 @@ actor BlobTransfer {
     private func finish(throwing error: Error) {
         guard !isFinished else { return }
         isFinished = true
-        terminalError = error
         metadataContinuation?.resume(throwing: error)
         metadataContinuation = nil
-        chunks.finish()
+        chunks.fail(error)
     }
 }
 
