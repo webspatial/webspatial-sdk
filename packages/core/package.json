@@ -51,11 +51,11 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
-    "happy-dom": "^20.9.0",
+    "happy-dom": "^20.13.2",
     "jsdom": "^26.1.0",
-    "tsup": "^8.4.0",
-    "typedoc": "^0.26.5",
-    "typedoc-plugin-markdown": "^4.2.2",
-    "typescript": "^5.6.3"
+    "tsup": "^8.5.1",
+    "typedoc": "^0.26.11",
+    "typedoc-plugin-markdown": "^4.13.0",
+    "typescript": "^5.9.3"
   }
 }
