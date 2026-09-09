@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import visionOSRuntimeCapabilities from '../../../visionOS/runtime-capabilities.json'
 
 describe('supports("PBRMaterial") / supports("Material", ["pbr"])', () => {
   beforeEach(() => {
@@ -37,23 +38,19 @@ describe('supports("PBRMaterial") / supports("Material", ["pbr"])', () => {
   })
 
   test('checked-in visionOS native manifest enables PBR (not only the version table)', async () => {
-    const manifest = (
-      await import('../../../visionOS/runtime-capabilities.json', {
-        with: { type: 'json' },
-      })
-    ).default as {
-      manifestVersion: number
-      runtime: { type: string }
-      supported: string[]
-    }
+    const manifest = visionOSRuntimeCapabilities
     expect(manifest.supported).toContain('PBRMaterial')
     expect(manifest.supported).toContain('Material:pbr')
 
+    // 1.8.0 table row keeps PBR false; native injection supplies buildId.
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
-    vi.stubGlobal('__webspatialCapabilities', manifest)
+    vi.stubGlobal('__webspatialCapabilities', {
+      ...manifest,
+      runtime: { ...manifest.runtime, buildId: 'test-build' },
+    })
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()
     expect(supports('PBRMaterial')).toBe(true)
@@ -64,6 +61,17 @@ describe('supports("PBRMaterial") / supports("Material", ["pbr"])', () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('PBRMaterial')).toBe(false)
+    expect(supports('Material', ['pbr'])).toBe(false)
+  })
+
+  test('picoOS PicoWebApp/0.7.0: PBR flags stay false', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (X11; Linux x86_64; unknown OS0.11.0 like Quest) AppleWebKit/537.36 PicoWebApp/0.7.0 (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0',
     } as Navigator)
     const { supports, resetRuntimeCacheForTests } = await import('./supports')
     resetRuntimeCacheForTests()

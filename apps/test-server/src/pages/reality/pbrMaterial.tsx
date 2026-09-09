@@ -14,15 +14,21 @@ import {
   Texture,
 } from '@webspatial/react-sdk'
 
-/** Public grid texture (requires network for native download). */
+/** Public textures (require network for native download). */
 const DEMO_TEXTURE_URL =
   'https://threejs.org/examples/textures/uv_grid_opengl.jpg'
+const DEMO_TEXTURE_ALT_URL =
+  'https://threejs.org/examples/textures/terrain/grasslight-big.jpg'
+
+type TextureChoice = 'none' | 'grid' | 'alt'
 
 const btnCls =
   'px-3 py-1 rounded-md bg-gray-700 hover:bg-gray-600 text-white text-xs'
 
 export default function PBRMaterialTest() {
-  const [textureReady, setTextureReady] = useState(false)
+  const [gridReady, setGridReady] = useState(false)
+  const [altReady, setAltReady] = useState(false)
+  const [textureChoice, setTextureChoice] = useState<TextureChoice>('grid')
   const [status, setStatus] = useState('Loading texture…')
 
   // Dynamic props on the "tunable" PBR material
@@ -30,6 +36,17 @@ export default function PBRMaterialTest() {
   const [roughness, setRoughness] = useState(0.5)
   const [metalness, setMetalness] = useState(0)
   const [transparent, setTransparent] = useState(false)
+
+  const tunableTextureId =
+    textureChoice === 'none'
+      ? ''
+      : textureChoice === 'alt'
+        ? altReady
+          ? 'pbrTexAlt'
+          : undefined
+        : gridReady
+          ? 'pbrTexGrid'
+          : undefined
 
   return (
     <div className="p-10 text-white min-h-full">
@@ -42,9 +59,21 @@ export default function PBRMaterialTest() {
         <code className="text-gray-300">{'<Material type="pbr">'}</code>.
         Status: {status}
       </p>
+      <p
+        id="pbr-smoke-state"
+        className="text-xs text-gray-500 mb-3"
+        data-roughness={roughness}
+        data-metalness={metalness}
+        data-transparent={transparent ? 'on' : 'off'}
+        data-texture={textureChoice}
+      >
+        smoke roughness={roughness.toFixed(2)} metalness={metalness.toFixed(2)}{' '}
+        transparent={transparent ? 'on' : 'off'} texture={textureChoice}
+      </p>
 
       <div className="flex flex-wrap gap-2 mb-4 items-center">
         <button
+          id="pbr-btn-tint"
           type="button"
           className={btnCls}
           onClick={() =>
@@ -54,6 +83,7 @@ export default function PBRMaterialTest() {
           Toggle tint ({tint})
         </button>
         <button
+          id="pbr-btn-roughness"
           type="button"
           className={btnCls}
           onClick={() => setRoughness(r => (r > 0.5 ? 0.1 : 0.9))}
@@ -61,6 +91,7 @@ export default function PBRMaterialTest() {
           Roughness {roughness.toFixed(2)} (toggle gloss/matte)
         </button>
         <button
+          id="pbr-btn-metalness"
           type="button"
           className={btnCls}
           onClick={() => setMetalness(m => (m > 0.5 ? 0 : 1))}
@@ -68,11 +99,36 @@ export default function PBRMaterialTest() {
           Metalness {metalness.toFixed(2)} (toggle metal/dielectric)
         </button>
         <button
+          id="pbr-btn-transparent"
           type="button"
           className={btnCls}
           onClick={() => setTransparent(t => !t)}
         >
           Transparent: {transparent ? 'on (opacity 0.35)' : 'off'}
+        </button>
+        <button
+          id="pbr-btn-texture-none"
+          type="button"
+          className={btnCls}
+          onClick={() => setTextureChoice('none')}
+        >
+          Remove texture
+        </button>
+        <button
+          id="pbr-btn-texture-grid"
+          type="button"
+          className={btnCls}
+          onClick={() => setTextureChoice('grid')}
+        >
+          Use grid texture
+        </button>
+        <button
+          id="pbr-btn-texture-alt"
+          type="button"
+          className={btnCls}
+          onClick={() => setTextureChoice('alt')}
+        >
+          Replace texture (grass)
         </button>
       </div>
 
@@ -90,13 +146,23 @@ export default function PBRMaterialTest() {
             id="pbrTexGrid"
             url={DEMO_TEXTURE_URL}
             onLoad={() => {
-              setTextureReady(true)
+              setGridReady(true)
               setStatus(
                 'Texture ready; PBR materials applied (presets + tunable + dispatcher).',
               )
             }}
             onError={err => {
               setStatus(`Texture error: ${String(err)}`)
+            }}
+          />
+          <Texture
+            id="pbrTexAlt"
+            url={DEMO_TEXTURE_ALT_URL}
+            onLoad={() => {
+              setAltReady(true)
+            }}
+            onError={err => {
+              setStatus(`Alt texture error: ${String(err)}`)
             }}
           />
 
@@ -134,7 +200,7 @@ export default function PBRMaterialTest() {
           <PBRMaterial
             id="pbrTunable"
             color={tint}
-            textureId={textureReady ? 'pbrTexGrid' : undefined}
+            textureId={tunableTextureId}
             roughness={roughness}
             metalness={metalness}
             transparent={transparent}
