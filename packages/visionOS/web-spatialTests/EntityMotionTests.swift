@@ -336,7 +336,7 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
         )
     }
 
-    /// Confirms malformed Entity commands receive one stable synchronous JSB failure reply.
+    /// Confirms malformed Entity commands receive one stable JSB failure reply.
     func testMalformedEntityCommandsReplyExactlyOnceThroughHandlerMessage() throws {
         let manager = JSBManager()
         manager.register(CreateEntityAnimationCommand.self)

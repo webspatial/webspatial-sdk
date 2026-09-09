@@ -58,17 +58,31 @@ struct JsbError: Error, Encodable {
 class JSBManager {
     typealias ResolveHandler<T> = (Result<T?, JsbError>) -> Void
 
+    /// WebKit delivers script messages on the main thread, so envelope
+    /// splitting and JSON decoding are moved here: a large command payload no
+    /// longer blocks rendering or input while it is being parsed. The queue is
+    /// serial, so commands stay in the order the web layer sent them, and it is
+    /// per manager so one webview's payload never delays another's.
+    private let commandQueue = DispatchQueue(label: "com.xrsdk.jsbManagerQueue")
+
+    /// Guards the registration tables below. They are written from the main
+    /// thread (scene setup/teardown) and read from `commandQueue` for every
+    /// incoming message.
+    private let registryLock = NSLock()
+
     private var typeMap = [String: CommandDataProtocol.Type]()
     private var actionWithDataMap: [String: (_ data: CommandDataProtocol, _ event: @escaping ResolveHandler<Encodable>) -> Void] = [:]
     private var actionWithoutDataMap: [String: (@escaping ResolveHandler<Encodable>) -> Void] = [:]
 
-    private let encoder = JSONEncoder()
-
     func register<T: CommandDataProtocol>(_ type: T.Type) {
+        registryLock.lock()
+        defer { registryLock.unlock() }
         typeMap[T.commandType] = type
     }
 
     func register<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (T, @escaping ResolveHandler<Encodable>) -> Void) {
+        registryLock.lock()
+        defer { registryLock.unlock() }
         typeMap[T.commandType] = type
         actionWithDataMap[T.commandType] = { data, result in
             event(data as! T, result)
@@ -76,23 +90,42 @@ class JSBManager {
     }
 
     func register<T: CommandDataProtocol>(_ type: T.Type, _ event: @escaping (@escaping ResolveHandler<Encodable>) -> Void) {
+        registryLock.lock()
+        defer { registryLock.unlock() }
         typeMap[T.commandType] = type
         actionWithoutDataMap[T.commandType] = event
     }
 
     func remove<T: CommandDataProtocol>(_ type: T.Type) {
+        registryLock.lock()
+        defer { registryLock.unlock() }
         typeMap.removeValue(forKey: T.commandType)
         actionWithDataMap.removeValue(forKey: T.commandType)
         actionWithoutDataMap.removeValue(forKey: T.commandType)
     }
 
     func clear() {
+        registryLock.lock()
+        defer { registryLock.unlock() }
         typeMap = [String: CommandDataProtocol.Type]()
         actionWithDataMap = [:]
         actionWithoutDataMap = [:]
     }
 
+    /// Accepts one JSB message and returns immediately.
+    ///
+    /// Parsing and decoding run on `commandQueue`; the registered action still
+    /// runs on the main actor, and every reply is delivered on the main thread
+    /// because that is where WebKit expects its reply handlers to run.
     func handlerMessage(_ message: String, _ replyHandler: ((Any?, String?) -> Void)? = nil) {
+        commandQueue.async {
+            self.decodeMessage(message, replyHandler)
+        }
+    }
+
+    /// Parses one JSB envelope off the main thread and hands the decoded
+    /// command to its registered action.
+    private func decodeMessage(_ message: String, _ replyHandler: ((Any?, String?) -> Void)?) {
         let actionKey = message.components(separatedBy: "::").first ?? ""
         do {
             let jsbInfo = message.components(separatedBy: "::")
@@ -112,20 +145,20 @@ class JSBManager {
 
             if hasData {
                 let data = try deserialize(cmdType: actionKey, cmdContent: jsbInfo[1])
-                if let action = actionWithDataMap[actionKey] {
+                if let action = actionWithData(for: actionKey) {
                     handleAction(action: { callback in
                         action(data!, callback)
                     }, replyHandler: replyHandler)
                 } else {
                     print("Invalid JSB!!!", message)
-                    replyHandler?(nil, "Invalid JSB!!! \(message)")
+                    reply(replyHandler, nil, "Invalid JSB!!! \(message)")
                 }
             } else {
-                if let action = actionWithoutDataMap[actionKey] {
+                if let action = actionWithoutData(for: actionKey) {
                     handleAction(action: action, replyHandler: replyHandler)
                 } else {
                     print("Invalid JSB!!!", message)
-                    replyHandler?(nil, "Invalid JSB!!! \(message)")
+                    reply(replyHandler, nil, "Invalid JSB!!! \(message)")
                 }
             }
         } catch {
@@ -144,7 +177,7 @@ class JSBManager {
             let resultString = parseData(
                 JsbErrorData(code: code, message: "Invalid command payload.")
             )
-            replyHandler?(nil, resultString)
+            reply(replyHandler, nil, resultString)
         }
     }
 
@@ -156,9 +189,9 @@ class JSBManager {
                 switch result {
                 case let .success(data):
                     if data == nil {
-                        replyHandler?("", nil)
+                        self.reply(replyHandler, "", nil)
                     } else {
-                        replyHandler?(try? data?.toDictionary() ?? "", nil)
+                        self.reply(replyHandler, (try? data?.toDictionary() ?? ""), nil)
                     }
 
                 case let .failure(error):
@@ -166,8 +199,26 @@ class JSBManager {
                         code: error.code,
                         message: error.message
                     ))
-                    replyHandler?(nil, resultString)
+                    self.reply(replyHandler, nil, resultString)
                 }
+            }
+        }
+    }
+
+    /// Delivers a JSB reply on the main thread. Replies now originate either
+    /// from `commandQueue` (payload errors) or from a handler that may resolve
+    /// on any thread, and WebKit's reply handlers must be called on the main
+    /// thread. Already-main callers keep their previous synchronous timing.
+    private func reply(_ replyHandler: ((Any?, String?) -> Void)?,
+                       _ result: Any?,
+                       _ error: String?)
+    {
+        guard let replyHandler else { return }
+        if Thread.isMainThread {
+            replyHandler(result, error)
+        } else {
+            DispatchQueue.main.async {
+                replyHandler(result, error)
             }
         }
     }
@@ -186,10 +237,27 @@ class JSBManager {
     }
 
     private func typeof(for key: String) -> CommandDataProtocol.Type? {
+        registryLock.lock()
+        defer { registryLock.unlock() }
         return typeMap[key]
     }
 
+    private func actionWithData(for key: String) -> ((CommandDataProtocol, @escaping ResolveHandler<Encodable>) -> Void)? {
+        registryLock.lock()
+        defer { registryLock.unlock() }
+        return actionWithDataMap[key]
+    }
+
+    private func actionWithoutData(for key: String) -> ((@escaping ResolveHandler<Encodable>) -> Void)? {
+        registryLock.lock()
+        defer { registryLock.unlock() }
+        return actionWithoutDataMap[key]
+    }
+
     private func parseData(_ data: Encodable) -> String? {
+        // Encoding now happens on both `commandQueue` and the main actor, so the
+        // encoder is created per call instead of shared as mutable state.
+        let encoder = JSONEncoder()
         if let jsonData = try? encoder.encode(data) {
             let jsonString = String(data: jsonData, encoding: .utf8)
             return jsonString!
