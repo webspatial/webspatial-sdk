@@ -174,7 +174,12 @@ export interface UpdateEntityAnimationResult {
 
 /** Playback control accepted by an Entity animation object. */
 export type EntityAnimationControlType =
-  'play' | 'pause' | 'stop' | 'reset' | 'finish' | 'destroy'
+  | 'play'
+  | 'pause'
+  | 'stop'
+  | 'reset'
+  | 'finish'
+  | 'destroy'
 
 /** Wire request for controlling an Entity animation object. */
 export interface ControlEntityAnimationCommand {
@@ -200,7 +205,10 @@ export interface SetEntityAnimationResult {
 
 /** Native playback states transported by Entity state events. */
 export type EntityMotionNativePlayState =
-  'idle' | 'running' | 'paused' | 'finished'
+  | 'idle'
+  | 'running'
+  | 'paused'
+  | 'finished'
 
 /** Lifecycle callback actions transported by Entity state events. */
 export type EntityMotionCallbackAction = 'start' | 'complete' | 'stop' | 'reset'

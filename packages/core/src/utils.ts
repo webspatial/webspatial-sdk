@@ -69,7 +69,8 @@ export function composeSRT(position: Vec3, rotation: Vec3, scale: Vec3) {
  */
 export function deepCloneJSON<T>(value: T): T {
   const sc = (globalThis as any).structuredClone as
-    ((v: any) => any) | undefined
+    | ((v: any) => any)
+    | undefined
   if (typeof sc === 'function') {
     try {
       return sc(value)

@@ -48,9 +48,9 @@ function isNearVec3(
 ): boolean {
   return Boolean(
     actual &&
-    Math.abs(actual.x - expected.x) <= tolerance &&
-    Math.abs(actual.y - expected.y) <= tolerance &&
-    Math.abs(actual.z - expected.z) <= tolerance,
+      Math.abs(actual.x - expected.x) <= tolerance &&
+      Math.abs(actual.y - expected.y) <= tolerance &&
+      Math.abs(actual.z - expected.z) <= tolerance,
   )
 }
 
@@ -94,12 +94,12 @@ export default function EntityAnimationTransformCacheReproPage() {
   const shadowState = readShadowState(entityRef)
   const hasTerminalConfirmation = Boolean(
     isNearVec3(entityProps.rotation, terminalRotation) &&
-    isNearVec3(entityProps.scale, terminalScale),
+      isNearVec3(entityProps.scale, terminalScale),
   )
   const shadowIsStale = Boolean(
     hasTerminalConfirmation &&
-    !isNearVec3(shadowState.rotation, terminalRotation) &&
-    !isNearVec3(shadowState.scale, terminalScale),
+      !isNearVec3(shadowState.rotation, terminalRotation) &&
+      !isNearVec3(shadowState.scale, terminalScale),
   )
   const acceptanceStatus =
     phase === 'position-updated'

@@ -33,7 +33,12 @@ export interface Quaternion {
  * - `'transparent'`: Represents a fully transparent background.
  */
 export type BackgroundMaterialType =
-  'none' | 'translucent' | 'thick' | 'regular' | 'thin' | 'transparent'
+  | 'none'
+  | 'translucent'
+  | 'thick'
+  | 'regular'
+  | 'thin'
+  | 'transparent'
 
 export type CornerRadius = {
   topLeading: number
@@ -82,7 +87,8 @@ export interface SpatializedElementProperties {
   rotateConstrainedToAxis?: Vec3
 }
 
-export interface Spatialized2DElementProperties extends SpatializedElementProperties {
+export interface Spatialized2DElementProperties
+  extends SpatializedElementProperties {
   scrollPageEnabled: boolean
   cornerRadius: CornerRadius
   material: BackgroundMaterialType
@@ -98,7 +104,8 @@ export type ModelLoadingMode = 'eager' | 'lazy'
 
 export type StageMode = 'orbit' | 'none'
 
-export interface SpatializedStatic3DElementProperties extends SpatializedElementProperties {
+export interface SpatializedStatic3DElementProperties
+  extends SpatializedElementProperties {
   modelURL: string
   sources?: ModelSource[]
   modelTransform?: number[]

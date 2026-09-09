@@ -115,7 +115,7 @@ export function createPicoManifest(
             }
             return {
               ...icon,
-              src: new URL(icon.src, base).href,
+              src: new URL(icon.src, base).href
             }
           }),
         }),
