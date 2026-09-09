@@ -1,11 +1,8 @@
 import { UpdatePBRMaterialProperties } from '../../JSBCommand'
 import { SpatialPBRMaterialOptions } from '../../types/types'
-import {
-  SpatialMaterial,
-  type SpatialMaterialUpdateOptions,
-} from './SpatialMaterial'
+import { SpatialMaterial } from './SpatialMaterial'
 
-export class SpatialPBRMaterial extends SpatialMaterial {
+export class SpatialPBRMaterial extends SpatialMaterial<SpatialPBRMaterialOptions> {
   constructor(
     public id: string,
     public options: SpatialPBRMaterialOptions,
@@ -13,7 +10,7 @@ export class SpatialPBRMaterial extends SpatialMaterial {
     super(id, 'pbr')
   }
 
-  updateProperties(properties: SpatialMaterialUpdateOptions) {
+  updateProperties(properties: SpatialPBRMaterialOptions) {
     return new UpdatePBRMaterialProperties(this, properties).execute()
   }
 }

@@ -1119,6 +1119,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    // Create: unknown `textureId` → tint-only (nil texture). Update: unknown
+    // non-empty id → InvalidSpatialObject. JS `useSpatialMaterial` already
+    // sends `''` for missing/failed textures, so the update miss is an
+    // assertion for unexpected native ids, not the JS miss path.
     private func onCreateUnlitMaterial(command: CreateUnlitMaterial, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         var tex: TextureResource? = nil
         if let textureId = command.textureId,
@@ -1570,6 +1574,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    // See onCreateUnlitMaterial: empty textureId clears the texture; a
+    // non-empty id that is not in spatialObjects is InvalidSpatialObject.
     private func onUpdateUnlitMaterialProperties(command: UpdateUnlitMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let material = spatialObjects[command.id] as? SpatialUnlitMaterial else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(command.id) not found")))

@@ -1,14 +1,15 @@
 import type { CommandResult } from '../../platform-adapter/interface'
 import { SpatialObject } from '../../SpatialObject'
-import type {
-  SpatialMaterialType,
-  SpatialPBRMaterialOptions,
-} from '../../types/types'
+import type { SpatialMaterialType } from '../../types/types'
 
-/** Property bag for material updates. PBR is a superset of unlit; every field is optional. */
-export type SpatialMaterialUpdateOptions = SpatialPBRMaterialOptions
-
-export abstract class SpatialMaterial extends SpatialObject {
+/**
+ * Native material handle. `O` is the create/update property bag for that
+ * material kind (unlit, PBR, and any later type). Collections can use the
+ * default `SpatialMaterial` (i.e. `SpatialMaterial<object>`).
+ */
+export abstract class SpatialMaterial<
+  O extends object = object,
+> extends SpatialObject {
   constructor(
     public id: string,
     public type: SpatialMaterialType,
@@ -17,7 +18,5 @@ export abstract class SpatialMaterial extends SpatialObject {
     this.type = type
   }
 
-  abstract updateProperties(
-    properties: SpatialMaterialUpdateOptions,
-  ): Promise<CommandResult>
+  abstract updateProperties(properties: O): Promise<CommandResult>
 }

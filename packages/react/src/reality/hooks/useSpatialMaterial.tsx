@@ -1,10 +1,42 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  SpatialMaterial,
-  SpatialPBRMaterialOptions,
-  SpatialSession,
-} from '@webspatial/core-sdk'
+import { SpatialMaterial, SpatialSession } from '@webspatial/core-sdk'
 import { useRealityContext } from '../context'
+
+type TextureLookup = {
+  has(id: string): boolean
+  get(id: string): Promise<{ id: string }>
+}
+
+/** Copies own keys whose values are not `undefined` (explicit `0` / `''` / `false` stay). */
+function pickDefined<T extends object>(obj: T): Partial<T> {
+  const result: Partial<T> = {}
+  for (const key of Object.keys(obj) as Array<keyof T>) {
+    const value = obj[key]
+    if (value !== undefined) {
+      result[key] = value
+    }
+  }
+  return result
+}
+
+function definedOptionsKey(obj: object): string {
+  const defined = pickDefined(obj)
+  return JSON.stringify(defined, Object.keys(defined).sort())
+}
+
+async function resolveTextureIdForNative(
+  textureId: string | undefined,
+  resourceRegistry: TextureLookup,
+): Promise<string | undefined> {
+  if (textureId === undefined) return undefined
+  if (textureId === '' || !resourceRegistry.has(textureId)) return ''
+  try {
+    const textureResource = await resourceRegistry.get(textureId)
+    return textureResource.id
+  } catch {
+    return ''
+  }
+}
 
 /**
  * Shared native-material lifecycle for `<UnlitMaterial>` and `<PBRMaterial>`.
@@ -15,21 +47,23 @@ import { useRealityContext } from '../context'
  * explicit `0` and `''` are sent. Unmount cancels in-flight work and
  * schedules destroy through the registry so a pending create cannot
  * register after teardown.
+ *
+ * JS always normalizes a missing texture to `''` before JSB. visionOS create
+ * treats an unknown non-empty id as tint-only; update rejects it. The reject
+ * path is therefore an assertion for unexpected native ids, not the JS miss
+ * path.
  */
-export function useSpatialMaterial(
+export function useSpatialMaterial<O extends { textureId?: string }>(
   id: string,
-  options: SpatialPBRMaterialOptions,
-  create: (
-    session: SpatialSession,
-    options: SpatialPBRMaterialOptions,
-  ) => Promise<SpatialMaterial>,
+  options: O,
+  create: (session: SpatialSession, options: O) => Promise<SpatialMaterial<O>>,
 ): void {
   const ctx = useRealityContext()
-  const materialRef = useRef<SpatialMaterial | undefined>(undefined)
+  const materialRef = useRef<SpatialMaterial<O> | undefined>(undefined)
   const [isInitialized, setIsInitialized] = useState(false)
   const [textureRevision, setTextureRevision] = useState(0)
-  const { color, textureId, metalness, roughness, transparent, opacity } =
-    options
+  const textureId = options.textureId
+  const optionsKey = definedOptionsKey(options)
 
   useEffect(() => {
     if (!ctx || !textureId) return
@@ -45,27 +79,16 @@ export function useSpatialMaterial(
     const { session, resourceRegistry } = ctx
     const init = async () => {
       try {
-        let textureIdForNative: string | undefined = textureId
-        if (textureId && resourceRegistry.has(textureId)) {
-          try {
-            const textureResource = await resourceRegistry.get(textureId)
-            if (cancelled) return
-            textureIdForNative = textureResource.id
-          } catch {
-            textureIdForNative = ''
-          }
-        } else if (textureId) {
-          textureIdForNative = ''
-        }
+        const commandOptions = pickDefined(options)
+        const textureIdForNative = await resolveTextureIdForNative(
+          textureId,
+          resourceRegistry,
+        )
         if (cancelled) return
-        const commandOptions: SpatialPBRMaterialOptions = {}
-        if (color !== undefined) commandOptions.color = color
-        if (metalness !== undefined) commandOptions.metalness = metalness
-        if (roughness !== undefined) commandOptions.roughness = roughness
-        if (transparent !== undefined) commandOptions.transparent = transparent
-        if (opacity !== undefined) commandOptions.opacity = opacity
-        commandOptions.textureId = textureIdForNative
-        const materialPromise = create(session, commandOptions)
+        if (textureIdForNative !== undefined) {
+          commandOptions.textureId = textureIdForNative
+        }
+        const materialPromise = create(session, commandOptions as O)
         resourceRegistry.add(materialId, materialPromise)
         const mat = await materialPromise
         if (cancelled) return
@@ -90,32 +113,20 @@ export function useSpatialMaterial(
     let cancelled = false
     const materialId = id
     void (async () => {
-      const updates: SpatialPBRMaterialOptions = {}
-      if (color !== undefined) updates.color = color
-      if (metalness !== undefined) updates.metalness = metalness
-      if (roughness !== undefined) updates.roughness = roughness
-      if (transparent !== undefined) updates.transparent = transparent
-      if (opacity !== undefined) updates.opacity = opacity
-      if (textureId !== undefined) {
-        if (textureId === '') {
-          updates.textureId = ''
-        } else if (!ctx.resourceRegistry.has(textureId)) {
-          updates.textureId = ''
-        } else {
-          try {
-            const textureResource = await ctx.resourceRegistry.get(textureId)
-            if (cancelled) return
-            updates.textureId = textureResource.id
-          } catch {
-            updates.textureId = ''
-          }
-        }
+      const updates = pickDefined(options)
+      if (updates.textureId !== undefined) {
+        const textureIdForNative = await resolveTextureIdForNative(
+          updates.textureId,
+          ctx.resourceRegistry,
+        )
+        if (cancelled) return
+        updates.textureId = textureIdForNative
       }
       if (cancelled || Object.keys(updates).length === 0) return
       const mat = materialRef.current
       if (!mat) return
       try {
-        const result = await mat.updateProperties(updates)
+        const result = await mat.updateProperties(updates as O)
         if (cancelled) return
         if (!result.success) {
           console.error(
@@ -131,16 +142,5 @@ export function useSpatialMaterial(
     return () => {
       cancelled = true
     }
-  }, [
-    ctx,
-    id,
-    isInitialized,
-    textureRevision,
-    color,
-    textureId,
-    metalness,
-    roughness,
-    transparent,
-    opacity,
-  ])
+  }, [ctx, id, isInitialized, textureRevision, optionsKey])
 }

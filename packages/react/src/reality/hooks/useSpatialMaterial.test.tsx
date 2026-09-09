@@ -17,9 +17,9 @@ import { useSpatialMaterial } from './useSpatialMaterial'
 type CreateMaterial = (
   session: SpatialSession,
   options: SpatialPBRMaterialOptions,
-) => Promise<SpatialMaterial>
+) => Promise<SpatialMaterial<SpatialPBRMaterialOptions>>
 
-class TestMaterial extends SpatialMaterial {
+class TestMaterial extends SpatialMaterial<SpatialPBRMaterialOptions> {
   readonly updateProperties = vi.fn(
     async (_properties: SpatialPBRMaterialOptions) => okResult(),
   )
@@ -93,9 +93,9 @@ describe('useSpatialMaterial', () => {
     expect(create).toHaveBeenCalledWith(ctx.session, {
       color: '#c0c0c0',
       metalness: 0,
-      textureId: undefined,
     })
     const payload = create.mock.calls[0][1]
+    expect(payload).not.toHaveProperty('textureId')
     expect(payload).not.toHaveProperty('roughness')
     expect(payload).not.toHaveProperty('transparent')
     expect(payload).not.toHaveProperty('opacity')
