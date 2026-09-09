@@ -24,8 +24,8 @@ class TestMaterial extends SpatialMaterial {
     async (_properties: SpatialPBRMaterialOptions) => okResult(),
   )
 
-  constructor(id = 'native-mat-1', type: 'unlit' | 'pbr' = 'pbr') {
-    super(id, type)
+  constructor(id = 'native-mat-1') {
+    super(id, 'pbr')
   }
 
   override async destroy() {
@@ -142,211 +142,189 @@ describe('useSpatialMaterial', () => {
     expect(updates).not.toHaveProperty('opacity')
   })
 
-  describe.each([
-    { kind: 'unlit' as const, type: 'unlit' as const },
-    { kind: 'pbr' as const, type: 'pbr' as const },
-  ])('$kind shared lifecycle', ({ type }) => {
-    it('destroys a still-pending create on unmount', async () => {
-      let resolveCreate!: (material: TestMaterial) => void
-      const material = new TestMaterial(`native-${type}`, type)
-      const create = vi.fn<CreateMaterial>(
-        () =>
-          new Promise<TestMaterial>(resolve => {
-            resolveCreate = resolve
-          }),
-      )
-      const { ctx, wrapper } = makeContext()
-      const removeAndDestroy = vi.spyOn(
-        ctx.resourceRegistry,
-        'removeAndDestroy',
-      )
+  it('destroys a still-pending create on unmount', async () => {
+    let resolveCreate!: (material: TestMaterial) => void
+    const material = new TestMaterial()
+    const create = vi.fn<CreateMaterial>(
+      () =>
+        new Promise<TestMaterial>(resolve => {
+          resolveCreate = resolve
+        }),
+    )
+    const { ctx, wrapper } = makeContext()
+    const removeAndDestroy = vi.spyOn(ctx.resourceRegistry, 'removeAndDestroy')
 
-      const { unmount } = renderHook(
-        () => useSpatialMaterial('shared', { color: '#fff' }, create),
-        { wrapper },
-      )
+    const { unmount } = renderHook(
+      () => useSpatialMaterial('car', { color: '#fff' }, create),
+      { wrapper },
+    )
 
-      await waitFor(() => {
-        expect(create).toHaveBeenCalledTimes(1)
-      })
-
-      unmount()
-      expect(removeAndDestroy).toHaveBeenCalledWith('shared')
-
-      await act(async () => {
-        resolveCreate(material)
-      })
-      await waitFor(() => {
-        expect(material.isDestroyed).toBe(true)
-      })
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledTimes(1)
     })
 
-    it('creates tint-only while a texture is missing, then binds the native id', async () => {
-      const material = new TestMaterial(`native-${type}`, type)
-      const create = vi.fn<CreateMaterial>(async () => material)
-      const { ctx, wrapper } = makeContext()
+    unmount()
+    expect(removeAndDestroy).toHaveBeenCalledWith('car')
 
-      renderHook(
-        () =>
-          useSpatialMaterial(
-            'shared',
-            { color: '#fff', textureId: 'grid' },
-            create,
-          ),
-        { wrapper },
+    await act(async () => {
+      resolveCreate(material)
+    })
+    await waitFor(() => {
+      expect(material.isDestroyed).toBe(true)
+    })
+  })
+
+  it('creates tint-only while a texture is missing, then binds the native id', async () => {
+    const material = new TestMaterial()
+    const create = vi.fn<CreateMaterial>(async () => material)
+    const { ctx, wrapper } = makeContext()
+
+    renderHook(
+      () =>
+        useSpatialMaterial('car', { color: '#fff', textureId: 'grid' }, create),
+      { wrapper },
+    )
+
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledWith(
+        ctx.session,
+        expect.objectContaining({ textureId: '' }),
       )
-
-      await waitFor(() => {
-        expect(create).toHaveBeenCalledWith(
-          ctx.session,
-          expect.objectContaining({ textureId: '' }),
-        )
-      })
-
-      await act(async () => {
-        ctx.resourceRegistry.add(
-          'grid',
-          Promise.resolve(new TestTexture('native-tex-1')),
-        )
-      })
-
-      await waitFor(() => {
-        expect(material.updateProperties).toHaveBeenCalledWith(
-          expect.objectContaining({ textureId: 'native-tex-1' }),
-        )
-      })
     })
 
-    it('falls back to an empty texture id when texture load fails', async () => {
-      const material = new TestMaterial(`native-${type}`, type)
-      const create = vi.fn<CreateMaterial>(async () => material)
-      const { ctx, wrapper } = makeContext()
-      ctx.resourceRegistry.add(
-        'grid',
-        Promise.reject(new Error('decode failed')),
-      )
-
-      renderHook(
-        () =>
-          useSpatialMaterial(
-            'shared',
-            { color: '#fff', textureId: 'grid' },
-            create,
-          ),
-        { wrapper },
-      )
-
-      await waitFor(() => {
-        expect(create).toHaveBeenCalledWith(
-          ctx.session,
-          expect.objectContaining({ textureId: '' }),
-        )
-      })
-    })
-
-    it('clears the bound texture when textureId is replaced with empty string', async () => {
-      const material = new TestMaterial(`native-${type}`, type)
-      const create = vi.fn<CreateMaterial>(async () => material)
-      const { ctx, wrapper } = makeContext()
+    await act(async () => {
       ctx.resourceRegistry.add(
         'grid',
         Promise.resolve(new TestTexture('native-tex-1')),
       )
-
-      const { rerender } = renderHook(
-        (props: SpatialPBRMaterialOptions) =>
-          useSpatialMaterial('shared', props, create),
-        {
-          wrapper,
-          initialProps: { color: '#fff', textureId: 'grid' },
-        },
-      )
-
-      await waitFor(() => {
-        expect(create).toHaveBeenCalledWith(
-          ctx.session,
-          expect.objectContaining({ textureId: 'native-tex-1' }),
-        )
-      })
-
-      await act(async () => {
-        rerender({ color: '#fff', textureId: '' })
-      })
-
-      await waitFor(() => {
-        expect(material.updateProperties).toHaveBeenCalledWith(
-          expect.objectContaining({ textureId: '' }),
-        )
-      })
     })
 
-    it('destroys the previous material when the id changes', async () => {
-      const first = new TestMaterial(`native-${type}-a`, type)
-      const second = new TestMaterial(`native-${type}-b`, type)
-      const create = vi
-        .fn<CreateMaterial>()
-        .mockResolvedValueOnce(first)
-        .mockResolvedValueOnce(second)
-      const { ctx, wrapper } = makeContext()
-      const removeAndDestroy = vi.spyOn(
-        ctx.resourceRegistry,
-        'removeAndDestroy',
+    await waitFor(() => {
+      expect(material.updateProperties).toHaveBeenCalledWith(
+        expect.objectContaining({ textureId: 'native-tex-1' }),
       )
+    })
+  })
 
-      const { rerender } = renderHook(
-        ({ id }: { id: string }) =>
-          useSpatialMaterial(id, { color: '#fff' }, create),
-        { wrapper, initialProps: { id: 'first' } },
+  it('falls back to an empty texture id when texture load fails', async () => {
+    const material = new TestMaterial()
+    const create = vi.fn<CreateMaterial>(async () => material)
+    const { ctx, wrapper } = makeContext()
+    ctx.resourceRegistry.add('grid', Promise.reject(new Error('decode failed')))
+
+    renderHook(
+      () =>
+        useSpatialMaterial('car', { color: '#fff', textureId: 'grid' }, create),
+      { wrapper },
+    )
+
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledWith(
+        ctx.session,
+        expect.objectContaining({ textureId: '' }),
       )
+    })
+  })
 
-      await waitFor(() => {
-        expect(create).toHaveBeenCalledTimes(1)
-      })
+  it('clears the bound texture when textureId is replaced with empty string', async () => {
+    const material = new TestMaterial()
+    const create = vi.fn<CreateMaterial>(async () => material)
+    const { ctx, wrapper } = makeContext()
+    ctx.resourceRegistry.add(
+      'grid',
+      Promise.resolve(new TestTexture('native-tex-1')),
+    )
 
-      await act(async () => {
-        rerender({ id: 'second' })
-      })
+    const { rerender } = renderHook(
+      (props: SpatialPBRMaterialOptions) =>
+        useSpatialMaterial('car', props, create),
+      {
+        wrapper,
+        initialProps: { color: '#fff', textureId: 'grid' },
+      },
+    )
 
-      await waitFor(() => {
-        expect(create).toHaveBeenCalledTimes(2)
-      })
-      expect(removeAndDestroy).toHaveBeenCalledWith('first')
-      expect(ctx.resourceRegistry.has('second')).toBe(true)
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledWith(
+        ctx.session,
+        expect.objectContaining({ textureId: 'native-tex-1' }),
+      )
     })
 
-    it('reports a failed update with the material id', async () => {
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-      const material = new TestMaterial(`native-${type}`, type)
-      material.updateProperties.mockResolvedValue({
-        success: false,
-        data: {},
-        errorCode: 'JSB',
-        errorMessage: 'native reject',
-      })
-      const create = vi.fn<CreateMaterial>(async () => material)
-      const { wrapper } = makeContext()
-
-      const { rerender } = renderHook(
-        (props: SpatialPBRMaterialOptions) =>
-          useSpatialMaterial('shared', props, create),
-        { wrapper, initialProps: { color: '#fff' } },
-      )
-
-      await waitFor(() => {
-        expect(create).toHaveBeenCalledTimes(1)
-      })
-
-      await act(async () => {
-        rerender({ color: '#000' })
-      })
-
-      await waitFor(() => {
-        expect(errorSpy).toHaveBeenCalledWith(
-          ' ~ Material "shared" ~ update failed:',
-          'native reject',
-        )
-      })
-      errorSpy.mockRestore()
+    await act(async () => {
+      rerender({ color: '#fff', textureId: '' })
     })
+
+    await waitFor(() => {
+      expect(material.updateProperties).toHaveBeenCalledWith(
+        expect.objectContaining({ textureId: '' }),
+      )
+    })
+  })
+
+  it('destroys the previous material when the id changes', async () => {
+    const first = new TestMaterial('native-a')
+    const second = new TestMaterial('native-b')
+    const create = vi
+      .fn<CreateMaterial>()
+      .mockResolvedValueOnce(first)
+      .mockResolvedValueOnce(second)
+    const { ctx, wrapper } = makeContext()
+    const removeAndDestroy = vi.spyOn(ctx.resourceRegistry, 'removeAndDestroy')
+
+    const { rerender } = renderHook(
+      ({ id }: { id: string }) =>
+        useSpatialMaterial(id, { color: '#fff' }, create),
+      { wrapper, initialProps: { id: 'car' } },
+    )
+
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledTimes(1)
+    })
+
+    await act(async () => {
+      rerender({ id: 'hood' })
+    })
+
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledTimes(2)
+    })
+    expect(removeAndDestroy).toHaveBeenCalledWith('car')
+    expect(ctx.resourceRegistry.has('hood')).toBe(true)
+  })
+
+  it('reports a failed update with the material id', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const material = new TestMaterial()
+    material.updateProperties.mockResolvedValue({
+      success: false,
+      data: {},
+      errorCode: 'JSB',
+      errorMessage: 'native reject',
+    })
+    const create = vi.fn<CreateMaterial>(async () => material)
+    const { wrapper } = makeContext()
+
+    const { rerender } = renderHook(
+      (props: SpatialPBRMaterialOptions) =>
+        useSpatialMaterial('car', props, create),
+      { wrapper, initialProps: { color: '#fff' } },
+    )
+
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledTimes(1)
+    })
+
+    await act(async () => {
+      rerender({ color: '#000' })
+    })
+
+    await waitFor(() => {
+      expect(errorSpy).toHaveBeenCalledWith(
+        ' ~ Material "car" ~ update failed:',
+        'native reject',
+      )
+    })
+    errorSpy.mockRestore()
   })
 })

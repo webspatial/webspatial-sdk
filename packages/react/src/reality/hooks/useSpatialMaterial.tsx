@@ -6,15 +6,6 @@ import {
 } from '@webspatial/core-sdk'
 import { useRealityContext } from '../context'
 
-export type SpatialMaterialFields = {
-  color?: string
-  textureId?: string
-  metalness?: number
-  roughness?: number
-  transparent?: boolean
-  opacity?: number
-}
-
 /**
  * Shared native-material lifecycle for `<UnlitMaterial>` and `<PBRMaterial>`.
  *
@@ -27,7 +18,7 @@ export type SpatialMaterialFields = {
  */
 export function useSpatialMaterial(
   id: string,
-  options: SpatialMaterialFields,
+  options: SpatialPBRMaterialOptions,
   create: (
     session: SpatialSession,
     options: SpatialPBRMaterialOptions,

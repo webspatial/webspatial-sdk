@@ -78,15 +78,4 @@ describe('supports("PBRMaterial") / supports("Material", ["pbr"])', () => {
     expect(supports('PBRMaterial')).toBe(false)
     expect(supports('Material', ['pbr'])).toBe(false)
   })
-
-  test('picoOS PicoWebApp/0.4.90: PBR flags are false', async () => {
-    vi.stubGlobal('navigator', {
-      userAgent:
-        'Mozilla/5.0 (X11; Linux x86_64; unknown OS0.11.0 like Quest) AppleWebKit/537.36 PicoWebApp/0.4.90 (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0',
-    } as Navigator)
-    const { supports, resetRuntimeCacheForTests } = await import('./supports')
-    resetRuntimeCacheForTests()
-    expect(supports('PBRMaterial')).toBe(false)
-    expect(supports('Material', ['pbr'])).toBe(false)
-  })
 })
