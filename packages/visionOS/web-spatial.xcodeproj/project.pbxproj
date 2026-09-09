@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2BB10B012F50000100000001 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 2BB10B042F50000100000004 /* AsyncAlgorithms */; };
 		2B06AEDB2E4C1AE8000327E9 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC42E4C1AE8000327E9 /* Window.swift */; };
 		2B06AEDE2E4C1AE8000327E9 /* WebSpatialApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */; };
 		2B06AEE12E4C1AE8000327E9 /* SpatialObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC22E4C1AE8000327E9 /* SpatialObject.swift */; };
@@ -76,6 +77,7 @@
 		2B06AF312E4C1AF8000327E9 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				BlobTransfer.swift,
 				dynamic3d/Geometry.swift,
 				dynamic3d/SpatialComponent.swift,
 				dynamic3d/SpatialEntity.swift,
@@ -171,6 +173,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2BB10B012F50000100000001 /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,6 +281,7 @@
 			);
 			name = "web-spatial";
 			packageProductDependencies = (
+				2BB10B042F50000100000004 /* AsyncAlgorithms */,
 			);
 			productName = "web-spatial";
 			productReference = 2B2F1D632BEBFAAA006897EE /* WebSpatial.app */;
@@ -330,6 +334,7 @@
 			);
 			mainGroup = 2B2F1D5A2BEBFAAA006897EE;
 			packageReferences = (
+				2BB10B052F50000100000005 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 			);
 			productRefGroup = 2B2F1D642BEBFAAA006897EE /* Products */;
 			projectDirPath = "";
@@ -645,6 +650,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2BB10B052F50000100000005 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2BB10B042F50000100000004 /* AsyncAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2BB10B052F50000100000005 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
+			productName = AsyncAlgorithms;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 2B2F1D5B2BEBFAAA006897EE /* Project object */;
 }
