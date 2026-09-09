@@ -1,18 +1,8 @@
 import React from 'react'
-import { SpatialUnlitMaterialOptions } from '@webspatial/core-sdk'
 import { useSpatialMaterial } from '../hooks/useSpatialMaterial'
+import type { UnlitMaterialProps } from '../materialProps'
 
-const UNLIT_OPTION_KEYS = [
-  'color',
-  'textureId',
-  'transparent',
-  'opacity',
-] as const satisfies readonly (keyof SpatialUnlitMaterialOptions)[]
-
-export type UnlitMaterialProps = {
-  children?: React.ReactNode
-  id: string // user id
-} & SpatialUnlitMaterialOptions
+export type { UnlitMaterialProps } from '../materialProps'
 
 /**
  * A flat-shaded material that ignores scene lighting.
@@ -23,11 +13,8 @@ export const UnlitMaterial: React.FC<UnlitMaterialProps> = ({
   id,
   ...options
 }) => {
-  useSpatialMaterial(
-    id,
-    options,
-    UNLIT_OPTION_KEYS,
-    (session, commandOptions) => session.createUnlitMaterial(commandOptions),
+  useSpatialMaterial(id, options, (session, commandOptions) =>
+    session.createUnlitMaterial(commandOptions),
   )
   return null
 }

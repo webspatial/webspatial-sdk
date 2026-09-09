@@ -3,8 +3,10 @@ import { SpatialObject } from '../../SpatialObject'
 import type {
   SpatialMaterialType,
   SpatialPBRMaterialOptions,
-  SpatialUnlitMaterialOptions,
 } from '../../types/types'
+
+/** Property bag for material updates. PBR is a superset of unlit; every field is optional. */
+export type SpatialMaterialUpdateOptions = SpatialPBRMaterialOptions
 
 export abstract class SpatialMaterial extends SpatialObject {
   constructor(
@@ -16,8 +18,6 @@ export abstract class SpatialMaterial extends SpatialObject {
   }
 
   abstract updateProperties(
-    properties: Partial<
-      SpatialUnlitMaterialOptions & SpatialPBRMaterialOptions
-    >,
+    properties: SpatialMaterialUpdateOptions,
   ): Promise<CommandResult>
 }

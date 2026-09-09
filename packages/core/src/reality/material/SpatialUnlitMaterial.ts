@@ -1,6 +1,9 @@
 import { UpdateUnlitMaterialProperties } from '../../JSBCommand'
 import { SpatialUnlitMaterialOptions } from '../../types/types'
-import { SpatialMaterial } from './SpatialMaterial'
+import {
+  SpatialMaterial,
+  type SpatialMaterialUpdateOptions,
+} from './SpatialMaterial'
 
 export class SpatialUnlitMaterial extends SpatialMaterial {
   constructor(
@@ -10,7 +13,7 @@ export class SpatialUnlitMaterial extends SpatialMaterial {
     super(id, 'unlit')
   }
 
-  updateProperties(properties: Partial<SpatialUnlitMaterialOptions>) {
+  updateProperties(properties: SpatialMaterialUpdateOptions) {
     return new UpdateUnlitMaterialProperties(this, properties).execute()
   }
 }

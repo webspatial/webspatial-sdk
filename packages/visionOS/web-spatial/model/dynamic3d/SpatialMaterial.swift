@@ -74,9 +74,7 @@ class SpatialUnlitMaterial: SpatialMaterial {
 
 @Observable
 class SpatialPBRMaterial: SpatialMaterial {
-    /// Single RealityKit `PhysicallyBasedMaterial` mutated in place. RealityKit's
-    /// blending mode is set at construction, so flipping `transparent` requires
-    /// rebuilding `_mat`.
+    // Cached material; applyProperties updates its fields.
     private var _mat: PhysicallyBasedMaterial
     private(set) var currentColor: UIColor
     private(set) var currentTexture: TextureResource?

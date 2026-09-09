@@ -219,9 +219,7 @@ export type {
 } from './facades'
 
 // --- Material presets (pure data, no spatial-chunk dependency) --------------
-// JS-only tuned starting points for `<PBRMaterial>` — a plain frozen record,
-// safe to export from the default entry: `./MaterialPresets` has no runtime
-// imports, so it adds nothing to the static spatial module graph.
+// Data-only presets, safe to export without loading the spatial implementation.
 export { MaterialPresets } from './MaterialPresets'
 export type { MaterialPreset, MaterialPresetName } from './MaterialPresets'
 

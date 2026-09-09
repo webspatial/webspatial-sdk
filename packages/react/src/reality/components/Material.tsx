@@ -1,16 +1,9 @@
 import React from 'react'
-import type { SpatialMaterialType } from '@webspatial/core-sdk'
-import { UnlitMaterial, UnlitMaterialProps } from './UnlitMaterial'
-import { PBRMaterial, PBRMaterialProps } from './PBRMaterial'
+import type { MaterialProps } from '../materialProps'
+import { UnlitMaterial } from './UnlitMaterial'
+import { PBRMaterial } from './PBRMaterial'
 
-type MaterialPropsByType = {
-  unlit: UnlitMaterialProps
-  pbr: PBRMaterialProps
-}
-
-export type MaterialProps = {
-  [K in SpatialMaterialType]: { type: K } & MaterialPropsByType[K]
-}[SpatialMaterialType]
+export type { MaterialProps } from '../materialProps'
 
 export const Material: React.FC<MaterialProps> = props => {
   switch (props.type) {

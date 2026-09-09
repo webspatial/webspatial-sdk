@@ -1,20 +1,8 @@
 import React from 'react'
-import { SpatialPBRMaterialOptions } from '@webspatial/core-sdk'
 import { useSpatialMaterial } from '../hooks/useSpatialMaterial'
+import type { PBRMaterialProps } from '../materialProps'
 
-const PBR_OPTION_KEYS = [
-  'color',
-  'textureId',
-  'metalness',
-  'roughness',
-  'transparent',
-  'opacity',
-] as const satisfies readonly (keyof SpatialPBRMaterialOptions)[]
-
-export type PBRMaterialProps = {
-  children?: React.ReactNode
-  id: string // user id
-} & SpatialPBRMaterialOptions
+export type { PBRMaterialProps } from '../materialProps'
 
 /**
  * A physically-based material that responds to scene lighting.
@@ -30,7 +18,7 @@ export const PBRMaterial: React.FC<PBRMaterialProps> = ({
   id,
   ...options
 }) => {
-  useSpatialMaterial(id, options, PBR_OPTION_KEYS, (session, commandOptions) =>
+  useSpatialMaterial(id, options, (session, commandOptions) =>
     session.createPBRMaterial(commandOptions),
   )
   return null

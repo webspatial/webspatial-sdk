@@ -35,53 +35,46 @@ export default function PBRMaterialTest() {
     <div className="p-10 text-white min-h-full">
       <h1 className="text-2xl mb-2">PBR primitives + presets</h1>
       <p className="text-sm text-gray-400 mb-4 max-w-3xl">
-        Loads a <code className="text-gray-300">Texture</code>, then creates
-        several <code className="text-gray-300">PBRMaterial</code>s — one sphere
-        per <code className="text-gray-300">MaterialPresets</code> entry and a
-        tunable material whose <code className="text-gray-300">roughness</code>,{' '}
-        <code className="text-gray-300">metalness</code>, base{' '}
-        <code className="text-gray-300">color</code>, and{' '}
-        <code className="text-gray-300">transparent</code>/
-        <code className="text-gray-300">opacity</code> update reactively. Also
-        exercises{' '}
+        Untextured <code className="text-gray-300">MaterialPresets</code> render
+        immediately. A shared tunable material binds a{' '}
+        <code className="text-gray-300">Texture</code> when the download
+        succeeds; a download failure does not hide the presets. Also exercises{' '}
         <code className="text-gray-300">{'<Material type="pbr">'}</code>.
         Status: {status}
       </p>
 
-      {textureReady ? (
-        <div className="flex flex-wrap gap-2 mb-4 items-center">
-          <button
-            type="button"
-            className={btnCls}
-            onClick={() =>
-              setTint(t => (t === '#ffffff' ? '#3a8bff' : '#ffffff'))
-            }
-          >
-            Toggle tint ({tint})
-          </button>
-          <button
-            type="button"
-            className={btnCls}
-            onClick={() => setRoughness(r => (r > 0.5 ? 0.1 : 0.9))}
-          >
-            Roughness {roughness.toFixed(2)} (toggle gloss/matte)
-          </button>
-          <button
-            type="button"
-            className={btnCls}
-            onClick={() => setMetalness(m => (m > 0.5 ? 0 : 1))}
-          >
-            Metalness {metalness.toFixed(2)} (toggle metal/dielectric)
-          </button>
-          <button
-            type="button"
-            className={btnCls}
-            onClick={() => setTransparent(t => !t)}
-          >
-            Transparent: {transparent ? 'on (opacity 0.35)' : 'off'}
-          </button>
-        </div>
-      ) : null}
+      <div className="flex flex-wrap gap-2 mb-4 items-center">
+        <button
+          type="button"
+          className={btnCls}
+          onClick={() =>
+            setTint(t => (t === '#ffffff' ? '#3a8bff' : '#ffffff'))
+          }
+        >
+          Toggle tint ({tint})
+        </button>
+        <button
+          type="button"
+          className={btnCls}
+          onClick={() => setRoughness(r => (r > 0.5 ? 0.1 : 0.9))}
+        >
+          Roughness {roughness.toFixed(2)} (toggle gloss/matte)
+        </button>
+        <button
+          type="button"
+          className={btnCls}
+          onClick={() => setMetalness(m => (m > 0.5 ? 0 : 1))}
+        >
+          Metalness {metalness.toFixed(2)} (toggle metal/dielectric)
+        </button>
+        <button
+          type="button"
+          className={btnCls}
+          onClick={() => setTransparent(t => !t)}
+        >
+          Transparent: {transparent ? 'on (opacity 0.35)' : 'off'}
+        </button>
+      </div>
 
       <div className="relative border border-gray-800 rounded-xl overflow-hidden bg-[#111]">
         <Reality
@@ -107,147 +100,141 @@ export default function PBRMaterialTest() {
             }}
           />
 
-          {textureReady ? (
-            <>
-              {/* Tunable PBR — reactively updates color / roughness / metalness / blending */}
-              <PBRMaterial
-                id="pbrTunable"
-                color={tint}
-                textureId="pbrTexGrid"
-                roughness={roughness}
-                metalness={metalness}
-                transparent={transparent}
-                opacity={transparent ? 0.35 : 1}
-              />
+          {/* Untextured presets and dispatcher always mount. */}
+          <PBRMaterial
+            id="pbrMetal"
+            {...MaterialPresets.metal}
+            color="#c0c0c0"
+          />
+          <PBRMaterial id="pbrGlossy" {...MaterialPresets.glossy} />
+          <PBRMaterial
+            id="pbrPlastic"
+            {...MaterialPresets.plastic}
+            color="#e04444"
+          />
+          <PBRMaterial
+            id="pbrMatte"
+            {...MaterialPresets.matte}
+            color="#8B4513"
+          />
+          <PBRMaterial
+            id="pbrGlass"
+            {...MaterialPresets.glass}
+            color="#aaddff"
+          />
+          <Material
+            type="pbr"
+            id="pbrViaDispatcher"
+            color="#ffffff"
+            roughness={0.3}
+            metalness={0.8}
+          />
 
-              {/* One material per preset (color overridden where useful) */}
-              <PBRMaterial
-                id="pbrMetal"
-                {...MaterialPresets.metal}
-                color="#c0c0c0"
-              />
-              <PBRMaterial id="pbrGlossy" {...MaterialPresets.glossy} />
-              <PBRMaterial
-                id="pbrPlastic"
-                {...MaterialPresets.plastic}
-                color="#e04444"
-              />
-              <PBRMaterial
-                id="pbrMatte"
-                {...MaterialPresets.matte}
-                color="#8B4513"
-              />
-              <PBRMaterial
-                id="pbrGlass"
-                {...MaterialPresets.glass}
-                color="#aaddff"
-              />
+          {/* Tunable PBR binds the texture only after onLoad. */}
+          <PBRMaterial
+            id="pbrTunable"
+            color={tint}
+            textureId={textureReady ? 'pbrTexGrid' : undefined}
+            roughness={roughness}
+            metalness={metalness}
+            transparent={transparent}
+            opacity={transparent ? 0.35 : 1}
+          />
 
-              {/* Material dispatcher: same as <PBRMaterial> via type="pbr" */}
-              <Material
-                type="pbr"
-                id="pbrViaDispatcher"
-                color="#ffffff"
-                roughness={0.3}
-                metalness={0.8}
+          <SceneGraph>
+            {/* Row 1: presets */}
+            <Entity
+              position={{ x: 0, y: 0.12, z: 0 }}
+              rotation={{ x: 0, y: 0.4, z: 0 }}
+              scale={{ x: 0.85, y: 0.85, z: 0.85 }}
+            >
+              <SphereEntity
+                id="pbrSphereMetal"
+                name="pbrSphereMetal"
+                radius={0.07}
+                position={{ x: -0.36, y: 0, z: 0 }}
+                materials={['pbrMetal']}
               />
+              <SphereEntity
+                id="pbrSphereGlossy"
+                name="pbrSphereGlossy"
+                radius={0.07}
+                position={{ x: -0.18, y: 0, z: 0 }}
+                materials={['pbrGlossy']}
+              />
+              <SphereEntity
+                id="pbrSpherePlastic"
+                name="pbrSpherePlastic"
+                radius={0.07}
+                position={{ x: 0, y: 0, z: 0 }}
+                materials={['pbrPlastic']}
+              />
+              <SphereEntity
+                id="pbrSphereMatte"
+                name="pbrSphereMatte"
+                radius={0.07}
+                position={{ x: 0.18, y: 0, z: 0 }}
+                materials={['pbrMatte']}
+              />
+              <SphereEntity
+                id="pbrSphereGlass"
+                name="pbrSphereGlass"
+                radius={0.07}
+                position={{ x: 0.36, y: 0, z: 0 }}
+                materials={['pbrGlass']}
+              />
+            </Entity>
 
-              <SceneGraph>
-                {/* Row 1: presets */}
-                <Entity
-                  position={{ x: 0, y: 0.12, z: 0 }}
-                  rotation={{ x: 0, y: 0.4, z: 0 }}
-                  scale={{ x: 0.85, y: 0.85, z: 0.85 }}
-                >
-                  <SphereEntity
-                    id="pbrSphereMetal"
-                    name="pbrSphereMetal"
-                    radius={0.07}
-                    position={{ x: -0.36, y: 0, z: 0 }}
-                    materials={['pbrMetal']}
-                  />
-                  <SphereEntity
-                    id="pbrSphereGlossy"
-                    name="pbrSphereGlossy"
-                    radius={0.07}
-                    position={{ x: -0.18, y: 0, z: 0 }}
-                    materials={['pbrGlossy']}
-                  />
-                  <SphereEntity
-                    id="pbrSpherePlastic"
-                    name="pbrSpherePlastic"
-                    radius={0.07}
-                    position={{ x: 0, y: 0, z: 0 }}
-                    materials={['pbrPlastic']}
-                  />
-                  <SphereEntity
-                    id="pbrSphereMatte"
-                    name="pbrSphereMatte"
-                    radius={0.07}
-                    position={{ x: 0.18, y: 0, z: 0 }}
-                    materials={['pbrMatte']}
-                  />
-                  <SphereEntity
-                    id="pbrSphereGlass"
-                    name="pbrSphereGlass"
-                    radius={0.07}
-                    position={{ x: 0.36, y: 0, z: 0 }}
-                    materials={['pbrGlass']}
-                  />
-                </Entity>
-
-                {/* Row 2: shared tunable PBR across primitive shapes */}
-                <Entity
-                  position={{ x: 0, y: -0.12, z: 0 }}
-                  rotation={{ x: 0, y: 0.4, z: 0 }}
-                  scale={{ x: 0.85, y: 0.85, z: 0.85 }}
-                >
-                  <BoxEntity
-                    id="pbrBoxTunable"
-                    name="pbrBoxTunable"
-                    width={0.14}
-                    height={0.14}
-                    depth={0.14}
-                    cornerRadius={0.015}
-                    position={{ x: -0.36, y: 0, z: 0 }}
-                    materials={['pbrTunable']}
-                  />
-                  <SphereEntity
-                    id="pbrSphereTunable"
-                    name="pbrSphereTunable"
-                    radius={0.07}
-                    position={{ x: -0.18, y: 0, z: 0 }}
-                    materials={['pbrTunable']}
-                  />
-                  <CylinderEntity
-                    id="pbrCylinderTunable"
-                    name="pbrCylinderTunable"
-                    radius={0.06}
-                    height={0.14}
-                    position={{ x: 0, y: 0, z: 0 }}
-                    materials={['pbrTunable']}
-                  />
-                  <ConeEntity
-                    id="pbrConeTunable"
-                    name="pbrConeTunable"
-                    radius={0.06}
-                    height={0.14}
-                    position={{ x: 0.18, y: 0, z: 0 }}
-                    materials={['pbrTunable']}
-                  />
-                  <PlaneEntity
-                    id="pbrPlaneDispatcher"
-                    name="pbrPlaneDispatcher"
-                    width={0.16}
-                    height={0.16}
-                    position={{ x: 0.36, y: 0, z: 0 }}
-                    rotation={{ x: 0, y: 0.9, z: 0 }}
-                    materials={['pbrViaDispatcher']}
-                  />
-                </Entity>
-              </SceneGraph>
-            </>
-          ) : null}
+            {/* Row 2: shared tunable PBR across primitive shapes */}
+            <Entity
+              position={{ x: 0, y: -0.12, z: 0 }}
+              rotation={{ x: 0, y: 0.4, z: 0 }}
+              scale={{ x: 0.85, y: 0.85, z: 0.85 }}
+            >
+              <BoxEntity
+                id="pbrBoxTunable"
+                name="pbrBoxTunable"
+                width={0.14}
+                height={0.14}
+                depth={0.14}
+                cornerRadius={0.015}
+                position={{ x: -0.36, y: 0, z: 0 }}
+                materials={['pbrTunable']}
+              />
+              <SphereEntity
+                id="pbrSphereTunable"
+                name="pbrSphereTunable"
+                radius={0.07}
+                position={{ x: -0.18, y: 0, z: 0 }}
+                materials={['pbrTunable']}
+              />
+              <CylinderEntity
+                id="pbrCylinderTunable"
+                name="pbrCylinderTunable"
+                radius={0.06}
+                height={0.14}
+                position={{ x: 0, y: 0, z: 0 }}
+                materials={['pbrTunable']}
+              />
+              <ConeEntity
+                id="pbrConeTunable"
+                name="pbrConeTunable"
+                radius={0.06}
+                height={0.14}
+                position={{ x: 0.18, y: 0, z: 0 }}
+                materials={['pbrTunable']}
+              />
+              <PlaneEntity
+                id="pbrPlaneDispatcher"
+                name="pbrPlaneDispatcher"
+                width={0.16}
+                height={0.16}
+                position={{ x: 0.36, y: 0, z: 0 }}
+                rotation={{ x: 0, y: 0.9, z: 0 }}
+                materials={['pbrViaDispatcher']}
+              />
+            </Entity>
+          </SceneGraph>
         </Reality>
       </div>
     </div>

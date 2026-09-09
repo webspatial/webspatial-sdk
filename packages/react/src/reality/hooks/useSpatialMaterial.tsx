@@ -3,66 +3,49 @@ import {
   SpatialMaterial,
   SpatialPBRMaterialOptions,
   SpatialSession,
-  SpatialUnlitMaterialOptions,
 } from '@webspatial/core-sdk'
 import { useRealityContext } from '../context'
 
-function assignDefinedOptions<O extends object>(
-  source: O,
-  keys: readonly (keyof O)[],
-): Partial<O> {
-  const out: Partial<O> = {}
-  for (const key of keys) {
-    const value = source[key]
-    if (value !== undefined) {
-      out[key] = value
-    }
-  }
-  return out
+export type SpatialMaterialFields = {
+  color?: string
+  textureId?: string
+  metalness?: number
+  roughness?: number
+  transparent?: boolean
+  opacity?: number
 }
 
 /**
- * Shared lifecycle for material components (`<UnlitMaterial>`, `<PBRMaterial>`).
+ * Shared native-material lifecycle for `<UnlitMaterial>` and `<PBRMaterial>`.
  *
- * Owns the full native-material lifecycle so each material kind only declares
- * its option keys and create call:
- * - creates the native material on mount and registers it in the
- *   ResourceRegistry under the user-facing `id`,
- * - resolves a user-facing `textureId` to the native texture id, falling back
- *   to tint-only (`textureId: ''`) while the texture is missing or failed,
- * - subscribes to the texture id so a `<Texture>` that registers, reloads, or
- *   fails later re-syncs this material,
- * - pushes prop changes to the native side via `updateProperties`,
- * - destroys the native material on unmount (scheduled through the registry).
- *
- * `optionKeys` must be a module-level constant: it sizes the update effect's
- * dependency array, so its length and order have to be stable across renders.
- *
- * Omitted option keys stay `undefined` and are not serialized, so native keeps
- * its current value. Explicit values (including `0` and `''`) are sent through.
+ * A missing or failed `textureId` is sent as `''` (tint-only); subscribe
+ * re-syncs when that texture later registers, reloads, or fails. Omitted
+ * props stay undefined and are not serialized (native keeps its value);
+ * explicit `0` and `''` are sent. Unmount cancels in-flight work and
+ * schedules destroy through the registry so a pending create cannot
+ * register after teardown.
  */
-export function useSpatialMaterial<
-  O extends SpatialUnlitMaterialOptions | SpatialPBRMaterialOptions,
->(
+export function useSpatialMaterial(
   id: string,
-  options: O,
-  optionKeys: readonly (keyof O & string)[],
+  options: SpatialMaterialFields,
   create: (
     session: SpatialSession,
-    options: Partial<O>,
+    options: SpatialPBRMaterialOptions,
   ) => Promise<SpatialMaterial>,
 ): void {
   const ctx = useRealityContext()
   const materialRef = useRef<SpatialMaterial | undefined>(undefined)
   const [isInitialized, setIsInitialized] = useState(false)
   const [textureRevision, setTextureRevision] = useState(0)
+  const { color, textureId, metalness, roughness, transparent, opacity } =
+    options
 
   useEffect(() => {
-    if (!ctx || !options.textureId) return
-    return ctx.resourceRegistry.subscribe(options.textureId, () => {
+    if (!ctx || !textureId) return
+    return ctx.resourceRegistry.subscribe(textureId, () => {
       setTextureRevision(v => v + 1)
     })
-  }, [ctx, options.textureId])
+  }, [ctx, textureId])
 
   useEffect(() => {
     if (!ctx) return
@@ -71,24 +54,25 @@ export function useSpatialMaterial<
     const { session, resourceRegistry } = ctx
     const init = async () => {
       try {
-        let textureIdForNative: string | undefined = options.textureId
-        if (options.textureId && resourceRegistry.has(options.textureId)) {
+        let textureIdForNative: string | undefined = textureId
+        if (textureId && resourceRegistry.has(textureId)) {
           try {
-            const textureResource = await resourceRegistry.get(
-              options.textureId,
-            )
+            const textureResource = await resourceRegistry.get(textureId)
             if (cancelled) return
             textureIdForNative = textureResource.id
           } catch {
-            // failed texture → tint-only
             textureIdForNative = ''
           }
-        } else if (options.textureId) {
-          // no Texture for this id yet → tint-only; subscribe picks up add() later
+        } else if (textureId) {
           textureIdForNative = ''
         }
         if (cancelled) return
-        const commandOptions = assignDefinedOptions(options, optionKeys)
+        const commandOptions: SpatialPBRMaterialOptions = {}
+        if (color !== undefined) commandOptions.color = color
+        if (metalness !== undefined) commandOptions.metalness = metalness
+        if (roughness !== undefined) commandOptions.roughness = roughness
+        if (transparent !== undefined) commandOptions.transparent = transparent
+        if (opacity !== undefined) commandOptions.opacity = opacity
         commandOptions.textureId = textureIdForNative
         const materialPromise = create(session, commandOptions)
         resourceRegistry.add(materialId, materialPromise)
@@ -104,31 +88,31 @@ export function useSpatialMaterial<
 
     return () => {
       cancelled = true
-      // Use registry to schedule destruction after promise resolves
       resourceRegistry.removeAndDestroy(materialId)
       materialRef.current = undefined
       setIsInitialized(false)
     }
   }, [ctx, id])
 
-  // Dynamic property updates
   useEffect(() => {
     if (!ctx || !isInitialized || !materialRef.current) return
     let cancelled = false
+    const materialId = id
     void (async () => {
-      const updates = assignDefinedOptions(
-        options,
-        optionKeys.filter(key => key !== 'textureId'),
-      )
-      if (options.textureId !== undefined) {
-        if (options.textureId === '') {
+      const updates: SpatialPBRMaterialOptions = {}
+      if (color !== undefined) updates.color = color
+      if (metalness !== undefined) updates.metalness = metalness
+      if (roughness !== undefined) updates.roughness = roughness
+      if (transparent !== undefined) updates.transparent = transparent
+      if (opacity !== undefined) updates.opacity = opacity
+      if (textureId !== undefined) {
+        if (textureId === '') {
           updates.textureId = ''
-        } else if (!ctx.resourceRegistry.has(options.textureId)) {
+        } else if (!ctx.resourceRegistry.has(textureId)) {
           updates.textureId = ''
         } else {
-          const texturePromise = ctx.resourceRegistry.get(options.textureId)
           try {
-            const textureResource = await texturePromise
+            const textureResource = await ctx.resourceRegistry.get(textureId)
             if (cancelled) return
             updates.textureId = textureResource.id
           } catch {
@@ -138,8 +122,19 @@ export function useSpatialMaterial<
       }
       if (cancelled || Object.keys(updates).length === 0) return
       const mat = materialRef.current
-      if (mat) {
-        void mat.updateProperties(updates).catch(() => {})
+      if (!mat) return
+      try {
+        const result = await mat.updateProperties(updates)
+        if (cancelled) return
+        if (!result.success) {
+          console.error(
+            ` ~ Material "${materialId}" ~ update failed:`,
+            result.errorMessage ?? result.errorCode,
+          )
+        }
+      } catch (error) {
+        if (cancelled) return
+        console.error(` ~ Material "${materialId}" ~ update failed:`, error)
       }
     })()
     return () => {
@@ -147,8 +142,14 @@ export function useSpatialMaterial<
     }
   }, [
     ctx,
+    id,
     isInitialized,
     textureRevision,
-    ...optionKeys.map(key => options[key]),
+    color,
+    textureId,
+    metalness,
+    roughness,
+    transparent,
+    opacity,
   ])
 }

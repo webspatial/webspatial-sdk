@@ -2,10 +2,10 @@
 
 import { ComponentType, ReactNode } from 'react'
 import type {
-  SpatialMaterialType,
-  SpatialPBRMaterialOptions,
-  SpatialUnlitMaterialOptions,
-} from '@webspatial/core-sdk'
+  MaterialProps,
+  PBRMaterialProps,
+  UnlitMaterialProps,
+} from '../reality/materialProps'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
 import { BootForgottenDiagnostic } from './shared/BootForgottenDiagnostic'
@@ -40,24 +40,7 @@ function createNullFacade<P>(
   return Facade
 }
 
-export type UnlitMaterialProps = {
-  children?: ReactNode
-  id: string
-} & SpatialUnlitMaterialOptions
-
-export type PBRMaterialProps = {
-  children?: ReactNode
-  id: string
-} & SpatialPBRMaterialOptions
-
-type MaterialPropsByType = {
-  unlit: UnlitMaterialProps
-  pbr: PBRMaterialProps
-}
-
-export type MaterialProps = {
-  [K in SpatialMaterialType]: { type: K } & MaterialPropsByType[K]
-}[SpatialMaterialType]
+export type { MaterialProps, PBRMaterialProps, UnlitMaterialProps }
 
 export type TextureProps = {
   children?: ReactNode
