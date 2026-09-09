@@ -31,14 +31,17 @@
     "changeset": "changeset",
     "changeset:pre-enter": "changeset pre enter alpha",
     "changeset:pre-exit": "changeset pre exit alpha",
-    "generateStaticSite": "./tools/scripts/generateWebsite.sh"
+    "generateStaticSite": "./tools/scripts/generateWebsite.sh",
+    "commitlint": "commitlint",
+    "test:commitlint": "node --test tools/scripts/commitlint.test.cjs"
   },
   "engines": {
     "node": ">=24",
     "pnpm": ">=11"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged"
+    "pre-commit": "pnpm lint-staged",
+    "commit-msg": "npx --no -- commitlint --edit \"$1\""
   },
   "lint-staged": {
     "*.{js,json}": [
@@ -67,6 +70,8 @@
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
     "@fission-ai/openspec": "^1.12.0",
     "@vitest/coverage-v8": "^4.1.11",
     "concurrently": "^8.2.2",

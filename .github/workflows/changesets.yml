@@ -51,7 +51,10 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          commit: "chore: update versions"
+          commit: |
+            chore: update versions
+
+            ticket: 0
           title: "chore: update versions"
           publish: pnpm ci:publish
         env:
@@ -165,7 +168,10 @@ jobs:
       - name: Create sync PR
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: 'chore: sync stable → main'
+          commit-message: |
+            chore: sync stable → main
+
+            ticket: 0
           title: 'Merge stable into main'
           token: ${{ secrets.PAT_TOKEN }}
           body: |
