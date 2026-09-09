@@ -111,10 +111,10 @@ importers:
     dependencies:
       '@react-router/node':
         specifier: ^7.18.3
-        version: 7.18.3(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
+        version: 7.18.3(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
       '@react-router/serve':
         specifier: ^7.18.3
-        version: 7.18.3(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(typescript@5.9.3)
+        version: 7.18.3(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(typescript@5.9.3)
       '@webspatial/core-sdk':
         specifier: workspace:*
         version: link:../../packages/core
@@ -131,15 +131,15 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
       react-router:
-        specifier: ^7.18.3
-        version: 7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^8.3.0
+        version: 8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-router-dom:
         specifier: ^7.18.3
         version: 7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@react-router/dev':
         specifier: ^7.18.3
-        version: 7.18.3(@react-router/serve@7.18.3(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(typescript@5.9.3))(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(sass-embedded@1.103.1)(sass@1.103.1)(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.13)(typescript@5.9.3)(vite@6.4.3(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(yaml@2.9.0)
+        version: 7.18.3(@react-router/serve@7.18.3(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(typescript@5.9.3))(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(sass-embedded@1.103.1)(sass@1.103.1)(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.13)(typescript@5.9.3)(vite@6.4.3(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(yaml@2.9.0)
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@6.4.3(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
@@ -363,17 +363,17 @@ importers:
         specifier: ^4.12.24
         version: 4.12.24(postcss@8.5.28)
       esbuild:
-        specifier: ^0.25.12
-        version: 0.25.12
+        specifier: ^0.28.1
+        version: 0.28.2
       esbuild-css-modules-plugin:
         specifier: ^3.1.5
-        version: 3.1.5(esbuild@0.25.12)
+        version: 3.1.5(esbuild@0.28.2)
       esbuild-plugin-tailwindcss:
         specifier: ^1.2.3
         version: 1.2.3(tsx@4.23.13)(yaml@2.9.0)
       esbuild-sass-plugin:
         specifier: ^3.7.0
-        version: 3.7.0(esbuild@0.25.12)(sass-embedded@1.103.1)
+        version: 3.7.0(esbuild@0.28.2)(sass-embedded@1.103.1)
       eslint:
         specifier: ^8.57.1
         version: 8.57.1(supports-color@8.1.1)
@@ -551,14 +551,14 @@ importers:
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
       esbuild:
-        specifier: ^0.25.12
-        version: 0.25.12
+        specifier: ^0.28.1
+        version: 0.28.2
       esbuild-plugin-d.ts:
         specifier: ^1.3.1
         version: 1.3.1(typescript@5.9.3)
       esbuild-plugin-define:
         specifier: ^0.5.0
-        version: 0.5.0(esbuild@0.25.12)
+        version: 0.5.0(esbuild@0.28.2)
       jsdom:
         specifier: ^24.1.3
         version: 24.1.3(supports-color@8.1.1)
@@ -4174,6 +4174,9 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
+  cookie-es@3.1.1:
+    resolution: {integrity: sha512-UaXxwISYJPTr9hwQxMFYZ7kNhSXboMXP+Z3TRX6f1/NyaGPfuNUZOWP1pUEb75B2HjfklIYLVRfWiFZJyC6Npg==}
+
   cookie-signature@1.0.7:
     resolution: {integrity: sha512-NXdYc3dLr47pBkpUCHtKSwIOQXLVn8dZEuywboCOJY/osA0wFSLlSawr3KN8qXJEyX66FcONTH8EIlVuK0yyFA==}
 
@@ -6634,6 +6637,16 @@ packages:
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+
+  react-router@8.3.1:
+    resolution: {integrity: sha512-TEOpiO2g0TJHEOJeRVv4amUFun9v1npCKszvcquNvzETUtJ8udV86ah5eFoHT7g26bsBvT6EiIhqulR8eDF++A==}
+    engines: {node: '>=22.22.0'}
+    peerDependencies:
+      react: '>=19.2.7'
+      react-dom: '>=19.2.7'
     peerDependenciesMeta:
       react-dom:
         optional: true
@@ -9675,7 +9688,7 @@ snapshots:
     optionalDependencies:
       yauzl: 2.10.0
 
-  '@react-router/dev@7.18.3(@react-router/serve@7.18.3(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(typescript@5.9.3))(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(sass-embedded@1.103.1)(sass@1.103.1)(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.13)(typescript@5.9.3)(vite@6.4.3(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(yaml@2.9.0)':
+  '@react-router/dev@7.18.3(@react-router/serve@7.18.3(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(typescript@5.9.3))(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(sass-embedded@1.103.1)(sass@1.103.1)(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.13)(typescript@5.9.3)(vite@6.4.3(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(yaml@2.9.0)':
     dependencies:
       '@babel/core': 7.29.7(supports-color@8.1.1)
       '@babel/generator': 7.29.8
@@ -9684,7 +9697,7 @@ snapshots:
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
       '@babel/traverse': 7.29.8(supports-color@8.1.1)
       '@babel/types': 7.29.8
-      '@react-router/node': 7.18.3(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
+      '@react-router/node': 7.18.3(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
       '@remix-run/node-fetch-server': 0.13.3
       arg: 5.0.2
       babel-dead-code-elimination: 1.0.12(supports-color@8.1.1)
@@ -9701,14 +9714,14 @@ snapshots:
       pkg-types: 2.3.2
       prettier: 3.9.6
       react-refresh: 0.14.2
-      react-router: 7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router: 8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       semver: 7.8.5
       tinyglobby: 0.2.17
       valibot: 1.4.2(typescript@5.9.3)
       vite: 6.4.3(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
       vite-node: 3.2.4(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(sass-embedded@1.103.1)(sass@1.103.1)(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
     optionalDependencies:
-      '@react-router/serve': 7.18.3(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(typescript@5.9.3)
+      '@react-router/serve': 7.18.3(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(typescript@5.9.3)
       typescript: 5.9.3
     transitivePeerDependencies:
       - '@types/node'
@@ -9725,31 +9738,31 @@ snapshots:
       - tsx
       - yaml
 
-  '@react-router/express@7.18.3(express@4.22.2(supports-color@8.1.1))(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)':
+  '@react-router/express@7.18.3(express@4.22.2(supports-color@8.1.1))(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)':
     dependencies:
-      '@react-router/node': 7.18.3(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
+      '@react-router/node': 7.18.3(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
       express: 4.22.2(supports-color@8.1.1)
-      react-router: 7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router: 8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     optionalDependencies:
       typescript: 5.9.3
 
-  '@react-router/node@7.18.3(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)':
+  '@react-router/node@7.18.3(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)':
     dependencies:
       '@mjackson/node-fetch-server': 0.2.0
-      react-router: 7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router: 8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     optionalDependencies:
       typescript: 5.9.3
 
-  '@react-router/serve@7.18.3(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(typescript@5.9.3)':
+  '@react-router/serve@7.18.3(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(typescript@5.9.3)':
     dependencies:
       '@mjackson/node-fetch-server': 0.2.0
-      '@react-router/express': 7.18.3(express@4.22.2(supports-color@8.1.1))(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
-      '@react-router/node': 7.18.3(react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
+      '@react-router/express': 7.18.3(express@4.22.2(supports-color@8.1.1))(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
+      '@react-router/node': 7.18.3(react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.3)
       compression: 1.8.1(supports-color@8.1.1)
       express: 4.22.2(supports-color@8.1.1)
       get-port: 5.1.1
       morgan: 1.12.0(supports-color@8.1.1)
-      react-router: 7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router: 8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       source-map-support: 0.5.21
     transitivePeerDependencies:
       - supports-color
@@ -11370,6 +11383,8 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
+  cookie-es@3.1.1: {}
+
   cookie-signature@1.0.7: {}
 
   cookie@0.7.2: {}
@@ -11632,9 +11647,9 @@ snapshots:
       has-tostringtag: 1.0.2
       hasown: 2.0.4
 
-  esbuild-css-modules-plugin@3.1.5(esbuild@0.25.12):
+  esbuild-css-modules-plugin@3.1.5(esbuild@0.28.2):
     dependencies:
-      esbuild: 0.25.12
+      esbuild: 0.28.2
       lightningcss: 1.33.0
       lodash-es: 4.18.1
 
@@ -11646,9 +11661,9 @@ snapshots:
       type-fest: 4.41.0
       typescript: 5.9.3
 
-  esbuild-plugin-define@0.5.0(esbuild@0.25.12):
+  esbuild-plugin-define@0.5.0(esbuild@0.28.2):
     dependencies:
-      esbuild: 0.25.12
+      esbuild: 0.28.2
 
   esbuild-plugin-tailwindcss@1.2.3(tsx@4.23.13)(yaml@2.9.0):
     dependencies:
@@ -11660,9 +11675,9 @@ snapshots:
       - tsx
       - yaml
 
-  esbuild-sass-plugin@3.7.0(esbuild@0.25.12)(sass-embedded@1.103.1):
+  esbuild-sass-plugin@3.7.0(esbuild@0.28.2)(sass-embedded@1.103.1):
     dependencies:
-      esbuild: 0.25.12
+      esbuild: 0.28.2
       resolve: 1.22.12
       sass: 1.103.1
       sass-embedded: 1.103.1
@@ -14173,6 +14188,13 @@ snapshots:
       cookie: 1.1.1
       react: 18.3.1
       set-cookie-parser: 2.7.2
+    optionalDependencies:
+      react-dom: 18.3.1(react@18.3.1)
+
+  react-router@8.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      cookie-es: 3.1.1
+      react: 18.3.1
     optionalDependencies:
       react-dom: 18.3.1(react@18.3.1)
 
