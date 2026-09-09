@@ -1,4 +1,4 @@
-import { SpatialMaterialTypeValues } from '../types/types'
+import type { SpatialMaterialType } from '../types/types'
 
 /**
  * Canonical `supports(name)` key registry (OpenSpec `review.md` §3).
@@ -101,7 +101,9 @@ export function normalizeCapabilityName(name: string): string {
 
 /** Known sub-tokens per canonical top-level `name` (AND semantics). */
 export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
-  Material: SpatialMaterialTypeValues,
+  // Inline: this file is eval'd in isolation by
+  // generate-runtime-capability-manifest.js (no value imports).
+  Material: ['unlit', 'pbr'] as const satisfies readonly SpatialMaterialType[],
   WindowScene: ['defaultSize', 'resizability'],
   VolumeScene: [
     'defaultSize',
