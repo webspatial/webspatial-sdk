@@ -1,3 +1,5 @@
+> Status: Superseded by `redesign-entity-motion-api`. The redesign change is authoritative.
+
 ## ADDED Requirements
 
 ### Requirement: Expose entity transform animation API

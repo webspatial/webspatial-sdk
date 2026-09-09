@@ -50,6 +50,14 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         jsbManager.handlerMessage(command)
     }
 
+    /// Lets tests observe replies while using the production JSB dispatch path.
+    func mockJSB(
+        _ command: String,
+        _ replyHandler: @escaping (Any?, String?) -> Void
+    ) {
+        jsbManager.handlerMessage(command, replyHandler)
+    }
+
     func registerWebviewStateChangeInvoke(invoke: @escaping (_ type: SpatialWebViewState) -> Void) {
         webviewStateChangeInvoke = invoke
     }

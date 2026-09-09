@@ -12,6 +12,7 @@ import { ImageHelper } from '../resource/imageHelper'
 import { manifestSwiftTemplate } from './manifestSwiftTemplate'
 import { SpatialSceneType } from '../utils/sceneUtils'
 import { getInstalledPackageVersion } from '../utils/utils'
+import { applyRuntimeBuildMetadata } from './runtimeBuildId'
 const xcode = require('xcode')
 const exportOptionsXML = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -311,19 +312,15 @@ export default class XcodeProject {
     const xcodePackageJsonPath = join(PROJECT_DIRECTORY, 'package.json')
     const packageJson = await loadJsonFromDisk(xcodePackageJsonPath)
     let manifestSwift = manifestSwiftTemplate
-    manifestSwift = manifestSwift.replace(
-      'WS_SHELL_VERSION',
-      packageJson.version ?? '0.0.0',
+    const shellVersion = packageJson.version ?? '0.0.0'
+    const sdkVersion =
+      getInstalledPackageVersion('@webspatial/core-sdk') ?? '0.0.0'
+    manifestSwift = applyRuntimeBuildMetadata(
+      manifestSwift,
+      shellVersion,
+      sdkVersion,
     )
-    manifestSwift = manifestSwift.replace(
-      'WS_SDK_VERSION',
-      getInstalledPackageVersion('@webspatial/core-sdk') ?? '0.0.0',
-    )
-    console.log(
-      'versions:',
-      packageJson.version,
-      getInstalledPackageVersion('@webspatial/core-sdk'),
-    )
+    console.log('versions:', shellVersion, sdkVersion)
     manifestSwift = manifestSwift.replace('START_URL', manifest.start_url)
     manifestSwift = manifestSwift.replace('SCOPE', manifest.scope)
     manifestSwift = manifestSwift.replace('AppName', manifest.name)

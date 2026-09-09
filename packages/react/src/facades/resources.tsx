@@ -8,7 +8,7 @@ import type {
 } from '@webspatial/core-sdk'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
-import { warnBootForgotten } from './shared/warnBootForgotten'
+import { BootForgottenDiagnostic } from './shared/BootForgottenDiagnostic'
 
 type SpatialImpl = ReturnType<typeof requireSpatialImpl>
 
@@ -31,8 +31,7 @@ function createNullFacade<P>(
   function Facade(props: P) {
     const ready = useSpatialReady()
     if (!ready) {
-      warnBootForgotten(componentName)
-      return null
+      return <BootForgottenDiagnostic componentName={componentName} />
     }
     const RealComponent = pickReal(requireSpatialImpl()) as ComponentType<any>
     return <RealComponent {...(props as any)} />

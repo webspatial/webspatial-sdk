@@ -1,5 +1,80 @@
 # @webspatial/react-sdk
 
+## 2.0.0
+
+### Major Changes
+
+- 8bb148b: BREAKING: the React SDK now uses a lazy default entry and adds an eager entry for spatial-only client apps.
+
+  To upgrade from v1 to v2:
+
+  - Import web-first or SSR-capable apps from `@webspatial/react-sdk`. Spatial implementations load after `bootSpatial()` runs in a WebSpatial runtime.
+  - Import CSR-only spatial apps from `@webspatial/react-sdk/eager`. Do not mix the default and eager React SDK entries in the same bundle.
+  - Replace the removed `/web` and `/default` import paths with `@webspatial/react-sdk` or `@webspatial/react-sdk/eager`.
+  - Mount spatial UI behind `<SpatialBoot>` or wait for `bootSpatial()` / `useSpatialReady()` before using runtime-only APIs or imperative refs that need the real spatial implementation.
+  - Update code that relied on removed implementation-detail exports such as internal spatial containers, monitors, `SSRProvider`, and `getAbsoluteUrl`.
+
+  See the lazy-load spatial runtime migration guide for full upgrade examples.
+
+### Minor Changes
+
+- 7c91edd: Add entity transform animation API (`useAnimation` hook, `animation` prop, and native visionOS playback).
+
+  **Core SDK**
+
+  - New `AnimationConfig`, `AnimatedProps`, `AnimationApi`, `AnimationError`, and related types.
+  - `SpatialEntity.animateTransform()` sends a unified `AnimateTransform` JSB command with play/pause/resume/stop actions.
+  - `composeSRT` and `decomposeTransformMatrix` utilities exported for matrix round-trip.
+  - `supports('useAnimation')` capability key added (currently disabled; will be enabled when native shell ships support).
+
+  **React SDK**
+
+  - `useAnimation(config)` hook returns `[AnimatedProps, AnimationApi]` with declarative config validation, `autoStart`, `delay`, `loop` (including reverse), `timingFunction`, and lifecycle callbacks (`onStart`, `onComplete`, `onCancel`, `onError`).
+  - Entity components (`BoxEntity`, `SphereEntity`, etc.) accept an `animation` prop that binds animated transforms and suppresses competing ordinary transform updates for animated fields.
+  - Transform suppression logic ensures non-animated fields still update normally during an active animation session.
+
+  **visionOS native**
+
+  - `EntityAnimationManager` handles play/pause/resume/stop commands, builds `FromToByAnimation<Transform>` for RealityKit playback, and manages per-animation session state (idle/queued/delaying/running/paused).
+  - Delay timer preserves remaining time across pause/resume cycles.
+  - Completion, stop, and failure events are emitted back to JS via the SpatialWebEvent bridge.
+  - Animation sessions are cleaned up on page navigation and scene destruction.
+
+- 9c86e34: Fix portal content crash and blank webview when hot-reloading linked SDK source during local development.
+
+  Mount portal `<Content />` when `spatializedElement` exists (no longer gated on `portalInstanceObject.dom`). `onSpatialContentReady` still requires `dom` and a connected host; `useSync2DFrame` re-syncs the 2D frame on mount and when the element is replaced. Observable render timing in production may shift slightly earlier on first paint.
+
+- f3a4975: Add `stagemode` prop to `<Model>` for built-in orbit interaction
+- 4f95752: Add an opt-in `@webspatial/react-sdk/experimental` entry for APIs whose names or parameters may change before they graduate into the default stable entry.
+- 1a8f46b: Add spatialized element motion support through the React `useAnimation` API.
+
+### Patch Changes
+
+- e702d0f: Fix `<UnlitMaterial>` so providing an undeclared `textureId` no longer blocks material creation. It now falls back to color-only rendering (empty native `textureId`) and continues to support binding once the texture resource is later declared.
+- b0364c6: Fix portal head style sync for CSS-in-JS (e.g. styled-components). Serialize `style.sheet.cssRules` when syncing parent styles into portal windows, update portal `<style>` nodes in place, incrementally mirror parent rules via `insertRule`/`deleteRule`, observe parent head style text changes even for portal callers that opt out of subtree observation, re-sync before portal re-rendering after 2D-frame updates, and coalesce active portal syncs through a singleton parent-head registry that captures one parent head snapshot per broadcast wave.
+- aaa8df8: Update Vitest development tooling to a patched 4.1.x release.
+- 7ebae8a: Fix `ModelLoadEvent` typings to cover bubbled child load/error events (#1293).
+- 3e59ee4: Resolve Model ref and load event APIs from the DOM-linked spatial element so `event.target.ready` works when a Model is nested inside another spatial container.
+- 24a0e4f: Fix SpatialDiv transforms when stylesheets use **HTML tag selectors** on the host element (for example `h1 { transform: … }` or `h1.myClass { … }`). The off-screen transform/visibility probe now mirrors the host’s intrinsic tag (`<h1 enable-xr>` → probe `<h1>`); custom React component wrappers still use a `div` probe.
+
+  **Limitations:** ancestor selectors tied to the page tree (e.g. `.page h1`) may not match the probe; prefer class selectors or inline `style` for those cases. See `docs/webspatial-quirks.md` and `packages/react/src/spatialized-container/ARCHITECTURE.md`.
+
+  Fixes [#1263](https://github.com/webspatial/webspatial-sdk/issues/1263).
+
+- 9e64391: fix: Model duration unavailable before playback
+- Updated dependencies [b96e139]
+- Updated dependencies [8bb148b]
+- Updated dependencies [7c91edd]
+- Updated dependencies [f34e327]
+- Updated dependencies [9c1a3ec]
+- Updated dependencies [88fa5cb]
+- Updated dependencies [f3a4975]
+- Updated dependencies [05f6738]
+- Updated dependencies [9cf2a58]
+- Updated dependencies [5361e45]
+- Updated dependencies [1a8f46b]
+  - @webspatial/core-sdk@2.0.0
+
 ## 1.7.0
 
 ### Minor Changes

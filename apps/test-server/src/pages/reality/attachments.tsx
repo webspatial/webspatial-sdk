@@ -10,6 +10,7 @@ import {
   SceneGraph,
   UnlitMaterial,
 } from '@webspatial/react-sdk'
+import type { BackgroundMaterialType } from '@webspatial/react-sdk'
 import gsap from 'gsap'
 import React, { useRef } from 'react'
 
@@ -661,6 +662,100 @@ function TestSpatialDivHost() {
   )
 }
 
+const SURFACE_MATERIALS = [
+  'none',
+  'transparent',
+  'translucent',
+  'thin',
+  'regular',
+  'thick',
+  'invalid-material',
+] as const
+
+/** 8. Surface styling — cornerRadius + backgroundMaterial live updates. */
+function TestSurfaceStyle() {
+  const [cornerRadius, setCornerRadius] = React.useState(24)
+  const [material, setMaterial] = React.useState<string>('translucent')
+
+  return (
+    <TestCase title="8. Surface style (cornerRadius + backgroundMaterial)">
+      <p className="text-sm text-gray-600 mb-3">
+        Drag the slider and switch materials to restyle the attachment surface
+        in place — the WebView is not recreated. The HTML content is transparent
+        so the native material shows through; content is clipped to the rounded
+        corners. Selecting <code className="text-xs">invalid-material</code>{' '}
+        normalizes to <code className="text-xs">transparent</code> and logs a
+        dev warning.
+      </p>
+      <div className="mb-4 max-w-md space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
+        <SliderRow
+          label="Corner radius"
+          value={cornerRadius}
+          min={0}
+          max={60}
+          step={1}
+          onChange={setCornerRadius}
+          unit=" pt"
+        />
+        <label className="flex items-center gap-3 text-sm">
+          <span className="w-28 shrink-0 text-gray-700">Material</span>
+          <select
+            value={material}
+            onChange={e => setMaterial(e.target.value)}
+            className="flex-1 min-w-0 rounded border border-gray-300 px-2 py-1"
+          >
+            {SURFACE_MATERIALS.map(m => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <Reality style={{ ...REALITY_FRAME, border: '1px solid #7c3aed' }}>
+        <UnlitMaterial id="matSurface" color="#7c3aed" />
+        <AttachmentAsset id="surface-style">
+          <div
+            style={{
+              color: 'white',
+              padding: 12,
+              textAlign: 'center',
+              minHeight: '100%',
+              boxSizing: 'border-box',
+              textShadow: '0 1px 2px rgba(0,0,0,0.6)',
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: 600 }}>Surface style</p>
+            <p style={{ margin: '6px 0 0', fontSize: 12 }}>
+              radius {cornerRadius} pt · {material}
+            </p>
+          </div>
+        </AttachmentAsset>
+        <SceneGraph>
+          {/* Offset right and down so the floating attachment doesn't cover
+              the slider/material controls above the Reality frame. */}
+          <Entity position={{ x: 0.08, y: -0.12, z: 0.1 }}>
+            <BoxEntity
+              width={0.1}
+              height={0.1}
+              depth={0.1}
+              materials={['matSurface']}
+            />
+            <AttachmentEntity
+              attachment="surface-style"
+              position={{ x: 0, y: 0.16, z: 0 }}
+              width={0.3}
+              height={0.15}
+              cornerRadius={cornerRadius}
+              backgroundMaterial={material as BackgroundMaterialType}
+            />
+          </Entity>
+        </SceneGraph>
+      </Reality>
+    </TestCase>
+  )
+}
+
 function App() {
   return (
     <div className="p-8">
@@ -673,6 +768,7 @@ function App() {
         <TestDuplicateAssetId />
         <TestGsapInAttachment />
         <TestSpatialDivHost />
+        <TestSurfaceStyle />
       </div>
     </div>
   )

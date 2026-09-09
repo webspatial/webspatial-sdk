@@ -9,9 +9,23 @@ import { registerReactSdkEntry } from './runtime/entryRegistry'
 registerReactSdkEntry('lazy')
 
 export { Ornament } from './facades/Ornament'
-export type { OrnamentProps } from './facades/Ornament'
+export type {
+  OrnamentPoint3D,
+  OrnamentProps,
+  OrnamentVisibility,
+} from './facades/Ornament'
 export { useAnimation } from './hooks-web/useAnimation'
 export { useEntityAnimation } from './hooks-web/useEntityAnimation'
+export type {
+  EntityMotionConfig,
+  EntityMotionProps,
+  EntityPlaybackApi,
+  EntityPlaybackError,
+} from '@webspatial/core-sdk'
+export type {
+  EntityMotionAnimation,
+  UseEntityAnimationResult,
+} from './reality/hooks/useEntityAnimation'
 export type {
   UseAnimationResult,
   SpatializedMotionConfig,

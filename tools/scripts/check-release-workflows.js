@@ -69,9 +69,9 @@ assertExcludes(
   'publish-beta job must not install npm into pnpm global storage.',
 )
 assertExcludes(
-  publishBetaBlock,
+  changesetsWorkflow,
   'npm install -g npm',
-  'publish-beta job must not self-upgrade the runner-provided npm CLI.',
+  'Changesets workflow must use the npm CLI bundled with Node.js.',
 )
 assertIncludes(
   publishBetaBlock,

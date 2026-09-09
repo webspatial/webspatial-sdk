@@ -8,6 +8,10 @@ import {
   isKnownTopLevel,
   normalizeCapabilityName,
 } from './keys'
+import {
+  getRuntimeCapabilityManifest,
+  resetRuntimeCapabilityManifestCacheForTests,
+} from './capability-manifest'
 
 /**
  * Unsubstituted shell version placeholder from visionOS manifest / Xcode template
@@ -21,6 +25,7 @@ let runtimeCache: WebSpatialRuntimeSnapshot | undefined
 /** Test helper: clear cached UA/runtime snapshot between Vitest cases. */
 export function resetRuntimeCacheForTests(): void {
   runtimeCache = undefined
+  resetRuntimeCapabilityManifestCacheForTests()
 }
 
 /**
@@ -85,7 +90,15 @@ export function supports(name: string, tokens?: readonly string[]): boolean {
     return true
   }
   if (rt.type === null) return false
-  if (rt.shellVersion === null) return false
+
+  const manifest = getRuntimeCapabilityManifest(rt.type)
+  if (manifest !== null) {
+    if (tokList.length === 0) {
+      return manifest.supported.includes(canonical)
+    }
+    if (!manifest.supported.includes(canonical)) return false
+    return tokList.every(t => manifest.supported.includes(`${canonical}:${t}`))
+  }
 
   if (
     rt.type === 'visionos' &&
@@ -94,10 +107,10 @@ export function supports(name: string, tokens?: readonly string[]): boolean {
     return true
   }
 
+  if (rt.shellVersion === null) return false
+
   const parsedShell = parseSemverOrNull(rt.shellVersion)
   if (!parsedShell) return false
-
-  if (rt.type !== 'visionos' && rt.type !== 'picoos') return false
 
   const row = selectRow(rt.type, parsedShell)
   if (!row) return false

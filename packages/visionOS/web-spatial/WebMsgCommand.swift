@@ -13,7 +13,7 @@ enum WebSpatialGestureType: String, Encodable {
     case spatialmagnifyend
 }
 
-enum SpatialWebMsgType: String, Encodable {
+enum SpatialWebMsgType: String, Codable {
     case modelloaded
     case modelloadfailed
     case spatialtap
@@ -27,6 +27,10 @@ enum SpatialWebMsgType: String, Encodable {
     case animationstatechange
     case entitytransformchange
     case objectdestroy
+    /// Entity-motion lifecycle state channel.
+    case spatialanimationstatechanged
+    /// Entity-motion asynchronous failure channel.
+    case entityanimationerror
 }
 
 struct WebSpatialTapGuestureEventDetail: Encodable {

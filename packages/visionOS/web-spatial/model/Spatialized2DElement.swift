@@ -43,7 +43,7 @@ class Spatialized2DElement: SpatializedElement, ScrollAbleSpatialElementContaine
     }
 
     override init() {
-        spatialWebViewModel = SpatialWebViewModel(url: nil)
+        spatialWebViewModel = SpatialWebViewModel(url: nil, contentRole: .portal)
 
         super.init()
 

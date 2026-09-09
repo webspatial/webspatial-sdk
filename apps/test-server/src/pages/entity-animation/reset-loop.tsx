@@ -2,7 +2,9 @@ import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
 import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
+  EntityPropsPanel,
   Log,
+  fmtVec3,
   btnCls,
   btnPrimary,
   useLog,
@@ -11,14 +13,16 @@ import {
 export default function EntityAnimationResetLoopPage() {
   const logger = useLog()
 
-  const [animation, api] = useEntityAnimation({
+  const [animation, api, entityProps] = useEntityAnimation({
     from: { position: { x: 0, y: 0, z: 0 } },
     to: { position: { x: 0.1, y: 0, z: 0 } },
     duration: 1.2,
     timingFunction: 'easeIn',
     loop: true,
     onStart: () => logger.log('onStart (reset loop)'),
-    onError: error => logger.log(`onError [${error.command}] ${error.reason}`),
+    onReset: value => logger.log(`onReset pos=${fmtVec3(value.position)}`),
+    onStop: value => logger.log(`onStop pos=${fmtVec3(value.position)}`),
+    onError: error => logger.log(`onError [${error.code}] ${error.reason}`),
   })
 
   return (
@@ -32,8 +36,8 @@ export default function EntityAnimationResetLoopPage() {
             className={btnPrimary}
             onClick={() => {
               if (api.isAnimating) {
-                api.cancel()
-                logger.log('cancel()')
+                api.reset()
+                logger.log('reset()')
                 return
               }
 
@@ -41,7 +45,25 @@ export default function EntityAnimationResetLoopPage() {
               logger.log('play()')
             }}
           >
-            {api.isAnimating ? 'Cancel' : 'Play'}
+            {api.isAnimating ? 'Reset' : 'Play'}
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.stop()
+              logger.log('stop()')
+            }}
+          >
+            Stop
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.set({ position: { y: 0.04 } })
+              logger.log('api.set(y=0.04) requested; see entityProps')
+            }}
+          >
+            api.set(y = 0.04)
           </button>
           <button className={btnCls} onClick={logger.clear}>
             Clear log
@@ -56,10 +78,13 @@ export default function EntityAnimationResetLoopPage() {
               width={0.1}
               height={0.1}
               depth={0.1}
+              position={{ x: 0, y: 0, z: 0 }}
+              {...entityProps}
               animation={animation}
             />
           </SceneGraph>
         </Reality>
+        <EntityPropsPanel entityProps={entityProps} />
         <Log lines={logger.lines} />
       </section>
     </EntityAnimationPageShell>

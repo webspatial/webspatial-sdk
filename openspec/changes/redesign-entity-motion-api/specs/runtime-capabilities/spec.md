@@ -6,6 +6,8 @@ The documented target-state capability contract for Entity motion MUST use the t
 
 This capability represents that the current runtime supports Reality Entity components connecting `useEntityAnimation` through the `animation` binding.
 
+The capability MUST be enabled from WSAppShell `1.9.0` on visionOS and PicoWebApp `0.7.0` on picoOS.
+
 #### Scenario: Entity motion capability guidance
 - **WHEN** application documentation explains how to detect support for the new Entity motion API
 - **THEN** it MUST use `supports('useEntityAnimation')` as the documented target-state capability check
@@ -14,3 +16,8 @@ This capability represents that the current runtime supports Reality Entity comp
 - **WHEN** capability documentation or code references Entity motion support
 - **THEN** it MUST NOT use or reserve `supports('useEntityAnimation', ['entity'])`
 - **AND** `supports('useEntityAnimation')` MUST be the only documented capability check for Entity motion
+
+#### Scenario: Entity motion capability version boundary
+- **WHEN** the runtime is WSAppShell `1.9.0` or newer, or PicoWebApp `0.7.0` or newer
+- **THEN** `supports('useEntityAnimation')` MUST return `true`
+- **AND** older recognized runtime versions MUST return `false`

@@ -32,11 +32,11 @@
 - **缓动函数(timingFunction)**:描述两帧之间快慢变化的曲线,如匀速 `linear`、先慢后快 `easeIn`。
 - **基准值(baseline)**:每次 fresh play 被接受时的原生当前值;当某个字段未写入 config 时,用它补全本轮播放的完整姿态。
 - **起始姿态确认(start confirmation)**:fresh play 编译成功后,Native 把 config 的 `from` / `0%` 与本轮 baseline 合成为完整起始姿态,提交给目标并返回 Entity 当前的完整 transform。确认成功后立即发出 `start`,React 据此更新 `entityProps`;该事件不等待 delay 结束。
-- **fresh play**:创建后的首次播放,或动画在 `complete` / `finish` / `stop` / `reset` 后重新开始播放;`autoStart` 也属于 fresh play。`pause` 后继续 `play` 是恢复当前播放,不属于 fresh play。
+- **fresh play**:创建后的首次播放,或动画在 `complete` / `finish` / `stop` / `reset` 后重新开始播放;`autoStart` 也属于 fresh play。未发生配置更新时,`pause` 后继续 `play` 是恢复当前播放;paused update 后的 `play` 从保存 pose 启动新执行。
 - **球面线性插值(slerp)**:RealityKit 对旋转采用的插值方式,总是走两个朝向之间的最短路径。
 - **空操作(no-op)**:命令被接收后,物体和 `entityProps` 保持原值。
 - **注册表(registry)**:原生层用来按 id 查找物体或动画对象的表。
-- **绑定命令队列(binding command queue)**:每个绑定对象独立持有的 FIFO 队列。该队列在命令进入 JS Bridge 前,依次执行播放命令和 `set`。它属于 React/Core 的顺序控制机制,不是第二套原生动画队列。
+- **创建前播放队列(creation-pending playback queue)**:React Binding 在 Native 创建动画对象前保存播放命令的队列。创建后由 Core 直接提交命令。
 - **命令回执(command reply)**:原生层完成命令的同步状态变更和姿态提交后,通过 JSB 返回的成功或失败结果。命令需要产生状态事件时,原生层先发出事件,再返回成功回执。
 
 ## 3. 设计目标
@@ -74,7 +74,7 @@ React 配置 / api.set
 由此得到几条规则:
 
 - 播放、停止、重置、结束、`api.set` 等一切会改变姿态的操作,都要先进原生层。
-- 普通播放或控制命令结果为失败时,物体姿态与 `entityProps` 保持原值。动画对象创建或姿态交接失败进入绑定终止流程。
+- 普通播放、控制或配置 update 结果为失败时,物体姿态与 `entityProps` 保持原值。只有动画对象初次创建失败进入绑定终止流程。
 - 原生接受播放控制命令时,通过动画状态事件回传确认姿态;接受 `set` 时,通过 `SetEntityAnimationResult` 回传确认姿态。React 收到 Core 转发的确认值后更新 `entityProps`。
 - React 把原生确认过的姿态镜像给使用者;动画进行中的写入按空操作处理。
 - `entityProps` 初始为空。首次确认后,它包含完整的已提交 `position`、`rotation`、`scale` 值。播放空闲期间,组件组合后的 React 属性控制 transform;把 `entityProps` 展开在基础属性之后即可保持确认姿态。
@@ -121,27 +121,25 @@ flowchart TB
         ReactBinding["创建运动绑定与播放 api"]
         EntityProps["entityProps<br/>原生确认姿态的镜像"]
         ApiSet["api.set(update)<br/>提交原生权威状态"]
-        BindTarget["useBindMotionTarget({ binding, target })<br/>animation 绑定"]
+        BindTarget["useEntity<br/>把 animation 绑定到 target"]
 
         UseEntity --> ReactBinding
         UseEntity --> EntityProps
         UseEntity --> ApiSet
-        ReactBinding --> BindTarget
+        BindTarget --> ReactBinding
     end
 
     subgraph Core["公共逻辑层 (packages/core)"]
         EntityCreate["SpatialEntity.createAnimation(config)<br/>封装目标 id 与 Entity 专属创建逻辑"]
-        Normalize["normalizeEntityMotionConfig(config)<br/>把顶层 from/to、timeline.from/to 与百分比统一成内部轨道"]
+        Normalize["normalizeEntityMotionConfig(config)<br/>校验公开配置并归一化规范轨道"]
         Tracks["规范轨道<br/>position.* / rotation.* / scale.*"]
-        Validate["validateEntityMotionConfig()<br/>校验 transform 属性白名单"]
         PlaybackApi["SpatializedPlaybackApi<br/>通用播放接口"]
-        EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>增加 set(EntityTransformUpdate)"]
+        EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>增加 set(EntityMotionPatch)"]
         CoreAnimationObject["EntityAnimationObject<br/>implements EntityPlaybackApi"]
 
         EntityCreate --> Normalize
         Normalize --> Tracks
-        Tracks --> Validate
-        Validate -->|"返回规范 payload"| EntityCreate
+        Tracks -->|"返回规范 payload"| EntityCreate
         EntityCreate -->|"创建成功后返回"| CoreAnimationObject
         PlaybackApi --> EntityApi
         EntityApi --> CoreAnimationObject
@@ -180,7 +178,7 @@ flowchart TB
 
 **各层职责:**
 
-- **React 层**负责 Hook API、目标绑定协调、`entityProps` 镜像、命令排队、回调分发和重渲染。`useEntityAnimation` 创建一个 `EntityMotionBinding` 和一个稳定的 `EntityPlaybackApi` 控制门面;`useEntity` 通过 `useBindMotionTarget` 把目标交给绑定对象。`EntityMotionBinding` 作为 React 胶水层保存最新期望配置、连接当前目标与 Core 动画对象,并调用 `SpatialEntity.createAnimation(config)`。
+- **React 层**负责 Hook API、目标绑定协调、`entityProps` 镜像、创建前播放命令、回调分发和重渲染。`useEntityAnimation` 创建一个 `EntityMotionBinding` 和一个稳定的 `EntityPlaybackApi` 控制门面;`useEntity` 调用绑定对象的 `__bind` 和 `__unbind` 入口。`EntityMotionBinding` 作为 React 胶水层保存最新期望配置、连接当前目标与 Core 动画对象,并调用 `SpatialEntity.createAnimation(config)`。
 - **公共逻辑层**由 `SpatialEntity.createAnimation(config)` 使用目标自身的 `SpatialObject.id`,执行 Entity 专属归一化与校验,发送创建命令并返回 `EntityAnimationObject`。`EntityPlaybackApi` 扩展现有 `SpatializedPlaybackApi` 并只为 Entity 增加 `set`;`EntityAnimationObject` 与普通 `AnimationObject` 分别实现对应接口,两个具体类之间没有继承关系。归一化会把对外的三种书写形态折叠成内部规范物体轨道;当 `timeline` 与顶层 `from` / `to` 同时出现时,`timeline` 是唯一生效输入,开发模式同时打印重复声明警告。
 - **原生层**由 `SpatialScene.spatialObjects` 统一持有动画对象并复用 `SpatialObject` 生命周期。`SpatialScene` 负责创建目标查找和动画对象查找;目标 Entity 通过 `createAnimation(config)` 创建 `EntityMotionAnimationObject`;动画对象负责单对象状态机、fresh play 编译、RealityKit 执行和确认姿态回传。
 
@@ -195,15 +193,14 @@ classDiagram
             +entityProps EntityMotionProps
         }
         class useEntity
-        class EntityMotionBinding
+        class EntityMotionBinding {
+            +__bind(target)
+            +__unbind()
+        }
         class EntityMotionProps {
             +position Vec3
             +rotation Vec3
             +scale Vec3
-        }
-        class useBindMotionTarget {
-            +binding
-            +target
         }
     }
     namespace CoreLayer {
@@ -212,7 +209,6 @@ classDiagram
         }
         class EntityMotionNormalizer {
             +normalizeEntityMotionConfig(config)
-            +validateEntityMotionConfig(tracks)
         }
         class SpatializedPlaybackApi {
             <<interface>>
@@ -224,7 +220,7 @@ classDiagram
         }
         class EntityPlaybackApi {
             <<interface>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class AnimationObject {
             +play()
@@ -235,14 +231,16 @@ classDiagram
         }
         class EntityAnimationObject {
             +id string
-            -config EntityMotionConfig
             -timeline EntityMotionTimelinePayload
+            -executionRevision number
+            +isDestroyed boolean
             +play()
             +pause()
             +stop()
             +reset()
             +finish()
-            +set(update EntityTransformUpdate)
+            +update(config EntityMotionConfig)
+            +set(update EntityMotionPatch)
             +onStart(callback)
             +onComplete(callback)
             +onStop(callback)
@@ -252,27 +250,35 @@ classDiagram
         class CreateEntityAnimationJSBCommand
         class ControlEntityAnimationJSBCommand
         class SetEntityAnimationJSBCommand
+        class UpdateEntityAnimationJSBCommand
     }
     namespace NativeLayer {
         class SpatialScene {
             +onCreateEntityAnimation()
             +onControlEntityAnimation()
             +onSetEntityAnimation()
+            +onUpdateEntityAnimation()
             +findSpatialObject(id)
         }
         class NativeSpatialEntity {
             +createAnimation(config)
         }
-        class EntityMotionAnimationObject
+        class EntityMotionAnimationObject {
+            +timeline EntityMotionTimelinePayload
+            +playState EntityMotionPlayState
+            +executionRevision Int
+            -playbackController AnimationPlaybackController
+            -completionSubscription Cancellable
+            -preparedPausedPlayback PreparedPlayback
+        }
         class RealityKit
     }
     useEntityAnimation --> EntityMotionBinding : 创建并返回 animation
     useEntityAnimation --> EntityPlaybackApi : 创建并返回 api 控制门面
     useEntityAnimation --> EntityMotionProps : 返回当前镜像
     EntityMotionBinding *-- EntityMotionProps : 持有确认姿态镜像
-    useEntity --> useBindMotionTarget : 调用
-    useBindMotionTarget --> EntityMotionBinding : 调用内部绑定与解绑入口
-    useBindMotionTarget --> SpatialEntity : 接收 target
+    useEntity --> EntityMotionBinding : 调用内部绑定与解绑入口
+    useEntity --> SpatialEntity : 解析 target
     EntityPlaybackApi --> EntityMotionBinding : 控制门面委派
     EntityMotionBinding --> SpatialEntity : 调用 createAnimation(config)
     EntityMotionBinding --> EntityAnimationObject : 委派命令并消费通知
@@ -284,9 +290,11 @@ classDiagram
     SpatialEntity --> CreateEntityAnimationJSBCommand
     EntityAnimationObject --> ControlEntityAnimationJSBCommand
     EntityAnimationObject --> SetEntityAnimationJSBCommand
+    EntityAnimationObject --> UpdateEntityAnimationJSBCommand
     CreateEntityAnimationJSBCommand --> SpatialScene : JSB 处理
     ControlEntityAnimationJSBCommand --> SpatialScene : JSB 处理
     SetEntityAnimationJSBCommand --> SpatialScene : JSB 处理
+    UpdateEntityAnimationJSBCommand --> SpatialScene : JSB 处理
     SpatialScene --> NativeSpatialEntity : 按 id 创建动画
     SpatialScene --> EntityMotionAnimationObject : 按 id 控制或设置
     NativeSpatialEntity --> EntityMotionAnimationObject : 创建
@@ -297,7 +305,7 @@ classDiagram
 
 #### 跨层通信概览
 
-- Core 通过 `CreateEntityAnimationJSBCommand`、`ControlEntityAnimationJSBCommand` 和 `SetEntityAnimationJSBCommand` 向 Native 分别发送创建、播放控制和姿态设置命令。
+- Core 通过 `CreateEntityAnimationJSBCommand`、`UpdateEntityAnimationJSBCommand`、`ControlEntityAnimationJSBCommand` 和 `SetEntityAnimationJSBCommand` 向 Native 分别发送创建、原地配置更新、播放控制和姿态设置命令。
 - Native 通过 `spatialanimationstatechanged` 向 Core 回传播放状态和确认姿态,通过 `entityanimationerror` 回传命令接受后发生的异步错误。
 - Core `EntityAnimationObject` 是两类事件的直接消费者。它更新自身播放状态并触发对应的 `onXXX` 调试监听器,再由 React `EntityMotionBinding` 更新公开状态、生命周期 callback 和 `entityProps`。
 
@@ -351,11 +359,13 @@ sequenceDiagram
         NativeObj->>NativeObj: 读取最新 native baseline
         NativeObj->>Compiler: compile(timeline payload, baseline)
         Compiler-->>NativeObj: 完整变换动画资源
-        NativeObj->>NativeObj: 提交并确认起始姿态,发出 start
+        NativeObj->>NativeObj: 提交并确认起始姿态
         NativeObj->>NativeObj: 创建 controller 并进入 delay / running
+        NativeObj->>Event: 发送携带 start 和 running 的状态消息
     else paused 后 play
         NativeObj->>NativeObj: private resumeCurrent()
-        Note over NativeObj: 不读 baseline、不编译、不重复 start
+        NativeObj->>Event: 发送仅携带 running 的状态消息
+        Note over NativeObj: 复用当前 baseline、resource、controller 并保持 onStart 次数
     end
     NativeObj-->>Scene: success
     Scene-->>Bridge: success
@@ -379,11 +389,11 @@ sequenceDiagram
         participant NativeObj as EntityMotionAnimationObject
     end
 
-    NativeObj->>NativeObj: 状态变化(开始/完成/停止/重置/结束/set 被接受)
+    NativeObj->>NativeObj: 生命周期确认节点(start/complete/stop/reset/finish)
     NativeObj->>NativeObj: 读取权威姿态
     NativeObj->>NativeObj: 拆解为 position / rotation / scale
     NativeObj->>NativeObj: 编码完整 position、rotation、scale
-    NativeObj->>Event: 回传确认值
+    NativeObj->>Event: 回传 callbackAction、playState 和确认姿态
     Event->>Obj: 收到事件
     Obj-->>Hook: 确认后的 EntityMotionProps
     Hook-->>App: entityProps 更新
@@ -394,12 +404,12 @@ sequenceDiagram
 
 ### 4.4 关键折中
 
-- **Entity 使用独立桥接协议。** 创建、播放控制和姿态设置分别使用 Entity 专属命令。三条命令都直接使用 `SpatialObject.id`,避免继承 Element 动画协议及其字段语义。
+- **Entity 使用独立桥接协议。** 创建、原地配置更新、播放控制和姿态设置分别使用 Entity 专属命令。四条命令都直接使用 `SpatialObject.id`,避免继承 Element 动画协议及其字段语义。
 - **承担 fresh play 的原生编译成本。** 每次 fresh play 都由物体动画对象读取当前 baseline,再调用编译器完成多关键帧、稀疏关键帧、旋转换算和整姿态串联编译,换取最新 baseline、RealityKit 原生播放、系统合成和统一播放语义。
 - **切片为整姿态串联。** 把时间轴切成若干节点、每个节点携带完整的 `position` / `rotation` / `scale`,再按先后顺序串联成一条整姿态动画播放。visionOS(RealityKit)的动画绑定粒度是整个 `.transform`,当前缓动需求也以整段为单位。因此采用整姿态串联,天然对齐 visionOS 与 picoOS(两端原生都绑定整 transform);同一区间内各通道共用一个 `timingFunction`。
 - **只在播放活跃期间保护完整 transform。** 每次 fresh play 时,Native 在提交起始姿态前启用完整 transform 写入保护。例如只动画 `position.y` 时,`position.x`、`position.z`、`rotation`、`scale` 在播放期间都保持本轮基准姿态。延迟、运行和暂停期间持续保护,因此 `SpatialScene` 接受普通 React transform 更新但不应用。停止、重置、结束和自然完成会提交对应姿态、解除保护,并返回 Entity 当前的完整 transform,供 Core 更新 `entityProps`。播放空闲期间,普通 React transform 更新恢复生效。解绑、绑定终止和销毁动画对象也会作为清理路径解除保护。该行为与 Element 动画的 Native animating mask 一致。
-- **`set` 使用稀疏更新对象。** v1 的 `api.set` 接受 `EntityTransformUpdate`,当前确认姿态通过 `entityProps` 读取。
-- **Entity handler 直接分发。** `SpatialScene` 的三条 Entity 专属 handler 分别完成创建、播放控制和姿态设置,不经过 Element 动画管理器。
+- **`set` 使用稀疏更新对象。** v1 的 `api.set` 接受 `EntityMotionPatch`,当前确认姿态通过 `entityProps` 读取。
+- **Entity handler 直接分发。** `SpatialScene` 的四条 Entity 专属 handler 分别完成创建、原地配置更新、播放控制和姿态设置,不经过 Element 动画管理器。
 - **并发性能需要实测。** RealityKit 原生播放优于 JS 逐帧写入,但海量物体并发仍需专项性能验证。
 
 ## 5. 系统/模块设计
@@ -407,49 +417,61 @@ sequenceDiagram
 ### 5.1 React SDK
 
 - **公开接口:** `useEntityAnimation` 创建一个 `EntityMotionBinding` 和一个稳定的 `EntityPlaybackApi` 控制门面,读取绑定对象的当前确认姿态镜像,并返回 `[animation, api, entityProps]`;物体组件通过 `animation` 属性接收 `EntityMotionBinding`。
-- **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`,并把命令委派给 `EntityMotionBinding`;绑定对象按照 FIFO 顺序把命令委派给当前 `EntityAnimationObject`。`api.set(update)` 把稀疏 transform 更新提交给原生。
-- **目标绑定:** `useEntity` 消费物体组件的 `animation` 属性,并调用 `useBindMotionTarget({ binding, target })`。该 Hook 在 React effect 建立和清理时分别调用绑定对象对称的内部绑定与解绑入口。`EntityMotionBinding` 保证自身在同一时刻最多连接一个 `SpatialEntity`,绑定完成后调用 `target.createAnimation(config)`。解绑或目标替换时,绑定对象执行清理并把自身持有的 `entityProps` 镜像清空为 `{}`。应用继续展开返回对象时,普通 React 变换属性恢复控制。
-- **命令顺序:** `EntityMotionBinding` 复用 Element 动画绑定在对象创建前暂存命令、创建后逐条执行的机制。每个绑定对象独立串行执行命令,当前命令收到 JSB 回执后才发送下一条命令。
+- **播放控制:** `EntityPlaybackApi` 提供 `play`、`pause`、`stop`、`reset`、`finish` 和 `set`;创建前的播放命令委派给 `EntityMotionBinding`,创建后的命令直接委派给 `EntityAnimationObject`。`api.set(update)` 把稀疏 transform 更新提交给原生。
+- **set 生命周期门:** `EntityMotionBinding` 负责绑定、创建中和已终止生命周期门。每个门输出一次 warning,在本地丢弃 update 并完成 no-op。Core object 负责销毁中和已销毁门,使用相同的 warning 与本地 no-op 结果。Core object 存活时同步校验参数,再直接提交合法 update。
+- **目标绑定:** `useEntity` 消费物体组件的 `animation` 属性,并在 effect 建立和清理时调用绑定对象的 `__bind(target)` 和 `__unbind()` 入口。`EntityMotionBinding` 保证自身在同一时刻最多连接一个 `SpatialEntity`,绑定完成后调用 `target.createAnimation(config)`。解绑或目标替换时,绑定对象执行清理并把自身持有的 `entityProps` 镜像清空为 `{}`。应用继续展开返回对象时,普通 React 变换属性恢复控制。
+- **命令提交:** `EntityMotionBinding` 只在对象创建前暂存播放命令,创建成功后按调用顺序刷新。Core 对象创建后立即提交每条 update、播放和 set,每条回执独立结算。
 - **结果镜像:** `EntityMotionBinding` 持有 `entityProps`,消费当前 `EntityAnimationObject` 的确认值并通知 React 重渲染。`useEntityAnimation` 在每次渲染中读取当前镜像并作为第三项返回。`entityProps` 包含原生确认的 `position`、`rotation` 和 `scale`。
 
 #### 对象职责与调用关系
 
-- **`useEntityAnimation`:** 管理 React 侧 `EntityMotionBinding` 实例的存续,创建稳定的 `EntityPlaybackApi` 控制门面,把最新配置交给绑定对象,订阅镜像和公开状态变化,并返回当前 `entityProps` 快照。
-- **`EntityMotionBinding`:** 作为 React 响应式 API 与 Core 动画对象之间的胶水层,保存最新期望配置、当前目标、当前动画对象、确认姿态镜像和待执行命令。它协调目标连接、对象创建与替换、命令串行化、确认值提交和 React 更新。供控制门面读取的内部 `playState` getter 在存在待执行命令时返回 `queued`,在当前动画对象存在时读取 `EntityAnimationObject.playState`,其它时机返回 `idle`。
-- **`EntityPlaybackApi`:** 作为应用可见的稳定控制门面,把播放命令、`set` 和状态读取委派给同一个 `EntityMotionBinding`。配置更新和动画对象替换保持该门面对象的身份。
-- **`useEntity` 与 `useBindMotionTarget`:** `useEntity` 提供组件的 `animation` 属性和已解析的 `SpatialEntity`;`useBindMotionTarget` 使用 React effect 调用绑定对象的内部 `__bindTarget(target)` 和 `__unbindTarget(target)`。
+- **`useEntityAnimation`:** 管理 `EntityMotionBinding`,创建稳定的 `EntityPlaybackApi`,提交最新配置,订阅状态,并返回 `entityProps`。
+- **`EntityMotionBinding`:** 保存期望配置、目标、动画对象、确认姿态和创建前播放队列。它负责绑定目标、创建或更新对象、刷新待处理播放命令和通知 React。命令等待对象时 `playState` 为 `queued`;对象存在时读取对象状态;其它情况为 `idle`。
+- **`EntityPlaybackApi`:** 把播放、`set` 和状态读取委派给 `EntityMotionBinding`。配置更新不改变该对象。
+- **`useEntity`:** 提供组件的 `animation` 属性和已解析的 `SpatialEntity`,再通过 React effect 调用绑定对象的内部 `__bind(target)` 和 `__unbind()` 入口。
 - **`EntityMotionProps`:** 表示 `EntityMotionBinding` 持有的只读确认姿态快照。应用通过 `useEntityAnimation` 返回值读取该快照。
 - **`SpatialEntity`:** 提供 `createAnimation(config)` 创建入口。`EntityMotionBinding` 使用最新期望配置调用该入口。
-- **`EntityAnimationObject`:** 持有当前 Core 动画对象采用的配置快照和权威播放状态,执行播放与 `set` 命令,并向绑定对象通知状态、确认姿态和错误。
+- **`EntityAnimationObject`:** 保存已提交的配置、规范时间轴、执行版本和播放状态。它执行更新、播放和 `set`,并上报状态、姿态和错误。更新保持对象和 id 不变。
 
-`EntityMotionBinding` 保存的最新期望配置服务于目标晚绑定和对象替换。`EntityAnimationObject` 保存的配置快照服务于当前 Core 对象执行。两者具有不同生命周期和职责。过期的创建、销毁、姿态交接、命令回执和状态事件必须失效;实现可以使用递增 token、取消信号或等价机制。
+`EntityMotionBinding` 保存期望配置。`EntityAnimationObject` 保存 Native 已提交的配置。绑定代次隔离目标连接;执行版本隔离同一对象的不同执行。把校验集中在存活的 Core object 中,同时保持销毁阶段的 no-op 行为与现有包边界。
 
 本文中的“绑定生命周期”表示 React 目标连接会话。`EntityAnimationObject` 持有播放状态机并管理播放生命周期。
 
-#### 绑定命令队列与完成语义
+#### 创建前播放与命令提交
 
-公开的 `EntityPlaybackApi` 保持 `void` 命令接口。内部由每个 `EntityMotionBinding` 持有一条 FIFO 命令链,在不向应用暴露 JSB Promise 的前提下保持调用顺序。
+公开的 `EntityPlaybackApi` 保持 `void` 命令接口。具体的 `EntityAnimationObject.set(update)` 返回 `Promise<EntityMotionProps | void>`,供绑定对象根据原生回执更新 `entityProps`。React 只在动画对象创建期间持有播放队列。
 
-- 目标绑定或原生动画对象创建完成前,`play`、`pause`、`stop`、`reset`、`finish` 按调用顺序进入待执行命令队列。原生层创建回执首先确认初始 `idle` 状态。创建成功回执到达后,绑定对象逐条执行队列中的命令。当前 `EntityAnimationObject` 的内部命令 Promise 完成后,才发送下一条命令。创建失败回执使公开状态收敛为 `idle`,使当前绑定代次失效,清空动画对象引用、控制器派生状态、待执行队列和 `entityProps`,触发 React 渲染以恢复基础属性控制,通过 `onError` 报告一次错误,并终止当前绑定生命周期。
-- `autoStart` 开启时,创建成功后生成的 `play` 命令插入待执行播放命令的队首。该行为与现有 Element 动画一致。
+- 原生动画对象创建期间,`play`、`pause`、`stop`、`reset`、`finish` 按调用顺序排队。`autoStart` 生成的 `play` 排在队首。
+- Native 动画对象创建期间为 `idle`;如果此时调用播放,命令等待执行,状态变为 `queued`。
+- 创建成功后,原生层先确认 `idle`,再由 React 按顺序刷新待处理播放队列。Core 立即提交每条命令。
 - 绑定、原生动画对象创建前或当前绑定生命周期终止后调用 `api.set` 时,该命令不进入队列。SDK 输出控制台警告并执行空操作。
-- 原生动画对象创建后,所有播放命令和 `set` 进入同一条绑定命令队列。命令失败或 `set` 被转换为“警告并执行空操作”时,SDK 结束当前队列项并继续执行下一项。失败不会阻塞队列,也不会改变后续命令的顺序。
-- JSB 成功回执表示原生层已完成该命令的同步状态转换和所需姿态提交。播放控制命令产生 `start`、`pause`、`stop`、`reset` 或 `finish` 状态事件时,原生层先发出对应事件,再返回成功回执。`SetEntityAnimation` 不产生状态事件,Native 更新 Entity 后直接通过成功回执返回 Entity 当前的完整 transform。自然完成产生的异步 `complete` 事件不属于此前 `play` 命令的回执。
-- 解绑、目标替换、配置变更导致动画对象替换或销毁时,绑定对象使当前队列批次失效,并丢弃所有尚未发送的命令。正在执行的命令可以按既有销毁竞态规则完成,但其回执不得继续触发已失效队列中的下一条命令。
-
-该顺序保证连续调用具有确定行为。`set → play` 会等待已接受的 `set` 返回回执,再由 fresh play 读取基准值;`stop → play` 会等待停止后的姿态提交完成;`play → pause` 会等待原生层接受 `play` 命令。
+- 原生动画对象创建后,Core 直接提交 `update`、播放命令和 `set`,无需等待此前命令的回执。每条回执独立结算自身 Promise。
+- 控制命令产生状态消息时,原生层先提交消息,再完成空成功回执。`SetEntityAnimation` 通过成功回执返回完整确认姿态。自然完成产生独立的异步完成状态消息。
+- 解绑或目标替换会使当前绑定代次失效并丢弃创建前待处理的播放命令。已经提交给 Native 的命令继续结算;销毁后的 Core 新调用在本地空操作。同一目标的更新保留绑定代次。
+- 只更新回调时立即替换引用。等价的已提交配置不发送命令。配置更新立即提交。
 
 #### 解绑、重新绑定与配置更新
 
-`EntityMotionBinding` 沿用 Element 动画的销毁并重建生命周期。绑定对象根据生效的时间轴、时长、缓动、延迟、播放速率、循环和 `autoStart` 计算归一化执行签名。等价的公开配置写法生成同一个签名。生命周期回调引用独立于执行签名存储和刷新。
+解绑或目标替换会销毁对象。同一目标通过 `EntityAnimationObject.update(config)` 原地更新。`SpatialEntity.createAnimation(config)` 和 `EntityAnimationObject.update(config)` 分别同步归一化并校验初始配置和更新配置。React 不提前校验配置。Core 用规范时间轴和播放参数判断配置是否等价。回调和 `autoStart` 不参与比较。`autoStart` 只控制初次创建后的隐式 `play`。
 
 - 解绑时,绑定对象推进绑定代次、注销当前 `EntityAnimationObject`、销毁对应原生对象、把 `entityProps` 清空为 `{}`,并触发 React 渲染。返回的空对象可以继续安全地展开在基础属性之后。
 - 重新绑定不同目标时,绑定对象先完成同一套清理,再为新目标创建动画对象。新目标从空镜像开始,并建立自身的确认值。
-- 当前绑定生命周期正常且同一目标的归一化执行签名发生变化时,绑定对象保持旧对象和旧代次至销毁成功。旧对象销毁成功并解除可能存在的 transform 写入保护后,`entityProps` 包含完整确认姿态时,绑定对象通过普通 Entity transform 更新入口提交该姿态并等待更新成功;`entityProps` 为空时,当前原生 transform 保持权威,绑定对象直接进入新对象创建。随后绑定对象推进代次并使用最新配置创建新对象。替换对象的首次 fresh play 读取当前原生 transform 作为基准姿态,其中包括已提交的确认姿态。该交接保持现有 `entityProps` 和生命周期回调次数。姿态交接或新对象创建失败时,绑定对象执行与初次创建失败相同的终止流程。旧对象销毁失败时,绑定对象保持旧对象、旧代次和原有播放状态,清理本次替换产生的待执行命令,并触发一次 `onError`。
-- 当前绑定生命周期正常时,仅更新回调会保持当前动画对象、控制器、队列、状态和 `entityProps`,并替换后续已接受事件使用的回调引用。当前绑定生命周期终止后,config 和 callback 更新只刷新绑定保存的最新值。
-- 替换开始后发出的命令归属新的绑定代次,并等待该代次的动画对象。创建完成后,`autoStart: true` 在该代次待执行命令的队首加入一次隐式 `play`;`autoStart: false` 直接执行显式待执行命令。
-- 绑定代次和动画对象身份同时匹配当前对象的命令回执或状态事件会更新绑定。当前代次是状态、`entityProps` 和公开生命周期回调更新的唯一来源。替换清理由销毁生命周期完成。
-- 创建或交接失败终止当前绑定生命周期后,所有 playback 方法和 `api.set` 均输出控制台警告并执行空操作。显式解绑后重新绑定,或创建新的 binding,会使用届时最新的 config 和 callback 开启新代次。
+- 执行配置变化时,绑定对象直接向现有 Core object 提交 `update`。更新保持 Core 对象、Native 对象、id 和绑定代次。成功后提交新配置、执行版本和确认姿态。失败时保留旧执行并为该命令触发 `onError`。
+- 只更新回调时保留对象、创建前播放队列、状态和 `entityProps`,后续事件使用最新回调。
+- 每条配置更新都立即提交。
+- 回执和事件必须匹配绑定代次、id 和执行版本。新执行会丢弃旧控制器的迟到完成事件。
+- 初次创建失败会终止绑定。更新失败保留绑定和 `entityProps`。
+
+#### 播放中的原地 retarget
+
+Native 先校验并准备新时间轴,再停止旧控制器并提交新定义。提交成功后推进执行版本。停止旧控制器前必须完成所有可能失败的准备。
+
+- `running` 或 `delay` 时,Native 用当前姿态作为本次执行的临时 `0%`,并从头执行新延迟、时长和播放参数。
+- 临时 `0%` 覆盖受控轨道。未受控分量使用当前姿态。第一段沿用新 `0%` 的缓动。较晚出现的首个关键帧从当前值开始插值。
+- 临时起点只用于本次重新定向。后续 `reset`、`finish` 和重新播放使用新配置声明的边界。
+- 旧执行不触发 `onStop` 或 `onComplete`。新执行触发一次 `onStart`。成功回执用完整当前姿态更新 `entityProps`。
+- `paused` 时保存当前姿态和新定义,并保持暂停。下次 `play` 启动新执行并触发 `onStart`。
+- `idle` 或 `finished` 时只安装新定义。活跃更新始终执行新时间轴,包括终点等于当前姿态的情况。
 
 #### 类图
 
@@ -467,27 +489,19 @@ classDiagram
         class EntityPlaybackApi {
             <<interface>>
             <<public>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class EntityMotionBinding {
             <<opaque>>
-            -desiredConfig EntityMotionConfig
+            +api EntityPlaybackApi
             -target SpatialEntity
             -animationObject EntityAnimationObject
-            -entityProps EntityMotionProps
-            -pendingCommands
             +currentEntityProps EntityMotionProps
             +playState EntityMotionPlayState
-            +__bindTarget(target SpatialEntity)
-            +__unbindTarget(target SpatialEntity)
+            +__bind(target SpatialEntity)
+            +__unbind()
             +updateConfig(config EntityMotionConfig)
-            +play()
-            +pause()
-            +stop()
-            +reset()
-            +finish()
-            +set(update EntityTransformUpdate)
-            +destroy()
+            +reconcileConfig()
         }
         class EntityMotionProps {
             <<public>>
@@ -496,10 +510,6 @@ classDiagram
             +scale Vec3
         }
         class useEntity
-        class useBindMotionTarget {
-            +binding EntityMotionBinding
-            +target SpatialEntity
-        }
     }
     namespace CoreSDKBoundary {
         class SpatializedPlaybackApi {
@@ -518,14 +528,17 @@ classDiagram
             +createAnimation(config) EntityAnimationObject
         }
         class EntityAnimationObject {
-            -config EntityMotionConfig
+            -timeline EntityMotionTimelinePayload
+            -executionRevision number
+            +isDestroyed boolean
             +playState EntityMotionNativePlayState
             +play()
             +pause()
             +stop()
             +reset()
             +finish()
-            +set(update EntityTransformUpdate)
+            +update(config EntityMotionConfig)
+            +set(update EntityMotionPatch)
             +destroy()
             +onStart(callback)
             +onComplete(callback)
@@ -537,10 +550,10 @@ classDiagram
     useEntityAnimation --> EntityMotionBinding : 创建、返回并读取镜像
     useEntityAnimation --> EntityPlaybackApi : 创建并返回稳定门面
     useEntityAnimation --> EntityMotionProps : 返回当前快照
+    EntityMotionBinding *-- EntityPlaybackApi : 创建并持有稳定门面
     EntityMotionBinding *-- EntityMotionProps : 持有确认姿态镜像
-    useEntity --> useBindMotionTarget : 调用
-    useBindMotionTarget --> EntityMotionBinding : 调用内部绑定与解绑入口
-    useBindMotionTarget --> SpatialEntity : 接收 target
+    useEntity --> EntityMotionBinding : 调用内部绑定与解绑入口
+    useEntity --> SpatialEntity : 解析 target
     SpatializedPlaybackApi <|-- EntityPlaybackApi : extends
     EntityPlaybackApi <|.. EntityAnimationObject : implements
     EntityPlaybackApi --> EntityMotionBinding : 门面委派
@@ -551,34 +564,34 @@ classDiagram
 
 #### 状态事件映射
 
-Core `EntityAnimationObject` 直接消费 Native 发出的 `EntityMotionStateChangedMsg`,将 Native action 映射到自身状态和 `onXXX` 调试监听器。React `EntityMotionBinding` 再消费这些对象级通知,更新用户 callback 和 `entityProps`:
+Core `EntityAnimationObject` 直接消费同一种 `EntityMotionStateChangedMsg`:`playState` 更新状态,可选的 `callbackAction` 与完整 `values` 成对触发 callback 和 `entityProps` 更新。
 
-| Native action | 对应用户 callback | 是否更新 entityProps |
+| 场景 | `playState` | `callbackAction` / callback |
 |---|---|---|
-| `start` | `onStart` | 是(fresh play 起始姿态被 Native 接受后一次,不等待 delay 结束) |
-| `complete` | `onComplete` | 是(终态) |
-| `finish` | `onComplete` | 是(终态) |
-| `stop` | `onStop` | 是(当前姿态) |
-| `reset` | `onReset` | 是(起点姿态) |
-| `pause` | 播放状态变化 | 否 |
+| fresh play | `running` | `start` / `onStart` |
+| paused 后恢复 | `running` | — |
+| pause | `paused` | — |
+| 自然完成或 `finish()` | `finished` | `complete` / `onComplete` |
+| stop | `idle` | `stop` / `onStop` |
+| reset | `idle` | `reset` / `onReset` |
 
-状态事件中的 `values` 使用 `EntityMotionProps` 形态,包含 `position`、`rotation`、`scale`。`set` 不改变播放状态,因此不进入该表;Core 从 `SetEntityAnimationResult.values` 取得合并后的确认姿态并更新 `entityProps`。错误不进入状态事件,Core 通过独立的 `EntityAnimationErrorMsg` 触发 `onError`。动画对象创建或姿态交接失败会额外清空 `entityProps` 并终止当前绑定生命周期;其它错误保持当前 `entityProps`。
+`values` 包含完整的 `position`、`rotation`、`scale`。`set` 从 `SetEntityAnimationResult.values` 更新 `entityProps`;错误由 `EntityAnimationErrorMsg` 触发 `onError`。
 
 ### 5.2 Core SDK
 
 - **目标创建入口:** `SpatialEntity.createAnimation(config)` 使用自身 id,执行 Entity 专属归一化与校验,发送 `CreateEntityAnimation` 并返回 `EntityAnimationObject`。普通 `SpatializedElement.createAnimation(config)` 仍返回 `AnimationObject`。
-- **播放接口:** 现有 `SpatializedPlaybackApi` 保持通用播放方法与状态,不包含 `set`;`EntityPlaybackApi extends SpatializedPlaybackApi`,只增加 `set(EntityTransformUpdate)`。
-- **动画对象:** `AnimationObject extends SpatialObject implements SpatializedPlaybackApi`;`EntityAnimationObject extends SpatialObject implements EntityPlaybackApi`。两个具体类之间没有继承关系。`EntityAnimationObject` 直接使用继承自 `SpatialObject` 的 `id`,私有保存公开 `config` 和归一化后的 `timeline`,并提供与 React callback 对齐的 `onStart`、`onComplete`、`onStop`、`onReset`、`onError` 调试监听方法。`finish` 与自然完成共同触发 `onComplete`。
-- **类型与函数:** Core 定义物体运动类型、`EntityTransformUpdate`、`EntityMotionProps`、属性白名单、归一化函数、校验函数以及内部规范时间轴。
+- **播放接口:** 现有 `SpatializedPlaybackApi` 保持通用播放方法与状态,不包含 `set`;`EntityPlaybackApi extends SpatializedPlaybackApi`,只增加 `set(EntityMotionPatch)`。
+- **动画对象:** `AnimationObject` 和 `EntityAnimationObject` 分别实现对应播放接口,两者没有继承关系。`EntityAnimationObject` 使用 `SpatialObject.id`,保存已提交的配置、规范时间轴和执行版本,并提供 `update(config)` 与 `onXXX` 调试监听方法。`finish` 和自然完成都会触发 `onComplete`。
+- **类型与函数:** Core 定义物体运动类型、`EntityMotionPatch`(内部类型,不公开导出)、`EntityMotionProps`、属性白名单、归一化函数、校验函数以及内部规范时间轴。
 
-`EntityAnimationObject` 的 `onXXX` 方法只注册观察回调,不发送控制命令,也不改变动画配置或执行签名。参数与 React callback 保持一致:
+`EntityAnimationObject` 的 `onXXX` 方法只注册观察回调,不发送控制或更新命令,也不改变动画配置。参数与 React callback 保持一致:
 
 ```text
 onStart(listener: (values: EntityMotionProps) => void)
 onComplete(listener: (values: EntityMotionProps) => void)
 onStop(listener: (values: EntityMotionProps) => void)
 onReset(listener: (values: EntityMotionProps) => void)
-onError(listener: (error: SpatializedPlaybackError) => void)
+onError(listener: (error: EntityPlaybackError) => void)
 ```
 
 状态事件触发前四类方法,专用错误事件触发 `onError`。`pause` 只更新播放状态,因此不增加 `onPause`。
@@ -600,14 +613,13 @@ classDiagram
         }
         class EntityPlaybackApi {
             <<interface>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class SpatialEntity {
             +createAnimation(config) EntityAnimationObject
         }
         class EntityMotionNormalizer {
             +normalizeEntityMotionConfig(config)
-            +validateEntityMotionConfig(tracks)
         }
         class EntityMotionTimelinePayload {
             +duration number
@@ -618,14 +630,16 @@ classDiagram
         }
         class EntityAnimationObject {
             +id string
-            -config EntityMotionConfig
             -timeline EntityMotionTimelinePayload
+            -executionRevision number
+            +isDestroyed boolean
             +play()
             +pause()
             +stop()
             +reset()
             +finish()
-            +set(update EntityTransformUpdate)
+            +update(config EntityMotionConfig)
+            +set(update EntityMotionPatch)
             +onStart(callback)
             +onComplete(callback)
             +onStop(callback)
@@ -635,6 +649,7 @@ classDiagram
         class CreateEntityAnimationJSBCommand
         class ControlEntityAnimationJSBCommand
         class SetEntityAnimationJSBCommand
+        class UpdateEntityAnimationJSBCommand
     }
     SpatializedPlaybackApi <|-- EntityPlaybackApi : extends
     SpatialObject <|-- EntityAnimationObject
@@ -646,11 +661,12 @@ classDiagram
     SpatialEntity --> CreateEntityAnimationJSBCommand : 发送创建命令
     EntityAnimationObject --> ControlEntityAnimationJSBCommand : 发送控制命令
     EntityAnimationObject --> SetEntityAnimationJSBCommand : 发送设置命令
+    EntityAnimationObject --> UpdateEntityAnimationJSBCommand : 发送更新命令
 ```
 
 #### JSB 协议
 
-Core 定义 Entity 专属的创建命令、控制命令、设置命令、状态事件和错误事件 wire contract。这些协议不依赖 Spatialized Element 动画协议。
+Core 定义 Entity 专属的创建命令、原地更新命令、控制命令、设置命令、状态事件和错误事件 wire contract。这些协议不依赖 Spatialized Element 动画协议。
 
 ##### 创建动画命令
 
@@ -667,6 +683,22 @@ CreateEntityAnimationResult {
 }
 ```
 
+##### 原地更新动画命令
+
+```text
+UpdateEntityAnimation {
+  id: string
+  timeline: EntityMotionTimelinePayload
+}
+
+UpdateEntityAnimationResult {
+  values: EntityMotionProps
+  revision: number
+}
+```
+
+成功回执表示候选执行定义已在同一个 Native 对象上提交。Core 此时才替换当前 config 与 timeline 快照,并使用 `values` 更新 `entityProps`。失败回执不提交候选定义。
+
 ##### 控制动画命令
 
 ```text
@@ -676,12 +708,14 @@ ControlEntityAnimation {
 }
 ```
 
+控制成功回执使用空 payload 确认当前命令处理完成。Core 提交每条命令时不等待此前命令的回执,公开 `playState` 由 `EntityMotionStateChangedMsg` 更新。
+
 ##### 设置动画姿态命令
 
 ```text
 SetEntityAnimation {
   id: string
-  update: EntityTransformUpdate
+  update: EntityMotionPatch
 }
 
 SetEntityAnimationResult {
@@ -689,7 +723,7 @@ SetEntityAnimationResult {
 }
 ```
 
-`api.set` 使用独立设置命令,接受深度稀疏的 `EntityTransformUpdate`。Native 合并更新并修改 Entity,再通过 `SetEntityAnimationResult` 返回 Entity 当前的完整 transform;Core 使用 `values` 更新 `entityProps`,不发送状态事件。绑定前或原生动画对象创建前的调用归类为空操作并打印控制台警告,也不会暂存为后续命令。JSB 不提供 `resume`;paused 后调用 `play` 时由 Native 动画对象内部恢复当前 controller。
+`api.set` 使用独立设置命令,接受深度稀疏的 `EntityMotionPatch`。Native 合并更新并修改 Entity,再通过 `SetEntityAnimationResult` 返回 Entity 当前的完整 transform;Core 使用 `values` 更新 `entityProps`,不发送状态事件。绑定前或原生动画对象创建前的调用归类为空操作并打印控制台警告,也不会暂存为后续命令。JSB 不提供 `resume`;paused 后调用 `play` 时由 Native 动画对象内部恢复未更新的当前 controller,或在 paused update 后启动保存的新定义。
 
 ```text
 type EntityMotionProps = {
@@ -698,14 +732,14 @@ type EntityMotionProps = {
   scale?: Vec3
 }
 
-type EntityTransformUpdate = {
+type EntityMotionPatch = {
   position?: Partial<Vec3>
   rotation?: Partial<Vec3>
   scale?: Partial<Vec3>
 }
 ```
 
-`EntityTransformUpdate` 表示 `EntityMotionProps` 的任意深度子集。原生层按轴合并更新;播放状态事件中的确认值和 `SetEntityAnimationResult.values` 都携带完整的 `position`、`rotation`、`scale`,且每项都是完整的 `Vec3`。
+`EntityMotionPatch` 表示 `EntityMotionProps` 的任意深度子集。原生层按轴合并更新;播放状态事件中的确认值和 `SetEntityAnimationResult.values` 都携带完整的 `position`、`rotation`、`scale`,且每项都是完整的 `Vec3`。
 
 ##### 状态变化事件
 
@@ -715,9 +749,9 @@ type EntityMotionPlayState = 'queued' | EntityMotionNativePlayState
 
 interface EntityMotionStateChangedDetail {
   id: string
-  action:
-    | 'start' | 'complete' | 'pause' | 'stop' | 'reset' | 'finish'
+  revision: number
   playState: EntityMotionNativePlayState
+  callbackAction?: 'start' | 'complete' | 'stop' | 'reset'
   values?: EntityMotionProps
 }
 
@@ -727,9 +761,9 @@ interface EntityMotionStateChangedMsg {
 }
 ```
 
-`values` 使用物体目标的 `EntityMotionProps`,包含 `position`、`rotation`、`scale`。
+每次播放状态确认或 lifecycle callback 都使用同一个 `EntityMotionStateChangedMsg`。`revision` 和 `playState` 始终存在;触发用户 callback 的消息同时携带 `callbackAction` 与完整 `values`。显式 `finish()` 和自然完成都使用 `callbackAction: 'complete'`。暂停和恢复通过只含 `id`、`revision` 与 `playState` 的消息更新状态。
 
-`queued` 是命令等待原生动画对象创建期间的 React 绑定状态。原生层创建回执确认初始 `idle` 状态。创建失败时,React 绑定把公开状态收敛为 `idle` 并终止当前绑定生命周期。后续原生层控制回执和状态事件确认 `idle`、`running`、`paused` 或 `finished`。正常绑定生命周期中的原生层回执与状态事件是公开播放状态的唯一数据源。公开 `finished` 标记由 `playState === 'finished'` 派生,不进入 JSB 状态事件。
+`queued` 是命令等待原生动画对象创建期间的 React 绑定状态。原生层创建回执确认初始 `idle` 状态。创建失败时,React 绑定把公开状态收敛为 `idle` 并终止当前绑定生命周期。后续原生层状态消息确认 `idle`、`running`、`paused` 或 `finished`。正常绑定生命周期中的创建回执与原生层状态消息是公开播放状态的唯一数据源。公开 `finished` 标记由 `playState === 'finished'` 派生。
 
 ##### Entity 错误事件与错误类型
 
@@ -738,7 +772,7 @@ interface EntityMotionStateChangedMsg {
 ```text
 interface EntityAnimationErrorDetail {
   id: string
-  error: SpatializedPlaybackError
+  error: EntityPlaybackError
 }
 
 interface EntityAnimationErrorMsg {
@@ -747,10 +781,8 @@ interface EntityAnimationErrorMsg {
 }
 ```
 
-`SpatializedPlaybackError` 不重复携带命令名称。Core 在命令回执处理中已经持有当前命令上下文,异步错误也由对应动画对象接收。对用户稳定开放错误码和可读原因:
-
 ```text
-type SpatializedPlaybackError = {
+type EntityPlaybackError = {
   code:
     | 'TARGET_NOT_FOUND'
     | 'UNSUPPORTED_TARGET'
@@ -766,10 +798,10 @@ type SpatializedPlaybackError = {
 错误出口由发现错误的阶段决定:
 
 - Core 对公开 config 和方法参数执行的同步校验失败直接抛出内置 `Error`,不触发 `onError`。
-- JSB 命令执行失败通过当前命令回执返回。Core 将回执转换为一次 `SpatializedPlaybackError`,再触发 `onError`。
+- JSB 命令执行失败通过当前命令回执返回。Core 将回执转换为一次 `EntityPlaybackError`,再触发 `onError`。
 - 命令成功回执后发生的原生异步失败只通过一次 `entityanimationerror` 回传。Core `EntityAnimationObject` 消费该事件并触发 `onError`。
 - 同一失败只选择一个出口,状态事件不携带错误,从而避免重复触发 `onError`。
-- 动画对象创建或姿态交接失败会终止当前绑定生命周期。其它异步播放错误保持既有状态语义。
+- 动画对象初次创建失败会终止当前绑定生命周期。配置 update 失败保持旧执行和当前绑定生命周期;其它异步播放错误保持既有状态语义。
 - 动画活跃期间调用 `api.set` 属于预期状态拒绝,保持 warning + no-op,不触发错误事件或 `onError`。
 
 用户按错误码处理:
@@ -782,7 +814,7 @@ type SpatializedPlaybackError = {
 | `INVALID_TIMELINE` | 修正动画配置中的时间、属性、关键帧或取值。公开配置通常由 Core 同步拦截。 |
 | `COMPILATION_FAILED` | 简化或调整 Native 无法编译的关键帧组合,并记录 `reason` 用于问题定位。 |
 | `INVALID_CONTROL_STATE` | 等待当前状态允许该操作,或先停止动画。活跃期间的 `set` 由 SDK 转换为 warning + no-op。 |
-| `INVALID_SET_VALUES` | 修正 `EntityTransformUpdate`,确保至少包含一个合法的 transform 标量。 |
+| `INVALID_SET_VALUES` | 修正 `EntityMotionPatch`,确保至少包含一个合法的 transform 标量。 |
 
 #### 类型、归一化与校验
 
@@ -872,9 +904,9 @@ supports('useEntityAnimation')
 
 ### 5.3 Native
 
-- **命令入口:** `SpatialScene` 分别承接 `CreateEntityAnimation`、`ControlEntityAnimation` 和 `SetEntityAnimation`。三条命令都使用 `id` 查询对应的 `SpatialObject`。
+- **命令入口:** `SpatialScene` 分别承接 `CreateEntityAnimation`、`UpdateEntityAnimation`、`ControlEntityAnimation` 和 `SetEntityAnimation`。四条命令都使用 `id` 查询对应的 `SpatialObject`。
 - **执行子系统:** 创建命令解析到目标 Entity 后调用 `entity.createAnimation(config)`。动画对象复用 `SpatialScene.spatialObjects` 与 `SpatialObject` 生命周期,单对象控制和 fresh/resume 判断由 `EntityMotionAnimationObject` 内聚。
-- **确认值回传:** 播放生命周期节点通过状态事件回传确认值;`set` 通过 `SetEntityAnimationResult` 回传确认值。
+- **确认值回传:** 播放生命周期节点通过状态事件回传确认值;`update` 和 `set` 分别通过 `UpdateEntityAnimationResult` 与 `SetEntityAnimationResult` 回传确认值。
 - **错误回传:** 命令成功回执后发生的异步错误通过 `entityanimationerror` 回传,不进入状态事件。
 
 #### 类图
@@ -889,6 +921,7 @@ classDiagram
         +onCreateEntityAnimation()
         +onControlEntityAnimation()
         +onSetEntityAnimation()
+        +onUpdateEntityAnimation()
         +findSpatialObject(id)
     }
     class SpatialEntity {
@@ -896,20 +929,21 @@ classDiagram
     }
     class EntityMotionAnimationObject {
         +id
-        +target SpatialEntity
+        +targetEntityId String
         +timeline EntityMotionTimelinePayload
         +playState
-        +controller
+        +confirmedValues EntityMotionPose
+        +executionRevision Int
+        -playbackController AnimationPlaybackController
+        -completionSubscription Cancellable
+        -preparedPausedPlayback PreparedPlayback
         +play()
-        -startFresh(resource)
-        -resumeCurrent()
         +pause()
         +stop()
         +reset()
         +finish()
+        +update(timeline)
         +set(update)
-        -emitStateChanged()
-        -emitError()
     }
     class EntityMotionTimelineCompiler {
         +compile(payload, baseline)
@@ -948,10 +982,10 @@ classDiagram
 **各类职责:**
 
 - **目标物体(`SpatialEntity`):** `createAnimation(config)` 兜底校验创建 payload,构造保存目标与规范时间轴的动画对象并返回给 `SpatialScene` 注册。Entity 不维护动画 registry 或播放状态。
-- **物体动画对象(`EntityMotionAnimationObject`):** 表示单个物体动画,直接使用继承自 `SpatialObject` 的 `id`,保存目标物体、规范时间轴、播放状态、当前播放控制器与资源,负责全部单对象状态转换。`play()` 在 `paused` 状态下调用私有方法 `resumeCurrent()`,其它可开始新一轮播放的状态读取基准姿态、调用编译器并通过私有方法 `startFresh(resource)` 启动。起始姿态确认和播放生命周期终态通过私有方法 `emitStateChanged()` 发出状态变化事件。`set` 被接受后直接返回包含完整确认姿态的 `SetEntityAnimationResult`。异步错误通过私有方法 `emitError()` 发出专用错误事件。
+- **物体动画对象(`EntityMotionAnimationObject`):** 保存目标 id 与弱目标引用、规范时间轴、确认姿态、执行版本、已编译时间轴、基准姿态、播放控制器、完成订阅和暂停时准备好的执行。`update()` 准备并提交新定义,根据当前状态重新定向或保存暂停定义。`play()` 恢复未更新的暂停执行,或从暂停更新保存的姿态启动新执行。控制器身份、执行版本和完成门禁共同拒绝旧完成事件与重复完成事件。对象通过 `emitStateChanged()` 和 `emitError()` 发送事件。`update` 与 `set` 返回完整确认姿态。
 - **时间轴编译器(`EntityMotionTimelineCompiler`):** 在每次 fresh play 时接受规范时间轴和本轮 baseline,将其切片编译为一条串联的整姿态 RealityKit 动画资源。
 - **桥接类型(`EntityMotionBridgeTypes`):** 承载原生桥接的编解码结构,包括时间轴数据、控制值、确认值和错误。若命令类型已够用,这部分可作为若干结构体分散存在。
-- **播放参数映射(`EntityMotionTiming`):** 把已经按全局时间段解析完成的唯一缓动函数、延迟、循环、播放速率映射到 RealityKit 的表达;四种内建缓动函数全部直接映射。
+- **播放参数映射(`EntityMotionTiming`):** 把已经按全局时间段解析完成的唯一缓动函数映射到 RealityKit,在运动前安排一次全局延迟,并把循环和播放速率应用于运动序列;四种内建缓动函数全部直接映射。
 - **姿态拆解与合并(`EntityMotionTransformValues`):** 负责从物体姿态拆解确认值、把 `api.set` 的稀疏更新合并到已提交基准上,以及欧拉角度数与 RealityKit 旋转表示之间的换算。
 
 #### JSB 命令处理
@@ -969,7 +1003,7 @@ classDiagram
 - 创建成功后,`SpatialScene` 把动画对象作为 `SpatialObject` 加入全局 `spatialObjects`;成功回执返回该对象的 `id` 并确认其初始状态为 `idle`。
 - 控制命令通过 `id` 在全局 `spatialObjects` 查找 `EntityMotionAnimationObject`。设置命令使用同一套查找规则,并单独调用 `set(update)`。
 - 同步命令错误通过 JSB reply 回传;仅命令接受后发生的异步播放错误通过一次 `entityanimationerror` 回传。
-- JSB 成功回执只在原生层完成命令的同步状态转换和姿态提交后返回。播放控制命令需要产生状态事件时,原生层先发出事件,再返回成功回执。设置命令更新 Entity 后通过回执返回 Entity 当前的完整 transform,不产生状态事件。绑定命令队列收到回执后,才发送下一条命令。
+- 播放状态发生变化时,原生层先发送携带最新 `playState` 的状态消息,再返回控制命令成功回执。
 - fresh play 编译失败时,控制命令失败,动画保持非活跃。
 
 创建成功回执只携带动画对象的 `id`,确认对象已经创建并处于 `idle`;失败回执确认对象创建结束,绑定对象据此收敛到 `idle`、清理待执行命令并分发分类错误。
@@ -978,7 +1012,7 @@ Native 在非活跃时接受并提交 `api.set`;活跃时保持姿态不变并�
 
 #### 时间轴编译
 
-编译在每次 fresh play 时由 `EntityMotionAnimationObject.play()` 触发:命令被接受后、进入 delay / running 前读取当前姿态作为本轮 baseline,再把规范时间轴切成若干携带完整姿态的节点并逐段编译,最终产出本轮播放资源。创建动画只校验并保存规范时间轴。paused 状态下的 `play()` 直接恢复当前控制器,不读取 baseline、不编译也不产生新的 `start`;单次播放内部的 loop 复用本轮资源。
+编译在每次 fresh play 时由 `EntityMotionAnimationObject.play()` 触发:命令被接受后、进入 delay / running 前读取当前姿态作为本轮 baseline,再把规范时间轴切成若干携带完整姿态的节点并逐段编译,最终产出本轮播放资源。创建动画只校验并保存规范时间轴。未发生配置更新的 paused 状态下,`play()` 直接恢复当前控制器,不读取 baseline、不编译也不产生新的 `start`;paused update 后,`play()` 从保存 pose 启动新执行并产生新的 `start`;单次播放内部的 loop 复用本轮资源。
 
 ##### 输入:内部时间轴
 
@@ -1008,7 +1042,7 @@ flowchart TB
 
 **逐段——用 `FromToByAnimation<Transform>` 表达。** 每段的 `from` / `to` 取相邻两个切点的完整姿态,`duration` 取该段时长,`timing` 取 Core 已为该全局时间段解析出的唯一缓动函数,`bindTarget` 固定为 `.transform`。visionOS 的动画绑定粒度是整个 `.transform`,这也是选择整姿态切片的根本原因。
 
-**串联——用 `sequence` 首尾相接。** 各段整姿态动画按时间顺序用 `AnimationResource.sequence(with:)` 串成一条动画,让每段各自带缓动、又连续播放。只有起止两帧的时间轴退化为单个 `FromToByAnimation<Transform>`。`delay` / `speed` / `loop` 作用在这条串联动画的顶层。
+**串联——用 `sequence` 首尾相接。** 各段整姿态动画按时间顺序用 `AnimationResource.sequence(with:)` 串成一条运动序列,让每段各自带缓动、又连续播放。只有起止两帧的时间轴退化为单个 `FromToByAnimation<Transform>`。每次全新执行在该运动序列之前安排一次全局 `delay`。`speed` 和 `loop` 仅作用于运动序列,因此 speed 不缩放延迟,loop 也不重复延迟。
 
 以一个例子说明(`position.y` 有 3 帧、`rotation.y` 只有起止 2 帧,切点并集为 `0 / 0.6s / 1.2s`,共 2 段):
 
@@ -1017,20 +1051,18 @@ flowchart TB
     Slice["切片时间 = 各通道关键帧时间并集<br/>{0, 0.6s, 1.2s} → 2 段"]
     S0["段0 FromToBy<br/>from=整姿态@0,to=整姿态@0.6s,easeOut"]
     S1["段1 FromToBy<br/>from=整姿态@0.6s,to=整姿态@1.2s,linear"]
-    Clip["整姿态动画<br/>+ 顶层 delay / speed / loop"]
+    Clip["全新执行<br/>一次全局延迟 → 变速 / 循环运动序列"]
 
     Slice --> S0
     S0 -->|sequence 串联| S1
     S1 --> Clip
 ```
 
-每段都携带完整姿态并按时间顺序串联,`delay` / `speed` / `loop` 作用在串联动画顶层。
-
 ##### 输出:可控播放对象与代码演示
 
 编译的最终输出是可控播放对象。沿用上文示例(2 段整姿态),下面分别用 visionOS 与 picoOS 演示:每段编成一个整姿态 `FromToBy`,用 `sequence` 串成一条动画资源,最后交给引擎播放,拿到可暂停 / 恢复 / 停止 / 变速的播放控制器——即“可控播放对象”。两端都绑定整个 transform,写法对齐。
 
-visionOS 与 picoOS 的平台能力按第 8 节验收任务留痕验证,覆盖整 transform 绑定、多段动画序列、每段独立缓动函数、顶层 delay / speed / loop、controller pause / internal resume / stop 以及 completion。以下代码只展示资源构造和 controller 形态;`EntityMotionTiming` 在交给引擎前把顶层 delay / speed / loop 统一应用到整条动画序列,不由单个时间段重复设置。
+visionOS 平台能力按 `tasks.zh.md` 第 8 节验收任务留痕验证。picoOS 验收已迁出当前变更。以下代码只展示资源构造和 controller 形态。
 
 visionOS(RealityKit / Swift):
 
@@ -1172,15 +1204,15 @@ fun playSequencedTransformAnimation(entity: Entity): AnimationPlaybackController
 2. **时间范围:** `duration` 必须为正;每个关键帧的 `at` 必须落在 `[0, duration]` 内。
 3. **排序与重复:** 每条轨道的关键帧按 `at` 非递减排序;每个属性对应一条唯一轨道。
 4. **切片时间取各通道并集:** 把所有通道的关键帧时间取并集作为整条时间轴的切点,相邻切点之间构成一段。例如 `position.y` 在 `0, 0.6, 1.2`、`rotation.y` 在 `0, 1.2`,并集 `0, 0.6, 1.2` 切成 `[0, 0.6]` 与 `[0.6, 1.2]` 两段。
-5. **每个切点采样完整姿态,缺帧按通道回落:** 每个切点都要给出完整的 `position` / `rotation` / `scale`。某通道在该时刻存在关键帧空缺时,仅按时间比例在它自己的数值关键帧之间做线性插值,得到切点值。早于该通道首帧的时段回落到播放起点的原生基准值,晚于末帧的时段保持末帧值。配置中空缺的分量(例如 `scale.*`)会被采样为基准值并在播放期间保持原值——即整个 transform 在动画期间都由动画持有。
+5. **稀疏通道补全:** 编译器在每个切点生成完整姿态。相邻关键帧之间线性插值;首帧晚于零时,从零时刻 baseline 插值到首帧;末帧后沿用末帧值;其余分量全程沿用 baseline。
 6. **逐段串联整姿态:** 相邻切点构成一段整姿态 `FromToByAnimation<Transform>`,各段按时间顺序用 `sequence` 串成一条整姿态动画,统一绑定到整个 transform(`bindTarget: .transform`),详见“时间轴切片为整姿态节点并串联”。
 7. **旋转:** `rotation.*` 输入是欧拉角度数,编译时转成 RealityKit 所需的旋转表示,由 RealityKit 使用最短路径球面插值处理。某个旋转通道若单帧增量达到或超过 180°、或跨多轴,实际路径可能区别于逐轴直觉;特定的多圈或多轴路径由使用者通过中间关键帧显式定义。
 8. **缩放:** `scale.*` 必须非负,非法缩放直接失败。
 9. **每段唯一缓动函数:** 公开配置中的 `timingFunction` 属于全局时间轴节点。v1 由 Core 把该全局值复制到现有 track/keyframe 字段,并保证同一个 `at` 上的缓动值统一且唯一;Native 接受这种全局缓动形态。Native 对关键帧时间并集中的每对相邻节点解析一个缓动值,并在构造最终整姿态分段时应用一次。切点值采样使用线性时间插值,最终分段播放应用缓动。缓动函数的取值是封闭枚举 `linear` / `easeIn` / `easeOut` / `easeInOut`,全部直接映射到 RealityKit 内建曲线。
-10. **循环 / 播放速率 / 延迟:** 这些播放参数放在时间轴顶层,对整条串联动画统一生效,由 RealityKit 播放层执行。同一次 fresh play 内的 loop 复用本轮资源,每圈不重新读取 baseline 或编译。
+10. **延迟、播放速率和循环:** 每次全新执行只运行一次延迟;播放速率和循环仅作用于运动序列。循环复用本轮资源。
 11. **失败显式化:** RealityKit 无法表达某个段时,fresh play 的控制命令必须失败,动画保持非活跃。
 
-上述跨端能力组合以第 8 节验收记录为准;本设计不引入 SDK 自行调度分段队列的降级方案。验收记录包含平台版本、SDK 版本、fixtures、执行命令和结果。
+上述 visionOS 能力组合以 `tasks.zh.md` 第 8 节验收记录为准;picoOS 验收已迁出当前变更。本设计不引入 SDK 自行调度分段队列的降级方案。验收记录包含平台版本、SDK 版本、fixtures、执行命令和结果。
 
 #### 姿态拆解与确认值回传
 
@@ -1196,11 +1228,12 @@ type EntityMotionProps = {
 
 拆解规则:
 
+- `start`、`stop`、`reset`、`finish`、自然完成和成功 `set` 先完成对应姿态提交,再重新读取 Entity 当前的完整 transform;该读取结果是状态消息 `values`、callback values 和 `SetEntityAnimationResult.values` 的统一来源。
 - `position` 来自原生姿态的平移部分。
 - `scale` 来自原生姿态的缩放部分。
 - `rotation` 使用角度制欧拉角和 Entity 相对父节点的局部右手坐标系，其中 +X 向右、+Y 向上、+Z 朝向观察者。旋转按 ZYX intrinsic 顺序组合，等价于 XYZ extrinsic，矩阵顺序为 `Rz × Ry × Rx`。原生层确认的旋转通过旋转矩阵拆解，`y` 位于 `[-90°, 90°]`，`x` 和 `z` 位于 `(-180°, 180°]`；gimbal lock 时固定 `z = 0°`，并从矩阵计算 `x`。等价 quaternion 因此产生相同的欧拉角结果。`api.set` 的稀疏 rotation update 先合并到这份规范化完整欧拉角基准，再重新组合姿态。
 - 拆解结果始终包含完整的已提交变换,其范围独立于动画配置和 `api.set` 写入字段。
-- 回调值和 `entityProps` 都采用 `EntityMotionProps` 形态;每个已确认值都包含完整的 `position`、`rotation`、`scale`,且每项都是完整的 `Vec3`。`api.set(update)` 接受深度稀疏的 `EntityTransformUpdate`。例如 `set({ position: { y: 0.3 } })` 按轴合并后,确认结果包含完整的位置、旋转和缩放。
+- 回调值和 `entityProps` 都采用 `EntityMotionProps` 形态;每个已确认值都包含完整的 `position`、`rotation`、`scale`,且每项都是完整的 `Vec3`。`api.set(update)` 接受深度稀疏的 `EntityMotionPatch`。例如 `set({ position: { y: 0.3 } })` 按轴合并后,确认结果包含完整的位置、旋转和缩放。
 
 #### Native 内部时序
 
@@ -1244,29 +1277,30 @@ sequenceDiagram
         Obj->>Obj: 启用完整 transform 写入保护
         Obj->>RK: 提交 from / 0% 完整起始姿态
         Obj->>RK: 读取 Entity 当前的完整 transform
-        Obj->>Event: 发出 start,携带当前完整 transform
         Obj->>RK: 创建控制器并进入 delay / running
         RK-->>Obj: 播放控制器
+        Obj->>Event: 发出 running + callbackAction=start + 当前完整 transform
     else paused 后恢复
         Obj->>Obj: private resumeCurrent()
-        Obj->>RK: 恢复当前控制器,不产生 start
+        Obj->>RK: 恢复当前控制器并保持现有 onStart 次数
+        Obj->>Event: 发送仅携带 running 的状态消息
     end
     RK-->>Obj: 完成 / 终态回调
     Obj->>Obj: 读取并拆解 Entity 当前的完整 transform
     Obj->>Obj: 解除完整 transform 写入保护
-    Obj->>Event: 发出 complete,携带当前完整 transform
+    Obj->>Event: 发出 finished + callbackAction=complete + 当前完整 transform
 ```
 
-创建阶段只保存规范时间轴,由 `SpatialScene` 注册 animation object 并返回其 `id`。每次 fresh play 读取最新 baseline 并编译本轮 RealityKit 资源,随后提交并确认完整起始姿态;`start` 和首个 `entityProps` 更新发生在确认成功后,不等待 delay 结束。paused 后的 `play` 直接复用当前资源和控制器,不读取 baseline、不编译、不产生新的 `start`。
+创建阶段只保存规范时间轴,由 `SpatialScene` 注册 animation object 并返回其 `id`。每次 fresh play 读取最新 baseline 并编译本轮 RealityKit 资源,随后提交并确认完整起始姿态;`start` 和首个 `entityProps` 更新发生在确认成功后,不等待 delay 结束。未发生配置更新时,paused 后的 `play` 直接复用当前资源和控制器,不读取 baseline、不编译、不产生新的 `start`;paused update 后按新执行处理。
 
 状态命令矩阵:
 
 | 原生层状态 | `play` | `pause` | `stop` | `reset` | `finish` | `set` |
 |---|---|---|---|---|---|---|
-| `idle` | fresh play → `running`;起始姿态确认后发出一次 `start` | 保持 `idle` | 保持 `idle` | 提交起始姿态 → `idle`;发出 `reset` | 提交终点姿态 → `finished`;发出 `finish` | 提交更新;保持 `idle` |
-| `running`(包含 delay) | 保持当前运行 | → `paused`;发出 `pause` | 提交当前姿态 → `idle`;发出 `stop` | 提交起始姿态 → `idle`;发出 `reset` | 提交终点姿态 → `finished`;发出 `finish` | 保持当前运行;返回警告回执 |
-| `paused` | 恢复当前控制器 → `running` | 保持 `paused` | 提交当前姿态 → `idle`;发出 `stop` | 提交起始姿态 → `idle`;发出 `reset` | 提交终点姿态 → `finished`;发出 `finish` | 保持暂停运行;返回警告回执 |
-| `finished` | fresh play → `running`;起始姿态确认后发出一次 `start` | 保持 `finished` | 保持 `finished` | 提交起始姿态 → `idle`;发出 `reset` | 保持 `finished` | 提交更新;保持 `finished` |
+| `idle` | fresh play → `running`;起始姿态确认后发出 `callbackAction: start` | 保持 `idle` | 保持 `idle` | 提交起始姿态 → `idle`;发出 `callbackAction: reset` | 提交终点姿态 → `finished`;发出 `callbackAction: complete` | 提交更新;保持 `idle` |
+| `running`(包含 delay) | 保持当前运行 | → `paused`;发出 paused 状态消息 | 提交当前姿态 → `idle`;发出 `callbackAction: stop` | 提交起始姿态 → `idle`;发出 `callbackAction: reset` | 提交终点姿态 → `finished`;发出 `callbackAction: complete` | 保持当前运行;返回警告回执 |
+| `paused` | 恢复当前控制器 → `running`;发出 running 状态消息 | 保持 `paused` | 提交当前姿态 → `idle`;发出 `callbackAction: stop` | 提交起始姿态 → `idle`;发出 `callbackAction: reset` | 提交终点姿态 → `finished`;发出 `callbackAction: complete` | 保持暂停运行;返回警告回执 |
+| `finished` | fresh play → `running`;起始姿态确认后发出 `callbackAction: start` | 保持 `finished` | 保持 `finished` | 提交起始姿态 → `idle`;发出 `callbackAction: reset` | 保持 `finished` | 提交更新;保持 `finished` |
 
 `reset` 和 `finish` 优先使用当前运行的已确认起始姿态和终点姿态。首次运行之前调用时,编译器按需读取当前原生层 transform 作为基准姿态,并计算配置声明的起始姿态或终点姿态。普通播放、reset loop 和 reverse loop 的 `finish` 统一提交配置声明的 `to` / `100%` 姿态。
 
@@ -1287,7 +1321,7 @@ sequenceDiagram
     alt 找到且状态允许
         Scene->>Obj: pause()
         Obj->>RK: 控制器暂停
-        Obj->>Event: 发出 pause,携带播放状态
+        Obj->>Event: 发出仅携带 paused 的状态消息
         Scene-->>JSB: 成功
     else 动画查询失败 / 状态非法
         Scene-->>JSB: 失败
@@ -1314,7 +1348,7 @@ sequenceDiagram
         Obj->>RK: 以零时长提交目标姿态
         Obj->>Obj: 读取并拆解 Entity 当前的完整 transform
         Obj->>Obj: 解除完整 transform 写入保护
-        Obj->>Event: 发出 stop/reset/finish,携带当前完整 transform
+        Obj->>Event: stop/reset 携带对应 callbackAction,finish 携带 callbackAction=complete,同时携带当前完整 transform
         Scene-->>JSB: 成功
     else id 不存在
         Scene-->>JSB: 失败(ANIMATION_NOT_FOUND)
@@ -1354,19 +1388,19 @@ sequenceDiagram
 
 暂停复用已编译的整姿态串联动画、控制当前播放控制器,并保持完整 transform 写入保护。停止 / 重置 / 结束会停止该控制器、以零时长提交目标姿态,并在返回完整 transform 前解除保护。自然完成也会在 `complete` 事件前解除保护。`set` 在非活跃状态下把稀疏更新合并到已提交姿态后以零时长提交,并通过成功回执返回 Entity 当前的完整 transform。`set` 保持原有 `playState`,不发送状态事件。
 
-Native Entity animation object 与一次 target binding 同生命周期;target 销毁时,`SpatialScene` 通过全局 `SpatialObject` lifecycle 级联销毁关联动画,不保留失效对象。
+Native Entity animation object 与一次 target binding 同生命周期;target 销毁时,`SpatialScene` 通过全局 `SpatialObject` lifecycle 级联销毁关联动画,并为每个 animation id 发送 `objectdestroy`。Core 消费该消息后标记动画对象已销毁并注销该 animation id 的事件接收器。后续 playback 在 Core 本地完成空操作;`set` 在 Core 本地输出 warning 并完成空操作,同时保持现有 `onError` 次数。在途命令继续适用 `ANIMATION_NOT_FOUND` 竞态结果。
 
-边界约束:`SpatialScene` 负责全局 `spatialObjects`、创建目标查找、动画对象查找、三条 Entity 命令回执和 `SpatialObject` lifecycle。`SpatialEntity.createAnimation(config)` 负责创建 Entity 动画对象;`EntityMotionAnimationObject` 内聚单对象编译、播放状态、控制、确认值、事件发送和资源释放。Entity 与 Element 路径保持独立协议,并共享全局 `spatialObjects` 生命周期。
+边界约束:`SpatialScene` 负责全局 `spatialObjects`、创建目标查找、动画对象查找、四条 Entity 命令回执和 `SpatialObject` lifecycle。`SpatialEntity.createAnimation(config)` 负责创建 Entity 动画对象;`EntityMotionAnimationObject` 内聚单对象更新、编译、播放状态、控制、确认值、事件发送和资源释放。Entity 与 Element 路径保持独立协议,并共享全局 `spatialObjects` 生命周期。
 
 ## 6. 风险评估
 
 | 风险 | 缓解 |
 |---|---|
-| 平台能力验证缺少可追溯记录 | 第 8 节验收任务记录平台版本、SDK 版本、fixtures、执行命令和结果 |
-| 控制器级停止影响同一 Entity 或子节点上的其它动画 | 原生清理只停止当前 `EntityMotionAnimationObject` 持有的控制器,8.4/8.5 覆盖其它动画保持运行 |
-| 零时长姿态提交影响其它动画或终态 | 状态命令矩阵限定 `stop` / `reset` / `finish` / `set` 的提交动作,8.4/8.5 覆盖终态提交 |
+| 平台能力验证缺少可追溯记录 | `tasks.zh.md` 第 8 节记录平台版本、SDK 版本、fixtures、执行命令和结果 |
+| 控制器级停止影响同一 Entity 或子节点上的其它动画 | 原生清理只停止当前 `EntityMotionAnimationObject` 持有的控制器;任务 8.4 覆盖其它动画保持运行 |
+| 零时长姿态提交影响其它动画或终态 | 状态命令矩阵限定 `stop` / `reset` / `finish` / `set` 的提交动作;任务 8.4 覆盖终态提交 |
 | transform 写入保护遗漏导致 React 写入覆盖活动动画 | `SpatialScene` 在普通 Entity transform 更新入口检查 animating mask;停止、重置、结束、自然完成、解绑和销毁时解除保护;4.3/8.2 覆盖该行为 |
-| 动画对象创建或同目标姿态交接失败后继续执行产生状态歧义 | 失败通过 `onError` 报告并终止当前绑定生命周期,清空镜像和待执行命令;4.3a 覆盖终止与显式重新绑定 |
+| 配置 update 在旧执行已受破坏后失败 | Native 在停止旧 controller 前完成所有可能失败的候选准备;失败原子保留旧执行,第 9 节覆盖 RealityKit 可行性验证与回滚测试 |
 | 创建请求和创建回执都使用 `id` 导致语义混淆 | 协议按消息方向固定含义:请求为目标 Entity id,回执为动画对象 id;Core/Native contract 测试分别断言 |
 | 状态事件和错误事件重复报告同一失败 | 同一失败只选择命令回执或 `entityanimationerror` 一个出口,状态事件不承载错误 |
-| 三条 Entity JSB 命令在 Core 与 Native 间发生结构漂移 | Bridge contract 测试分别覆盖创建、控制、设置命令和两类事件 |
+| 四条 Entity JSB 命令在 Core 与 Native 间发生结构漂移 | Bridge contract 测试分别覆盖创建、更新、控制、设置命令和两类事件 |

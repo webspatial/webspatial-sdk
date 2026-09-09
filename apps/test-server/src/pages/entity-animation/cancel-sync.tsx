@@ -3,6 +3,7 @@ import { BoxEntity, Reality, SceneGraph } from '@webspatial/react-sdk'
 import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
+  EntityPropsPanel,
   Log,
   type Vec3,
   fmtVec3,
@@ -15,7 +16,7 @@ export default function EntityAnimationCancelSyncPage() {
   const logger = useLog()
   const [position, setPosition] = useState<Vec3>({ x: 0, y: 0, z: 0 })
 
-  const [animation, api] = useEntityAnimation({
+  const [animation, api, entityProps] = useEntityAnimation({
     from: { position: { x: -0.1, y: 0, z: 0 } },
     to: { position: { x: 0.1, y: 0, z: 0 } },
     duration: 3.0,
@@ -25,16 +26,17 @@ export default function EntityAnimationCancelSyncPage() {
     onComplete: value => {
       logger.log(`onComplete pos=${fmtVec3(value.position)}`)
     },
-    onCancel: value => {
-      logger.log(`onCancel pos=${fmtVec3(value.position)}`)
+    onStop: value => {
+      if (value.position) setPosition(value.position)
+      logger.log(`onStop pos=${fmtVec3(value.position)}`)
     },
-    onError: error => logger.log(`onError [${error.command}] ${error.reason}`),
+    onError: error => logger.log(`onError [${error.code}] ${error.reason}`),
   })
 
   return (
     <EntityAnimationPageShell
-      title="Cancel and Sync State"
-      description="Cancel the animation and mirror the restored from-position back into React state so the next render stays stable."
+      title="Stop and Sync State"
+      description="Stop the animation and mirror the native-confirmed stop position back into React state so the next render stays stable."
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div className="flex flex-wrap gap-2">
@@ -50,11 +52,20 @@ export default function EntityAnimationCancelSyncPage() {
           <button
             className={btnCls}
             onClick={() => {
-              api.cancel()
-              logger.log('cancel()')
+              api.stop()
+              logger.log('stop()')
             }}
           >
-            Cancel
+            Stop
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.set({ position: { y: 0.05 } })
+              logger.log('api.set(y=0.05) requested; see entityProps')
+            }}
+          >
+            api.set(y = 0.05)
           </button>
           <button className={btnCls} onClick={logger.clear}>
             Clear log
@@ -71,10 +82,12 @@ export default function EntityAnimationCancelSyncPage() {
               height={0.1}
               depth={0.1}
               position={position}
+              {...entityProps}
               animation={animation}
             />
           </SceneGraph>
         </Reality>
+        <EntityPropsPanel entityProps={entityProps} />
         <Log lines={logger.lines} />
       </section>
     </EntityAnimationPageShell>

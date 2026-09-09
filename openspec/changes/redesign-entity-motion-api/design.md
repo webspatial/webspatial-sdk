@@ -32,11 +32,11 @@ The public API surface covers animation binding, playback control, and confirmed
 - **timingFunction**: a curve describing the pacing between two frames, e.g. constant-speed `linear`, slow-then-fast `easeIn`.
 - **baseline**: the current native value when each fresh play is accepted; it fills fields omitted from the config to form the full pose for that playback run.
 - **start confirmation**: after a fresh play compiles successfully, Native combines config `from` / `0%` values with that run's baseline, commits the complete start pose to the target, and reports the Entity's complete current transform. Native emits `start` as soon as that confirmation succeeds, and React updates `entityProps` without waiting for delay to end.
-- **fresh play**: the first playback after creation, or playback restarted after `complete`, `finish`, `stop`, or `reset`; `autoStart` is also a fresh play. Continuing `play` after `pause` resumes the current run and is not a fresh play.
+- **fresh play**: the first playback after creation, or playback restarted after `complete`, `finish`, `stop`, or `reset`; `autoStart` is also a fresh play. With no config update, continuing `play` after `pause` resumes the current run; after a paused update, `play` starts a new execution from the saved pose.
 - **spherical linear interpolation (slerp)**: the interpolation RealityKit uses for rotation, always taking the shortest path between two orientations.
 - **no-op**: after the command is received, the entity and `entityProps` retain their current values.
 - **registry**: the table the native layer uses to look up entities or animation objects by id.
-- **binding command queue**: the per-binding FIFO that serializes playback commands and `set` before they enter the JS Bridge. It is a React/Core ordering mechanism, not a second native animation queue.
+- **creation-pending playback queue**: the React Binding queue that stores playback commands until Native creates the animation object. After creation, Core submits commands directly.
 - **command reply**: the JSB success or failure receipt returned after Native has finished the command's synchronous state and transform commit work. When a command emits a state event, Native emits that event before returning the success reply.
 
 ## 3. Design Goals
@@ -74,7 +74,7 @@ React config / api.set
 From this a few rules follow:
 
 - Play, stop, reset, finish, `api.set` — every operation that changes the transform goes to the native layer first.
-- When an ordinary playback or control command fails, the entity transform and `entityProps` retain their current values. Animation-object creation or pose-handoff failure enters the binding-termination path.
+- When an ordinary playback, control, or config-update command fails, the entity transform and `entityProps` retain their current values. Only initial animation-object creation failure enters the binding-termination path.
 - When native accepts a playback control command, it reports the confirmed transform through an animation state event. When it accepts `set`, it reports the confirmed transform through `SetEntityAnimationResult`. React updates `entityProps` from the value Core forwards.
 - React mirrors native-confirmed transforms back to the user; writes during active animation are handled as no-ops.
 - `entityProps` starts empty. The first confirmation fills it with the complete committed `position`, `rotation`, and `scale` values. While playback is inactive, the component's combined React props control the transform; spreading `entityProps` after base props preserves the confirmed pose.
@@ -121,27 +121,25 @@ flowchart TB
         ReactBinding["create motion binding and playback api"]
         EntityProps["entityProps<br/>mirror of native confirmed transform"]
         ApiSet["api.set(update)<br/>commits native authoritative state"]
-        BindTarget["useBindMotionTarget({ binding, target })<br/>animation binding"]
+        BindTarget["useEntity<br/>binds animation to target"]
 
         UseEntity --> ReactBinding
         UseEntity --> EntityProps
         UseEntity --> ApiSet
-        ReactBinding --> BindTarget
+        BindTarget --> ReactBinding
     end
 
     subgraph Core["shared logic layer (packages/core)"]
         EntityCreate["SpatialEntity.createAnimation(config)<br/>encapsulates target id and Entity-specific creation"]
-        Normalize["normalizeEntityMotionConfig(config)<br/>unify top-level from/to, timeline.from/to and percentages into internal tracks"]
+        Normalize["normalizeEntityMotionConfig(config)<br/>validate public config and normalize canonical tracks"]
         Tracks["canonical tracks<br/>position.* / rotation.* / scale.*"]
-        Validate["validateEntityMotionConfig()<br/>validate the transform property allowlist"]
         PlaybackApi["SpatializedPlaybackApi<br/>shared playback interface"]
-        EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>adds set(EntityTransformUpdate)"]
+        EntityApi["EntityPlaybackApi extends SpatializedPlaybackApi<br/>adds set(EntityMotionPatch)"]
         CoreAnimationObject["EntityAnimationObject<br/>implements EntityPlaybackApi"]
 
         EntityCreate --> Normalize
         Normalize --> Tracks
-        Tracks --> Validate
-        Validate -->|"return canonical payload"| EntityCreate
+        Tracks -->|"return canonical payload"| EntityCreate
         EntityCreate -->|"return after create succeeds"| CoreAnimationObject
         PlaybackApi --> EntityApi
         EntityApi --> CoreAnimationObject
@@ -180,7 +178,7 @@ flowchart TB
 
 **Responsibilities per layer:**
 
-- **React layer** handles the Hook API, target-binding coordination, the `entityProps` mirror, command queuing, callback dispatch, and re-render. `useEntityAnimation` creates one `EntityMotionBinding` and one stable `EntityPlaybackApi` facade; `useEntity` passes the target to the binding through `useBindMotionTarget`. As the React glue layer, `EntityMotionBinding` stores the latest desired config, connects the current target to the Core animation object, and calls `SpatialEntity.createAnimation(config)`.
+- **React layer** handles the Hook API, target-binding coordination, the `entityProps` mirror, creation-pending playback commands, callback dispatch, and re-render. `useEntityAnimation` creates one `EntityMotionBinding` and one stable `EntityPlaybackApi` facade; `useEntity` calls the binding's `__bind` and `__unbind` entries. As the React glue layer, `EntityMotionBinding` stores the latest desired config, connects the current target to the Core animation object, and calls `SpatialEntity.createAnimation(config)`.
 - **Shared logic layer** uses the target's own `SpatialObject.id` in `SpatialEntity.createAnimation(config)`, performs Entity-specific normalization and validation, sends the create command, and returns an `EntityAnimationObject`. `EntityPlaybackApi` extends the existing `SpatializedPlaybackApi` and adds `set` only for Entity; `EntityAnimationObject` and the ordinary `AnimationObject` implement their respective interfaces without inheriting from each other. Normalization folds the three public authoring forms into internal canonical entity tracks; when `timeline` and top-level `from` / `to` are both present, `timeline` is the sole effective input and development mode logs a duplicate-declaration warning.
 - **Native layer** stores animation objects in `SpatialScene.spatialObjects` and reuses the `SpatialObject` lifecycle. `SpatialScene` resolves create targets and animation objects; the target Entity creates an `EntityMotionAnimationObject` through `createAnimation(config)`, and the animation object owns its state machine, fresh-play compilation, RealityKit execution, and confirmed-pose reporting.
 
@@ -195,15 +193,14 @@ classDiagram
             +entityProps EntityMotionProps
         }
         class useEntity
-        class EntityMotionBinding
+        class EntityMotionBinding {
+            +__bind(target)
+            +__unbind()
+        }
         class EntityMotionProps {
             +position Vec3
             +rotation Vec3
             +scale Vec3
-        }
-        class useBindMotionTarget {
-            +binding
-            +target
         }
     }
     namespace CoreLayer {
@@ -212,7 +209,6 @@ classDiagram
         }
         class EntityMotionNormalizer {
             +normalizeEntityMotionConfig(config)
-            +validateEntityMotionConfig(tracks)
         }
         class SpatializedPlaybackApi {
             <<interface>>
@@ -224,7 +220,7 @@ classDiagram
         }
         class EntityPlaybackApi {
             <<interface>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class AnimationObject {
             +play()
@@ -235,14 +231,16 @@ classDiagram
         }
         class EntityAnimationObject {
             +id string
-            -config EntityMotionConfig
             -timeline EntityMotionTimelinePayload
+            -executionRevision number
+            +isDestroyed boolean
             +play()
             +pause()
             +stop()
             +reset()
             +finish()
-            +set(update EntityTransformUpdate)
+            +update(config EntityMotionConfig)
+            +set(update EntityMotionPatch)
             +onStart(callback)
             +onComplete(callback)
             +onStop(callback)
@@ -252,27 +250,35 @@ classDiagram
         class CreateEntityAnimationJSBCommand
         class ControlEntityAnimationJSBCommand
         class SetEntityAnimationJSBCommand
+        class UpdateEntityAnimationJSBCommand
     }
     namespace NativeLayer {
         class SpatialScene {
             +onCreateEntityAnimation()
             +onControlEntityAnimation()
             +onSetEntityAnimation()
+            +onUpdateEntityAnimation()
             +findSpatialObject(id)
         }
         class NativeSpatialEntity {
             +createAnimation(config)
         }
-        class EntityMotionAnimationObject
+        class EntityMotionAnimationObject {
+            +timeline EntityMotionTimelinePayload
+            +playState EntityMotionPlayState
+            +executionRevision Int
+            -playbackController AnimationPlaybackController
+            -completionSubscription Cancellable
+            -preparedPausedPlayback PreparedPlayback
+        }
         class RealityKit
     }
     useEntityAnimation --> EntityMotionBinding : creates and returns animation
     useEntityAnimation --> EntityPlaybackApi : creates and returns api facade
     useEntityAnimation --> EntityMotionProps : returns current mirror
     EntityMotionBinding *-- EntityMotionProps : owns confirmed-pose mirror
-    useEntity --> useBindMotionTarget : calls
-    useBindMotionTarget --> EntityMotionBinding : calls internal bind and unbind
-    useBindMotionTarget --> SpatialEntity : receives target
+    useEntity --> EntityMotionBinding : calls internal bind and unbind
+    useEntity --> SpatialEntity : resolves target
     EntityPlaybackApi --> EntityMotionBinding : facade delegates
     EntityMotionBinding --> SpatialEntity : calls createAnimation(config)
     EntityMotionBinding --> EntityAnimationObject : delegates commands and consumes notifications
@@ -284,9 +290,11 @@ classDiagram
     SpatialEntity --> CreateEntityAnimationJSBCommand
     EntityAnimationObject --> ControlEntityAnimationJSBCommand
     EntityAnimationObject --> SetEntityAnimationJSBCommand
+    EntityAnimationObject --> UpdateEntityAnimationJSBCommand
     CreateEntityAnimationJSBCommand --> SpatialScene : JSB handling
     ControlEntityAnimationJSBCommand --> SpatialScene : JSB handling
     SetEntityAnimationJSBCommand --> SpatialScene : JSB handling
+    UpdateEntityAnimationJSBCommand --> SpatialScene : JSB handling
     SpatialScene --> NativeSpatialEntity : create animation by id
     SpatialScene --> EntityMotionAnimationObject : control or set by id
     NativeSpatialEntity --> EntityMotionAnimationObject : creates
@@ -297,7 +305,7 @@ The diagram presents React, shared-logic, and native classes together; each clas
 
 #### Cross-layer Communication Overview
 
-- Core sends create, playback control, and transform-set commands through `CreateEntityAnimationJSBCommand`, `ControlEntityAnimationJSBCommand`, and `SetEntityAnimationJSBCommand`.
+- Core sends create, in-place config update, playback control, and transform-set commands through `CreateEntityAnimationJSBCommand`, `UpdateEntityAnimationJSBCommand`, `ControlEntityAnimationJSBCommand`, and `SetEntityAnimationJSBCommand`.
 - Native reports playback state and confirmed transforms through `spatialanimationstatechanged`, and asynchronous post-acceptance errors through `entityanimationerror`.
 - Core `EntityAnimationObject` directly consumes both event types. It updates its playback state and invokes matching `onXXX` debug listeners, after which React `EntityMotionBinding` updates public state, lifecycle callbacks, and `entityProps`.
 
@@ -351,11 +359,13 @@ sequenceDiagram
         NativeObj->>NativeObj: read latest native baseline
         NativeObj->>Compiler: compile(timeline payload, baseline)
         Compiler-->>NativeObj: whole-transform resource
-        NativeObj->>NativeObj: commit and confirm start pose, emit start
+        NativeObj->>NativeObj: commit and confirm start pose
         NativeObj->>NativeObj: create controller and enter delay / running
+        NativeObj->>Event: send start state message with running
     else play after pause
         NativeObj->>NativeObj: private resumeCurrent()
-        Note over NativeObj: no baseline read, compile, or repeated start
+        NativeObj->>Event: emit state message carrying only running
+        Note over NativeObj: reuse current baseline, resource, and controller; preserve onStart count
     end
     NativeObj-->>Scene: success
     Scene-->>Bridge: success
@@ -379,11 +389,11 @@ sequenceDiagram
         participant NativeObj as EntityMotionAnimationObject
     end
 
-    NativeObj->>NativeObj: playback state change (start/complete/stop/reset/finish)
+    NativeObj->>NativeObj: lifecycle confirmation (start/complete/stop/reset/finish)
     NativeObj->>NativeObj: read authoritative transform
     NativeObj->>NativeObj: decompose into position / rotation / scale
     NativeObj->>NativeObj: encode complete position / rotation / scale
-    NativeObj->>Event: report confirmed value
+    NativeObj->>Event: report callbackAction, playState, and confirmed value
     Event->>Obj: receive event
     Obj-->>Hook: confirmed EntityMotionProps
     Hook-->>App: entityProps updated
@@ -394,12 +404,12 @@ Native decides whether `api.set` takes effect: it accepts updates while playback
 
 ### 4.4 Key Trade-offs
 
-- **Entity uses a dedicated bridge protocol.** Creation, playback control, and transform setting use separate Entity-specific commands. All three commands use `SpatialObject.id` directly and do not inherit Element animation protocol fields.
+- **Entity uses a dedicated bridge protocol.** Creation, in-place config update, playback control, and transform setting use separate Entity-specific commands. All four commands use `SpatialObject.id` directly and do not inherit Element animation protocol fields.
 - **Accept native compilation cost on fresh play.** Each fresh play makes the entity animation object read the current baseline and invoke the compiler for multi-keyframe handling, sparse keyframes, rotation conversion, and whole-transform serial compilation in exchange for an up-to-date baseline, native RealityKit playback, system compositing, and one execution model.
 - **Slice into a serial chain of full poses.** Cut the timeline into a set of nodes, each carrying a complete `position` / `rotation` / `scale`, then chain them in order into one whole-transform animation. The visionOS RealityKit animation binding granularity is the whole `.transform`, and current easing requirements apply per segment. A serial chain of full poses therefore aligns visionOS and picoOS, where native animation binds the whole transform; all channels within one segment share a single `timingFunction`.
 - **Protect the whole transform only while playback is active.** On each fresh play, Native enables whole-transform write protection before committing the start pose. For example, animating only `position.y` freezes `position.x` / `position.z` — and `rotation` / `scale` too — at baseline during playback. Delay, running, and pause keep this protection, so `SpatialScene` accepts ordinary React transform updates without applying them. Stop, reset, finish, and natural completion commit the corresponding pose, remove the protection, and report the Entity's complete current transform so Core can update `entityProps`. Ordinary React transform updates apply again while playback is inactive. Unbinding, binding termination, and animation-object destruction also remove the protection as cleanup paths. This matches the Element animation's native animating-mask behavior.
-- **`set` uses a sparse update object.** In v1, `api.set` accepts `EntityTransformUpdate`, and consumers read the latest confirmed transform through `entityProps`.
-- **Entity handlers dispatch directly.** The three Entity-specific handlers on `SpatialScene` independently perform create, playback control, and transform set without entering the Element animation manager.
+- **`set` uses a sparse update object.** In v1, `api.set` accepts `EntityMotionPatch`, and consumers read the latest confirmed transform through `entityProps`.
+- **Entity handlers dispatch directly.** The four Entity-specific handlers on `SpatialScene` independently perform create, in-place config update, playback control, and transform set without entering the Element animation manager.
 - **Measure large-scale concurrency.** Native RealityKit playback is preferable to per-frame JS writes, but high entity counts still require dedicated performance validation.
 
 ## 5. System/Module Design
@@ -407,49 +417,61 @@ Native decides whether `api.set` takes effect: it accepts updates while playback
 ### 5.1 React SDK
 
 - **Public interface:** `useEntityAnimation` creates one `EntityMotionBinding` and one stable `EntityPlaybackApi` facade, reads the binding's current confirmed-pose mirror, and returns `[animation, api, entityProps]`; the entity component receives `EntityMotionBinding` through its `animation` property.
-- **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`, delegating commands to `EntityMotionBinding`; the binding delegates them to the current `EntityAnimationObject` in FIFO order. `api.set(update)` submits a sparse transform update to native.
-- **Target binding:** `useEntity` consumes the entity component's `animation` property and calls `useBindMotionTarget({ binding, target })`. On React effect setup and cleanup, the hook calls the binding's symmetric internal bind and unbind entries. `EntityMotionBinding` ensures that it connects to at most one `SpatialEntity` at a time and calls `target.createAnimation(config)` after binding. On unbinding or target replacement, the binding performs cleanup and clears its owned `entityProps` mirror to `{}`. Continuing to spread the returned object then restores control to ordinary React transform props.
-- **Command sequencing:** `EntityMotionBinding` reuses the Element animation binding's pending-command and sequential-flush model. It serializes commands per binding and does not send the next command until the current JSB reply settles.
+- **Playback control:** `EntityPlaybackApi` provides `play`, `pause`, `stop`, `reset`, `finish`, and `set`, delegating creation-pending playback commands to `EntityMotionBinding` and later commands directly to `EntityAnimationObject`. `api.set(update)` submits a sparse transform update to native.
+- **Set lifecycle gate:** `EntityMotionBinding` owns the binding, creation-pending, and terminated lifecycle gates. Each gate logs one warning, discards the update locally, and completes a local no-op. The Core object owns the destroying and destroyed gates with the same warning and local no-op result. A live Core object validates synchronously before submitting a valid update.
+- **Target binding:** `useEntity` consumes the entity component's `animation` property and calls the binding's `__bind(target)` and `__unbind()` entries during effect setup and cleanup. `EntityMotionBinding` ensures that it connects to at most one `SpatialEntity` at a time and calls `target.createAnimation(config)` after binding. On unbinding or target replacement, the binding performs cleanup and clears its owned `entityProps` mirror to `{}`. Continuing to spread the returned object then restores control to ordinary React transform props.
+- **Command submission:** `EntityMotionBinding` stores only playback commands received before Native animation-object creation and flushes them in call order after creation. Core submits every post-creation update, playback, and `set` immediately; each reply settles independently.
 - **Result mirror:** `EntityMotionBinding` owns `entityProps`, consumes confirmed values from the current `EntityAnimationObject`, and schedules React re-render. `useEntityAnimation` reads the current mirror on every render and returns it as the third tuple item. `entityProps` contains native-confirmed `position`, `rotation`, and `scale`.
 
 #### Object responsibilities and call relationships
 
-- **`useEntityAnimation`:** Owns the React-side lifetime of one `EntityMotionBinding`, creates a stable `EntityPlaybackApi` facade, passes the latest config to the binding, subscribes to mirror and public-state changes, and returns the current `entityProps` snapshot.
-- **`EntityMotionBinding`:** Acts as the glue layer between the reactive React API and the Core animation object. It stores the latest desired config, current target, current animation object, confirmed-pose mirror, and pending commands. It coordinates target attachment, object creation and replacement, command serialization, confirmed-value commits, and React updates. Its internal `playState` getter, consumed by the control facade, returns `queued` while commands await an object, reads `EntityAnimationObject.playState` while the current object exists, and returns `idle` otherwise.
-- **`EntityPlaybackApi`:** Is the application-visible stable control facade. It delegates playback commands, `set`, and state reads to the same `EntityMotionBinding`. Config updates and animation-object replacement preserve the facade identity.
-- **`useEntity` and `useBindMotionTarget`:** `useEntity` provides the component's `animation` property and resolved `SpatialEntity`; `useBindMotionTarget` uses a React effect to call the binding's internal `__bindTarget(target)` and `__unbindTarget(target)`.
+- **`useEntityAnimation`:** Owns `EntityMotionBinding`, creates stable `EntityPlaybackApi`, submits the latest config, subscribes to state, and returns `entityProps`.
+- **`EntityMotionBinding`:** Stores the desired config, target, animation object, confirmed pose, and creation-pending playback queue. It binds targets, creates or updates objects, flushes pending playback commands, and notifies React. `playState` is `queued` while commands await an object, reads the object state when present, and is `idle` otherwise.
+- **`EntityPlaybackApi`:** Delegates playback, `set`, and state reads to `EntityMotionBinding`. Config updates preserve this object.
+- **`useEntity`:** Provides the component's `animation` property and resolved `SpatialEntity`, then uses a React effect to call the binding's internal `__bind(target)` and `__unbind()` entries.
 - **`EntityMotionProps`:** Is the read-only confirmed-pose snapshot owned by `EntityMotionBinding`. Applications read the snapshot through the `useEntityAnimation` return value.
 - **`SpatialEntity`:** Provides the `createAnimation(config)` entry. `EntityMotionBinding` calls it with the latest desired config.
-- **`EntityAnimationObject`:** Owns the config snapshot used by the current Core animation object and the authoritative playback state, executes playback and `set` commands, and notifies the binding of state, confirmed poses, and errors.
+- **`EntityAnimationObject`:** Stores the committed config, canonical timeline, execution revision, and playback state. It executes update, playback, and `set`, then reports state, pose, and errors. Updates preserve the object and id.
 
-The latest desired config stored by `EntityMotionBinding` supports late target binding and object replacement. The config snapshot stored by `EntityAnimationObject` supports execution of the current Core object. They have different lifetimes and responsibilities. Stale create, destroy, pose-handoff, command-reply, and state-event work must be invalidated; implementations may use an incrementing token, cancellation signal, or an equivalent mechanism.
+`EntityMotionBinding` stores the desired config. `EntityAnimationObject` stores the config committed by Native. Binding generation isolates target attachments; execution revision isolates runs on one object. Keeping the validator in the live Core object centralizes programmer-error handling while preserving teardown no-op behavior and the existing package boundary.
 
 In this document, “binding lifecycle” means the React target-attachment session. `EntityAnimationObject` owns the playback state machine and manages the playback lifecycle.
 
-#### Binding command queue and completion semantics
+#### Creation-pending playback and command submission
 
-The public `EntityPlaybackApi` remains a `void` command surface. Internally, each `EntityMotionBinding` owns one FIFO command chain so call order is preserved without exposing bridge promises to application code.
+The public `EntityPlaybackApi` remains a `void` command surface. The concrete `EntityAnimationObject.set(update)` returns `Promise<EntityMotionProps | void>` so the binding can update `entityProps` from the Native reply. React owns one playback queue only while the animation object is being created.
 
-- Before the target binding and native animation-object creation complete, `play`, `pause`, `stop`, `reset`, and `finish` enter the pending-command queue in call order. The native creation reply first confirms the initial `idle` state. After a successful creation reply, the binding flushes pending commands sequentially and awaits each internal `EntityAnimationObject` command promise before sending the next command. A failed creation reply settles the public state to `idle`, invalidates the current binding generation, clears the animation-object reference, controller-derived state, pending queue, and `entityProps`, schedules a React render so static/base props regain control, reports one error through `onError`, and terminates the current binding lifecycle.
-- When `autoStart` is enabled, its generated `play` command is inserted at the front of the pending playback commands when creation succeeds, matching the existing Element animation behavior.
+- During native animation-object creation, `play`, `pause`, `stop`, `reset`, and `finish` queue in call order. The `play` generated by `autoStart` goes first.
+- The state is `idle` while the Native animation object is being created. If playback is requested during creation, the command waits to run and the state changes to `queued`.
+- After creation succeeds, Native first confirms `idle`, then React flushes the pending playback queue in order. Core submits the flushed commands immediately.
 - `api.set` before binding, before native animation-object creation, or after the current binding lifecycle terminates never enters the queue. It remains a console warning plus no-op.
-- After the native animation object exists, all playback commands and `set` enter the same per-binding FIFO. A failure or a warning-plus-no-op settles that queue item and allows the next item to run; it does not poison or reorder the queue.
-- A JSB success reply means Native has completed the command's synchronous state transition and any required transform commit. If a playback control command produces `start`, `pause`, `stop`, `reset`, or `finish`, Native emits the corresponding state event before returning that success reply. `SetEntityAnimation` emits no state event; after updating the Entity, Native returns its complete current transform directly in the success reply. A natural asynchronous `complete` event remains independent of the earlier `play` reply.
-- Unbinding, target replacement, config-driven object replacement, or destruction invalidates the current queue generation and drops every command that has not been sent. The in-flight command may settle under the documented teardown race, but its reply cannot dispatch another command from the invalidated generation.
-
-This ordering makes consecutive calls deterministic. In particular, `set → play` waits for the accepted `set` reply before fresh play reads its baseline; `stop → play` waits for the stopped transform commit; and `play → pause` waits until Native has accepted the play command.
+- After the native animation object exists, Core submits `update`, playback, and `set` directly without waiting for earlier replies. Each command reply settles its own promise independently.
+- When a control command produces a state message, Native submits the message before completing an empty success reply. `SetEntityAnimation` returns the complete confirmed transform in its success reply. Natural completion produces an independent asynchronous completion state message.
+- Unbinding or target replacement invalidates the current binding generation and drops creation-pending playback commands. Native object destruction leaves already submitted commands to finish; later Core calls are local no-ops. Same-target updates preserve the generation.
+- Callback-only updates replace references immediately. Equivalent committed configs send no command. Config updates submit immediately.
 
 #### Unbinding, rebinding, and config updates
 
-`EntityMotionBinding` follows the Element animation destroy-and-recreate lifecycle. It computes a normalized execution signature from the effective timeline, duration, timing, delay, playback rate, loop, and `autoStart`. Equivalent public authoring forms produce the same signature. Lifecycle callback references are stored and refreshed separately from the execution signature.
+Unbinding or target replacement destroys the object. Same-target config changes use `EntityAnimationObject.update(config)`. `SpatialEntity.createAnimation(config)` and `EntityAnimationObject.update(config)` synchronously normalize and validate initial and updated config respectively. React does not prevalidate config. Core compares canonical timelines and playback options. Callbacks and `autoStart` are excluded. `autoStart` only controls implicit `play` after initial creation.
 
 - Unbinding increments the binding generation, retires the current `EntityAnimationObject`, destroys its native object, clears `entityProps` to `{}`, and schedules a React render. The returned empty object remains safe to spread after static/base props.
 - Rebinding to a different target performs the same cleanup before creating the new target's animation object. The new target begins with an empty mirror and establishes its own confirmed values.
-- During a healthy current binding lifecycle, a normalized execution-signature change on the same target keeps the old object and generation current until destruction succeeds. After the old object is destroyed and any active transform write protection is removed, the binding submits the latest confirmed complete pose through the ordinary Entity transform update entry when `entityProps` contains one. When `entityProps` is empty, the current native transform remains authoritative and the binding proceeds directly to new-object creation. The binding then advances the generation and creates the new object from the latest config. The replacement object's first fresh play reads the current native transform, including any submitted confirmed pose, as its baseline. The handoff preserves the existing `entityProps` and lifecycle callback counts. Pose-handoff or new-object-creation failure executes the same terminal path as initial creation failure. When old-object destruction fails, the binding retains the old object, old generation, and existing playback state, clears commands pending for the attempted replacement, and fires `onError` once.
-- While the current binding lifecycle is healthy, a callback-only config update keeps the current animation object, controller, queue, state, and `entityProps`, and replaces the callback references used by subsequent accepted events. After the current binding lifecycle terminates, config and callback updates only refresh the latest values stored by the binding.
-- Commands issued after replacement begins belong to the new binding generation and wait for its animation object. After creation, `autoStart: true` contributes exactly one implicit `play` at the front of that generation's pending commands; `autoStart: false` begins with the explicit pending commands.
-- A command reply or state event with the current binding generation and animation-object identity updates the binding. The current generation is the exclusive source of state, `entityProps`, and public lifecycle callback updates. Replacement teardown is handled by the destroy lifecycle.
-- After creation or handoff failure terminates the current binding lifecycle, every playback method and `api.set` logs a warning and performs a no-op. Explicitly unbinding and rebinding, or creating a new binding, starts a new generation from the latest config and callbacks.
+- An execution-config change submits `update` directly to the existing Core object. It preserves the Core object, Native object, id, and binding generation. Success commits the new config, execution revision, and confirmed pose. Failure preserves the old run and fires `onError` for that command.
+- A callback-only update preserves the object, creation-pending playback queue, state, and `entityProps`; later events use the latest callbacks.
+- Every config update submits immediately.
+- Replies and events must match the binding generation, id, and execution revision. A new run drops late completion from the old controller.
+- Initial creation failure terminates the binding. Update failure preserves the binding and `entityProps`.
+
+#### In-place retarget during playback
+
+Native validates and prepares the new timeline before stopping the old controller and committing the new definition. Commit advances the execution revision. All potentially failing preparation must finish before the old controller stops.
+
+- During `running` or `delay`, Native uses the current pose as this run's temporary `0%`, then starts the new delay, duration, and playback options from the beginning.
+- The temporary `0%` replaces controlled tracks. Uncontrolled components use the current pose. The first segment keeps the new `0%` easing. A later first keyframe interpolates from the current value.
+- The temporary start applies only to this retarget. Later `reset`, `finish`, and replay use the new config's declared boundaries.
+- The old run fires neither `onStop` nor `onComplete`. The new run fires `onStart` once. The success reply updates `entityProps` with the complete current pose.
+- During `paused`, Native stores the current pose and new definition and remains paused. The next `play` starts a new run and fires `onStart`.
+- During `idle` or `finished`, Native only installs the definition. Active updates always run the new timeline, including when its end equals the current pose.
 
 #### Class Diagram
 
@@ -467,27 +489,19 @@ classDiagram
         class EntityPlaybackApi {
             <<interface>>
             <<public>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class EntityMotionBinding {
             <<opaque>>
-            -desiredConfig EntityMotionConfig
+            +api EntityPlaybackApi
             -target SpatialEntity
             -animationObject EntityAnimationObject
-            -entityProps EntityMotionProps
-            -pendingCommands
             +currentEntityProps EntityMotionProps
             +playState EntityMotionPlayState
-            +__bindTarget(target SpatialEntity)
-            +__unbindTarget(target SpatialEntity)
+            +__bind(target SpatialEntity)
+            +__unbind()
             +updateConfig(config EntityMotionConfig)
-            +play()
-            +pause()
-            +stop()
-            +reset()
-            +finish()
-            +set(update EntityTransformUpdate)
-            +destroy()
+            +reconcileConfig()
         }
         class EntityMotionProps {
             <<public>>
@@ -496,10 +510,6 @@ classDiagram
             +scale Vec3
         }
         class useEntity
-        class useBindMotionTarget {
-            +binding EntityMotionBinding
-            +target SpatialEntity
-        }
     }
     namespace CoreSDKBoundary {
         class SpatializedPlaybackApi {
@@ -518,14 +528,17 @@ classDiagram
             +createAnimation(config) EntityAnimationObject
         }
         class EntityAnimationObject {
-            -config EntityMotionConfig
+            -timeline EntityMotionTimelinePayload
+            -executionRevision number
+            +isDestroyed boolean
             +playState EntityMotionNativePlayState
             +play()
             +pause()
             +stop()
             +reset()
             +finish()
-            +set(update EntityTransformUpdate)
+            +update(config EntityMotionConfig)
+            +set(update EntityMotionPatch)
             +destroy()
             +onStart(callback)
             +onComplete(callback)
@@ -537,10 +550,10 @@ classDiagram
     useEntityAnimation --> EntityMotionBinding : creates, returns, and reads mirror
     useEntityAnimation --> EntityPlaybackApi : creates and returns stable facade
     useEntityAnimation --> EntityMotionProps : returns current snapshot
+    EntityMotionBinding *-- EntityPlaybackApi : creates and owns stable facade
     EntityMotionBinding *-- EntityMotionProps : owns confirmed-transform mirror
-    useEntity --> useBindMotionTarget : calls
-    useBindMotionTarget --> EntityMotionBinding : calls internal bind and unbind
-    useBindMotionTarget --> SpatialEntity : receives target
+    useEntity --> EntityMotionBinding : calls internal bind and unbind
+    useEntity --> SpatialEntity : resolves target
     SpatializedPlaybackApi <|-- EntityPlaybackApi : extends
     EntityPlaybackApi <|.. EntityAnimationObject : implements
     EntityPlaybackApi --> EntityMotionBinding : facade delegates
@@ -551,34 +564,34 @@ classDiagram
 
 #### State-event Mapping
 
-Core `EntityAnimationObject` directly consumes native `EntityMotionStateChangedMsg`, maps native actions to its own state and `onXXX` debug listeners, and lets React `EntityMotionBinding` update user callbacks and `entityProps`:
+Core `EntityAnimationObject` directly consumes one `EntityMotionStateChangedMsg` shape: `playState` updates state, while optional `callbackAction` plus complete `values` update callbacks and `entityProps`.
 
-| native action | mapped user callback | updates entityProps |
+| scenario | `playState` | `callbackAction` / callback |
 |---|---|---|
-| `start` | `onStart` | yes (once after Native accepts the fresh-play start pose, without waiting for delay to end) |
-| `complete` | `onComplete` | yes (end state) |
-| `finish` | `onComplete` | yes (end state) |
-| `stop` | `onStop` | yes (current transform) |
-| `reset` | `onReset` | yes (starting transform) |
-| `pause` | playback state change | no |
+| fresh play | `running` | `start` / `onStart` |
+| resume after pause | `running` | — |
+| pause | `paused` | — |
+| natural completion or `finish()` | `finished` | `complete` / `onComplete` |
+| stop | `idle` | `stop` / `onStop` |
+| reset | `idle` | `reset` / `onReset` |
 
-Event `values` use the `EntityMotionProps` shape with `position`, `rotation`, and `scale`. Because `set` does not change playback state, it does not appear in this table; Core reads the merged confirmed transform from `SetEntityAnimationResult.values` and updates `entityProps`. Errors do not enter state events; Core triggers `onError` from the dedicated `EntityAnimationErrorMsg`. Animation-object creation or pose-handoff failure additionally clears `entityProps` and terminates the current binding lifecycle; other errors preserve the current `entityProps`.
+`values` contain complete `position`, `rotation`, and `scale`. `set` updates `entityProps` from `SetEntityAnimationResult.values`; `EntityAnimationErrorMsg` triggers `onError`.
 
 ### 5.2 Core SDK
 
 - **Target creation entry:** `SpatialEntity.createAnimation(config)` uses its own id, performs Entity-specific normalization and validation, sends `CreateEntityAnimation`, and returns an `EntityAnimationObject`. Ordinary `SpatializedElement.createAnimation(config)` still returns `AnimationObject`.
-- **Playback interfaces:** the existing `SpatializedPlaybackApi` keeps common playback methods and state and does not contain `set`; `EntityPlaybackApi extends SpatializedPlaybackApi` and adds only `set(EntityTransformUpdate)`.
-- **Animation objects:** `AnimationObject extends SpatialObject implements SpatializedPlaybackApi`; `EntityAnimationObject extends SpatialObject implements EntityPlaybackApi`. The two concrete classes do not inherit from each other. `EntityAnimationObject` directly uses the `id` inherited from `SpatialObject`, privately stores the public `config` and normalized `timeline`, and exposes `onStart`, `onComplete`, `onStop`, `onReset`, and `onError` debug-listener methods aligned with React callbacks. Both `finish` and natural completion trigger `onComplete`.
-- **Types and functions:** Core defines entity-motion types, `EntityTransformUpdate`, `EntityMotionProps`, the property allowlist, normalization and validation functions, and the internal canonical timeline.
+- **Playback interfaces:** the existing `SpatializedPlaybackApi` keeps common playback methods and state and does not contain `set`; `EntityPlaybackApi extends SpatializedPlaybackApi` and adds only `set(EntityMotionPatch)`.
+- **Animation objects:** `AnimationObject` and `EntityAnimationObject` implement their respective playback interfaces without inheriting from each other. `EntityAnimationObject` uses `SpatialObject.id`, stores the committed config, canonical timeline, and execution revision, and exposes `update(config)` plus `onXXX` debug listeners. Both `finish` and natural completion fire `onComplete`.
+- **Types and functions:** Core defines entity-motion types, `EntityMotionPatch` (internal, not publicly exported), `EntityMotionProps`, the property allowlist, normalization and validation functions, and the internal canonical timeline.
 
-The `onXXX` methods on `EntityAnimationObject` only register observers; they send no control commands and do not change animation configuration or the execution signature. Their parameters align with React callbacks:
+The `onXXX` methods on `EntityAnimationObject` only register observers; they send no control or update commands and do not change animation configuration. Their parameters align with React callbacks:
 
 ```text
 onStart(listener: (values: EntityMotionProps) => void)
 onComplete(listener: (values: EntityMotionProps) => void)
 onStop(listener: (values: EntityMotionProps) => void)
 onReset(listener: (values: EntityMotionProps) => void)
-onError(listener: (error: SpatializedPlaybackError) => void)
+onError(listener: (error: EntityPlaybackError) => void)
 ```
 
 State events trigger the first four methods, while the dedicated error event triggers `onError`. `pause` only updates playback state, so there is no `onPause`.
@@ -600,14 +613,13 @@ classDiagram
         }
         class EntityPlaybackApi {
             <<interface>>
-            +set(update EntityTransformUpdate)
+            +set(update EntityMotionPatch)
         }
         class SpatialEntity {
             +createAnimation(config) EntityAnimationObject
         }
         class EntityMotionNormalizer {
             +normalizeEntityMotionConfig(config)
-            +validateEntityMotionConfig(tracks)
         }
         class EntityMotionTimelinePayload {
             +duration number
@@ -618,14 +630,16 @@ classDiagram
         }
         class EntityAnimationObject {
             +id string
-            -config EntityMotionConfig
             -timeline EntityMotionTimelinePayload
+            -executionRevision number
+            +isDestroyed boolean
             +play()
             +pause()
             +stop()
             +reset()
             +finish()
-            +set(update EntityTransformUpdate)
+            +update(config EntityMotionConfig)
+            +set(update EntityMotionPatch)
             +onStart(callback)
             +onComplete(callback)
             +onStop(callback)
@@ -635,6 +649,7 @@ classDiagram
         class CreateEntityAnimationJSBCommand
         class ControlEntityAnimationJSBCommand
         class SetEntityAnimationJSBCommand
+        class UpdateEntityAnimationJSBCommand
     }
     SpatializedPlaybackApi <|-- EntityPlaybackApi : extends
     SpatialObject <|-- EntityAnimationObject
@@ -646,11 +661,12 @@ classDiagram
     SpatialEntity --> CreateEntityAnimationJSBCommand : sends create command
     EntityAnimationObject --> ControlEntityAnimationJSBCommand : sends control command
     EntityAnimationObject --> SetEntityAnimationJSBCommand : sends set command
+    EntityAnimationObject --> UpdateEntityAnimationJSBCommand : sends update command
 ```
 
 #### JSB Protocol
 
-Core defines Entity-specific wire contracts for create, control, set, state, and error messages. These protocols do not depend on the Spatialized Element animation protocol.
+Core defines Entity-specific wire contracts for create, in-place update, control, set, state, and error messages. These protocols do not depend on the Spatialized Element animation protocol.
 
 ##### Create animation command
 
@@ -667,6 +683,22 @@ CreateEntityAnimationResult {
 }
 ```
 
+##### In-place animation update command
+
+```text
+UpdateEntityAnimation {
+  id: string
+  timeline: EntityMotionTimelinePayload
+}
+
+UpdateEntityAnimationResult {
+  values: EntityMotionProps
+  revision: number
+}
+```
+
+A successful reply means the candidate execution definition has committed on the same Native object. Core only then replaces its current config and timeline snapshots and updates `entityProps` from `values`. A failed reply does not commit the candidate definition.
+
 ##### Control animation command
 
 ```text
@@ -676,12 +708,14 @@ ControlEntityAnimation {
 }
 ```
 
+A successful control reply uses an empty payload to confirm current-command completion. Core submits each command without waiting for earlier replies, while `EntityMotionStateChangedMsg` updates public `playState`.
+
 ##### Set animation transform command
 
 ```text
 SetEntityAnimation {
   id: string
-  update: EntityTransformUpdate
+  update: EntityMotionPatch
 }
 
 SetEntityAnimationResult {
@@ -689,7 +723,7 @@ SetEntityAnimationResult {
 }
 ```
 
-`api.set` uses the dedicated set command and accepts a deeply sparse `EntityTransformUpdate`. Native merges the update, changes the Entity, and returns its complete current transform through `SetEntityAnimationResult`; Core updates `entityProps` from `values` without a state event. Calls before binding or before native animation-object creation are classified as no-ops, log a console warning, and are not stashed as later commands. JSB does not expose `resume`; a `play` received while paused makes the native animation object resume its current controller internally.
+`api.set` uses the dedicated set command and accepts a deeply sparse `EntityMotionPatch`. Native merges the update, changes the Entity, and returns its complete current transform through `SetEntityAnimationResult`; Core updates `entityProps` from `values` without a state event. Calls before binding or before native animation-object creation are classified as no-ops, log a console warning, and are not stashed as later commands. JSB does not expose `resume`; a `play` received while paused makes the Native animation object resume an unchanged current controller or start the saved new definition after a paused update.
 
 ```text
 type EntityMotionProps = {
@@ -698,14 +732,14 @@ type EntityMotionProps = {
   scale?: Vec3
 }
 
-type EntityTransformUpdate = {
+type EntityMotionPatch = {
   position?: Partial<Vec3>
   rotation?: Partial<Vec3>
   scale?: Partial<Vec3>
 }
 ```
 
-`EntityTransformUpdate` represents any deep subset of `EntityMotionProps`. Native merges the supplied axes. Confirmed values in playback state events and `SetEntityAnimationResult.values` both contain complete `position`, `rotation`, and `scale`, each as a complete `Vec3`.
+`EntityMotionPatch` represents any deep subset of `EntityMotionProps`. Native merges the supplied axes. Confirmed values in playback state events and `SetEntityAnimationResult.values` both contain complete `position`, `rotation`, and `scale`, each as a complete `Vec3`.
 
 ##### State-changed event
 
@@ -715,9 +749,9 @@ type EntityMotionPlayState = 'queued' | EntityMotionNativePlayState
 
 interface EntityMotionStateChangedDetail {
   id: string
-  action:
-    | 'start' | 'complete' | 'pause' | 'stop' | 'reset' | 'finish'
+  revision: number
   playState: EntityMotionNativePlayState
+  callbackAction?: 'start' | 'complete' | 'stop' | 'reset'
   values?: EntityMotionProps
 }
 
@@ -727,9 +761,9 @@ interface EntityMotionStateChangedMsg {
 }
 ```
 
-`values` use the entity target's `EntityMotionProps`, containing `position`, `rotation`, and `scale`.
+Every playback-state confirmation or lifecycle callback uses the same `EntityMotionStateChangedMsg`. `revision` and `playState` are always present; messages that trigger a user callback carry both `callbackAction` and complete `values`. Explicit `finish()` and natural completion both use `callbackAction: 'complete'`. Pause and resume update state through messages containing only `id`, `revision`, and `playState`.
 
-`queued` is a React binding state while commands await native animation-object creation. The native creation reply confirms the initial `idle` state. On creation failure, the React binding settles the public state to `idle` and terminates the current binding lifecycle. Native control replies and state events then confirm `idle`, `running`, `paused`, or `finished`. During a healthy binding lifecycle, native replies and state events are the exclusive source of public playback state. The public `finished` flag is derived from `playState === 'finished'` and is not carried in the JSB state event.
+`queued` is a React binding state while commands await native animation-object creation. The native creation reply confirms the initial `idle` state. On creation failure, the React binding settles the public state to `idle` and terminates the current binding lifecycle. Later Native state messages confirm `idle`, `running`, `paused`, or `finished`. During a healthy binding lifecycle, the creation reply and Native state messages are the exclusive sources of public playback state. The public `finished` flag is derived from `playState === 'finished'`.
 
 ##### Entity error event and error type
 
@@ -738,7 +772,7 @@ State events do not carry errors. Asynchronous failures after Native accepts a c
 ```text
 interface EntityAnimationErrorDetail {
   id: string
-  error: SpatializedPlaybackError
+  error: EntityPlaybackError
 }
 
 interface EntityAnimationErrorMsg {
@@ -747,10 +781,8 @@ interface EntityAnimationErrorMsg {
 }
 ```
 
-`SpatializedPlaybackError` does not repeat the command name. Core already owns the current command context while processing a reply, and the corresponding animation object receives asynchronous errors. The public shape exposes a stable code and readable reason:
-
 ```text
-type SpatializedPlaybackError = {
+type EntityPlaybackError = {
   code:
     | 'TARGET_NOT_FOUND'
     | 'UNSUPPORTED_TARGET'
@@ -766,10 +798,10 @@ type SpatializedPlaybackError = {
 The discovery phase determines error delivery:
 
 - Synchronous Core validation of public config and method arguments throws the built-in `Error` and does not trigger `onError`.
-- A JSB command failure returns through that command's reply. Core converts the reply to one `SpatializedPlaybackError` and triggers `onError`.
+- A JSB command failure returns through that command's reply. Core converts the reply to one `EntityPlaybackError` and triggers `onError`.
 - An asynchronous native failure after a successful command reply is reported exactly once through `entityanimationerror`. Core `EntityAnimationObject` consumes the event and triggers `onError`.
 - One failure chooses one outlet. State events never carry errors, preventing duplicate `onError` delivery.
-- Animation-object creation or pose-handoff failure terminates the current binding lifecycle. Other asynchronous playback errors preserve their existing state semantics.
+- Initial animation-object creation failure terminates the current binding lifecycle. Config-update failure preserves the old execution and current binding lifecycle; other asynchronous playback errors preserve their existing state semantics.
 - Calling `api.set` during active playback is an expected state rejection and remains warning + no-op without an error event or `onError`.
 
 Users handle codes as follows:
@@ -782,7 +814,7 @@ Users handle codes as follows:
 | `INVALID_TIMELINE` | Correct timeline times, properties, keyframes, or values. Core normally catches public-config errors synchronously. |
 | `COMPILATION_FAILED` | Simplify or adjust the keyframe combination Native cannot compile and record `reason` for diagnosis. |
 | `INVALID_CONTROL_STATE` | Wait for an allowed state or stop playback first. The SDK converts active-playback `set` to warning + no-op. |
-| `INVALID_SET_VALUES` | Correct `EntityTransformUpdate` so it contains at least one valid transform scalar. |
+| `INVALID_SET_VALUES` | Correct `EntityMotionPatch` so it contains at least one valid transform scalar. |
 
 #### Types, normalization, and validation
 
@@ -872,9 +904,9 @@ supports('useEntityAnimation')
 
 ### 5.3 Native
 
-- **Command entry:** `SpatialScene` separately receives `CreateEntityAnimation`, `ControlEntityAnimation`, and `SetEntityAnimation`. All three commands look up their corresponding `SpatialObject` by `id`.
+- **Command entry:** `SpatialScene` separately receives `CreateEntityAnimation`, `UpdateEntityAnimation`, `ControlEntityAnimation`, and `SetEntityAnimation`. All four commands look up their corresponding `SpatialObject` by `id`.
 - **Execution subsystem:** after create resolves a target Entity, it calls `entity.createAnimation(config)`. Animation objects reuse `SpatialScene.spatialObjects` and the `SpatialObject` lifecycle, while `EntityMotionAnimationObject` owns per-object control and fresh/resume decisions.
-- **Confirmed-value reporting:** playback lifecycle points report confirmed values through state events; `set` reports confirmed values through `SetEntityAnimationResult`.
+- **Confirmed-value reporting:** playback lifecycle points report confirmed values through state events; `update` and `set` report confirmed values through `UpdateEntityAnimationResult` and `SetEntityAnimationResult`, respectively.
 - **Error reporting:** asynchronous failures after a successful command reply use `entityanimationerror` rather than the state event.
 
 #### Class Diagram
@@ -889,6 +921,7 @@ classDiagram
         +onCreateEntityAnimation()
         +onControlEntityAnimation()
         +onSetEntityAnimation()
+        +onUpdateEntityAnimation()
         +findSpatialObject(id)
     }
     class SpatialEntity {
@@ -896,20 +929,21 @@ classDiagram
     }
     class EntityMotionAnimationObject {
         +id
-        +target SpatialEntity
+        +targetEntityId String
         +timeline EntityMotionTimelinePayload
         +playState
-        +controller
+        +confirmedValues EntityMotionPose
+        +executionRevision Int
+        -playbackController AnimationPlaybackController
+        -completionSubscription Cancellable
+        -preparedPausedPlayback PreparedPlayback
         +play()
-        -startFresh(resource)
-        -resumeCurrent()
         +pause()
         +stop()
         +reset()
         +finish()
+        +update(timeline)
         +set(update)
-        -emitStateChanged()
-        -emitError()
     }
     class EntityMotionTimelineCompiler {
         +compile(payload, baseline)
@@ -948,10 +982,10 @@ classDiagram
 **Responsibilities per class:**
 
 - **Target entity (`SpatialEntity`):** `createAnimation(config)` fallback-validates the create payload, constructs an animation object that stores the target and canonical timeline, and returns it to `SpatialScene` for registration. The Entity owns no animation registry or playback state.
-- **Entity animation object (`EntityMotionAnimationObject`):** represents one entity animation, directly uses its inherited `SpatialObject.id`, and stores the target entity, canonical timeline, playback state, current playback controller, and resource. It owns every per-object state transition. `play()` calls private `resumeCurrent()` while paused; in another fresh-play-eligible state it reads the baseline, invokes the compiler, and starts through private `startFresh(resource)`. Start-pose confirmation and playback lifecycle end states use private `emitStateChanged()` to emit state events. An accepted `set` directly returns `SetEntityAnimationResult` with the complete confirmed transform. Private `emitError()` emits the dedicated asynchronous error event.
+- **Entity animation object (`EntityMotionAnimationObject`):** stores the target id and weak target reference, canonical timeline, confirmed pose, execution revision, compiled timeline, baseline, playback controller, completion subscription, and paused prepared playback. `update()` prepares and commits a new definition, then retargets or stores a paused definition according to state. `play()` resumes an unchanged paused run or starts the updated run from its saved pose. Controller identity, execution revision, and the completion gate reject stale or duplicate completion. The object emits events through `emitStateChanged()` and `emitError()`. `update` and `set` return the complete confirmed pose.
 - **Timeline compiler (`EntityMotionTimelineCompiler`):** on each fresh play, accepts the canonical timeline and that run's baseline and slices and compiles them into one chained whole-transform RealityKit animation resource.
 - **Bridge types (`EntityMotionBridgeTypes`):** carry the native bridge encode/decode structures, including timeline data, control values, confirmed values, and errors. If the command types are sufficient, this part may exist as a few scattered structs.
-- **Playback parameter mapping (`EntityMotionTiming`):** maps the single easing already resolved for each segment, plus delay, loop, and playback rate, to the RealityKit representation; all four built-in easings map directly.
+- **Playback parameter mapping (`EntityMotionTiming`):** maps the single easing already resolved for each segment, schedules one global delay before motion, and applies loop and playback rate to the motion sequence; all four built-in easings map directly.
 - **Transform decomposition and merge (`EntityMotionTransformValues`):** responsible for decomposing the confirmed value from the entity transform, merging the sparse `api.set` update onto the committed baseline, and converting between Euler degrees and the RealityKit rotation representation.
 
 #### JSB Command Processing
@@ -969,7 +1003,7 @@ Processing rules:
 - After create succeeds, `SpatialScene` adds the animation object to global `spatialObjects` as a `SpatialObject`; the success reply returns that object's `id` and confirms its initial `idle` state.
 - Control commands look up an `EntityMotionAnimationObject` by `id` in global `spatialObjects`. The set command uses the same lookup and separately invokes `set(update)`.
 - Synchronous command errors return through the JSB reply; only asynchronous playback failures after command acceptance return through one `entityanimationerror`.
-- A successful JSB reply is returned only after the command's synchronous native state transition and transform commit have completed. When a playback control command emits a state event, Native emits the event before resolving the success reply. A set command returns the Entity's complete current transform after the update and emits no state event. The binding queue uses reply settlement as the boundary for dispatching the next command.
+- When playback state changes, Native first sends a state message carrying the latest `playState`, then returns the successful control reply.
 - When fresh-play compilation fails, the control command fails and the animation remains inactive.
 
 The successful create reply carries only the animation object's `id` and confirms an existing object in `idle`; a failed reply confirms that no object was created and lets the binding settle to `idle`, clear pending commands, and dispatch the classified error.
@@ -978,7 +1012,7 @@ Native accepts and commits `api.set` while inactive. While active, it keeps the 
 
 #### Timeline compilation
 
-Compilation is triggered by `EntityMotionAnimationObject.play()` on every fresh play: after the command is accepted and before entering delay / running, it reads the current transform as that run's baseline, slices the canonical timeline into full-pose nodes, and compiles the playback resource. Animation creation only validates and stores the canonical timeline. A paused `play()` resumes the current controller without reading the baseline, compiling, or producing a new `start`; loops within one run reuse that run's resource.
+Compilation is triggered by `EntityMotionAnimationObject.play()` on every fresh play: after the command is accepted and before entering delay / running, it reads the current transform as that run's baseline, slices the canonical timeline into full-pose nodes, and compiles the playback resource. Animation creation only validates and stores the canonical timeline. In an unchanged paused state, `play()` resumes the current controller without reading the baseline, compiling, or producing a new `start`; after a paused update, `play()` starts a new execution from the saved pose and produces a new `start`; loops within one run reuse that run's resource.
 
 ##### Input: internal timeline
 
@@ -1008,7 +1042,7 @@ The whole timeline maps to a single bind target — the entire `transform`. Take
 
 **Per segment — expressed with `FromToByAnimation<Transform>`.** Each segment's `from` / `to` are the full poses at the two adjacent slice points, `duration` is the segment length, `timing` is the single easing Core already resolved for that segment, and `bindTarget` is fixed to `.transform`. The visionOS animation binding granularity is the whole `.transform`, which is the root reason for choosing full-pose slicing.
 
-**Chaining — connect end to end with `sequence`.** The full-pose segment animations are chained in time order via `AnimationResource.sequence(with:)` into a single animation, so each segment carries its own easing yet plays continuously. A timeline with only a start and an end frame becomes one `FromToByAnimation<Transform>`. `delay` / `speed` / `loop` act at the top of this chained animation.
+**Chaining — connect end to end with `sequence`.** The full-pose segment animations are chained in time order via `AnimationResource.sequence(with:)` into one motion sequence, so each segment carries its own easing yet plays continuously. A timeline with only a start and an end frame becomes one `FromToByAnimation<Transform>`. Each fresh execution schedules one global `delay` before that motion sequence. `speed` and `loop` apply to the motion sequence only, so speed does not scale the delay and a loop does not repeat it.
 
 Consider an example (`position.y` has 3 keyframes, `rotation.y` has only start and end, the slice-point union is `0 / 0.6s / 1.2s`, giving 2 segments):
 
@@ -1017,20 +1051,18 @@ flowchart TB
     Slice["slice times = union of channels' keyframe times<br/>{0, 0.6s, 1.2s} → 2 segments"]
     S0["segment 0 FromToBy<br/>from=full pose@0, to=full pose@0.6s, easeOut"]
     S1["segment 1 FromToBy<br/>from=full pose@0.6s, to=full pose@1.2s, linear"]
-    Clip["whole-transform animation<br/>+ top-level delay / speed / loop"]
+    Clip["fresh execution<br/>global delay once → speed-scaled / looped motion sequence"]
 
     Slice --> S0
     S0 -->|sequence| S1
     S1 --> Clip
 ```
 
-Each segment carries a full pose and joins the chain in time order; `delay` / `speed` / `loop` act at the top of the chained animation.
-
 ##### Output: the controllable playback object and sample code
 
 The final compilation output is the controllable playback object. Reusing the example above (2 full-pose segments), the following shows it on visionOS and picoOS: each segment compiles into a full-pose `FromToBy`, chained via `sequence` into one animation resource, then handed to the engine — obtaining a playback controller that can pause / resume / stop / change speed, i.e. a "controllable playback object." Both platforms bind the whole transform, so the code lines up.
 
-Platform capability validation on visionOS and picoOS is recorded through the Section 8 acceptance tasks, covering whole-transform binding, multi-segment sequence, per-segment easing, top-level delay / speed / loop, controller pause / internal resume / stop, and completion. The snippets below show resource construction and controller shape only; before handing the resource to the engine, `EntityMotionTiming` applies the top-level delay / speed / loop settings once to the whole sequence rather than repeating them on each segment.
+VisionOS platform capability validation is recorded in Section 8 of `tasks.md`. PicoOS acceptance has moved outside this change. The snippets below show resource construction and controller shape only.
 
 visionOS (RealityKit / Swift):
 
@@ -1172,15 +1204,15 @@ fun playSequencedTransformAnimation(entity: Entity): AnimationPlaybackController
 2. **Time range:** `duration` must be positive; each keyframe's `at` must fall within `[0, duration]`.
 3. **Ordering and duplicates:** each track's keyframes are sorted non-decreasing by `at`; each property maps to one unique track.
 4. **Slice times are the union across channels:** take the union of all channels' keyframe times as the timeline's slice points; adjacent slice points form a segment. For example `position.y` at `0, 0.6, 1.2` and `rotation.y` at `0, 1.2` give the union `0, 0.6, 1.2`, cut into `[0, 0.6]` and `[0.6, 1.2]`.
-5. **Each slice point samples a full pose; missing frames fall back per channel:** every slice point must provide a complete `position` / `rotation` / `scale`. A channel with a keyframe gap derives the slice-point value solely through linear interpolation in time between its own numeric keyframes. The span before the channel's first keyframe falls back to the native baseline at playback start, and the span after its last keyframe holds the last value. Components absent from the config, such as `scale.*`, are sampled at the baseline and retain that value during playback—the animation therefore owns the entire transform while it plays.
+5. **Sparse channel completion:** the compiler generates a full pose at every slice point. Values interpolate linearly between adjacent keyframes; a late first keyframe interpolates from the baseline at time zero; values after the final keyframe hold its value; remaining components use the baseline throughout playback.
 6. **Serial chaining of full poses:** adjacent slice points form a full-pose `FromToByAnimation<Transform>`, and the segments are chained in time order via `sequence` into one whole-transform animation, all bound to the whole transform (`bindTarget: .transform`); see "Slicing the timeline into full-pose nodes and chaining them."
 7. **Rotation:** `rotation.*` input is Euler degrees; at compile time it is converted to the rotation representation RealityKit requires, and RealityKit applies shortest-path spherical interpolation. If a rotation channel's single-frame increment reaches or exceeds 180°, or spans multiple axes, the actual path may differ from per-axis intuition; users define a specific multi-turn or multi-axis path through explicit intermediate keyframes.
 8. **Scale:** `scale.*` must be non-negative; an invalid scale fails outright.
 9. **One easing per segment:** public-authoring `timingFunction` belongs to a global timeline node. In v1, Core duplicates that global value into the existing track/keyframe fields and guarantees one consistent timing value at each `at`; Native accepts this consistent global-timing form. Native resolves one timing value for each adjacent pair in the keyframe-time union and applies it exactly once when constructing the final whole-transform segment. Slice-point value sampling uses linear time interpolation, while final segment playback applies easing. The closed easing enum is `linear` / `easeIn` / `easeOut` / `easeInOut`, with every value mapping directly to a RealityKit built-in curve.
-10. **Loop / playback rate / delay:** these playback parameters live at the top of the timeline and apply uniformly to the whole chained animation, executed by the RealityKit playback layer. Loops within one fresh play reuse that run's resource without reading a new baseline or recompiling on every iteration.
+10. **Delay, playback rate, and loop:** each fresh execution runs the delay once; playback rate and loop apply only to the motion sequence. Loops reuse the current run's resource.
 11. **Explicit failure:** when a segment is outside RealityKit's expression range, the fresh-play control command must fail and leave the animation inactive.
 
-The cross-platform capability combinations above depend on the Section 8 acceptance records; this design does not introduce an SDK-managed segment-queue fallback. Acceptance records include platform versions, SDK versions, fixtures, executed commands, and results.
+The visionOS capability combinations above depend on the acceptance records in Section 8 of `tasks.md`; picoOS acceptance has moved outside this change. This design does not introduce an SDK-managed segment-queue fallback. Acceptance records include platform versions, SDK versions, fixtures, executed commands, and results.
 
 #### Transform decomposition and confirmed-value reporting
 
@@ -1196,11 +1228,12 @@ type EntityMotionProps = {
 
 Decomposition rules:
 
+- `start`, `stop`, `reset`, `finish`, natural completion, and successful `set` first complete their corresponding transform commit and then read the Entity's complete current transform again. That readback is the shared source for state-message `values`, callback values, and `SetEntityAnimationResult.values`.
 - `position` comes from the translation part of the native transform.
 - `scale` comes from the scale part of the native transform.
 - `rotation` uses Euler degrees in the Entity's parent-relative local, right-handed coordinate system, where +X points right, +Y points up, and +Z points toward the viewer. Composition uses ZYX intrinsic rotation, equivalent to XYZ extrinsic rotation, with matrix order `Rz × Ry × Rx`. Confirmed native rotation is decomposed from its rotation matrix with `y` in `[-90°, 90°]` and `x` / `z` in `(-180°, 180°]`; at gimbal lock, `z` is fixed to `0°` and `x` is derived from the matrix. Equivalent quaternions therefore produce the same Euler result. A sparse `api.set` rotation update merges onto this canonical complete Euler baseline before recomposition.
 - After decomposition, report the complete committed transform independently of the animation config and the fields written by `api.set`.
-- Both callback values and `entityProps` use `EntityMotionProps`; every confirmed value contains complete `position`, `rotation`, and `scale` values, each as a complete `Vec3`. `api.set(update)` accepts a deeply sparse `EntityTransformUpdate`. For example, after axis-wise merging `set({ position: { y: 0.3 } })`, the confirmed result contains the complete position, rotation, and scale.
+- Both callback values and `entityProps` use `EntityMotionProps`; every confirmed value contains complete `position`, `rotation`, and `scale` values, each as a complete `Vec3`. `api.set(update)` accepts a deeply sparse `EntityMotionPatch`. For example, after axis-wise merging `set({ position: { y: 0.3 } })`, the confirmed result contains the complete position, rotation, and scale.
 
 #### Native Internal Sequences
 
@@ -1244,29 +1277,30 @@ sequenceDiagram
         Obj->>Obj: enable whole-transform write protection
         Obj->>RK: commit complete from / 0% start pose
         Obj->>RK: read Entity's complete current transform
-        Obj->>Event: emit start with complete current values
         Obj->>RK: create controller and enter delay / running
         RK-->>Obj: playback controller
+        Obj->>Event: emit running + callbackAction=start + complete current values
     else resume after pause
         Obj->>Obj: private resumeCurrent()
-        Obj->>RK: resume current controller without start
+        Obj->>RK: resume current controller and preserve current onStart count
+        Obj->>Event: emit state message carrying only running
     end
     RK-->>Obj: complete / end-state callback
     Obj->>Obj: read and decompose Entity's complete current transform
     Obj->>Obj: remove whole-transform write protection
-    Obj->>Event: emit complete, with complete current value
+    Obj->>Event: emit finished + callbackAction=complete + complete current value
 ```
 
-Create only stores the canonical timeline; `SpatialScene` registers the animation object and returns its `id`. Each fresh play reads the latest baseline and compiles that run's RealityKit resource, then commits and confirms the complete start pose. `start` and the first `entityProps` update happen after that confirmation without waiting for delay to end. A `play` after pause reuses the current resource and controller without reading the baseline, compiling, or producing another `start`.
+Create only stores the canonical timeline; `SpatialScene` registers the animation object and returns its `id`. Each fresh play reads the latest baseline and compiles that run's RealityKit resource, then commits and confirms the complete start pose. `start` and the first `entityProps` update happen after that confirmation without waiting for delay to end. With no config update, a `play` after pause reuses the current resource and controller without reading the baseline, compiling, or producing another `start`; after a paused update it follows the new-execution path.
 
 State-command matrix:
 
 | Native state | `play` | `pause` | `stop` | `reset` | `finish` | `set` |
 |---|---|---|---|---|---|---|
-| `idle` | fresh play → `running`; emit `start` once after start-pose confirmation | keep `idle` | keep `idle` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | commit update; keep `idle` |
-| `running` (including delay) | keep current run | → `paused`; emit `pause` | commit current pose → `idle`; emit `stop` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | keep current run; warning receipt |
-| `paused` | resume current controller → `running` | keep `paused` | commit current pose → `idle`; emit `stop` | commit start pose → `idle`; emit `reset` | commit end pose → `finished`; emit `finish` | keep paused run; warning receipt |
-| `finished` | fresh play → `running`; emit `start` once after start-pose confirmation | keep `finished` | keep `finished` | commit start pose → `idle`; emit `reset` | keep `finished` | commit update; keep `finished` |
+| `idle` | fresh play → `running`; emit `callbackAction: start` after start-pose confirmation | keep `idle` | keep `idle` | commit start pose → `idle`; emit `callbackAction: reset` | commit end pose → `finished`; emit `callbackAction: complete` | commit update; keep `idle` |
+| `running` (including delay) | keep current run | → `paused`; emit paused state message | commit current pose → `idle`; emit `callbackAction: stop` | commit start pose → `idle`; emit `callbackAction: reset` | commit end pose → `finished`; emit `callbackAction: complete` | keep current run; warning receipt |
+| `paused` | resume current controller → `running`; emit running state message | keep `paused` | commit current pose → `idle`; emit `callbackAction: stop` | commit start pose → `idle`; emit `callbackAction: reset` | commit end pose → `finished`; emit `callbackAction: complete` | keep paused run; warning receipt |
+| `finished` | fresh play → `running`; emit `callbackAction: start` after start-pose confirmation | keep `finished` | keep `finished` | commit start pose → `idle`; emit `callbackAction: reset` | keep `finished` | commit update; keep `finished` |
 
 For `reset` and `finish`, an existing run supplies its confirmed start and end poses. Before the first run, the compiler reads the current native transform as the baseline on demand and computes the configured start or end pose. `finish` always commits the configured `to` / `100%` pose for ordinary, reset-loop, and reverse-loop playback.
 
@@ -1287,7 +1321,7 @@ sequenceDiagram
     alt found and state allows
         Scene->>Obj: pause()
         Obj->>RK: controller pause
-        Obj->>Event: emit pause, with playback state
+        Obj->>Event: emit state message carrying only paused
         Scene-->>JSB: success
     else animation lookup failure / illegal state
         Scene-->>JSB: fail
@@ -1314,7 +1348,7 @@ sequenceDiagram
         Obj->>RK: commit target transform with zero duration
         Obj->>Obj: read and decompose Entity's complete current transform
         Obj->>Obj: remove whole-transform write protection
-        Obj->>Event: emit stop/reset/finish, with complete current value
+        Obj->>Event: stop/reset carry their callbackAction; finish carries callbackAction=complete; all carry complete current values
         Scene-->>JSB: success
     else id is absent
         Scene-->>JSB: fail(ANIMATION_NOT_FOUND)
@@ -1354,19 +1388,19 @@ sequenceDiagram
 
 Pause reuses the compiled whole-transform chain, controls the current playback controller, and keeps whole-transform write protection active. Stop / reset / finish stop that controller, commit the target pose with zero duration, and remove the protection before reporting the resulting complete transform. Natural completion performs the same removal before its `complete` event. While inactive, `set` merges the sparse update onto the committed transform, commits it with zero duration, and returns the Entity's complete current transform through the success reply. `set` preserves the existing `playState` and emits no state event.
 
-A native Entity animation object has the same lifecycle as one target binding. When the target is destroyed, `SpatialScene` cascades destruction to associated animations through the global `SpatialObject` lifecycle and retains no invalid object.
+A native Entity animation object has the same lifecycle as one target binding. When the target is destroyed, `SpatialScene` cascades destruction to associated animations through the global `SpatialObject` lifecycle and sends `objectdestroy` for each animation id. Core consumes that message, marks the animation object destroyed, and unregisters the event receiver for that animation id. Later playback completes locally as a no-op; `set` logs a warning and completes locally as a no-op while preserving the existing `onError` count. In-flight commands continue to use the `ANIMATION_NOT_FOUND` race result.
 
-Boundary constraint: `SpatialScene` owns global `spatialObjects`, create-target lookup, animation-object lookup, the three Entity command replies, and the `SpatialObject` lifecycle. `SpatialEntity.createAnimation(config)` creates Entity animation objects; `EntityMotionAnimationObject` owns per-object compilation, playback state, controls, confirmed values, event emission, and resource release. Entity and Element paths keep separate protocols while sharing the global `spatialObjects` lifecycle.
+Boundary constraint: `SpatialScene` owns global `spatialObjects`, create-target lookup, animation-object lookup, the four Entity command replies, and the `SpatialObject` lifecycle. `SpatialEntity.createAnimation(config)` creates Entity animation objects; `EntityMotionAnimationObject` owns per-object update, compilation, playback state, controls, confirmed values, event emission, and resource release. Entity and Element paths keep separate protocols while sharing the global `spatialObjects` lifecycle.
 
 ## 6. Risk Assessment
 
 | Risk | Mitigation |
 |---|---|
-| Platform capability validation lacks traceable records | Section 8 acceptance tasks record platform versions, SDK versions, fixtures, executed commands, and results |
-| Controller-scoped stop affects unrelated animations on the same Entity or descendants | Native cleanup stops only the controller held by the current `EntityMotionAnimationObject`; 8.4/8.5 cover unrelated animations remaining active |
-| Zero-duration pose commits affect unrelated animations or terminal state | The command matrix bounds commits for `stop` / `reset` / `finish` / `set`; 8.4/8.5 cover terminal commits |
+| Platform capability validation lacks traceable records | Section 8 of `tasks.md` records platform versions, SDK versions, fixtures, executed commands, and results |
+| Controller-scoped stop affects unrelated animations on the same Entity or descendants | Native cleanup stops only the controller held by the current `EntityMotionAnimationObject`; task 8.4 covers unrelated animations remaining active |
+| Zero-duration pose commits affect unrelated animations or terminal state | The command matrix bounds commits for `stop` / `reset` / `finish` / `set`; task 8.4 covers terminal commits |
 | Missing transform write protection lets React writes override active animation | `SpatialScene` checks the animating mask at the ordinary Entity transform update entry; stop, reset, finish, natural completion, unbind, and destruction remove the protection; 4.3/8.2 cover the behavior |
-| Continuing after animation-object creation or same-target pose-handoff failure creates ambiguous state | Report the failure through `onError`, terminate the current binding lifecycle, and clear the mirror and pending commands; 4.3a covers termination and explicit rebinding |
+| Config update fails after the old execution has already been damaged | Native completes every potentially failing candidate-preparation step before stopping the old controller; failure atomically preserves the old execution, and Section 9 covers RealityKit feasibility plus rollback tests |
 | Using `id` in both create requests and replies causes semantic confusion | Protocol direction fixes the meaning: request means target Entity id, reply means animation-object id; Core/native contract tests assert both |
 | State and error events report the same failure twice | Each failure chooses either a command reply or `entityanimationerror`; state events carry no errors |
-| The three Entity JSB commands drift between Core and Native | Bridge contract tests separately cover create, control, set, and both event types |
+| The four Entity JSB commands drift between Core and Native | Bridge contract tests separately cover create, update, control, set, and both event types |

@@ -33,7 +33,9 @@ jobs:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/setup@v2
+        with:
+          install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -82,7 +84,7 @@ jobs:
           set +e
           if ! command -v pnpm >/dev/null 2>&1; then
             corepack enable >/dev/null 2>&1 || true
-            corepack prepare pnpm@10.32.0 --activate >/dev/null 2>&1 || true
+            corepack prepare pnpm@11.25.0 --activate >/dev/null 2>&1 || true
           fi
           pnpm --filter autotest run post-test
           code=$?

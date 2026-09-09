@@ -47,7 +47,7 @@ export const GESTURE_KEYS = [
   'SpatialMagnifyEndEvent',
 ] as const
 
-export const ANIMATION_KEYS = ['useAnimation'] as const
+export const ANIMATION_KEYS = ['useAnimation', 'useEntityAnimation'] as const
 
 export const JS_SCENE_KEYS = [
   'useMetrics',

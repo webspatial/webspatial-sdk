@@ -8,6 +8,8 @@
 2. **动画结果回写(`entityProps`)**:Hook 会把动画的最终姿态交回给你,让物体在动画结束后稳稳停在终点。
 3. **绑定方式(`animation`)**:通过组件的 `animation` 属性把动画绑定到物体上。
 
+`useEntityAnimation` 保持为 experimental API,从 `@webspatial/react-sdk/experimental` 导入。
+
 > **几个基础名词**(下文会反复用到):
 > - **Entity**:场景里的一个 3D 物体,比如一个盒子 `<BoxEntity>`。
 > - **transform**:物体的空间姿态,由三部分组成——位置 `position`(单位:米)、旋转 `rotation`(单位:度)、缩放 `scale`(倍数,1 表示原始大小)。
@@ -36,7 +38,7 @@
 ## 快速上手:一个完整例子
 
 ```tsx
-import { useEntityAnimation } from '...'
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 
 function MyBox() {
   // 让盒子在 0.8 秒内向上移动 0.25 米,并放大到 1.1 倍
@@ -88,13 +90,8 @@ type EntityMotionProps = {
   scale?: Vec3
 }
 
+// SDK 内部类型,不从 package public entry 导出。
 type EntityMotionPatch = {
-  position?: Partial<Vec3>
-  rotation?: Partial<Vec3>
-  scale?: Partial<Vec3>
-}
-
-type EntityTransformUpdate = {
   position?: Partial<Vec3>
   rotation?: Partial<Vec3>
   scale?: Partial<Vec3>
@@ -109,7 +106,7 @@ type EntityMotionTimeline = {
   to?: EntityMotionFrame
 } & Partial<Record<`${number}%`, EntityMotionFrame>>
 
-type SpatializedPlaybackError = {
+type EntityPlaybackError = {
   code:
     | 'TARGET_NOT_FOUND'
     | 'UNSUPPORTED_TARGET'
@@ -135,11 +132,11 @@ type EntityMotionConfig = {
   onComplete?: (values: EntityMotionProps) => void
   onStop?: (values: EntityMotionProps) => void
   onReset?: (values: EntityMotionProps) => void
-  onError?: (error: SpatializedPlaybackError) => void
+  onError?: (error: EntityPlaybackError) => void
 }
 ```
 
-默认值为 `autoStart: true`、`timingFunction: 'easeInOut'`、`delay: 0`、`playbackRate: 1` 和 `loop: false`。包含 `timeline` 的 config 必须提供 `duration`;只有纯顶层 `from` / `to` 使用 0.3 秒默认值。非法 config 属于 programmer error,并同步抛错。
+默认值为 `autoStart: true`、`timingFunction: 'easeInOut'`、`delay: 0`、`playbackRate: 1` 和 `loop: false`。每次全新执行先等待一次全局 `delay`,再播放运动;`playbackRate` 和 `loop` 仅作用于该运动,因此延迟不随播放速率缩放,也不在循环边界重复。包含 `timeline` 的 config 必须提供 `duration`;只有纯顶层 `from` / `to` 使用 0.3 秒默认值。非法 config 属于 programmer error,并同步抛错。
 
 ### 最简写法:顶层 from / to(从一个姿态到另一个)
 
@@ -310,11 +307,29 @@ return (
 )
 ```
 
-**动画完成后**,`entityProps` 会更新为完整的终点姿态(`position`、`rotation`、`scale`)。Native animation 停止阻止普通 React transform 写入,组合后的 React 属性使物体保持在该姿态。动画对象创建或同一目标配置替换的姿态交接失败时,绑定清空该镜像并终止当前生命周期。
+**动画完成后**,`entityProps` 更新为完整终点姿态,组合后的 React 属性让物体保持该姿态。初次创建失败会清空 `entityProps`;配置更新失败会保留当前动画和 `entityProps`。
 
-**更新时机**:`entityProps` 不是每一帧都更新,只在这些关键节点更新:动画开始播放、完成、停止、重置、结束、`api.set` 写入成功,以及创建或交接失败时清空。
+**更新时机**:`entityProps` 在动画开始、完成、停止、重置、结束、配置更新成功或 `api.set` 成功时更新。初次创建失败时清空。
 
 > **注意**:在第一次播放、或第一次 `api.set` 成功之前,`entityProps` 可能是空的。不要在组件刚挂载时就假设它已经有值——要先播放一次动画,或成功调用一次 `api.set`,它才会有值。
+
+---
+
+## 播放过程中更新 config
+
+同一 Entity 的 config 变化会更新当前动画:
+
+| 更新时状态 | 行为 |
+|---|---|
+| `delay` 或 `running` | 立即从当前姿态重新定向,从头执行新延迟和完整时长 |
+| `paused` | 保持暂停;下次 `play` 从暂停姿态执行新时间轴 |
+| `idle` 或 `finished` | 保持当前状态;下次 `play` 使用新 config 的起点 |
+
+- 时间轴或播放参数变化都会触发重新定向。
+- 当前姿态临时作为本次执行的起点,避免跳变。后续 `reset` 和重新播放仍使用新 config 声明的起点。
+- 新时间轴从头执行。旧执行不触发 `onStop` 或 `onComplete`;新执行触发一次 `onStart`。
+- 只更新回调不影响播放。`autoStart` 只作用于初次创建。
+- 更新失败会保留当前动画和状态,并触发一次最新的 `onError`。
 
 ---
 
@@ -323,17 +338,19 @@ return (
 动画播完后,如果你想用代码把物体移到新姿态,调用 `api.set`:
 
 ```tsx
-// 把盒子抬高到 y = 0.3(其它保持不变)
+// 把盒子抬高到 y = 0.3(其它字段沿用当前值)
 api.set({ position: { y: 0.3 } })
 ```
 
 几条规则:
 
-1. **只在原生动画对象已经创建且动画不处于播放状态时用**(包括:从未播放、已播完、已停止 / 重置)。动画正在播放(含延迟、暂停)、原生动画对象尚未创建或当前绑定已经因创建 / 交接失败而终止时,调用 `api.set` 会被拒绝——此时它是一次 **noop**(不打断动画、也不会延后补播,物体保持不变,`entityProps` 也不更新),并在控制台打印一条警告(warning),**不会**触发 `onError`。想在动画进行中接管物体,请先停止动画,或等它结束。
-2. **只传你想改的字段即可**,其余保持原样。例如 `api.set({ position: { y: 0.3 } })` 不会影响 `rotation` 或 `scale`。
-3. **写入成功后 `entityProps` 会更新**为新姿态。Native 更新 Entity,并通过设置命令的成功回执返回 Entity 当前的完整 transform;Core 使用该值更新 `entityProps`。`set` 不产生播放状态事件,也不改变 `playState`。如果写入未被接受(比如在动画播放中调用),则是一次 noop——`entityProps` 保持不变,并在控制台打印一条警告,不会触发 `onError`。
-4. **想基于当前值来改**?先读 `entityProps` 拿到当前姿态,自己算好新值,再传给 `api.set`。这里没有 `api.get`——因为在 React 里用取值函数容易读到过期的旧值、产生先读后写的冲突。
-5. **它不是播放命令**:`api.set` 不会开始播放、也不改变播放进度。
+1. **在 `animation` 绑定完成后的空闲阶段调用**。播放完成、停止或重置后可以直接调用;播放期间先调用 `stop()`,随后调用 `api.set()`。
+2. **在 `position`、`rotation` 和/或 `scale` 中传入至少一个受支持的 transform 标量**,其余字段沿用当前值。例如 `api.set({ position: { y: 0.3 } })` 更新 `position.y`,同时沿用当前 `rotation` 和 `scale`。
+3. **写入成功后,`entityProps` 更新为 Entity 的完整当前姿态**。
+4. **基于当前姿态更新时**,读取 `entityProps`、计算新值,再传给 `api.set`。`entityProps` 是当前姿态的数据来源。
+5. **`api.set` 设置静止姿态**,播放进度沿用当前值。
+
+`api.set` 返回 `void`。绑定不可用、正在创建、绑定生命周期已终止或 object 正在销毁与已经销毁时,SDK 输出一次 warning 并在本地完成 no-op。写入成功后,`entityProps` 更新为原生确认的完整姿态。
 
 ### api.set 之后再播放的起点
 
@@ -351,7 +368,8 @@ api.set({ position: { y: 0.3 } })
 |---|---|
 | 播放空闲 | 组合后的 React 属性控制。首个确认值产生前 `entityProps` 为空,姿态由基础属性决定;确认后把完整 `entityProps` 放在最后展开即可保持该姿态。 |
 | 动画正在播放、延迟或暂停 | Native animation 控制完整 transform 并阻止普通 React transform 写入;配置中未声明的分量保持基准姿态。 |
-| 动画对象创建或姿态交接失败 | 当前绑定生命周期终止,`entityProps` 清空,其余 React 属性控制。 |
+| 动画对象初次创建失败 | 当前绑定生命周期终止,`entityProps` 清空,其余 React 属性控制。 |
+| 同一目标配置更新失败 | 旧执行、当前状态和 `entityProps` 保持不变。 |
 | 动画解绑 | `entityProps` 清空,其余 React 属性控制。 |
 
 这和 visionOS / picoOS 原生一致:底层绑定完整变换。动画活跃期间,配置字段执行动画,其余字段保持基准姿态。暂停保持 transform 写入保护。停止、重置、结束和自然完成会提交对应姿态、解除写入保护,并返回 Entity 当前的完整 transform,供 Core 更新 `entityProps`。
@@ -360,7 +378,8 @@ api.set({ position: { y: 0.3 } })
 
 - **动画正在播时**,整个 transform 都由动画接管,你此时用 props 或 `api.set` 改任何分量都不会生效;没写进 config 的分量会被冻结在基准值。
 - **播放空闲期间**,组合后的 React 属性控制 transform。使用 `api.set` 更新 Native 已提交 transform,并通过 `entityProps` 获得更新后的完整姿态。
-- **动画对象创建或姿态交接失败后**,当前绑定终止,普通 React 变换属性恢复控制。重新开始需要显式解绑后再绑定,或创建新的 binding。
+- **动画对象初次创建失败后**,当前绑定终止,普通 React 变换属性恢复控制。重新开始需要显式解绑后再绑定,或创建新的 binding。
+- **同一目标配置更新失败后**,binding 继续有效,旧动画继续执行,无需重新绑定。
 - **动画解绑后**,`entityProps` 清空,其余 React 变换属性继续控制 Entity。
 
 ### 推荐写法
@@ -390,7 +409,7 @@ interface EntityPlaybackApi {
   stop(): void
   reset(): void
   finish(): void
-  set(update: EntityTransformUpdate): void
+  set(update: EntityMotionPatch): void
   readonly playState: 'queued' | 'idle' | 'running' | 'paused' | 'finished'
   readonly isAnimating: boolean
   readonly isPaused: boolean
@@ -398,7 +417,7 @@ interface EntityPlaybackApi {
 }
 ```
 
-前五个是**播放控制**,操作动画的播放进度;`api.set` 是**设置姿态**,直接改物体的静止姿态,不影响播放进度。两者都是 `api` 上的方法,用途不同:需要控制动画时用前五个,需要在动画结束后手动摆放物体时用 `api.set`。
+前五个方法控制动画的播放进度。`api.set` 设置物体的静止姿态,同时沿用当前播放进度。播放控制使用前五个方法;动画结束后的姿态调整使用 `api.set`。
 
 ---
 
@@ -409,8 +428,8 @@ interface EntityPlaybackApi {
 ```mermaid
 stateDiagram-v2
     [*] --> idle
-    idle --> queued: 原生对象创建前收到播放命令
-    queued --> idle: 原生层创建回执
+    idle --> queued: 播放请求排队
+    queued --> idle: 播放准备完成
     idle --> running: play() / autoStart
     idle --> finished: finish()
     running --> paused: pause()
@@ -423,9 +442,9 @@ stateDiagram-v2
     finished --> idle: reset()
 ```
 
-`running` 包含起播前的延迟等待。`queued` 表示播放命令正在等待原生动画对象创建。排队期间三个布尔值保持 `false`。原生层创建回执在绑定对象执行待处理命令前确认 `idle`;后续控制回执和状态事件持续同步公开状态与原生确认值。
+`running` 包含起播前的延迟等待。`queued` 表示播放请求已提交并等待执行。`autoStart` 和初始化阶段调用 `play()` 会进入该状态。播放开始后,状态变为 `running`。
 
-动画对象创建或同一目标配置替换的姿态交接失败时,`onError` 报告一次分类错误,公开状态收敛为 `idle`,`entityProps` 清空,当前绑定生命周期终止。该绑定后续的所有 API 调用均输出警告并执行空操作;config 和 callback 更新只刷新绑定保存的最新值。应用通过显式解绑后重新绑定,或创建新的 binding 开启新生命周期。
+初次创建失败时,`onError` 触发一次,状态变为 `idle`,`entityProps` 清空。后续调用会输出警告。重新绑定后可以重试。配置更新失败时,当前动画继续有效。
 
 | `playState` | `isAnimating` | `isPaused` | `finished` |
 |---|---|---|---|
@@ -442,9 +461,11 @@ stateDiagram-v2
 | **初始状态** | 首个已确认值产生之前 | 原生动画对象创建后 ✅ 能用 | 首次确认时填充 | 组合后的 React 属性控制;`entityProps` 为空 |
 | **播放中**(含延迟、暂停) | `play()` / `autoStart`;`pause()` 后仍属此类 | ❌ 被拒绝(noop + 警告) | 仅在开始播放那一刻更新一次 | 动画接管整个 transform;config 未声明的字段冻结在本轮 fresh-play baseline |
 | **已有确认值的播放空闲状态** | `complete`、`stop`、`reset`、`finish`,或成功的 `api.set` | ✅ 能用 | ✅ 包含完整的已提交变换 | 组合后的 React 属性控制;把 `entityProps` 放在最后展开 |
-| **终止绑定** | 动画对象创建或姿态交接失败 | ❌ 所有 API 均为 noop + 警告 | 清空为 `{}` | 其余 React 属性控制;重新开始需要显式重新绑定 |
+| **终止绑定** | 动画对象初次创建失败 | ❌ 所有 API 均为 noop + 警告 | 清空为 `{}` | 其余 React 属性控制;重新开始需要显式重新绑定 |
 
 > **提示**:循环动画没有自然的“播放到终点”,所以循环期间 `entityProps` 不会在每圈结束时更新,也不会在每圈重新读取 baseline。`stop()`、`reset()` 或 `finish()` 会更新 `entityProps`;动画进入非活跃状态后,成功的 `api.set()` 也会更新 `entityProps`。
+
+文档化 capability 从 visionOS 的 WSAppShell `1.9.0` 和 picoOS 的 PicoWebApp `0.7.0` 开始可用。
 
 ---
 

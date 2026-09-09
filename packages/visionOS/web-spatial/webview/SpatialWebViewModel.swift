@@ -2,9 +2,18 @@ import SwiftUI
 import UIKit
 @preconcurrency import WebKit
 
+/// Describes the JavaScript content hosted by a WebSpatial WKWebView.
+enum SpatialWebViewContentRole {
+    /// Loads authored application code and owns the SDK JavaScript realm.
+    case application
+    /// Receives portal DOM only and does not execute the SDK.
+    case portal
+}
+
 @Observable
 class SpatialWebViewModel {
     var url = ""
+    let contentRole: SpatialWebViewContentRole
     private(set) var title: String?
     private var view: SpatialWebView?
     private var controller: SpatialWebController?
@@ -28,9 +37,10 @@ class SpatialWebViewModel {
 
     var scrollOffset: CGPoint = .zero
 
-    init(url: String?) {
+    init(url: String?, contentRole: SpatialWebViewContentRole) {
         controller = SpatialWebController()
         self.url = url ?? ""
+        self.contentRole = contentRole
         controller!.model = self
         controller?.registerNavigationInvoke(invoke: onNavigationInvoke)
         controller?.registerOpenWindowInvoke(invoke: onOpenWindowInvoke)
@@ -44,7 +54,12 @@ class SpatialWebViewModel {
 
     func load(_ url: String, _ configuration: WKWebViewConfiguration? = nil, _ spatialId: String? = "") {
         if controller?.webview == nil {
-            _ = WKWebViewManager.Instance.create(controller: controller!, configuration: configuration, spatialId: spatialId)
+            _ = WKWebViewManager.Instance.create(
+                controller: controller!,
+                contentRole: contentRole,
+                configuration: configuration,
+                spatialId: spatialId
+            )
             controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
             applyBackgroundTransparency()
         }
@@ -59,7 +74,10 @@ class SpatialWebViewModel {
 
     func loadHTML(_ htmlText: String) {
         if controller?.webview == nil {
-            _ = WKWebViewManager.Instance.create(controller: controller!)
+            _ = WKWebViewManager.Instance.create(
+                controller: controller!,
+                contentRole: contentRole
+            )
             controller!.webview?.scrollView.isScrollEnabled = scrollEnabled
             applyBackgroundTransparency()
         }
