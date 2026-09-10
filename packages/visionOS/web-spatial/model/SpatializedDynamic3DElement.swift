@@ -5,7 +5,7 @@ import RealityKit
 @Observable
 class SpatializedDynamic3DElement: SpatializedElement {
     private var rootEntity = SpatialRootEntity()
-    private var viewContent: RealityViewContent? = nil
+    private var viewContent: RealityViewContent?
 
     override init() {
         super.init()

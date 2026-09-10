@@ -289,11 +289,11 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
                 try JSONSerialization.jsonObject(
                     with: JSONEncoder().encode(decoded),
                     options: .fragmentsAllowed
-                ) as! NSObject,
+                ) as? NSObject,
                 try JSONSerialization.jsonObject(
                     with: Data(json.utf8),
                     options: .fragmentsAllowed
-                ) as! NSObject
+                ) as? NSObject
             )
         }
 
@@ -337,7 +337,7 @@ final class EntityMotionBridgeTypesTests: XCTestCase {
     }
 
     /// Confirms malformed Entity commands receive one stable synchronous JSB failure reply.
-    func testMalformedEntityCommandsReplyExactlyOnceThroughHandlerMessage() throws {
+    func testMalformedEntityCommandsReplyExactlyOnceThroughHandlerMessage() {
         let manager = JSBManager()
         manager.register(CreateEntityAnimationCommand.self)
         manager.register(UpdateEntityAnimationCommand.self)

@@ -68,7 +68,9 @@ enum SpatializedMotionTimingFunction {
         for _ in 0 ..< 8 {
             let currentX = sampleCurveX(guessT, x1: x1, x2: x2)
             let derivative = sampleCurveDerivativeX(guessT, x1: x1, x2: x2)
-            if abs(derivative) < 1e-6 { break }
+            if abs(derivative) < 1e-6 {
+                break
+            }
             guessT -= (currentX - t) / derivative
         }
         guessT = max(0.0, min(1.0, guessT))
