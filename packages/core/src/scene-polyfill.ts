@@ -15,6 +15,7 @@ import {
 import { SpatialSceneCreationOptionsInternal } from './types/internal'
 import { deepCloneJSON } from './utils'
 import { pointToPhysical, physicalToPoint } from './physicalMetrics'
+import { resolveJsbAdapterPlatform } from './runtime/jsbAdapterPlatform'
 
 const defaultSceneConfig: SpatialSceneCreationOptions = {
   defaultSize: {
@@ -288,18 +289,32 @@ class SceneManager {
     if (url?.startsWith(INTERNAL_SCHEMA_PREFIX)) {
       const spatialContentCommand = getSpatialContentCommand(url)
       if (spatialContentCommand) {
+        const sourceParams = new URL(url).searchParams
         const token = //@ts-ignore
           (window.webSpatial || window.__webspatialShell__)?.genToken?.()
         if (token) {
           const host = window.location.host
           const protocol = window.location.protocol
           const finalURL = `${protocol}//${host}/${token}/`
-          const sourceParams = new URL(url).searchParams
           const final = new URL(finalURL)
           sourceParams.forEach((value, key) => {
             final.searchParams.set(key, value)
           })
           final.searchParams.set('command', spatialContentCommand)
+          return this.originalOpen(final.toString(), target, features)
+        }
+        // A legacy Pico shell may lack genToken, so use the adapter resolver
+        // instead of treating every tokenless runtime as visionOS.
+        if (
+          resolveJsbAdapterPlatform(window.navigator.userAgent) === 'visionos'
+        ) {
+          const final = new URL('about:blank')
+          final.searchParams.set('command', spatialContentCommand)
+          sourceParams.forEach((value, key) => {
+            if (key !== 'command') {
+              final.searchParams.append(key, value)
+            }
+          })
           return this.originalOpen(final.toString(), target, features)
         }
       }
