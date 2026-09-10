@@ -167,7 +167,7 @@ describe('SpatialObject', () => {
   afterEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./JSBCommand')
+    vi.doUnmock('./JSBCommand')
   })
 
   it('inspect returns data when command succeeds', async () => {
@@ -313,7 +313,7 @@ describe('platform adapters', () => {
     vi.useRealTimers()
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./JSBCommand')
+    vi.doUnmock('./JSBCommand')
   })
 
   it('VisionOSPlatform.callJSB returns success and parses failures', async () => {
@@ -411,7 +411,7 @@ describe('spatialWindowPolyfill', () => {
   afterEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./Spatial')
+    vi.doUnmock('./Spatial')
   })
 
   it('returns early when not running in SpatialWeb', async () => {
@@ -542,7 +542,7 @@ describe('SpatializedElementCreator', () => {
   afterEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./JSBCommand')
+    vi.doUnmock('./JSBCommand')
   })
 
   it('createSpatialized2DElement sets base href and returns element', async () => {
@@ -813,7 +813,7 @@ describe('SpatializedStatic3DElement', () => {
   afterEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./JSBCommand')
+    vi.doUnmock('./JSBCommand')
   })
 
   it('entityTransform setter passes float64 array to updateProperties', async () => {
@@ -877,7 +877,7 @@ describe('SpatializedDynamic3DElement', () => {
   afterEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./JSBCommand')
+    vi.doUnmock('./JSBCommand')
   })
 
   it('addEntity sets parent, pushes children, and calls SetParentForEntityCommand', async () => {

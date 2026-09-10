@@ -292,7 +292,10 @@ vi.mock('./JSBCommand', () => {
 
 describe('removed scene window globals', () => {
   beforeEach(() => {
-    ;(window as any).opener = {}
+    Object.defineProperty(window, 'opener', {
+      configurable: true,
+      value: {},
+    })
   })
 
   it('does not type removed window scene globals', () => {

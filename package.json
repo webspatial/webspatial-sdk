@@ -68,7 +68,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
     "@fission-ai/openspec": "^1.12.0",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.0",
     "concurrently": "^8.2.2",
     "lint-staged": "^15.5.2",
     "prettier": "^3.9.6",
