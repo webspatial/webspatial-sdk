@@ -82,6 +82,8 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     'Cylinder',
     'Plane',
     'Material',
+    'MaterialPresets',
+    'PBRMaterial',
     'UnlitMaterial',
     'Texture',
     'ModelAsset',

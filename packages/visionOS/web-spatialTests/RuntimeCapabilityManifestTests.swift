@@ -14,6 +14,8 @@ final class RuntimeCapabilityManifestTests: XCTestCase {
         XCTAssertEqual(runtime?["buildId"], pwaManager.getRuntimeBuildId())
         XCTAssertTrue(supported?.contains("Model") ?? false)
         XCTAssertTrue(supported?.contains("useEntityAnimation") ?? false)
+        XCTAssertTrue(supported?.contains("PBRMaterial") ?? false)
+        XCTAssertTrue(supported?.contains("Material:pbr") ?? false)
     }
 
     func test_userScriptInjectsFrozenManifestAtDocumentStart() {

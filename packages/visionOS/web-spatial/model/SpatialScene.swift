@@ -318,6 +318,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(CreateSpatialEntity.self, onCreateEntity)
         spatialWebViewModel.addJSBListener(CreateGeometryProperties.self, onCreateGeometry)
         spatialWebViewModel.addJSBListener(CreateUnlitMaterial.self, onCreateUnlitMaterial)
+        spatialWebViewModel.addJSBListener(CreatePBRMaterial.self, onCreatePBRMaterial)
         spatialWebViewModel.addJSBListener(CreateTexture.self, onCreateTexture)
         spatialWebViewModel.addJSBListener(UpdateTextureProperties.self, onUpdateTextureProperties)
         spatialWebViewModel.addJSBListener(CreateModelComponent.self, onCreateModelComponent)
@@ -337,6 +338,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         spatialWebViewModel.addJSBListener(ConvertCoordinate.self, onConvertCoordinate)
 
         spatialWebViewModel.addJSBListener(UpdateUnlitMaterialProperties.self, onUpdateUnlitMaterialProperties)
+        spatialWebViewModel.addJSBListener(UpdatePBRMaterialProperties.self, onUpdatePBRMaterialProperties)
         spatialWebViewModel.addJSBListener(RemoveComponentFromEntity.self, onRemoveComponentFromEntity)
         spatialWebViewModel.addJSBListener(SetMaterialsOnEntity.self, onSetMaterialsOnEntity)
 
@@ -1117,6 +1119,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    // Create: unknown `textureId` → tint-only (nil texture). Update: unknown
+    // non-empty id → InvalidSpatialObject. JS `useSpatialMaterial` already
+    // sends `''` for missing/failed textures, so the update miss is an
+    // assertion for unexpected native ids, not the JS miss path.
     private func onCreateUnlitMaterial(command: CreateUnlitMaterial, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         var tex: TextureResource? = nil
         if let textureId = command.textureId,
@@ -1125,6 +1131,18 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             tex = texObj.resource
         }
         let material = Dynamic3DManager.createUnlitMaterial(command, tex)
+        addSpatialObject(material)
+        resolve(.success(AddSpatializedElementReply(id: material.id)))
+    }
+
+    private func onCreatePBRMaterial(command: CreatePBRMaterial, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        var tex: TextureResource? = nil
+        if let textureId = command.textureId,
+           let texObj = spatialObjects[textureId] as? SpatialTextureResource
+        {
+            tex = texObj.resource
+        }
+        let material = Dynamic3DManager.createPBRMaterial(command, tex)
         addSpatialObject(material)
         resolve(.success(AddSpatializedElementReply(id: material.id)))
     }
@@ -1414,7 +1432,7 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         Task {
             do {
                 try await texture.updateURL(newURL)
-                let refreshedMaterialIds = MaterialSceneRefresh.pushReloadedTextureToBoundUnlitMaterials(
+                let refreshedMaterialIds = MaterialSceneRefresh.pushReloadedTextureToBoundMaterials(
                     texture: texture,
                     textureSpatialId: command.id,
                     spatialObjects: spatialObjects
@@ -1556,6 +1574,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
+    // See onCreateUnlitMaterial: empty textureId clears the texture; a
+    // non-empty id that is not in spatialObjects is InvalidSpatialObject.
     private func onUpdateUnlitMaterialProperties(command: UpdateUnlitMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let material = spatialObjects[command.id] as? SpatialUnlitMaterial else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(command.id) not found")))
@@ -1573,6 +1593,37 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             }
         }
         material.updateProperties(color: command.color, texture: texture, transparent: command.transparent, opacity: command.opacity)
+        if let tid = command.textureId {
+            material.textureSpatialId = tid.isEmpty ? nil : tid
+        }
+        MaterialSceneRefresh.refreshComponentsUsingMaterial(command.id, spatialObjects: spatialObjects)
+        resolve(.success(baseReplyData))
+    }
+
+    private func onUpdatePBRMaterialProperties(command: UpdatePBRMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
+        guard let material = spatialObjects[command.id] as? SpatialPBRMaterial else {
+            resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(command.id) not found")))
+            return
+        }
+        var texture: TextureResource?? = nil
+        if let textureId = command.textureId {
+            if textureId.isEmpty {
+                texture = .some(nil)
+            } else if let texObj = spatialObjects[textureId] as? SpatialTextureResource {
+                texture = .some(texObj.resource)
+            } else {
+                resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Texture \(textureId) not found")))
+                return
+            }
+        }
+        material.updateProperties(
+            color: command.color,
+            texture: texture,
+            metalness: command.metalness,
+            roughness: command.roughness,
+            transparent: command.transparent,
+            opacity: command.opacity
+        )
         if let tid = command.textureId {
             material.textureSpatialId = tid.isEmpty ? nil : tid
         }

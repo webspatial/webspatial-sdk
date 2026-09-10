@@ -30,6 +30,7 @@ import {
   AttachmentAsset,
   Material,
   ModelAsset,
+  PBRMaterial,
   Texture,
   UnlitMaterial,
 } from './resources'
@@ -120,6 +121,7 @@ function makeSentinelSpatialImpl(): SpatialImplementation {
     ModelEntity: makeSentinelEntity('ModelEntity'),
     AttachmentEntity: makeSentinelResource('AttachmentEntity'),
     UnlitMaterial: makeSentinelResource('UnlitMaterial'),
+    PBRMaterial: makeSentinelResource('PBRMaterial'),
     Material: makeSentinelResource('Material'),
     Texture: makeSentinelResource('Texture'),
     ModelAsset: makeSentinelResource('ModelAsset'),
@@ -301,6 +303,7 @@ describe('lazy-load facades', () => {
     const nullCases: Array<{ name: string; Component: any }> = [
       { name: 'AttachmentEntity', Component: AttachmentEntity },
       { name: 'UnlitMaterial', Component: UnlitMaterial },
+      { name: 'PBRMaterial', Component: PBRMaterial },
       { name: 'Material', Component: Material },
       { name: 'Texture', Component: Texture },
       { name: 'ModelAsset', Component: ModelAsset },

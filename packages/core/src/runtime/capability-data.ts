@@ -27,6 +27,9 @@ function baseTrueFlags(): Record<string, boolean> {
     }
   }
   flags['Ornament'] = false
+  // PBR JSB commands ship with WSAppShell/1.9.0; Pico has no native handler.
+  flags['PBRMaterial'] = false
+  flags['Material:pbr'] = false
   // Entity motion is unavailable in legacy version-table rows.
   flags['useEntityAnimation'] = false
   return flags
@@ -101,6 +104,17 @@ function matrixVision_1_7_0_Flags(): Record<string, boolean> {
 function matrixVision_1_8_0_Flags(): Record<string, boolean> {
   const flags = matrixVision_1_7_0_Flags()
   flags['useAnimation'] = true
+  return flags
+}
+
+/**
+ * visionOS **WSAppShell/1.9.0** — PBR material JSB commands
+ * (`CreatePBRMaterial` / `UpdatePBRMaterialProperties`).
+ */
+function matrixVision_1_9_0_Flags(): Record<string, boolean> {
+  const flags = matrixVision_1_8_0_Flags()
+  flags['PBRMaterial'] = true
+  flags['Material:pbr'] = true
   return flags
 }
 
@@ -185,6 +199,13 @@ function visionOsRow_1_8_0(): CapabilityVersionRow {
   return { version: '1.8.0', flags: matrixVision_1_8_0_Flags() }
 }
 
+/**
+ * Build the capability row for visionOS **WSAppShell/1.9.0**.
+ */
+function visionOsRow_1_9_0(): CapabilityVersionRow {
+  return { version: '1.9.0', flags: matrixVision_1_9_0_Flags() }
+}
+
 function picoOsRow_0_1_1(): CapabilityVersionRow {
   return { version: '0.1.1', flags: matrixPico_0_1_1_Flags() }
 }
@@ -226,6 +247,7 @@ export const CAPABILITY_TABLE: {
     visionOsRow_1_6_0(),
     visionOsRow_1_7_0(),
     visionOsRow_1_8_0(),
+    visionOsRow_1_9_0(),
   ],
   picoos: [
     picoOsRow_0_1_1(),
