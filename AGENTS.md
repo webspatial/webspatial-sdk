@@ -48,6 +48,8 @@ From repo root:
 - Keep PRs focused: avoid committing untracked local artifacts (`node_modules/`, build outputs, temp tool scratch dirs). Tracked agent helper docs under `.trae/` are part of the repo.
 - **AI Agent Rule:** When refactoring, moving, or modifying existing code, DO NOT strip, delete, or rewrite existing inline comments unless explicitly instructed to do so. Retain all original developer context.
 - **AI Agent Rule:** Keep refactors (like moving files or renaming variables) strictly separate from logic changes to make PRs easier to review.
+- **AI Agent Rule (Commit Messages — MANDATORY):** Every `git commit` you produce MUST use Conventional Commits format AND include a `ticket: <ID>` line. Use the Meego work item ID when one is known; for trivial changes with no work item use `ticket: 0`. NEVER use `--no-verify` to bypass the commit-msg hook. If the user does not provide a ticket ID, ask for one or use `ticket: 0` and explicitly note it in your reply. See `CONTRIBUTING.md → Commit Message Convention` for the full spec.
+- **AI Agent Rule (Commit Scope):** Keep commits atomic. One logical change per commit. Do not bundle unrelated changes. If a change touches `packages/`, add a changeset (`pnpm changeset`) in the same commit.
 
 ## Useful Entry Points
 

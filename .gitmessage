@@ -1,0 +1,20 @@
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# ticket: <Meego work item ID, or 0 if none>
+#
+# --- Commit message rules ---
+# - Use Conventional Commits type: feat | fix | docs | style | refactor |
+#   perf | test | build | ci | chore | revert
+# - Header: <= 72 chars; subject: imperative mood, no trailing period
+# - Separate subject from body with a blank line
+# - The "ticket:" line is MANDATORY. Use the Meego work item ID for
+#   tracked changes; use "ticket: 0" for trivial changes with no work item.
+# - Example:
+#
+#     feat(react): add spatial scene persistence
+#
+#     Save and restore scene state across page reloads.
+#
+#     ticket: 123456

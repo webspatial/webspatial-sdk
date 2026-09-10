@@ -54,6 +54,78 @@ npm run dev
 
 If you develop an **external** app with a **linked** `@webspatial/react-sdk` and Vite HMR (not the monorepo test-server), dedupe `react` / `react-dom` in Vite and alias the SDK to a single copy. Portal hook invariants and regression tests are documented in `packages/react/src/spatialized-container/ARCHITECTURE.md` (section **Portal lifecycle and local dev (HMR)**).
 
+## Commit Message Convention
+
+Every commit in this repository must follow two rules, enforced by a local `commit-msg` hook (via [simple-git-hooks](https://github.com/toplenboren/simple-git-hooks) + [commitlint](https://commitlint.js.org/)) and by CI on every pull request.
+
+### 1. Conventional Commits format
+
+Use the [Conventional Commits](https://www.conventionalcommits.org/) structure:
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+ticket: <ID>
+```
+
+- **type**: `feat` | `fix` | `docs` | `style` | `refactor` | `perf` | `test` | `build` | `ci` | `chore` | `revert`
+- **scope** (optional): area touched, e.g. `react`, `core`, `cli`, `visionos`, `test-server`
+- **subject**: imperative mood, no trailing period; the entire header must be <= 72 characters
+- **body** (optional): what and why, wrapped at ~72 chars
+
+### 2. Mandatory `ticket:` trailer
+
+Every commit message **must** contain a `ticket:` line referencing the associated Meego work item ID:
+
+```
+ticket: 123456
+```
+
+For trivial changes that have no associated Meego work item, use:
+
+```
+ticket: 0
+```
+
+The `ticket:` line may appear anywhere in the message body or footer, but it must be on its own line in the format `ticket: <number>`.
+
+### Example
+
+```
+feat(react): add spatial scene persistence
+
+Save and restore scene state across page reloads so users
+do not lose their spatial layout when the session ends.
+
+ticket: 123456
+```
+
+### Local setup
+
+The commit-msg hook is installed automatically by `simple-git-hooks` on `pnpm install` (via the `postinstall` script). To use the repo commit template interactively, run once per clone:
+
+```sh
+git config commit.template .gitmessage
+```
+
+If `git config --get core.hooksPath` points to a managed or global hooks directory, verify that it runs the repository commit-msg hook. Preserve existing security hooks; installation alone does not guarantee Git uses the new hook. CI still validates PR commits.
+
+You can manually lint a message with:
+
+```sh
+pnpm commitlint < path/to/message
+```
+
+### Bypassing is not allowed
+
+Do **not** use `git commit --no-verify` to skip the commit-msg hook. CI re-validates commit messages in a pull request. Configure `Validate commit messages` as a required status check in branch protection for `main` and `stable` to block merging on failure; adding the workflow alone does not configure branch protection.
+
+Commitlint retains its default exemptions for generated merge and revert messages and version tags. Ordinary commits, including automated release commits, must include a ticket. When squash merging, retain the `ticket:` line in the final commit message; PR checks cannot validate edits made later in the merge dialog.
+
+The workflow checks the PR or push range, not the full repository history. Existing commits in an open PR may need their messages updated before this check passes.
+
 ## Local CodeQL-Aligned Checks
 
 Run the fast unused-local check before opening a PR that changes TypeScript or JavaScript:
