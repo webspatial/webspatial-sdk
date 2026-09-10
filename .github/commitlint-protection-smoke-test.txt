@@ -1,0 +1,1 @@
+Temporary file used to verify commit-message branch protection.
