@@ -2,6 +2,7 @@ import AsyncAlgorithms
 import Foundation
 
 private let tag = "BlobTransfer"
+private let timeout = Duration.seconds(1)
 
 /// Reassembles the chunks of a JavaScript `Blob` into a temporary file.
 actor BlobTransfer {
@@ -18,10 +19,9 @@ actor BlobTransfer {
     /// Waits for the transfer start chunk, then writes chunks at their declared offsets.
     /// The caller owns the returned temporary file and must remove it after use.
     func file() async throws -> URL {
-        var iterator = chunks.makeAsyncIterator()
         var url: URL?
         do {
-            guard case let .start(mimeType, _) = try await iterator.next() else {
+            guard case let .start(mimeType, _) = try await nextChunk() else {
                 throw BlobTransferError.notActive
             }
             let fileExt = ModelSource(src: source.src, type: source.type ?? mimeType).fileExtension
@@ -32,7 +32,7 @@ actor BlobTransfer {
             try Data().write(to: fileURL, options: .withoutOverwriting)
             let file = try FileHandle(forWritingTo: fileURL)
             defer { try? file.close() }
-            while case let .data(offset, data) = try await iterator.next() {
+            while case let .data(offset, data) = try await nextChunk() {
                 try Task.checkCancellation()
                 try file.seek(toOffset: offset)
                 try file.write(contentsOf: data)
@@ -72,6 +72,15 @@ actor BlobTransfer {
 
     nonisolated func cancel(reason: String? = nil) {
         chunks.fail(BlobTransferError.cancelled(reason))
+    }
+
+    private func nextChunk() async throws -> Chunk? {
+        try await withTimeout(timeout) { [chunks] in
+            var iterator = chunks.makeAsyncIterator()
+            let chunk = try await iterator.next()
+            try Task.checkCancellation()
+            return chunk
+        }
     }
 }
 
