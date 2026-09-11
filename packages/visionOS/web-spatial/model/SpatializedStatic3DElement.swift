@@ -40,8 +40,11 @@ class SpatializedStatic3DElement: SpatializedElement {
     var loading: Loading = .eager
     var stagemode: StageMode = .none
     var allSources: [ModelSource] {
-        if let modelURL { [ModelSource(src: modelURL, type: nil)] + sources }
-        else { sources }
+        if let modelURL {
+            [ModelSource(src: modelURL, type: nil)] + sources
+        } else {
+            sources
+        }
     }
 
     override var enableGesture: Bool {

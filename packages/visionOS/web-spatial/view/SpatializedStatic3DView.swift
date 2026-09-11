@@ -8,7 +8,9 @@ struct SpatializedStatic3DView: View {
     @State private var loadState: LoadState = .idle
 
     private var asset: Model3DAsset? {
-        if case let .loaded(asset, _) = loadState { return asset }
+        if case let .loaded(asset, _) = loadState {
+            return asset
+        }
         return nil
     }
 
@@ -84,8 +86,6 @@ struct SpatializedStatic3DView: View {
             }
             .onChange(of: spatializedStatic3DElement.pendingSeekTime) { _, time in onSeek(time: time) }
             .task(id: spatializedStatic3DElement.allSources) { await loadSources() }
-        } else {
-            EmptyView()
         }
     }
 
@@ -115,7 +115,9 @@ struct SpatializedStatic3DView: View {
     private func onPlayback(isPaused: Bool) {
         guard let asset else {
             // If entity has not loaded yet and play is called then autoplay after load
-            if !isPaused { spatializedStatic3DElement.autoplay = true }
+            if !isPaused {
+                spatializedStatic3DElement.autoplay = true
+            }
             return
         }
         // Setting selectedAnimation resets the animation and autoplays on first load
@@ -188,7 +190,9 @@ struct SpatializedStatic3DView: View {
             // This happens when play is called before load and autoplay is enabled
             if spatializedStatic3DElement.autoplay, spatializedStatic3DElement.animationPaused {
                 spatializedStatic3DElement.animationPaused = false
-            } else { onPlayback(isPaused: !spatializedStatic3DElement.autoplay) }
+            } else {
+                onPlayback(isPaused: !spatializedStatic3DElement.autoplay)
+            }
         } else {
             loadState = .failed
             onLoadFailure()
