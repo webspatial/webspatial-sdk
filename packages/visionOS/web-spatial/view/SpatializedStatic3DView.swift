@@ -202,6 +202,7 @@ struct SpatializedStatic3DView: View {
             do {
                 return try (url, await loadAsset(from: url))
             } catch {
+                logger.warning("Failed to load \(source) \(error)")
                 continue
             }
         }
