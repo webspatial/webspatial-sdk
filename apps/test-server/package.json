@@ -61,7 +61,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "concurrently": "^8.2.2",
     "daisyui": "^4.12.24",
-    "esbuild": "^0.25.12",
+    "esbuild": "^0.28.1",
     "esbuild-css-modules-plugin": "^3.1.5",
     "esbuild-plugin-tailwindcss": "^1.2.3",
     "esbuild-sass-plugin": "^3.7.0",
