@@ -55,35 +55,112 @@ struct JsbError: Error, Encodable {
     let message: String
 }
 
+/// Bridges JavaScript commands to their native handlers.
+///
+/// Commands flow through a two-stage structured pipeline. `handlerMessage` runs
+/// a cheap prologue on the main thread and yields into the decode stage, which a
+/// single detached consumer drains off the main actor; that stage hands finished
+/// work to a `@MainActor` consumer which invokes the handler and serializes the
+/// reply.
+///
+/// Each stage is one sequential `for await` loop, which is what preserves order.
+/// WebKit delivers script messages in the order JavaScript sent them and command
+/// sequences rely on it: `play()`/`pause()` and the other `control` calls return
+/// a promise with no JS-side queue, so an app that does not await them puts
+/// several commands in flight at once, and the SDK itself sends some commands
+/// fire-and-forget. Neither unstructured `Task`s nor an actor would do: tasks
+/// carry no ordering guarantee between each other, and an actor executes jobs
+/// from separate tasks in an unspecified order. Two sequential stages also let
+/// the next payload decode overlap the current handler running on main.
 class JSBManager {
     typealias ResolveHandler<T> = (Result<T?, JsbError>) -> Void
+
+    private typealias ReplyHandler = (Any?, String?) -> Void
+
+    /// A command entering the decode stage.
+    ///
+    /// `@unchecked Sendable`: it carries the registered handler and WebKit's
+    /// reply closure, neither of which is `Sendable`, but the pipeline hands
+    /// each value to exactly one executor at a time — the decode stage, then the
+    /// main actor — so they are never touched concurrently.
+    private enum PendingCommand: @unchecked Sendable {
+        /// Needs its payload decoded before a handler can run.
+        case decode(
+            actionKey: String,
+            message: String,
+            payloadStart: String.Index,
+            type: CommandDataProtocol.Type,
+            action: ((CommandDataProtocol, @escaping ResolveHandler<Encodable>) -> Void)?,
+            reply: ReplyHandler?
+        )
+        /// Already resolved. Passes through the decode stage anyway so it keeps
+        /// its place behind a command that is still being decoded.
+        case ready(MainWork)
+    }
+
+    /// Work for the main-actor stage, delivered in arrival order.
+    private enum MainWork: @unchecked Sendable {
+        /// Invoke a resolved handler and serialize whatever it resolves to.
+        case run((@escaping ResolveHandler<Encodable>) -> Void, ReplyHandler?)
+        /// The payload was missing or could not be decoded.
+        case payloadError(actionKey: String, ReplyHandler?)
+        /// No handler is registered for the command.
+        case invalidJSB(message: String, ReplyHandler?)
+    }
 
     private var typeMap = [String: CommandDataProtocol.Type]()
     private var actionWithDataMap: [String: (_ data: CommandDataProtocol, _ event: @escaping ResolveHandler<Encodable>) -> Void] = [:]
     private var actionWithoutDataMap: [String: (@escaping ResolveHandler<Encodable>) -> Void] = [:]
 
-    /// Shared encoder for reply payloads. Confined to the main thread, which is
-    /// where every reply is serialized.
+    /// Encoder for the replies built in the main-thread prologue. The pipeline's
+    /// main stage owns a separate one, so neither is ever shared across
+    /// executors.
     private let encoder = JSONEncoder()
 
-    /// Serial queue that moves payload decoding off the main thread.
-    ///
-    /// WebKit delivers script messages to the handler in the order JavaScript
-    /// sent them, and command sequences rely on it: `play()`/`pause()` and the
-    /// other `control` calls return a promise without any JS-side queue, so an
-    /// app that does not await them puts several commands in flight at once. A
-    /// serial queue feeding a single main-queue hop keeps that arrival order,
-    /// which a concurrent queue would not: a small `ControlEntityAnimation`
-    /// payload would otherwise overtake a large `CreateEntityAnimation`
-    /// timeline still being decoded.
-    private let decodeQueue = DispatchQueue(
-        label: "com.webspatial.jsb.decode",
-        qos: .userInitiated
-    )
+    /// Entrance to the decode stage. Yielding is non-blocking and thread-safe,
+    /// so the prologue never waits.
+    private let pipeline: AsyncStream<PendingCommand>.Continuation
 
-    /// Reused across commands to avoid a per-message allocation. Only ever
-    /// touched on `decodeQueue`, which is serial.
-    private let decoder = JSONDecoder()
+    init() {
+        let (commands, commandInput) = AsyncStream<PendingCommand>.makeStream(
+            // Never drop a command: a dropped one leaves its JS promise pending
+            // forever.
+            bufferingPolicy: .unbounded
+        )
+        let (mainWork, mainInput) = AsyncStream<MainWork>.makeStream(
+            bufferingPolicy: .unbounded
+        )
+        pipeline = commandInput
+
+        // Neither stage captures `self`. Each owns the coder it needs, so the
+        // pipeline cannot retain the manager into a cycle, and a teardown
+        // drains the buffered commands instead of dropping their replies.
+        //
+        // Detached on purpose: a plain `Task` would inherit the enclosing actor
+        // and could put decoding back on the main actor.
+        Task.detached(priority: .userInitiated) {
+            let decoder = JSONDecoder()
+            for await command in commands {
+                mainInput.yield(JSBManager.resolve(command, using: decoder))
+            }
+            // Ordered shutdown: the first stage closes the second only once it
+            // has drained.
+            mainInput.finish()
+        }
+
+        Task { @MainActor in
+            let encoder = JSONEncoder()
+            for await work in mainWork {
+                JSBManager.perform(work, using: encoder)
+            }
+        }
+    }
+
+    deinit {
+        // Finishing only the entrance drains the pipeline in order; each stage
+        // then closes the next.
+        pipeline.finish()
+    }
 
     func register<T: CommandDataProtocol>(_ type: T.Type) {
         typeMap[T.commandType] = type
@@ -113,14 +190,12 @@ class JSBManager {
         actionWithoutDataMap = [:]
     }
 
-    /// Dispatches one JSB message, decoding its payload off the main thread.
+    /// Dispatches one JSB message, decoding its payload off the main actor.
     ///
-    /// Runs a cheap prologue on the calling (main) thread: it splits the
-    /// command key from the payload and resolves the registered handler. That
-    /// keeps the registration maps main-thread-only, so no lock is needed. Only
-    /// the payload-sized work — the UTF-8 conversion and JSON decode — is
-    /// handed to `decodeQueue`, and the handler itself runs back on the main
-    /// actor in arrival order.
+    /// Must be called on the main thread, which is where WebKit delivers script
+    /// messages. Only the registration lookups happen here, so the maps stay
+    /// main-thread-only and need no lock; the payload-sized work — the UTF-8
+    /// conversion and JSON decode — belongs to the decode stage.
     func handlerMessage(_ message: String, _ replyHandler: ((Any?, String?) -> Void)? = nil) {
         // Split on the first separator only. The command key never contains
         // "::", but an encoded payload can, and splitting the whole string
@@ -136,96 +211,101 @@ class JSBManager {
         }
 
         guard let payloadStart else {
-            if commandRequiresPayload(actionKey) {
-                replyHandler?(nil, payloadErrorReply(for: actionKey))
+            // Replies that invoke no handler are sent straight back: they carry
+            // no ordering relationship to commands still in the pipeline.
+            if JSBManager.commandRequiresPayload(actionKey) {
+                replyHandler?(nil, JSBManager.payloadErrorReply(for: actionKey, using: encoder))
                 return
             }
             guard let action = actionWithoutDataMap[actionKey] else {
-                reportInvalidJSB(message, replyHandler)
+                JSBManager.reportInvalidJSB(message, replyHandler)
                 return
             }
-            // Still routed through the queue so a payload-free command keeps
-            // its place behind a command that is still decoding.
-            // `self` is captured strongly on purpose: the closure is released
-            // as soon as it runs, so there is no cycle, and a teardown must not
-            // drop the reply and leave the JS promise pending forever.
-            decodeQueue.async {
-                self.runOnMain(action, replyHandler)
-            }
+            pipeline.yield(.ready(.run(action, replyHandler)))
             return
         }
 
-        // Registration maps are only read here, on the main thread, so
-        // `register`/`remove`/`clear` never race with the decode queue. The
-        // action is looked up now but resolved after decoding: a type can be
-        // registered without a handler, and such a command must still report a
-        // malformed payload rather than an unknown command.
+        // The action is looked up here but resolved only after decoding: a type
+        // can be registered without a handler, and such a command must still
+        // report a malformed payload rather than an unknown command.
         guard let type = typeMap[actionKey] else {
-            reportInvalidJSB(message, replyHandler)
+            JSBManager.reportInvalidJSB(message, replyHandler)
             return
         }
-        let action = actionWithDataMap[actionKey]
 
-        // `message` is captured by value; Swift strings are copy-on-write, so
-        // the payload bytes are converted on the queue rather than here.
-        decodeQueue.async {
+        // `message` is passed by value; Swift strings are copy-on-write, so the
+        // payload bytes are converted on the decode stage rather than here.
+        pipeline.yield(.decode(
+            actionKey: actionKey,
+            message: message,
+            payloadStart: payloadStart,
+            type: type,
+            action: actionWithDataMap[actionKey],
+            reply: replyHandler
+        ))
+    }
+
+    /// Decode stage: turns a pending command into main-actor work. Runs off the
+    /// main actor, one command at a time.
+    private static func resolve(
+        _ command: PendingCommand,
+        using decoder: JSONDecoder
+    ) -> MainWork {
+        switch command {
+        case let .ready(work):
+            return work
+
+        case let .decode(actionKey, message, payloadStart, type, action, reply):
             let data: CommandDataProtocol
             do {
-                data = try self.decoder.decode(
+                data = try decoder.decode(
                     type.self,
                     from: Data(message[payloadStart...].utf8)
                 )
             } catch {
-                DispatchQueue.main.async {
-                    replyHandler?(nil, self.payloadErrorReply(for: actionKey))
-                }
-                return
+                return .payloadError(actionKey: actionKey, reply)
             }
             guard let action else {
-                DispatchQueue.main.async {
-                    self.reportInvalidJSB(message, replyHandler)
-                }
-                return
+                return .invalidJSB(message: message, reply)
             }
-            self.runOnMain({ callback in action(data, callback) }, replyHandler)
+            return .run({ callback in action(data, callback) }, reply)
         }
     }
 
-    /// Runs a resolved action on the main actor, preserving the order in which
-    /// `decodeQueue` hands work over.
-    ///
-    /// Uses the main queue rather than an unstructured `Task`: tasks carry no
-    /// ordering guarantee between each other, so two commands enqueued back to
-    /// back could run out of order.
-    private func runOnMain(_ action: @escaping (@escaping ResolveHandler<Encodable>) -> Void,
-                           _ replyHandler: ((Any?, String?) -> Void)?)
-    {
-        DispatchQueue.main.async {
-            MainActor.assumeIsolated {
-                action { result in
-                    switch result {
-                    case let .success(data):
-                        if data == nil {
-                            replyHandler?("", nil)
-                        } else {
-                            replyHandler?(try? data?.toDictionary() ?? "", nil)
-                        }
-
-                    case let .failure(error):
-                        let resultString = self.parseData(JsbErrorData(
-                            code: error.code,
-                            message: error.message
-                        ))
-                        replyHandler?(nil, resultString)
+    /// Main stage: invokes the handler and serializes its reply.
+    @MainActor
+    private static func perform(_ work: MainWork, using encoder: JSONEncoder) {
+        switch work {
+        case let .run(action, replyHandler):
+            action { result in
+                switch result {
+                case let .success(data):
+                    if data == nil {
+                        replyHandler?("", nil)
+                    } else {
+                        replyHandler?(try? data?.toDictionary() ?? "", nil)
                     }
+
+                case let .failure(error):
+                    let resultString = encodeReply(
+                        JsbErrorData(code: error.code, message: error.message),
+                        using: encoder
+                    )
+                    replyHandler?(nil, resultString)
                 }
             }
+
+        case let .payloadError(actionKey, replyHandler):
+            replyHandler?(nil, payloadErrorReply(for: actionKey, using: encoder))
+
+        case let .invalidJSB(message, replyHandler):
+            reportInvalidJSB(message, replyHandler)
         }
     }
 
     /// Entity commands carry a mandatory payload and report a dedicated code
     /// when it is missing.
-    private func commandRequiresPayload(_ actionKey: String) -> Bool {
+    private static func commandRequiresPayload(_ actionKey: String) -> Bool {
         switch actionKey {
         case CreateEntityAnimationCommand.commandType,
              UpdateEntityAnimationCommand.commandType,
@@ -237,9 +317,11 @@ class JSBManager {
         }
     }
 
-    /// Builds the reply for a missing or undecodable payload. Must be called on
-    /// the main thread: it uses the shared `encoder`.
-    private func payloadErrorReply(for actionKey: String) -> String? {
+    /// Builds the reply for a missing or undecodable payload.
+    private static func payloadErrorReply(
+        for actionKey: String,
+        using encoder: JSONEncoder
+    ) -> String? {
         let code: ReplyCode
         switch actionKey {
         case CreateEntityAnimationCommand.commandType,
@@ -252,20 +334,20 @@ class JSBManager {
         default:
             code = .TypeError
         }
-        return parseData(JsbErrorData(code: code, message: "Invalid command payload."))
+        return encodeReply(
+            JsbErrorData(code: code, message: "Invalid command payload."),
+            using: encoder
+        )
     }
 
-    private func reportInvalidJSB(_ message: String, _ replyHandler: ((Any?, String?) -> Void)?) {
+    private static func reportInvalidJSB(_ message: String, _ replyHandler: ReplyHandler?) {
         print("Invalid JSB!!!", message)
         replyHandler?(nil, "Invalid JSB!!! \(message)")
     }
 
-    private func parseData(_ data: Encodable) -> String? {
-        if let jsonData = try? encoder.encode(data) {
-            let jsonString = String(data: jsonData, encoding: .utf8)
-            return jsonString!
-        }
-        return nil
+    private static func encodeReply(_ data: Encodable, using encoder: JSONEncoder) -> String? {
+        guard let jsonData = try? encoder.encode(data) else { return nil }
+        return String(data: jsonData, encoding: .utf8)
     }
 }
 
