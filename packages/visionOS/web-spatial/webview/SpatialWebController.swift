@@ -327,7 +327,9 @@ extension WKWebView {
 
     /// Return true if WKWebview supports handling this protocol, but WKWebview supports HTTP by default, so return false to support using custom HTTP Handler
     @objc private dynamic static func wrapHandles(urlScheme: String) -> Bool {
-        if urlScheme == "file" { return false }
+        if urlScheme == "file" {
+            return false
+        }
         return wrapHandles(urlScheme: urlScheme)
     }
 }

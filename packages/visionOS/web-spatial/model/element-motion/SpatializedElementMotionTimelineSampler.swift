@@ -45,15 +45,21 @@ final class SpatializedElementMotionTimelineSampler {
         guard let first = frames.first else { return 0 }
         guard let last = frames.last else { return 0 }
 
-        if timeSec <= first.at { return first.value }
-        if timeSec >= last.at { return last.value }
+        if timeSec <= first.at {
+            return first.value
+        }
+        if timeSec >= last.at {
+            return last.value
+        }
 
         for i in 0 ..< (frames.count - 1) {
             let a = frames[i]
             let b = frames[i + 1]
             if timeSec >= a.at, timeSec <= b.at {
                 let span = b.at - a.at
-                if span <= 0 { return b.value }
+                if span <= 0 {
+                    return b.value
+                }
                 let linear = (timeSec - a.at) / span
                 let eased = SpatializedMotionTimingFunction
                     .from(name: a.timingFunction ?? track.timingFunction ?? "linear")

@@ -1574,8 +1574,8 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
         }
     }
 
-    // See onCreateUnlitMaterial: empty textureId clears the texture; a
-    // non-empty id that is not in spatialObjects is InvalidSpatialObject.
+    /// See onCreateUnlitMaterial: empty textureId clears the texture; a
+    /// non-empty id that is not in spatialObjects is InvalidSpatialObject.
     private func onUpdateUnlitMaterialProperties(command: UpdateUnlitMaterialProperties, resolve: @escaping JSBManager.ResolveHandler<Encodable>) {
         guard let material = spatialObjects[command.id] as? SpatialUnlitMaterial else {
             resolve(.failure(JsbError(code: .InvalidSpatialObject, message: "Material \(command.id) not found")))
