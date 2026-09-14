@@ -92,17 +92,20 @@ jobs:
           tolerated_err_re='Failed to find newest available Device type for visionOS'
           tolerated_cmd_re='^Command (GenerateAssetSymbols|RealityAssetsCompile) failed with a nonzero exit code'
 
-          unexpected_err=$(grep -E '^(error:|.+ error:)' "$log_file" | grep -Ev "$tolerated_err_re" || true)
-          unexpected_cmd=$(grep -E '^Command [A-Za-z]+ failed with a nonzero exit code' "$log_file" | grep -Ev "$tolerated_cmd_re" || true)
+          # Xcode emits additional, nondeterministic `error:` diagnostics for the
+          # same sandbox-exec failure. Classify the build by its terminal failed
+          # commands instead; compiler, linker, and other real failures get their
+          # own `Command ... failed` summary and therefore remain hard failures.
+          failed_cmd=$(grep -E '^Command [A-Za-z]+ failed with a nonzero exit code' "$log_file" || true)
+          unexpected_cmd=$(printf '%s\n' "$failed_cmd" | grep -Ev "$tolerated_cmd_re" || true)
 
-          if [[ -n "$unexpected_err" || -n "$unexpected_cmd" ]]; then
-            echo "::error::xcodebuild failed (exit $status) with unexpected errors:"
-            [[ -n "$unexpected_err" ]] && printf '%s\n' "$unexpected_err"
-            [[ -n "$unexpected_cmd" ]] && printf '%s\n' "$unexpected_cmd"
+          if [[ -n "$unexpected_cmd" ]]; then
+            echo "::error::xcodebuild failed (exit $status) with unexpected failed commands:"
+            printf '%s\n' "$unexpected_cmd"
             exit "$status"
           fi
 
-          if ! grep -qE "$tolerated_err_re|$tolerated_cmd_re" "$log_file"; then
+          if [[ -z "$failed_cmd" ]] || ! grep -qE "$tolerated_err_re|$tolerated_cmd_re" "$log_file"; then
             echo "::error::xcodebuild failed (exit $status) but the log does not match any known tolerated failure pattern. Treating as a hard failure."
             exit "$status"
           fi
