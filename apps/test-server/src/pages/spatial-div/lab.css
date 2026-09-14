@@ -1,0 +1,303 @@
+/* Fixture rules live in a real stylesheet on purpose: the selectors below are the test. */
+.panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 120px;
+  border-radius: 12px;
+  background: #2f56b5;
+  color: var(--panel-color, #fff);
+  font-size: 14px;
+  user-select: none;
+}
+.panel.small {
+  width: 120px;
+  height: 72px;
+}
+
+/* 01 layout */
+.grid-parent {
+  display: grid;
+  gap: 12px;
+  border: 1px dashed #555;
+  padding: 12px;
+}
+.grid-parent.narrow-by-ancestor {
+  width: 280px;
+}
+.sib {
+  background: #333;
+  height: 56px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 12px;
+}
+
+/* 02 styles */
+.theme .panel {
+  color: #ffd166;
+  background: #5a2d91;
+  transform: rotateY(20deg);
+}
+.theme .panel::after {
+  content: ' (themed)';
+}
+
+/* 03 transforms */
+.persp {
+  perspective: 600px;
+}
+.tilt-parent {
+  display: inline-block;
+  padding: 16px;
+  border: 1px dashed #555;
+  transform-style: preserve-3d;
+}
+
+/* 04 clipping */
+.clip {
+  width: 240px;
+  height: 160px;
+  position: relative;
+  background: #1c2540;
+}
+.clip.hidden {
+  overflow: hidden;
+}
+.clip.round {
+  border-radius: 24px;
+}
+.clip.circle {
+  clip-path: circle(45%);
+}
+.clip .panel {
+  position: absolute;
+  left: 150px;
+  top: 40px;
+}
+
+/* 05 scroll */
+.scroller {
+  height: 240px;
+  overflow: auto;
+  border: 1px dashed #555;
+  padding: 8px;
+  position: relative;
+}
+.scroller.xform {
+  transform: translateZ(0);
+}
+.sticky {
+  position: sticky;
+  top: 0;
+}
+.absolute {
+  position: absolute;
+  top: 80px;
+  left: 16px;
+}
+.fixed {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+}
+.filler {
+  height: 90px;
+  margin: 8px 0;
+  background: #1a1d29;
+  border-radius: 6px;
+}
+
+/* 06 stacking */
+.stack {
+  position: relative;
+  isolation: isolate;
+  height: 200px;
+}
+.stack .panel {
+  position: absolute;
+}
+.stack .a {
+  left: 20px;
+  top: 20px;
+}
+.stack .b {
+  left: 110px;
+  top: 60px;
+  background: #b5562f;
+}
+.cover {
+  position: absolute;
+  inset: 30px 10px;
+  background: rgba(255, 140, 0, 0.85);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 07 visibility */
+.fx-parent {
+  display: inline-block;
+  padding: 16px;
+  border: 1px dashed #555;
+}
+.fx-parent.vhidden {
+  visibility: hidden;
+}
+.fx-parent.half {
+  opacity: 0.5;
+}
+.fx-parent.zero {
+  opacity: 0;
+}
+.fx-parent.gone {
+  display: none;
+}
+.fx-parent.blur {
+  filter: blur(3px);
+}
+.fx-parent.round {
+  border-radius: 32px;
+  overflow: hidden;
+  background: #202537;
+}
+
+/* 08 animation */
+.anim {
+  transition:
+    transform 600ms ease,
+    --xr-back 600ms ease,
+    background-color 600ms ease;
+}
+.anim.moved {
+  transform: translateX(160px);
+}
+.anim.raised {
+  --xr-back: 160;
+}
+.anim.spin {
+  animation: spin 2s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    --xr-back: 0;
+  }
+  50% {
+    --xr-back: 160;
+  }
+}
+.anim.bob {
+  animation: bob 1.5s ease-in-out infinite;
+}
+.anim.scroll-tl {
+  animation: spin linear;
+  animation-timeline: scroll();
+  animation-range: 0% 100%;
+}
+
+/* 09 input */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 0, 80, 0.15);
+  pointer-events: none;
+}
+.overlay.solid {
+  pointer-events: auto;
+}
+.draggable {
+  touch-action: none;
+  cursor: grab;
+  position: relative;
+}
+
+/* 11 overlays */
+.scoped .pop {
+  background: #ffd166;
+  color: #000;
+}
+.pop {
+  background: #333;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+/* 1c environment queries */
+.env-box {
+  container-type: inline-size;
+  container-name: lab-env;
+}
+.env-box.wide {
+  width: 480px;
+}
+.env-box.narrow {
+  width: 240px;
+}
+@media (min-width: 400px) {
+  .env-media {
+    outline: 3px solid #22e06b;
+  }
+}
+.env-vw {
+  box-sizing: border-box;
+}
+.env-dvh {
+  min-height: 12dvh;
+}
+.env-rem {
+  font-size: 1.25rem;
+  padding: 0.5rem;
+}
+@container lab-env (min-width: 360px) {
+  .env-cq {
+    background: #2f9b6b !important;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .env-scheme {
+    box-shadow: 0 0 0 3px #c58c49 inset;
+  }
+}
+html.dark .env-dark {
+  background: #1a1030 !important;
+  color: #ffd166;
+}
+[dir='rtl'] .env-rtl {
+  flex-direction: row-reverse;
+}
+@font-face {
+  font-family: LabEnv;
+  src: local('Georgia'), local('Times New Roman');
+}
+.env-font {
+  font-family: LabEnv, Georgia, serif;
+}
+
+/* 6b anchored portals */
+.lab-anchor-scroll {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px dashed #555;
+  padding: 8px;
+}
+.lab-anchor-filler {
+  height: 180px;
+  color: #6d8277;
+  font-size: 12px;
+  padding-top: 24px;
+}
+.lab-float {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}

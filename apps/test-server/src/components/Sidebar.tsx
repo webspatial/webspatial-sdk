@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { entityAnimationRoutes } from '../pages/entity-animation/routes'
+import { spatialDivRoutes } from '../pages/spatial-div/routes'
 import { spatialElementMotionRoutes } from '../pages/spatial-element-motion/routes'
 
 export const routes = [
@@ -51,6 +52,17 @@ export const routes = [
   {
     path: '/styledComponentsSpatialTest',
     label: 'Styled-components Spatial',
+  },
+  {
+    path: '/spatial-div',
+    label: 'Spatial Div',
+    children: [
+      { path: '/spatial-div', label: 'Overview' },
+      ...spatialDivRoutes.map(route => ({
+        path: route.path,
+        label: route.label,
+      })),
+    ],
   },
   { path: '/canvas-test', label: 'Canvas Test' },
   { path: '/jsapi-test', label: 'JS API Test' },

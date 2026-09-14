@@ -106,6 +106,28 @@ import SpatialElementMotionPerfComparisonPage from './src/pages/spatial-element-
 import SpatialElementMotionLoopAnimationPage from './src/pages/spatial-element-motion/loop-animation'
 import SpatialElementMotionNestedAnimationPage from './src/pages/spatial-element-motion/nested-animation'
 import SpatialElementMotionTimelineMixedBoundariesPage from './src/pages/spatial-element-motion/timeline-mixed-boundaries'
+import SpatialDivPage from './src/pages/spatial-div/index'
+import {
+  SpatialDivAnimationPage,
+  SpatialDivClippingPage,
+  SpatialDivDomApisPage,
+  SpatialDivInputPage,
+  SpatialDivLayoutPage,
+  SpatialDivOverlaysPage,
+  SpatialDivScrollPage,
+  SpatialDivStackingPage,
+  SpatialDivStylesPage,
+  SpatialDivTransformsPage,
+  SpatialDivVisibilityPage,
+  SpatialDivGesturesPage,
+  SpatialDivFocusPage,
+  SpatialDivLifecyclePage,
+  SpatialDivDynamicStylesheetsPage,
+  SpatialDivEnvironmentQueriesPage,
+  SpatialDivDocumentListenersPage,
+  SpatialDivModalityPage,
+  SpatialDivAnchoredPortalsPage,
+} from './src/pages/spatial-div/pages'
 
 class ErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -206,6 +228,83 @@ function App() {
                 <Route
                   path="/styledComponentsSpatialTest"
                   element={<StyledComponentsSpatialTest />}
+                />
+                <Route path="/spatial-div" element={<SpatialDivPage />} />
+                <Route
+                  path="/spatial-div/layout"
+                  element={<SpatialDivLayoutPage />}
+                />
+                <Route
+                  path="/spatial-div/styles"
+                  element={<SpatialDivStylesPage />}
+                />
+                <Route
+                  path="/spatial-div/transforms"
+                  element={<SpatialDivTransformsPage />}
+                />
+                <Route
+                  path="/spatial-div/clipping"
+                  element={<SpatialDivClippingPage />}
+                />
+                <Route
+                  path="/spatial-div/scroll"
+                  element={<SpatialDivScrollPage />}
+                />
+                <Route
+                  path="/spatial-div/stacking"
+                  element={<SpatialDivStackingPage />}
+                />
+                <Route
+                  path="/spatial-div/visibility"
+                  element={<SpatialDivVisibilityPage />}
+                />
+                <Route
+                  path="/spatial-div/animation"
+                  element={<SpatialDivAnimationPage />}
+                />
+                <Route
+                  path="/spatial-div/input"
+                  element={<SpatialDivInputPage />}
+                />
+                <Route
+                  path="/spatial-div/dom-apis"
+                  element={<SpatialDivDomApisPage />}
+                />
+                <Route
+                  path="/spatial-div/overlays"
+                  element={<SpatialDivOverlaysPage />}
+                />
+                <Route
+                  path="/spatial-div/gestures"
+                  element={<SpatialDivGesturesPage />}
+                />
+                <Route
+                  path="/spatial-div/focus"
+                  element={<SpatialDivFocusPage />}
+                />
+                <Route
+                  path="/spatial-div/lifecycle"
+                  element={<SpatialDivLifecyclePage />}
+                />
+                <Route
+                  path="/spatial-div/dynamic-stylesheets"
+                  element={<SpatialDivDynamicStylesheetsPage />}
+                />
+                <Route
+                  path="/spatial-div/environment-queries"
+                  element={<SpatialDivEnvironmentQueriesPage />}
+                />
+                <Route
+                  path="/spatial-div/document-listeners"
+                  element={<SpatialDivDocumentListenersPage />}
+                />
+                <Route
+                  path="/spatial-div/modality"
+                  element={<SpatialDivModalityPage />}
+                />
+                <Route
+                  path="/spatial-div/anchored-portals"
+                  element={<SpatialDivAnchoredPortalsPage />}
                 />
                 <Route path="/canvas-test" element={<CanvasTest />} />
                 <Route path="/jsapi-test" element={<JSAPITest />} />
