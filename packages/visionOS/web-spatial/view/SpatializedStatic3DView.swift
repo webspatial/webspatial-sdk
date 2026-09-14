@@ -179,6 +179,12 @@ struct SpatializedStatic3DView: View {
         return try await Model3DAsset(url: localURL)
     }
 
+    private func loadBlob(from source: ModelSource) async throws -> Model3DAsset {
+        let fileURL = try await spatializedStatic3DElement.fetchBlob(source, from: spatialScene)
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        return try await Model3DAsset(url: fileURL)
+    }
+
     private func loadSources() async {
         loadState = .loading
         let result = await loadSources(spatializedStatic3DElement.allSources)
@@ -204,6 +210,9 @@ struct SpatializedStatic3DView: View {
         for source in sources {
             guard let url = localOrRemoteURL(url: source.src) else { continue }
             do {
+                if source.isBlob {
+                    return try (url, await loadBlob(from: source))
+                }
                 return try (url, await loadAsset(from: url))
             } catch {
                 continue
