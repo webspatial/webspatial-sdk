@@ -1,5 +1,7 @@
 import { SpatialStyleInfoUpdateEvent } from '../notifyUpdateStandInstanceLayout'
 
+const STYLESHEET_RETRY_DELAYS_MS = [200, 600]
+
 export function asyncLoadStyleToChildWindow(
   childWindow: WindowProxy,
   link: HTMLLinkElement,
@@ -7,11 +9,15 @@ export function asyncLoadStyleToChildWindow(
 ): Promise<boolean> {
   return new Promise(resolve => {
     const { href } = link
-    const sep = href.includes('?') ? '&' : '?'
-    link.href = `${href}${sep}uniqueURL=${Math.random()}`
+    const nextRequestUrl = () => {
+      const sep = href.includes('?') ? '&' : '?'
+      return `${href}${sep}uniqueURL=${Math.random()}`
+    }
+    link.href = nextRequestUrl()
 
     let finished = false
     let timeoutId: number | undefined
+    let retryCount = 0
     const finish = (ok: boolean) => {
       if (finished) return
       finished = true
@@ -24,14 +30,31 @@ export function asyncLoadStyleToChildWindow(
     // need to wait for some time to make sure the style is loaded
     // otherwise, the style may not be applied
     link.onerror = () => {
+      // Later sync waves treat an attached link as already satisfied, so a
+      // failed sheet is never replaced on its own. Retry while the node is
+      // still in the portal head — once a newer wave detaches it, the href is
+      // no longer wanted and the retry must stop.
+      if (
+        link.parentNode != null &&
+        retryCount < STYLESHEET_RETRY_DELAYS_MS.length
+      ) {
+        const delay = STYLESHEET_RETRY_DELAYS_MS[retryCount++]!
+        window.setTimeout(() => {
+          if (link.parentNode == null) {
+            finish(false)
+            return
+          }
+          link.href = nextRequestUrl()
+        }, delay)
+        return
+      }
       finish(false)
     }
     link.onload = () => {
-      if (!isCurrent()) {
-        link.parentNode?.removeChild(link)
-        finish(false)
-        return
-      }
+      // A newer sync wave may have started while this sheet was in flight. That
+      // wave already dropped links whose href is no longer wanted and skips
+      // re-adding the ones still attached, so detaching here would leave the
+      // portal document with no stylesheet at all.
       finish(true)
     }
 

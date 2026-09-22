@@ -145,6 +145,110 @@ describe('windowStyleSync', () => {
     await Promise.all([firstSync, secondSync])
   })
 
+  it('keeps an attached stylesheet that finishes loading after a newer sync starts', async () => {
+    vi.useFakeTimers()
+    const childWindow = createChildWindow()
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://example.com/a.css'
+    document.head.appendChild(link)
+
+    const firstSync = syncParentHeadToChild(childWindow)
+    await vi.advanceTimersByTimeAsync(51)
+    const childLink = childWindow.document.head.querySelector(
+      'link[data-webspatial-sync="1"]',
+    ) as HTMLLinkElement
+    expect(childLink).not.toBeNull()
+
+    // A newer wave starts while the stylesheet is still in flight. It must not
+    // schedule a second copy, and the in-flight one must survive its own load.
+    const secondSync = syncParentHeadToChild(childWindow)
+    childLink.dispatchEvent(new Event('load'))
+    await Promise.all([firstSync, secondSync])
+
+    expect(
+      childWindow.document.head.querySelectorAll(
+        'link[data-webspatial-sync="1"]',
+      ),
+    ).toHaveLength(1)
+    expect(childWindow.document.head.contains(childLink)).toBe(true)
+  })
+
+  it('retries a stylesheet that fails to load in the portal document', async () => {
+    vi.useFakeTimers()
+    const childWindow = createChildWindow()
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://example.com/a.css'
+    document.head.appendChild(link)
+
+    const sync = syncParentHeadToChild(childWindow)
+    await vi.advanceTimersByTimeAsync(51)
+    const childLink = childWindow.document.head.querySelector(
+      'link[data-webspatial-sync="1"]',
+    ) as HTMLLinkElement
+    const firstRequestUrl = childLink.href
+
+    childLink.dispatchEvent(new Event('error'))
+    await vi.advanceTimersByTimeAsync(201)
+
+    expect(childLink.href).not.toBe(firstRequestUrl)
+    expect(childWindow.document.head.contains(childLink)).toBe(true)
+
+    childLink.dispatchEvent(new Event('load'))
+    await expect(sync).resolves.toEqual([true])
+  })
+
+  it('does not retry a stylesheet that a newer sync already detached', async () => {
+    vi.useFakeTimers()
+    const childWindow = createChildWindow()
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://example.com/a.css'
+    document.head.appendChild(link)
+
+    const sync = syncParentHeadToChild(childWindow)
+    await vi.advanceTimersByTimeAsync(51)
+    const childLink = childWindow.document.head.querySelector(
+      'link[data-webspatial-sync="1"]',
+    ) as HTMLLinkElement
+    const requestUrl = childLink.href
+
+    childLink.remove()
+    childLink.dispatchEvent(new Event('error'))
+    await vi.advanceTimersByTimeAsync(201)
+
+    expect(childLink.href).toBe(requestUrl)
+    await expect(sync).resolves.toEqual([false])
+  })
+
+  it('gives up retrying once the stylesheet runs out of attempts', async () => {
+    vi.useFakeTimers()
+    const childWindow = createChildWindow()
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://example.com/a.css'
+    document.head.appendChild(link)
+
+    const sync = syncParentHeadToChild(childWindow)
+    await vi.advanceTimersByTimeAsync(51)
+    const childLink = childWindow.document.head.querySelector(
+      'link[data-webspatial-sync="1"]',
+    ) as HTMLLinkElement
+
+    childLink.dispatchEvent(new Event('error'))
+    await vi.advanceTimersByTimeAsync(201)
+    childLink.dispatchEvent(new Event('error'))
+    await vi.advanceTimersByTimeAsync(601)
+    const lastRequestUrl = childLink.href
+
+    childLink.dispatchEvent(new Event('error'))
+    await vi.advanceTimersByTimeAsync(2001)
+
+    expect(childLink.href).toBe(lastRequestUrl)
+    await expect(sync).resolves.toEqual([false])
+  })
+
   it('cancels a pending delayed sync when an immediate sync is scheduled', async () => {
     vi.useFakeTimers()
     const childWindow = createChildWindow()
