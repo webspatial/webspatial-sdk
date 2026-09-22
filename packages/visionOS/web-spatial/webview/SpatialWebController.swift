@@ -287,10 +287,13 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     }
 
     func callJS(_ js: String) {
-        if webview != nil, isPageLoaded {
-            webview!.evaluateJavaScript(js)
-        } else {
-            enqueueJS(js)
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            if let webview = self.webview, self.isPageLoaded {
+                webview.evaluateJavaScript(js)
+            } else {
+                self.enqueueJS(js)
+            }
         }
     }
 }
