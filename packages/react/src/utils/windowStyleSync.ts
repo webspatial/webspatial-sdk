@@ -13,8 +13,6 @@ export function asyncLoadStyleToChildWindow(
       const sep = href.includes('?') ? '&' : '?'
       return `${href}${sep}uniqueURL=${Math.random()}`
     }
-    link.href = nextRequestUrl()
-
     let finished = false
     let timeoutId: number | undefined
     let retryCount = 0
@@ -29,34 +27,50 @@ export function asyncLoadStyleToChildWindow(
 
     // need to wait for some time to make sure the style is loaded
     // otherwise, the style may not be applied
-    link.onerror = () => {
+    const arm = (node: HTMLLinkElement) => {
+      node.onerror = () => onAttemptFailed(node)
+      node.onload = () => {
+        // A newer sync wave may have started while this sheet was in flight.
+        // That wave already dropped links whose href is no longer wanted and
+        // skips re-adding the ones still attached, so detaching here would
+        // leave the portal document with no stylesheet at all.
+        finish(true)
+      }
+      node.href = nextRequestUrl()
+    }
+
+    const onAttemptFailed = (node: HTMLLinkElement) => {
+      node.onerror = null
+      node.onload = null
+
       // Later sync waves treat an attached link as already satisfied, so a
       // failed sheet is never replaced on its own. Retry while the node is
       // still in the portal head — once a newer wave detaches it, the href is
       // no longer wanted and the retry must stop.
       if (
-        link.parentNode != null &&
-        retryCount < STYLESHEET_RETRY_DELAYS_MS.length
+        node.parentNode == null ||
+        retryCount >= STYLESHEET_RETRY_DELAYS_MS.length
       ) {
-        const delay = STYLESHEET_RETRY_DELAYS_MS[retryCount++]!
-        window.setTimeout(() => {
-          if (link.parentNode == null) {
-            finish(false)
-            return
-          }
-          link.href = nextRequestUrl()
-        }, delay)
+        finish(false)
         return
       }
-      finish(false)
+
+      const delay = STYLESHEET_RETRY_DELAYS_MS[retryCount++]!
+      window.setTimeout(() => {
+        const parent = node.parentNode
+        if (parent == null) {
+          finish(false)
+          return
+        }
+        // PICO WebLayer does not emit a second error for a link whose href is
+        // rewritten in place, so every attempt needs its own node.
+        const replacement = node.cloneNode(true) as HTMLLinkElement
+        arm(replacement)
+        parent.replaceChild(replacement, node)
+      }, delay)
     }
-    link.onload = () => {
-      // A newer sync wave may have started while this sheet was in flight. That
-      // wave already dropped links whose href is no longer wanted and skips
-      // re-adding the ones still attached, so detaching here would leave the
-      // portal document with no stylesheet at all.
-      finish(true)
-    }
+
+    arm(link)
 
     setTimeout(() => {
       if (!isCurrent()) {

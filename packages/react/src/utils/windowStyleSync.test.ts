@@ -17,6 +17,12 @@ function createChildWindow() {
   } as unknown as WindowProxy
 }
 
+function getPortalLink(childWindow: WindowProxy) {
+  return childWindow.document.head.querySelector(
+    'link[data-webspatial-sync="1"]',
+  ) as HTMLLinkElement
+}
+
 function clearParentHead() {
   document.head
     .querySelectorAll('style, link[rel="stylesheet"]')
@@ -184,18 +190,55 @@ describe('windowStyleSync', () => {
 
     const sync = syncParentHeadToChild(childWindow)
     await vi.advanceTimersByTimeAsync(51)
-    const childLink = childWindow.document.head.querySelector(
-      'link[data-webspatial-sync="1"]',
-    ) as HTMLLinkElement
-    const firstRequestUrl = childLink.href
+    const firstAttempt = getPortalLink(childWindow)
+    const firstRequestUrl = firstAttempt.href
 
-    childLink.dispatchEvent(new Event('error'))
+    firstAttempt.dispatchEvent(new Event('error'))
     await vi.advanceTimersByTimeAsync(201)
 
-    expect(childLink.href).not.toBe(firstRequestUrl)
-    expect(childWindow.document.head.contains(childLink)).toBe(true)
+    const secondAttempt = getPortalLink(childWindow)
+    expect(secondAttempt.href).not.toBe(firstRequestUrl)
+    expect(
+      childWindow.document.head.querySelectorAll(
+        'link[data-webspatial-sync="1"]',
+      ),
+    ).toHaveLength(1)
 
-    childLink.dispatchEvent(new Event('load'))
+    secondAttempt.dispatchEvent(new Event('load'))
+    await expect(sync).resolves.toEqual([true])
+  })
+
+  it('replaces the link node on every retry so a reused node cannot stall the sequence', async () => {
+    vi.useFakeTimers()
+    const childWindow = createChildWindow()
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://example.com/a.css'
+    document.head.appendChild(link)
+
+    const sync = syncParentHeadToChild(childWindow)
+    await vi.advanceTimersByTimeAsync(51)
+
+    // PICO WebLayer only fires `error` once per node, so each attempt must run
+    // on a fresh node and the previous one must be detached.
+    const firstAttempt = getPortalLink(childWindow)
+    firstAttempt.dispatchEvent(new Event('error'))
+    await vi.advanceTimersByTimeAsync(201)
+
+    const secondAttempt = getPortalLink(childWindow)
+    expect(secondAttempt).not.toBe(firstAttempt)
+    expect(childWindow.document.head.contains(firstAttempt)).toBe(false)
+
+    secondAttempt.dispatchEvent(new Event('error'))
+    await vi.advanceTimersByTimeAsync(601)
+
+    const thirdAttempt = getPortalLink(childWindow)
+    expect(thirdAttempt).not.toBe(secondAttempt)
+    expect(thirdAttempt.getAttribute('data-webspatial-sync-key')).toBe(
+      'https://example.com/a.css',
+    )
+
+    thirdAttempt.dispatchEvent(new Event('load'))
     await expect(sync).resolves.toEqual([true])
   })
 
@@ -232,20 +275,20 @@ describe('windowStyleSync', () => {
 
     const sync = syncParentHeadToChild(childWindow)
     await vi.advanceTimersByTimeAsync(51)
-    const childLink = childWindow.document.head.querySelector(
-      'link[data-webspatial-sync="1"]',
-    ) as HTMLLinkElement
 
-    childLink.dispatchEvent(new Event('error'))
+    getPortalLink(childWindow).dispatchEvent(new Event('error'))
     await vi.advanceTimersByTimeAsync(201)
-    childLink.dispatchEvent(new Event('error'))
+    getPortalLink(childWindow).dispatchEvent(new Event('error'))
     await vi.advanceTimersByTimeAsync(601)
-    const lastRequestUrl = childLink.href
 
-    childLink.dispatchEvent(new Event('error'))
+    const lastAttempt = getPortalLink(childWindow)
+    const lastRequestUrl = lastAttempt.href
+
+    lastAttempt.dispatchEvent(new Event('error'))
     await vi.advanceTimersByTimeAsync(2001)
 
-    expect(childLink.href).toBe(lastRequestUrl)
+    expect(getPortalLink(childWindow)).toBe(lastAttempt)
+    expect(lastAttempt.href).toBe(lastRequestUrl)
     await expect(sync).resolves.toEqual([false])
   })
 
