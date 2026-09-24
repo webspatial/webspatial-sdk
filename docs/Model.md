@@ -210,19 +210,19 @@ function LongScrollPage() {
 
 ### HTML
 
-| Property   | visionOS       | Pico OS                | WebSpatial SDK |
-| ---------- | -------------- | ---------------------- | -------------- |
-| model      | ✓<br>26        | ❌                     | ✓<br>1.1       |
-| enable-xr  | ✓<br>26        | ✓<br>6 ⍺2.0            | ✓<br>1.1       |
-| src        | ✓ (USDZ)<br>26 | ✓ (USDZ/GLB)<br>6 ⍺2.0 | ✓<br>1.1       |
-| onLoad     | ✓<br>26        | ✓<br>6 ⍺2.0            | ✓<br>1.1       |
-| onError    | ✓<br>26        | ✓<br>6 ⍺2.0            | ✓<br>1.1       |
-| autoPlay   | ✓<br>26        | ✓<br>6 ⍺2.1            | ✓<br>1.6       |
-| loop       | ✓<br>26        | ✓<br>6 ⍺2.1            | ✓<br>1.6       |
-| `<source>` | ✓ (USDZ)<br>26 | ✓ (USDZ/GLB)<br>6 ⍺2.1 | ✓<br>1.6       |
-| poster     | ✓<br>26        | ✓<br>6 β2.0            | ✓<br>1.7       |
-| loading    | ✓<br>26        | ✓<br>6 β2.1            | ✓<br>1.7       |
-| stagemode  | 26             | 6.1                    | July           |
+| Property   | visionOS       | Pico OS                         | WebSpatial SDK |
+| ---------- | -------------- | ------------------------------- | -------------- |
+| model      | ✓<br>26        | ❌                              | ✓<br>1.1       |
+| enable-xr  | ✓<br>26        | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
+| src        | ✓ (USDZ)<br>26 | ✓ (USDZ/GLB,blob URL)<br>6 ⍺2.0 | ✓<br>1.1       |
+| onLoad     | ✓<br>26        | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
+| onError    | ✓<br>26        | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
+| autoPlay   | ✓<br>26        | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
+| loop       | ✓<br>26        | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
+| `<source>` | ✓ (USDZ)<br>26 | ✓ (USDZ/GLB,blob URL)<br>6 ⍺2.1 | ✓<br>1.6       |
+| poster     | ✓<br>26        | ✓<br>6 β2.0                     | ✓<br>1.7       |
+| loading    | ✓<br>26        | ✓<br>6 β2.1                     | ✓<br>1.7       |
+| stagemode  | ✓<br>26        | ✓<br>6.1                        | ✓<br>2.0       |
 
 ### CSS
 
@@ -249,35 +249,10 @@ function LongScrollPage() {
 | play()             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
 | pause()            | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
 | currentTime        | ✓<br>26  | ✓<br>6 β2.0 | ✓<br>1.7       |
-| boundingBoxCenter  | 26       | 6.2         | August         |
-| boundingBoxExtents | 26       | 6.2         | August         |
+| boundingBoxCenter  | 26       | 6.2         | October        |
+| boundingBoxExtents | 26       | 6.2         | October        |
 
 ## Feature Implementation Details
-
-### 5. Native Orbit Interaction (`stagemode="orbit"`)
-
-This feature provides a built-in, intuitive way for users to inspect a 3D model from different angles using familiar drag gestures, without requiring developers to write complex gesture-handling code.
-
-#### 5.1. React SDK (`@webspatial/react-sdk`)
-
-- **New Prop**: The `ModelProps` type will be extended to accept `stagemode?: 'orbit' | 'none'`. The default will be `'none'`.
-
-#### 5.2. Core SDK (`@webspatial/core-sdk`)
-
-- **New Property**: The `UpdateSpatializedStatic3DElementProperties` command in `JSBCommand.ts` will be extended to include the `stagemode` string. This property will be sent to the native layer.
-
-#### 5.3. Native visionOS Layer (`packages/visionOS`)
-
-1. In `SpatializedStatic3DView.swift`, we will check for the `stagemode` property on the `SpatializedStatic3DElement`.
-2. If `stagemode` is `"orbit"`, we will add a `DragGesture` to the view.
-3. The `onChanged` handler for the `DragGesture` will be used to manipulate the model's orientation.
-   - A horizontal drag (`event.translation.width`) will be mapped to a rotation around the model's Y-axis.
-   - A vertical drag (`event.translation.height`) will be mapped to a rotation around the model's X-axis (pitch).
-4. A state variable (e.g., `@State private var orbitRotation: Angle3D = .zero`) will be used to accumulate the rotation from the drag gesture. This rotation will be applied to the model using the `.rotation3DEffect()` modifier on the `Model3D` view.
-
-- **Interaction with&nbsp;entityTransform**: `entityTransform` will not be updated when the model is rotated using the orbit gesture. Similarly updates to `entityTransform` will not affect the model's orientation.
-
-- **Gesture Conflict Resolution**: `onSpatial*` will be disabled when stagemode is set to orbit. This restriction can be loosened in the future based if there are no gesture conflicts.
 
 ### 6. Bounding Box Geometry (`boundingBoxCenter` / `boundingBoxExtents`)
 
@@ -298,50 +273,6 @@ These read-only properties expose the axis-aligned bounding box (AABB) of the lo
 
 1. Add `readonly boundingBoxCenter: DOMPointReadOnly` and `readonly boundingBoxExtents: DOMPointReadOnly` to `SpatializedStatic3DElementRef` in `spatialized-container/types.ts`.
 2. Expose them as getters in `extraRefProps` in `SpatializedStatic3DElementContainer.tsx`, delegating to the core element getters (mirroring the existing `duration` getters).
-
-### 7. `blob:` URL Support for `<Model>` Sources
-
-`<Model>` should accept `blob:` URLs on `src` and child `<source>` elements. Today source URLs are sent to native as strings, and native downloads them — which cannot resolve `blob` URL since it's local to the WebView. So the bytes must be shipped from JS → native. The bridge is string-only, so we transfer chunked base64 into a native temp file; the existing local-file load path handles the rest. The blob URL is created via
-
-```js
-const resp = await fetch(src)
-const blob = await resp.blob()
-const blobURL = URL.createObjectURL(blob)
-// "blob:https://webspatial-hackathon.vercel.app/ef1ac2cd-0f6a-4e1a-861a-dac5427e7c29"
-```
-
-#### Design
-
-Blob URLs pass through the existing create/update flow unchanged. When native's source-fallback loop reaches a `blob:` source:
-
-1. **Native → JS**: new WebMsg `modelblobrequest` `{ requestId, src }`. Native creates a unique, non-reused `requestId` for each source attempt, including reloads of the same `src`.
-2. **JS** (pure transport — no format logic): `fetch(src)` → blob, then send `StartBlobTransfer` `{ id, requestId, src, mimeType, size }` and await its acknowledgement. JS splits the blob into 2 MiB slices and keeps at most four `TransferBlobChunk` `{ id, requestId, offset, data }` operations in flight. Each operation reads and base64-encodes its slice on the main thread, sends the chunk, and occupies its slot until native acknowledges it. After every chunk acknowledgement succeeds, JS sends `CompleteBlobTransfer` `{ id, requestId }`; a zero-byte blob sends start followed immediately by complete.
-3. **Native**: routes each command to the element by `id`, then to that element's transfer by `requestId`; unknown, cancelled, or completed request IDs are rejected so chunks from an earlier same-URL load cannot enter a newer transfer. Chunk arrival order is not significant. Base64 decoding and random-access `FileHandle` writes use each chunk's `offset` and run through a serialized background actor or queue. `CompleteBlobTransfer` closes the file, resolves its extension from the `<source type>` value, then `mimeType`, then USDZ as a last resort, and loads it with `Model3DAsset(url:)`. A successful load reports the original blob URL rather than the temp file URL.
-4. **Failure and cancellation**: a fetch, read, or bridge failure stops new chunk scheduling and sends a best-effort `FailBlobTransfer` `{ id, requestId, message? }` after already-started operations settle. A one-second inactivity timeout, explicit failure, element destruction, or model source replacement invalidates the native request and deletes its incomplete temp file. Later commands for an invalid request receive failed acknowledgements, which stop the JS transfer loop.
-
-The four-in-flight window bounds transport memory while allowing bridge delivery and native writing to overlap. The transport and its commands contain no model-format logic and can be reused by other spatial components. Temp files are deleted on failure, source replacement, and element destruction. No caching in v1: two elements sharing a blob URL transfer twice.
-
-#### 7.1. Core SDK (`@webspatial/core-sdk`)
-
-1. `WebMsgCommand.ts` — new `modelblobrequest` WebMsg type with detail `{ requestId, src }`, sent by native to request transfer of a blob source. `requestId` uniquely identifies this source attempt even when the same `src` is reloaded.
-2. `JSBCommand.ts` — add four command classes extending `SpatializedElementCommand`. Their serialized payloads are:
-   - `StartBlobTransfer` — `{ id, requestId, src, mimeType, size }`
-   - `TransferBlobChunk` — `{ id, requestId, offset, data }`
-   - `CompleteBlobTransfer` — `{ id, requestId }`
-   - `FailBlobTransfer` — `{ id, requestId, message? }`
-3. New `blob/blobTransfer.ts` — component-agnostic orchestration for fetching the blob; sending start, chunk, complete, and failure commands; splitting the blob into 2 MiB slices; and maintaining a four-operation sliding window. Each slot remains occupied until its JSB acknowledgement settles, and `CompleteBlobTransfer` is sent only after all chunk acknowledgements succeed. The helper takes only the element (a `SpatialObject`), request ID, and blob URL, so it remains reusable by other components.
-4. `SpatializedStatic3DElement.ts` — handles `modelblobrequest` in `onReceiveEvent` and delegates the requested URL, request ID, and element to the transfer helper. A rejected acknowledgement from native cancellation stops the helper without requiring source-change detection in JavaScript.
-5. The bounded sliding window allows up to four chunk commands to be sent concurrently.
-
-#### 7.2. Native visionOS Layer (`packages/visionOS`)
-
-1. `WebMsgCommand.swift` / `JSBCommand.swift` — mirror `modelblobrequest` and the four blob transfer command types with their required fields.
-2. New `blob/BlobTransfer.swift` — component-agnostic request state that creates and owns a temp file, stores `src`, `mimeType`, and `size`, and serializes background base64 decode plus random-access `FileHandle` writes. Each chunk seeks to its supplied `offset`, so chunks may arrive out of order. `CompleteBlobTransfer` closes and returns the file, while `FailBlobTransfer` or cancellation closes and deletes it. Accepted commands reset a one-second inactivity timer.
-3. `model/SpatializedStatic3DElement.swift` — creates a unique `requestId` for each blob source attempt, sends `modelblobrequest`, owns the active generic `BlobTransfer`, exposes an async fetch returning its temp file URL, and rejects commands for unknown, completed, or cancelled requests. It also retains completed temp files only for their required lifetime and removes them on replacement or destruction.
-4. `model/SpatialScene.swift` — registers all four blob transfer JSB commands and routes them to their owning element by `id`; the element resolves the transfer by `requestId`. Each chunk acknowledgement is sent only after its background write finishes.
-5. In `onUpdateSpatializedStatic3DElementProperties`, compare incoming `modelURL` and `sources` with the element's current values. If either actually changes, cancel the active transfer and clean up its temporary data before applying the new source values. Late chunks are rejected, causing the JS transfer loop to stop.
-6. `view/SpatializedStatic3DView.swift` — in the fallback loop, if `source.src` starts with `blob:`, await the element's fetch while passing the `<source type>` value, load the returned temp file via `Model3DAsset(url:)`, and return the original blob URL so `currentSrc` never exposes the temp path.
-7. No caching in v1 — two elements sharing the same blob URL transfer independently.
 
 ## Risks
 
