@@ -227,16 +227,17 @@ pushing transform data to the web side.
 
 ## Test Pages
 
-![Test pages coverage summary](imgs/05-infographic-test-pages-coverage.png)
+### Gesture coordinate verification
 
-### geometry-verify
+Routes:
 
-Route: `/#/geometry-verify`
+- `/#/reality/entity-gesture-coordinates`
+- `/#/reality/spatial-element-gesture-coordinates`
+- `/#/reality/convert-coordinate-gesture`
 
-Verifies tap gesture coordinate correctness (`offsetX/Y/Z`, `clientX/Y/Z`) across:
-- Plain, rotated, scaled SpatialDivs
-- Nested SpatialDivs (parent rotated, child offset)
-- 3D Model tap
+These pages verify target-local tap and drag-start offsets, parent-local drag and
+rotation values, and `convertCoordinate` round trips across Entity, nested
+SpatialDiv, and Model targets with rotated and scaled parents.
 
 ### transform-verify
 
@@ -260,5 +261,7 @@ combinations. Covers:
 |------|---------|
 | `packages/visionOS/web-spatial/model/SpatializedElement.swift` | Model: sceneTransform, coordinate conversion API |
 | `packages/visionOS/web-spatial/view/SpatializedElementView.swift` | Native view: transforms, gestures, geometry |
-| `apps/test-server/src/pages/geometry-verify/index.tsx` | Gesture coordinate verification page |
+| `apps/test-server/src/pages/reality/entityGestureCoordinates.tsx` | Entity gesture coordinate verification page |
+| `apps/test-server/src/pages/reality/spatialElementGestureCoordinates.tsx` | SpatialDiv and Model gesture coordinate verification page |
+| `apps/test-server/src/pages/reality/convertCoordinateGesture.tsx` | Gesture and coordinate-conversion round-trip page |
 | `apps/test-server/src/pages/transform-verify/index.tsx` | Transform visual correctness page |
