@@ -106,6 +106,12 @@ type CoordinateConvertible =
 
 When converting from an entity to `window`, you receive pixel values. When converting from `window` to an entity, you provide pixel values and receive meters. When converting from a 2D frame to `window`, both are in pixels but the frame uses view-local coordinates while the window uses view-global coordinates.
 
+Entity `onSpatialTap` uses the same two spaces: `offsetX/Y/Z` is entity local (meters); `clientX/Y/Z` is window global (pixels). See [`docs/dynamic-3d-api-prd.md` §12](./dynamic-3d-api-prd.md#12-interaction).
+
+SpatialDiv / independent `<Model>` `onSpatialTap` uses CSS pixels: `offset*` is the element's pre-transform local space (top-left origin; front face `offsetZ ≈ 0`); `client*` is SpatialScene / window space. See `docs/visionos-transform-and-gesture-design.md` and `openspec/specs/spatial-gestures/spec.md`.
+
+`convertCoordinate` for a 2D frame uses `SpatializedElement.sceneTransform`, which includes layout and `--xr-back` but **does not include the element's CSS `transform`**. Gesture `offset*` inverts the full placement chain (including CSS transform). Do not assume `convertCoordinate(tap.offset, { from: divRef, to: window })` equals `tap.client` when the element has a CSS transform.
+
 ### Unsupported behavior
 
 `convertCoordinate` is a runtime-gated API. Guard cross-environment code with `WebSpatialRuntime.supports('convertCoordinate')` before calling.

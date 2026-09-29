@@ -42,3 +42,33 @@ The system MUST allow constraining spatial **rotate** gestures to a single axis 
 - **GIVEN** `constrainedToAxis` is a vector whose magnitude is below the platform's floating-point epsilon (e.g. `[1e-15, 0, 0]`)
 - **WHEN** the value is applied on the native side
 - **THEN** the implementation SHOULD treat it as unconstrained (same as zero vector) rather than producing undefined behavior
+
+### Requirement: Tap and drag-start hit points
+
+The system MUST report `spatialTap` and `spatialDragStart` hit points in two explicit spaces. Native MUST convert the platform gesture location into those spaces and MUST NOT forward the gesture recognizer's default `.local` coordinates as the web-facing local point.
+
+`detail.location3D` (tap) and `detail.startLocation3D` (drag-start) are the target-local point (`offsetX/Y/Z` on the React event). `detail.globalLocation3D` is the same hit in SpatialScene / window space (`clientX/Y/Z`). Tap and drag-start MUST use the same target-local definition.
+
+Continuous `spatialDrag` `translation3D` space is out of scope for this requirement.
+
+#### Scenario: SpatialDiv tap ignores the element's own transform
+
+- **GIVEN** a SpatialDiv (or independent Model) with `--xr-back` and a CSS `transform` that includes translation, rotation, scale, and a non-default `transform-origin`
+- **WHEN** the user taps the top-left corner of the element's front face
+- **THEN** `offsetX`, `offsetY`, and `offsetZ` MUST be approximately `0` (CSS pixels, top-left origin, front face `z = 0`)
+- **AND** `clientX/Y/Z` MUST be the same hit in SpatialScene / window CSS pixels (so they DO move when the element is transformed)
+
+#### Scenario: Entity tap is target-local meters
+
+- **GIVEN** a Web-facing SpatialEntity with a non-zero `position` / `rotation` / `scale`, possibly under a Reality container that itself has CSS transform or `--xr-back`
+- **AND** `enableInput` is true so the entity is hit-testable
+- **WHEN** the user taps near the entity's local origin
+- **THEN** `offsetX/Y/Z` MUST be approximately `(0, 0, 0)` in meters in that SpatialEntity's local space
+- **AND** `clientX/Y/Z` MUST be the same hit in window CSS pixels
+
+#### Scenario: Hit on a child mesh dispatches to the SpatialEntity
+
+- **GIVEN** a SpatialEntity whose visible geometry is a child RealityKit mesh
+- **WHEN** the gesture hits that child mesh
+- **THEN** the event target MUST be the nearest Web-facing SpatialEntity
+- **AND** `location3D` MUST be converted into that SpatialEntity's local space, not left in the child mesh's space or in the Reality view's SwiftUI local space
