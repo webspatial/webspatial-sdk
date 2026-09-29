@@ -8,27 +8,34 @@ struct SpatializedDynamic3DView: View {
     @State private var isRotate = false
     @State private var isScale = false
 
+    /// The web-facing SpatialEntity for a hit entity. The actual hit may be a child mesh
+    /// inside a SpatialEntity subtree, in which case the event belongs to the nearest parent.
+    private func webTarget(for hitEntity: Entity) -> SpatialEntity? {
+        (hitEntity as? SpatialEntity) ?? SpatialEntity.findNearestParent(entity: hitEntity)
+    }
+
+    private func point3D(_ position: SIMD3<Float>) -> Point3D {
+        Point3D(x: Double(position.x), y: Double(position.y), z: Double(position.z))
+    }
+
+    /// Scene-space meters expressed as window-global pixels. This is the space SpatialDiv
+    /// already reports for clientX/Y/Z, and the one `convertCoordinate` calls `window`.
+    private func windowPixelPoint(_ scenePosition: SIMD3<Float>) -> Point3D? {
+        guard let content = spatializedDynamic3DElement.getViewContent() else { return nil }
+        return content.convert(point: scenePosition, from: .scene, to: .global)
+    }
+
     var spatialTapEvent: some Gesture {
         SpatialTapGesture(count: 1).targetedToAnyEntity()
             .onEnded { value in
-                if let entity = value.entity as? SpatialEntity {
-                    // Convert local gesture coordinates into world (global) coordinates via RealityKit.
-                    let globalLocation3D = entity.convert(position: SIMD3<Float>(Float(value.location3D.x), Float(value.location3D.y), Float(value.location3D.z)), to: nil)
-                    let globalPoint3D = Point3D(x: Double(globalLocation3D.x), y: Double(globalLocation3D.y), z: Double(globalLocation3D.z))
+                guard let target = webTarget(for: value.entity) else { return }
+                // value.location3D is in the RealityView's SwiftUI space, so it has to be converted
+                // before it can stand for target-local meters (offsetX/Y/Z) or window pixels
+                // (clientX/Y/Z). Both come from the same hit point.
+                let localPoint3D = point3D(value.convert(value.location3D, from: .local, to: target))
+                let globalPoint3D = windowPixelPoint(value.convert(value.location3D, from: .local, to: .scene))
 
-                    spatialScene.sendWebMsg(entity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D, globalLocation3D: globalPoint3D)))
-                } else {
-                    if let spatialEntity = SpatialEntity.findNearestParent(entity: value.entity) {
-                        // Convert using the hit entity's coordinate space, then forward to the nearest SpatialEntity.
-                        let globalLocation3D = value.entity.convert(
-                            position: SIMD3<Float>(Float(value.location3D.x), Float(value.location3D.y), Float(value.location3D.z)),
-                            to: nil
-                        )
-                        let globalPoint3D = Point3D(x: Double(globalLocation3D.x), y: Double(globalLocation3D.y), z: Double(globalLocation3D.z))
-
-                        spatialScene.sendWebMsg(spatialEntity.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: value.location3D, globalLocation3D: globalPoint3D)))
-                    }
-                }
+                spatialScene.sendWebMsg(target.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: localPoint3D, globalLocation3D: globalPoint3D)))
             }
     }
 
@@ -98,15 +105,14 @@ struct SpatializedDynamic3DView: View {
             // Always forward drag gesture events to JS
             if let entity = value.entity as? SpatialEntity {
                 if !isDrag {
-                    let globalStartLocation3D = value.entity.convert(
-                        position: SIMD3<Float>(Float(value.startLocation3D.x), Float(value.startLocation3D.y), Float(value.startLocation3D.z)),
-                        to: nil
-                    )
-                    let globalStartPoint3D = Point3D(x: Double(globalStartLocation3D.x), y: Double(globalStartLocation3D.y), z: Double(globalStartLocation3D.z))
+                    // Same conversion as tap: startLocation3D arrives in the RealityView's
+                    // SwiftUI space, not in entity meters or window pixels.
+                    let startPoint3D = point3D(value.convert(value.startLocation3D, from: .local, to: entity))
+                    let globalStartPoint3D = windowPixelPoint(value.convert(value.startLocation3D, from: .local, to: .scene))
 
                     let startEvent = WebSpatialDragStartGuestureEvent(
                         detail: .init(
-                            startLocation3D: value.startLocation3D,
+                            startLocation3D: startPoint3D,
                             globalLocation3D: globalStartPoint3D
                         )
                     )

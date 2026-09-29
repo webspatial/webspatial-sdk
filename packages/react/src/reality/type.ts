@@ -17,6 +17,7 @@ export type EntityProps = {
   position?: Vec3
   rotation?: Vec3
   scale?: Vec3
+  /** When true, the entity can be hit by spatial gestures (`spatialtap` and related). Default false. */
   enableInput?: boolean
   /** Animation prop returned by useEntityAnimation(). */
   animation?: EntityMotionAnimation
@@ -30,9 +31,11 @@ type allTarget<T extends EntityRefShape> = {
 export type SpatialTapEntityEvent<T extends EntityRefShape = EntityRefShape> =
   CoreSpatialTapEvent &
     allTarget<T> & {
+      /** Hit point in `event.target` entity local space, in meters. */
       readonly offsetX: number
       readonly offsetY: number
       readonly offsetZ: number
+      /** Hit point in window global space, in CSS pixels. */
       readonly clientX: number
       readonly clientY: number
       readonly clientZ: number
@@ -43,9 +46,11 @@ export type SpatialDragStartEntityEvent<
   T extends EntityRefShape = EntityRefShape,
 > = CoreSpatialDragStartEvent &
   allTarget<T> & {
+    /** Drag-start point in `event.target` entity local space, in meters. */
     readonly offsetX: number
     readonly offsetY: number
     readonly offsetZ: number
+    /** Drag-start point in window global space, in CSS pixels. */
     readonly clientX: number
     readonly clientY: number
     readonly clientZ: number

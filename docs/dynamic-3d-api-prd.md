@@ -98,7 +98,7 @@ import { useEntityAnimation } from '@webspatial/react-sdk/experimental';
 </Entity>
 ```
 
-- **Props:** `id?`, `name?`, `position?`, `rotation?`, `scale?`, spatial event handlers (see §12).
+- **Props:** `id?`, `name?`, `position?`, `rotation?`, `scale?`, `enableInput?`, spatial event handlers (see §12).
 - **Children:** Any entity (primitives, `ModelEntity`, nested `Entity`). Transforms are relative to the parent.
 
 ---
@@ -243,9 +243,31 @@ const [texReady, setTexReady] = useState(false);
 
 ## 12. Interaction
 
-- **Spatial events** (on entities and optionally on container): `onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`. Event detail includes 3D location / deltas where applicable.
+- **Hit testing:** Set `enableInput` on the entity that should receive gestures. Default is `false`. Without it, RealityKit does not attach `InputTargetComponent`, and `onSpatialTap` never fires.
+- **Spatial events** (on `<Reality>` and, when wired, on entities): `onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`. Events bubble. `event.target` is the hit entity; `event.currentTarget` is the listener owner.
 - **Refs:** Use `useEntityRef` or pass `ref` to entity components to get the underlying entity ref for programmatic transform or other APIs.
 - **Visibility:** Toggle by conditional render: `{ show && <BoxEntity … /> }`. Updating React state (e.g. a shared material’s `color`) re-renders and updates the scene for every entity using that material id.
+
+### Tap / drag-start coordinates
+
+These fields are **not** DOM `MouseEvent` coordinates. Primitive size and `position` are meters; the window is CSS pixels.
+
+| Field | Space | Unit | Origin |
+|---|---|---|---|
+| `offsetX` / `offsetY` / `offsetZ` | `event.target` entity local | meters | entity local origin (geometry center for primitives) |
+| `clientX` / `clientY` / `clientZ` | window global | CSS pixels | window origin |
+| `detail.location3D` | same as offset | meters | same as offset |
+| `detail.globalLocation3D` | same as client | CSS pixels | same as client |
+
+Entity local axes match §11: **+X** right, **+Y** up, **+Z** toward the viewer.
+
+`offset*` does **not** include the entity’s own `position` / `rotation` / `scale`, nor CSS `transform` or `--xr-back` on `<Reality>`. Tapping near a box’s local origin yields `offset ≈ (0, 0, 0)` even if the entity sits at `{ x: 0.2, y: 0, z: 0 }`. For a `BoxEntity` of `depth={0.1}`, a tap on the front-face center is about `{ x: 0, y: 0, z: 0.05 }`.
+
+`client*` is the same hit point in window space, so it **does** move when the entity or the Reality container moves. Use [`convertCoordinate`](./convertCoordinate.md) for any other pair of spaces.
+
+Drag start uses the same mapping: `offset*` ← `detail.startLocation3D`, `client*` ← `detail.globalLocation3D`.
+
+Standalone `<Model enable-xr>` and SpatialDiv use the Spatial HTML coordinate system (CSS pixels, element-local top-left), not this table. See `docs/Model.md` and `docs/visionos-transform-and-gesture-design.md`. Behavioral spec: `openspec/specs/spatial-gestures/spec.md`.
 
 Example: tap to change color — the same `UnlitMaterial` id is reused; all `BoxEntity` instances referencing it update together.
 
@@ -253,10 +275,12 @@ Example: tap to change color — the same `UnlitMaterial` id is reused; all `Box
 const [color, setColor] = useState('#ff0000');
 <UnlitMaterial id="dynamic" color={color} />
 <BoxEntity
+  enableInput
   materials={['dynamic']}
   onSpatialTap={(e) => {
     setColor('#00ff00');
-    console.log('3D position:', e.detail.location3D);
+    console.log('local m', e.offsetX, e.offsetY, e.offsetZ);
+    console.log('window px', e.clientX, e.clientY, e.clientZ);
   }}
 />
 ```
@@ -347,6 +371,7 @@ useEffect(() => {
 ## 14. References
 
 - **Standalone `<Model>` (not part of this spec):** `docs/Model.md`
+- **Coordinate conversion between entity local (m), 2D frames (px), and window (px):** `docs/convertCoordinate.md`
 - **Window / volume scenes (`initScene`, manifest defaults, `type: 'volume'`):** `docs/manifest-api.md` (and scene polyfill / `initScene` in `@webspatial/react-sdk`)
 - **Apple Quick Look / model sources:** [developer.apple.com/augmented-reality/quick-look/](https://developer.apple.com/augmented-reality/quick-look/)
 - **Spatial CSS vars:** e.g. `--xr-depth`, `--xr-back` (see spatialized container / types in `@webspatial/react-sdk`)

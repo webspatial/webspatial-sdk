@@ -188,8 +188,8 @@ export default function RealityGestures() {
 
               // console.log('onSpatialTap', e.target, e.currentTarget)
               // logLine('tap location3D', e.detail.location3D)
-              // logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
-              // logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
+              logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+              logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
             }}
             onSpatialDragStart={async e => {
               if (!enabled || e.target?.id !== 'boxGreen') return

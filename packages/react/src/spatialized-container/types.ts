@@ -50,8 +50,7 @@ type SpatialEventProps<T extends SpatializedElementRef> = {
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent<T>) => void
 }
 
-export interface StandardSpatializedContainerProps
-  extends React.ComponentPropsWithoutRef<'div'> {
+export interface StandardSpatializedContainerProps extends React.ComponentPropsWithoutRef<'div'> {
   component: ElementType
   inStandardSpatializedContainer?: boolean
   [SpatialID]: string
@@ -169,9 +168,11 @@ export type SpatialTapEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialTapEvent &
   CurrentTarget<T> & {
+    /** Hit point in the target element's pre-transform local space, in CSS pixels (top-left origin; front face z ≈ 0). */
     readonly offsetX: number
     readonly offsetY: number
     readonly offsetZ: number
+    /** Same hit point in SpatialScene / window space, in CSS pixels. */
     readonly clientX: number
     readonly clientY: number
     readonly clientZ: number
@@ -181,9 +182,11 @@ export type SpatialDragStartEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialDragStartEvent &
   CurrentTarget<T> & {
+    /** Drag-start point in the target element's pre-transform local space, in CSS pixels (top-left origin; front face z ≈ 0). */
     readonly offsetX: number
     readonly offsetY: number
     readonly offsetZ: number
+    /** Drag-start point in SpatialScene / window space, in CSS pixels. */
     readonly clientX: number
     readonly clientY: number
     readonly clientZ: number

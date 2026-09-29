@@ -33,12 +33,7 @@ export interface Quaternion {
  * - `'transparent'`: Represents a fully transparent background.
  */
 export type BackgroundMaterialType =
-  | 'none'
-  | 'translucent'
-  | 'thick'
-  | 'regular'
-  | 'thin'
-  | 'transparent'
+  'none' | 'translucent' | 'thick' | 'regular' | 'thin' | 'transparent'
 
 export type CornerRadius = {
   topLeading: number
@@ -87,8 +82,7 @@ export interface SpatializedElementProperties {
   rotateConstrainedToAxis?: Vec3
 }
 
-export interface Spatialized2DElementProperties
-  extends SpatializedElementProperties {
+export interface Spatialized2DElementProperties extends SpatializedElementProperties {
   scrollPageEnabled: boolean
   cornerRadius: CornerRadius
   material: BackgroundMaterialType
@@ -104,8 +98,7 @@ export type ModelLoadingMode = 'eager' | 'lazy'
 
 export type StageMode = 'orbit' | 'none'
 
-export interface SpatializedStatic3DElementProperties
-  extends SpatializedElementProperties {
+export interface SpatializedStatic3DElementProperties extends SpatializedElementProperties {
   modelURL: string
   sources?: ModelSource[]
   modelTransform?: number[]
@@ -388,14 +381,18 @@ export class CubeInfo {
 }
 
 export interface SpatialTapEventDetail {
+  /** Hit point in the event target's local space. SpatialDiv/Model: CSS pixels, top-left origin. Entity: meters, entity local origin. */
   location3D: Point3D
+  /** Same hit point in SpatialScene / window space, in CSS pixels. */
   globalLocation3D?: Point3D
 }
 
 export type SpatialTapEvent = CustomEvent<SpatialTapEventDetail>
 
 export interface SpatialDragStartEventDetail {
+  /** Drag-start point in the event target's local space. Same units and origin as `SpatialTapEventDetail.location3D`. */
   startLocation3D: Point3D
+  /** Same point in SpatialScene / window space, in CSS pixels. */
   globalLocation3D?: Point3D
 }
 

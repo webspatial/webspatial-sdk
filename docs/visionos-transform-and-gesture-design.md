@@ -27,9 +27,9 @@ Key ordering rules:
 - **CSS transform** (`.transform3DEffect`) is applied **before** `--xr-back` offset.
 - **`--xr-back`** (`.offset(z: frameOffsetZ)`) is applied **after** CSS transform,
   so it always moves the element along the **parent's** Z axis.
-- **Gesture** is placed **after** `.offset(z: frameOffsetZ)`, so `event.location3D`
-  includes the `frameOffsetZ` in its coordinate system but does **not** include
-  visual transforms from `.transform3DEffect`.
+- **Gesture** is placed **after** `.offset(z: frameOffsetZ)`, but every gesture is
+  declared with `coordinateSpace: .named("SpatialScene")`, so `event.location3D` does
+  not depend on where in the chain the gesture sits.
 - **`onGeometryChange3D`** captures the layout→scene transform at the same level.
 
 ## CSS Transform: Full Matrix via `transform3DEffect`
@@ -96,50 +96,63 @@ transform applied, then is pushed back along the parent Z axis.
 
 ![Gesture coordinate semantics (local vs scene)](imgs/03-flowchart-gesture-coordinate-semantics.png)
 
-### `location3D` (element-local)
+Web-facing mapping (same names as Entity events; different units and origin):
 
-`event.location3D` is captured at the `.simultaneousGesture` level (top-left origin).
-It includes `frameOffsetZ` in its Z coordinate but **not** visual transforms from
-`.transform3DEffect`.
+| Field | Space | Unit | Origin |
+|---|---|---|---|
+| `offsetX` / `offsetY` / `offsetZ` | target element pre-transform local | CSS pixels | top-left; front face `z = 0` |
+| `clientX` / `clientY` / `clientZ` | SpatialScene / window | CSS pixels | window origin |
+| `detail.location3D` | same as offset | CSS pixels | same as offset |
+| `detail.globalLocation3D` | same as client | CSS pixels | same as client |
 
-To provide the web with a "semantic local" coordinate where the front face is z=0:
+`offset*` does not include the element's `--xr-back`, CSS `transform`, or layout position. Tapping the top-left of the front face yields `offset ≈ (0, 0, 0)`. Entity events use meters and a center origin; see `docs/dynamic-3d-api-prd.md` §12. The behavioral spec is `openspec/specs/spatial-gestures/spec.md`.
 
-```swift
-let localPoint3D = Point3D(
-    x: event.location3D.x,
-    y: event.location3D.y,
-    z: event.location3D.z - localFrameOffsetZ()
-)
-```
-
-Tapping the front face of a SpatialDiv yields `offsetZ ≈ 0`.
+All gestures are declared in the `"SpatialScene"` coordinate space, so the event point
+arrives already in scene space. Both reported coordinates are derived from that single
+point rather than from SwiftUI's `.local` space, which would otherwise fold the
+element's own placement modifiers into the result.
 
 ### `globalLocation3D` (scene-space)
 
-The scene-space coordinate is computed by applying `proxyTransform` directly to the
-**raw** event point (without subtracting `frameOffsetZ`):
+The raw event point, used as-is:
 
 ```swift
-let globalPoint3D = localToScene(event.location3D)  // raw event point
+let globalPoint3D = event.location3D
+```
 
-func localToScene(_ localPoint: Point3D) -> Point3D {
-    let p = SIMD4<Double>(localPoint.x, localPoint.y, localPoint.z, 1.0)
-    let scene = gestureState.proxyTransform.matrix * p
-    return Point3D(x: scene.x, y: scene.y, z: scene.z)
+### `location3D` (element-local)
+
+The element's "semantic local" space is top-left origin, CSS pixels, front face z=0.
+It is reached by inverting the element's full placement chain — CSS transform first,
+then `--xr-back`/`zIndex`, then layout:
+
+```swift
+private func sceneToLocal(_ scenePoint: Point3D) -> Point3D {
+    let full = spatializedElement.sceneTransform.concatenating(anchoredCSSTransform())
+    guard let inverse = full.inverse else { return scenePoint }
+    let p = SIMD4<Double>(scenePoint.x, scenePoint.y, scenePoint.z, 1.0)
+    let local = inverse.matrix * p
+    return Point3D(x: local.x, y: local.y, z: local.z)
 }
 ```
 
-**Why not subtract-then-add `frameOffsetZ`?** Previously, `localToScene` received the
-adjusted point (with `frameZ` subtracted) and then concatenated a Z-offset transform
-to add it back. Mathematically:
+Because the inverse cancels the element's own displacement, `offsetX`/`offsetY`/`offsetZ`
+describe **where on the element** the hit landed and are unaffected by `--xr-back`, by
+`transform: translateX(...)`, or by any rotation on the element itself. Tapping the
+top-left corner yields `(0, 0, 0)` no matter how the element is transformed; tapping
+the front face yields `offsetZ ≈ 0`.
 
-```
-proxyTransform · T(0,0,frameZ) · (x, y, z−frameZ) = proxyTransform · (x, y, z)
-```
+This matches the Entity semantics in `docs/dynamic-3d-api-prd.md` §12 — local hit point
+in the target's own space, global hit point in the surrounding space — differing only in
+units and origin (CSS pixels / top-left here, meters / center for entities).
 
-The subtract-then-add is a no-op — the simplified version applies `proxyTransform`
-directly to the raw event point, producing the same result with less computation and
-no dependency on `frameOffsetZ` staleness.
+**Why invert instead of reading SwiftUI's `.local` space?** A gesture's `.local` space is
+the space of the modifier level it attaches to, and SwiftUI is not consistent about which
+of the preceding visual modifiers it folds in: `.offset(z:)` was reflected in the reported
+point while `.transform3DEffect` was not, forcing a manual `frameOffsetZ` subtraction while
+`translateX` leaked into `offsetX`. Requesting scene space and inverting the chain we built
+ourselves removes that dependency entirely — the reported values now follow from the
+transforms this file applies, not from framework behaviour we cannot observe.
 
 ## `proxyTransform` and `sceneTransform`
 
@@ -155,14 +168,12 @@ modifier that does not affect the layout proxy.
 .onGeometryChange3D(for: AffineTransform3D.self) { proxy in
     proxy.transform(in: .named("SpatialScene"))!
 } action: { new in
-    gestureState.proxyTransform = new
     spatializedElement.proxySceneTransform = new
 }
 ```
 
-The raw value is written to both the View-layer `gestureState.proxyTransform` (for
-gesture coordinate computation) and the model-layer `spatializedElement.proxySceneTransform`
-(for cross-element coordinate conversion via JSB).
+The raw value is written to the model-layer `spatializedElement.proxySceneTransform`, which
+backs both gesture coordinate computation and cross-element coordinate conversion via JSB.
 
 ### `sceneTransform` (Model layer)
 
@@ -179,7 +190,10 @@ var sceneTransform: AffineTransform3D {
 
 This means `backOffset`/`zIndex` changes are always reflected without needing extra
 update triggers. The `sceneTransform` maps from the element's semantic local coordinate
-system (top-left origin, front face z=0) to SpatialScene space.
+system (top-left origin, front face z=0) to SpatialScene space, **excluding** the CSS
+transform. Gesture handling composes the missing piece itself via
+`sceneTransform.concatenating(anchoredCSSTransform())`; the `convertCoordinate` JSB still
+uses `sceneTransform` alone and therefore ignores CSS transforms, which is a known gap.
 
 ### Coordinate conversion API
 
