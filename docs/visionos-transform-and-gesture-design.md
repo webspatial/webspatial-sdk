@@ -27,7 +27,7 @@ Key ordering rules:
 - **CSS transform** (`.transform3DEffect`) is applied **before** `--xr-back` offset.
 - **`--xr-back`** (`.offset(z: frameOffsetZ)`) is applied **after** CSS transform,
   so it always moves the element along the **parent's** Z axis.
-- **Gesture** is placed **after** `.offset(z: frameOffsetZ)`, but every gesture is
+- **Gesture** is placed **after** `.offset(z: frameOffsetZ)`, but tap and drag are
   declared with `coordinateSpace: .named("SpatialScene")`, so `event.location3D` does
   not depend on where in the chain the gesture sits.
 - **`onGeometryChange3D`** captures the layout→scene transform at the same level.
@@ -104,10 +104,15 @@ Web-facing mapping (same names as Entity events; different units and origin):
 | `clientX` / `clientY` / `clientZ` | SpatialScene / window | CSS pixels | window origin |
 | `detail.location3D` | same as offset | CSS pixels | same as offset |
 | `detail.globalLocation3D` | same as client | CSS pixels | same as client |
+| `translation3D` | direct parent pre-transform local (SpatialScene if no parent) | CSS pixels | vector from drag-start to now |
 
 `offset*` does not include the element's `--xr-back`, CSS `transform`, or layout position. Tapping the top-left of the front face yields `offset ≈ (0, 0, 0)`. Entity events use meters and a center origin; see `docs/dynamic-3d-api-prd.md` §12. The behavioral spec is `openspec/specs/spatial-gestures/spec.md`.
 
-All gestures are declared in the `"SpatialScene"` coordinate space, so the event point
+`translation3D` is the cumulative hit displacement in the **parent** SpatialDiv's pre-transform local space, not in SpatialScene and not in the target's own local space. A root SpatialDiv (parent = SpatialScene) therefore matches the scene-space SwiftUI translation; a nested child under a rotated parent does not, so adding `translation3D` to the child's CSS `translate` still follows the hand.
+
+`spatialRotate.quaternion` is a cumulative rotation in the same parent-local axes. Compose it on the left of the gesture-start orientation. The rotation recognizer uses the local basis at its modifier; native maps that basis through the layout-to-scene transform and then into the parent's pre-transform space. The target's own CSS transform is excluded. Shared ancestor transforms cancel before rotation extraction, so ancestor scale is not applied to the angle. If the parent basis is singular, no rotation sample is emitted. For SpatialDiv/Model, `constrainedToAxis` is interpreted in that pre-transform parent basis because the recognizer is attached to the target view. Entity gestures attach one recognizer to the Reality view, so their constraint axis is in Reality/scene space; the returned quaternion is still converted into the hit Entity's direct-parent basis.
+
+Tap and drag are declared in the `"SpatialScene"` coordinate space, so the event point
 arrives already in scene space. Both reported coordinates are derived from that single
 point rather than from SwiftUI's `.local` space, which would otherwise fold the
 element's own placement modifiers into the result.
@@ -189,11 +194,11 @@ var sceneTransform: AffineTransform3D {
 ```
 
 This means `backOffset`/`zIndex` changes are always reflected without needing extra
-update triggers. The `sceneTransform` maps from the element's semantic local coordinate
-system (top-left origin, front face z=0) to SpatialScene space, **excluding** the CSS
-transform. Gesture handling composes the missing piece itself via
-`sceneTransform.concatenating(anchoredCSSTransform())`; the `convertCoordinate` JSB still
-uses `sceneTransform` alone and therefore ignores CSS transforms, which is a known gap.
+update triggers. The `sceneTransform` maps layout and parent-axis depth into
+SpatialScene space, excluding the element's own CSS transform. Gesture handling and
+`convertCoordinate` both compose the remaining anchored CSS transform as
+`sceneTransform.concatenating(anchoredCSSTransform())`, so they share the same
+pre-transform local coordinate definition.
 
 ### Coordinate conversion API
 

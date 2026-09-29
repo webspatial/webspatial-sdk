@@ -59,6 +59,7 @@ export type SpatialDragStartEntityEvent<
 export type SpatialDragEntityEvent<T extends EntityRefShape = EntityRefShape> =
   CoreSpatialDragEvent &
     allTarget<T> & {
+      /** Cumulative drag delta from gesture start, in the parent entity (or Reality scene) local space, in meters. */
       readonly translationX: number
       readonly translationY: number
       readonly translationZ: number
@@ -72,6 +73,7 @@ export type SpatialRotateEntityEvent<
   T extends EntityRefShape = EntityRefShape,
 > = CoreSpatialRotateEvent &
   allTarget<T> & {
+    /** Cumulative parent-local rotation; apply as delta * gestureStartOrientation. */
     readonly quaternion: Quaternion
   }
 export type SpatialRotateEndEntityEvent<

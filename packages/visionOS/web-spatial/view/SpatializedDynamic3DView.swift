@@ -10,12 +10,16 @@ struct SpatializedDynamic3DView: View {
 
     /// The web-facing SpatialEntity for a hit entity. The actual hit may be a child mesh
     /// inside a SpatialEntity subtree, in which case the event belongs to the nearest parent.
-    private func webTarget(for hitEntity: Entity) -> SpatialEntity? {
+    func webTarget(for hitEntity: Entity) -> SpatialEntity? {
         (hitEntity as? SpatialEntity) ?? SpatialEntity.findNearestParent(entity: hitEntity)
     }
 
     private func point3D(_ position: SIMD3<Float>) -> Point3D {
         Point3D(x: Double(position.x), y: Double(position.y), z: Double(position.z))
+    }
+
+    func targetLocalPoint(_ point: Point3D, converter: some RealityCoordinateSpaceConverting, target: SpatialEntity) -> Point3D {
+        point3D(converter.convert(point, from: .local, to: target))
     }
 
     /// Scene-space meters expressed as window-global pixels. This is the space SpatialDiv
@@ -32,7 +36,7 @@ struct SpatializedDynamic3DView: View {
                 // value.location3D is in the RealityView's SwiftUI space, so it has to be converted
                 // before it can stand for target-local meters (offsetX/Y/Z) or window pixels
                 // (clientX/Y/Z). Both come from the same hit point.
-                let localPoint3D = point3D(value.convert(value.location3D, from: .local, to: target))
+                let localPoint3D = targetLocalPoint(value.location3D, converter: value, target: target)
                 let globalPoint3D = windowPixelPoint(value.convert(value.location3D, from: .local, to: .scene))
 
                 spatialScene.sendWebMsg(target.spatialId, WebSpatialTapGuestureEvent(detail: WebSpatialTapGuestureEventDetail(location3D: localPoint3D, globalLocation3D: globalPoint3D)))
@@ -42,14 +46,15 @@ struct SpatializedDynamic3DView: View {
     var rotate3dEvent: some Gesture {
         makeRotateGesture3D().targetedToAnyEntity().onChanged { value in
             // Always forward rotate gesture events to JS
-            if let entity = value.entity as? SpatialEntity {
+            if let entity = webTarget(for: value.entity) {
+                let rotation = parentSpaceRotation(value.rotation, converter: value, target: entity)
                 let gestureEvent = WebSpatialRotateGuestureEvent(
                     detail: .init(
                         quaternion: Quaternion(
-                            x: value.rotation.quaternion.imag.x,
-                            y: value.rotation.quaternion.imag.y,
-                            z: value.rotation.quaternion.imag.z,
-                            w: value.rotation.quaternion.real
+                            x: Double(rotation.imag.x),
+                            y: Double(rotation.imag.y),
+                            z: Double(rotation.imag.z),
+                            w: Double(rotation.real)
                         )
                     )
                 )
@@ -57,7 +62,7 @@ struct SpatializedDynamic3DView: View {
             }
         }.onEnded { value in
             // Always forward rotate end event to JS
-            if let entity = value.entity as? SpatialEntity {
+            if let entity = webTarget(for: value.entity) {
                 let gestureEvent = WebSpatialRotateEndGuestureEvent()
                 spatialScene.sendWebMsg(entity.spatialId, gestureEvent)
             }
@@ -100,36 +105,76 @@ struct SpatializedDynamic3DView: View {
         }
     }
 
+    /// Cumulative drag translation in the target's parent space (meters). Falls
+    /// back to Reality scene space when the entity has no parent. Computed from
+    /// the same hit points as tap, not from SwiftUI's view-space translation3D.
+    func parentSpaceTranslation(
+        from startLocation: Point3D,
+        to location: Point3D,
+        converter: some RealityCoordinateSpaceConverting,
+        target: SpatialEntity
+    ) -> Vector3D {
+        let start: SIMD3<Float>
+        let now: SIMD3<Float>
+        if let parent = target.parent {
+            start = converter.convert(startLocation, from: .local, to: parent)
+            now = converter.convert(location, from: .local, to: parent)
+        } else {
+            start = converter.convert(startLocation, from: .local, to: .scene)
+            now = converter.convert(location, from: .local, to: .scene)
+        }
+        return Vector3D(
+            x: Double(now.x - start.x),
+            y: Double(now.y - start.y),
+            z: Double(now.z - start.z)
+        )
+    }
+
+    /// A cumulative rotation delta, not an absolute orientation. The conversion
+    /// changes its axes into parent space, including SwiftUI's Y-down convention.
+    func parentSpaceRotation(
+        _ rotation: Rotation3D,
+        converter: some RealityCoordinateSpaceConverting,
+        target: SpatialEntity
+    ) -> simd_quatf {
+        let sceneRotation = converter.convert(rotation, from: .local, to: .scene)
+        if let parent = target.parent {
+            // Converting directly to a scaled entity also scales the rotation
+            // axis. A delta orientation needs only the parent's rotational basis.
+            let parentOrientation = parent.orientation(relativeTo: nil)
+            return simd_normalize(parentOrientation.inverse * sceneRotation * parentOrientation)
+        }
+        return sceneRotation
+    }
+
     var dragEvent: some Gesture {
         DragGesture().targetedToAnyEntity().onChanged { value in
-            // Always forward drag gesture events to JS
-            if let entity = value.entity as? SpatialEntity {
-                if !isDrag {
-                    // Same conversion as tap: startLocation3D arrives in the RealityView's
-                    // SwiftUI space, not in entity meters or window pixels.
-                    let startPoint3D = point3D(value.convert(value.startLocation3D, from: .local, to: entity))
-                    let globalStartPoint3D = windowPixelPoint(value.convert(value.startLocation3D, from: .local, to: .scene))
+            guard let target = webTarget(for: value.entity) else { return }
+            if !isDrag {
+                // Same conversion as tap: startLocation3D arrives in the RealityView's
+                // SwiftUI space, not in entity meters or window pixels.
+                let startPoint3D = targetLocalPoint(value.startLocation3D, converter: value, target: target)
+                let globalStartPoint3D = windowPixelPoint(value.convert(value.startLocation3D, from: .local, to: .scene))
 
-                    let startEvent = WebSpatialDragStartGuestureEvent(
-                        detail: .init(
-                            startLocation3D: startPoint3D,
-                            globalLocation3D: globalStartPoint3D
-                        )
+                let startEvent = WebSpatialDragStartGuestureEvent(
+                    detail: .init(
+                        startLocation3D: startPoint3D,
+                        globalLocation3D: globalStartPoint3D
                     )
-                    spatialScene.sendWebMsg(entity.spatialId, startEvent)
-                    isDrag = true
-                } else {
-                    let gestureEvent = WebSpatialDragGuestureEvent(
-                        detail: .init(translation3D: value.translation3D)
-                    )
-                    spatialScene.sendWebMsg(entity.spatialId, gestureEvent)
-                }
+                )
+                spatialScene.sendWebMsg(target.spatialId, startEvent)
+                isDrag = true
             }
+            let gestureEvent = WebSpatialDragGuestureEvent(
+                detail: .init(translation3D: parentSpaceTranslation(
+                    from: value.startLocation3D, to: value.location3D,
+                    converter: value, target: target
+                ))
+            )
+            spatialScene.sendWebMsg(target.spatialId, gestureEvent)
         }.onEnded { value in
-            // Always forward drag end event to JS
-            if let entity = value.entity as? SpatialEntity {
-                let gestureEvent = WebSpatialDragEndGuestureEvent()
-                spatialScene.sendWebMsg(entity.spatialId, gestureEvent)
+            if let target = webTarget(for: value.entity) {
+                spatialScene.sendWebMsg(target.spatialId, WebSpatialDragEndGuestureEvent())
             }
             isDrag = false
         }

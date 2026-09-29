@@ -397,6 +397,7 @@ export interface SpatialDragStartEventDetail {
 }
 
 export interface SpatialDragEventDetail {
+  /** Cumulative drag delta from gesture start, in the target's direct parent space. SpatialDiv/Model: CSS pixels. Entity: meters. */
   translation3D: Vec3
 }
 
@@ -408,6 +409,7 @@ export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail>
 
 export type SpatialDragEndEvent = CustomEvent<SpatialDragEndEventDetail>
 export interface SpatialRotateEventDetail {
+  /** Cumulative rotation in the target's direct parent axes. Compose as delta * gestureStartOrientation, not by adding Euler angles. */
   quaternion: Quaternion
 }
 

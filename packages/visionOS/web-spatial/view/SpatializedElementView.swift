@@ -55,7 +55,7 @@ struct SpatializedElementView<Content: View>: View {
 
     private func onRotateGesture3D(_ event: RotateGesture3D.Value) {
         if spatializedElement.enableRotateGesture {
-            let quaternion = event.rotation.quaternion
+            guard let quaternion = parentSpaceRotation(event.rotation) else { return }
             let x = quaternion.imag.x
             let y = quaternion.imag.y
             let z = quaternion.imag.z
@@ -90,7 +90,7 @@ struct SpatializedElementView<Content: View>: View {
 
         if spatializedElement.enableDragGesture {
             let gestureEvent = WebSpatialDragGuestureEvent(detail: .init(
-                translation3D: event.translation3D
+                translation3D: parentSpaceTranslation(from: event.startLocation3D, to: event.location3D)
             ))
 
             spatialScene.sendWebMsg(spatializedElement.id, gestureEvent)
@@ -117,25 +117,65 @@ struct SpatializedElementView<Content: View>: View {
     /// Wrap CSS transform with anchor (CSS transform-origin) since
     /// transform3DEffect does not support anchor. Preserves the original
     /// CSS transform order (e.g. rotateX(90deg) translateZ(100px)).
-    private func anchoredCSSTransform() -> AffineTransform3D {
-        let anchor = spatializedElement.rotationAnchor
-        let ax = spatializedElement.width * anchor.x
-        let ay = spatializedElement.height * anchor.y
+    private func anchoredCSSTransform(of element: SpatializedElement) -> AffineTransform3D {
+        let anchor = element.rotationAnchor
+        let ax = element.width * anchor.x
+        let ay = element.height * anchor.y
         let toAnchor = AffineTransform3D(translation: Vector3D(x: -ax, y: -ay, z: 0))
         let fromAnchor = AffineTransform3D(translation: Vector3D(x: ax, y: ay, z: 0))
-        return fromAnchor.concatenating(spatializedElement.transform).concatenating(toAnchor)
+        return fromAnchor.concatenating(element.transform).concatenating(toAnchor)
     }
 
-    /// Maps a SpatialScene point into the element's own local space: top-left origin,
+    private func anchoredCSSTransform() -> AffineTransform3D {
+        anchoredCSSTransform(of: spatializedElement)
+    }
+
+    /// Maps a SpatialScene point into an element's own local space: top-left origin,
     /// CSS pixels, front face at z = 0. Inverts the whole placement chain
     /// (CSS transform, then --xr-back/zIndex, then layout), so the element's own
     /// visual displacement never leaks into the reported offset.
-    private func sceneToLocal(_ scenePoint: Point3D) -> Point3D {
-        let full = spatializedElement.sceneTransform.concatenating(anchoredCSSTransform())
+    func sceneToLocal(_ scenePoint: Point3D, of element: SpatializedElement) -> Point3D {
+        let full = element.sceneTransform.concatenating(anchoredCSSTransform(of: element))
         guard let inverse = full.inverse else { return scenePoint }
         let p = SIMD4<Double>(scenePoint.x, scenePoint.y, scenePoint.z, 1.0)
         let local = inverse.matrix * p
         return Point3D(x: local.x, y: local.y, z: local.z)
+    }
+
+    private func sceneToLocal(_ scenePoint: Point3D) -> Point3D {
+        sceneToLocal(scenePoint, of: spatializedElement)
+    }
+
+    /// Direct parent's pre-transform local space, or SpatialScene when there is no
+    /// SpatializedElement parent. This is the space a child `translate` / layout
+    /// offset is written in.
+    private func sceneToParentLocal(_ scenePoint: Point3D) -> Point3D {
+        if let parentElement = spatializedElement.parent as? SpatializedElement {
+            return sceneToLocal(scenePoint, of: parentElement)
+        }
+        return scenePoint
+    }
+
+    /// Cumulative drag translation in parent-local CSS pixels.
+    func parentSpaceTranslation(from start: Point3D, to now: Point3D) -> Vector3D {
+        let a = sceneToParentLocal(start)
+        let b = sceneToParentLocal(now)
+        return Vector3D(x: b.x - a.x, y: b.y - a.y, z: b.z - a.z)
+    }
+
+    /// RotateGesture3D uses the local space at the gesture modifier. Convert that
+    /// basis to the direct parent's pre-transform space, excluding our own CSS
+    /// transform. Cancel shared ancestors before extracting rotation so their
+    /// non-uniform scales do not distort the axis. A singular basis has no inverse.
+    func parentSpaceRotation(_ rotation: Rotation3D) -> simd_quatd? {
+        var basis = spatializedElement.proxySceneTransform
+        if let parent = spatializedElement.parent as? SpatializedElement {
+            let parentToScene = parent.sceneTransform.concatenating(anchoredCSSTransform(of: parent))
+            guard let inverse = parentToScene.inverse else { return nil }
+            basis = inverse.concatenating(basis)
+        }
+        guard let orientation = basis.rotation?.quaternion else { return nil }
+        return simd_normalize(orientation * rotation.quaternion * orientation.inverse)
     }
 
     private func onTapEnded(_ event: SpatialTapGesture.Value) {

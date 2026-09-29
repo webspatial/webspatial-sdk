@@ -6,6 +6,8 @@
 
 The system MUST allow constraining spatial **rotate** gestures to a single axis defined by a 3D direction vector.
 
+On visionOS, `constrainedToAxis` uses the coordinate space where the native recognizer is attached. SpatialDiv/Model attach it to the target view, so the vector is in the target's pre-transform direct-parent axes. Entity gestures attach it to the Reality view, so the vector is in Reality/scene axes. This input constraint is distinct from the returned rotation delta, which is always parent-local.
+
 #### Scenario: Unconstrained rotation
 
 - **GIVEN** the developer does not set `spatialEventOptions.constrainedToAxis`, or sets it to `[0, 0, 0]`
@@ -49,7 +51,7 @@ The system MUST report `spatialTap` and `spatialDragStart` hit points in two exp
 
 `detail.location3D` (tap) and `detail.startLocation3D` (drag-start) are the target-local point (`offsetX/Y/Z` on the React event). `detail.globalLocation3D` is the same hit in SpatialScene / window space (`clientX/Y/Z`). Tap and drag-start MUST use the same target-local definition.
 
-Continuous `spatialDrag` `translation3D` space is out of scope for this requirement.
+Continuous `spatialDrag` `translation3D` space is specified in the following requirement.
 
 #### Scenario: SpatialDiv tap ignores the element's own transform
 
@@ -72,3 +74,57 @@ Continuous `spatialDrag` `translation3D` space is out of scope for this requirem
 - **WHEN** the gesture hits that child mesh
 - **THEN** the event target MUST be the nearest Web-facing SpatialEntity
 - **AND** `location3D` MUST be converted into that SpatialEntity's local space, not left in the child mesh's space or in the Reality view's SwiftUI local space
+
+### Requirement: Drag translation is parent-local
+
+The system MUST report `spatialDrag` `translation3D` as the cumulative displacement of the hit point from drag-start to the current sample, expressed in the event target's **direct parent** local space. Native MUST compute this from converted hit points and MUST NOT forward the gesture recognizer's view-space `translation3D`.
+
+The target's own transform MUST NOT be folded into `translation3D`. A parent transform MUST be, because that is the space in which the target's `position` / child `translate` is written. If the target has no parent SpatialDiv / SpatialEntity, parent space is SpatialScene (CSS pixels, Y-down) or the Reality scene (meters, Y-up) respectively.
+
+#### Scenario: Root SpatialDiv translation matches scene displacement
+
+- **GIVEN** a SpatialDiv whose parent is the SpatialScene (no ancestor CSS rotate/scale)
+- **WHEN** the user drags it
+- **THEN** `translation3D` MUST equal the SpatialScene displacement of the hit from drag-start, in CSS pixels
+- **AND** adding it to the element's CSS `translate3d` MUST move the element with the hand
+
+#### Scenario: Nested SpatialDiv translation follows the parent axes
+
+- **GIVEN** a child SpatialDiv whose parent has a CSS `rotate` or `scale`
+- **WHEN** the user drags the child
+- **THEN** `translation3D` MUST be the hit displacement in the **parent** SpatialDiv's pre-transform local space (CSS pixels)
+- **AND** it MUST NOT be the raw SpatialScene displacement (which would move the child along the parent's local axes instead of with the hand once added to the child's `translate`)
+
+#### Scenario: Entity translation is parent-local meters
+
+- **GIVEN** a SpatialEntity with `enableInput`, possibly nested under a rotated/scaled parent entity
+- **WHEN** the user drags it
+- **THEN** `translation3D` MUST be in the parent entity's local space in meters (Reality scene space if there is no parent), Y-up
+- **AND** `position = dragStartPosition + translation3D` MUST move the entity with the hand without a points-to-meters scale or a Y flip
+
+### Requirement: Rotation delta is parent-local
+
+The system MUST report `spatialRotate` `quaternion` as a cumulative rotation from gesture start, expressed in the event target's **direct parent** axes. With no spatial parent, the basis is SpatialScene for SpatialDiv/Model or Reality scene for Entity. Native MUST convert the recognizer's local rotation into that basis, including the SwiftUI-to-Reality axis convention for Entity.
+
+The target's own rotation and scale MUST NOT change the delta's basis. Consumers MUST compose `orientation = deltaQuaternion * gestureStartOrientation`; they MUST NOT repeatedly accumulate the cumulative delta or add its Euler angles to the current orientation. Scaling is not a rotation and MUST NOT be applied to the quaternion's angle.
+
+#### Scenario: Rotation under a rotated parent
+
+- **GIVEN** a target under a rotated parent, with its own non-identity orientation
+- **WHEN** a rotate sample is delivered
+- **THEN** the quaternion MUST express the gesture about the parent's axes
+- **AND** left-multiplying the gesture-start orientation MUST apply that parent-local delta
+- **AND** an identity gesture delta MUST remain identity
+
+#### Scenario: Rotation hits a model child mesh
+
+- **GIVEN** the recognizer targets an internal mesh below a Web-facing SpatialEntity
+- **WHEN** rotate or rotate-end is delivered
+- **THEN** the event MUST target the nearest Web-facing SpatialEntity, as tap and drag do
+- **AND** the rotation basis MUST be that SpatialEntity's parent, not the internal mesh's parent
+
+#### Scenario: Non-invertible SpatialDiv parent
+
+- **GIVEN** a parent transform with a zero scale axis
+- **WHEN** the parent-local rotation basis cannot be computed
+- **THEN** native MUST NOT emit a quaternion containing invalid values or silently label a scene-space rotation as parent-local

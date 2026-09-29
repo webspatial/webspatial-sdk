@@ -267,6 +267,16 @@ Entity local axes match §11: **+X** right, **+Y** up, **+Z** toward the viewer.
 
 Drag start uses the same mapping: `offset*` ← `detail.startLocation3D`, `client*` ← `detail.globalLocation3D`.
 
+Continuous `spatialDrag` `translation3D` is **not** that hit point. It is the cumulative displacement of the hit from drag-start, expressed in the target's **direct parent** space (Reality scene if there is no parent), in meters, Y-up. Add it to the value you write into `position`:
+
+```ts
+position = dragStartPosition + translation3D
+```
+
+Do not scale by `0.001` or flip Y. The target's own `rotation` / `scale` are not folded in; a parent `rotation` / `scale` is, because `position` already lives in parent space.
+
+`spatialRotate.quaternion` is also cumulative from gesture start and expressed in the direct parent's axes (Reality scene when unparented). Compose `orientation = deltaQuaternion * gestureStartOrientation`. Capture the start orientation once per gesture; do not add cumulative Euler angles to the current rotation. Native converts SwiftUI axes to Reality axes. Child-mesh hits route rotate and rotate-end to the nearest Web-facing SpatialEntity. On visionOS, Entity `constrainedToAxis` is interpreted in the Reality view/scene axes because one recognizer targets the whole Reality view; it does not change the returned parent-local basis. SpatialDiv/Model attach their recognizer at the target view and therefore interpret the same option in the target's pre-transform parent axes.
+
 Standalone `<Model enable-xr>` and SpatialDiv use the Spatial HTML coordinate system (CSS pixels, element-local top-left), not this table. See `docs/Model.md` and `docs/visionos-transform-and-gesture-design.md`. Behavioral spec: `openspec/specs/spatial-gestures/spec.md`.
 
 Example: tap to change color — the same `UnlitMaterial` id is reused; all `BoxEntity` instances referencing it update together.
