@@ -244,6 +244,23 @@ final class SpatialGestureCoordinateTests: XCTestCase {
         assertRotation(Rotation3D(scaled).quaternion, Rotation3D(unscaled).quaternion)
     }
 
+    func testEntityRotationPreservesReflectedParentBasis() {
+        let root = SpatializedDynamic3DElement()
+        let parent = Entity()
+        let target = SpatialEntity()
+        defer { target.destroy(); root.destroy() }
+        parent.addChild(target)
+        let nativeView = SpatializedDynamic3DView(spatializedDynamic3DElement: root)
+        let rotation = Rotation3D(angle: .degrees(30), axis: .z)
+
+        parent.scale = SIMD3(2, 3, 4)
+        let unreflected = nativeView.parentSpaceRotation(rotation, converter: Converter(), target: target)
+        parent.scale = SIMD3(-2, 3, 4)
+        let reflected = nativeView.parentSpaceRotation(rotation, converter: Converter(), target: target)
+
+        assertRotation(Rotation3D(reflected).quaternion, Rotation3D(unreflected.inverse).quaternion)
+    }
+
     func testEntityDragIncludesTransformedRealityView() {
         let root = SpatializedDynamic3DElement()
         let target = SpatialEntity()

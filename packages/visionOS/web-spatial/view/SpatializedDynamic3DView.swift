@@ -132,6 +132,24 @@ struct SpatializedDynamic3DView: View {
 
     /// A cumulative rotation delta, not an absolute orientation. The conversion
     /// changes its axes into parent space, including SwiftUI's Y-down convention.
+    private func orthogonalBasisPreservingReflection(of entity: Entity) -> simd_float3x3? {
+        let matrix = entity.transformMatrix(relativeTo: nil)
+        let column0 = SIMD3(matrix.columns.0.x, matrix.columns.0.y, matrix.columns.0.z)
+        let column1 = SIMD3(matrix.columns.1.x, matrix.columns.1.y, matrix.columns.1.z)
+        let column2 = SIMD3(matrix.columns.2.x, matrix.columns.2.y, matrix.columns.2.z)
+        let epsilon: Float = 1e-6
+
+        guard simd_length(column0) > epsilon else { return nil }
+        let x = simd_normalize(column0)
+        let yRemainder = column1 - simd_dot(column1, x) * x
+        guard simd_length(yRemainder) > epsilon else { return nil }
+        let y = simd_normalize(yRemainder)
+        let zRemainder = column2 - simd_dot(column2, x) * x - simd_dot(column2, y) * y
+        guard simd_length(zRemainder) > epsilon else { return nil }
+        let z = simd_normalize(zRemainder)
+        return simd_float3x3(columns: (x, y, z))
+    }
+
     func parentSpaceRotation(
         _ rotation: Rotation3D,
         converter: some RealityCoordinateSpaceConverting,
@@ -139,10 +157,17 @@ struct SpatializedDynamic3DView: View {
     ) -> simd_quatf {
         let sceneRotation = converter.convert(rotation, from: .local, to: .scene)
         if let parent = target.parent {
-            // Converting directly to a scaled entity also scales the rotation
-            // axis. A delta orientation needs only the parent's rotational basis.
-            let parentOrientation = parent.orientation(relativeTo: nil)
-            return simd_normalize(parentOrientation.inverse * sceneRotation * parentOrientation)
+            // Remove scale magnitudes and shear while retaining the basis
+            // handedness. A quaternion alone cannot represent the reflection
+            // introduced by an odd number of negative scale axes.
+            guard let parentBasis = orthogonalBasisPreservingReflection(of: parent) else {
+                // Preserve the previous rotation-only behavior when a zero
+                // scale axis makes the full parent basis non-invertible.
+                let parentOrientation = parent.orientation(relativeTo: nil)
+                return simd_normalize(parentOrientation.inverse * sceneRotation * parentOrientation)
+            }
+            let parentLocalRotation = parentBasis.transpose * simd_float3x3(sceneRotation) * parentBasis
+            return simd_normalize(simd_quatf(parentLocalRotation))
         }
         return sceneRotation
     }
