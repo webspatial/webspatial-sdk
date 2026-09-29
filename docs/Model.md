@@ -222,7 +222,7 @@ function LongScrollPage() {
 | `<source>` | ✓ (USDZ)<br>26 | ✓ (USDZ/GLB)<br>6 ⍺2.1 | ✓<br>1.6       |
 | poster     | ✓<br>26        | ✓<br>6 β2.0            | ✓<br>1.7       |
 | loading    | ✓<br>26        | ✓<br>6 β2.1            | ✓<br>1.7       |
-| stagemode  | 26             | 6.1                    | July           |
+| stagemode  | ✓<br>26        | ✓<br>6.1               | ✓<br>2.0       |
 
 ### CSS
 
@@ -249,35 +249,10 @@ function LongScrollPage() {
 | play()             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
 | pause()            | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
 | currentTime        | ✓<br>26  | ✓<br>6 β2.0 | ✓<br>1.7       |
-| boundingBoxCenter  | 26       | 6.2         | August         |
-| boundingBoxExtents | 26       | 6.2         | August         |
+| boundingBoxCenter  | 26       | 6.2         | October        |
+| boundingBoxExtents | 26       | 6.2         | October        |
 
 ## Feature Implementation Details
-
-### 5. Native Orbit Interaction (`stagemode="orbit"`)
-
-This feature provides a built-in, intuitive way for users to inspect a 3D model from different angles using familiar drag gestures, without requiring developers to write complex gesture-handling code.
-
-#### 5.1. React SDK (`@webspatial/react-sdk`)
-
-- **New Prop**: The `ModelProps` type will be extended to accept `stagemode?: 'orbit' | 'none'`. The default will be `'none'`.
-
-#### 5.2. Core SDK (`@webspatial/core-sdk`)
-
-- **New Property**: The `UpdateSpatializedStatic3DElementProperties` command in `JSBCommand.ts` will be extended to include the `stagemode` string. This property will be sent to the native layer.
-
-#### 5.3. Native visionOS Layer (`packages/visionOS`)
-
-1. In `SpatializedStatic3DView.swift`, we will check for the `stagemode` property on the `SpatializedStatic3DElement`.
-2. If `stagemode` is `"orbit"`, we will add a `DragGesture` to the view.
-3. The `onChanged` handler for the `DragGesture` will be used to manipulate the model's orientation.
-   - A horizontal drag (`event.translation.width`) will be mapped to a rotation around the model's Y-axis.
-   - A vertical drag (`event.translation.height`) will be mapped to a rotation around the model's X-axis (pitch).
-4. A state variable (e.g., `@State private var orbitRotation: Angle3D = .zero`) will be used to accumulate the rotation from the drag gesture. This rotation will be applied to the model using the `.rotation3DEffect()` modifier on the `Model3D` view.
-
-- **Interaction with&nbsp;entityTransform**: `entityTransform` will not be updated when the model is rotated using the orbit gesture. Similarly updates to `entityTransform` will not affect the model's orientation.
-
-- **Gesture Conflict Resolution**: `onSpatial*` will be disabled when stagemode is set to orbit. This restriction can be loosened in the future based if there are no gesture conflicts.
 
 ### 6. Bounding Box Geometry (`boundingBoxCenter` / `boundingBoxExtents`)
 
