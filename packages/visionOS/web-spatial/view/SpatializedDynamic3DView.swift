@@ -133,21 +133,27 @@ struct SpatializedDynamic3DView: View {
     /// A cumulative rotation delta, not an absolute orientation. The conversion
     /// changes its axes into parent space, including SwiftUI's Y-down convention.
     private func orthogonalBasisPreservingReflection(of entity: Entity) -> simd_float3x3? {
-        let matrix = entity.transformMatrix(relativeTo: nil)
-        let column0 = SIMD3(matrix.columns.0.x, matrix.columns.0.y, matrix.columns.0.z)
-        let column1 = SIMD3(matrix.columns.1.x, matrix.columns.1.y, matrix.columns.1.z)
-        let column2 = SIMD3(matrix.columns.2.x, matrix.columns.2.y, matrix.columns.2.z)
-        let epsilon: Float = 1e-6
+        var hierarchy: [Entity] = []
+        var current: Entity? = entity
+        while let node = current {
+            hierarchy.append(node)
+            current = node.parent
+        }
 
-        guard simd_length(column0) > epsilon else { return nil }
-        let x = simd_normalize(column0)
-        let yRemainder = column1 - simd_dot(column1, x) * x
-        guard simd_length(yRemainder) > epsilon else { return nil }
-        let y = simd_normalize(yRemainder)
-        let zRemainder = column2 - simd_dot(column2, x) * x - simd_dot(column2, y) * y
-        guard simd_length(zRemainder) > epsilon else { return nil }
-        let z = simd_normalize(zRemainder)
-        return simd_float3x3(columns: (x, y, z))
+        var basis = matrix_identity_float3x3
+        let epsilon: Float = 1e-6
+        for node in hierarchy.reversed() {
+            let scale = node.scale
+            guard abs(scale.x) > epsilon, abs(scale.y) > epsilon, abs(scale.z) > epsilon else { return nil }
+            let scaleSigns = SIMD3<Float>(
+                scale.x < 0 ? -1 : 1,
+                scale.y < 0 ? -1 : 1,
+                scale.z < 0 ? -1 : 1
+            )
+            basis *= simd_float3x3(node.orientation)
+            basis *= simd_float3x3(diagonal: scaleSigns)
+        }
+        return basis
     }
 
     func parentSpaceRotation(
@@ -157,9 +163,9 @@ struct SpatializedDynamic3DView: View {
     ) -> simd_quatf {
         let sceneRotation = converter.convert(rotation, from: .local, to: .scene)
         if let parent = target.parent {
-            // Remove scale magnitudes and shear while retaining the basis
-            // handedness. A quaternion alone cannot represent the reflection
-            // introduced by an odd number of negative scale axes.
+            // Compose each hierarchy level from its local rotation and scale
+            // signs. This retains handedness without allowing non-uniform scale
+            // magnitudes to skew a descendant's logical axes.
             guard let parentBasis = orthogonalBasisPreservingReflection(of: parent) else {
                 // Preserve the previous rotation-only behavior when a zero
                 // scale axis makes the full parent basis non-invertible.
