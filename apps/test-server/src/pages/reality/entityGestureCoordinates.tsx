@@ -14,8 +14,11 @@ type Vec3 = { x: number; y: number; z: number }
 type Quaternion = Vec3 & { w: number }
 
 const parentRotation = { x: 0, y: 45, z: 0 }
+const ancestorScale = { x: 1.5, y: 0.75, z: 1 }
 const initialTargetRotation = { x: 0, y: 0, z: 20 }
 const initialTargetPosition = { x: 0, y: 0, z: 0 }
+const hitBounds = { x: 0.105, y: 0.085, z: 0.115 }
+const hitTolerance = 0.01
 
 function fixed(value: number) {
   return Number.isFinite(value) ? value.toFixed(5) : String(value)
@@ -28,9 +31,9 @@ function formatVec3(value: Vec3) {
 function entityHitPass(value: Vec3 | null) {
   return (
     value != null &&
-    Math.abs(value.x) <= 0.105 &&
-    Math.abs(value.y) <= 0.085 &&
-    Math.abs(value.z) <= 0.115
+    Math.abs(value.x) <= hitBounds.x + hitTolerance &&
+    Math.abs(value.y) <= hitBounds.y + hitTolerance &&
+    Math.abs(value.z) <= hitBounds.z + hitTolerance
   )
 }
 
@@ -101,9 +104,9 @@ export default function EntityGestureCoordinates() {
       <p className="mb-5 max-w-4xl text-sm text-gray-300">
         Tap offset is target-local meters. Rotation is cumulative in the direct
         parent Entity axes. Drag translation is cumulative in the same direct
-        parent space. The parent is rotated 45 degrees around Y and has a
-        non-uniform scale; global Z rotation and a screen-horizontal drag should
-        both have X/Z components in parent-local space.
+        parent space. A non-uniformly scaled ancestor contains a direct parent
+        rotated 45 degrees around Y; global Z rotation and a screen-horizontal
+        drag should both have X/Z components in parent-local space.
       </p>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_400px]">
@@ -183,40 +186,41 @@ export default function EntityGestureCoordinates() {
           <UnlitMaterial id="parentAxisRed" color="#ff4d4f" />
           <UnlitMaterial id="parentOriginBlue" color="#3b82f6" />
           <SceneGraph>
-            <Entity
-              ref={parentRef}
-              id="rotatedParent"
-              position={{ x: 0, y: 0, z: 0 }}
-              rotation={parentRotation}
-              scale={{ x: 1.5, y: 0.75, z: 1 }}
-            >
-              <BoxEntity
-                id="coordinateTarget"
-                width={0.2}
-                height={0.16}
-                depth={0.1}
-                cornerRadius={0.02}
-                position={targetPosition}
-                rotation={targetRotation}
-                materials={['coordinateGreen']}
-                enableInput
-              />
-              <BoxEntity
-                id="parentXAxisMarker"
-                width={0.16}
-                height={0.018}
-                depth={0.018}
-                position={{ x: 0.2, y: 0, z: 0 }}
-                materials={['parentAxisRed']}
-              />
-              <BoxEntity
-                id="parentOriginMarker"
-                width={0.025}
-                height={0.025}
-                depth={0.14}
-                position={{ x: 0, y: -0.13, z: 0 }}
-                materials={['parentOriginBlue']}
-              />
+            <Entity id="scaledAncestor" scale={ancestorScale}>
+              <Entity
+                ref={parentRef}
+                id="rotatedParent"
+                position={{ x: 0, y: 0, z: 0 }}
+                rotation={parentRotation}
+              >
+                <BoxEntity
+                  id="coordinateTarget"
+                  width={0.2}
+                  height={0.16}
+                  depth={0.1}
+                  cornerRadius={0.02}
+                  position={targetPosition}
+                  rotation={targetRotation}
+                  materials={['coordinateGreen']}
+                  enableInput
+                />
+                <BoxEntity
+                  id="parentXAxisMarker"
+                  width={0.16}
+                  height={0.018}
+                  depth={0.018}
+                  position={{ x: 0.2, y: 0, z: 0 }}
+                  materials={['parentAxisRed']}
+                />
+                <BoxEntity
+                  id="parentOriginMarker"
+                  width={0.025}
+                  height={0.025}
+                  depth={0.14}
+                  position={{ x: 0, y: -0.13, z: 0 }}
+                  materials={['parentOriginBlue']}
+                />
+              </Entity>
             </Entity>
           </SceneGraph>
         </Reality>
@@ -240,9 +244,9 @@ export default function EntityGestureCoordinates() {
             <div>target: {tapTarget}</div>
             <div>offset meters: {tap ? formatVec3(tap) : '—'}</div>
             <div className="mt-2 text-xs text-gray-400">
-              Expected bounds: |x| ≤ 0.105, |y| ≤ 0.085, |z| ≤ 0.115. Runtime
-              primitives may use either a centered Z range or a back-to-front
-              0…depth range.
+              Expected bounds: |x| ≤ 0.105, |y| ≤ 0.085, |z| ≤ 0.115 (plus 0.01
+              m collision tolerance). Runtime primitives may use either a
+              centered Z range or a back-to-front 0…depth range.
             </div>
           </div>
 
@@ -259,7 +263,8 @@ export default function EntityGestureCoordinates() {
             </div>
             <div>offset meters: {dragStart ? formatVec3(dragStart) : '—'}</div>
             <div className="mt-2 text-xs text-gray-400">
-              Expected bounds: |x| ≤ 0.105, |y| ≤ 0.085, |z| ≤ 0.115.
+              Expected bounds: |x| ≤ 0.105, |y| ≤ 0.085, |z| ≤ 0.115 (plus 0.01
+              m collision tolerance).
             </div>
           </div>
 

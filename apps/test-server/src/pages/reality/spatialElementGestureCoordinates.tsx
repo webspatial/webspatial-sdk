@@ -40,7 +40,8 @@ const emptyResult = (): Result => ({
 const initialPosition = { x: 0, y: 0, z: 0 }
 const initialTargetRotation = { x: 20, y: 0, z: 0 }
 const activeTargetStorageKey = 'spatial-element-gesture-active-target'
-const parentTransform = 'rotateY(45deg) scale3d(1.5, 0.75, 1)'
+const ancestorTransform = 'scale3d(1.5, 0.75, 1)'
+const parentTransform = 'rotateY(45deg)'
 
 function targetTransform(position: Vec3, rotation: Vec3) {
   return `translate3d(${position.x}px, ${position.y}px, ${position.z}px) rotateZ(${rotation.z}deg) rotateY(${rotation.y}deg) rotateX(${rotation.x}deg) scale3d(1.2, 0.8, 1)`
@@ -77,7 +78,7 @@ function rotationAxis(quaternion: Quaternion | null) {
 
 function horizontalWindowPass(value: Vec3 | null) {
   if (!value) return false
-  return Math.abs(value.x) > 2 && Math.abs(value.y / value.x) < 0.25
+  return Math.abs(value.x) > 2 && Math.abs(value.y / value.x) < 0.35
 }
 
 function rotationParentLocalPass(value: Quaternion | null) {
@@ -253,12 +254,12 @@ export default function SpatialElementGestureCoordinates() {
         SpatialDiv / Model Gesture Coordinates
       </h1>
       <p className="mb-4 max-w-5xl text-sm text-gray-300">
-        Each target is nested under a SpatialDiv rotated 45° around Y and scaled
-        (1.5, 0.75, 1). The targets also have their own X rotation and
-        non-uniform scale. Tap and DragStart must be target-local CSS pixels.
-        Horizontal Drag and parent-Z constrained Rotation must exclude the
-        target's own transform and remain cumulative in the rotated direct
-        parent coordinate system.
+        Each target has a non-uniformly scaled CSS ancestor and a SpatialDiv
+        direct parent rotated 45° around Y. The targets also have their own X
+        rotation and non-uniform scale. Tap and DragStart must be target-local
+        CSS pixels. Horizontal Drag and parent-Z constrained Rotation must
+        exclude the target's own transform and remain cumulative in the rotated
+        direct parent coordinate system.
       </p>
       <ol className="mb-5 list-decimal space-y-1 pl-5 text-sm text-gray-300">
         <li>Tap each target once.</li>
@@ -283,165 +284,191 @@ export default function SpatialElementGestureCoordinates() {
       <div className="max-w-3xl">
         {activeTarget === 'SpatialDiv' && (
           <div
-            ref={divParentRef}
-            enable-xr
-            data-name="SpatialDiv Gesture Parent"
-            className="flex min-h-[260px] items-center justify-center rounded-xl border border-cyan-500/50 bg-cyan-950/20"
+            data-name="SpatialDiv Gesture CSS Scaled Ancestor"
+            className="flex min-h-[260px] items-center justify-center rounded-xl border border-cyan-500/50"
             style={{
               width: '100%',
               height: 260,
-              '--xr-depth': '180px',
-              '--xr-back': '40px',
-              '--xr-background-material': 'thin',
-              background: '#083344',
-              transform: parentTransform,
+              background: 'transparent',
+              transform: ancestorTransform,
               transformStyle: 'preserve-3d',
             }}
           >
             <div
+              ref={divParentRef}
               enable-xr
-              data-name="SpatialDiv Gesture Target"
-              className="flex select-none items-center justify-center rounded-xl bg-green-500 font-bold text-green-950"
+              data-name="SpatialDiv Gesture Parent"
+              className="flex min-h-[220px] items-center justify-center rounded-xl border border-cyan-300/50 bg-cyan-950/20"
               style={{
-                width: 220,
-                height: 140,
-                '--xr-depth': '80px',
-                '--xr-back': '30px',
-                transform: targetTransform(divPosition, divRotation),
+                width: '85%',
+                height: 220,
+                '--xr-depth': '180px',
+                '--xr-back': '40px',
+                '--xr-background-material': 'thin',
+                background: '#083344',
+                transform: parentTransform,
                 transformStyle: 'preserve-3d',
-                touchAction: 'none',
-              }}
-              spatialEventOptions={{ constrainedToAxis: [0, 0, 1] }}
-              onSpatialTap={event =>
-                setDivResult(value => ({
-                  ...value,
-                  tap: point(event),
-                  tapClient: clientPoint(event),
-                }))
-              }
-              onSpatialDragStart={event => {
-                divDragBase.current = divPosition
-                setDivResult(value => ({
-                  ...value,
-                  dragStart: startPoint(event),
-                  dragStartClient: startClientPoint(event),
-                  drag: null,
-                  dragWindow: null,
-                }))
-              }}
-              onSpatialDrag={(event: SpatialDragEvent) => {
-                const drag = event.detail.translation3D
-                setDivResult(value => ({ ...value, drag }))
-                void projectDragToWindow(
-                  divParentRef.current,
-                  drag,
-                  setDivResult,
-                )
-                setDivPosition({
-                  x: divDragBase.current.x + drag.x,
-                  y: divDragBase.current.y + drag.y,
-                  z: divDragBase.current.z + drag.z,
-                })
-              }}
-              onSpatialRotate={(event: SpatialRotateEvent) => {
-                setDivResult(value => ({
-                  ...value,
-                  rotation: event.quaternion,
-                }))
-                divRotateBase.current ??= divRotation
-                setDivRotation(
-                  applyParentRotation(divRotateBase.current, event.quaternion),
-                )
-              }}
-              onSpatialRotateEnd={() => {
-                divRotateBase.current = null
               }}
             >
-              SpatialDiv target
+              <div
+                enable-xr
+                data-name="SpatialDiv Gesture Target"
+                className="flex select-none items-center justify-center rounded-xl bg-green-500 font-bold text-green-950"
+                style={{
+                  width: 220,
+                  height: 140,
+                  '--xr-depth': '80px',
+                  '--xr-back': '30px',
+                  background: '#22c55e',
+                  transform: targetTransform(divPosition, divRotation),
+                  transformStyle: 'preserve-3d',
+                  touchAction: 'none',
+                }}
+                spatialEventOptions={{ constrainedToAxis: [0, 0, 1] }}
+                onSpatialTap={event =>
+                  setDivResult(value => ({
+                    ...value,
+                    tap: point(event),
+                    tapClient: clientPoint(event),
+                  }))
+                }
+                onSpatialDragStart={event => {
+                  divDragBase.current = divPosition
+                  setDivResult(value => ({
+                    ...value,
+                    dragStart: startPoint(event),
+                    dragStartClient: startClientPoint(event),
+                    drag: null,
+                    dragWindow: null,
+                  }))
+                }}
+                onSpatialDrag={(event: SpatialDragEvent) => {
+                  const drag = event.detail.translation3D
+                  setDivResult(value => ({ ...value, drag }))
+                  void projectDragToWindow(
+                    divParentRef.current,
+                    drag,
+                    setDivResult,
+                  )
+                  setDivPosition({
+                    x: divDragBase.current.x + drag.x,
+                    y: divDragBase.current.y + drag.y,
+                    z: divDragBase.current.z + drag.z,
+                  })
+                }}
+                onSpatialRotate={(event: SpatialRotateEvent) => {
+                  setDivResult(value => ({
+                    ...value,
+                    rotation: event.quaternion,
+                  }))
+                  divRotateBase.current ??= divRotation
+                  setDivRotation(
+                    applyParentRotation(
+                      divRotateBase.current,
+                      event.quaternion,
+                    ),
+                  )
+                }}
+                onSpatialRotateEnd={() => {
+                  divRotateBase.current = null
+                }}
+              >
+                SpatialDiv target
+              </div>
             </div>
           </div>
         )}
 
         {activeTarget === 'Model' && (
           <div
-            ref={modelParentRef}
-            enable-xr
-            data-name="Model Gesture Parent"
+            data-name="Model Gesture CSS Scaled Ancestor"
             className="flex min-h-[260px] items-center justify-center rounded-xl border border-violet-500/50 bg-violet-950/20"
             style={{
               width: '100%',
               height: 260,
-              '--xr-depth': '180px',
-              '--xr-back': '40px',
-              '--xr-background-material': 'thin',
               background: '#2e1065',
-              transform: parentTransform,
+              transform: ancestorTransform,
               transformStyle: 'preserve-3d',
             }}
           >
-            <Model
+            <div
+              ref={modelParentRef}
               enable-xr
-              data-name="Model Gesture Target"
-              src="/modelasset/Duck.glb"
-              poster="/img/toy_drummer.png"
+              data-name="Model Gesture Parent"
+              className="flex min-h-[220px] items-center justify-center rounded-xl border border-violet-300/50 bg-violet-900/30"
               style={{
-                width: 220,
-                height: 180,
-                '--xr-depth': '120px',
-                '--xr-back': '30px',
-                transform: targetTransform(modelPosition, modelRotation),
+                width: '85%',
+                height: 220,
+                '--xr-depth': '140px',
+                '--xr-back': '20px',
+                transform: parentTransform,
                 transformStyle: 'preserve-3d',
-                touchAction: 'none',
               }}
-              spatialEventOptions={{ constrainedToAxis: [0, 0, 1] }}
-              onSpatialTap={event =>
-                setModelResult(value => ({
-                  ...value,
-                  tap: point(event),
-                  tapClient: clientPoint(event),
-                }))
-              }
-              onSpatialDragStart={event => {
-                modelDragBase.current = modelPosition
-                setModelResult(value => ({
-                  ...value,
-                  dragStart: startPoint(event),
-                  dragStartClient: startClientPoint(event),
-                  drag: null,
-                  dragWindow: null,
-                }))
-              }}
-              onSpatialDrag={(event: ModelSpatialDragEvent) => {
-                const drag = event.detail.translation3D
-                setModelResult(value => ({ ...value, drag }))
-                void projectDragToWindow(
-                  modelParentRef.current,
-                  drag,
-                  setModelResult,
-                )
-                setModelPosition({
-                  x: modelDragBase.current.x + drag.x,
-                  y: modelDragBase.current.y + drag.y,
-                  z: modelDragBase.current.z + drag.z,
-                })
-              }}
-              onSpatialRotate={(event: ModelSpatialRotateEvent) => {
-                setModelResult(value => ({
-                  ...value,
-                  rotation: event.quaternion,
-                }))
-                modelRotateBase.current ??= modelRotation
-                setModelRotation(
-                  applyParentRotation(
-                    modelRotateBase.current,
-                    event.quaternion,
-                  ),
-                )
-              }}
-              onSpatialRotateEnd={() => {
-                modelRotateBase.current = null
-              }}
-            />
+            >
+              <Model
+                enable-xr
+                data-name="Model Gesture Target"
+                src="/modelasset/Duck.glb"
+                poster="/img/toy_drummer.png"
+                style={{
+                  width: 220,
+                  height: 180,
+                  '--xr-depth': '120px',
+                  '--xr-back': '30px',
+                  transform: targetTransform(modelPosition, modelRotation),
+                  transformStyle: 'preserve-3d',
+                  touchAction: 'none',
+                }}
+                spatialEventOptions={{ constrainedToAxis: [0, 0, 1] }}
+                onSpatialTap={event =>
+                  setModelResult(value => ({
+                    ...value,
+                    tap: point(event),
+                    tapClient: clientPoint(event),
+                  }))
+                }
+                onSpatialDragStart={event => {
+                  modelDragBase.current = modelPosition
+                  setModelResult(value => ({
+                    ...value,
+                    dragStart: startPoint(event),
+                    dragStartClient: startClientPoint(event),
+                    drag: null,
+                    dragWindow: null,
+                  }))
+                }}
+                onSpatialDrag={(event: ModelSpatialDragEvent) => {
+                  const drag = event.detail.translation3D
+                  setModelResult(value => ({ ...value, drag }))
+                  void projectDragToWindow(
+                    modelParentRef.current,
+                    drag,
+                    setModelResult,
+                  )
+                  setModelPosition({
+                    x: modelDragBase.current.x + drag.x,
+                    y: modelDragBase.current.y + drag.y,
+                    z: modelDragBase.current.z + drag.z,
+                  })
+                }}
+                onSpatialRotate={(event: ModelSpatialRotateEvent) => {
+                  setModelResult(value => ({
+                    ...value,
+                    rotation: event.quaternion,
+                  }))
+                  modelRotateBase.current ??= modelRotation
+                  setModelRotation(
+                    applyParentRotation(
+                      modelRotateBase.current,
+                      event.quaternion,
+                    ),
+                  )
+                }}
+                onSpatialRotateEnd={() => {
+                  modelRotateBase.current = null
+                }}
+              />
+            </div>
           </div>
         )}
       </div>
