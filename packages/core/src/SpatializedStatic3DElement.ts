@@ -79,6 +79,24 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   }
 
   /**
+   * Center of the model's axis-aligned bounding box in local meters.
+   */
+  private _boundingBoxCenter: DOMPointReadOnly = new DOMPointReadOnly()
+
+  get boundingBoxCenter(): DOMPointReadOnly {
+    return this._boundingBoxCenter
+  }
+
+  /**
+   * Full extents of the model's axis-aligned bounding box in local meters.
+   */
+  private _boundingBoxExtents: DOMPointReadOnly = new DOMPointReadOnly()
+
+  get boundingBoxExtents(): DOMPointReadOnly {
+    return this._boundingBoxExtents
+  }
+
+  /**
    * Creates a new promise for tracking the ready state of the model.
    * @returns Promise that resolves when the model is loaded (true) or fails to load (false)
    */
@@ -121,6 +139,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       }
     }
     if (needsReadyReset) {
+      this._boundingBoxCenter = new DOMPointReadOnly()
+      this._boundingBoxExtents = new DOMPointReadOnly()
       this.ready = this.createReadyPromise()
     }
     if (properties.autoplay !== undefined) {
@@ -295,6 +315,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     if (data.type === SpatialWebMsgType.modelloaded) {
       // On old runtimes (<⍺2.1) detail is not returned so fallback to modelURL
       this._currentSrc = data.detail?.src ?? this.modelURL ?? ''
+      this._boundingBoxCenter = toDOMPoint(data.detail?.boundingBoxCenter)
+      this._boundingBoxExtents = toDOMPoint(data.detail?.boundingBoxExtents)
       // Handle successful model loading
       this._onLoadCallback?.()
       this._readyResolve?.(true)
@@ -414,6 +436,10 @@ export class SpatializedStatic3DElement extends SpatializedElement {
 // Equivalent of proposed Math.clamp
 function clamp(num: number, min: number, max: number) {
   return num <= min ? min : num >= max ? max : num
+}
+
+function toDOMPoint(point?: { x: number; y: number; z: number }) {
+  return new DOMPointReadOnly(point?.x, point?.y, point?.z)
 }
 
 type Static3DReceiveEventData =
