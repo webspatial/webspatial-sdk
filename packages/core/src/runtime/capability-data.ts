@@ -30,6 +30,8 @@ function baseTrueFlags(): Record<string, boolean> {
   // PBR JSB commands ship with WSAppShell/1.9.0; Pico has no native handler.
   flags['PBRMaterial'] = false
   flags['Material:pbr'] = false
+  flags['Model:boundingBoxCenter'] = false
+  flags['Model:boundingBoxExtents'] = false
   // Entity motion is unavailable in legacy version-table rows.
   flags['useEntityAnimation'] = false
   return flags
@@ -177,6 +179,8 @@ function matrixPico_0_4_90_Flags(): Record<string, boolean> {
 function matrixPico_0_7_0_Flags(): Record<string, boolean> {
   const flags = matrixPico_0_4_90_Flags()
   flags['useEntityAnimation'] = true
+  flags['Model:boundingBoxCenter'] = true
+  flags['Model:boundingBoxExtents'] = true
   return flags
 }
 

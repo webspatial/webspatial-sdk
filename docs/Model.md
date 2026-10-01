@@ -81,6 +81,8 @@ In addition to the DOM API relating to the source, animation, and environment ma
 
 `boundingBoxExtents` a read-only `DOMPointReadOnly` that indicates the extents of the axis-aligned bounding box of the model contents. Like `boundingBoxCenter`, it is computed once when the model loads and remains static for the lifetime of the model.
 
+Both properties use meters in the model's local, right-handed, Y-up coordinate space. Extents are the full width, height, and depth of the box. The loaded values are available inside `onLoad` and after `ready` resolves.
+
 `duration` a read-only `double` reflecting the un-scaled total duration of the animation in seconds. If there is no animation on this model, the value is 0.
 
 `currentTime` a read-write `double` reflecting the un-scaled playback time of the model animation in seconds. It is clamped to the duration of the animation, so for an animation with no animation, the value is always 0.
