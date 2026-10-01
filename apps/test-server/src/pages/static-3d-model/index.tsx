@@ -14,6 +14,16 @@ function App() {
   const [loop, setLoop] = useState(true)
   const [loading, setLoading] = useState<'eager' | 'lazy'>('eager')
   const [isOrbit, setIsOrbit] = useState(true)
+  const [boundingBoxCenter, setBoundingBoxCenter] = useState({
+    x: 0,
+    y: 0,
+    z: 0,
+  })
+  const [boundingBoxExtents, setBoundingBoxExtents] = useState({
+    x: 0,
+    y: 0,
+    z: 0,
+  })
   useEffect(() => {
     modelRef
       .current!.ready?.then(() => logLine('ref.current.ready success'))
@@ -48,7 +58,11 @@ function App() {
         }}
         ref={modelRef}
         onError={e => logLine(`Model error ${modelRef.current?.currentSrc}`)}
-        onLoad={e => logLine(`Model success ${e.currentTarget.currentSrc}`)}
+        onLoad={e => {
+          logLine(`Model success ${e.currentTarget.currentSrc}`)
+          setBoundingBoxCenter(e.currentTarget.boundingBoxCenter)
+          setBoundingBoxExtents(e.currentTarget.boundingBoxExtents)
+        }}
         onSpatialTap={e => {
           logLine('model onSpatialTap', e.detail.location3D)
         }}
@@ -172,6 +186,37 @@ function App() {
         </span>
       </section>
       <Logger logs={logs} clearLog={clearLog} />
+      <section className="boundingBox">
+        <h2>Bounding Box</h2>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Property</th>
+              <th scope="col">X (m)</th>
+              <th scope="col">Y (m)</th>
+              <th scope="col">Z (m)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">
+                <code>boundingBoxCenter</code>
+              </th>
+              <td>{boundingBoxCenter.x.toFixed(4)}</td>
+              <td>{boundingBoxCenter.y.toFixed(4)}</td>
+              <td>{boundingBoxCenter.z.toFixed(4)}</td>
+            </tr>
+            <tr>
+              <th scope="row">
+                <code>boundingBoxExtents</code>
+              </th>
+              <td>{boundingBoxExtents.x.toFixed(4)}</td>
+              <td>{boundingBoxExtents.y.toFixed(4)}</td>
+              <td>{boundingBoxExtents.z.toFixed(4)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
       <Model
         enable-xr
         autoPlay

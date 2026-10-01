@@ -89,7 +89,11 @@ export interface SpatialMagnifyEndMsg {
 export interface ModelLoadSuccess {
   type: SpatialWebMsgType.modelloaded
   // detail object is undefined in old native runtimes
-  detail?: { src: string }
+  detail?: {
+    src: string
+    boundingBoxCenter?: { x: number; y: number; z: number }
+    boundingBoxExtents?: { x: number; y: number; z: number }
+  }
 }
 
 export interface ModelLoadFailure {
