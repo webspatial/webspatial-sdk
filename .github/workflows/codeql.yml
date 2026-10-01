@@ -38,6 +38,8 @@ jobs:
           category: '/language:javascript-typescript'
 
   analyze-swift:
+    # Disabled while CodeQL visionOS asset builds fail before app Swift compilation.
+    if: ${{ false }}
     name: Analyze Swift
     runs-on: macos-15
     timeout-minutes: 60
