@@ -34,6 +34,9 @@ export type SpatialContentReadyCallback = (
 export type SpatialEventOptions = {
   /**
    * Direction vector for rotate gesture constraint. `[0, 0, 0]` or omit = unconstrained.
+   * On visionOS SpatialDiv/Model interpret this in the target's pre-transform
+   * parent axes. Entity gestures interpret it in the Reality view/scene axes.
+   * The returned quaternion is always parent-local.
    */
   constrainedToAxis?: Vec3 | readonly [number, number, number]
 }
@@ -50,8 +53,7 @@ type SpatialEventProps<T extends SpatializedElementRef> = {
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent<T>) => void
 }
 
-export interface StandardSpatializedContainerProps
-  extends React.ComponentPropsWithoutRef<'div'> {
+export interface StandardSpatializedContainerProps extends React.ComponentPropsWithoutRef<'div'> {
   component: ElementType
   inStandardSpatializedContainer?: boolean
   [SpatialID]: string
@@ -169,9 +171,11 @@ export type SpatialTapEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialTapEvent &
   CurrentTarget<T> & {
+    /** Hit point in the target element's pre-transform local space, in CSS pixels (top-left origin; front face z ≈ 0). */
     readonly offsetX: number
     readonly offsetY: number
     readonly offsetZ: number
+    /** Same hit point in SpatialScene / window space, in CSS pixels. */
     readonly clientX: number
     readonly clientY: number
     readonly clientZ: number
@@ -181,9 +185,11 @@ export type SpatialDragStartEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialDragStartEvent &
   CurrentTarget<T> & {
+    /** Drag-start point in the target element's pre-transform local space, in CSS pixels (top-left origin; front face z ≈ 0). */
     readonly offsetX: number
     readonly offsetY: number
     readonly offsetZ: number
+    /** Drag-start point in SpatialScene / window space, in CSS pixels. */
     readonly clientX: number
     readonly clientY: number
     readonly clientZ: number
@@ -193,6 +199,7 @@ export type SpatialDragEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialDragEvent &
   CurrentTarget<T> & {
+    /** Cumulative drag delta from gesture start, in the parent SpatialDiv (or SpatialScene) local space, in CSS pixels. */
     readonly translationX: number
     readonly translationY: number
     readonly translationZ: number
@@ -206,6 +213,7 @@ export type SpatialRotateEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialRotateEvent &
   CurrentTarget<T> & {
+    /** Cumulative parent-local rotation; apply as delta * gestureStartOrientation. */
     readonly quaternion: import('@webspatial/core-sdk').Quaternion
   }
 

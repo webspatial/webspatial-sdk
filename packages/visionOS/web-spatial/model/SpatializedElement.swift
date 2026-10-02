@@ -91,23 +91,35 @@ class SpatializedElement: SpatialObject {
         return proxySceneTransform.concatenating(localZ)
     }
 
+    /// Full semantic-local → scene transform used by coordinate conversion.
+    /// CSS transform is wrapped around transform-origin and precedes the
+    /// parent-axis --xr-back/zIndex offset, matching SpatializedElementView.
+    var coordinateSpaceTransform: AffineTransform3D {
+        let ax = width * rotationAnchor.x
+        let ay = height * rotationAnchor.y
+        let toAnchor = AffineTransform3D(translation: Vector3D(x: -ax, y: -ay, z: 0))
+        let fromAnchor = AffineTransform3D(translation: Vector3D(x: ax, y: ay, z: 0))
+        let anchoredCSS = fromAnchor.concatenating(transform).concatenating(toAnchor)
+        return sceneTransform.concatenating(anchoredCSS)
+    }
+
     /// Converts a point from this element's local coordinate system to scene space.
     func convertToScene(_ localPoint: SIMD3<Double>) -> SIMD3<Double> {
         let p = SIMD4<Double>(localPoint.x, localPoint.y, localPoint.z, 1.0)
-        let scene = sceneTransform.matrix * p
+        let scene = coordinateSpaceTransform.matrix * p
         return SIMD3<Double>(scene.x, scene.y, scene.z)
     }
 
     /// Converts a point from scene space to this element's local coordinate system.
-    func convertFromScene(_ scenePoint: SIMD3<Double>) -> SIMD3<Double> {
-        let inv = sceneTransform.inverse!
+    func convertFromScene(_ scenePoint: SIMD3<Double>) -> SIMD3<Double>? {
+        guard let inv = coordinateSpaceTransform.inverse else { return nil }
         let p = SIMD4<Double>(scenePoint.x, scenePoint.y, scenePoint.z, 1.0)
         let local = inv.matrix * p
         return SIMD3<Double>(local.x, local.y, local.z)
     }
 
     /// Converts a point from this element's local space to another element's local space.
-    func convert(_ localPoint: SIMD3<Double>, to target: SpatializedElement) -> SIMD3<Double> {
+    func convert(_ localPoint: SIMD3<Double>, to target: SpatializedElement) -> SIMD3<Double>? {
         let scenePoint = convertToScene(localPoint)
         return target.convertFromScene(scenePoint)
     }

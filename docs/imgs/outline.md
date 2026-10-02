@@ -3,7 +3,7 @@ article: ../visionos-transform-and-gesture-design.md
 type: mixed
 style: blueprint
 density: balanced
-image_count: 5
+image_count: 4
 ---
 
 # Illustration Outline — visionOS Transform & Gesture Design
@@ -22,8 +22,8 @@ image_count: 5
 
 ## Illustration 03
 **Position**: After `## Gesture Coordinate Semantics`
-**Purpose**: Clarify local vs global gesture coordinates and why subtract-then-add frameZ is a no-op
-**Visual Content**: Two-lane pipeline diagram: localPoint3D computation vs globalPoint3D via proxyTransform
+**Purpose**: Clarify target-local vs scene-global gesture coordinates and why the scene point is inverted instead of reading SwiftUI `.local`
+**Visual Content**: Two-lane pipeline diagram from one `"SpatialScene"` hit point: `inverse(M)` to element-local `offset*` vs raw point as `client*`
 **Filename**: 03-flowchart-gesture-coordinate-semantics.png
 
 ## Illustration 04
@@ -33,8 +33,5 @@ image_count: 5
 **Filename**: 04-framework-proxy-vs-scene-transform.png
 
 ## Illustration 05
-**Position**: After `## Test Pages`
-**Purpose**: Summarize what each test page validates and the key coverage dimensions
-**Visual Content**: Two-column infographic (geometry-verify vs transform-verify) with bullet coverage tags
-**Filename**: 05-infographic-test-pages-coverage.png
-
+**Status**: Retired because the test-page matrix changes faster than a generated image can remain accurate
+**Replacement**: Keep the route and coverage list as searchable text under `## Test Pages`

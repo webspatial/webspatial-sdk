@@ -63,7 +63,7 @@ function convertCoordinate(
 
 | Type | Description |
 |------|-------------|
-| `Promise<Vec3>` | A promise that resolves to the converted position in the `to` coordinate space. If the conversion cannot be performed (e.g., unresolved IDs or missing spatial scene), the original `position` is returned unchanged as a safe fallback. |
+| `Promise<Vec3>` | A promise that resolves to the converted position in the `to` coordinate space. Invalid references, missing runtime/session state, native conversion failures, and non-invertible target transforms reject with an error. |
 
 ## Types
 
@@ -94,17 +94,23 @@ type CoordinateConvertible =
 | `Window` | The browser `window` object. Represents the window's global coordinate space in pixels. |
 | `SpatializedElementRef<any>` | A ref to a spatialized DOM element (2D frame). Coordinates are in **view-local pixels**. Internally resolved to its spatial element ID. |
 | `EntityRef` | A ref to a Reality entity. Resolved via the `.entity.id` property. |
-| `ModelRef` | A ref to a `<Model />` component instance. Resolved to its underlying entity. |
+| `ModelRef` | A ref to an independent `<Model />` component instance. Resolved to its spatialized frame. |
 
 ## Usage Notes
 
 ### Coordinate Units
 
-- **Entity / Model local space**: positions are expressed in **meters**.
-- **2D Frame (SpatializedElement) local space**: positions are expressed in **pixels** (view-local coordinates).
+- **Entity local space**: positions are expressed in **meters**.
+- **2D Frame (SpatializedElement) / independent Model local space**: positions are expressed in **CSS pixels** (pre-transform local coordinates).
 - **Window space**: positions are expressed in **pixels** (view global coordinates).
 
 When converting from an entity to `window`, you receive pixel values. When converting from `window` to an entity, you provide pixel values and receive meters. When converting from a 2D frame to `window`, both are in pixels but the frame uses view-local coordinates while the window uses view-global coordinates.
+
+Entity `onSpatialTap` uses the same two spaces: `offsetX/Y/Z` is entity local (meters); `clientX/Y/Z` is window global (pixels). See [`docs/dynamic-3d-api-prd.md` §12](./dynamic-3d-api-prd.md#12-interaction).
+
+SpatialDiv / independent `<Model>` `onSpatialTap` uses CSS pixels: `offset*` is the element's pre-transform local space (top-left origin; front face `offsetZ ≈ 0`); `client*` is SpatialScene / window space. See `docs/visionos-transform-and-gesture-design.md` and `openspec/specs/spatial-gestures/spec.md`.
+
+`convertCoordinate` for a 2D frame composes layout, `--xr-back` / `zIndex`, and the element's CSS `transform` around `transform-origin`. It therefore uses the same pre-transform local definition as gesture `offset*`: `convertCoordinate(tap.offset, { from: divRef, to: window })` maps back to the same point as `tap.client`, within floating-point tolerance.
 
 ### Unsupported behavior
 
@@ -135,8 +141,8 @@ The function is asynchronous because the actual coordinate transformation is per
 | 2D Frame | Window | Yes | Converts 2D frame view-local pixels to window-global pixels. |
 | Window | 2D Frame | Yes | Converts window-global pixels to 2D frame view-local pixels. |
 | 2D Frame | 2D Frame | Yes | Converts between two 2D frame local coordinate spaces (via window as intermediate). |
-| Model | Entity | Yes | Model refs are resolved to their underlying entity. |
-| Entity | Model | Yes | Model refs are resolved to their underlying entity. |
+| Model | Entity | Yes | Independent Model local input uses CSS pixels and converts through its spatialized frame. |
+| Entity | Model | Yes | Independent Model local output uses CSS pixels and converts through its spatialized frame. |
 | Model | Window | Yes | Equivalent to Entity-to-Window after ref resolution. |
 | Window | Model | Yes | Equivalent to Window-to-Entity after ref resolution. |
 | SpatializedElement | Entity | Yes | Element refs are resolved via their internal spatialized element ID. |
