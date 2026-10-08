@@ -50,8 +50,7 @@ type SpatialEventProps<T extends SpatializedElementRef> = {
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent<T>) => void
 }
 
-export interface StandardSpatializedContainerProps
-  extends React.ComponentPropsWithoutRef<'div'> {
+export interface StandardSpatializedContainerProps extends React.ComponentPropsWithoutRef<'div'> {
   component: ElementType
   inStandardSpatializedContainer?: boolean
   [SpatialID]: string
@@ -151,6 +150,8 @@ export type SpatializedDivElementRef = SpatializedElementRef<HTMLDivElement>
 
 export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
   currentSrc: string
+  readonly boundingBoxCenter: DOMPointReadOnly
+  readonly boundingBoxExtents: DOMPointReadOnly
   ready: Promise<ModelLoadEvent>
   entityTransform: DOMMatrixReadOnly
   play(): Promise<void>
