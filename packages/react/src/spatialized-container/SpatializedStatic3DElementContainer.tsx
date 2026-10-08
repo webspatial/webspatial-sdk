@@ -210,6 +210,16 @@ function SpatializedStatic3DElementContainerBase(
           const spatializedElement = getDomSpatializedStaticElement(domProxy)
           return spatializedElement?.currentSrc ?? ''
         },
+        get boundingBoxCenter(): DOMPointReadOnly {
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
+          return spatializedElement?.boundingBoxCenter ?? new DOMPointReadOnly()
+        },
+        get boundingBoxExtents(): DOMPointReadOnly {
+          const spatializedElement = getDomSpatializedStaticElement(domProxy)
+          return (
+            spatializedElement?.boundingBoxExtents ?? new DOMPointReadOnly()
+          )
+        },
         get ready(): Promise<ModelLoadEvent> {
           const spatializedElement = getDomSpatializedStaticElement(domProxy)
           const readySource = spatializedElement
