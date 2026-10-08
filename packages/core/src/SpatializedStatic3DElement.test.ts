@@ -50,6 +50,154 @@ describe('SpatializedStatic3DElement', () => {
     expect(el.currentSrc).toBe('https://cdn.example.com/fallback.usdz')
   })
 
+  it('defaults bounding box properties to zero before the model loads', () => {
+    const el = new SpatializedStatic3DElement('bounds-default', 'model.glb')
+
+    expect(el.boundingBoxCenter).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(el.boundingBoxExtents).toMatchObject({ x: 0, y: 0, z: 0 })
+  })
+
+  it('sets bounding box properties from modelloaded detail data', () => {
+    const el = new SpatializedStatic3DElement('bounds-loaded', 'model.glb')
+
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.modelloaded,
+      detail: {
+        src: 'https://example.com/model.glb',
+        boundingBoxCenter: { x: 1, y: 2, z: 3 },
+        boundingBoxExtents: { x: 4, y: 5, z: 6 },
+      },
+    })
+
+    expect(el.boundingBoxCenter).toBeInstanceOf(DOMPointReadOnly)
+    expect(el.boundingBoxCenter).toMatchObject({ x: 1, y: 2, z: 3 })
+    expect(el.boundingBoxExtents).toBeInstanceOf(DOMPointReadOnly)
+    expect(el.boundingBoxExtents).toMatchObject({ x: 4, y: 5, z: 6 })
+  })
+
+  it('keeps bounding box properties compatible with older runtimes', () => {
+    const el = new SpatializedStatic3DElement('bounds-legacy', 'model.glb')
+
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.modelloaded,
+      detail: { src: 'https://example.com/model.glb' },
+    })
+
+    expect(el.boundingBoxCenter).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(el.boundingBoxExtents).toMatchObject({ x: 0, y: 0, z: 0 })
+  })
+
+  it('resets bounding box properties when the model source changes', async () => {
+    const el = new SpatializedStatic3DElement('bounds-reset', 'model.glb')
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.modelloaded,
+      detail: {
+        src: 'model.glb',
+        boundingBoxCenter: { x: 1, y: 2, z: 3 },
+        boundingBoxExtents: { x: 4, y: 5, z: 6 },
+      },
+    })
+
+    await el.updateProperties({ modelURL: 'replacement.glb' })
+
+    expect(el.boundingBoxCenter).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(el.boundingBoxExtents).toMatchObject({ x: 0, y: 0, z: 0 })
+  })
+
+  it('makes bounds available inside onLoad and after ready resolves', async () => {
+    const el = new SpatializedStatic3DElement('bounds-ready', 'model.glb')
+    const onLoad = vi.fn(() => {
+      expect(el.boundingBoxCenter).toMatchObject({ x: -1, y: 0.5, z: 2 })
+      expect(el.boundingBoxExtents).toMatchObject({ x: 0.2, y: 0.4, z: 0.6 })
+    })
+    el.onLoadCallback = onLoad
+
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.modelloaded,
+      detail: {
+        src: 'model.glb',
+        boundingBoxCenter: { x: -1, y: 0.5, z: 2 },
+        boundingBoxExtents: { x: 0.2, y: 0.4, z: 0.6 },
+      },
+    })
+
+    expect(onLoad).toHaveBeenCalledOnce()
+    await expect(el.ready).resolves.toBe(true)
+    expect(el.boundingBoxCenter).toMatchObject({ x: -1, y: 0.5, z: 2 })
+    expect(el.boundingBoxExtents).toMatchObject({ x: 0.2, y: 0.4, z: 0.6 })
+  })
+
+  it('keeps cached bounds static through transform and animation changes', async () => {
+    const el = new SpatializedStatic3DElement('bounds-static', 'model.glb')
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.modelloaded,
+      detail: {
+        src: 'model.glb',
+        boundingBoxCenter: { x: 1, y: 2, z: 3 },
+        boundingBoxExtents: { x: 4, y: 5, z: 6 },
+      },
+    })
+    const center = el.boundingBoxCenter
+    const extents = el.boundingBoxExtents
+    const transform = new DOMMatrix().translate(10, 20, 30).rotate(45).scale(2)
+
+    el.entityTransform = transform
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.entitytransformchange,
+      detail: { transform: Array.from(transform.toFloat64Array()) },
+    })
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.animationstatechange,
+      detail: { paused: false, duration: 10, currentTime: 5 },
+    })
+    await el.updateProperties({ modelURL: 'model.glb', loop: true })
+
+    expect(el.boundingBoxCenter).toBe(center)
+    expect(el.boundingBoxExtents).toBe(extents)
+    expect(center).toMatchObject({ x: 1, y: 2, z: 3 })
+    expect(extents).toMatchObject({ x: 4, y: 5, z: 6 })
+    expect(Reflect.set(el, 'boundingBoxCenter', new DOMPointReadOnly())).toBe(
+      false,
+    )
+    expect(Reflect.set(el, 'boundingBoxExtents', new DOMPointReadOnly())).toBe(
+      false,
+    )
+  })
+
+  it('resets bounds for replacement sources and accepts a legacy load message', async () => {
+    const sources = [{ src: 'model.glb', type: 'model/gltf-binary' }]
+    const el = new SpatializedStatic3DElement(
+      'bounds-sources',
+      undefined,
+      sources,
+    )
+    el.onReceiveEvent({
+      type: SpatialWebMsgType.modelloaded,
+      detail: {
+        src: 'model.glb',
+        boundingBoxCenter: { x: 1, y: 2, z: 3 },
+        boundingBoxExtents: { x: 4, y: 5, z: 6 },
+      },
+    })
+    const center = el.boundingBoxCenter
+    const extents = el.boundingBoxExtents
+
+    await el.updateProperties({ sources: [...sources] })
+    expect(el.boundingBoxCenter).toBe(center)
+    expect(el.boundingBoxExtents).toBe(extents)
+
+    await el.updateProperties({ sources: [{ src: 'replacement.usdz' }] })
+    expect(el.boundingBoxCenter).toBeInstanceOf(DOMPointReadOnly)
+    expect(el.boundingBoxExtents).toBeInstanceOf(DOMPointReadOnly)
+    expect(el.boundingBoxCenter).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(el.boundingBoxExtents).toMatchObject({ x: 0, y: 0, z: 0 })
+
+    el.onReceiveEvent({ type: SpatialWebMsgType.modelloaded })
+    await expect(el.ready).resolves.toBe(true)
+    expect(el.boundingBoxCenter).toMatchObject({ x: 0, y: 0, z: 0 })
+    expect(el.boundingBoxExtents).toMatchObject({ x: 0, y: 0, z: 0 })
+  })
+
   it('ready resolves to false on modelloadfailed event', async () => {
     const el = new SpatializedStatic3DElement('s3', 'model.glb')
     const p = el.ready
