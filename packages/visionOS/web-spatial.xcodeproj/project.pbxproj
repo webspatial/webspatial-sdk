@@ -19,6 +19,7 @@
 		2BCA00042F18000000000004 /* RuntimeCapabilityManifestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA00032F18000000000003 /* RuntimeCapabilityManifestTests.swift */; };
 		2B1008A52F0B000800000005 /* SpatializedElementMotionTimelineSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */; };
 		2B1008A72F0B000800000007 /* SpatializedElementAnimationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */; };
+		2B1348A92F0B000800000009 /* SpatialScrollDragDeltaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1348A82F0B000800000008 /* SpatialScrollDragDeltaTests.swift */; };
 		2B1008A92F0B000800000009 /* AttachmentSurfaceNormalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1008A82F0B000800000008 /* AttachmentSurfaceNormalizationTests.swift */; };
 		2B2F1D712BEBFAAC006897EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D702BEBFAAC006897EE /* Assets.xcassets */; };
 		2B2F1D742BEBFAAC006897EE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B2F1D732BEBFAAC006897EE /* Preview Assets.xcassets */; };
@@ -49,6 +50,7 @@
 		2BCA00032F18000000000003 /* RuntimeCapabilityManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeCapabilityManifestTests.swift; sourceTree = "<group>"; };
 		2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatializedElementMotionTimelineSamplerTests.swift; sourceTree = "<group>"; };
 		2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatializedElementAnimationManagerTests.swift; sourceTree = "<group>"; };
+		2B1348A82F0B000800000008 /* SpatialScrollDragDeltaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialScrollDragDeltaTests.swift; sourceTree = "<group>"; };
 		2B1008A82F0B000800000008 /* AttachmentSurfaceNormalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentSurfaceNormalizationTests.swift; sourceTree = "<group>"; };
 		2B2F1D632BEBFAAA006897EE /* WebSpatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebSpatial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B2F1D672BEBFAAA006897EE /* RealityKitContent */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RealityKitContent; sourceTree = "<group>"; };
@@ -194,6 +196,7 @@
 				2BCA00032F18000000000003 /* RuntimeCapabilityManifestTests.swift */,
 				2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */,
 				2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */,
+				2B1348A82F0B000800000008 /* SpatialScrollDragDeltaTests.swift */,
 				2B1008A82F0B000800000008 /* AttachmentSurfaceNormalizationTests.swift */,
 				2B3000012F0C000800000001 /* EntityMotionTests.swift */,
 			);
@@ -390,6 +393,7 @@
 				2BCA00042F18000000000004 /* RuntimeCapabilityManifestTests.swift in Sources */,
 				2B1008A52F0B000800000005 /* SpatializedElementMotionTimelineSamplerTests.swift in Sources */,
 				2B1008A72F0B000800000007 /* SpatializedElementAnimationManagerTests.swift in Sources */,
+				2B1348A92F0B000800000009 /* SpatialScrollDragDeltaTests.swift in Sources */,
 				2B1008A92F0B000800000009 /* AttachmentSurfaceNormalizationTests.swift in Sources */,
 				2B3000022F0C000800000002 /* EntityMotionTests.swift in Sources */,
 			);
