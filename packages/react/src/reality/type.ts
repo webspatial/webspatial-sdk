@@ -1,5 +1,5 @@
 import type { Quaternion, Vec3 } from '@webspatial/core-sdk'
-import type { AnimatedProps } from '@webspatial/core-sdk'
+import type { EntityMotionAnimation } from './hooks/EntityMotionBinding'
 import { EntityRefShape } from './hooks'
 import { SpatialTapEvent as CoreSpatialTapEvent } from '@webspatial/core-sdk'
 import { SpatialDragStartEvent as CoreSpatialDragStartEvent } from '@webspatial/core-sdk'
@@ -19,7 +19,7 @@ export type EntityProps = {
   scale?: Vec3
   enableInput?: boolean
   /** Animation prop returned by useEntityAnimation(). */
-  animation?: AnimatedProps
+  animation?: EntityMotionAnimation
 }
 
 type allTarget<T extends EntityRefShape> = {

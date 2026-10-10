@@ -1,0 +1,65 @@
+name: Commit Lint
+
+on:
+  push:
+    branches:
+      - main
+      - stable
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CI: true
+  SKIP_SIMPLE_GIT_HOOKS: 1
+
+jobs:
+  commitlint:
+    name: Validate commit messages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v5
+        with:
+          # Need full history so commitlint can inspect every commit in the PR range.
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/setup@v2
+        with:
+          install: false
+
+      - name: Setup node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test commit message rules
+        run: pnpm test:commitlint
+
+      - name: Validate commit messages
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Lint every commit in the PR range (base..head).
+            pnpm exec commitlint \
+              --from "${{ github.event.pull_request.base.sha }}" \
+              --to "${{ github.event.pull_request.head.sha }}" \
+              --verbose
+          else
+            # On push to main/stable, lint the commits introduced by this push.
+            if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+              pnpm exec commitlint \
+                --from "${{ github.event.before }}" \
+                --to "${{ github.sha }}" \
+                --verbose
+            else
+              # Initial push or force-push with no usable base: lint just the HEAD commit.
+              git log -1 --format=%B | pnpm exec commitlint --verbose
+            fi
+          fi

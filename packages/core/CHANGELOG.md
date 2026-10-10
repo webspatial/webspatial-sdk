@@ -1,5 +1,66 @@
 # @webspatial/core-sdk
 
+## 2.0.0
+
+### Major Changes
+
+- 8bb148b: BREAKING: restructure the Core SDK runtime and platform packaging around explicit ESM subpaths.
+
+  - Add `@webspatial/core-sdk/runtime` for runtime detection (`supports`, `getRuntime`) and `@webspatial/core-sdk/runtime/keys` for capability registry constants. `CapabilityKey` and `supports()` remain available, but registry constants are no longer exported from the main runtime entry.
+  - Move WebSpatial polyfill installation to `@webspatial/core-sdk/install-polyfills`. Consumers that previously relied on top-level `@webspatial/core-sdk` import side effects must import this subpath explicitly when they need polyfills. The React SDK loads it from the spatial chunk after `bootSpatial()`.
+  - Remove the legacy IIFE bundle (`dist/iife/index.global.js`) and its build target. ESM imports are the supported distribution path.
+  - Make `createPlatformSync()` / `createPlatform()` throw during SSR instead of returning an internal no-op `SSRPlatform`.
+  - Emit the Core SDK as unbundled ESM so downstream bundlers can tree-shake runtime detection and spatial implementation code independently.
+
+### Minor Changes
+
+- 7c91edd: Add entity transform animation API (`useAnimation` hook, `animation` prop, and native visionOS playback).
+
+  **Core SDK**
+
+  - New `AnimationConfig`, `AnimatedProps`, `AnimationApi`, `AnimationError`, and related types.
+  - `SpatialEntity.animateTransform()` sends a unified `AnimateTransform` JSB command with play/pause/resume/stop actions.
+  - `composeSRT` and `decomposeTransformMatrix` utilities exported for matrix round-trip.
+  - `supports('useAnimation')` capability key added (currently disabled; will be enabled when native shell ships support).
+
+  **React SDK**
+
+  - `useAnimation(config)` hook returns `[AnimatedProps, AnimationApi]` with declarative config validation, `autoStart`, `delay`, `loop` (including reverse), `timingFunction`, and lifecycle callbacks (`onStart`, `onComplete`, `onCancel`, `onError`).
+  - Entity components (`BoxEntity`, `SphereEntity`, etc.) accept an `animation` prop that binds animated transforms and suppresses competing ordinary transform updates for animated fields.
+  - Transform suppression logic ensures non-animated fields still update normally during an active animation session.
+
+  **visionOS native**
+
+  - `EntityAnimationManager` handles play/pause/resume/stop commands, builds `FromToByAnimation<Transform>` for RealityKit playback, and manages per-animation session state (idle/queued/delaying/running/paused).
+  - Delay timer preserves remaining time across pause/resume cycles.
+  - Completion, stop, and failure events are emitted back to JS via the SpatialWebEvent bridge.
+  - Animation sessions are cleaned up on page navigation and scene destruction.
+
+- f3a4975: Add `stagemode` prop to `<Model>` for built-in orbit interaction
+- 1a8f46b: Add spatialized element motion support through the React `useAnimation` API.
+
+### Patch Changes
+
+- b96e139: Send placement-shaped attachment payloads when the runtime advertises AttachmentEntity placement support.
+- f34e327: Fix html background material updates written through bracket syntax so CSS custom
+  properties are stored in CSSOM before later html style mutations recompute scene
+  material.
+- 9c1a3ec: Fix spatial child window creation so platform handoff resolves only after the child document reaches `complete`. This avoids rare caller-side DOM write failures such as `TypeError: Cannot set properties of null (setting 'innerHTML')` when the returned window proxy still has a loading document.
+- 88fa5cb: Add snake_case/camelCase alias support for `manifest.json` `xr_spatial_scene` config.
+
+  - Same-object alias resolution prefers snake_case when both are present
+  - Override priority remains unchanged (overrides > top-level)
+  - Support snake_case keys for `resizability` and `overrides` scene selectors
+
+- 05f6738: Remove the undocumented, non-public `window.xrCurrentSceneDefaults` and `window.xrCurrentSceneType` scene globals.
+
+  - Drop the global type declarations that these internal APIs added to `Window`.
+  - Remove the Core SDK scene-polyfill path that read these globals. `window.open` still resolves scene defaults from the manifest / native fallback layers, and `initScene()` remains the supported way to customize scene configuration.
+  - Remove the visionOS native `checkHookExist` path so a pending scene moves to `.willVisible` directly instead of waiting on the deleted globals.
+
+- 9cf2a58: chore: update capability table for Model
+- 5361e45: Add refresh-safe SpatialDiv and attachment request metadata, and guard VisionOS scene refreshes from stale spatial creation requests.
+
 ## 1.7.0
 
 ### Minor Changes

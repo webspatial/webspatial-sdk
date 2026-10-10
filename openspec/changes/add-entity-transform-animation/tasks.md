@@ -1,3 +1,5 @@
+> **Status: superseded.** No new work is tracked here. Continue in `redesign-entity-motion-api`.
+
 ## 1. API and capability contract
 
 - [x] 1.1 Add the `entity-transform-animation` and `runtime-capabilities` spec artifacts to the implementation plan and align naming with `supports("useAnimation", ["entity"])`

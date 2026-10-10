@@ -42,6 +42,7 @@ import RealityNested from './src/pages/reality/nested'
 import RealityAttachments from './src/pages/reality/attachments'
 import RealityDynamicAssets from './src/pages/reality/dynamicAssets'
 import RealityTexturedUnlitBox from './src/pages/reality/texturedUnlitBox'
+import RealityPBRMaterial from './src/pages/reality/pbrMaterial'
 import RealityTestIndex from './src/pages/reality-test/index'
 import RealityAliases from './src/pages/reality/aliases'
 import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
@@ -78,11 +79,15 @@ import OrnamentTestPage from './src/pages/ornament-test/index'
 import EntityAnimationPage from './src/pages/entity-animation/index'
 import EntityAnimationEntrancePage from './src/pages/entity-animation/entrance'
 import EntityAnimationManualTriggerPage from './src/pages/entity-animation/manual-trigger'
+import EntityAnimationTransformCacheReproPage from './src/pages/entity-animation/transform-cache-repro'
 import EntityAnimationReverseLoopPage from './src/pages/entity-animation/reverse-loop'
 import EntityAnimationCancelSyncPage from './src/pages/entity-animation/cancel-sync'
 import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/capability-check'
 import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loop'
 import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
+import EntityAnimationBindingOwnershipPage from './src/pages/entity-animation/binding-ownership'
+import EntityAnimationConfigReplacementPage from './src/pages/entity-animation/config-replacement'
+import EntityAnimationIsolationCleanupPage from './src/pages/entity-animation/isolation-cleanup'
 import SpatialElementMotionPage from './src/pages/spatial-element-motion/index'
 import SpatialElementMotionRealityContainerPage from './src/pages/spatial-element-motion/reality-container'
 import SpatialElementMotionStaticModelContainerPage from './src/pages/spatial-element-motion/static-model-container'
@@ -233,6 +238,10 @@ function App() {
                   element={<EntityAnimationManualTriggerPage />}
                 />
                 <Route
+                  path="/entity-animation/transform-cache-repro"
+                  element={<EntityAnimationTransformCacheReproPage />}
+                />
+                <Route
                   path="/entity-animation/reverse-loop"
                   element={<EntityAnimationReverseLoopPage />}
                 />
@@ -251,6 +260,18 @@ function App() {
                 <Route
                   path="/entity-animation/play-state"
                   element={<EntityAnimationPlayStatePage />}
+                />
+                <Route
+                  path="/entity-animation/binding-ownership"
+                  element={<EntityAnimationBindingOwnershipPage />}
+                />
+                <Route
+                  path="/entity-animation/config-replacement"
+                  element={<EntityAnimationConfigReplacementPage />}
+                />
+                <Route
+                  path="/entity-animation/isolation-cleanup"
+                  element={<EntityAnimationIsolationCleanupPage />}
                 />
                 <Route
                   path="/spatial-element-motion"
@@ -383,6 +404,10 @@ function App() {
                 <Route
                   path="/reality/textured-unlit-box"
                   element={<RealityTexturedUnlitBox />}
+                />
+                <Route
+                  path="/reality/pbr-material"
+                  element={<RealityPBRMaterial />}
                 />
                 <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route

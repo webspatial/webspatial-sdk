@@ -261,11 +261,21 @@ export type SpatialGeometryOptions =
   | SpatialCylinderGeometryOptions
   | SpatialConeGeometryOptions
 
-export type SpatialMaterialType = 'unlit'
+export const SpatialMaterialTypeValues = ['unlit', 'pbr'] as const
+export type SpatialMaterialType = (typeof SpatialMaterialTypeValues)[number]
 
 export interface SpatialUnlitMaterialOptions {
   color?: string
   textureId?: string
+  transparent?: boolean
+  opacity?: number
+}
+
+export interface SpatialPBRMaterialOptions {
+  color?: string
+  textureId?: string
+  metalness?: number
+  roughness?: number
   transparent?: boolean
   opacity?: number
 }
@@ -433,6 +443,8 @@ export interface AttachmentEntityOptions {
   scale?: Vec3
   width?: number
   height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
   ownerViewId: string
 }
 
@@ -442,6 +454,8 @@ export interface AttachmentEntityUpdateOptions {
   scale?: Vec3
   width?: number
   height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
 }
 
 // manifest

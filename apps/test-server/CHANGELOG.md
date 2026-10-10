@@ -1,5 +1,41 @@
 # web-content
 
+## 0.2.1
+
+### Patch Changes
+
+- 7c91edd: Split the Entity Animation test page into dedicated subpages, one per animation case.
+
+  - Keep `/entity-animation` as an overview page with the verification checklist.
+  - Add separate routes for entrance, manual trigger, reverse loop, stop and sync, capability detection, and reset loop cases.
+  - Show the new Entity Animation subpages in the SPA sidebar for easier navigation.
+
+- 1a8f46b: Add spatialized element motion support through the React `useAnimation` API.
+- 9e64391: fix: Model duration unavailable before playback
+- Updated dependencies [b96e139]
+- Updated dependencies [e702d0f]
+- Updated dependencies [8bb148b]
+- Updated dependencies [7c91edd]
+- Updated dependencies [b0364c6]
+- Updated dependencies [f34e327]
+- Updated dependencies [9c86e34]
+- Updated dependencies [9c1a3ec]
+- Updated dependencies [aaa8df8]
+- Updated dependencies [88fa5cb]
+- Updated dependencies [7ebae8a]
+- Updated dependencies [3e59ee4]
+- Updated dependencies [f3a4975]
+- Updated dependencies [24a0e4f]
+- Updated dependencies [4f95752]
+- Updated dependencies [8bb148b]
+- Updated dependencies [05f6738]
+- Updated dependencies [9cf2a58]
+- Updated dependencies [5361e45]
+- Updated dependencies [1a8f46b]
+- Updated dependencies [9e64391]
+  - @webspatial/core-sdk@2.0.0
+  - @webspatial/react-sdk@2.0.0
+
 ## 0.2.0
 
 ### Minor Changes

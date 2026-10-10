@@ -1,5 +1,53 @@
 # @webspatial/platform-visionos
 
+## 2.0.0
+
+### Minor Changes
+
+- 7c91edd: Add entity transform animation API (`useAnimation` hook, `animation` prop, and native visionOS playback).
+
+  **Core SDK**
+
+  - New `AnimationConfig`, `AnimatedProps`, `AnimationApi`, `AnimationError`, and related types.
+  - `SpatialEntity.animateTransform()` sends a unified `AnimateTransform` JSB command with play/pause/resume/stop actions.
+  - `composeSRT` and `decomposeTransformMatrix` utilities exported for matrix round-trip.
+  - `supports('useAnimation')` capability key added (currently disabled; will be enabled when native shell ships support).
+
+  **React SDK**
+
+  - `useAnimation(config)` hook returns `[AnimatedProps, AnimationApi]` with declarative config validation, `autoStart`, `delay`, `loop` (including reverse), `timingFunction`, and lifecycle callbacks (`onStart`, `onComplete`, `onCancel`, `onError`).
+  - Entity components (`BoxEntity`, `SphereEntity`, etc.) accept an `animation` prop that binds animated transforms and suppresses competing ordinary transform updates for animated fields.
+  - Transform suppression logic ensures non-animated fields still update normally during an active animation session.
+
+  **visionOS native**
+
+  - `EntityAnimationManager` handles play/pause/resume/stop commands, builds `FromToByAnimation<Transform>` for RealityKit playback, and manages per-animation session state (idle/queued/delaying/running/paused).
+  - Delay timer preserves remaining time across pause/resume cycles.
+  - Completion, stop, and failure events are emitted back to JS via the SpatialWebEvent bridge.
+  - Animation sessions are cleaned up on page navigation and scene destruction.
+
+- 664c280: Add `stagemode` prop to `<Model>` for built-in orbit interaction
+- fd83830: fix changing Model source from empty value not re-rendering
+- 1a8f46b: Add spatialized element motion support through the React `useAnimation` API.
+
+### Patch Changes
+
+- 83df4cf: chore: replace Model loading property with enum
+- 3ff92d8: fix(visionos): sync nav button state from webview
+- 561dfb0: Improve type safety of Swift code
+- 05f6738: Remove the undocumented, non-public `window.xrCurrentSceneDefaults` and `window.xrCurrentSceneType` scene globals.
+
+  - Drop the global type declarations that these internal APIs added to `Window`.
+  - Remove the Core SDK scene-polyfill path that read these globals. `window.open` still resolves scene defaults from the manifest / native fallback layers, and `initScene()` remains the supported way to customize scene configuration.
+  - Remove the visionOS native `checkHookExist` path so a pending scene moves to `.willVisible` directly instead of waiting on the deleted globals.
+
+- 78cdd5d: Show 3D Model poster when no sources are defined
+- 5361e45: Add refresh-safe SpatialDiv and attachment request metadata, and guard VisionOS scene refreshes from stale spatial creation requests.
+- 9e64391: fix: Model duration unavailable before playback
+- 4908fc4: Recreate the spatial scene when visionOS `WindowGroup` window data references a missing scene ID, instead of force-unwrapping nil. Read volume resize limits from the active scene config after recreation.
+
+  ***
+
 ## 1.7.0
 
 ### Minor Changes

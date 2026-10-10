@@ -1,3 +1,5 @@
+> **状态:已正式 superseded。** 本文件不再跟踪新工作,后续任务统一进入 `redesign-entity-motion-api`。
+
 ## 1. API 与能力契约
 
 - [x] 1.1 将 `entity-transform-animation` 与 `runtime-capabilities` 的 spec 纳入实现计划，并统一命名到 `supports("useAnimation", ["entity"])`

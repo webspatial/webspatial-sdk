@@ -141,6 +141,10 @@ describe('JSBCommand', () => {
       AddSpatializedElementToSpatialScene,
       AddSpatializedElementToSpatialized2DElement,
       UpdateUnlitMaterialProperties,
+      StartBlobTransferCommand,
+      TransferBlobChunkCommand,
+      CompleteBlobTransferCommand,
+      FailBlobTransferCommand,
     } = mod
 
     const obj = { id: 'so-1' } as any
@@ -207,6 +211,114 @@ describe('JSBCommand', () => {
     expect(platformSpy.callJSB).toHaveBeenCalledWith(
       'UpdateUnlitMaterialProperties',
       JSON.stringify({ id: 'so-1', color: '#fff' }),
+    )
+
+    await new StartBlobTransferCommand(obj, {
+      requestId: 'request-1',
+      src: 'blob:https://example.com/model',
+      mimeType: 'model/gltf-binary',
+      size: 6,
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'StartBlobTransfer',
+      JSON.stringify({
+        id: 'so-1',
+        requestId: 'request-1',
+        src: 'blob:https://example.com/model',
+        mimeType: 'model/gltf-binary',
+        size: 6,
+      }),
+    )
+
+    await new TransferBlobChunkCommand(obj, {
+      requestId: 'request-1',
+      offset: 3,
+      data: 'ZGVm',
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'TransferBlobChunk',
+      JSON.stringify({
+        id: 'so-1',
+        requestId: 'request-1',
+        offset: 3,
+        data: 'ZGVm',
+      }),
+    )
+
+    await new CompleteBlobTransferCommand(obj, {
+      requestId: 'request-1',
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'CompleteBlobTransfer',
+      JSON.stringify({ id: 'so-1', requestId: 'request-1' }),
+    )
+
+    await new FailBlobTransferCommand(obj, {
+      requestId: 'request-1',
+      message: 'failed',
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'FailBlobTransfer',
+      JSON.stringify({
+        id: 'so-1',
+        requestId: 'request-1',
+        message: 'failed',
+      }),
+    )
+  })
+
+  it('builds Entity motion commands with one direct id field', async () => {
+    const {
+      CreateEntityAnimationJSBCommand,
+      ControlEntityAnimationJSBCommand,
+      SetEntityAnimationJSBCommand,
+      UpdateEntityAnimationJSBCommand,
+    } = await import('./JSBCommand')
+    const timeline = {
+      duration: 1,
+      delay: 0,
+      playbackRate: 1,
+      loop: false,
+      tracks: [],
+    }
+
+    await new CreateEntityAnimationJSBCommand({
+      id: 'entity-1',
+      timeline,
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'CreateEntityAnimation',
+      JSON.stringify({ id: 'entity-1', timeline }),
+    )
+
+    await new ControlEntityAnimationJSBCommand({
+      id: 'animation-1',
+      type: 'play',
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'ControlEntityAnimation',
+      JSON.stringify({ id: 'animation-1', type: 'play' }),
+    )
+
+    await new SetEntityAnimationJSBCommand({
+      id: 'animation-1',
+      update: { rotation: { y: 45 } },
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'SetEntityAnimation',
+      JSON.stringify({
+        id: 'animation-1',
+        update: { rotation: { y: 45 } },
+      }),
+    )
+
+    await new UpdateEntityAnimationJSBCommand({
+      id: 'animation-1',
+      timeline,
+    }).execute()
+    expect(platformSpy.callJSB).toHaveBeenCalledWith(
+      'UpdateEntityAnimation',
+      JSON.stringify({ id: 'animation-1', timeline }),
     )
   })
 })

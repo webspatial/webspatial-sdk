@@ -4,6 +4,23 @@ import SwiftUI
 struct ModelSource: Codable, Equatable {
     let src: String
     let type: String?
+    var isBlob: Bool {
+        src.hasPrefix("blob:")
+    }
+
+    var fileExtension: String {
+        switch type {
+        case "model/gltf+json": return "gltf"
+        case "model/gltf-binary": return "glb"
+        case "model/obj": return "obj"
+        case "model/stl": return "stl"
+        case "model/vnd.usda": return "usda"
+        case "model/vnd.usdz+zip": return "usdz"
+        default:
+            let pathExtension = URL(string: src)?.pathExtension ?? ""
+            return pathExtension.isEmpty ? "usdz" : pathExtension
+        }
+    }
 }
 
 enum Loading: String {
@@ -40,12 +57,34 @@ class SpatializedStatic3DElement: SpatializedElement {
     var loading: Loading = .eager
     var stagemode: StageMode = .none
     var allSources: [ModelSource] {
-        if let modelURL { [ModelSource(src: modelURL, type: nil)] + sources }
-        else { sources }
+        if let modelURL {
+            [ModelSource(src: modelURL, type: nil)] + sources
+        } else {
+            sources
+        }
+    }
+
+    @ObservationIgnored private(set) var blobTransfer: BlobTransfer? {
+        didSet {
+            guard oldValue !== blobTransfer else { return }
+            oldValue?.cancel()
+        }
     }
 
     override var enableGesture: Bool {
         stagemode == .orbit || super.enableGesture
+    }
+
+    func fetchBlob(_ source: ModelSource, from scene: SpatialScene) async throws -> URL {
+        let transfer = BlobTransfer(source: source)
+        blobTransfer = transfer
+        defer {
+            if blobTransfer === transfer {
+                blobTransfer = nil
+            }
+        }
+        scene.sendWebMsg(id, ModelBlobRequestEvent(requestId: transfer.requestId, src: source.src))
+        return try await transfer.file()
     }
 
     enum CodingKeys: String, CodingKey {
@@ -57,5 +96,10 @@ class SpatializedStatic3DElement: SpatializedElement {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(modelURL, forKey: .modelURL)
         try container.encode(SpatializedElementType.SpatializedStatic3DElement, forKey: .type)
+    }
+
+    override func onDestroy() {
+        blobTransfer = nil
+        super.onDestroy()
     }
 }

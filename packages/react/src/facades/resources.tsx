@@ -1,10 +1,14 @@
 'use client'
 
 import { ComponentType, ReactNode } from 'react'
-import type { SpatialUnlitMaterialOptions } from '@webspatial/core-sdk'
+import type {
+  MaterialProps,
+  PBRMaterialProps,
+  UnlitMaterialProps,
+} from '../reality/materialProps'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
-import { warnBootForgotten } from './shared/warnBootForgotten'
+import { BootForgottenDiagnostic } from './shared/BootForgottenDiagnostic'
 
 type SpatialImpl = ReturnType<typeof requireSpatialImpl>
 
@@ -27,8 +31,7 @@ function createNullFacade<P>(
   function Facade(props: P) {
     const ready = useSpatialReady()
     if (!ready) {
-      warnBootForgotten(componentName)
-      return null
+      return <BootForgottenDiagnostic componentName={componentName} />
     }
     const RealComponent = pickReal(requireSpatialImpl()) as ComponentType<any>
     return <RealComponent {...(props as any)} />
@@ -37,12 +40,7 @@ function createNullFacade<P>(
   return Facade
 }
 
-export type UnlitMaterialProps = {
-  children?: ReactNode
-  id: string
-} & SpatialUnlitMaterialOptions
-
-export type MaterialProps = { type: 'unlit' } & UnlitMaterialProps
+export type { MaterialProps, PBRMaterialProps, UnlitMaterialProps }
 
 export type TextureProps = {
   children?: ReactNode
@@ -74,6 +72,11 @@ export const UnlitMaterial =
     'UnlitMaterial',
     impl => impl.UnlitMaterial,
   )
+
+export const PBRMaterial = /* @__PURE__ */ createNullFacade<PBRMaterialProps>(
+  'PBRMaterial',
+  impl => impl.PBRMaterial,
+)
 
 export const Material = /* @__PURE__ */ createNullFacade<MaterialProps>(
   'Material',

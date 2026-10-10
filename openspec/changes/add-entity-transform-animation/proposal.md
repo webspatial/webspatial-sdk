@@ -1,3 +1,5 @@
+> **Status: superseded.** `redesign-entity-motion-api` is the authoritative Entity motion target state. This change remains only as migration history.
+
 ## Why
 
 **Problem**

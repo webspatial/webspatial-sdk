@@ -1,3 +1,5 @@
+> 状态：已由 `redesign-entity-motion-api` 取代。后续以重设计变更为准。
+
 ## 新增需求
 
 ### Requirement: 提供实体 Transform 动画 API

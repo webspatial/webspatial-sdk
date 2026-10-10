@@ -9,9 +9,11 @@ export default function EntityAnimationPage() {
           Test pages for the{' '}
           <code className="text-cyan-300">useEntityAnimation</code> hook
           (OpenSpec:{' '}
-          <code className="text-cyan-300">add-entity-transform-animation</code>
-          ). Animations run natively at 90 fps via the JSBridge with no
-          per-frame JS calls.
+          <code className="text-cyan-300">redesign-entity-motion-api</code>).
+          Each page binds <code className="text-cyan-300">animation</code>,
+          spreads native-confirmed{' '}
+          <code className="text-cyan-300">entityProps</code>, and exercises the
+          playback API.
         </p>
         <p className="mb-8 max-w-3xl text-xs text-gray-500">
           Best tested in a WebSpatial runtime (visionOS). In a regular browser
@@ -29,6 +31,8 @@ export default function EntityAnimationPage() {
             <li>Entrance: box rises and scales up after 0.3 s delay.</li>
             <li>
               Manual: play moves box left-to-right and stop freezes mid-flight.
+              React transform probes are blocked during delay, running, and
+              paused states, then accepted after playback becomes inactive.
             </li>
             <li>
               Reverse loop: box rotates back and forth and pause/resume works.
@@ -37,11 +41,24 @@ export default function EntityAnimationPage() {
               Stop and sync: after stop, the next render keeps the stop-point.
             </li>
             <li>
-              Capability: <code>supports('useAnimation', ['entity'])</code>{' '}
-              probes the runtime key for <code>useEntityAnimation</code> and is
-              true in WebSpatial runtime and false otherwise.
+              Capability: <code>supports('useEntityAnimation')</code> reports
+              support on compatible WebSpatial runtimes.
             </li>
             <li>Reset loop: box moves, resets to the start, and repeats.</li>
+            <li>
+              In-place config update: execution changes keep the React animation
+              reference stable; running and paused retargets preserve pose and
+              state; callback-only updates use the latest callback.
+            </li>
+            <li>
+              Binding ownership: unbind clears entityProps and restores React
+              control; binding the same animation to a second Entity is rejected
+              without disturbing the first.
+            </li>
+            <li>
+              Callback scenarios report PASS only when start, complete, stop,
+              and reset callbacks match their expected exactly-once counts.
+            </li>
             <li>
               All lifecycle callbacks appear in the log panel when the runtime
               supports the animation flow.

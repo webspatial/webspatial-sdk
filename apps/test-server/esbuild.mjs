@@ -194,6 +194,10 @@ if (isBuild) {
     cache: -1, // Disable caching
     port: port, // Define the port
     before: [spaFallback],
+    mimetypes: {
+      'model/vnd.usdz+zip': ['usdz'],
+      'model/gltf-binary': ['glb'],
+    },
   })
   staticServer.server.on('error', err => {
     if (err?.code === 'EADDRINUSE') {

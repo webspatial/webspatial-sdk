@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { AnimationConfig } from '@webspatial/core-sdk'
+import type { EntityMotionConfig } from '@webspatial/core-sdk'
 import { WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
 import { renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -35,7 +35,7 @@ function useAnimationFromExperimental() {
 
 function useEntityAnimationFromExperimental() {
   return (experimentalSdk as Record<string, unknown>).useEntityAnimation as (
-    config: AnimationConfig,
+    config: EntityMotionConfig,
   ) => unknown
 }
 
@@ -66,8 +66,9 @@ describe('useAnimation experimental-entry facade', () => {
   it('keeps entity animation ready-gated before bootSpatial readiness', () => {
     const useEntityAnimation = useEntityAnimationFromExperimental()
 
-    const entityConfig: AnimationConfig = {
-      to: { position: { x: 0, y: 0, z: 0 } },
+    const entityConfig: EntityMotionConfig = {
+      from: { position: { x: 0 } },
+      to: { position: { x: 1 } },
     }
     try {
       renderHook(() => useEntityAnimation(entityConfig))

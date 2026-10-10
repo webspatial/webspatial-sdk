@@ -25,12 +25,14 @@ jobs:
           fetch-depth: 0  # Use full git history to enable tagging
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/setup@v2
+        with:
+          install: false
 
       - name: Setup node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
       
       - name: Install dependencies and build

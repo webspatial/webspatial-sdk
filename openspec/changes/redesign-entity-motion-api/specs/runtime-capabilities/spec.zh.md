@@ -6,6 +6,8 @@
 
 该 capability 代表当前 runtime 支持 Reality Entity 组件通过 `animation` 绑定来接入 `useEntityAnimation`。
 
+该 capability MUST 从 visionOS 的 WSAppShell `1.9.0` 和 picoOS 的 PicoWebApp `0.7.0` 开始启用。
+
 #### Scenario: Entity motion capability 文档指引
 - **WHEN** 应用文档解释如何检测新的 Entity motion API 是否受支持
 - **THEN** 文档 MUST 使用 `supports('useEntityAnimation')` 作为目标态 capability 检测方式
@@ -14,3 +16,8 @@
 - **WHEN** capability 文档或代码引用 Entity motion 支持检测
 - **THEN** MUST NOT 使用或保留 `supports('useEntityAnimation', ['entity'])`
 - **AND** `supports('useEntityAnimation')` MUST 是 Entity motion 唯一文档化的 capability 检测方式
+
+#### Scenario: Entity motion capability 版本边界
+- **WHEN** runtime 是 WSAppShell `1.9.0` 或更新版本,或 PicoWebApp `0.7.0` 或更新版本
+- **THEN** `supports('useEntityAnimation')` MUST 返回 `true`
+- **AND** 已识别的更早 runtime 版本 MUST 返回 `false`

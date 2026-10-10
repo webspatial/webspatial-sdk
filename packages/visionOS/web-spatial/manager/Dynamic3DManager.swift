@@ -74,7 +74,9 @@ private actor RemoteResourceLoadCache {
         let digest = SHA256.hash(data: Data(urlString.utf8))
         let hex = digest.prefix(8).reduce(into: "") { $0.append(String(format: "%02x", $1)) }
         var baseName = URL(string: urlString)?.lastPathComponent ?? "asset"
-        if baseName.isEmpty { baseName = "asset" }
+        if baseName.isEmpty {
+            baseName = "asset"
+        }
         let safe = baseName.replacingOccurrences(of: "/", with: "_")
         return documents.appendingPathComponent("\(hex)_\(safe)")
     }
@@ -112,33 +114,63 @@ class Dynamic3DManager {
         switch type {
         case .BoxGeometry:
             var missing: [String] = []
-            if props.width == nil { missing.append("width") }
-            if props.height == nil { missing.append("height") }
-            if props.depth == nil { missing.append("depth") }
-            if !missing.isEmpty { throw GeometryCreationError.missingFields("BoxGeometry", missing) }
+            if props.width == nil {
+                missing.append("width")
+            }
+            if props.height == nil {
+                missing.append("height")
+            }
+            if props.depth == nil {
+                missing.append("depth")
+            }
+            if !missing.isEmpty {
+                throw GeometryCreationError.missingFields("BoxGeometry", missing)
+            }
             return BoxGeometry(width: props.width!, height: props.height!, depth: props.depth!, cornerRadius: props.cornerRadius ?? 0, splitFaces: props.splitFaces ?? false)
         case .PlaneGeometry:
             var missing: [String] = []
-            if props.width == nil { missing.append("width") }
-            if props.height == nil { missing.append("height") }
-            if !missing.isEmpty { throw GeometryCreationError.missingFields("PlaneGeometry", missing) }
+            if props.width == nil {
+                missing.append("width")
+            }
+            if props.height == nil {
+                missing.append("height")
+            }
+            if !missing.isEmpty {
+                throw GeometryCreationError.missingFields("PlaneGeometry", missing)
+            }
             return PlaneGeometry(width: props.width!, height: props.height!, cornerRadius: props.cornerRadius ?? 0)
         case .SphereGeometry:
             var missing: [String] = []
-            if props.radius == nil { missing.append("radius") }
-            if !missing.isEmpty { throw GeometryCreationError.missingFields("SphereGeometry", missing) }
+            if props.radius == nil {
+                missing.append("radius")
+            }
+            if !missing.isEmpty {
+                throw GeometryCreationError.missingFields("SphereGeometry", missing)
+            }
             return SphereGeometry(radius: props.radius!)
         case .ConeGeometry:
             var missing: [String] = []
-            if props.radius == nil { missing.append("radius") }
-            if props.height == nil { missing.append("height") }
-            if !missing.isEmpty { throw GeometryCreationError.missingFields("ConeGeometry", missing) }
+            if props.radius == nil {
+                missing.append("radius")
+            }
+            if props.height == nil {
+                missing.append("height")
+            }
+            if !missing.isEmpty {
+                throw GeometryCreationError.missingFields("ConeGeometry", missing)
+            }
             return ConeGeometry(radius: props.radius!, height: props.height!)
         case .CylinderGeometry:
             var missing: [String] = []
-            if props.radius == nil { missing.append("radius") }
-            if props.height == nil { missing.append("height") }
-            if !missing.isEmpty { throw GeometryCreationError.missingFields("CylinderGeometry", missing) }
+            if props.radius == nil {
+                missing.append("radius")
+            }
+            if props.height == nil {
+                missing.append("height")
+            }
+            if !missing.isEmpty {
+                throw GeometryCreationError.missingFields("CylinderGeometry", missing)
+            }
             return CylinderGeometry(radius: props.radius!, height: props.height!)
         }
     }
@@ -154,6 +186,22 @@ class Dynamic3DManager {
             props.color ?? "#FFFFFF",
             tex,
             props.transparent ?? true,
+            props.opacity ?? 1,
+            textureSpatialId: textureSpatialId
+        )
+    }
+
+    static func createPBRMaterial(_ props: CreatePBRMaterial, _ tex: TextureResource? = nil) -> SpatialPBRMaterial {
+        let textureSpatialId: String? = {
+            guard let tid = props.textureId, !tid.isEmpty else { return nil }
+            return tid
+        }()
+        return SpatialPBRMaterial(
+            props.color ?? "#FFFFFF",
+            tex,
+            props.metalness ?? 0,
+            props.roughness ?? 0.5,
+            props.transparent ?? false,
             props.opacity ?? 1,
             textureSpatialId: textureSpatialId
         )
