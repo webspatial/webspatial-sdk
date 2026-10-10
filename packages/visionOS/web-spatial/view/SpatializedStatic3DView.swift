@@ -121,7 +121,9 @@ struct SpatializedStatic3DView: View {
             return
         }
         // Setting selectedAnimation resets the animation and autoplays on first load
-        if asset.selectedAnimation == nil || asset.animationPlaybackController?.isComplete == true {
+        if asset.selectedAnimation == nil ||
+            (!isPaused && asset.animationPlaybackController?.isComplete == true)
+        {
             asset.selectedAnimation = asset.availableAnimations.first
         }
         let controller = asset.animationPlaybackController
@@ -138,10 +140,11 @@ struct SpatializedStatic3DView: View {
     /// requested, then clears `pendingSeekTime` so subsequent identical
     /// requests still trigger a fresh seek.
     private func onSeek(time: Double?) {
-        guard let controller = asset?.animationPlaybackController, let time else { return }
-        controller.time = time
-        spatializedStatic3DElement.pendingSeekTime = nil
-        sendAnimationStateChange(isPaused: spatializedStatic3DElement.animationPaused)
+        guard let asset, let controller = asset.animationPlaybackController, time != nil else { return }
+        if controller.isComplete {
+            asset.selectedAnimation = asset.availableAnimations.first
+        }
+        onPlayback(isPaused: spatializedStatic3DElement.animationPaused)
     }
 
     /// Emits the current animation state to the web layer, sampling the
@@ -150,7 +153,9 @@ struct SpatializedStatic3DView: View {
     private func sendAnimationStateChange(isPaused: Bool) {
         let controller = asset?.animationPlaybackController
         let duration = controller?.duration ?? 0
-        let currentTime = controller?.time ?? 0
+        let currentTime = controller?.isComplete == true
+            ? duration
+            : controller?.time ?? 0
         spatialScene.sendWebMsg(
             spatializedStatic3DElement.id,
             AnimationStateChangeEvent(
