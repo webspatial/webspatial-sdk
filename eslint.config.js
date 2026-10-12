@@ -31,6 +31,9 @@ module.exports = tseslint.config(
   },
   {
     files: typedSourceFiles,
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
