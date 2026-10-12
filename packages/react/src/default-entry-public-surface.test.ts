@@ -55,7 +55,9 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
       'SphereEntity',
       'AttachmentAsset',
       'Material',
+      'MaterialPresets',
       'ModelAsset',
+      'PBRMaterial',
       'Texture',
       'UnlitMaterial',
       'World',
@@ -231,6 +233,16 @@ describe('default-entry public surface (spec tasks.md §7.1 / §7.2 / §7.3 / §
     it('declares `version` exactly once', () => {
       const matches = sourceNoComments.match(/export const version\s*=/g) ?? []
       expect(matches.length).toBe(1)
+    })
+
+    it('does NOT re-export experimental Ornament type helpers', () => {
+      for (const typeName of [
+        'OrnamentOptions',
+        'OrnamentPoint3D',
+        'OrnamentVisibility',
+      ]) {
+        expect(sourceNoComments).not.toMatch(new RegExp(`\\b${typeName}\\b`))
+      }
     })
   })
 

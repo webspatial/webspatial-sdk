@@ -35,6 +35,7 @@ export {
   AttachmentAsset,
   Material,
   ModelAsset,
+  PBRMaterial,
   Texture,
   UnlitMaterial,
 } from './resources'
@@ -42,6 +43,7 @@ export type {
   AttachmentAssetProps,
   MaterialProps,
   ModelAssetProps,
+  PBRMaterialProps,
   TextureProps,
   UnlitMaterialProps,
 } from './resources'

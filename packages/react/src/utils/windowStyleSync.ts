@@ -1,5 +1,7 @@
 import { SpatialStyleInfoUpdateEvent } from '../notifyUpdateStandInstanceLayout'
 
+const STYLESHEET_RETRY_DELAYS_MS = [200, 600]
+
 export function asyncLoadStyleToChildWindow(
   childWindow: WindowProxy,
   link: HTMLLinkElement,
@@ -7,11 +9,13 @@ export function asyncLoadStyleToChildWindow(
 ): Promise<boolean> {
   return new Promise(resolve => {
     const { href } = link
-    const sep = href.includes('?') ? '&' : '?'
-    link.href = `${href}${sep}uniqueURL=${Math.random()}`
-
+    const nextRequestUrl = () => {
+      const sep = href.includes('?') ? '&' : '?'
+      return `${href}${sep}uniqueURL=${Math.random()}`
+    }
     let finished = false
     let timeoutId: number | undefined
+    let retryCount = 0
     const finish = (ok: boolean) => {
       if (finished) return
       finished = true
@@ -23,17 +27,50 @@ export function asyncLoadStyleToChildWindow(
 
     // need to wait for some time to make sure the style is loaded
     // otherwise, the style may not be applied
-    link.onerror = () => {
-      finish(false)
+    const arm = (node: HTMLLinkElement) => {
+      node.onerror = () => onAttemptFailed(node)
+      node.onload = () => {
+        // A newer sync wave may have started while this sheet was in flight.
+        // That wave already dropped links whose href is no longer wanted and
+        // skips re-adding the ones still attached, so detaching here would
+        // leave the portal document with no stylesheet at all.
+        finish(true)
+      }
+      node.href = nextRequestUrl()
     }
-    link.onload = () => {
-      if (!isCurrent()) {
-        link.parentNode?.removeChild(link)
+
+    const onAttemptFailed = (node: HTMLLinkElement) => {
+      node.onerror = null
+      node.onload = null
+
+      // Later sync waves treat an attached link as already satisfied, so a
+      // failed sheet is never replaced on its own. Retry while the node is
+      // still in the portal head — once a newer wave detaches it, the href is
+      // no longer wanted and the retry must stop.
+      if (
+        node.parentNode == null ||
+        retryCount >= STYLESHEET_RETRY_DELAYS_MS.length
+      ) {
         finish(false)
         return
       }
-      finish(true)
+
+      const delay = STYLESHEET_RETRY_DELAYS_MS[retryCount++]!
+      window.setTimeout(() => {
+        const parent = node.parentNode
+        if (parent == null) {
+          finish(false)
+          return
+        }
+        // PICO WebLayer does not emit a second error for a link whose href is
+        // rewritten in place, so every attempt needs its own node.
+        const replacement = node.cloneNode(true) as HTMLLinkElement
+        arm(replacement)
+        parent.replaceChild(replacement, node)
+      }, delay)
     }
+
+    arm(link)
 
     setTimeout(() => {
       if (!isCurrent()) {

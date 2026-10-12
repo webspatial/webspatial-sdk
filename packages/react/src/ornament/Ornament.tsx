@@ -14,7 +14,6 @@ import {
   normalizeOrnamentOptions,
   type BackgroundMaterialType,
   type CornerRadius,
-  type OrnamentOptions,
   type OrnamentPoint3D,
   type OrnamentVisibility,
 } from '@webspatial/core-sdk'
@@ -35,9 +34,13 @@ type OrnamentStyle = CSSProperties & {
   [ORNAMENT_BACKGROUND_MATERIAL_STYLE_VAR]?: BackgroundMaterialType
 }
 
-type OrnamentPublicOptions = Omit<OrnamentOptions, 'backgroundMaterial'>
-
-export type OrnamentProps = OrnamentPublicOptions & {
+export type OrnamentProps = {
+  attachmentAnchor?: OrnamentPoint3D
+  contentAlignment?: OrnamentPoint3D
+  visibility?: OrnamentVisibility
+  width?: number
+  height?: number
+  cornerRadius?: Partial<CornerRadius>
   children: ReactNode
   style?: OrnamentStyle
 }
@@ -90,10 +93,8 @@ const UNITLESS_STYLE_PROPERTIES = new Set([
 
 function getOrnamentStyleBackgroundMaterial(
   style: OrnamentStyle | undefined,
-): OrnamentOptions['backgroundMaterial'] {
-  return style?.[ORNAMENT_BACKGROUND_MATERIAL_STYLE_VAR] as
-    | OrnamentOptions['backgroundMaterial']
-    | undefined
+): BackgroundMaterialType | undefined {
+  return style?.[ORNAMENT_BACKGROUND_MATERIAL_STYLE_VAR]
 }
 
 function hyphenateStyleName(name: string) {

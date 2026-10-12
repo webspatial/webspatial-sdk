@@ -59,6 +59,16 @@ struct CreateUnlitMaterial: CommandDataProtocol {
     let opacity: Float?
 }
 
+struct CreatePBRMaterial: CommandDataProtocol {
+    static let commandType: String = "CreatePBRMaterial"
+    let color: String?
+    let textureId: String?
+    let metalness: Float?
+    let roughness: Float?
+    let transparent: Bool?
+    let opacity: Float?
+}
+
 struct CreateTexture: CommandDataProtocol {
     static let commandType: String = "CreateTexture"
     let url: String
@@ -169,6 +179,17 @@ struct UpdateUnlitMaterialProperties: CommandDataProtocol {
     let id: String
     let color: String?
     let textureId: String?
+    let transparent: Bool?
+    let opacity: Float?
+}
+
+struct UpdatePBRMaterialProperties: CommandDataProtocol {
+    static let commandType: String = "UpdatePBRMaterialProperties"
+    let id: String
+    let color: String?
+    let textureId: String?
+    let metalness: Float?
+    let roughness: Float?
     let transparent: Bool?
     let opacity: Float?
 }
@@ -424,6 +445,8 @@ struct InitializeAttachmentCommand: CommandDataProtocol {
     let width: Double?
     let height: Double?
     let ownerViewId: String
+    let cornerRadius: CornerRadius?
+    let backgroundMaterial: BackgroundMaterial?
 }
 
 struct UpdateAttachmentEntityCommand: CommandDataProtocol {
@@ -434,4 +457,41 @@ struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     let scale: JSBVec3?
     let width: Double?
     let height: Double?
+    let cornerRadius: CornerRadius?
+    let backgroundMaterial: BackgroundMaterial?
+}
+
+protocol BlobTransferCommand: CommandDataProtocol {
+    var id: String { get }
+    var requestId: String { get }
+}
+
+struct StartBlobTransfer: BlobTransferCommand {
+    static let commandType = "StartBlobTransfer"
+    let id: String
+    let requestId: String
+    let src: String
+    let mimeType: String
+    let size: Int
+}
+
+struct TransferBlobChunk: BlobTransferCommand {
+    static let commandType = "TransferBlobChunk"
+    let id: String
+    let requestId: String
+    let offset: Int
+    let data: String
+}
+
+struct CompleteBlobTransfer: BlobTransferCommand {
+    static let commandType = "CompleteBlobTransfer"
+    let id: String
+    let requestId: String
+}
+
+struct FailBlobTransfer: BlobTransferCommand {
+    static let commandType = "FailBlobTransfer"
+    let id: String
+    let requestId: String
+    let message: String?
 }

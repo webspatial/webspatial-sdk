@@ -1,3 +1,5 @@
+> **Status: superseded.** `redesign-entity-motion-api` is the authoritative Entity motion design. This document remains only as implementation history.
+
 ## Context
 
 See the proposal for full motivation. In short: entity transform updates are currently instantaneous with no native transition support. This design covers the transform-only animation API, cross-layer contracts, and behavior rules needed to close that gap.

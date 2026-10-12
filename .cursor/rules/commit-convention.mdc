@@ -1,0 +1,43 @@
+---
+description: Commit message convention — mandatory ticket trailer
+globs:
+alwaysApply: true
+---
+
+# Commit Message Convention (MANDATORY)
+
+When creating or amending git commits in this repository, you MUST follow these rules. The local `commit-msg` hook (commitlint) and CI both enforce them.
+
+## Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+ticket: <ID>
+```
+
+## Rules
+
+1. **Conventional Commits type**: `feat` | `fix` | `docs` | `style` | `refactor` | `perf` | `test` | `build` | `ci` | `chore` | `revert`
+2. **Scope** (optional): area touched, e.g. `react`, `core`, `cli`, `visionos`, `test-server`
+3. **Subject**: imperative mood, no trailing period; entire header <= 72 characters
+4. **`ticket:` line is MANDATORY**:
+   - Use the Meego work item ID when one is known
+   - Use `ticket: 0` for trivial changes with no associated work item
+   - If the user does not provide a ticket ID, ask for one before committing
+5. **NEVER** use `git commit --no-verify` to bypass the hook
+6. One logical change per commit
+
+## Example
+
+```
+feat(react): add spatial scene persistence
+
+Save and restore scene state across page reloads.
+
+ticket: 123456
+```
+
+See `CONTRIBUTING.md → Commit Message Convention` for the full specification.

@@ -47,5 +47,5 @@ export * from './types/motion'
 export { validateSpatializedMotionConfig } from './motion'
 export * from './runtime'
 
-export { composeSRT, decomposeSRT } from './utils'
+export { composeSRT } from './utils'
 export { isSSREnv } from './isSSREnv'

@@ -21,14 +21,20 @@ let hasWarned = false
  * Stripped from production builds via `process.env.NODE_ENV` guard
  * (consumer bundlers / tsup minify dead-code).
  */
-export function warnBootForgotten(componentName: string): void {
+export function isBootForgotten(): boolean {
   if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
-    return
+    return false
   }
+  if (detectSpatialRuntime() === null) return false
+  if (isSpatialReady()) return false
+  if (hasBootSpatialBeenCalled()) return false
+
+  return true
+}
+
+export function warnBootForgotten(componentName: string): void {
   if (hasWarned) return
-  if (detectSpatialRuntime() === null) return
-  if (isSpatialReady()) return
-  if (hasBootSpatialBeenCalled()) return
+  if (!isBootForgotten()) return
 
   hasWarned = true
   console.warn(

@@ -21,7 +21,10 @@ final class NavigationCleanupTests: XCTestCase {
             rotation: SIMD3<Float>(0, 0, 0),
             scale: SIMD3<Float>(1, 1, 1),
             frameSize: CGSize(width: 100, height: 100),
-            webViewModel: SpatialWebViewModel(url: "http://localhost:5173/")
+            webViewModel: SpatialWebViewModel(
+                url: "http://localhost:5173/",
+                contentRole: .portal
+            )
         )
         XCTAssertFalse(scene.attachmentManager.attachments.isEmpty)
 
@@ -34,6 +37,7 @@ final class NavigationCleanupTests: XCTestCase {
         XCTAssertNil(SpatialObject.get(panel.id))
     }
 }
+
 final class SpatializedDynamic3DElementInspectTests: XCTestCase {
     func test_addAndRemoveEntityKeepsInspectHierarchyInSync() throws {
         let reality = SpatializedDynamic3DElement()
@@ -109,12 +113,12 @@ final class SpatialSceneInspectTests: XCTestCase {
         )
         let detached = OrnamentElement(
             id: "detached-ornament",
-            webViewModel: SpatialWebViewModel(url: nil),
+            webViewModel: SpatialWebViewModel(url: nil, contentRole: .portal),
             options: .default
         )
         let active = OrnamentElement(
             id: "active-ornament",
-            webViewModel: SpatialWebViewModel(url: nil),
+            webViewModel: SpatialWebViewModel(url: nil, contentRole: .portal),
             options: .default
         )
         defer {

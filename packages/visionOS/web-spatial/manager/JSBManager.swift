@@ -13,11 +13,41 @@ struct JsbErrorData: Encodable {
     var message: String?
 }
 
-enum ReplyCode: Encodable {
+enum ReplyCode: String, Encodable {
     case TypeError
     case CommandError
     case InvalidSpatialObject
     case InvalidMatrix
+    /// Entity target does not exist.
+    case TARGET_NOT_FOUND
+    /// Entity target cannot run motion.
+    case UNSUPPORTED_TARGET
+    /// Animation object does not exist.
+    case ANIMATION_NOT_FOUND
+    /// Entity-motion timeline is invalid.
+    case INVALID_TIMELINE
+    /// Native animation compilation failed.
+    case COMPILATION_FAILED
+    /// Control operation is invalid for the current state.
+    case INVALID_CONTROL_STATE
+    /// Sparse transform values are invalid.
+    case INVALID_SET_VALUES
+
+    /// Maps the closed entity-motion error set into synchronous JSB reply codes.
+    init(entityMotion code: EntityMotionErrorCode) {
+        self = ReplyCode(rawValue: code.rawValue)!
+    }
+
+    /// Encodes entity-motion codes as strings while preserving legacy reply JSON.
+    func encode(to encoder: Encoder) throws {
+        switch self {
+        case .TypeError, .CommandError, .InvalidSpatialObject, .InvalidMatrix:
+            try [rawValue: [String: String]()].encode(to: encoder)
+        default:
+            var container = encoder.singleValueContainer()
+            try container.encode(rawValue)
+        }
+    }
 }
 
 struct JsbError: Error, Encodable {
@@ -63,10 +93,22 @@ class JSBManager {
     }
 
     func handlerMessage(_ message: String, _ replyHandler: ((Any?, String?) -> Void)? = nil) {
+        let actionKey = message.components(separatedBy: "::").first ?? ""
         do {
             let jsbInfo = message.components(separatedBy: "::")
-            let actionKey = jsbInfo[0]
             let hasData = jsbInfo.count == 2 && jsbInfo[1] != ""
+            let requiresEntityPayload = actionKey == CreateEntityAnimationCommand.commandType
+                || actionKey == UpdateEntityAnimationCommand.commandType
+                || actionKey == ControlEntityAnimationCommand.commandType
+                || actionKey == SetEntityAnimationCommand.commandType
+            if requiresEntityPayload, !hasData {
+                throw DecodingError.dataCorrupted(
+                    .init(
+                        codingPath: [],
+                        debugDescription: "Entity command payload is required."
+                    )
+                )
+            }
 
             if hasData {
                 let data = try deserialize(cmdType: actionKey, cmdContent: jsbInfo[1])
@@ -86,7 +128,24 @@ class JSBManager {
                     replyHandler?(nil, "Invalid JSB!!! \(message)")
                 }
             }
-        } catch {}
+        } catch {
+            let code: ReplyCode
+            switch actionKey {
+            case CreateEntityAnimationCommand.commandType,
+                 UpdateEntityAnimationCommand.commandType:
+                code = .INVALID_TIMELINE
+            case ControlEntityAnimationCommand.commandType:
+                code = .INVALID_CONTROL_STATE
+            case SetEntityAnimationCommand.commandType:
+                code = .INVALID_SET_VALUES
+            default:
+                code = .TypeError
+            }
+            let resultString = parseData(
+                JsbErrorData(code: code, message: "Invalid command payload.")
+            )
+            replyHandler?(nil, resultString)
+        }
     }
 
     private func handleAction(action: @escaping (@escaping ResolveHandler<Encodable>) -> Void,

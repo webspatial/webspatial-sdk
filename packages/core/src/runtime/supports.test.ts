@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 describe('getRuntime / supports', () => {
   beforeEach(() => {
+    Reflect.deleteProperty(globalThis, '__webspatialCapabilities')
     vi.resetModules()
   })
 
@@ -21,9 +22,8 @@ describe('getRuntime / supports', () => {
       userAgent:
         'Mozilla/5.0 (X11; Linux x86_64; unknown OS0.11.0 like Quest) AppleWebKit/537.36 WSAppShell/1.5.0 WebSpatial/1.5.0',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     const rt = getRuntime()
     expect(rt.type).toBe(null)
@@ -36,9 +36,8 @@ describe('getRuntime / supports', () => {
       userAgent:
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 WSAppShell/9.9.9 WebSpatial/1.5.0',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     const rt = getRuntime()
     expect(rt.type).toBe(null)
@@ -51,9 +50,8 @@ describe('getRuntime / supports', () => {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 (KHTML, like Gecko) WSAppShell/1.5.0 WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     const rt = getRuntime()
     expect(rt.type).toBe('visionos')
@@ -162,9 +160,8 @@ describe('getRuntime / supports', () => {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Puppeteer WSAppShell/1.5.0 WebSpatial/1.5.0',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     const rt = getRuntime()
     expect(rt.type).toBe('puppeteer')
@@ -179,9 +176,8 @@ describe('getRuntime / supports', () => {
     vi.stubGlobal('navigator', {
       userAgent: 'Mozilla/5.0 Puppeteer HeadlessChrome/120.0.0.0',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     expect(getRuntime().type).toBe('puppeteer')
     expect(getRuntime().shellVersion).toBe(null)
@@ -193,9 +189,8 @@ describe('getRuntime / supports', () => {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/WS_SHELL_VERSION WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     const rt = getRuntime()
     expect(rt.type).toBe('visionos')
@@ -205,6 +200,152 @@ describe('getRuntime / supports', () => {
     expect(supports('Model', ['stagemode'])).toBe(true)
     expect(supports('UnknownThing' as any)).toBe(false)
     expect(supports('Model', ['not-a-token' as any])).toBe(false)
+  })
+
+  test('visionOS manifest overrides WS_SHELL_VERSION debug mode with a complete allowlist', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/WS_SHELL_VERSION WebSpatial/1.7.0 Safari/537.36',
+    } as Navigator)
+    vi.stubGlobal('__webspatialCapabilities', {
+      manifestVersion: 1,
+      runtime: {
+        type: 'visionos',
+        version: '1.7.0-preview',
+        buildId: 'pr-1234-a1b2c3d',
+      },
+      supported: ['Model', 'Model:poster', 'FutureCapability'],
+    })
+    const {
+      getRuntimeCapabilityManifest,
+      supports,
+      resetRuntimeCacheForTests,
+    } = await import('./index')
+    resetRuntimeCacheForTests()
+
+    expect(supports('Model')).toBe(true)
+    expect(supports('Model', ['poster'])).toBe(true)
+    expect(supports('Model', ['play'])).toBe(false)
+    expect(supports('Reality')).toBe(false)
+    expect(getRuntimeCapabilityManifest('visionos')?.runtime.buildId).toBe(
+      'pr-1234-a1b2c3d',
+    )
+  })
+
+  test('manifest metadata does not affect capability results', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.5.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    vi.stubGlobal('__webspatialCapabilities', {
+      manifestVersion: 1,
+      runtime: {
+        type: 'visionos',
+        version: '99.0.0',
+        buildId: 'arbitrary-build',
+      },
+      supported: ['useAnimation', 'useEntityAnimation'],
+    })
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+
+    expect(supports('useAnimation')).toBe(true)
+    expect(supports('useEntityAnimation')).toBe(true)
+    expect(supports('Model')).toBe(false)
+  })
+
+  test('manifest snapshot remains stable for the page lifetime', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.7.0 WebSpatial/1.7.0 Safari/537.36',
+    } as Navigator)
+    vi.stubGlobal('__webspatialCapabilities', {
+      manifestVersion: 1,
+      runtime: { type: 'visionos', buildId: 'first' },
+      supported: ['Model'],
+    })
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('Model')).toBe(true)
+
+    vi.stubGlobal('__webspatialCapabilities', {
+      manifestVersion: 1,
+      runtime: { type: 'visionos', buildId: 'second' },
+      supported: [],
+    })
+    expect(supports('Model')).toBe(true)
+  })
+
+  test.each([
+    {
+      label: 'unsupported schema',
+      manifest: {
+        manifestVersion: 2,
+        runtime: { type: 'visionos', buildId: 'test' },
+        supported: [],
+      },
+    },
+    {
+      label: 'platform mismatch',
+      manifest: {
+        manifestVersion: 1,
+        runtime: { type: 'picoos', buildId: 'test' },
+        supported: [],
+      },
+    },
+    {
+      label: 'malformed manifest',
+      manifest: {
+        manifestVersion: 1,
+        runtime: { type: 'visionos', buildId: '' },
+        supported: [],
+      },
+    },
+  ])('$label falls back to the version table', async ({ manifest }) => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.5.0 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    vi.stubGlobal('__webspatialCapabilities', manifest)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+
+    expect(supports('Model')).toBe(true)
+    expect(supports('Model', ['poster'])).toBe(false)
+  })
+
+  test('Puppeteer keeps the all-true behavior when a manifest is present', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent: 'Mozilla/5.0 Puppeteer WSAppShell/1.7.0',
+    } as Navigator)
+    vi.stubGlobal('__webspatialCapabilities', {
+      manifestVersion: 1,
+      runtime: { type: 'visionos', buildId: 'test' },
+      supported: [],
+    })
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+
+    expect(supports('Model')).toBe(true)
+    expect(supports('Model', ['poster'])).toBe(true)
+  })
+
+  test('an authored manifest-like global does not classify a plain browser as WebSpatial', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+    } as Navigator)
+    vi.stubGlobal('__webspatialCapabilities', {
+      manifestVersion: 1,
+      runtime: { type: 'visionos', buildId: 'authored' },
+      supported: ['Model'],
+    })
+    const { getRuntime, supports, resetRuntimeCacheForTests } =
+      await import('./supports')
+    resetRuntimeCacheForTests()
+
+    expect(getRuntime().type).toBeNull()
+    expect(supports('Model')).toBe(false)
   })
 
   test('visionOS WSAppShell/1.5.0: Model sub-tokens (alpha2.0 baseline)', async () => {
@@ -246,7 +387,7 @@ describe('getRuntime / supports', () => {
     expect(supports('useAnimation', ['entity'])).toBe(false)
   })
 
-  test('visionOS WSAppShell/1.8.0: useAnimation is true while sub-tokens are false', async () => {
+  test('visionOS WSAppShell/1.8.0: useAnimation rejects entity sub-token', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
@@ -257,6 +398,53 @@ describe('getRuntime / supports', () => {
     expect(supports('useAnimation', ['entity'])).toBe(false)
     expect(supports('useAnimation', ['element'])).toBe(false)
   })
+
+  test('visionOS manifest enables useEntityAnimation as a top-level key', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/WS_SHELL_VERSION WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    vi.stubGlobal('__webspatialCapabilities', {
+      manifestVersion: 1,
+      runtime: { type: 'visionos', buildId: 'entity-motion-test' },
+      supported: ['useEntityAnimation'],
+    })
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useEntityAnimation')).toBe(true)
+    expect(supports('useEntityAnimation', [])).toBe(true)
+    expect(supports('useEntityAnimation', ['entity'])).toBe(false)
+    expect(supports('useAnimation', ['entity'])).toBe(false)
+  })
+
+  test('visionOS WSAppShell/1.8.x: useEntityAnimation remains false', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.9 WebSpatial/1.5.0 Safari/537.36',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+    expect(supports('useEntityAnimation')).toBe(false)
+    expect(supports('useEntityAnimation', ['entity'])).toBe(false)
+  })
+
+  test.each([
+    ['0.6.99', false],
+    ['0.7.0', true],
+    ['1.0.0', true],
+  ] as const)(
+    'picoOS PicoWebApp/%s reports useEntityAnimation=%s',
+    async (version, expected) => {
+      vi.stubGlobal('navigator', {
+        userAgent: `Mozilla/5.0 (X11; Linux x86_64; swan OS6.1.0 like Quest) AppleWebKit/537.36 PicoWebApp/${version} (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0`,
+      } as Navigator)
+      const { supports, resetRuntimeCacheForTests } = await import('./supports')
+      resetRuntimeCacheForTests()
+      expect(supports('useEntityAnimation')).toBe(expected)
+      expect(supports('useEntityAnimation', [])).toBe(expected)
+      expect(supports('useEntityAnimation', ['entity'])).toBe(false)
+    },
+  )
 
   test('useAnimation rejects all sub-tokens', async () => {
     vi.stubGlobal('navigator', {
@@ -303,7 +491,7 @@ describe('supports("useAnimation") for motion', () => {
     vi.unstubAllGlobals()
   })
 
-  test('visionOS WSAppShell/1.8.0: useAnimation is true while sub-tokens are false', async () => {
+  test('visionOS WSAppShell/1.8.0: useAnimation rejects entity sub-token', async () => {
     vi.stubGlobal('navigator', {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/1.8.0 WebSpatial/1.5.0 Safari/537.36',
