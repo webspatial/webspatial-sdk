@@ -14,7 +14,7 @@ import {
 } from './useEntityAnimation'
 import type { EntityPlaybackError } from '../../experimental'
 // @ts-expect-error EntityPlaybackErrorCode is intentionally not exported.
-import type { EntityPlaybackErrorCode } from '../../experimental'
+import type { EntityPlaybackErrorCode } from '../../experimental' // eslint-disable-line unused-imports/no-unused-imports
 
 class TestErrorBoundary extends Component<
   { children?: ReactNode; onError: (error: Error) => void },
