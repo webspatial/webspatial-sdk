@@ -13,7 +13,7 @@
     "dev": "npm run testServer",
     "xcode": "open packages/visionOS/web-spatial.xcodeproj",
     "adbDevPorts": "adb reverse tcp:35729 tcp:35729 && adb reverse tcp:5173 tcp:5173",
-    "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\" \"pnpm run test:workflows\" \"pnpm run test:runtime-capabilities\"",
+    "test": "pnpm lint && concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\" \"pnpm run test:workflows\" \"pnpm run test:runtime-capabilities\"",
     "check:unused": "node tools/scripts/check-unused-locals.js",
     "codeql:js": "node tools/scripts/run-codeql-js.js",
     "test:workflows": "node tools/scripts/check-release-workflows.js",
@@ -45,9 +45,6 @@
     "commit-msg": "npx --no -- commitlint --edit \"$1\""
   },
   "lint-staged": {
-    "{apps/test-server,tests/ci-test,packages/cli/src,packages/core/src,packages/react/src}/**/*.{js,jsx,ts,tsx}": [
-      "eslint --cache --cache-location node_modules/.cache/eslint/ --fix"
-    ],
     "*.{js,json}": [
       "prettier --write"
     ],

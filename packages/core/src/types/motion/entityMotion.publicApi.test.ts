@@ -6,7 +6,7 @@ import type {
 } from '../../index'
 import type { SpatialEntity } from '../../index'
 // @ts-expect-error Entity transform update type was removed from the package entry.
-import type { EntityTransformUpdate } from '../../index'
+import type { EntityTransformUpdate } from '../../index' // eslint-disable-line unused-imports/no-unused-imports
 // @ts-expect-error Entity motion frame authoring type is not exported from the package entry.
 import type { EntityMotionFrame } from '../../index'
 // @ts-expect-error Entity motion patch type is not exported from the package entry.
