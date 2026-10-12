@@ -22,9 +22,8 @@ describe('getRuntime / supports', () => {
       userAgent:
         'Mozilla/5.0 (X11; Linux x86_64; unknown OS0.11.0 like Quest) AppleWebKit/537.36 WSAppShell/1.5.0 WebSpatial/1.5.0',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     const rt = getRuntime()
     expect(rt.type).toBe(null)
@@ -37,9 +36,8 @@ describe('getRuntime / supports', () => {
       userAgent:
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 WSAppShell/9.9.9 WebSpatial/1.5.0',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     const rt = getRuntime()
     expect(rt.type).toBe(null)
@@ -52,9 +50,8 @@ describe('getRuntime / supports', () => {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 (KHTML, like Gecko) WSAppShell/1.5.0 WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     const rt = getRuntime()
     expect(rt.type).toBe('visionos')
@@ -163,9 +160,8 @@ describe('getRuntime / supports', () => {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Puppeteer WSAppShell/1.5.0 WebSpatial/1.5.0',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     const rt = getRuntime()
     expect(rt.type).toBe('puppeteer')
@@ -180,9 +176,8 @@ describe('getRuntime / supports', () => {
     vi.stubGlobal('navigator', {
       userAgent: 'Mozilla/5.0 Puppeteer HeadlessChrome/120.0.0.0',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     expect(getRuntime().type).toBe('puppeteer')
     expect(getRuntime().shellVersion).toBe(null)
@@ -194,9 +189,8 @@ describe('getRuntime / supports', () => {
       userAgent:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; wv) AppleWebKit/605.1.15 WSAppShell/WS_SHELL_VERSION WebSpatial/1.5.0 Safari/537.36',
     } as Navigator)
-    const { supports, getRuntime, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { supports, getRuntime, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
     const rt = getRuntime()
     expect(rt.type).toBe('visionos')
@@ -346,9 +340,8 @@ describe('getRuntime / supports', () => {
       runtime: { type: 'visionos', buildId: 'authored' },
       supported: ['Model'],
     })
-    const { getRuntime, supports, resetRuntimeCacheForTests } = await import(
-      './supports'
-    )
+    const { getRuntime, supports, resetRuntimeCacheForTests } =
+      await import('./supports')
     resetRuntimeCacheForTests()
 
     expect(getRuntime().type).toBeNull()
@@ -452,6 +445,19 @@ describe('getRuntime / supports', () => {
       expect(supports('useEntityAnimation', ['entity'])).toBe(false)
     },
   )
+
+  test('PICO OS 6 PicoWebApp/0.7.0 exposes Model bounding box properties', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (X11; Linux x86_64; swan OS6.2.0 like Quest) AppleWebKit/537.36 PicoWebApp/0.7.0 (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+
+    expect(supports('Model', ['boundingBoxCenter', 'boundingBoxExtents'])).toBe(
+      true,
+    )
+  })
 
   test('useAnimation rejects all sub-tokens', async () => {
     vi.stubGlobal('navigator', {
