@@ -13,7 +13,7 @@
     "dev": "npm run testServer",
     "xcode": "open packages/visionOS/web-spatial.xcodeproj",
     "adbDevPorts": "adb reverse tcp:35729 tcp:35729 && adb reverse tcp:5173 tcp:5173",
-    "test": "concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\" \"pnpm run test:workflows\" \"pnpm run test:runtime-capabilities\"",
+    "test": "pnpm lint && concurrently \"pnpm -r --filter '@webspatial/*' run test\" \"tsc -p apps/test-server/tsconfig.json\" \"pnpm run test:workflows\" \"pnpm run test:runtime-capabilities\"",
     "check:unused": "node tools/scripts/check-unused-locals.js",
     "codeql:js": "node tools/scripts/run-codeql-js.js",
     "test:workflows": "node tools/scripts/check-release-workflows.js",
@@ -33,7 +33,8 @@
     "changeset:pre-exit": "changeset pre exit alpha",
     "generateStaticSite": "./tools/scripts/generateWebsite.sh",
     "commitlint": "commitlint",
-    "test:commitlint": "node --test tools/scripts/commitlint.test.cjs"
+    "test:commitlint": "node --test tools/scripts/commitlint.test.cjs",
+    "lint": "eslint apps/test-server tests/ci-test packages/cli/src packages/core/src packages/react/src"
   },
   "engines": {
     "node": ">=24",
@@ -75,10 +76,16 @@
     "@fission-ai/openspec": "^1.12.0",
     "@vitest/coverage-v8": "^4.1.11",
     "concurrently": "^8.2.2",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "globals": "^16.5.0",
     "lint-staged": "^15.5.2",
     "prettier": "^3.9.6",
     "simple-git-hooks": "^2.14.0",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.69.0",
     "vite": "^6.4.3",
     "vitest": "^4.1.11"
   },

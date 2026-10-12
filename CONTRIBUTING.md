@@ -54,6 +54,14 @@ npm run dev
 
 If you develop an **external** app with a **linked** `@webspatial/react-sdk` and Vite HMR (not the monorepo test-server), dedupe `react` / `react-dom` in Vite and alias the SDK to a single copy. Portal hook invariants and regression tests are documented in `packages/react/src/spatialized-container/ARCHITECTURE.md` (section **Portal lifecycle and local dev (HMR)**).
 
+## Lint and pre-commit
+
+Run `pnpm lint` to check the test server, CI harness, CLI, Core SDK, and React SDK with the root ESLint flat config. Package lint commands delegate to the same config; Core SDK lint also runs its TypeScript check. The root `pnpm test` command runs lint before tests, so CI checks lint without modifying source files.
+
+Lint errors fail the command. Existing warnings remain visible but do not fail CI; tightening the warning baseline should be handled separately from adopting the unified configuration.
+
+Pre-commit runs Prettier and the file size and character guards through lint-staged. ESLint is intentionally kept out of the commit hook to avoid blocking local commits or running two auto-fix tools concurrently on the same source file.
+
 ## Commit Message Convention
 
 Every commit in this repository must follow two rules, enforced by a local `commit-msg` hook (via [simple-git-hooks](https://github.com/toplenboren/simple-git-hooks) + [commitlint](https://commitlint.js.org/)) and by CI on every pull request.
