@@ -9,6 +9,7 @@ import {
   UnlitMaterial,
 } from '@webspatial/react-sdk'
 import { useEffect, useRef, useState } from 'react'
+import { applyParentRotation } from './gestureRotation'
 
 // Use DaisyUI button styles for consistency across test-server pages.
 const btnCls = 'btn btn-sm btn-neutral'
@@ -36,7 +37,7 @@ export default function RealityGestures() {
 
   const dragBaseRef = useRef(boxPos)
   const scaleBaseRef = useRef(boxScale)
-  const rotateBaseRef = useRef(boxRot)
+  const rotateBaseRef = useRef<typeof boxRot | null>(null)
   const activeGestureRef = useRef<null | 'drag' | 'rotate' | 'magnify'>(null)
   const logRef = useRef<HTMLPreElement>(null)
   const realityRef = useRef<SpatializedElementRef<HTMLDivElement>>(null)
@@ -188,8 +189,8 @@ export default function RealityGestures() {
 
               // console.log('onSpatialTap', e.target, e.currentTarget)
               // logLine('tap location3D', e.detail.location3D)
-              // logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
-              // logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
+              logLine('tap offsetX/Y/Z', e.offsetX, e.offsetY, e.offsetZ)
+              logLine('tap clientX/Y/Z', e.clientX, e.clientY, e.clientZ)
             }}
             onSpatialDragStart={async e => {
               if (!enabled || e.target?.id !== 'boxGreen') return
@@ -214,10 +215,9 @@ export default function RealityGestures() {
               )
                 return
               const t = e.detail.translation3D
-              const TRANSLATION_SCALE = 0.001
-              const nx = dragBaseRef.current.x + t.x * TRANSLATION_SCALE
-              const ny = dragBaseRef.current.y - t.y * TRANSLATION_SCALE
-              const nz = dragBaseRef.current.z + t.z * TRANSLATION_SCALE
+              const nx = dragBaseRef.current.x + t.x
+              const ny = dragBaseRef.current.y + t.y
+              const nz = dragBaseRef.current.z + t.z
               const clamp = (v: number) => Math.max(-0.5, Math.min(0.5, v))
               setBoxPos({ x: clamp(nx), y: clamp(ny), z: clamp(nz) })
               logLine('drag', t)
@@ -245,33 +245,15 @@ export default function RealityGestures() {
                 return
               }
               activeGestureRef.current = 'rotate'
-              rotateBaseRef.current = boxRot
-              const { x, y, z, w } = e.quaternion
-              const roll = Math.atan2(
-                2 * (w * x + y * z),
-                1 - 2 * (x * x + y * y),
+              rotateBaseRef.current ??= boxRot
+              setBoxRot(
+                applyParentRotation(rotateBaseRef.current, e.quaternion),
               )
-              const pitch = Math.asin(
-                Math.max(-1, Math.min(1, 2 * (w * y - z * x))),
-              )
-              const yaw = Math.atan2(
-                2 * (w * z + x * y),
-                1 - 2 * (y * y + z * z),
-              )
-              const toDeg = (r: number) => (r * 180) / Math.PI
-              setBoxRot({
-                x: rotateBaseRef.current.x + toDeg(roll),
-                y: rotateBaseRef.current.y + toDeg(pitch),
-                z: rotateBaseRef.current.z + toDeg(yaw),
-              })
-              logLine('rotate', {
-                roll: toDeg(roll),
-                pitch: toDeg(pitch),
-                yaw: toDeg(yaw),
-              })
             }}
             onSpatialRotateEnd={e => {
-              if (!enabled || e.target?.id !== 'boxGreen') return
+              if (e.target?.id !== 'boxGreen') return
+              rotateBaseRef.current = null
+              if (!enabled) return
               if (
                 exclusive &&
                 activeGestureRef.current &&

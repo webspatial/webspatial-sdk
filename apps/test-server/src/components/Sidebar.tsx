@@ -13,7 +13,18 @@ export const routes = [
       { path: '/reality/debug', label: 'Reality Debug' },
       { path: '/reality/dynamic3d', label: 'Dynamic 3D' },
       { path: '/reality/gestures', label: 'Gestures' },
-      { path: '/reality/gestureDiv', label: 'Gesture Div' },
+      {
+        path: '/reality/entity-gesture-coordinates',
+        label: 'Entity Gesture Coordinates',
+      },
+      {
+        path: '/reality/spatial-element-gesture-coordinates',
+        label: 'SpatialDiv/Model Gesture Coordinates',
+      },
+      {
+        path: '/reality/convert-coordinate-gesture',
+        label: 'Convert Coordinate Gesture',
+      },
       { path: '/reality/spatial-div', label: 'Spatial Div Dynamic' },
       { path: '/reality/attachments', label: 'Attachments' },
       { path: '/reality/empty', label: 'Empty' },
@@ -94,11 +105,9 @@ export const routes = [
     ],
   },
   {
-    path: '/spatial-drag-gesture',
+    path: '/spatial-rotate-axis-constraint',
     label: 'Gestures',
     children: [
-      { path: '/spatial-drag-gesture', label: 'Drag' },
-      { path: '/spatial-rotation-gesture', label: 'Rotate' },
       {
         path: '/spatial-rotate-axis-constraint',
         label: 'Rotate axis constraint',
@@ -130,7 +139,6 @@ export const routes = [
       },
       { path: '/spatial-converter', label: 'Spatial Converter' },
       { path: '/spatial-corner', label: 'Spatial Corner' },
-      { path: '/geometry-verify', label: 'Geometry Verify' },
       { path: '/transform-verify', label: 'Transform Verify' },
       { path: '/static-3d-model', label: 'Static 3D Model' },
       {

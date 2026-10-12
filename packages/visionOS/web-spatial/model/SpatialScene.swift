@@ -1445,7 +1445,10 @@ class SpatialScene: SpatialObject, ScrollAbleSpatialElementContainer, WebMsgSend
             return
         } else if let to2dFrame {
             let scenePoint = SIMD3<Double>(globalPx.x, globalPx.y, globalPx.z)
-            let localPoint = to2dFrame.convertFromScene(scenePoint)
+            guard let localPoint = to2dFrame.convertFromScene(scenePoint) else {
+                resolve(.failure(JsbError(code: .InvalidMatrix, message: "Target coordinate space transform is not invertible")))
+                return
+            }
             let ret = Vec3(x: CGFloat(localPoint.x), y: CGFloat(localPoint.y), z: CGFloat(localPoint.z))
             resolve(.success(ret))
             return

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B2800022F0C000800000002 /* SpatialGestureCoordinateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2800012F0C000800000001 /* SpatialGestureCoordinateTests.swift */; };
 		2BB10B012F50000100000001 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 2BB10B042F50000100000004 /* AsyncAlgorithms */; };
 		2B06AEDB2E4C1AE8000327E9 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC42E4C1AE8000327E9 /* Window.swift */; };
 		2B06AEDE2E4C1AE8000327E9 /* WebSpatialApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06AEC32E4C1AE8000327E9 /* WebSpatialApp.swift */; };
@@ -38,6 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2B2800012F0C000800000001 /* SpatialGestureCoordinateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialGestureCoordinateTests.swift; sourceTree = "<group>"; };
 		2B06AEBF2E4C1AE8000327E9 /* EventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventEmitter.swift; sourceTree = "<group>"; };
 		2B06AEC02E4C1AE8000327E9 /* JSBCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSBCommand.swift; sourceTree = "<group>"; };
 		2B06AEC12E4C1AE8000327E9 /* manifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = manifest.swift; sourceTree = "<group>"; };
@@ -191,6 +193,7 @@
 			isa = PBXGroup;
 			children = (
 				2B1008A12F0B000800000001 /* NavigationCleanupTests.swift */,
+				2B2800012F0C000800000001 /* SpatialGestureCoordinateTests.swift */,
 				2BCA00032F18000000000003 /* RuntimeCapabilityManifestTests.swift */,
 				2B1008A42F0B000800000004 /* SpatializedElementMotionTimelineSamplerTests.swift */,
 				2B1008A62F0B000800000006 /* SpatializedElementAnimationManagerTests.swift */,
@@ -387,6 +390,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B1008A22F0B000800000002 /* NavigationCleanupTests.swift in Sources */,
+				2B2800022F0C000800000002 /* SpatialGestureCoordinateTests.swift in Sources */,
 				2BCA00042F18000000000004 /* RuntimeCapabilityManifestTests.swift in Sources */,
 				2B1008A52F0B000800000005 /* SpatializedElementMotionTimelineSamplerTests.swift in Sources */,
 				2B1008A72F0B000800000007 /* SpatializedElementAnimationManagerTests.swift in Sources */,

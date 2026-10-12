@@ -53,6 +53,8 @@ The `<Model>` component fires several events to allow developers to monitor its 
 
 `onSpatialTap` Fired when a user performs a tap gesture on the model in the spatial environment.
 
+Tap and drag-start expose `offsetX` / `offsetY` / `offsetZ` and `clientX` / `clientY` / `clientZ`. **This is the Spatial HTML coordinate system, not the Reality entity system:** `offset*` is the hit point in the model’s element-local space (CSS pixels, top-left origin; front face `offsetZ ≈ 0`), and `client*` is the same point in SpatialScene / window space (CSS pixels). They do not use meters. The same mapping applies to SpatialDiv. For `<ModelEntity>` inside `<Reality>`, see `docs/dynamic-3d-api-prd.md` §12. Behavioral spec: `openspec/specs/spatial-gestures/spec.md`.
+
 `onSpatialDragStart` Fired when a user begins a drag gesture on the model.
 
 `onSpatialDrag` Fired continuously as the user drags the model.
