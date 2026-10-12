@@ -1,0 +1,34 @@
+## 1. Manifest Source and Generation
+
+- [x] 1.1 Define Runtime Capability Manifest v1 TypeScript types, validation rules, and canonical serialization helpers in the core runtime module.
+- [x] 1.2 Add `packages/visionOS/runtime-capabilities.json` with the complete current visionOS allowlist and validate every entry against the SDK key/token registry.
+- [x] 1.3 Add deterministic generation for static manifest data while sourcing runtime version and build provenance from builder-generated `pwaManager` metadata.
+- [x] 1.4 Keep the source JSON Git-managed, publish the generated provider required by the builder, and add a CI drift/validation check.
+
+## 2. SDK Capability Resolution
+
+- [x] 2.1 Implement internal synchronous manifest discovery, schema validation, platform matching, and page-lifetime snapshot caching without exposing a new public global API.
+- [x] 2.2 Update `supports()` precedence so a valid matching manifest wins before the visionOS debug shortcut and version table while preserving Puppeteer, SSR, non-WebSpatial, and fallback behavior.
+- [x] 2.3 Add unit tests for complete allowlist semantics, top-level/token queries, unknown entries, unsupported schema versions, malformed data, platform mismatch, repeated reads, and metadata-independent results.
+- [x] 2.4 Add regression tests proving valid manifests override `WS_SHELL_VERSION` and unusable manifests retain existing table/debug behavior.
+
+## 3. visionOS Runtime Provider
+
+- [x] 3.1 Make the checked-in visionOS Xcode project and builder-generated project consume the same generated manifest representation.
+- [x] 3.2 Add a centralized document-start `WKUserScript` provider that installs a frozen, non-writable manifest value before authored application scripts.
+- [x] 3.3 Apply the provider to every application-hosting Scene WebView and exclude SpatialDiv/Attachment portal WebViews through an explicit documented WebView content role.
+- [x] 3.4 Add native/builder tests that verify direct and generated Xcode projects combine the expected runtime type and capability allowlist with `pwaManager` package version and build ID metadata.
+
+## 4. Preview QA and Maintenance Workflow
+
+- [x] 4.1 Extend the runtime-capabilities test page to show provider source, manifest version, runtime version, build ID, and selected capability results.
+- [x] 4.2 Add preview verification for preview SDK + preview runtime, preview SDK + legacy runtime fallback, omitted known capabilities, and invalid manifests.
+- [x] 4.3 Document that future visionOS feature PRs update the current-capability source instead of guessing a future `CAPABILITY_TABLE` version row.
+- [x] 4.4 Add the required Changeset entries for affected fixed-group packages and describe the provider/fallback compatibility behavior.
+
+## 5. Validation
+
+- [x] 5.1 Run core and builder unit tests plus repository typecheck/lint checks for all touched packages.
+- [x] 5.2 Build the visionOS platform/builder artifacts and confirm generated output is deterministic and package-complete.
+- [x] 5.3 Run AVP simulator coverage proving the manifest is available in application Scene WebViews and absent from SpatialDiv/Attachment portal WebViews.
+- [x] 5.4 Verify legacy visionOS, picoOS without a provider, Puppeteer, plain browser, and SSR behavior remain unchanged.

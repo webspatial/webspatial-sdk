@@ -261,11 +261,21 @@ export type SpatialGeometryOptions =
   | SpatialCylinderGeometryOptions
   | SpatialConeGeometryOptions
 
-export type SpatialMaterialType = 'unlit'
+export const SpatialMaterialTypeValues = ['unlit', 'pbr'] as const
+export type SpatialMaterialType = (typeof SpatialMaterialTypeValues)[number]
 
 export interface SpatialUnlitMaterialOptions {
   color?: string
   textureId?: string
+  transparent?: boolean
+  opacity?: number
+}
+
+export interface SpatialPBRMaterialOptions {
+  color?: string
+  textureId?: string
+  metalness?: number
+  roughness?: number
   transparent?: boolean
   opacity?: number
 }
@@ -422,16 +432,30 @@ export type SpatialMagnifyEndEvent = CustomEvent<SpatialMagnifyEndEventDetail>
 
 export type SpatialEntityOrReality = SpatialEntity | SpatializedDynamic3DElement
 
+export interface AttachmentEntityPlacement {
+  id: string
+}
+
 export interface AttachmentEntityOptions {
-  parentEntityId: string
-  position?: [number, number, number]
-  size: { width: number; height: number }
+  placement: AttachmentEntityPlacement
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+  width?: number
+  height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
   ownerViewId: string
 }
 
 export interface AttachmentEntityUpdateOptions {
-  position?: [number, number, number]
-  size?: { width: number; height: number }
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+  width?: number
+  height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
 }
 
 // manifest

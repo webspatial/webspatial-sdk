@@ -1,5 +1,11 @@
 import SwiftUI
 
+struct JSBVec3: Codable {
+    let x: Double
+    let y: Double
+    let z: Double
+}
+
 struct UpdateSpatialSceneProperties: CommandDataProtocol {
     static let commandType: String = "UpdateSpatialSceneProperties"
     let cornerRadius: CornerRadius?
@@ -10,6 +16,11 @@ struct UpdateSpatialSceneProperties: CommandDataProtocol {
 struct AddSpatializedElementToSpatialScene: CommandDataProtocol {
     static let commandType: String = "AddSpatializedElementToSpatialScene"
     let spatializedElementId: String
+}
+
+struct AddOrnamentToSceneCommand: CommandDataProtocol {
+    static let commandType: String = "AddOrnamentToScene"
+    let ornamentId: String
 }
 
 struct CreateSpatializedStatic3DElement: CommandDataProtocol {
@@ -44,6 +55,16 @@ struct CreateUnlitMaterial: CommandDataProtocol {
     static let commandType: String = "CreateUnlitMaterial"
     let color: String?
     let textureId: String?
+    let transparent: Bool?
+    let opacity: Float?
+}
+
+struct CreatePBRMaterial: CommandDataProtocol {
+    static let commandType: String = "CreatePBRMaterial"
+    let color: String?
+    let textureId: String?
+    let metalness: Float?
+    let roughness: Float?
     let transparent: Bool?
     let opacity: Float?
 }
@@ -162,6 +183,17 @@ struct UpdateUnlitMaterialProperties: CommandDataProtocol {
     let opacity: Float?
 }
 
+struct UpdatePBRMaterialProperties: CommandDataProtocol {
+    static let commandType: String = "UpdatePBRMaterialProperties"
+    let id: String
+    let color: String?
+    let textureId: String?
+    let metalness: Float?
+    let roughness: Float?
+    let transparent: Bool?
+    let opacity: Float?
+}
+
 struct RemoveComponentFromEntity: CommandDataProtocol {
     static let commandType: String = "RemoveComponentFromEntity"
     let entityId: String
@@ -177,6 +209,18 @@ struct SetMaterialsOnEntity: CommandDataProtocol {
 struct DestroyCommand: CommandDataProtocol {
     static let commandType: String = "Destroy"
     var id: String
+}
+
+struct UpdateOrnamentCommand: CommandDataProtocol {
+    static let commandType: String = "UpdateOrnament"
+    let id: String
+    let attachmentAnchor: String?
+    let contentAlignment: String?
+    let visibility: String?
+    let width: Double?
+    let height: Double?
+    let cornerRadius: CornerRadius?
+    let backgroundMaterial: BackgroundMaterial?
 }
 
 protocol SpatializedElementProperties: SpatialObjectCommand {
@@ -394,20 +438,60 @@ struct GetSpatialSceneStateCommand: CommandDataProtocol {
 struct InitializeAttachmentCommand: CommandDataProtocol {
     static let commandType = "InitializeAttachment"
     let id: String
-    let parentEntityId: String
-    let position: [Float]?
-    let size: AttachmentSize?
+    let placementId: String
+    let position: JSBVec3?
+    let rotation: JSBVec3?
+    let scale: JSBVec3?
+    let width: Double?
+    let height: Double?
     let ownerViewId: String
+    let cornerRadius: CornerRadius?
+    let backgroundMaterial: BackgroundMaterial?
 }
 
 struct UpdateAttachmentEntityCommand: CommandDataProtocol {
     static let commandType = "UpdateAttachmentEntity"
     let id: String
-    let position: [Float]?
-    let size: AttachmentSize?
+    let position: JSBVec3?
+    let rotation: JSBVec3?
+    let scale: JSBVec3?
+    let width: Double?
+    let height: Double?
+    let cornerRadius: CornerRadius?
+    let backgroundMaterial: BackgroundMaterial?
 }
 
-struct AttachmentSize: Codable {
-    let width: Double
-    let height: Double
+protocol BlobTransferCommand: CommandDataProtocol {
+    var id: String { get }
+    var requestId: String { get }
+}
+
+struct StartBlobTransfer: BlobTransferCommand {
+    static let commandType = "StartBlobTransfer"
+    let id: String
+    let requestId: String
+    let src: String
+    let mimeType: String
+    let size: Int
+}
+
+struct TransferBlobChunk: BlobTransferCommand {
+    static let commandType = "TransferBlobChunk"
+    let id: String
+    let requestId: String
+    let offset: Int
+    let data: String
+}
+
+struct CompleteBlobTransfer: BlobTransferCommand {
+    static let commandType = "CompleteBlobTransfer"
+    let id: String
+    let requestId: String
+}
+
+struct FailBlobTransfer: BlobTransferCommand {
+    static let commandType = "FailBlobTransfer"
+    let id: String
+    let requestId: String
+    let message: String?
 }

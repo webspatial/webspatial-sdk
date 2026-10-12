@@ -3,13 +3,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Logger, useLogger } from './Logger'
 
 const MODEL_SRC =
-  'https://developer.apple.com/augmented-reality/quick-look/models/drummertoy/toy_drummer.usdz'
+  'https://developer.apple.com/quick-look-gallery/models/drummertoy/toy_drummer.usdz'
 
-function describeTarget(event: ModelLoadEvent) {
+function describeCurrentTarget(event: ModelLoadEvent) {
   return {
-    tagName: event.target.tagName,
-    currentSrc: event.target.currentSrc,
-    readyProperty: 'ready' in event.target,
+    tagName: event.currentTarget.tagName,
+    currentSrc: event.currentTarget.currentSrc,
+    readyProperty: 'ready' in event.currentTarget,
   }
 }
 
@@ -25,39 +25,45 @@ export default function NestedStatic3DModelReady() {
   useEffect(() => {
     logLine(
       'page mounted',
-      'Mounts <div enable-xr><Model enable-xr /></div> and reads event.target.ready from onLoad.',
+      'Mounts <div enable-xr><Model enable-xr /></div> and reads event.currentTarget.ready from onLoad.',
     )
   }, [logLine])
 
   const handleLoad = useCallback(
     (event: ModelLoadEvent) => {
-      const target = describeTarget(event)
-      logLine('onLoad target', target)
-      setStatus('onLoad fired; waiting for event.target.ready')
+      const currentTarget = describeCurrentTarget(event)
+      logLine('onLoad currentTarget', currentTarget)
+      setStatus('onLoad fired; waiting for event.currentTarget.ready')
 
       let ready
       try {
-        ready = event.target.ready
+        ready = event.currentTarget.ready
       } catch (error) {
-        logLine('event.target.ready getter threw', getErrorMessage(error))
-        setStatus('event.target.ready getter threw')
+        logLine(
+          'event.currentTarget.ready getter threw',
+          getErrorMessage(error),
+        )
+        setStatus('event.currentTarget.ready getter threw')
         return
       }
 
       if (!ready || typeof ready.then !== 'function') {
-        logLine('event.target.ready unavailable')
-        setStatus('event.target.ready unavailable')
+        logLine('event.currentTarget.ready unavailable')
+        setStatus('event.currentTarget.ready unavailable')
         return
       }
 
       ready
         .then(readyEvent => {
-          logLine('event.target.ready resolved', describeTarget(readyEvent))
-          setStatus('event.target.ready resolved')
+          logLine(
+            'event.currentTarget.ready resolved',
+            describeCurrentTarget(readyEvent),
+          )
+          setStatus('event.currentTarget.ready resolved')
         })
         .catch(error => {
-          logLine('event.target.ready rejected', getErrorMessage(error))
-          setStatus('event.target.ready rejected')
+          logLine('event.currentTarget.ready rejected', getErrorMessage(error))
+          setStatus('event.currentTarget.ready rejected')
         })
     },
     [logLine],
@@ -65,7 +71,7 @@ export default function NestedStatic3DModelReady() {
 
   const handleError = useCallback(
     (event: ModelLoadEvent) => {
-      logLine('onError target', describeTarget(event))
+      logLine('onError currentTarget', describeCurrentTarget(event))
       setStatus('Model onError fired')
     },
     [logLine],
@@ -76,8 +82,8 @@ export default function NestedStatic3DModelReady() {
       <h1>Nested Static 3D Model Ready</h1>
       <p className="max-w-3xl text-sm text-gray-300">
         Reproduces the nested static 3D model path where a spatial parent owns
-        the branch and the Model load event target still needs a working ready
-        promise.
+        the branch and the Model load event currentTarget still needs a working
+        ready promise.
       </p>
 
       <div className="mb-4 flex flex-wrap items-center gap-2 not-prose">
@@ -122,7 +128,10 @@ export default function NestedStatic3DModelReady() {
           onClick={() => {
             modelRef.current?.ready
               .then(event => {
-                logLine('ref.current.ready resolved', describeTarget(event))
+                logLine(
+                  'ref.current.ready resolved',
+                  describeCurrentTarget(event),
+                )
               })
               .catch(error => {
                 logLine('ref.current.ready rejected', getErrorMessage(error))
@@ -134,6 +143,56 @@ export default function NestedStatic3DModelReady() {
       </div>
 
       <Logger logs={logs} clearLog={clearLog} />
+      <h1>Model with blob URL</h1>
+      <BlobModel src="/modelasset/cone.usdz">
+        <source
+          src="/modelasset/MaterialsVariantsShoe.glb"
+          type="model/gltf-binary"
+        />
+      </BlobModel>
     </div>
+  )
+}
+
+type BlobModelProps = React.PropsWithChildren<{
+  src: string
+  poster?: string
+  type?: string
+}>
+function BlobModel({ src, poster, type, children }: BlobModelProps) {
+  const [blobSrc, setBlobSrc] = useState<string>()
+  const [isFetching, setIsFetching] = useState(false)
+  useEffect(() => {
+    let objectURL: string | undefined
+    let cancelled = false
+    setIsFetching(true)
+    fetch(src)
+      .then(res => res.blob())
+      .then(blob => {
+        if (cancelled) return
+        objectURL = URL.createObjectURL(blob)
+        setBlobSrc(objectURL)
+        setIsFetching(false)
+      })
+    return () => {
+      cancelled = true
+      if (objectURL) URL.revokeObjectURL(objectURL)
+    }
+  }, [])
+  return isFetching ? (
+    <p style={{ height: 200 }}>Is fetching {`${isFetching}`}</p>
+  ) : (
+    <Model
+      poster={poster}
+      enable-xr
+      style={{
+        height: '200px',
+        '--xr-depth': '100px',
+        '--xr-back': '50px',
+      }}
+    >
+      <source src={blobSrc} type={type} />
+      {children}
+    </Model>
   )
 }

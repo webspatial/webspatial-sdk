@@ -31,8 +31,8 @@ import {
   UnlitMaterial,
   Texture,
   ModelAsset,
-  useAnimation,
 } from '@webspatial/react-sdk';
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental';
 ```
 
 ---
@@ -265,14 +265,14 @@ const [color, setColor] = useState('#ff0000');
 
 ## 13. Animation
 
-### 12.1 Native transform animation (`useAnimation`)
+### 12.1 Native transform animation (`useEntityAnimation`)
 
-Animate entity transforms (position, rotation, scale) at native frame rate using the `useAnimation` hook. Playback runs in RealityKit at 90 fps — no per-frame JS bridge calls.
+Animate entity transforms (position, rotation, scale) at native frame rate using the `useEntityAnimation` hook. Playback runs in RealityKit at 90 fps — no per-frame JS bridge calls.
 
-```tsx
-import { useAnimation } from '@webspatial/react-sdk';
+```text
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental';
 
-const [animation, api] = useAnimation({
+const [animation, api] = useEntityAnimation({
   to: { position: { x: 0, y: 1.5, z: -2 } },
   duration: 0.6,
   timingFunction: 'easeOut',
@@ -310,11 +310,11 @@ const [animation, api] = useAnimation({
 
 **Feature detection:**
 
-```ts
+```text
 import { supports } from '@webspatial/core-sdk';
 
 if (supports('useAnimation', ['entity'])) {
-  // Animation API is available in the current runtime
+  // Entity animation API is available in the current runtime
 }
 ```
 
@@ -340,7 +340,7 @@ useEffect(() => {
 <BoxEntity materials={['red']} rotation={rotation} />
 ```
 
-> **Trade-off:** Frame-driven animation crosses the JS–native bridge every frame and cannot match the smoothness of `useAnimation` on visionOS. Prefer `useAnimation` for transform animations.
+> **Trade-off:** Frame-driven animation crosses the JS-native bridge every frame and cannot match the smoothness of `useEntityAnimation` on visionOS. Prefer `useEntityAnimation` for transform animations.
 
 ---
 

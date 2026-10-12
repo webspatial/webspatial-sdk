@@ -82,6 +82,8 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     'Cylinder',
     'Plane',
     'Material',
+    'MaterialPresets',
+    'PBRMaterial',
     'UnlitMaterial',
     'Texture',
     'ModelAsset',
@@ -95,7 +97,6 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
     // demotion cascades automatically — the parity contract continues to
     // hold (both entries omit them).
     'useMetrics',
-    'useAnimation',
   ] as const
 
   const EXPECTED_LAZY_RUNTIME_STUBS = [
@@ -150,6 +151,13 @@ describe('Eager entry — runtime symbol presence (spec §16.6)', () => {
       (EagerEntry as Record<string, unknown>).useBootSpatial,
     ).toBeUndefined()
   })
+
+  it.each(['useAnimation', 'useEntityAnimation'] as const)(
+    'does NOT export experimental hook `%s`',
+    name => {
+      expect((EagerEntry as Record<string, unknown>)[name]).toBeUndefined()
+    },
+  )
 
   it('exposes Group B / Group C stateless utilities re-exported from the default entry', () => {
     for (const name of EXPECTED_STATELESS_UTILITIES) {

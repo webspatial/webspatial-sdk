@@ -290,18 +290,26 @@ vi.mock('./JSBCommand', () => {
   }
 })
 
-describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scene config', () => {
+describe('removed scene window globals', () => {
   beforeEach(() => {
     ;(window as any).opener = {}
   })
 
-  it('with no type', async () => {
+  it('does not type removed window scene globals', () => {
+    // @ts-expect-error removed undocumented scene global
+    void window.xrCurrentSceneDefaults
+    // @ts-expect-error removed undocumented scene global
+    void window.xrCurrentSceneType
+  })
+
+  it('does not use opened-page globals to override pending scene config', async () => {
     vi.useFakeTimers()
 
     const mockFn = vi
       .fn()
       .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
-    window.xrCurrentSceneDefaults = mockFn
+    ;(window as any).xrCurrentSceneDefaults = mockFn
+    ;(window as any).xrCurrentSceneType = 'volume'
 
     injectSceneHook()
 
@@ -309,88 +317,9 @@ describe('injectScenePolyfill should call xrCurrentSceneDefaults and update scen
 
     await vi.runAllTimersAsync()
 
-    expect(mockFn).toHaveBeenCalledWith(
-      expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
-    )
-
-    // verify UpdateSceneConfig.execute
     const { UpdateSceneConfig } = await import('./JSBCommand')
-    expect(UpdateSceneConfig).toHaveBeenCalledWith({
-      type: 'window',
-      defaultSize: { width: 800, height: 600 },
-    })
-  })
-
-  it('with window type', async () => {
-    vi.useFakeTimers()
-
-    const mockFn = vi
-      .fn()
-      .mockResolvedValue({ defaultSize: { width: 800, height: 600 } })
-    window.xrCurrentSceneDefaults = mockFn
-    window.xrCurrentSceneType = 'window'
-
-    injectSceneHook()
-
-    document.dispatchEvent(new Event('DOMContentLoaded'))
-
-    await vi.runAllTimersAsync()
-
-    expect(mockFn).toHaveBeenCalledWith(
-      expect.objectContaining({ defaultSize: { width: 1280, height: 720 } }),
-    )
-
-    // verify UpdateSceneConfig.execute
-    const { UpdateSceneConfig } = await import('./JSBCommand')
-    expect(UpdateSceneConfig).toHaveBeenCalledWith({
-      type: 'window',
-      defaultSize: { width: 800, height: 600 },
-    })
-  })
-
-  it('with volume type', async () => {
-    vi.useFakeTimers()
-
-    const mockFn = vi.fn().mockResolvedValue({
-      defaultSize: { width: 1, height: 1, depth: 1 },
-      resizability: {
-        minWidth: 0.5,
-        minHeight: 1,
-        maxWidth: 0.5,
-        maxHeight: 1,
-      },
-    })
-    window.xrCurrentSceneDefaults = mockFn
-    window.xrCurrentSceneType = 'volume'
-
-    injectSceneHook()
-
-    document.dispatchEvent(new Event('DOMContentLoaded'))
-
-    await vi.runAllTimersAsync()
-
-    expect(mockFn).toHaveBeenCalledWith(
-      expect.objectContaining({
-        defaultSize: { width: '0.94m', height: '0.94m', depth: '0.94m' },
-      }),
-    )
-
-    // verify UpdateSceneConfig.execute
-    const { UpdateSceneConfig } = await import('./JSBCommand')
-    expect(UpdateSceneConfig).toHaveBeenCalledWith({
-      type: 'volume',
-      defaultSize: {
-        width: pointToPhysical(1),
-        height: pointToPhysical(1),
-        depth: pointToPhysical(1),
-      },
-      resizability: {
-        minWidth: 0.5,
-        minHeight: 1,
-        maxWidth: 0.5,
-        maxHeight: 1,
-      },
-    })
+    expect(mockFn).not.toHaveBeenCalled()
+    expect(UpdateSceneConfig).not.toHaveBeenCalled()
   })
 })
 

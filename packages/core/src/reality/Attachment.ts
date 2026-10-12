@@ -29,7 +29,14 @@ export class Attachment extends SpatialObject {
   async update(options: AttachmentEntityUpdateOptions) {
     if (this.isDestroyed) return
     if (options.position) this.options.position = options.position
-    if (options.size) this.options.size = options.size
+    if (options.rotation) this.options.rotation = options.rotation
+    if (options.scale) this.options.scale = options.scale
+    if (options.width !== undefined) this.options.width = options.width
+    if (options.height !== undefined) this.options.height = options.height
+    if (options.cornerRadius !== undefined)
+      this.options.cornerRadius = options.cornerRadius
+    if (options.backgroundMaterial !== undefined)
+      this.options.backgroundMaterial = options.backgroundMaterial
     return new UpdateAttachmentEntityCommand(this.id, options).execute()
   }
 }

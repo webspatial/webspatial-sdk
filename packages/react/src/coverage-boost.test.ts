@@ -1915,6 +1915,8 @@ describe('SpatializedStatic3DElementContainer', () => {
     expect(onLoad.mock.calls[0]?.[0].type).toBe('modelloaded')
     expect(onError.mock.calls[0]?.[0].type).toBe('modelloadfailed')
     expect(onLoad.mock.calls[0]?.[0].target).toEqual({ tid: 1 })
+    expect(onLoad.mock.calls[0]?.[0].currentTarget).toEqual({ tid: 1 })
+    expect(onError.mock.calls[0]?.[0].currentTarget).toEqual({ tid: 1 })
 
     expect(extra.currentSrc).toBe(window.location.origin + '/resolved.usdz')
     await expect(extra.ready).resolves.toMatchObject({ type: 'modelloaded' })

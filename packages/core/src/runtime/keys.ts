@@ -1,3 +1,5 @@
+import type { SpatialMaterialType } from '../types/types'
+
 /**
  * Canonical `supports(name)` key registry (OpenSpec `review.md` §3).
  * Aliases are normalized before lookup (see `normalizeCapabilityName`).
@@ -8,6 +10,7 @@
  */
 
 export const COMPONENT_KEYS = [
+  'Ornament',
   'Model',
   'Reality',
   'Entity',
@@ -20,6 +23,7 @@ export const COMPONENT_KEYS = [
   'ModelAsset',
   'ModelEntity',
   'UnlitMaterial',
+  'PBRMaterial',
   'Material',
   'AttachmentAsset',
   'AttachmentEntity',
@@ -43,7 +47,7 @@ export const GESTURE_KEYS = [
   'SpatialMagnifyEndEvent',
 ] as const
 
-export const ANIMATION_KEYS = ['useAnimation'] as const
+export const ANIMATION_KEYS = ['useAnimation', 'useEntityAnimation'] as const
 
 export const JS_SCENE_KEYS = [
   'useMetrics',
@@ -97,7 +101,9 @@ export function normalizeCapabilityName(name: string): string {
 
 /** Known sub-tokens per canonical top-level `name` (AND semantics). */
 export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
-  Material: ['unlit'],
+  // Inline: this file is eval'd in isolation by
+  // generate-runtime-capability-manifest.js (no value imports).
+  Material: ['unlit', 'pbr'] as const satisfies readonly SpatialMaterialType[],
   WindowScene: ['defaultSize', 'resizability'],
   VolumeScene: [
     'defaultSize',
@@ -107,7 +113,10 @@ export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
     'baseplateVisibility',
   ],
   SpatialRotateEvent: ['constrainedToAxis'],
-  useAnimation: ['entity'],
+  // Placement-shaped attachment JSB protocol (placementId + Vec3 transform +
+  // meter width/height). Runtimes without it take the legacy payload
+  // (parentEntityId + tuple position + point size).
+  AttachmentEntity: ['placement'],
   Model: [
     'autoplay',
     'loop',

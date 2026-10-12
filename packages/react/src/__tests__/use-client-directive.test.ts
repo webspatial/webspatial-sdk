@@ -64,6 +64,15 @@ describe('"use client" directive on published dist (spec tasks.md §13.1)', () =
       expect(startsWithUseClient(eagerPath)).toBe(true)
     })
 
+    it('dist/experimental.js begins with the "use client" directive', () => {
+      // The experimental entry is an opt-in public surface. It may expose
+      // React hooks or components before their default-entry API is stable,
+      // so it needs the same RSC boundary treatment as the default entry.
+      const experimentalPath = resolve(distDir, 'experimental.js')
+      expect(existsSync(experimentalPath)).toBe(true)
+      expect(startsWithUseClient(experimentalPath)).toBe(true)
+    })
+
     it('dist/internal/facades-client.js begins with the "use client" directive', () => {
       // The internal facade boundary used by the JSX runtime
       // (`src/internal/facades-client.ts`). It is reached transitively

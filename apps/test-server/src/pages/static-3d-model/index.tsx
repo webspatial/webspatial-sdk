@@ -48,7 +48,7 @@ function App() {
         }}
         ref={modelRef}
         onError={e => logLine(`Model error ${modelRef.current?.currentSrc}`)}
-        onLoad={e => logLine(`Model success ${e.target.currentSrc}`)}
+        onLoad={e => logLine(`Model success ${e.currentTarget.currentSrc}`)}
         onSpatialTap={e => {
           logLine('model onSpatialTap', e.detail.location3D)
         }}
@@ -185,7 +185,7 @@ function App() {
         }}
       >
         <source
-          src="https://developer.apple.com/augmented-reality/quick-look/models/drummertoy/toy_drummer.usdz"
+          src="https://developer.apple.com/quick-look-gallery/models/drummertoy/toy_drummer.usdz"
           type="model/vnd.usdz+zip"
         />
         <img

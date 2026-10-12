@@ -13,6 +13,7 @@ import {
   SpatialSceneProperties,
   SpatialSceneCreationOptions,
   SpatialUnlitMaterialOptions,
+  SpatialPBRMaterialOptions,
   SpatialGeometryOptions,
   SpatialGeometryType,
   ModelComponentOptions,
@@ -23,12 +24,28 @@ import {
   Vec3,
   AttachmentEntityOptions,
   AttachmentEntityUpdateOptions,
+  BackgroundMaterialType,
+  CornerRadius,
   ModelLoadingMode,
   ModelSource,
   SpatialTextureResourceOptions,
 } from './types/types'
-import type { AnimateTransformCommand } from './types/animation'
+import type { OrnamentOptions } from './Ornament'
+import {
+  normalizeAttachmentBackgroundMaterial,
+  normalizeAttachmentCornerRadius,
+} from './reality/attachmentSurface'
 import { composeSRT } from './utils'
+import type {
+  ControlSpatializedElementAnimationCommand,
+  CreateSpatializedElementAnimationCommand,
+} from './types/motion/spatializedElementMotion'
+import type {
+  ControlEntityAnimationCommand,
+  CreateEntityAnimationCommand,
+  SetEntityAnimationCommand,
+  UpdateEntityAnimationCommand,
+} from './types/motion/entityMotion'
 
 abstract class JSBCommand {
   commandType: string = ''
@@ -223,6 +240,23 @@ export class UpdateUnlitMaterialProperties extends SpatializedElementCommand {
   }
 }
 
+export class UpdatePBRMaterialProperties extends SpatializedElementCommand {
+  properties: Partial<SpatialPBRMaterialOptions>
+  commandType = 'UpdatePBRMaterialProperties'
+
+  constructor(
+    spatialObject: SpatialObject,
+    properties: Partial<SpatialPBRMaterialOptions>,
+  ) {
+    super(spatialObject)
+    this.properties = properties
+  }
+
+  protected getExtraParams() {
+    return this.properties
+  }
+}
+
 export class UpdateSpatializedElementTransform extends SpatializedElementCommand {
   matrix: DOMMatrix
   commandType = 'UpdateSpatializedElementTransform'
@@ -283,6 +317,38 @@ export class AddSpatializedElementToSpatialScene extends JSBCommand {
   protected getParams() {
     return {
       spatializedElementId: this.spatializedElement.id,
+    }
+  }
+}
+
+export class AddOrnamentToSceneCommand extends JSBCommand {
+  commandType = 'AddOrnamentToScene'
+
+  constructor(readonly ornamentId: string) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      ornamentId: this.ornamentId,
+    }
+  }
+}
+
+export class UpdateOrnamentCommand extends JSBCommand {
+  commandType = 'UpdateOrnament'
+
+  constructor(
+    readonly id: string,
+    readonly options: OrnamentOptions,
+  ) {
+    super()
+  }
+
+  protected getParams() {
+    return {
+      id: this.id,
+      ...this.options,
     }
   }
 }
@@ -380,6 +446,16 @@ export class CreateSpatialUnlitMaterialCommand extends JSBCommand {
     return this.options
   }
   commandType = 'CreateUnlitMaterial'
+}
+
+export class CreateSpatialPBRMaterialCommand extends JSBCommand {
+  constructor(private options: SpatialPBRMaterialOptions) {
+    super()
+  }
+  protected getParams(): Record<string, any> | undefined {
+    return this.options
+  }
+  commandType = 'CreatePBRMaterial'
 }
 
 export class AddComponentToEntityCommand extends JSBCommand {
@@ -629,39 +705,6 @@ export class CheckWebViewCanCreateCommand extends JSBCommand {
   }
 }
 
-export class AnimateTransformJSBCommand extends JSBCommand {
-  commandType = 'AnimateTransform'
-
-  constructor(private command: AnimateTransformCommand) {
-    super()
-  }
-
-  protected getParams(): Record<string, any> | undefined {
-    const { type, animationId, entityId } = this.command
-    const params: Record<string, any> = { type, animationId }
-
-    if (entityId !== undefined) params.entityId = entityId
-
-    if (type === 'play') {
-      if (this.command.toTransform) {
-        params.toTransform = Array.from(this.command.toTransform)
-      }
-      if (this.command.fromTransform) {
-        params.fromTransform = Array.from(this.command.fromTransform)
-      }
-      if (this.command.duration !== undefined)
-        params.duration = this.command.duration
-      if (this.command.timingFunction !== undefined)
-        params.timingFunction = this.command.timingFunction
-      if (this.command.delay !== undefined) params.delay = this.command.delay
-      if (this.command.loop !== undefined) params.loop = this.command.loop
-      if (this.command.playbackRate !== undefined)
-        params.playbackRate = this.command.playbackRate
-    }
-
-    return params
-  }
-}
 export class InitializeAttachmentCommand extends JSBCommand {
   commandType = 'InitializeAttachment'
   constructor(
@@ -673,10 +716,17 @@ export class InitializeAttachmentCommand extends JSBCommand {
   protected getParams() {
     return {
       id: this.attachmentId,
-      parentEntityId: this.options.parentEntityId,
-      position: this.options.position ?? [0, 0, 0],
-      size: this.options.size,
+      placementId: this.options.placement.id,
+      position: this.options.position ?? { x: 0, y: 0, z: 0 },
+      rotation: this.options.rotation ?? { x: 0, y: 0, z: 0 },
+      scale: this.options.scale ?? { x: 1, y: 1, z: 1 },
+      width: this.options.width,
+      height: this.options.height,
       ownerViewId: this.options.ownerViewId,
+      cornerRadius: normalizeAttachmentCornerRadius(this.options.cornerRadius),
+      backgroundMaterial: normalizeAttachmentBackgroundMaterial(
+        this.options.backgroundMaterial,
+      ),
     }
   }
 }
@@ -690,9 +740,206 @@ export class UpdateAttachmentEntityCommand extends JSBCommand {
     super()
   }
   protected getParams() {
-    return {
+    // Omitted fields stay omitted so the native side preserves the
+    // attachment's existing effective values on partial updates.
+    const { cornerRadius, backgroundMaterial, ...rest } = this.options
+    const params: {
+      id: string
+      cornerRadius?: CornerRadius
+      backgroundMaterial?: BackgroundMaterialType
+    } & Omit<
+      AttachmentEntityUpdateOptions,
+      'cornerRadius' | 'backgroundMaterial'
+    > = {
       id: this.attachmentId,
-      ...this.options,
+      ...rest,
     }
+    if (cornerRadius !== undefined) {
+      params.cornerRadius = normalizeAttachmentCornerRadius(cornerRadius)
+    }
+    if (backgroundMaterial !== undefined) {
+      params.backgroundMaterial =
+        normalizeAttachmentBackgroundMaterial(backgroundMaterial)
+    }
+    return params
+  }
+}
+
+export class CreateSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'CreateSpatializedElementAnimation'
+
+  constructor(private command: CreateSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { elementId, timeline } = this.command
+    return {
+      elementId,
+      timeline,
+    }
+  }
+}
+
+export class ControlSpatializedElementAnimationJSBCommand extends JSBCommand {
+  commandType = 'ControlSpatializedElementAnimation'
+
+  constructor(private command: ControlSpatializedElementAnimationCommand) {
+    super()
+  }
+
+  protected getParams() {
+    const { animationId, type } = this.command
+    return {
+      animationId,
+      type,
+    }
+  }
+}
+
+export interface StartBlobTransferParams {
+  requestId: string
+  src: string
+  mimeType: string
+  size: number
+}
+
+export class StartBlobTransferCommand extends SpatializedElementCommand {
+  commandType = 'StartBlobTransfer'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: StartBlobTransferParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
+
+export interface TransferBlobChunkParams {
+  requestId: string
+  /** Byte offset of this base64-encoded chunk in the Blob. */
+  offset: number
+  data: string
+}
+
+export class TransferBlobChunkCommand extends SpatializedElementCommand {
+  commandType = 'TransferBlobChunk'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: TransferBlobChunkParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
+
+export interface CompleteBlobTransferParams {
+  requestId: string
+}
+
+export class CompleteBlobTransferCommand extends SpatializedElementCommand {
+  commandType = 'CompleteBlobTransfer'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: CompleteBlobTransferParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
+
+export interface FailBlobTransferParams {
+  requestId: string
+  message?: string
+}
+
+export class FailBlobTransferCommand extends SpatializedElementCommand {
+  commandType = 'FailBlobTransfer'
+
+  constructor(
+    spatialObject: SpatialObject,
+    private params: FailBlobTransferParams,
+  ) {
+    super(spatialObject)
+  }
+
+  protected getExtraParams() {
+    return { ...this.params }
+  }
+}
+
+/** Sends a canonical Entity animation timeline for a target Entity id. */
+export class CreateEntityAnimationJSBCommand extends JSBCommand {
+  /** Native bridge command name. */
+  commandType = 'CreateEntityAnimation'
+
+  /** Creates a bridge command from its complete wire request. */
+  constructor(private command: CreateEntityAnimationCommand) {
+    super()
+  }
+
+  /** Returns the dedicated Entity animation create payload. */
+  protected getParams() {
+    return this.command
+  }
+}
+
+/** Sends a candidate timeline to an existing Entity animation object. */
+export class UpdateEntityAnimationJSBCommand extends JSBCommand {
+  /** Native bridge command name. */
+  commandType = 'UpdateEntityAnimation'
+
+  /** Creates a bridge command from its complete wire request. */
+  constructor(private command: UpdateEntityAnimationCommand) {
+    super()
+  }
+
+  /** Returns the dedicated Entity animation update payload. */
+  protected getParams() {
+    return this.command
+  }
+}
+
+/** Sends a playback or lifecycle command to an Entity animation object. */
+export class ControlEntityAnimationJSBCommand extends JSBCommand {
+  /** Native bridge command name. */
+  commandType = 'ControlEntityAnimation'
+
+  /** Creates a bridge command from its complete wire request. */
+  constructor(private command: ControlEntityAnimationCommand) {
+    super()
+  }
+
+  /** Returns the dedicated Entity animation control payload. */
+  protected getParams() {
+    return this.command
+  }
+}
+
+/** Sends a sparse committed-transform update to an Entity animation object. */
+export class SetEntityAnimationJSBCommand extends JSBCommand {
+  /** Native bridge command name. */
+  commandType = 'SetEntityAnimation'
+
+  /** Creates a bridge command from its complete wire request. */
+  constructor(private command: SetEntityAnimationCommand) {
+    super()
+  }
+
+  /** Returns the dedicated Entity animation set payload. */
+  protected getParams() {
+    return this.command
   }
 }

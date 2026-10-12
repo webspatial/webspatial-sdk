@@ -1,6 +1,7 @@
 export * from './Entity'
 export * from './BoxEntity'
 export * from './UnlitMaterial'
+export * from './PBRMaterial'
 export * from './Texture'
 export * from './SphereEntity'
 export * from './ConeEntity'

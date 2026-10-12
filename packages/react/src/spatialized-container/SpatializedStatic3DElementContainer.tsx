@@ -43,7 +43,7 @@ function createLoadEvent(
   })
   const proxyEvent = new Proxy(event, {
     get(target, prop) {
-      if (prop === 'target') {
+      if (prop === 'target' || prop === 'currentTarget') {
         return targetGetter()
       }
       return Reflect.get(target, prop)

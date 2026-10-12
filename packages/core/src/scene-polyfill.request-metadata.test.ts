@@ -8,7 +8,7 @@ describe('scene polyfill request metadata forwarding', () => {
     delete (window as any).__webspatialShell__
   })
 
-  it.each(['createSpatialized2DElement', 'createAttachment'])(
+  it.each(['createSpatialized2DElement', 'createAttachment', 'createOrnament'])(
     'forwards rid and wsepoch for %s without introducing extra request fields',
     async command => {
       ;(window as any).webSpatial = {
@@ -20,7 +20,14 @@ describe('scene polyfill request metadata forwarding', () => {
       const { hijackWindowOpen } = await import('./scene-polyfill')
       hijackWindowOpen(window)
 
-      window.open(`webspatial://${command}?rid=req_1&wsepoch=9`, '_blank')
+      const ornamentParams =
+        command === 'createOrnament'
+          ? '&attachmentAnchor=bottomTrailingFront&contentAlignment=back&visibility=visible&width=240&height=120'
+          : ''
+      window.open(
+        `webspatial://${command}?rid=req_1&wsepoch=9${ornamentParams}`,
+        '_blank',
+      )
 
       expect(originalOpen).toHaveBeenCalled()
       const redirectedUrl = (originalOpen.mock.calls as unknown[][])[0]?.[0]
@@ -34,6 +41,15 @@ describe('scene polyfill request metadata forwarding', () => {
       expect(redirected.searchParams.get('rid')).toBe('req_1')
       expect(redirected.searchParams.get('wsepoch')).toBe('9')
       expect(redirected.searchParams.get('wsrid')).toBeNull()
+      if (command === 'createOrnament') {
+        expect(redirected.searchParams.get('attachmentAnchor')).toBe(
+          'bottomTrailingFront',
+        )
+        expect(redirected.searchParams.get('contentAlignment')).toBe('back')
+        expect(redirected.searchParams.get('visibility')).toBe('visible')
+        expect(redirected.searchParams.get('width')).toBe('240')
+        expect(redirected.searchParams.get('height')).toBe('120')
+      }
     },
   )
 })

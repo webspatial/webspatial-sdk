@@ -347,7 +347,7 @@ flowchart TD
   J --> K
 ```
 
-The manifest is loaded **once** during `SceneManager.init()`. All `initScene()` calls and hook-based scene polyfills (`window.xrCurrentSceneDefaults`) wait for manifest resolution before executing.
+The manifest is loaded **once** during `SceneManager.init()`. `initScene()` calls and `window.open` fallback scene creation use the resolved manifest defaults.
 
 ---
 

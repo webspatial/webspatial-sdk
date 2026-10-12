@@ -43,11 +43,11 @@ export type { SpatialBootProps } from './runtime/SpatialBoot'
 
 // --- Runtime capability infrastructure (from @webspatial/core-sdk/runtime) ----
 export { WebSpatialRuntime } from './webSpatialRuntime'
-export {
-  WebSpatialRuntimeError,
-  type CapabilityKey,
-  type WebSpatialRuntimeSnapshot,
-  type WebSpatialRuntimeType,
+export { WebSpatialRuntimeError } from '@webspatial/core-sdk/runtime'
+export type {
+  CapabilityKey,
+  WebSpatialRuntimeSnapshot,
+  WebSpatialRuntimeType,
 } from '@webspatial/core-sdk/runtime'
 
 // --- Core-sdk type re-exports (zero runtime cost) ---------------------------
@@ -108,6 +108,7 @@ export type {
   // Material / texture options.
   SpatialMaterialType,
   SpatialUnlitMaterialOptions,
+  SpatialPBRMaterialOptions,
   SpatialTextureResourceOptions,
   // Model / asset options.
   ModelSource,
@@ -190,6 +191,7 @@ export {
   AttachmentAsset,
   Material,
   ModelAsset,
+  PBRMaterial,
   Texture,
   UnlitMaterial,
   World,
@@ -207,6 +209,7 @@ export type {
   ModelEntityProps,
   ModelProps,
   ModelRef,
+  PBRMaterialProps,
   PlaneEntityProps,
   RealityProps,
   SceneGraphProps,
@@ -215,9 +218,13 @@ export type {
   UnlitMaterialProps,
 } from './facades'
 
+// --- Material presets (pure data, no spatial-chunk dependency) --------------
+// Data-only presets, safe to export without loading the spatial implementation.
+export { MaterialPresets } from './MaterialPresets'
+export type { MaterialPreset, MaterialPresetName } from './MaterialPresets'
+
 // --- Hooks (placeholder / ready-gated per spec "Hook placeholders") ---------
 export { useMetrics } from './hooks-web/useMetrics'
-export { useAnimation } from './hooks-web/useAnimation'
 
 // --- Public type surface (no runtime values) --------------------------------
 // Spatial event + ref types — referenced by facade prop / ref typing.

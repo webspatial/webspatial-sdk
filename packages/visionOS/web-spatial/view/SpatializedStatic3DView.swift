@@ -2,30 +2,32 @@ import RealityKit
 import SwiftUI
 
 struct SpatializedStatic3DView: View {
-    @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
+    @Bindable var spatializedStatic3DElement: SpatializedStatic3DElement
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
 
     @State private var loadState: LoadState = .idle
 
-    private var spatializedStatic3DElement: SpatializedStatic3DElement {
-        return spatializedElement as! SpatializedStatic3DElement
-    }
-
     private var asset: Model3DAsset? {
-        if case let .loaded(asset, _) = loadState { return asset }
+        if case let .loaded(asset, _) = loadState {
+            return asset
+        }
         return nil
     }
 
     func onLoadSuccess(src: String) {
-        spatialScene.sendWebMsg(spatializedElement.id, ModelLoadSuccess(src: src))
+        spatialScene.sendWebMsg(spatializedStatic3DElement.id, ModelLoadSuccess(src: src))
     }
 
     func onLoadFailure() {
-        spatialScene.sendWebMsg(spatializedElement.id, ModelLoadFailure())
+        spatialScene.sendWebMsg(spatializedStatic3DElement.id, ModelLoadFailure())
+    }
+
+    private func onOrbit(_ transform: AffineTransform3D) {
+        spatialScene.sendWebMsg(spatializedStatic3DElement.id, EntityTransformChangeEvent(transform))
     }
 
     var body: some View {
-        let depth = spatializedElement.depth
+        let depth = spatializedStatic3DElement.depth
         let transform = spatializedStatic3DElement.entityTransform
         let translation = transform.translation
         let scale = transform.scale
@@ -34,7 +36,7 @@ struct SpatializedStatic3DView: View {
         let y = translation.y
         let z = translation.z
 
-        let enableGesture = spatializedElement.enableGesture
+        let enableGesture = spatializedStatic3DElement.enableGesture
         if spatializedStatic3DElement.loading == .eager {
             Group {
                 switch loadState {
@@ -44,27 +46,26 @@ struct SpatializedStatic3DView: View {
                     Model3D(asset: asset) { resolvedModel3D in
                         resolvedModel3D
                             .resizable(true)
-                            .aspectRatio(
-                                nil,
-                                contentMode: .fit
-                            )
+                            .aspectRatio(nil, contentMode: .fit)
                             .if(!depth.isZero) { view in view.scaledToFit3D() }
                             .if(enableGesture) { view in view.hoverEffect() }
                     }
+                    .scaleEffect(scale)
+                    .rotation3DEffect(rotation)
+                    .offset(x: x, y: y)
+                    .offset(z: z)
                 case .failed:
-                    posterView {}
+                    posterView {
+                        // Transparent view is required so that lifecycle modifiers like .task still work
+                        Color.clear
+                    }
                 }
             }
-            .scaleEffect(
-                x: scale.width,
-                y: scale.height,
-                z: scale.depth
+            .orbit(
+                enabled: spatializedStatic3DElement.stagemode == .orbit && asset != nil,
+                entityTransform: $spatializedStatic3DElement.entityTransform,
+                onChange: onOrbit
             )
-            .rotation3DEffect(
-                rotation
-            )
-            .offset(x: x, y: y)
-            .offset(z: z)
             .onChange(of: asset?.animationPlaybackController?.isComplete) { _, isComplete in
                 guard isComplete == true else { return }
                 if spatializedStatic3DElement.loop,
@@ -85,8 +86,6 @@ struct SpatializedStatic3DView: View {
             }
             .onChange(of: spatializedStatic3DElement.pendingSeekTime) { _, time in onSeek(time: time) }
             .task(id: spatializedStatic3DElement.allSources) { await loadSources() }
-        } else {
-            EmptyView()
         }
     }
 
@@ -116,11 +115,15 @@ struct SpatializedStatic3DView: View {
     private func onPlayback(isPaused: Bool) {
         guard let asset else {
             // If entity has not loaded yet and play is called then autoplay after load
-            if !isPaused { spatializedStatic3DElement.autoplay = true }
+            if !isPaused {
+                spatializedStatic3DElement.autoplay = true
+            }
             return
         }
         // Setting selectedAnimation resets the animation and autoplays on first load
-        if asset.selectedAnimation == nil || asset.animationPlaybackController?.isComplete == true {
+        if asset.selectedAnimation == nil ||
+            (!isPaused && asset.animationPlaybackController?.isComplete == true)
+        {
             asset.selectedAnimation = asset.availableAnimations.first
         }
         let controller = asset.animationPlaybackController
@@ -137,10 +140,11 @@ struct SpatializedStatic3DView: View {
     /// requested, then clears `pendingSeekTime` so subsequent identical
     /// requests still trigger a fresh seek.
     private func onSeek(time: Double?) {
-        guard let controller = asset?.animationPlaybackController, let time else { return }
-        controller.time = time
-        spatializedStatic3DElement.pendingSeekTime = nil
-        sendAnimationStateChange(isPaused: spatializedStatic3DElement.animationPaused)
+        guard let asset, let controller = asset.animationPlaybackController, time != nil else { return }
+        if controller.isComplete {
+            asset.selectedAnimation = asset.availableAnimations.first
+        }
+        onPlayback(isPaused: spatializedStatic3DElement.animationPaused)
     }
 
     /// Emits the current animation state to the web layer, sampling the
@@ -149,9 +153,11 @@ struct SpatializedStatic3DView: View {
     private func sendAnimationStateChange(isPaused: Bool) {
         let controller = asset?.animationPlaybackController
         let duration = controller?.duration ?? 0
-        let currentTime = controller?.time ?? 0
+        let currentTime = controller?.isComplete == true
+            ? duration
+            : controller?.time ?? 0
         spatialScene.sendWebMsg(
-            spatializedElement.id,
+            spatializedStatic3DElement.id,
             AnimationStateChangeEvent(
                 detail: AnimationStateChangeDetail(
                     paused: isPaused,
@@ -178,6 +184,12 @@ struct SpatializedStatic3DView: View {
         return try await Model3DAsset(url: localURL)
     }
 
+    private func loadBlob(from source: ModelSource) async throws -> Model3DAsset {
+        let fileURL = try await spatializedStatic3DElement.fetchBlob(source, from: spatialScene)
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        return try await Model3DAsset(url: fileURL)
+    }
+
     private func loadSources() async {
         loadState = .loading
         let result = await loadSources(spatializedStatic3DElement.allSources)
@@ -189,7 +201,9 @@ struct SpatializedStatic3DView: View {
             // This happens when play is called before load and autoplay is enabled
             if spatializedStatic3DElement.autoplay, spatializedStatic3DElement.animationPaused {
                 spatializedStatic3DElement.animationPaused = false
-            } else { onPlayback(isPaused: !spatializedStatic3DElement.autoplay) }
+            } else {
+                onPlayback(isPaused: !spatializedStatic3DElement.autoplay)
+            }
         } else {
             loadState = .failed
             onLoadFailure()
@@ -201,6 +215,9 @@ struct SpatializedStatic3DView: View {
         for source in sources {
             guard let url = localOrRemoteURL(url: source.src) else { continue }
             do {
+                if source.isBlob {
+                    return try (url, await loadBlob(from: source))
+                }
                 return try (url, await loadAsset(from: url))
             } catch {
                 continue

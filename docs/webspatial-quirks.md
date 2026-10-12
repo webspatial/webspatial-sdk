@@ -43,13 +43,13 @@ A `<div enable-xr>` (SpatialDiv) is **not** a single DOM node for styling purpos
 
 ### What to use instead
 
-| Approach | Works for spatial transform |
-| --- | --- |
-| Class selector (`.panel { transform: … }`) | Yes — `className` is mirrored host → probe |
-| Inline `style={{ transform: … }}` | Yes — applied to the probe |
-| `ref.current.style.transform = '…'` | Yes — forwarded to the probe |
-| Tag selector on matching intrinsic (`h1 {}` with `<h1 enable-xr>`) | Yes (after probe tag mirror) |
-| Ancestor + tag (`.page h1 {}`) | Often **no** |
+| Approach                                                           | Works for spatial transform                |
+| ------------------------------------------------------------------ | ------------------------------------------ |
+| Class selector (`.panel { transform: … }`)                         | Yes — `className` is mirrored host → probe |
+| Inline `style={{ transform: … }}`                                  | Yes — applied to the probe                 |
+| `ref.current.style.transform = '…'`                                | Yes — forwarded to the probe               |
+| Tag selector on matching intrinsic (`h1 {}` with `<h1 enable-xr>`) | Yes (after probe tag mirror)               |
+| Ancestor + tag (`.page h1 {}`)                                     | Often **no**                               |
 
 ### CSS-in-JS in SpatialDiv (styled-components, Emotion, …)
 
@@ -71,7 +71,52 @@ A `<div enable-xr>` (SpatialDiv) is **not** a single DOM node for styling purpos
 
 **Manual check:** test-server `#/styledComponentsSpatialTest` (host, child, nested tabs). On device, drag the opacity slider and/or run `window.__runStyledComponentsSpatialOpacitySweep()`; expect `mismatchFrames === 0`.
 
-Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md` — *Portal head sync (CSS-in-JS)*.
+Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md` — _Portal head sync (CSS-in-JS)_.
+
+### UI library portals and scoped CSS
+
+**Symptom:** A modal, dropdown, tooltip, or other UI-library overlay looks correct in desktop Chrome but loses padding, border radius, width, or theme overrides in spatial mode, even though the stylesheet appears to be loaded in the child webview.
+
+Example: a rule like this works in the normal page:
+
+```css
+.app-modal .semi-modal-small div[role='dialog'] {
+  padding: 32px;
+  border-radius: 16px;
+}
+```
+
+But the visible spatial portal may contain only the dialog content:
+
+```html
+<body>
+  <div role="dialog" class="semi-modal-content">...</div>
+</body>
+```
+
+**Root cause:** The portal webview can receive the relevant `<head>` styles, but it does **not** preserve the host page's ancestor DOM tree. Any selector that depends on wrappers such as `.app-modal`, `.semi-portal`, `.semi-modal-wrap`, or `.semi-modal-small` may stop matching once the visible content is rendered in a separate portal target.
+
+**What to use instead:**
+
+- Put essential styles on the **actual visible node** via stable `className`, `contentClassName`, `modalContentClass`, `overlayClassName`, or a `data-*` attribute provided by the UI library.
+- Prefer CSS variables for values that must cross the boundary, for example `--modal-padding` or `--overlay-radius`.
+- Keep ancestor-scoped selectors only for non-essential polish that can safely fall back to the library default.
+- When debugging, inspect the child webview / spatial target directly and check the element's real ancestors, `ownerDocument`, and matched CSS rules.
+
+For example:
+
+```tsx
+<Modal modalContentClass="app-modal-dialog" />
+```
+
+```css
+.app-modal-dialog {
+  padding: 32px;
+  border-radius: 16px;
+}
+```
+
+This applies to third-party overlay systems that create their own portals (Semi UI, Radix UI, Floating UI, etc.) because WebSpatial adds another portal boundary on top of the library's normal DOM structure.
 
 ### Dev workflow note
 
@@ -94,12 +139,12 @@ Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md`.
 
 **What to use instead:**
 
-| Goal | Approach |
-| --- | --- |
+| Goal                            | Approach                                                                                                       |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Keep child inside parent bounds | Constrain child CSS size (`max-width`, `max-height`, flex/grid) so the child layout does not exceed the parent |
-| Clip content to a rounded panel | Use a single `SpatialDiv` and put overflow-sensitive UI in **plain HTML** inside that portal |
-| Layered panels that may overlap | Accept that child spatial panels can extend past the parent; tune `--xr-back` / `z-index` for depth ordering |
+| Clip content to a rounded panel | Use a single `SpatialDiv` and put overflow-sensitive UI in **plain HTML** inside that portal                   |
+| Layered panels that may overlap | Accept that child spatial panels can extend past the parent; tune `--xr-back` / `z-index` for depth ordering   |
 
 **Manual check:** test-server `#/nested-spatial-overflow`. Open in the visionOS simulator (or target device). Toggle child size and parent `overflow`; the spatial child panel should remain unclipped when larger than the parent. The plain-HTML reference block on the same page shows normal browser clipping for comparison.
 
-Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md` — *Portal lifecycle and local dev (HMR)*.
+Maintainer details: `packages/react/src/spatialized-container/ARCHITECTURE.md` — _Portal lifecycle and local dev (HMR)_.

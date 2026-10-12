@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Attachment } from '@webspatial/core-sdk'
+import type { BackgroundMaterialType, Vec3 } from '@webspatial/core-sdk'
 
 import { useRealityContext, useParentContext } from '../context'
 import { setOpenWindowStyle } from '../../utils/windowStyleSync'
@@ -7,16 +8,31 @@ import { useSyncHeadStyles } from '../../utils/useSyncHeadStyles'
 
 let instanceCounter = 0
 
+function normalizeCornerRadiusProp(value: number | undefined) {
+  if (value === undefined) return undefined
+  return Number.isFinite(value) && value >= 0 ? value : 0
+}
+
 type AttachmentEntityProps = {
   attachment: string
-  position?: [number, number, number]
-  size: { width: number; height: number }
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+  width?: number
+  height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
 }
 
 export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   attachment: attachmentName,
   position,
-  size,
+  rotation,
+  scale,
+  width,
+  height,
+  cornerRadius,
+  backgroundMaterial,
 }) => {
   const ctx = useRealityContext()
   const parent = useParentContext()
@@ -25,6 +41,8 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
   const instanceIdRef = useRef(`att_${++instanceCounter}`)
   const attachmentNameRef = useRef(attachmentName)
   const [childWindow, setChildWindow] = useState<WindowProxy | null>(null)
+
+  const normalizedCornerRadius = normalizeCornerRadiusProp(cornerRadius)
 
   // Create the attachment when the parent entity is ready
   useEffect(() => {
@@ -40,9 +58,14 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
     const init = async () => {
       try {
         const att = await ctx.session.createAttachmentEntity({
-          parentEntityId: parentId,
-          position: position ?? [0, 0, 0],
-          size,
+          placement: { id: parentId },
+          position,
+          rotation,
+          scale,
+          width,
+          height,
+          cornerRadius: normalizedCornerRadius,
+          backgroundMaterial,
           ownerViewId: ctx.reality.id,
         })
         if (cancelled) {
@@ -126,11 +149,34 @@ export const AttachmentEntity: React.FC<AttachmentEntityProps> = ({
 
   useSyncHeadStyles(childWindow)
 
-  // Update position/size when they change
+  // Update transform, meter dimensions, and surface styling when they change.
+  // These are in-place updates — the native WebView is never recreated.
   useEffect(() => {
     if (!attachmentRef.current) return
-    attachmentRef.current.update({ position, size })
-  }, [position?.[0], position?.[1], position?.[2], size?.width, size?.height])
+    attachmentRef.current.update({
+      position,
+      rotation,
+      scale,
+      width,
+      height,
+      cornerRadius: normalizedCornerRadius,
+      backgroundMaterial,
+    })
+  }, [
+    position?.x,
+    position?.y,
+    position?.z,
+    rotation?.x,
+    rotation?.y,
+    rotation?.z,
+    scale?.x,
+    scale?.y,
+    scale?.z,
+    width,
+    height,
+    normalizedCornerRadius,
+    backgroundMaterial,
+  ])
 
   return null
 }

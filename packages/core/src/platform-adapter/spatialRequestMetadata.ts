@@ -36,12 +36,21 @@ export function getCurrentPageEpoch(): string | undefined {
 export function buildSpatialRequestQuery(
   requestId: string,
   pageEpoch = getCurrentPageEpoch(),
+  extraParams: Record<
+    string,
+    string | number | boolean | null | undefined
+  > = {},
 ): string {
   const params = new URLSearchParams()
   params.set('rid', requestId)
 
   if (pageEpoch !== undefined) {
     params.set('wsepoch', pageEpoch)
+  }
+
+  for (const [key, value] of Object.entries(extraParams)) {
+    if (value === undefined || value === null) continue
+    params.set(key, String(value))
   }
 
   return params.toString()

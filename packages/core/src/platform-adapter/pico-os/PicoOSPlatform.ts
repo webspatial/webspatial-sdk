@@ -11,6 +11,7 @@ import { buildSpatialSceneQuery } from '../spatialSceneQuery'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 import type { SpatialSceneCreationOptionsInternal } from '../../types/internal'
 import type { AttachmentEntityOptions } from '../../types/types'
+import type { OrnamentProtocolOptions } from '../../Ornament'
 import {
   buildSpatialRequestQuery,
   createSpatialRequestId,
@@ -92,12 +93,19 @@ export class PicoOSPlatform implements PlatformAbility {
     return this.waitForRidProtocolAsync('createAttachment')
   }
 
+  createNativeOrnament(
+    options?: OrnamentProtocolOptions,
+  ): Promise<WebSpatialProtocolResult> {
+    return this.waitForRidProtocolAsync('createOrnament', options)
+  }
+
   /**
    * Async path for createNativeSpatialDiv / createNativeAttachment: open webspatial URL
    * with rid= correlation (Pico OS 6).
    */
   private waitForRidProtocolAsync(
     command: string,
+    params: Record<string, string | number | boolean | null | undefined> = {},
   ): Promise<WebSpatialProtocolResult> {
     return new Promise(resolve => {
       const createdId = createSpatialRequestId()
@@ -175,7 +183,10 @@ export class PicoOSPlatform implements PlatformAbility {
         )
         windowProxy = this.openWindow(
           command,
-          buildSpatialRequestQuery(createdId),
+          buildSpatialRequestQuery(createdId, undefined, {
+            command,
+            ...params,
+          }),
         ).windowProxy
       } catch (error: unknown) {
         const { code, message } = this.parseJSBError(error)

@@ -15,8 +15,8 @@ WebSpatial is a set of [minimal extensions to HTML/CSS/DOM APIs](https://tpac202
 
 ## Requirements
 
-- Node.js 22 or newer
-- pnpm 9 or newer
+- Node.js 24 or newer
+- pnpm 11 or newer
 
 ## Documentation
 

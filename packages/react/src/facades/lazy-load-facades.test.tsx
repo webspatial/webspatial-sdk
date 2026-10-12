@@ -9,6 +9,7 @@ import {
 } from '../runtime/bridge'
 import * as reality from '../reality'
 import { Model } from './Model'
+import { Ornament } from './Ornament'
 import { Reality } from './Reality'
 import {
   AttachmentEntity,
@@ -29,6 +30,7 @@ import {
   AttachmentAsset,
   Material,
   ModelAsset,
+  PBRMaterial,
   Texture,
   UnlitMaterial,
 } from './resources'
@@ -41,6 +43,7 @@ import {
   __resetWithSpatialMonitorCacheForTests,
   withSpatialMonitor,
 } from './withSpatialMonitor'
+import { resetRuntimeCacheForTests } from '@webspatial/core-sdk/runtime'
 import { __resetBootForgottenWarningForTests } from './shared/warnBootForgotten'
 
 function setUserAgent(userAgent: string): void {
@@ -70,6 +73,9 @@ function makeSentinelSpatialImpl(): SpatialImplementation {
       {children}
     </div>
   ))
+  const SentinelOrnament = ({ children }: { children?: React.ReactNode }) => (
+    <div data-sentinel="Ornament">{children}</div>
+  )
   const makeSentinelEntity = (name: string) =>
     forwardRef<HTMLElement, { children?: React.ReactNode }>(
       ({ children }, _ref) => <div data-sentinel={name}>{children}</div>,
@@ -104,6 +110,7 @@ function makeSentinelSpatialImpl(): SpatialImplementation {
 
   return {
     Model: SentinelModel,
+    Ornament: SentinelOrnament,
     Reality: SentinelReality,
     Entity: makeSentinelEntity('Entity'),
     BoxEntity: makeSentinelEntity('BoxEntity'),
@@ -114,6 +121,7 @@ function makeSentinelSpatialImpl(): SpatialImplementation {
     ModelEntity: makeSentinelEntity('ModelEntity'),
     AttachmentEntity: makeSentinelResource('AttachmentEntity'),
     UnlitMaterial: makeSentinelResource('UnlitMaterial'),
+    PBRMaterial: makeSentinelResource('PBRMaterial'),
     Material: makeSentinelResource('Material'),
     Texture: makeSentinelResource('Texture'),
     ModelAsset: makeSentinelResource('ModelAsset'),
@@ -144,6 +152,7 @@ describe('lazy-load facades', () => {
     __resetWithSpatialized2DElementContainerCacheForTests()
     __resetWithSpatialMonitorCacheForTests()
     setPlainWebUserAgent()
+    resetRuntimeCacheForTests()
     warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     // The native HTML <model> element is part of a future spec and not
     // recognized by jsdom / React's intrinsic table; React logs an "unknown
@@ -163,6 +172,7 @@ describe('lazy-load facades', () => {
     __resetBootForgottenWarningForTests()
     __resetWithSpatialized2DElementContainerCacheForTests()
     __resetWithSpatialMonitorCacheForTests()
+    resetRuntimeCacheForTests()
   })
 
   describe('Model facade — plain web fallback (per "Model fallback renders degraded <model> tag" Scenario)', () => {
@@ -254,6 +264,32 @@ describe('lazy-load facades', () => {
     })
   })
 
+  describe('Ornament facade — unsupported fallback returns null', () => {
+    it('renders null in plain web and does not mount children', () => {
+      const { container, queryByTestId } = render(
+        <Ornament>
+          <span data-testid="ornament-child" />
+        </Ornament>,
+      )
+      expect(container.children.length).toBe(0)
+      expect(queryByTestId('ornament-child')).toBeNull()
+    })
+
+    it('shows a page-visible diagnostic in a WebSpatial runtime when bootSpatial() has not been called', () => {
+      setPuppeteerUserAgent()
+      resetRuntimeCacheForTests()
+      render(
+        <Ornament>
+          <span />
+        </Ornament>,
+      )
+      expect(
+        document.querySelector('[data-webspatial-boot-forgotten]'),
+      ).not.toBeNull()
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+    })
+  })
+
   describe('Entity-class facades — plain web fallback returns null', () => {
     const entityRefCases: Array<{ name: string; Component: any }> = [
       { name: 'Entity', Component: Entity },
@@ -267,6 +303,7 @@ describe('lazy-load facades', () => {
     const nullCases: Array<{ name: string; Component: any }> = [
       { name: 'AttachmentEntity', Component: AttachmentEntity },
       { name: 'UnlitMaterial', Component: UnlitMaterial },
+      { name: 'PBRMaterial', Component: PBRMaterial },
       { name: 'Material', Component: Material },
       { name: 'Texture', Component: Texture },
       { name: 'ModelAsset', Component: ModelAsset },
@@ -385,6 +422,33 @@ describe('lazy-load facades', () => {
       expect(ref.current).toBe(section)
     })
 
+    it('withSpatialized2DElementContainer fallback does not bind xr-animation in plain-web mode', () => {
+      const Wrapped = withSpatialized2DElementContainer(
+        'section',
+      ) as unknown as React.ComponentType<Record<string, unknown>>
+      const motion = {
+        __kind: 'spatializedMotion' as const,
+        __setElement: vi.fn(),
+        __onUnbind: vi.fn(),
+      }
+
+      const { getByTestId, unmount } = render(
+        <Wrapped xr-animation={motion} data-testid="fallback-motion-host">
+          Motion host
+        </Wrapped>,
+      )
+      const host = getByTestId('fallback-motion-host')
+
+      expect(host.hasAttribute('xr-animation')).toBe(false)
+      expect(motion.__setElement).not.toHaveBeenCalled()
+      expect(motion.__onUnbind).not.toHaveBeenCalled()
+
+      unmount()
+
+      expect(motion.__setElement).not.toHaveBeenCalled()
+      expect(motion.__onUnbind).not.toHaveBeenCalled()
+    })
+
     it('withSpatialMonitor fallback renders the raw El transparently', () => {
       const Monitor = withSpatialMonitor(
         'div',
@@ -446,6 +510,28 @@ describe('lazy-load facades', () => {
       expect(warnSpy.mock.calls[0][0]).toMatch(/bootSpatial\(\)/)
     })
 
+    it('shows one page-visible diagnostic in React StrictMode when multiple facades render before bootSpatial() is called', () => {
+      setPuppeteerUserAgent()
+      render(
+        <React.StrictMode>
+          <Model src="x" />
+          <Reality />
+          <Ornament>
+            <span />
+          </Ornament>
+        </React.StrictMode>,
+      )
+
+      const diagnostics = document.querySelectorAll(
+        '[data-webspatial-boot-forgotten]',
+      )
+      expect(diagnostics).toHaveLength(1)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(diagnostics[0].textContent).toMatch(/WebSpatial/)
+      expect(diagnostics[0].textContent).toMatch(/SpatialBoot/)
+      expect(diagnostics[0].textContent).toMatch(/bootSpatial\(\)/)
+    })
+
     it('does NOT warn in a WebSpatial runtime once bootSpatial() has been called', async () => {
       setPuppeteerUserAgent()
       __setSpatialImplLoaderForTests(() => new Promise(() => {})) // hang
@@ -454,6 +540,9 @@ describe('lazy-load facades', () => {
       })
       render(<Model src="x" />)
       expect(warnSpy).not.toHaveBeenCalled()
+      expect(
+        document.querySelector('[data-webspatial-boot-forgotten]'),
+      ).toBeNull()
     })
   })
 
@@ -506,7 +595,9 @@ describe('lazy-load facades', () => {
       __setSpatialImplLoaderForTests(() => Promise.resolve(sentinel))
 
       const { container, rerender } = render(<Entity />)
-      expect(container.children.length).toBe(0)
+      expect(
+        container.querySelector('[data-webspatial-boot-forgotten]'),
+      ).not.toBeNull()
 
       await act(async () => {
         await bootSpatial()

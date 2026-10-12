@@ -6,7 +6,7 @@ var pwaManager = PWAManager()
 struct PWAManager: Codable {
     var isLocal: Bool = false
 
-//    var start_url: String = "http://localhost:5173/#/"
+    ///    var start_url: String = "http://localhost:5173/#/"
     var start_url: String = "http://localhost:5173/#/runtime-capabilities"
 
     // var start_url: String = "http://localhost:5173/#/spatial-drag-gesture"
@@ -41,6 +41,7 @@ struct PWAManager: Codable {
     var useMainScene: Bool = true
     private var shellVersion: String = "WS_SHELL_VERSION"
     private var sdkVersion: String = "WS_SDK_VERSION"
+    private var runtimeBuildId: String = "package-WS_SHELL_VERSION"
 
     mutating func _init() {
         let urlType = start_url.split(separator: "://").first
@@ -110,6 +111,10 @@ struct PWAManager: Codable {
 
     func getSdkVersion() -> String {
         return sdkVersion
+    }
+
+    func getRuntimeBuildId() -> String {
+        return runtimeBuildId
     }
 }
 

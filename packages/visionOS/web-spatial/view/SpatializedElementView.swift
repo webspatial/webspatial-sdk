@@ -7,7 +7,7 @@ final class GestureState {
 }
 
 struct SpatializedElementView<Content: View>: View {
-    @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
+    let spatializedElement: SpatializedElement
     @Environment(SpatialScene.self) var spatialScene: SpatialScene
 
     var parentScrollOffset: Vec2
@@ -15,8 +15,9 @@ struct SpatializedElementView<Content: View>: View {
 
     @State private var gestureState = GestureState()
 
-    init(parentScrollOffset: Vec2, @ViewBuilder content: () -> Content) {
+    init(parentScrollOffset: Vec2, spatializedElement: SpatializedElement, @ViewBuilder content: () -> Content) {
         self.parentScrollOffset = parentScrollOffset
+        self.spatializedElement = spatializedElement
         self.content = content()
     }
 

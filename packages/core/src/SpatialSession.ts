@@ -18,6 +18,7 @@ import {
   SpatialPlaneGeometryOptions,
   SpatialSphereGeometryOptions,
   SpatialUnlitMaterialOptions,
+  SpatialPBRMaterialOptions,
   SpatialTextureResourceOptions,
   SpatialEntityUserData,
   AttachmentEntityOptions,
@@ -25,6 +26,7 @@ import {
   ModelSource,
 } from './types/types'
 import { SpatializedDynamic3DElement } from './SpatializedDynamic3DElement'
+import { createOrnament, Ornament, OrnamentOptions } from './Ornament'
 import { SpatialEntity } from './reality/entity/SpatialEntity'
 import {
   createModelAsset,
@@ -34,6 +36,7 @@ import {
   createSpatialModelEntity,
   createSpatialTexture,
   createSpatialUnlitMaterial,
+  createSpatialPBRMaterial,
 } from './reality/realityCreator'
 import {
   SpatialBoxGeometry,
@@ -174,6 +177,17 @@ export class SpatialSession {
   }
 
   /**
+   * Creates a physically-based material that responds to scene lighting.
+   * Supports `metalness` and `roughness` on top of the base
+   * color/texture/transparency surface controls.
+   * @param options Configuration options for the PBR material
+   * @returns Promise resolving to a new SpatialPBRMaterial instance
+   */
+  createPBRMaterial(options: SpatialPBRMaterialOptions) {
+    return createSpatialPBRMaterial(options)
+  }
+
+  /**
    * Creates a texture resource from the specified image URL.
    * Texture resources can be referenced by materials and other spatial content.
    * @param options Configuration options for the texture resource
@@ -216,5 +230,14 @@ export class SpatialSession {
     options: AttachmentEntityOptions,
   ): Promise<Attachment> {
     return createAttachmentEntity(options)
+  }
+
+  /**
+   * Creates a new window-level Ornament content container.
+   * @param options Ornament anchor, alignment, visibility, and size options
+   * @returns Promise resolving to a new Ornament runtime handle
+   */
+  createOrnament(options: OrnamentOptions = {}): Promise<Ornament> {
+    return createOrnament(options)
   }
 }

@@ -139,6 +139,8 @@ export interface SpatialScene extends SpatialObjectProtocol {
   state: SceneStateKind
   sceneConfig: SceneConfig
   children: Record<string, SpatializedElement>
+  ornaments: Record<string, any>
+  activeOrnaments: any[]
   spatialWebViewModel: any
   findSpatialObject(id: string): SpatializedElement | null
   addSpatialObject(object: SpatialObjectProtocol): void

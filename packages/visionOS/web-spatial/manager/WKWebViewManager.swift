@@ -6,11 +6,20 @@ class WKWebViewManager {
 
     private init() {}
 
-    func create(controller: SpatialWebController, configuration: WKWebViewConfiguration? = nil, spatialId: String? = "") -> WKWebView {
+    func create(
+        controller: SpatialWebController,
+        contentRole: SpatialWebViewContentRole,
+        configuration: WKWebViewConfiguration? = nil,
+        spatialId: String? = ""
+    ) -> WKWebView {
         let userContentController = WKUserContentController()
         // TODO: get native api instead of using the injected WS_SDK_VERSION placeholder
         let userScript = WKUserScript(source: "window.WebSpatailEnabled = true; window.WebSpatailNativeVersion = 'WS_SDK_VERSION';", injectionTime: .atDocumentStart, forMainFrameOnly: false)
         userContentController.addUserScript(userScript)
+        installRuntimeCapabilityManifestIfNeeded(
+            into: userContentController,
+            contentRole: contentRole
+        )
 //        userContentController.add(controller, name: "bridge")
         userContentController.addScriptMessageHandler(controller, contentWorld: .page, name: "bridge")
         let myConfig = (configuration != nil) ? configuration! : WKWebViewConfiguration()
@@ -43,5 +52,15 @@ class WKWebViewManager {
 
         controller.startObserving()
         return controller.webview!
+    }
+
+    func installRuntimeCapabilityManifestIfNeeded(
+        into userContentController: WKUserContentController,
+        contentRole: SpatialWebViewContentRole
+    ) {
+        // SpatialDiv and Attachment webviews only host portal DOM. The SDK and
+        // supports() execute in the application webview's JavaScript realm.
+        guard contentRole == .application else { return }
+        userContentController.addUserScript(RuntimeCapabilityManifestProvider.makeUserScript())
     }
 }

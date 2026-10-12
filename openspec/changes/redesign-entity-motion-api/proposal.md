@@ -1,0 +1,529 @@
+## What This Is
+
+`useEntityAnimation` is a React Hook for animating a 3D object (an Entity) in the scene, letting it move, rotate, or scale smoothly.
+
+`useEntityAnimation` provides three core capabilities:
+
+1. **Keyframe animation (`timeline`)**: do a simple "from A to B" motion, or write multi-step animations like `0% → 50% → 100%`.
+2. **Result write-back (`entityProps`)**: the Hook hands the animation's final pose back to you, so the object stays put at the end instead of snapping back.
+3. **Binding (`animation`)**: bind the animation to the object through the component's `animation` prop.
+
+`useEntityAnimation` remains an experimental API and is imported from `@webspatial/react-sdk/experimental`.
+
+> **A few basic terms** (used throughout):
+> - **Entity**: a 3D object in the scene, e.g. a box `<BoxEntity>`.
+> - **transform**: the object's spatial pose, made of three parts — position `position` (unit: meters), rotation `rotation` (unit: degrees), and scale `scale` (a multiplier, 1 = original size).
+> - **`Vec3`**: a 3D vector shaped like `{ x, y, z }`, used for the three axes of each part above.
+> - **component**: one of `position` / `rotation` / `scale`.
+
+---
+
+## I Want To Do X — What Do I Use (Quick Reference)
+
+| What I want to do | What to use |
+|---|---|
+| Move/rotate/scale an object from one pose to another | Write top-level `from` / `to` (simplest form), or `timeline.from` / `timeline.to`, in the config |
+| Do a multi-step keyframe animation (e.g. 0% → 50% → 100%) | Write `timeline` in the config |
+| Keep the object at the end pose after the animation, no snap-back | Spread `{...entityProps}` onto the component |
+| Move the object to a new pose in code after the animation | Call `api.set({ ... })` |
+| Animate position only while preserving the other components | Put only `position` in the config; native fills `rotation` / `scale` from the baseline, owns the whole transform during playback, and returns the complete committed transform through `entityProps` |
+| Read the final pose the animation hands back | Read `entityProps` (there is no `api.get`) |
+| Control playback (start/pause/stop/reset) | `api.play()` / `pause()` / `stop()` / `reset()` / `finish()` |
+| Check whether the runtime supports animation | `supports('useEntityAnimation')` |
+
+> **Transform only**: this version can animate `position` / `rotation` / `scale` only. It does **not** support `opacity`, material, color, etc. Targeting something unsupported throws an error rather than being silently ignored.
+
+---
+
+## Quick Start: A Complete Example
+
+```tsx
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
+
+function MyBox() {
+  // Move the box up by 0.25m and scale it to 1.1x over 0.8s
+  const [animation, api, entityProps] = useEntityAnimation({
+    timeline: {
+      from: { position: { x: 0, y: 0, z: 0.8 }, scale: { x: 1, y: 1, z: 1 } },
+      to:   { position: { y: 0.25 },            scale: { x: 1.1, y: 1.1, z: 1.1 } },
+    },
+    duration: 0.8,
+    autoStart: true,
+    onComplete: () => console.log('animation done'),
+  })
+
+  return (
+    <Reality>
+      <SceneGraph>
+        {/* Put entityProps last so the object stays at the end pose */}
+        <BoxEntity {...entityProps} animation={animation} />
+      </SceneGraph>
+    </Reality>
+  )
+}
+```
+
+The Hook returns three values, destructured in order:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation(config)
+```
+
+| Return value | What it does |
+|---|---|
+| `animation` | The animation binding; pass it to the component's `animation` prop |
+| `api` | The playback controller; provides `play / pause / stop / reset / finish` and `set` |
+| `entityProps` | A committed-pose snapshot updated at key moments; after the first confirmation it contains complete `position`, `rotation`, and `scale` values and should be spread onto the component |
+
+---
+
+## Describing the Animation (config)
+
+The public config contract is:
+
+```ts
+type TimingFunction = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+
+type EntityMotionProps = {
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+}
+
+// Internal SDK type; not exported from the package public entry.
+type EntityMotionPatch = {
+  position?: Partial<Vec3>
+  rotation?: Partial<Vec3>
+  scale?: Partial<Vec3>
+}
+
+type EntityMotionFrame = EntityMotionPatch & {
+  timingFunction?: TimingFunction
+}
+
+type EntityMotionTimeline = {
+  from?: EntityMotionFrame
+  to?: EntityMotionFrame
+} & Partial<Record<`${number}%`, EntityMotionFrame>>
+
+type EntityPlaybackError = {
+  code:
+    | 'TARGET_NOT_FOUND'
+    | 'UNSUPPORTED_TARGET'
+    | 'ANIMATION_NOT_FOUND'
+    | 'INVALID_TIMELINE'
+    | 'COMPILATION_FAILED'
+    | 'INVALID_CONTROL_STATE'
+    | 'INVALID_SET_VALUES'
+  reason: string
+}
+
+type EntityMotionConfig = {
+  from?: EntityMotionPatch
+  to?: EntityMotionPatch
+  timeline?: EntityMotionTimeline
+  duration?: number
+  timingFunction?: TimingFunction
+  delay?: number
+  playbackRate?: number
+  loop?: boolean | { reverse?: boolean }
+  autoStart?: boolean
+  onStart?: (values: EntityMotionProps) => void
+  onComplete?: (values: EntityMotionProps) => void
+  onStop?: (values: EntityMotionProps) => void
+  onReset?: (values: EntityMotionProps) => void
+  onError?: (error: EntityPlaybackError) => void
+}
+```
+
+Defaults are `autoStart: true`, `timingFunction: 'easeInOut'`, `delay: 0`, `playbackRate: 1`, and `loop: false`. Every fresh execution waits for the global `delay` once, then plays the motion; `playbackRate` and `loop` affect only that motion, so the delay is neither rate-scaled nor repeated at loop boundaries. Every config containing `timeline` must provide `duration`; only pure top-level `from` / `to` uses the 0.3-second default. Invalid config is a programmer error and throws synchronously.
+
+### Option 0: top-level from / to (simplest form)
+
+If you only need "from one pose to another", write `from` / `to` at the top level of the config, without nesting them under `timeline`:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  from: { position: { x: 0, y: 0, z: 0.8 }, scale: { x: 1, y: 1, z: 1 } },
+  to:   { position: { y: 0.25 },            scale: { x: 1.1, y: 1.1, z: 1.1 } },
+  // With pure top-level from/to and no percentages, duration defaults to 0.3s
+  autoStart: true,
+})
+```
+
+A few rules:
+
+1. **Equivalent to `timeline.from` / `timeline.to`**: top-level `from` / `to` is just shorthand; it normalizes to the same single timeline internally and behaves identically.
+2. **Both boundaries are required**: in this top-level shape, `from` and `to` must both be provided; supplying only one throws an error and is not filled from the object's current pose.
+3. **`duration` defaults to 0.3s for pure top-level from/to** (as long as no percentage keyframes are used).
+4. **When `timeline` is also present, `timeline` wins**: the top-level `from` / `to` is then ignored, with a warning logged in development mode.
+
+### Option 1: timeline.from / timeline.to (from one pose to another)
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  timeline: {
+    from: {
+      position: { x: 0, y: 0, z: 0.8 },
+      rotation: { x: 0, y: 0, z: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+    to: {
+      position: { y: 0.25 },
+      scale: { x: 1.1, y: 1.1, z: 1.1 },
+    },
+  },
+  duration: 0.8,
+  autoStart: true,
+})
+```
+
+Both `timeline.from` and `timeline.to` can list only the **fields** you care about; unlisted fields stay unchanged. But **both ends are required**: `timeline.from` (or the `0%` frame) and `timeline.to` (or the `100%` frame) must both be present; supplying only one throws an error and does not fill the other end from the object's current pose or the baseline.
+
+### Option 2: timeline (multi-step keyframes)
+
+Use percentages inside `timeline` to describe the pose at different points in time — good for more complex motion:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  duration: 1.2,
+  timingFunction: 'easeInOut',
+  timeline: {
+    '0%': {
+      position: { x: 0, y: 0, z: 0.8 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+    '50%': {
+      position: { y: 0.25 },
+      scale: { x: 1.1, y: 1.1, z: 1.1 },
+    },
+    '100%': {
+      position: { y: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+  },
+})
+```
+
+### Option 3: mixing from / to with percentages in timeline
+
+Inside a single `timeline`, `from` is the `0%` frame and `to` is the `100%` frame, so you can mix `from` / `to` with intermediate percentage keys. This fits the "express the two ends with from/to, then insert a few percentage keyframes in between" case:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  duration: 1.2,
+  timingFunction: 'easeInOut',
+  timeline: {
+    from: {                              // equivalent to 0%
+      position: { x: 0, y: 0, z: 0.8 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+    '50%': {
+      position: { y: 0.25 },
+      scale: { x: 1.1, y: 1.1, z: 1.1 },
+    },
+    to: {                                // equivalent to 100%
+      position: { y: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+  },
+})
+```
+
+A couple of notes:
+
+- **Both ends are required**: the start (`from` or `0%`) and the end (`to` or `100%`) must both be written, and omitting either throws an error; using `from` + `to` here naturally satisfies this.
+- `from` and `0%`, `to` and `100%`, refer to the same frame — **do not write both `from` and `0%` (or both `to` and `100%`) in the same `timeline`**, or defining the same frame twice throws an error.
+- The 0.3s `duration` default does not apply here (it applies only to pure top-level `from` / `to` with no percentages); provide `duration` explicitly.
+
+### Option 4: per-global-segment timingFunction
+
+Besides a single global `timingFunction` at the top level of the config, you can also put `timingFunction` on an **individual keyframe**, as a sibling of that frame's `position` / `rotation` / `scale`. **A per-keyframe `timingFunction` applies to the segment from the current global timeline node to the next global timeline node**, and takes precedence over the top-level global `timingFunction`:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  duration: 1.2,
+  timingFunction: 'linear',        // global default: segments not otherwise specified use linear
+  timeline: {
+    '0%': {
+      position: { x: 0, y: 0, z: 0.8 },
+      timingFunction: 'easeIn',    // applies to the global 0% → 50% segment
+    },
+    '50%': {
+      position: { y: 0.25 },
+      timingFunction: 'easeOut',   // applies to the global 50% → 100% segment
+    },
+    '100%': {
+      position: { y: 0 },          // last frame has no next segment, no timingFunction needed
+    },
+  },
+})
+```
+
+A couple of notes:
+
+- **Sibling of the pose fields**: `timingFunction` sits inside a frame, alongside that frame's `position` / `rotation` / `scale`, and describes the easing from that global timeline node to the next global timeline node.
+- **Allowed values**: `'linear'` / `'easeIn'` / `'easeOut'` / `'easeInOut'` (camelCase; there is no hyphenated form like `'ease-in'`).
+- **Precedence**: a global segment's easing takes the `timingFunction` on its start frame; if absent it falls back to the top-level global `timingFunction`, and otherwise the default.
+- **Not needed on the last frame**: the last global timeline node has no next segment, so a `timingFunction` written on it has no effect.
+
+### Which Fields You Can Write
+
+The config accepts only these fields (matching the Entity's own prop hierarchy):
+
+```text
+position.x / position.y / position.z
+rotation.x / rotation.y / rotation.z
+scale.x    / scale.y    / scale.z
+```
+
+Targeting something unsupported like `opacity` throws synchronously during config validation.
+
+---
+
+## Keeping the Result at the End Pose (entityProps)
+
+`entityProps` is the third value returned by the Hook — it is the **final pose the animation hands back** at key moments (see "When it updates" below), not a value that refreshes every frame. Spread it onto the component so the object stays at the end pose after the animation:
+
+```tsx
+const [animation, api, entityProps] = useEntityAnimation({
+  duration: 0.8,
+  timeline: {
+    from: {
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { y: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+    to: {
+      position: { x: 0.1, y: 0, z: 0 },
+      rotation: { y: 90 },
+      scale: { x: 1, y: 1, z: 1 },
+    },
+  },
+})
+
+return (
+  <BoxEntity {...entityProps} animation={animation} />
+)
+```
+
+**After the animation completes**, `entityProps` updates to the complete end pose, and the combined React props keep the object there. Initial creation failure clears `entityProps`; config-update failure preserves the current animation and `entityProps`.
+
+**When it updates**: `entityProps` updates on start, completion, stop, reset, finish, successful config update, or successful `api.set`. Initial creation failure clears it.
+
+> **Note**: before the first playback, or before the first successful `api.set`, `entityProps` may be empty. Do not assume it already has a value right when the component mounts — play the animation once, or call `api.set` successfully once, and it will then hold a value.
+
+---
+
+## Updating config During Playback
+
+Config changes on the same Entity update the current animation:
+
+| State at update | Behavior |
+|---|---|
+| `delay` or `running` | Retarget from the current pose and run the new delay and full duration from the beginning |
+| `paused` | Remain paused; the next `play` runs the new timeline from the paused pose |
+| `idle` or `finished` | Preserve the state; the next `play` uses the new config's start |
+
+- Timeline or playback-option changes trigger retargeting.
+- The current pose temporarily starts this run to avoid a jump. Later `reset` and replay use the new config's declared start.
+- The new timeline starts from the beginning. The old run fires neither `onStop` nor `onComplete`; the new run fires `onStart` once.
+- Callback-only changes do not affect playback. `autoStart` applies only to initial creation.
+- Update failure preserves the current animation and state and fires the latest `onError` once.
+
+---
+
+## Moving the Object in Code After the Animation (api.set)
+
+Once the animation is done, if you want to move the object to a new pose from code, call `api.set`:
+
+```tsx
+// Raise the box to y = 0.3 (other fields keep their current values)
+api.set({ position: { y: 0.3 } })
+```
+
+A few rules:
+
+1. **Call during the idle phase after the `animation` binding is ready**. Call it after completion, `stop()`, or `reset()`. During playback, call `stop()` first, followed by `api.set()`.
+2. **Pass at least one supported transform scalar under `position`, `rotation`, and/or `scale`**; every other field keeps its current value. For example, `api.set({ position: { y: 0.3 } })` updates `position.y` while keeping the current `rotation` and `scale`.
+3. **After a successful write, `entityProps` updates to the Entity's complete current pose**.
+4. **For an update based on the current pose**, read `entityProps`, calculate the new value, then pass it to `api.set`. `entityProps` is the current-pose data source.
+5. **`api.set` sets the static pose** and preserves the current playback progress.
+
+`api.set` returns `void`. When the binding is unavailable, creation is pending, the binding lifecycle is terminated, or object destruction is in progress or complete, the SDK logs one warning and completes a local no-op. A successful write updates `entityProps` with the confirmed complete pose.
+
+### Where Playback Starts After api.set
+
+- Playback starts from the start frame declared by the config (top-level `from`, `timeline.from`, or the `0%` frame). Because every animation must declare a start, there is no "no start frame" case — a config missing the start is rejected during validation.
+- Every fresh play reads the entity's latest native transform at the start. Fields declared by the config start from the configured start frame, while omitted fields use that latest transform as the run's baseline. Therefore, after a successful inactive `api.set`, the next fresh play uses the updated values to fill omitted fields.
+- A fresh play is the first `play` / `autoStart` after creation, or a new `play` after completion, finish, stop, or reset. A `play` after `pause` only resumes from the current progress and does not read a new baseline; loops within one run also keep using that run's baseline.
+
+---
+
+## Who Controls the Transform
+
+The component combines static/base props and `entityProps` as ordinary React props. Native animation temporarily blocks those ordinary writes while playback is active:
+
+| Situation | Who controls the transform |
+|---|---|
+| Playback is inactive | The combined React props. Before the first confirmed value, `entityProps` is empty and the base props determine the pose. After confirmation, spreading complete `entityProps` last preserves that pose. |
+| The animation is playing, delayed, or paused | Native animation controls the whole transform and blocks ordinary React transform writes; components omitted from the config hold their baseline values. |
+| Initial animation-object creation fails | The current binding lifecycle terminates, `entityProps` clears, and the remaining React props control. |
+| Same-target config update fails | The old execution, current state, and `entityProps` remain unchanged. |
+| The animation binding is removed | `entityProps` clears and the remaining React props control. |
+
+This matches visionOS / picoOS natively: the underlying runtime binds the whole transform. During active animation, configured components animate and the remaining components hold their baseline values. Pause keeps the write protection. Stop, reset, finish, and natural completion commit the corresponding pose, remove the write protection, and report the Entity's complete current transform so Core can update `entityProps`.
+
+A few practical takeaways follow:
+
+- **While the animation is playing**, the entire transform is taken over by the animation, so writing any component via props or `api.set` has no effect; components not in the config are frozen at baseline.
+- **While playback is inactive**, the combined React props control the transform. Use `api.set` to update the Native committed transform and receive the resulting complete pose through `entityProps`.
+- **After initial animation-object creation fails**, the current binding terminates and ordinary React transform props regain control. Restarting requires an explicit unbind followed by rebind, or a new binding.
+- **After a same-target config update fails**, the binding remains valid and the old animation continues without rebinding.
+- **After the binding is removed**, `entityProps` clears and the remaining React transform props continue to control the Entity.
+
+### Recommended Pattern
+
+Put `entityProps` **after** your other props, so the object correctly stays at the end pose after the animation instead of being overwritten by older prop values:
+
+```tsx
+<BoxEntity
+  position={basePosition}
+  {...entityProps}
+  animation={animation}
+/>
+```
+
+Once `entityProps` has a confirmed value, spreading it after `basePosition` makes it the effective React transform value. Call `api.set` to change the Native committed transform and update `entityProps`.
+
+---
+
+## api Methods Overview
+
+`api` provides the following methods:
+
+```tsx
+interface EntityPlaybackApi {
+  play(): void
+  pause(): void
+  stop(): void
+  reset(): void
+  finish(): void
+  set(update: EntityMotionPatch): void
+  readonly playState: 'queued' | 'idle' | 'running' | 'paused' | 'finished'
+  readonly isAnimating: boolean
+  readonly isPaused: boolean
+  readonly finished: boolean
+}
+```
+
+The first five methods control animation playback progress. `api.set` sets the object's static pose while preserving current playback progress. Use the first five methods for playback control and `api.set` for pose changes after the animation.
+
+---
+
+## Animation States
+
+During its lifecycle an animation moves through the states below. Reading this diagram helps you tell, at any moment: whether `api.set` is usable, whether `entityProps` updates, and who controls the object.
+
+```mermaid
+stateDiagram-v2
+    [*] --> idle
+    idle --> queued: playback request queued
+    queued --> idle: playback ready
+    idle --> running: play() / autoStart
+    idle --> finished: finish()
+    running --> paused: pause()
+    paused --> running: play()
+    running --> idle: stop() / reset()
+    paused --> idle: stop() / reset()
+    running --> finished: reaches end / finish()
+    paused --> finished: finish()
+    finished --> running: play()
+    finished --> idle: reset()
+```
+
+`running` includes the start delay. `queued` means the playback request has been submitted and awaits execution. `autoStart` and `play()` calls during initialization enter this state. Playback start changes the state to `running`.
+
+If initial creation fails, `onError` fires once, the state becomes `idle`, and `entityProps` clears. Later calls log a warning. Rebinding allows another attempt. If a config update fails, the current animation remains valid.
+
+| `playState` | `isAnimating` | `isPaused` | `finished` |
+|---|---|---|---|
+| `queued` | `false` | `false` | `false` |
+| `idle` | `false` | `false` | `false` |
+| `running` | `true` | `false` | `false` |
+| `paused` | `false` | `true` | `false` |
+| `finished` | `false` | `false` | `true` |
+
+### Behavior in Each State
+
+| State | How to enter | Is `api.set` usable | Does `entityProps` update | Who controls the transform |
+|---|---|---|---|---|
+| **Initial** | Before the first confirmed value | ✅ Usable after native object creation | Filled at the first confirmation | Combined React props; `entityProps` is empty |
+| **Playing** (incl. delay, paused) | `play()` / `autoStart`; still counts after `pause()` | ❌ Rejected (noop + warning) | Only once, at the moment playback starts | Native animation controls the whole transform; fields omitted from the config freeze at this run's fresh-play baseline |
+| **Inactive with confirmed state** | `complete` / `stop` / `reset` / `finish`, or successful `api.set` | ✅ Usable | ✅ Contains the complete committed transform | Combined React props; spread `entityProps` last |
+| **Terminated binding** | Initial animation-object creation failure | ❌ Every API is warning + no-op | Cleared to `{}` | Remaining React props; restart requires explicit rebinding |
+
+> **Note**: a looping animation has no natural "reaches end", so `entityProps` does not update and the baseline is not reread at each loop boundary. `stop()`, `reset()`, or `finish()` updates `entityProps`; after the animation becomes inactive, a successful `api.set()` also updates `entityProps`.
+
+The documented capability becomes available in WSAppShell `1.9.0` on visionOS and PicoWebApp `0.7.0` on picoOS.
+
+---
+
+## Event Callbacks (callback)
+
+You can pass callbacks in the config to get notified at different stages of the animation:
+
+```tsx
+useEntityAnimation({
+  // ...
+  onStart:    values => console.log('start', values),
+  onComplete: values => console.log('complete', values),
+  onStop:     values => console.log('stop', values),
+  onReset:    values => console.log('reset', values),
+  onError:    error  => console.error('error', error),
+})
+```
+
+Callbacks are **notifications only**. Their return values are ignored and cannot decide where the object ends up. To decide the end pose, declare it in the config before playback (e.g. via top-level `to` or `timeline.to`), or take over after playback through `entityProps` / `api.set`.
+
+The `values` passed to callbacks contain only the fields Entity supports:
+
+```text
+{ position?: Vec3, rotation?: Vec3, scale?: Vec3 }
+```
+
+---
+
+## Checking Runtime Support
+
+Use capability detection to check whether the current runtime supports animation:
+
+```tsx
+supports('useEntityAnimation')
+```
+
+Meaning: the current runtime supports binding animation to an Entity via `animation`.
+
+If it returns `false`, the current runtime does not support animation; skip the animation and render the object at its target pose with static props instead:
+
+```tsx
+if (supports('useEntityAnimation')) {
+  return <BoxEntity {...entityProps} animation={animation} />
+}
+// Not supported: render straight to the final pose, no animation
+return <BoxEntity position={targetPosition} />
+```
+
+**This version supports transform only (`position` / `rotation` / `scale`); it does not support `opacity`.**
+
+---
+
+## Limitations (This Version)
+
+This version can **animate transform only** (`position` / `rotation` / `scale`); it does not support opacity (`opacity`), material, color, or other properties. In addition, an animation object binds to a single object and cannot be shared across multiple objects.
+
+---
+
+## One-Line Summary
+
+`useEntityAnimation` describes animation with `position / rotation / scale`, and supports top-level `from` / `to` shorthand, percentage `timeline`, `entityProps` result write-back, and the `animation` binding; this version supports transform only, not opacity.

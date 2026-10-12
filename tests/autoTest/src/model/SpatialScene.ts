@@ -15,6 +15,12 @@ import { PuppeteerWebViewModel } from '../webview/PuppeteerWebViewModel'
 import { ProtocolHandlerManager } from '../webview/ProtocolHandlerManager'
 import { Spatialized2DElement } from './Spatialized2DElement'
 import { SpatializedElement } from './SpatializedElement'
+import {
+  createOrnamentRecord,
+  updateOrnamentRecord,
+  type OrnamentOptions,
+  type OrnamentRecord,
+} from './Ornament'
 
 // Add missing Vec3 type definition
 export interface Vec3 {
@@ -47,6 +53,7 @@ export class SpatialScene
 
   private _spatialObjects: Record<string, any> = {}
   private _children: Record<string, SpatializedElement> = {}
+  private _ornaments: Record<string, OrnamentRecord> = {}
   // private _boundSpatialIframeCreatedHandler: EventListener;
 
   get cornerRadius(): CornerRadius {
@@ -103,6 +110,16 @@ export class SpatialScene
 
   get spatialObjects(): Record<string, SpatialObject> {
     return { ...this._spatialObjects }
+  }
+
+  get ornaments(): Record<string, OrnamentRecord> {
+    return { ...this._ornaments }
+  }
+
+  get activeOrnaments(): OrnamentRecord[] {
+    return Object.values(this._ornaments)
+      .filter(ornament => ornament.active)
+      .sort((a, b) => a.order - b.order)
   }
 
   constructor(
@@ -393,6 +410,55 @@ export class SpatialScene
     }
   }
 
+  createOrnament(id: string, options: OrnamentOptions = {}): OrnamentRecord {
+    const existing = this._ornaments[id]
+    const ornament = createOrnamentRecord(
+      id,
+      options,
+      existing,
+      Object.keys(this._ornaments).length,
+    )
+
+    this._ornaments[id] = ornament
+    this._spatialObjects[id] = ornament
+    this.emit('ornamentCreated', { ornament })
+    return ornament
+  }
+
+  addOrnament(id: string): OrnamentRecord | null {
+    const ornament = this._ornaments[id]
+    if (!ornament) return null
+
+    ornament.active = true
+    this._ornaments[id] = ornament
+    this._spatialObjects[id] = ornament
+
+    this.emit('ornamentAdded', { ornament })
+    return ornament
+  }
+
+  updateOrnament(
+    id: string,
+    options: OrnamentOptions = {},
+  ): OrnamentRecord | null {
+    const ornament = this._ornaments[id]
+    if (!ornament) return null
+
+    const updatedOrnament = updateOrnamentRecord(ornament, options)
+    this._ornaments[id] = updatedOrnament
+    this._spatialObjects[id] = updatedOrnament
+    this.emit('ornamentUpdated', { ornament: updatedOrnament })
+    return updatedOrnament
+  }
+
+  removeOrnament(id: string): void {
+    if (!this._ornaments[id]) return
+
+    delete this._ornaments[id]
+    delete this._spatialObjects[id]
+    this.emit('ornamentRemoved', { id })
+  }
+
   /**
    * Send message to web page
    */
@@ -435,8 +501,8 @@ export class SpatialScene
     }
   }
 
-  findSpatialObject(id: string): SpatializedElement | null {
-    return (this._spatialObjects[id] as SpatializedElement) || null
+  findSpatialObject(id: string): any | null {
+    return this._spatialObjects[id] || null
   }
 
   updateSpatializedElementProperties(
@@ -704,6 +770,7 @@ export class SpatialScene
       }
     })
     this._spatialObjects = {}
+    this._ornaments = {}
     this.backgroundMaterial = BackgroundMaterial.none
   }
 
@@ -734,6 +801,7 @@ export class SpatialScene
       }
     })
     this._spatialObjects = {}
+    this._ornaments = {}
     // Destroy all child elements
     Object.values(this._children).forEach(child => {
       if (child && typeof child.destroy === 'function') {

@@ -7,7 +7,7 @@ import type {
 } from '../spatialized-container/types'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
-import { warnBootForgotten } from './shared/warnBootForgotten'
+import { BootForgottenDiagnostic } from './shared/BootForgottenDiagnostic'
 
 const SPATIAL_EVENT_PROPS = [
   'onSpatialTap',
@@ -20,6 +20,7 @@ const SPATIAL_EVENT_PROPS = [
   'onSpatialMagnifyEnd',
   'spatialEventOptions',
   'onSpatialContentReady',
+  'xr-animation',
 ] as const
 
 const facadeCache = new Map<ElementType, ComponentType<any>>()
@@ -59,8 +60,8 @@ export function withSpatialized2DElementContainer<P extends ElementType>(
     ref: ForwardedRef<SpatializedElementRef>,
   ) {
     const ready = useSpatialReady()
+
     if (!ready) {
-      warnBootForgotten('withSpatialized2DElementContainer')
       const { component: _component, ...rest } = givenProps as Record<
         string,
         unknown
@@ -73,7 +74,12 @@ export function withSpatialized2DElementContainer<P extends ElementType>(
       // props) so it is neither invoked here nor leaked as a DOM attribute.
       const passthrough = stripSpatialOnlyProps(rest)
       const Element = Component as ElementType
-      return <Element {...(passthrough as any)} ref={ref as any} />
+      return (
+        <>
+          <BootForgottenDiagnostic componentName="withSpatialized2DElementContainer" />
+          <Element {...(passthrough as any)} ref={ref as any} />
+        </>
+      )
     }
     const RealHOC = requireSpatialImpl()
       .withSpatialized2DElementContainer as typeof withSpatialized2DElementContainer
