@@ -226,11 +226,12 @@ function App() {
           height: '200px',
           '--xr-depth': '100px',
           '--xr-back': '50px',
+          marginTop: 100,
           marginBottom: '20px',
         }}
       >
         <source
-          src="https://developer.apple.com/quick-look-gallery/models/drummertoy/toy_drummer.usdz"
+          src="/modelasset/Character_animated.usdz"
           type="model/vnd.usdz+zip"
         />
         <img
