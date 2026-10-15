@@ -291,8 +291,12 @@ vi.mock('./JSBCommand', () => {
 })
 
 describe('removed scene window globals', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   beforeEach(() => {
-    ;(window as any).opener = {}
+    vi.stubGlobal('opener', {})
   })
 
   it('does not type removed window scene globals', () => {
