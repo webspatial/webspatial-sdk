@@ -53,6 +53,14 @@ function makeComputedStyle(map: Record<string, string>) {
   } as any as CSSStyleDeclaration
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>(inResolve => {
+    resolve = inResolve
+  })
+  return { promise, resolve }
+}
+
 describe('PortalInstanceObject', () => {
   it('updates spatialized element props from dom and transform/visibility', async () => {
     const { PortalInstanceObject } = await import('./PortalInstanceContext')
@@ -100,7 +108,7 @@ describe('PortalInstanceObject', () => {
       visibility: 'visible',
     })
 
-    portal.notify2DFrameChange()
+    await portal.notify2DFrameChange()
 
     expect(spatializedElement.updateProperties).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -123,6 +131,39 @@ describe('PortalInstanceObject', () => {
 
     expect((dom as any).__spatializedElement).toBe(spatializedElement)
     expect(typeof (dom as any).__innerSpatializedElement).toBe('function')
+    expect(typeof (dom as any).__syncSpatializedElement).toBe('function')
+
+    const propertiesUpdate = deferred<void>()
+    const transformUpdate = deferred<void>()
+    spatializedElement.updateProperties
+      .mockClear()
+      .mockReturnValueOnce(propertiesUpdate.promise)
+    spatializedElement.updateTransform
+      .mockClear()
+      .mockReturnValueOnce(transformUpdate.promise)
+    const requestAnimationFrame = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation(callback => {
+        callback(0)
+        return 1
+      })
+
+    let synchronized = false
+    const synchronization = (dom as any).__syncSpatializedElement().then(() => {
+      synchronized = true
+    })
+    await Promise.resolve()
+
+    expect(spatializedElement.updateProperties).toHaveBeenCalledTimes(1)
+    expect(spatializedElement.updateTransform).toHaveBeenCalledTimes(1)
+    propertiesUpdate.resolve()
+    await Promise.resolve()
+    expect(synchronized).toBe(false)
+
+    transformUpdate.resolve()
+    await synchronization
+    expect(synchronized).toBe(true)
+    requestAnimationFrame.mockRestore()
   })
 
   it('adds fixed or root portal elements to scene', async () => {

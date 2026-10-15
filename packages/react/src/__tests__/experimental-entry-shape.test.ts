@@ -24,6 +24,11 @@ describe('experimental-entry public surface', () => {
       expect(typeof ExperimentalEntry.Ornament).toBe('function')
     })
 
+    it('exports `WebSpatialInspector` as a defined runtime value', () => {
+      expect(ExperimentalEntry.WebSpatialInspector).toBeDefined()
+      expect(typeof ExperimentalEntry.WebSpatialInspector).toBe('function')
+    })
+
     it('keeps Ornament prop helper types available from the experimental entry', () => {
       expect(ornamentTypeSurface).toEqual({
         attachmentAnchor: 'bottom',

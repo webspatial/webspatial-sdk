@@ -14,6 +14,8 @@ export type {
   OrnamentProps,
   OrnamentVisibility,
 } from './facades/Ornament'
+export { WebSpatialInspector } from './facades/WebSpatialInspector'
+export type { WebSpatialInspectorProps } from './facades/WebSpatialInspector'
 export { useAnimation } from './hooks-web/useAnimation'
 export { useEntityAnimation } from './hooks-web/useEntityAnimation'
 export type {

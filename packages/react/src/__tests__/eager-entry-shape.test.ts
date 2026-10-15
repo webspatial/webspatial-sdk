@@ -306,9 +306,8 @@ describe('Eager entry — bridge preload (spec "Spatial primitives mount real im
     // The very fact that EagerEntry was imported at the top of this file
     // (and ran its top-level `__internalSetSpatialImpl(SpatialImpl)`) means
     // the lazy-entry's `isSpatialReady()` MUST also return true.
-    const { isSpatialReady: lazyIsReady, getSpatialImpl } = await import(
-      '../runtime/bridge'
-    )
+    const { isSpatialReady: lazyIsReady, getSpatialImpl } =
+      await import('../runtime/bridge')
     expect(lazyIsReady()).toBe(true)
     expect(getSpatialImpl()).not.toBeNull()
   })
