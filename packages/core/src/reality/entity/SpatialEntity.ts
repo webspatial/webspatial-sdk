@@ -3,6 +3,7 @@ import {
   ConvertFromEntityToSceneCommand,
   ConvertFromSceneToEntityCommand,
   SetParentForEntityCommand,
+  CreateEntityAnimationJSBCommand,
 } from './../../JSBCommand'
 import {
   SpatialEntityEventType,
@@ -33,6 +34,12 @@ import {
   SpatialTapMsg,
   SpatialWebMsgType,
 } from '../../WebMsgCommand'
+import type {
+  CreateEntityAnimationResult,
+  EntityMotionConfig,
+} from '../../types/motion/entityMotion'
+import { EntityAnimationObject } from '../../motion/entity/EntityAnimationObject'
+import { normalizeEntityMotionConfig } from '../../motion/entity/normalizeEntityMotionConfig'
 
 export class SpatialEntity extends SpatialObject {
   position: Vec3 = { x: 0, y: 0, z: 0 }
@@ -116,6 +123,53 @@ export class SpatialEntity extends SpatialObject {
     this.rotation = properties.rotation ?? this.rotation
     this.scale = properties.scale ?? this.scale
     return new UpdateEntityPropertiesCommand(this, properties).execute()
+  }
+
+  /**
+   * Creates a dedicated Entity animation after synchronous Core validation.
+   */
+  createAnimation(config: EntityMotionConfig): Promise<EntityAnimationObject> {
+    const timeline = normalizeEntityMotionConfig(config)
+    return this.createEntityAnimation(config, timeline)
+  }
+
+  /**
+   * Sends the validated timeline and constructs its Core animation object.
+   */
+  private async createEntityAnimation(
+    config: EntityMotionConfig,
+    timeline: ReturnType<typeof normalizeEntityMotionConfig>,
+  ): Promise<EntityAnimationObject> {
+    const ret = await new CreateEntityAnimationJSBCommand({
+      id: this.id,
+      timeline,
+    }).execute()
+    if (!ret.success) {
+      const reason = ret.errorMessage ?? 'CreateEntityAnimation command failed'
+      config.onError?.({
+        code:
+          ret.errorCode === 'TARGET_NOT_FOUND' ||
+          ret.errorCode === 'UNSUPPORTED_TARGET' ||
+          ret.errorCode === 'INVALID_TIMELINE' ||
+          ret.errorCode === 'COMPILATION_FAILED'
+            ? ret.errorCode
+            : 'COMPILATION_FAILED',
+        reason,
+      })
+      throw new Error(reason)
+    }
+    const data = ret.data as Partial<CreateEntityAnimationResult> | undefined
+    if (!data?.id) {
+      throw new Error('CreateEntityAnimation did not return an id')
+    }
+    const animation = new EntityAnimationObject(data.id, { config, timeline })
+    animation.onValuesChange(values => {
+      // Keep ordinary partial transform commands aligned with Native-confirmed state.
+      this.position = values.position!
+      this.rotation = values.rotation!
+      this.scale = values.scale!
+    })
+    return animation
   }
 
   async addEvent(type: SpatialEntityEventType, callback: (data: any) => void) {

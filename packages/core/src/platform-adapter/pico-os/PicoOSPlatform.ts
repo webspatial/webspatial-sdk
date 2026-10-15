@@ -11,6 +11,7 @@ import { buildSpatialSceneQuery } from '../spatialSceneQuery'
 import { SpatialWebEvent } from '../../SpatialWebEvent'
 import type { SpatialSceneCreationOptionsInternal } from '../../types/internal'
 import type { AttachmentEntityOptions } from '../../types/types'
+import type { OrnamentProtocolOptions } from '../../Ornament'
 import {
   buildSpatialRequestQuery,
   createSpatialRequestId,
@@ -92,17 +93,25 @@ export class PicoOSPlatform implements PlatformAbility {
     return this.waitForRidProtocolAsync('createAttachment')
   }
 
+  createNativeOrnament(
+    options?: OrnamentProtocolOptions,
+  ): Promise<WebSpatialProtocolResult> {
+    return this.waitForRidProtocolAsync('createOrnament', options)
+  }
+
   /**
    * Async path for createNativeSpatialDiv / createNativeAttachment: open webspatial URL
    * with rid= correlation (Pico OS 6).
    */
   private waitForRidProtocolAsync(
     command: string,
+    params: Record<string, string | number | boolean | null | undefined> = {},
   ): Promise<WebSpatialProtocolResult> {
     return new Promise(resolve => {
       const createdId = createSpatialRequestId()
       let settled = false
       let timeoutId: ReturnType<typeof setTimeout> | undefined
+      let cleanupDocumentReadyListener: (() => void) | undefined
 
       // Native creation may respond synchronously, asynchronously, or never.
       // Funnel every path through one settle() helper so receiver cleanup is
@@ -113,12 +122,50 @@ export class PicoOSPlatform implements PlatformAbility {
         if (timeoutId !== undefined) {
           clearTimeout(timeoutId)
         }
+        cleanupDocumentReadyListener?.()
+        cleanupDocumentReadyListener = undefined
         SpatialWebEvent.removeEventReceiver(createdId)
         resolve(result)
       }
 
       try {
         let windowProxy: WindowProxy | null = null
+        const settleWhenDocumentComplete = (spatialId: string) => {
+          const successResult = CommandResultSuccess({
+            windowProxy: windowProxy,
+            id: spatialId,
+          })
+          const childDocument = windowProxy?.document
+
+          if (!childDocument) {
+            settle(
+              CommandResultFailure(
+                'E_SPATIAL_DOCUMENT_UNAVAILABLE',
+                `${command} document is unavailable`,
+              ),
+            )
+            return
+          }
+
+          if (childDocument.readyState === 'complete') {
+            settle(successResult)
+            return
+          }
+
+          const onReadyStateChange = () => {
+            if (childDocument.readyState !== 'complete') return
+            settle(successResult)
+          }
+
+          cleanupDocumentReadyListener = () => {
+            childDocument.removeEventListener(
+              'readystatechange',
+              onReadyStateChange,
+            )
+          }
+          childDocument.addEventListener('readystatechange', onReadyStateChange)
+        }
+
         timeoutId = setTimeout(() => {
           settle(
             CommandResultFailure(
@@ -131,17 +178,15 @@ export class PicoOSPlatform implements PlatformAbility {
         SpatialWebEvent.addEventReceiver(
           createdId,
           (result: { spatialId: string }) => {
-            settle(
-              CommandResultSuccess({
-                windowProxy: windowProxy,
-                id: result.spatialId,
-              }),
-            )
+            settleWhenDocumentComplete(result.spatialId)
           },
         )
         windowProxy = this.openWindow(
           command,
-          buildSpatialRequestQuery(createdId),
+          buildSpatialRequestQuery(createdId, undefined, {
+            command,
+            ...params,
+          }),
         ).windowProxy
       } catch (error: unknown) {
         const { code, message } = this.parseJSBError(error)

@@ -167,10 +167,6 @@ describe('Support SpatialDiv/HTML Material', function (this: Mocha.Suite) {
       await applyAndAssertClassMaterial('thick', 'thickMat', 'thick')
     })
 
-    it('change material to thick when add class .thickMat', async () => {
-      await applyAndAssertClassMaterial('thick', 'thickMat', 'thick')
-    })
-
     it('change material to none when add class .noMat', async () => {
       await applyAndAssertClassMaterial('none', 'noMat', 'none')
     })

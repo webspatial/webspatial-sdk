@@ -4,14 +4,18 @@ import {
   ModelLoadingMode,
   ModelSource,
   SpatializedStatic3DElementProperties,
+  StageMode,
 } from './types/types'
 import {
   ModelLoadSuccess,
   ModelLoadFailure,
+  ModelBlobRequestMsg,
   SpatialWebMsgType,
   AnimationStateChangeDetail,
   AnimationStateChangeMsg,
+  EntityTransformChangeMsg,
 } from './WebMsgCommand'
+import { transferBlob } from './blob/blobTransfer'
 
 /**
  * Represents a static 3D model element in the spatial environment.
@@ -19,6 +23,11 @@ import {
  * and provides events for load success and failure.
  */
 export class SpatializedStatic3DElement extends SpatializedElement {
+  /**
+   * Identifies the motion target kind supported by this element.
+   */
+  override readonly kind = 'static3d' as const
+
   /**
    * Creates a new spatialized static 3D element with the specified ID and URL.
    * Registers the element to receive spatial events.
@@ -70,6 +79,24 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   }
 
   /**
+   * Center of the model's axis-aligned bounding box in local meters.
+   */
+  private _boundingBoxCenter: DOMPointReadOnly = new DOMPointReadOnly()
+
+  get boundingBoxCenter(): DOMPointReadOnly {
+    return this._boundingBoxCenter
+  }
+
+  /**
+   * Full extents of the model's axis-aligned bounding box in local meters.
+   */
+  private _boundingBoxExtents: DOMPointReadOnly = new DOMPointReadOnly()
+
+  get boundingBoxExtents(): DOMPointReadOnly {
+    return this._boundingBoxExtents
+  }
+
+  /**
    * Creates a new promise for tracking the ready state of the model.
    * @returns Promise that resolves when the model is loaded (true) or fails to load (false)
    */
@@ -112,6 +139,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       }
     }
     if (needsReadyReset) {
+      this._boundingBoxCenter = new DOMPointReadOnly()
+      this._boundingBoxExtents = new DOMPointReadOnly()
       this.ready = this.createReadyPromise()
     }
     if (properties.autoplay !== undefined) {
@@ -137,6 +166,9 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     }
     if (properties.loading !== undefined) {
       this._loading = properties.loading
+    }
+    if (properties.stagemode !== undefined) {
+      this._stagemode = properties.stagemode
     }
     return new UpdateSpatializedStatic3DElementProperties(
       this,
@@ -283,6 +315,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     if (data.type === SpatialWebMsgType.modelloaded) {
       // On old runtimes (<⍺2.1) detail is not returned so fallback to modelURL
       this._currentSrc = data.detail?.src ?? this.modelURL ?? ''
+      this._boundingBoxCenter = toDOMPoint(data.detail?.boundingBoxCenter)
+      this._boundingBoxExtents = toDOMPoint(data.detail?.boundingBoxExtents)
       // Handle successful model loading
       this._onLoadCallback?.()
       this._readyResolve?.(true)
@@ -297,6 +331,10 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       this._currentTime = data.detail.currentTime ?? 0
       this._anchorTimestamp = data.detail.timestamp ?? Date.now()
       this._onAnimationStateChangeCallback?.(data.detail)
+    } else if (data.type === SpatialWebMsgType.entitytransformchange) {
+      this._entityTransform = new DOMMatrixReadOnly(data.detail.transform)
+    } else if (data.type === SpatialWebMsgType.modelblobrequest) {
+      transferBlob(this, data.detail.requestId, data.detail.src)
     } else {
       // Handle other spatial events using the base class implementation
       super.onReceiveEvent(data)
@@ -363,9 +401,35 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     this._onLoadFailureCallback = callback
   }
 
-  updateModelTransform(transform: DOMMatrixReadOnly) {
-    const modelTransform = Array.from(transform.toFloat64Array())
-    this.updateProperties({ modelTransform })
+  /**
+   * Built-in interaction mode. In `'orbit'` the native layer drives the
+   * transform and `entityTransform` is read-only.
+   */
+  private _stagemode: StageMode = 'none'
+
+  get stagemode(): StageMode {
+    return this._stagemode
+  }
+
+  /**
+   * Latest transform of the model, including native-driven manipulations such
+   * as orbit interaction.
+   */
+  private _entityTransform: DOMMatrixReadOnly = new DOMMatrixReadOnly()
+
+  get entityTransform(): DOMMatrixReadOnly {
+    return this._entityTransform
+  }
+
+  set entityTransform(transform: DOMMatrixReadOnly) {
+    // In orbit mode the native layer owns the transform, so ignore writes.
+    if (this._stagemode === 'orbit') return
+    this._entityTransform = transform
+    // The public API is `entityTransform`, but the JSB property stays
+    // `modelTransform` so the native side remains backward compatible.
+    this.updateProperties({
+      modelTransform: Array.from(transform.toFloat64Array()),
+    })
   }
 }
 
@@ -374,8 +438,14 @@ function clamp(num: number, min: number, max: number) {
   return num <= min ? min : num >= max ? max : num
 }
 
+function toDOMPoint(point?: { x: number; y: number; z: number }) {
+  return new DOMPointReadOnly(point?.x, point?.y, point?.z)
+}
+
 type Static3DReceiveEventData =
   | ModelLoadSuccess
   | ModelLoadFailure
+  | ModelBlobRequestMsg
   | ReceiveEventData
   | AnimationStateChangeMsg
+  | EntityTransformChangeMsg

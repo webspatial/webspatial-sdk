@@ -14,17 +14,20 @@ extension View {
 
 class Spatialized2DViewGestureData {
     var dragStarted = false
-    var dragStart: CGFloat = 0.0
+    var dragStart: CGSize = .zero
     var dragVelocity: CGFloat = 0.0
 }
 
-struct Spatialized2DElementView: View {
-    @Environment(SpatializedElement.self) var spatializedElement: SpatializedElement
-    @Environment(SpatialScene.self) var spatialScene: SpatialScene
+func spatialScrollDelta(from previousTranslation: CGSize, to currentTranslation: CGSize) -> Vec2 {
+    Vec2(
+        x: previousTranslation.width - currentTranslation.width,
+        y: previousTranslation.height - currentTranslation.height
+    )
+}
 
-    private var spatialized2DElement: Spatialized2DElement {
-        return spatializedElement as! Spatialized2DElement
-    }
+struct Spatialized2DElementView: View {
+    let spatialized2DElement: Spatialized2DElement
+    @Environment(SpatialScene.self) var spatialScene: SpatialScene
 
     @State private var gestureData = Spatialized2DViewGestureData()
 
@@ -40,30 +43,27 @@ struct Spatialized2DElementView: View {
                 )
                 .simultaneousGesture(spatialized2DElement.scrollPageEnabled ? dragWebGesture : nil)
 
-            let childrenOfSpatialized2DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.Spatialized2DElement).values)
+            let childrenOfSpatialized2DElement = spatialized2DElement.getChildren(ofType: Spatialized2DElement.self)
 
             ForEach(childrenOfSpatialized2DElement, id: \.id) { child in
-                SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
-                    Spatialized2DElementView()
+                SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset, spatializedElement: child) {
+                    Spatialized2DElementView(spatialized2DElement: child)
                 }
-                .environment(child)
             }
 
-            let childrenOfSpatializedStatic3DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.SpatializedStatic3DElement).values)
+            let childrenOfSpatializedStatic3DElement = spatialized2DElement.getChildren(ofType: SpatializedStatic3DElement.self)
             ForEach(childrenOfSpatializedStatic3DElement, id: \.id) { child in
-                SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
-                    SpatializedStatic3DView()
+                SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset, spatializedElement: child) {
+                    SpatializedStatic3DView(spatializedStatic3DElement: child)
                 }
-                .environment(child)
             }
 
-            let childrenOfSpatializedDynamic3DElement: [SpatializedElement] = Array(spatialized2DElement.getChildrenOfType(.SpatializedDynamic3DElement).values)
+            let childrenOfSpatializedDynamic3DElement = spatialized2DElement.getChildren(ofType: SpatializedDynamic3DElement.self)
 
             ForEach(childrenOfSpatializedDynamic3DElement, id: \.id) { child in
-                SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset) {
-                    SpatializedDynamic3DView()
+                SpatializedElementView(parentScrollOffset: spatialized2DElement.scrollOffset, spatializedElement: child) {
+                    SpatializedDynamic3DView(spatializedDynamic3DElement: child)
                 }
-                .environment(child)
             }
         }
     }
@@ -78,13 +78,16 @@ struct Spatialized2DElementView: View {
                 if spatialized2DElement.scrollPageEnabled {
                     if !gestureData.dragStarted {
                         gestureData.dragStarted = true
-                        gestureData.dragStart = (gesture.translation.height)
+                        gestureData.dragStart = gesture.translation
                     }
 
                     // TODO: this should have velocity
-                    let delta = gestureData.dragStart - gesture.translation.height
-                    gestureData.dragStart = gesture.translation.height
-                    spatialScene.updateDeltaScrollOffset(Vec2(x: 0, y: delta))
+                    let delta = spatialScrollDelta(
+                        from: gestureData.dragStart,
+                        to: gesture.translation
+                    )
+                    gestureData.dragStart = gesture.translation
+                    spatialScene.updateDeltaScrollOffset(delta)
                 }
             }
             .onEnded { _ in
@@ -94,7 +97,7 @@ struct Spatialized2DElementView: View {
                 }
                 if spatialized2DElement.scrollPageEnabled {
                     gestureData.dragStarted = false
-                    gestureData.dragStart = 0
+                    gestureData.dragStart = .zero
                     spatialScene.stopScrolling()
                 }
             }

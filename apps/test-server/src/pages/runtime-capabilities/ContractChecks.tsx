@@ -1,9 +1,9 @@
+import { supports } from '@webspatial/core-sdk'
 import {
   ELEMENT_DOM_DEPTH_KEYS,
   SUB_TOKENS_BY_NAME,
-  supports,
   WINDOW_DOM_DEPTH_KEYS,
-} from '@webspatial/core-sdk'
+} from '@webspatial/core-sdk/runtime/keys'
 import {
   Model,
   type ModelRef,

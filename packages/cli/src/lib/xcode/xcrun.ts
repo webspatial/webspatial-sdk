@@ -11,6 +11,7 @@ import { clearDir } from '../resource/file'
 import { CliLog } from '../utils/utils'
 import CliHistory from '../utils/history'
 import { BasicAppInfo, SimulatorInfo } from '../types'
+import { launchSimulatorApplication } from './simulatorApplication'
 
 export default class Xcrun {
   public static async validate(
@@ -169,15 +170,11 @@ export default class Xcrun {
 
   private static launchSimulator(device: any) {
     // boot visionOS simulator if not booted
-    if (device.state === 'Shutdown') {
-      let cmd = new XcrunCMD().simctl()
-      cmd.boot(device.deviceId)
-      execSync(cmd.line)
-      // wait 10s for simulator to boot
-      execSync('sleep 10')
-    }
+    let cmd = new XcrunCMD().simctl()
+    cmd.bootStatus(device.deviceId)
+    execSync(cmd.line)
     // open simulator
-    execSync('open -a Simulator --args -CurrentDeviceUDID ' + device.deviceId)
+    launchSimulatorApplication(device.deviceId)
   }
 
   private static buildTestApp(deviceId: string) {
@@ -511,8 +508,8 @@ class XcrunCMD {
     return this
   }
 
-  public boot(device: string) {
-    this.line += ` boot "${device}"`
+  public bootStatus(device: string) {
+    this.line += ` bootstatus "${device}" -b`
     return this
   }
 

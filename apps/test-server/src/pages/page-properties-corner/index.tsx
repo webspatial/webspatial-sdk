@@ -487,7 +487,7 @@ export default function PagePropertiesCornerPage() {
               }}
             >
               <UnlitMaterial id="cornerAttachmentAnchor" color="#14b8a6" />
-              <AttachmentAsset name="corner-radius-attachment">
+              <AttachmentAsset id="corner-radius-attachment">
                 <ControlPanel
                   title="Attachment"
                   description="Adjust logical corners directly on this Reality attachment card."
@@ -544,8 +544,9 @@ export default function PagePropertiesCornerPage() {
                   />
                   <AttachmentEntity
                     attachment="corner-radius-attachment"
-                    position={[0, 0.16, 0]}
-                    size={{ width: 460, height: 560 }}
+                    position={{ x: 0, y: 0.16, z: 0 }}
+                    width={460}
+                    height={560}
                   />
                 </Entity>
               </SceneGraph>

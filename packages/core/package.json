@@ -1,6 +1,6 @@
 {
   "name": "@webspatial/core-sdk",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "description": "this is the core js API for webspatial",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -9,18 +9,34 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    },
+    "./runtime/keys": {
+      "types": "./dist/runtime/keys.d.ts",
+      "import": "./dist/runtime/keys.js"
+    },
+    "./install-polyfills": {
+      "types": "./dist/install-polyfills.d.ts",
+      "import": "./dist/install-polyfills.js"
+    },
+    "./package.json": "./package.json"
   },
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/install-polyfills.js",
+    "./src/install-polyfills.ts"
+  ],
   "scripts": {
     "test": "vitest run",
-    "lint": "tsc -p ./tsconfig.json",
+    "typecheck": "tsc -p ./tsconfig.json",
+    "lint": "pnpm run typecheck && pnpm --workspace-root exec eslint packages/core/src",
     "coverage": "vitest run --coverage",
     "test:w": "vitest",
     "build": "tsup",
     "start": "tsup --watch",
-    "buildIife": "esbuild dist/index.js --outdir=dist/iife --minify --bundle --format=iife --global-name=webspatialCore",
     "format": "npx prettier --write 'src/**/*.ts' 'src/**/*.tsx' || true",
     "genDocs": "typedoc --plugin typedoc-plugin-markdown src/core/index.ts"
   },
@@ -36,10 +52,11 @@
   },
   "homepage": "https://github.com/webspatial/webspatial-sdk#readme",
   "devDependencies": {
+    "happy-dom": "^20.13.2",
     "jsdom": "^26.1.0",
-    "tsup": "^8.4.0",
-    "typedoc": "^0.26.5",
-    "typedoc-plugin-markdown": "^4.2.2",
-    "typescript": "^5.6.3"
+    "tsup": "^8.5.1",
+    "typedoc": "^0.26.11",
+    "typedoc-plugin-markdown": "^4.13.0",
+    "typescript": "^5.9.3"
   }
 }

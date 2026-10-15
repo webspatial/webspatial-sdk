@@ -1,5 +1,6 @@
 import React, { ElementType } from 'react'
 import type { PortalInstanceObject } from './context/PortalInstanceContext'
+import type { SpatializedMotionBinding } from './motion/motionBindingTypes'
 import { SpatialID } from './SpatialID'
 import {
   ModelLoadingMode,
@@ -13,6 +14,7 @@ import {
   SpatialMagnifyEvent as CoreSpatialMagnifyEvent,
   SpatialMagnifyEndEvent as CoreSpatialMagnifyEndEvent,
   SpatializedStatic3DElement,
+  type StageMode,
   type Vec3,
 } from '@webspatial/core-sdk'
 
@@ -32,6 +34,9 @@ export type SpatialContentReadyCallback = (
 export type SpatialEventOptions = {
   /**
    * Direction vector for rotate gesture constraint. `[0, 0, 0]` or omit = unconstrained.
+   * On visionOS SpatialDiv/Model interpret this in the target's pre-transform
+   * parent axes. Entity gestures interpret it in the Reality view/scene axes.
+   * The returned quaternion is always parent-local.
    */
   constrainedToAxis?: Vec3 | readonly [number, number, number]
 }
@@ -48,8 +53,7 @@ type SpatialEventProps<T extends SpatializedElementRef> = {
   onSpatialMagnifyEnd?: (event: SpatialMagnifyEndEvent<T>) => void
 }
 
-export interface StandardSpatializedContainerProps
-  extends React.ComponentPropsWithoutRef<'div'> {
+export interface StandardSpatializedContainerProps extends React.ComponentPropsWithoutRef<'div'> {
   component: ElementType
   inStandardSpatializedContainer?: boolean
   [SpatialID]: string
@@ -65,6 +69,7 @@ export type PortalSpatializedContainerProps<T extends SpatializedElementRef> =
         computedStyle: CSSStyleDeclaration,
       ) => Record<string, any>
       spatialEventOptions?: SpatialEventOptions
+      'xr-animation'?: SpatializedMotionBinding
 
       [SpatialID]: string
     }
@@ -107,10 +112,13 @@ export type SpatializedStatic3DContainerProps =
       autoPlay?: boolean
       loop?: boolean
       loading?: ModelLoadingMode
+      stagemode?: StageMode
       children?: React.ReactNode
       onLoad?: (event: ModelLoadEvent) => void
       onError?: (event: ModelLoadEvent) => void
       spatialEventOptions?: SpatialEventOptions
+      /** Native root-transform motion binding from `useAnimation()` via `xr-animation`. */
+      'xr-animation'?: SpatializedMotionBinding
     }
 
 export type SpatializedStatic3DContentProps = {
@@ -120,9 +128,11 @@ export type SpatializedStatic3DContentProps = {
   autoPlay?: boolean
   loop?: boolean
   loading?: ModelLoadingMode
+  stagemode?: StageMode
   children?: React.ReactNode
   onLoad?: (event: ModelLoadEvent) => void
   onError?: (event: ModelLoadEvent) => void
+  'xr-animation'?: SpatializedMotionBinding
 }
 
 export const SpatialCustomStyleVars = {
@@ -143,6 +153,8 @@ export type SpatializedDivElementRef = SpatializedElementRef<HTMLDivElement>
 
 export type SpatializedStatic3DElementRef = SpatializedDivElementRef & {
   currentSrc: string
+  readonly boundingBoxCenter: DOMPointReadOnly
+  readonly boundingBoxExtents: DOMPointReadOnly
   ready: Promise<ModelLoadEvent>
   entityTransform: DOMMatrixReadOnly
   play(): Promise<void>
@@ -161,9 +173,11 @@ export type SpatialTapEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialTapEvent &
   CurrentTarget<T> & {
+    /** Hit point in the target element's pre-transform local space, in CSS pixels (top-left origin; front face z ≈ 0). */
     readonly offsetX: number
     readonly offsetY: number
     readonly offsetZ: number
+    /** Same hit point in SpatialScene / window space, in CSS pixels. */
     readonly clientX: number
     readonly clientY: number
     readonly clientZ: number
@@ -173,9 +187,11 @@ export type SpatialDragStartEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialDragStartEvent &
   CurrentTarget<T> & {
+    /** Drag-start point in the target element's pre-transform local space, in CSS pixels (top-left origin; front face z ≈ 0). */
     readonly offsetX: number
     readonly offsetY: number
     readonly offsetZ: number
+    /** Drag-start point in SpatialScene / window space, in CSS pixels. */
     readonly clientX: number
     readonly clientY: number
     readonly clientZ: number
@@ -185,6 +201,7 @@ export type SpatialDragEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialDragEvent &
   CurrentTarget<T> & {
+    /** Cumulative drag delta from gesture start, in the parent SpatialDiv (or SpatialScene) local space, in CSS pixels. */
     readonly translationX: number
     readonly translationY: number
     readonly translationZ: number
@@ -198,6 +215,7 @@ export type SpatialRotateEvent<
   T extends SpatializedElementRef = SpatializedElementRef,
 > = CoreSpatialRotateEvent &
   CurrentTarget<T> & {
+    /** Cumulative parent-local rotation; apply as delta * gestureStartOrientation. */
     readonly quaternion: import('@webspatial/core-sdk').Quaternion
   }
 
@@ -234,6 +252,8 @@ export type ModelSpatialMagnifyEvent =
 export type ModelSpatialMagnifyEndEvent =
   SpatialMagnifyEndEvent<SpatializedStatic3DElementRef>
 
-export type ModelLoadEvent = CustomEvent & {
-  target: SpatializedStatic3DElementRef
-}
+export type ModelLoadEvent<T extends EventTarget = EventTarget> =
+  CustomEvent & {
+    target: T
+    currentTarget: SpatializedStatic3DElementRef
+  }

@@ -1,4 +1,4 @@
-import React, { CSSProperties, useCallback } from 'react'
+import { CSSProperties, useCallback } from 'react'
 import { expect } from 'chai'
 import { render, unmount } from './render'
 import { AsyncPromise } from '../../utils/AsyncPromise'

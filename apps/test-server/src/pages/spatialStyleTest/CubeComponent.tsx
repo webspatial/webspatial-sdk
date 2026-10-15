@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { CSSProperties } from 'styled-components'
+import { useState, type CSSProperties } from 'react'
 import './CubeComponent.scss'
 
 export interface CubeProps {

@@ -40,13 +40,31 @@ struct WebSpatialApp: App {
         )
     }
 
+    func getSceneOrCreate(_ sceneID: String?, _ style: SpatialScene.WindowStyle) -> SpatialScene {
+        if let sceneID, let spatialScene = SpatialApp.Instance.getScene(sceneID) {
+            return spatialScene
+        }
+
+        logger.debug("Missing scene for WindowGroup data. Recreating scene.")
+        return SpatialApp.Instance.createScene(
+            startURL,
+            style,
+            .visible,
+            app.getSceneOptions()
+        )
+    }
+
+    func getSceneOrCreate(_ sceneID: String, _ style: SpatialScene.WindowStyle) -> SpatialScene {
+        return getSceneOrCreate(Optional(sceneID), style)
+    }
+
     var body: some Scene {
         WindowGroup(
             id: SpatialScene.WindowStyle.window.rawValue,
             for: String.self
         ) { $windowData in
-            let spatialScene = SpatialApp.Instance.getScene(windowData)
-            SpatialSceneView(spatialScene: spatialScene!)
+            let spatialScene = getSceneOrCreate(windowData, .window)
+            SpatialSceneView(spatialScene: spatialScene)
         }
         defaultValue: {
             let scene = SpatialApp.Instance.createScene(
@@ -66,20 +84,20 @@ struct WebSpatialApp: App {
         )
 
         WindowGroup(id: SpatialScene.WindowStyle.volume.rawValue, for: String.self) { $windowData in
-            let spatialScene = SpatialApp.Instance.getScene(windowData)
-            SpatialSceneView(spatialScene: spatialScene!)
+            let spatialScene = getSceneOrCreate(windowData, .volume)
+            SpatialSceneView(spatialScene: spatialScene)
                 .frame(
                     minWidth: getCGFloat(
-                        app.getSceneOptions(windowData)?.resizeRange?.minWidth
+                        spatialScene.sceneConfig?.resizeRange?.minWidth
                     ),
                     maxWidth: getCGFloat(
-                        app.getSceneOptions(windowData)?.resizeRange?.maxWidth
+                        spatialScene.sceneConfig?.resizeRange?.maxWidth
                     ),
                     minHeight: getCGFloat(
-                        app.getSceneOptions(windowData)?.resizeRange?.minHeight
+                        spatialScene.sceneConfig?.resizeRange?.minHeight
                     ),
                     maxHeight: getCGFloat(
-                        app.getSceneOptions(windowData)?.resizeRange?.maxHeight
+                        spatialScene.sceneConfig?.resizeRange?.maxHeight
                     )
                 )
         }

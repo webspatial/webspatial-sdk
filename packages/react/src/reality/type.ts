@@ -1,4 +1,5 @@
 import type { Quaternion, Vec3 } from '@webspatial/core-sdk'
+import type { EntityMotionAnimation } from './hooks/EntityMotionBinding'
 import { EntityRefShape } from './hooks'
 import { SpatialTapEvent as CoreSpatialTapEvent } from '@webspatial/core-sdk'
 import { SpatialDragStartEvent as CoreSpatialDragStartEvent } from '@webspatial/core-sdk'
@@ -16,7 +17,10 @@ export type EntityProps = {
   position?: Vec3
   rotation?: Vec3
   scale?: Vec3
+  /** When true, the entity can be hit by spatial gestures (`spatialtap` and related). Default false. */
   enableInput?: boolean
+  /** Animation prop returned by useEntityAnimation(). */
+  animation?: EntityMotionAnimation
 }
 
 type allTarget<T extends EntityRefShape> = {
@@ -27,9 +31,11 @@ type allTarget<T extends EntityRefShape> = {
 export type SpatialTapEntityEvent<T extends EntityRefShape = EntityRefShape> =
   CoreSpatialTapEvent &
     allTarget<T> & {
+      /** Hit point in `event.target` entity local space, in meters. */
       readonly offsetX: number
       readonly offsetY: number
       readonly offsetZ: number
+      /** Hit point in window global space, in CSS pixels. */
       readonly clientX: number
       readonly clientY: number
       readonly clientZ: number
@@ -40,9 +46,11 @@ export type SpatialDragStartEntityEvent<
   T extends EntityRefShape = EntityRefShape,
 > = CoreSpatialDragStartEvent &
   allTarget<T> & {
+    /** Drag-start point in `event.target` entity local space, in meters. */
     readonly offsetX: number
     readonly offsetY: number
     readonly offsetZ: number
+    /** Drag-start point in window global space, in CSS pixels. */
     readonly clientX: number
     readonly clientY: number
     readonly clientZ: number
@@ -51,6 +59,7 @@ export type SpatialDragStartEntityEvent<
 export type SpatialDragEntityEvent<T extends EntityRefShape = EntityRefShape> =
   CoreSpatialDragEvent &
     allTarget<T> & {
+      /** Cumulative drag delta from gesture start, in the parent entity (or Reality scene) local space, in meters. */
       readonly translationX: number
       readonly translationY: number
       readonly translationZ: number
@@ -64,6 +73,7 @@ export type SpatialRotateEntityEvent<
   T extends EntityRefShape = EntityRefShape,
 > = CoreSpatialRotateEvent &
   allTarget<T> & {
+    /** Cumulative parent-local rotation; apply as delta * gestureStartOrientation. */
     readonly quaternion: Quaternion
   }
 export type SpatialRotateEndEntityEvent<

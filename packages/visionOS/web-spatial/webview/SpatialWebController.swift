@@ -50,6 +50,14 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         jsbManager.handlerMessage(command)
     }
 
+    /// Lets tests observe replies while using the production JSB dispatch path.
+    func mockJSB(
+        _ command: String,
+        _ replyHandler: @escaping (Any?, String?) -> Void
+    ) {
+        jsbManager.handlerMessage(command, replyHandler)
+    }
+
     func registerWebviewStateChangeInvoke(invoke: @escaping (_ type: SpatialWebViewState) -> Void) {
         webviewStateChangeInvoke = invoke
     }
@@ -279,10 +287,13 @@ class SpatialWebController: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     }
 
     func callJS(_ js: String) {
-        if webview != nil, isPageLoaded {
-            webview!.evaluateJavaScript(js)
-        } else {
-            enqueueJS(js)
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            if let webview = self.webview, self.isPageLoaded {
+                webview.evaluateJavaScript(js)
+            } else {
+                self.enqueueJS(js)
+            }
         }
     }
 }
@@ -319,7 +330,9 @@ extension WKWebView {
 
     /// Return true if WKWebview supports handling this protocol, but WKWebview supports HTTP by default, so return false to support using custom HTTP Handler
     @objc private dynamic static func wrapHandles(urlScheme: String) -> Bool {
-        if urlScheme == "file" { return false }
+        if urlScheme == "file" {
+            return false
+        }
         return wrapHandles(urlScheme: urlScheme)
     }
 }

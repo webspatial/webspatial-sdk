@@ -1,7 +1,11 @@
-import { ForwardedRef, useEffect, useRef } from 'react'
+import { ForwardedRef, useEffect, useRef, useState } from 'react'
 import { SpatialEntity } from '@webspatial/core-sdk'
 import { useRealityContext, useParentContext } from '../context'
 import { EntityEventHandler, EntityProps } from '../type'
+import type {
+  EntityMotionAnimation,
+  EntityMotionBindingInternal,
+} from './EntityMotionBinding'
 import {
   EntityRefShape,
   EntityRef,
@@ -25,6 +29,7 @@ export const useEntity = ({
   rotation,
   scale,
   enableInput,
+  animation,
   onSpatialTap,
   onSpatialDragStart,
   onSpatialDrag,
@@ -41,6 +46,14 @@ export const useEntity = ({
   const instanceRef = useRef<EntityRef>(new EntityRef(null, ctx))
 
   const forceUpdate = useForceUpdate()
+  const [bindingError, setBindingError] = useState<Error | null>(null)
+
+  // Track the current animation prop for bind/unbind
+  const prevAnimationRef = useRef<EntityMotionAnimation | undefined>(undefined)
+  // Reject delayed unbind completions after a newer binding transition.
+  const bindingTransitionRef = useRef(0)
+  // Force one declared-transform submission after the final animation unbind.
+  const transformSyncRevisionRef = useRef(0)
 
   useEffect(() => {
     if (!ctx) return
@@ -61,12 +74,17 @@ export const useEntity = ({
           ent.destroy()
           return
         }
-        if (parent) {
-          const result = await parent.addEntity(ent)
-          if (!result.success) throw new Error('parent.addEntity failed')
-        } else {
-          const result = await ctx.reality.addEntity(ent)
-          if (!result.success) throw new Error('ctx.reality.addEntity failed')
+        const result = parent
+          ? await parent.addEntity(ent)
+          : await ctx.reality.addEntity(ent)
+        if (controller.signal.aborted) {
+          ent.destroy()
+          return
+        }
+        if (!result.success) {
+          throw new Error(
+            parent ? 'parent.addEntity failed' : 'ctx.reality.addEntity failed',
+          )
         }
 
         instanceRef.current?.updateEntity(ent)
@@ -80,12 +98,75 @@ export const useEntity = ({
 
     return () => {
       controller.abort()
+      bindingTransitionRef.current += 1
+      // Unbind animation on cleanup
+      if (prevAnimationRef.current) {
+        void (
+          prevAnimationRef.current as unknown as EntityMotionBindingInternal
+        ).__unbind()
+        prevAnimationRef.current = undefined
+      }
       instanceRef.current?.destroy()
     }
   }, [ctx, parent, recreateKey])
 
+  const entity = instanceRef.current.entity
+
+  // Handle animation prop changes after initial mount
+  useEffect(() => {
+    if (!entity) return
+
+    const prevAnimation = prevAnimationRef.current
+
+    if (prevAnimation === animation) return
+    const transition = ++bindingTransitionRef.current
+    let unbindCompletion: Promise<void> | undefined
+
+    // Unbind old animation
+    if (prevAnimation) {
+      unbindCompletion = (
+        prevAnimation as unknown as EntityMotionBindingInternal
+      ).__unbind()
+      prevAnimationRef.current = undefined
+    }
+
+    // Bind new animation
+    if (animation) {
+      try {
+        ;(animation as unknown as EntityMotionBindingInternal).__bind(entity)
+        prevAnimationRef.current = animation
+      } catch (error) {
+        setBindingError(
+          error instanceof Error ? error : new Error(String(error)),
+        )
+      }
+    }
+
+    if (!animation && unbindCompletion) {
+      void unbindCompletion.then(() => {
+        if (
+          transition !== bindingTransitionRef.current ||
+          prevAnimationRef.current ||
+          instanceRef.current.entity !== entity
+        ) {
+          return
+        }
+        transformSyncRevisionRef.current += 1
+        forceUpdate()
+      })
+    }
+  }, [animation, entity])
+
   useEntityId({ id, entity: instanceRef.current.entity })
-  useEntityTransform(instanceRef.current.entity, { position, rotation, scale })
+  useEntityTransform(
+    instanceRef.current.entity,
+    {
+      position,
+      rotation,
+      scale,
+    },
+    transformSyncRevisionRef.current,
+  )
   useEntityRef(ref, instanceRef.current)
 
   useEntityEvent({
@@ -107,6 +188,8 @@ export const useEntity = ({
       ent.enableInput = !!enableInput
     }
   }, [instanceRef.current.entity, enableInput])
+
+  if (bindingError) throw bindingError
 
   return instanceRef.current.entity
 }

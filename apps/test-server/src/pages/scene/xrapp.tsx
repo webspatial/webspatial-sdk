@@ -140,45 +140,7 @@ function App() {
         window.open fixed size
       </button>
 
-      <h1 className="text-2xl text-black">a tag</h1>
-      <a className={btnCls} href={`/pages/scene/hook.html`}>
-        open in place
-      </a>
-      <a className={btnCls} href={`/pages/scene/hook.html`} target="_blank">
-        open _blank
-      </a>
-      <a
-        className={btnCls}
-        href={`/pages/scene/hook.html`}
-        target="_blank"
-        onClick={e => {
-          console.log('click on', e)
-        }}
-      >
-        open _blank with onClick
-      </a>
       <h1 className="text-2xl text-black">openscene</h1>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open no name')
-          winARef.current = window.open(
-            '/pages/scene/loading.html',
-            // 'http://localhost:5173/src/scene/xrapp.html',
-          )
-        }}
-      >
-        open loading
-      </button>
-      <button
-        className={btnCls}
-        onClick={async () => {
-          startlog('open no name')
-          winARef.current = window.open('/pages/scene/hook.html')
-        }}
-      >
-        open hook
-      </button>
 
       <button
         className={btnCls}

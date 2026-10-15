@@ -32,6 +32,7 @@ import {
   Texture,
   ModelAsset,
 } from '@webspatial/react-sdk';
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental';
 ```
 
 ---
@@ -97,7 +98,7 @@ import {
 </Entity>
 ```
 
-- **Props:** `id?`, `name?`, `position?`, `rotation?`, `scale?`, spatial event handlers (see §12).
+- **Props:** `id?`, `name?`, `position?`, `rotation?`, `scale?`, `enableInput?`, spatial event handlers (see §12).
 - **Children:** Any entity (primitives, `ModelEntity`, nested `Entity`). Transforms are relative to the parent.
 
 ---
@@ -168,7 +169,7 @@ For a **standalone** `<Model>` (single file, no `<Reality>` / scene graph), see 
 ```
 
 - **ModelAsset:** `id`, `src`, `onLoad?`, `onError?`. Relative `src` are resolved to absolute URLs. Formats (e.g. USDZ) follow platform support; see [Apple Quick Look](https://developer.apple.com/augmented-reality/quick-look/) and **`docs/Model.md`**.
-- **ModelEntity:** `model` (asset id), optional `materials?` (material override), `position?`, `rotation?`, `scale?`, and entity event handlers. Changing **`model`** after mount recreates that instance with the new asset. Changing **`materials`** reapplies overrides on the loaded model.
+- **ModelEntity:** `model` (asset id), optional `materials?` (material override), `position?`, `rotation?`, `scale?`, and entity event handlers. Changing **`model`** after mount recreates that instance with the new asset. Changing **`materials`** reapplies overrides on the loaded model. Avoid driving material overrides from high-frequency state: overlapping async updates can still apply out of order, and clearing `materials` does not currently restore the model asset's authored material set on visionOS.
 
 ---
 
@@ -242,9 +243,41 @@ const [texReady, setTexReady] = useState(false);
 
 ## 12. Interaction
 
-- **Spatial events** (on entities and optionally on container): `onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`. Event detail includes 3D location / deltas where applicable.
+- **Hit testing:** Set `enableInput` on the entity that should receive gestures. Default is `false`. Without it, RealityKit does not attach `InputTargetComponent`, and `onSpatialTap` never fires.
+- **Spatial events** (on `<Reality>` and, when wired, on entities): `onSpatialTap`, `onSpatialDragStart`, `onSpatialDrag`, `onSpatialDragEnd`, `onSpatialRotate`, `onSpatialRotateEnd`, `onSpatialMagnify`, `onSpatialMagnifyEnd`. Events bubble. `event.target` is the hit entity; `event.currentTarget` is the listener owner.
 - **Refs:** Use `useEntityRef` or pass `ref` to entity components to get the underlying entity ref for programmatic transform or other APIs.
 - **Visibility:** Toggle by conditional render: `{ show && <BoxEntity … /> }`. Updating React state (e.g. a shared material’s `color`) re-renders and updates the scene for every entity using that material id.
+
+### Tap / drag-start coordinates
+
+These fields are **not** DOM `MouseEvent` coordinates. Primitive size and `position` are meters; the window is CSS pixels.
+
+| Field | Space | Unit | Origin |
+|---|---|---|---|
+| `offsetX` / `offsetY` / `offsetZ` | `event.target` entity local | meters | entity local origin (geometry center for primitives) |
+| `clientX` / `clientY` / `clientZ` | window global | CSS pixels | window origin |
+| `detail.location3D` | same as offset | meters | same as offset |
+| `detail.globalLocation3D` | same as client | CSS pixels | same as client |
+
+Entity local axes match §11: **+X** right, **+Y** up, **+Z** toward the viewer.
+
+`offset*` does **not** include the entity’s own `position` / `rotation` / `scale`, nor CSS `transform` or `--xr-back` on `<Reality>`. Tapping near a box’s local origin yields `offset ≈ (0, 0, 0)` even if the entity sits at `{ x: 0.2, y: 0, z: 0 }`. For a `BoxEntity` of `depth={0.1}`, a tap on the front-face center is about `{ x: 0, y: 0, z: 0.05 }`.
+
+`client*` is the same hit point in window space, so it **does** move when the entity or the Reality container moves. Use [`convertCoordinate`](./convertCoordinate.md) for any other pair of spaces.
+
+Drag start uses the same mapping: `offset*` ← `detail.startLocation3D`, `client*` ← `detail.globalLocation3D`.
+
+Continuous `spatialDrag` `translation3D` is **not** that hit point. It is the cumulative displacement of the hit from drag-start, expressed in the target's **direct parent** space (Reality scene if there is no parent), in meters, Y-up. Add it to the value you write into `position`:
+
+```ts
+position = dragStartPosition + translation3D
+```
+
+Do not scale by `0.001` or flip Y. The target's own `rotation` / `scale` are not folded in; a parent `rotation` / `scale` is, because `position` already lives in parent space.
+
+`spatialRotate.quaternion` is also cumulative from gesture start and expressed in the direct parent's axes (Reality scene when unparented). Compose `orientation = deltaQuaternion * gestureStartOrientation`. Capture the start orientation once per gesture; do not add cumulative Euler angles to the current rotation. Native converts SwiftUI axes to Reality axes. Child-mesh hits route rotate and rotate-end to the nearest Web-facing SpatialEntity. On visionOS, Entity `constrainedToAxis` is interpreted in the Reality view/scene axes because one recognizer targets the whole Reality view; it does not change the returned parent-local basis. SpatialDiv/Model attach their recognizer at the target view and therefore interpret the same option in the target's pre-transform parent axes.
+
+Standalone `<Model enable-xr>` and SpatialDiv use the Spatial HTML coordinate system (CSS pixels, element-local top-left), not this table. See `docs/Model.md` and `docs/visionos-transform-and-gesture-design.md`. Behavioral spec: `openspec/specs/spatial-gestures/spec.md`.
 
 Example: tap to change color — the same `UnlitMaterial` id is reused; all `BoxEntity` instances referencing it update together.
 
@@ -252,10 +285,12 @@ Example: tap to change color — the same `UnlitMaterial` id is reused; all `Box
 const [color, setColor] = useState('#ff0000');
 <UnlitMaterial id="dynamic" color={color} />
 <BoxEntity
+  enableInput
   materials={['dynamic']}
   onSpatialTap={(e) => {
     setColor('#00ff00');
-    console.log('3D position:', e.detail.location3D);
+    console.log('local m', e.offsetX, e.offsetY, e.offsetZ);
+    console.log('window px', e.clientX, e.clientY, e.clientZ);
   }}
 />
 ```
@@ -264,7 +299,64 @@ const [color, setColor] = useState('#ff0000');
 
 ## 13. Animation
 
-Drive transforms (or other state) from `requestAnimationFrame` and pass updated props. Entity transforms are applied each frame from React state.
+### 12.1 Native transform animation (`useEntityAnimation`)
+
+Animate entity transforms (position, rotation, scale) at native frame rate using the `useEntityAnimation` hook. Playback runs in RealityKit at 90 fps — no per-frame JS bridge calls.
+
+```text
+import { useEntityAnimation } from '@webspatial/react-sdk/experimental';
+
+const [animation, api] = useEntityAnimation({
+  to: { position: { x: 0, y: 1.5, z: -2 } },
+  duration: 0.6,
+  timingFunction: 'easeOut',
+});
+
+<BoxEntity materials={['red']} width={0.3} height={0.3} depth={0.3} animation={animation} />
+```
+
+**Config options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `to` | `{ position?, rotation?, scale? }` | *(required)* | Target transform values |
+| `from` | `{ position?, rotation?, scale? }` | current | Starting transform values (omit to animate from current) |
+| `duration` | `number` | `0.25` | Duration in seconds (must be positive and finite) |
+| `delay` | `number` | `0` | Delay before playback starts, in seconds |
+| `timingFunction` | `'linear' \| 'easeIn' \| 'easeOut' \| 'easeInOut'` | `'linear'` | Easing curve |
+| `autoStart` | `boolean` | `true` | Start playing on mount |
+| `loop` | `boolean \| { reverse: true }` | `false` | `true` = reset loop; `{ reverse: true }` = ping-pong |
+| `onStart` | `() => void` | — | Called when native playback actually begins |
+| `onComplete` | `() => void` | — | Called on natural completion |
+| `onCancel` | `() => void` | — | Called when `cancel()` is invoked |
+| `onError` | `(err: AnimationError) => void` | — | Called on bridge or native failure |
+
+**Imperative API (`api`):**
+
+| Method / Property | Description |
+|-------------------|-------------|
+| `api.play()` | Start or restart the animation |
+| `api.pause()` | Pause (preserves delay remaining time) |
+| `api.resume()` | Resume from paused state |
+| `api.stop()` | Stop and reset |
+| `api.isAnimating` | `true` while queued, delaying, or running |
+| `api.isPaused` | `true` while paused |
+
+**Feature detection:**
+
+```text
+import { supports } from '@webspatial/core-sdk';
+
+if (supports('useAnimation', ['entity'])) {
+  // Entity animation API is available in the current runtime
+}
+```
+
+> **Note:** The `animation` prop is only accepted by entity components under `<Reality>` / `<SceneGraph>` (e.g. `BoxEntity`, `SphereEntity`, `ModelEntity`). It is not available on `SpatialDiv` or non-entity components. While an animated entity is playing, the animated transform fields (e.g. `position`) are suppressed — ordinary prop updates for those fields are ignored until the animation stops. Non-animated fields continue to update normally.
+
+### 12.2 Frame-driven animation (manual)
+
+For custom per-frame logic, drive transforms from `requestAnimationFrame` and pass updated props. Entity transforms are applied each frame from React state.
 
 ```tsx
 const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 });
@@ -282,11 +374,14 @@ useEffect(() => {
 <BoxEntity materials={['red']} rotation={rotation} />
 ```
 
+> **Trade-off:** Frame-driven animation crosses the JS-native bridge every frame and cannot match the smoothness of `useEntityAnimation` on visionOS. Prefer `useEntityAnimation` for transform animations.
+
 ---
 
 ## 14. References
 
 - **Standalone `<Model>` (not part of this spec):** `docs/Model.md`
+- **Coordinate conversion between entity local (m), 2D frames (px), and window (px):** `docs/convertCoordinate.md`
 - **Window / volume scenes (`initScene`, manifest defaults, `type: 'volume'`):** `docs/manifest-api.md` (and scene polyfill / `initScene` in `@webspatial/react-sdk`)
 - **Apple Quick Look / model sources:** [developer.apple.com/augmented-reality/quick-look/](https://developer.apple.com/augmented-reality/quick-look/)
 - **Spatial CSS vars:** e.g. `--xr-depth`, `--xr-back` (see spatialized container / types in `@webspatial/react-sdk`)

@@ -1,15 +1,8 @@
 import type { PhysicalMetricsValueShape } from '../physicalMetrics'
-import type { SpatialSceneCreationOptions, SpatialSceneType } from './types'
-
 declare global {
   const __WEBSPATIAL_CORE_SDK_VERSION__: string
 
   interface Window {
-    xrCurrentSceneType: SpatialSceneType
-    xrCurrentSceneDefaults: (
-      defaultConfig: SpatialSceneCreationOptions,
-    ) => Promise<SpatialSceneCreationOptions>
-
     // Location for webspatial custom functions
     __WebSpatialData: {
       androidNativeMessage: Function
@@ -35,7 +28,6 @@ declare global {
     WebSpatailNativeVersion: string
 
     __webspatialsdk__?: {
-      XR_ENV?: string
       'natvie-version'?: string
       'react-sdk-version'?: string
       'core-sdk-version'?: string

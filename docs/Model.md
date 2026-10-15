@@ -41,7 +41,7 @@ Like standard HTML elements, the `<Model>` component supports a range of attribu
 `stagemode` Controls the built-in user interaction mode for the model.
 
 - **none** (default): No built-in interaction is enabled. All interactions must be handled via spatial events.
-- `orbit` Enables a native orbit interaction mode. Allows users to rotate the model by dragging. When in orbit mode `entityTransform` becomes read-only and gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
+- `orbit` Enables a native orbit interaction mode. Allows users to rotate the model by dragging. When in orbit mode `entityTransform` becomes read-only and all spatial gesture handlers `onSpatial*` are disabled
 
 ## Events
 
@@ -52,6 +52,8 @@ The `<Model>` component fires several events to allow developers to monitor its 
 `onError` Fired when the model fails to load. If multiple sources are provided, this event is fired only after **all** sources have been attempted and have failed. It does not fire each individual source failure.
 
 `onSpatialTap` Fired when a user performs a tap gesture on the model in the spatial environment.
+
+Tap and drag-start expose `offsetX` / `offsetY` / `offsetZ` and `clientX` / `clientY` / `clientZ`. **This is the Spatial HTML coordinate system, not the Reality entity system:** `offset*` is the hit point in the model’s element-local space (CSS pixels, top-left origin; front face `offsetZ ≈ 0`), and `client*` is the same point in SpatialScene / window space (CSS pixels). They do not use meters. The same mapping applies to SpatialDiv. For `<ModelEntity>` inside `<Reality>`, see `docs/dynamic-3d-api-prd.md` §12. Behavioral spec: `openspec/specs/spatial-gestures/spec.md`.
 
 `onSpatialDragStart` Fired when a user begins a drag gesture on the model.
 
@@ -77,9 +79,11 @@ In addition to the DOM API relating to the source, animation, and environment ma
 
 `entityTransform` a read-write `DOMMatrixReadOnly` that expresses the current mapping of the view of the model contents to the view displayed in the browser.
 
-`boundingBoxCenter` a read-only `DOMPoint` that indicates the center of the axis-aligned bounding box (AABB) of the model contents. If there is an animation present, the bounding box is computed based on the bind pose of the animation and remains static for the lifetime of the model. It does not update based on a change of the `entityTransform`.
+`boundingBoxCenter` a read-only `DOMPointReadOnly` that indicates the center of the axis-aligned bounding box (AABB) of the model contents. If there is an animation present, the bounding box is computed based on the bind pose of the animation and remains static for the lifetime of the model. It does not update based on a change of the `entityTransform`.
 
-`boundingBoxExtents` a read-only `DOMPoint` that indicates the extents of the bounding box of the model contents.
+`boundingBoxExtents` a read-only `DOMPointReadOnly` that indicates the extents of the axis-aligned bounding box of the model contents. Like `boundingBoxCenter`, it is computed once when the model loads and remains static for the lifetime of the model.
+
+Both properties use meters in the model's local, right-handed, Y-up coordinate space. Extents are the full width, height, and depth of the box. The loaded values are available inside `onLoad` and after `ready` resolves.
 
 `duration` a read-only `double` reflecting the un-scaled total duration of the animation in seconds. If there is no animation on this model, the value is 0.
 
@@ -97,13 +101,13 @@ In addition to the DOM API relating to the source, animation, and environment ma
 
 The <source> HTML element specifies one or more media resources for the <Model> element. It is a void element, which means that it has no content and does not require a closing tag. Browsers don't all support the same 3D model formats; you can provide multiple sources and the browser will then use the first one it understands. The browser attempts to load each source sequentially, if a source fails the next source is attempted. An `error` event fires on the `<Model>` element after all sources have failed; `error` events are not fired on each individual `<source>` element.
 
-`src` The URL of the 3D model. This attribute has the highest priority when multiple sources are provided. If `src` is specified, it will be the first source attempted for loading.
+`src` The URL of the 3D model.
 
 `type` Specifies the MIME media type of the Model. Currently supported [MIME model types](https://www.iana.org/assignments/media-types/media-types.xhtml#model) are `model/vnd.usdz+zip` and `model/gltf-binary`.
 
 ## Usage Notes
 
-- **Orbit Interaction Conflicts**: Setting the `stagemode` attribute to `orbit` results in an **_orbit_** interaction mode, where the `entityTransform` becomes read-only, and the view is updated exclusively based on input events from the user. Native gesture handlers `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` are disabled
+- **Orbit Interaction Conflicts**: Setting the `stagemode` attribute to `orbit` results in an **_orbit_** interaction mode, where the `entityTransform` becomes read-only, and the view is updated exclusively based on input events from the user. Spatial gesture handlers `onSpatial*` are disabled
 
 ## Examples
 
@@ -210,19 +214,19 @@ function LongScrollPage() {
 
 ### HTML
 
-| Property   | visionOS           | Pico OS                         | WebSpatial SDK |
-| ---------- | ------------------ | ------------------------------- | -------------- |
-| model      | ✓<br>26            | ❌                              | ✓<br>1.1       |
-| enable-xr  | ✓<br>26            | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
-| src        | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.0 | ✓<br>1.1       |
-| onLoad     | ✓<br>26            | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
-| onError    | ✓<br>26            | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
-| autoPlay   | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
-| loop       | ✓<br>26            | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
-| `<source>` | ✓ (USD/USDZ)<br>26 | ✓ (USD/USDZ/GLB/GLTF)<br>6 ⍺2.1 | ✓<br>1.6       |
-| poster     | ✓<br>26            | ✓<br>6 β2.0                     | ✓<br>1.7       |
-| loading    | ✓<br>26            | ✓<br>6 β2.1                     | ✓<br>1.7       |
-| stagemode  | 26                 | 6                               | July           |
+| Property   | visionOS       | Pico OS                         | WebSpatial SDK |
+| ---------- | -------------- | ------------------------------- | -------------- |
+| model      | ✓<br>26        | ❌                              | ✓<br>1.1       |
+| enable-xr  | ✓<br>26        | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
+| src        | ✓ (USDZ)<br>26 | ✓ (USDZ/GLB,blob URL)<br>6 ⍺2.0 | ✓<br>1.1       |
+| onLoad     | ✓<br>26        | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
+| onError    | ✓<br>26        | ✓<br>6 ⍺2.0                     | ✓<br>1.1       |
+| autoPlay   | ✓<br>26        | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
+| loop       | ✓<br>26        | ✓<br>6 ⍺2.1                     | ✓<br>1.6       |
+| `<source>` | ✓ (USDZ)<br>26 | ✓ (USDZ/GLB,blob URL)<br>6 ⍺2.1 | ✓<br>1.6       |
+| poster     | ✓<br>26        | ✓<br>6 β2.0                     | ✓<br>1.7       |
+| loading    | ✓<br>26        | ✓<br>6 β2.1                     | ✓<br>1.7       |
+| stagemode  | ✓<br>26        | ✓<br>6.1                        | ✓<br>2.0       |
 
 ### CSS
 
@@ -249,39 +253,33 @@ function LongScrollPage() {
 | play()             | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
 | pause()            | ✓<br>26  | ✓<br>6 ⍺2.1 | ✓<br>1.6       |
 | currentTime        | ✓<br>26  | ✓<br>6 β2.0 | ✓<br>1.7       |
-| boundingBoxCenter  | 26       | 6           | July           |
-| boundingBoxExtents | 26       | 6           | July           |
+| boundingBoxCenter  | 26       | 6.2         | October        |
+| boundingBoxExtents | 26       | 6.2         | October        |
 
 ## Feature Implementation Details
 
-### 5. Native Orbit Interaction (`stagemode="orbit"`)
+### 6. Bounding Box Geometry (`boundingBoxCenter` / `boundingBoxExtents`)
 
-This feature provides a built-in, intuitive way for users to inspect a 3D model from different angles using familiar drag gestures, without requiring developers to write complex gesture-handling code.
+These read-only properties expose the axis-aligned bounding box (AABB) of the loaded model contents. Both are `DOMPointReadOnly` values expressed in the model's local right-handed, Y-up space. The box is computed once when the model loads — from the animation bind pose if the model is animated — and is **static for the lifetime of the model**. It is unaffected by `entityTransform` changes.
 
-#### 5.1. React SDK (`@webspatial/react-sdk`)
+#### 6.1. Native visionOS Layer (`packages/visionOS`)
 
-- **New Prop**: The `ModelProps` type will be extended to accept `stagemode?: 'orbit' | 'none'`. The default will be `'none'`.
+1. `Model3DAsset` does not expose its underlying entity, so the bounds are computed by **loading the same model file twice** as a RealityKit `Entity` (`try await Entity(contentsOf: localURL)`) and reading `entity.visualBounds(relativeTo: nil)` (`BoundingBox.center` and `.extents`). The view already resolves a local file URL during load.
+2. Extend `ModelLoadSuccessDetail` in `WebMsgCommand.swift` with `boundingBoxCenter` and `boundingBoxExtents` (each `{ x, y, z }`), and populate them when constructing `ModelLoadSuccess`.
 
-#### 5.2. Core SDK (`@webspatial/core-sdk`)
+#### 6.2. Core SDK (`@webspatial/core-sdk`)
 
-- **New Property**: The `UpdateSpatializedStatic3DElementProperties` command in `JSBCommand.ts` will be extended to include the `stagemode` string. This property will be sent to the native layer.
+1. Extend the `ModelLoadSuccess.detail` interface in `WebMsgCommand.ts` with optional `boundingBoxCenter?: { x, y, z }` and `boundingBoxExtents?: { x, y, z }` (optional for back-compat with older native runtimes that do not send them).
+2. In `SpatializedStatic3DElement.onReceiveEvent`, in the `modelloaded` branch, cache the two values into private fields as `DOMPointReadOnly` instances (mirroring how `_currentSrc` is cached).
+3. Add read-only `boundingBoxCenter` / `boundingBoxExtents` getters (mirroring the `currentSrc` getter — no setter). Default to a zero `DOMPointReadOnly` before the model has loaded.
 
-#### 5.3. Native visionOS Layer (`packages/visionOS`)
+#### 6.3. React SDK (`@webspatial/react-sdk`)
 
-1. In `SpatializedStatic3DView.swift`, we will check for the `stagemode` property on the `SpatializedStatic3DElement`.
-2. If `stagemode` is `"orbit"`, we will add a `DragGesture` to the view.
-3. The `onChanged` handler for the `DragGesture` will be used to manipulate the model's orientation.
-   - A horizontal drag (`event.translation.width`) will be mapped to a rotation around the model's Y-axis.
-   - A vertical drag (`event.translation.height`) will be mapped to a rotation around the model's X-axis (pitch).
-4. A state variable (e.g., `@State private var orbitRotation: Angle3D = .zero`) will be used to accumulate the rotation from the drag gesture. This rotation will be applied to the model using the `.rotation3DEffect()` modifier on the `Model3D` view.
-
-- **Interaction with&nbsp;entityTransform**: `entityTransform` will not be updated when the model is rotated using the orbit gesture. Similarly updates to `entityTransform` will not affect the model's orientation.
-
-- **Gesture Conflict Resolution**: `onSpatialDragStart`, `onSpatialDrag`, and `onSpatialDragEnd` will be disabled when stagemode is set to orbit.
+1. Add `readonly boundingBoxCenter: DOMPointReadOnly` and `readonly boundingBoxExtents: DOMPointReadOnly` to `SpatializedStatic3DElementRef` in `spatialized-container/types.ts`.
+2. Expose them as getters in `extraRefProps` in `SpatializedStatic3DElementContainer.tsx`, delegating to the core element getters (mirroring the existing `duration` getters).
 
 ## Risks
 
-- **Gesture Conflicts**: Our proposed solution of disabling drag listeners when orbit is present is a safe starting point.
 - **Safari Alignment**: Since the `<model>` element is still an evolving standard, our implementation is a best-effort interpretation. We must be prepared to adapt as the standard solidifies.
 
 ## References

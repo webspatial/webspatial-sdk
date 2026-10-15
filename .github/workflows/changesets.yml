@@ -33,17 +33,16 @@ jobs:
           fetch-depth: 0 # Use full git history to enable tagging
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/setup@v2
+        with:
+          install: false
 
       - name: Setup node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: 'https://registry.npmjs.org'
           cache: "pnpm"
-
-      - name: Update npm
-        run: npm install -g npm@'>=11.5.1'
 
       - name: Install dependencies and build
         run: pnpm run setup
@@ -52,7 +51,10 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          commit: "chore: update versions"
+          commit: |
+            chore: update versions
+
+            ticket: 0
           title: "chore: update versions"
           publish: pnpm ci:publish
         env:
@@ -107,7 +109,9 @@ jobs:
 
       - name: Setup pnpm
         if: steps.changesets.outputs.has_changesets == 'true'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/setup@v2
+        with:
+          install: false
 
       - name: Setup node.js
         if: steps.changesets.outputs.has_changesets == 'true'
@@ -164,7 +168,10 @@ jobs:
       - name: Create sync PR
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: 'chore: sync stable → main'
+          commit-message: |
+            chore: sync stable → main
+
+            ticket: 0
           title: 'Merge stable into main'
           token: ${{ secrets.PAT_TOKEN }}
           body: |

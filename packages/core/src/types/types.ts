@@ -33,12 +33,7 @@ export interface Quaternion {
  * - `'transparent'`: Represents a fully transparent background.
  */
 export type BackgroundMaterialType =
-  | 'none'
-  | 'translucent'
-  | 'thick'
-  | 'regular'
-  | 'thin'
-  | 'transparent'
+  'none' | 'translucent' | 'thick' | 'regular' | 'thin' | 'transparent'
 
 export type CornerRadius = {
   topLeading: number
@@ -87,8 +82,7 @@ export interface SpatializedElementProperties {
   rotateConstrainedToAxis?: Vec3
 }
 
-export interface Spatialized2DElementProperties
-  extends SpatializedElementProperties {
+export interface Spatialized2DElementProperties extends SpatializedElementProperties {
   scrollPageEnabled: boolean
   cornerRadius: CornerRadius
   material: BackgroundMaterialType
@@ -102,11 +96,13 @@ export interface ModelSource {
 
 export type ModelLoadingMode = 'eager' | 'lazy'
 
-export interface SpatializedStatic3DElementProperties
-  extends SpatializedElementProperties {
+export type StageMode = 'orbit' | 'none'
+
+export interface SpatializedStatic3DElementProperties extends SpatializedElementProperties {
   modelURL: string
   sources?: ModelSource[]
   modelTransform?: number[]
+  stagemode?: StageMode
   autoplay?: boolean
   loop?: boolean
   animationPaused?: boolean
@@ -258,11 +254,21 @@ export type SpatialGeometryOptions =
   | SpatialCylinderGeometryOptions
   | SpatialConeGeometryOptions
 
-export type SpatialMaterialType = 'unlit'
+export const SpatialMaterialTypeValues = ['unlit', 'pbr'] as const
+export type SpatialMaterialType = (typeof SpatialMaterialTypeValues)[number]
 
 export interface SpatialUnlitMaterialOptions {
   color?: string
   textureId?: string
+  transparent?: boolean
+  opacity?: number
+}
+
+export interface SpatialPBRMaterialOptions {
+  color?: string
+  textureId?: string
+  metalness?: number
+  roughness?: number
   transparent?: boolean
   opacity?: number
 }
@@ -375,18 +381,23 @@ export class CubeInfo {
 }
 
 export interface SpatialTapEventDetail {
+  /** Hit point in the event target's local space. SpatialDiv/Model: CSS pixels, top-left origin. Entity: meters, entity local origin. */
   location3D: Point3D
+  /** Same hit point in SpatialScene / window space, in CSS pixels. */
   globalLocation3D?: Point3D
 }
 
 export type SpatialTapEvent = CustomEvent<SpatialTapEventDetail>
 
 export interface SpatialDragStartEventDetail {
+  /** Drag-start point in the event target's local space. Same units and origin as `SpatialTapEventDetail.location3D`. */
   startLocation3D: Point3D
+  /** Same point in SpatialScene / window space, in CSS pixels. */
   globalLocation3D?: Point3D
 }
 
 export interface SpatialDragEventDetail {
+  /** Cumulative drag delta from gesture start, in the target's direct parent space. SpatialDiv/Model: CSS pixels. Entity: meters. */
   translation3D: Vec3
 }
 
@@ -398,6 +409,7 @@ export type SpatialDragEvent = CustomEvent<SpatialDragEventDetail>
 
 export type SpatialDragEndEvent = CustomEvent<SpatialDragEndEventDetail>
 export interface SpatialRotateEventDetail {
+  /** Cumulative rotation in the target's direct parent axes. Compose as delta * gestureStartOrientation, not by adding Euler angles. */
   quaternion: Quaternion
 }
 
@@ -419,16 +431,30 @@ export type SpatialMagnifyEndEvent = CustomEvent<SpatialMagnifyEndEventDetail>
 
 export type SpatialEntityOrReality = SpatialEntity | SpatializedDynamic3DElement
 
+export interface AttachmentEntityPlacement {
+  id: string
+}
+
 export interface AttachmentEntityOptions {
-  parentEntityId: string
-  position?: [number, number, number]
-  size: { width: number; height: number }
+  placement: AttachmentEntityPlacement
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+  width?: number
+  height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
   ownerViewId: string
 }
 
 export interface AttachmentEntityUpdateOptions {
-  position?: [number, number, number]
-  size?: { width: number; height: number }
+  position?: Vec3
+  rotation?: Vec3
+  scale?: Vec3
+  width?: number
+  height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
 }
 
 // manifest

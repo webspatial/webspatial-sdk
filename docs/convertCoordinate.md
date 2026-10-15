@@ -63,7 +63,7 @@ function convertCoordinate(
 
 | Type | Description |
 |------|-------------|
-| `Promise<Vec3>` | A promise that resolves to the converted position in the `to` coordinate space. If the conversion cannot be performed (e.g., unresolved IDs or missing spatial scene), the original `position` is returned unchanged as a safe fallback. |
+| `Promise<Vec3>` | A promise that resolves to the converted position in the `to` coordinate space. Invalid references, missing runtime/session state, native conversion failures, and non-invertible target transforms reject with an error. |
 
 ## Types
 
@@ -94,27 +94,36 @@ type CoordinateConvertible =
 | `Window` | The browser `window` object. Represents the window's global coordinate space in pixels. |
 | `SpatializedElementRef<any>` | A ref to a spatialized DOM element (2D frame). Coordinates are in **view-local pixels**. Internally resolved to its spatial element ID. |
 | `EntityRef` | A ref to a Reality entity. Resolved via the `.entity.id` property. |
-| `ModelRef` | A ref to a `<Model />` component instance. Resolved to its underlying entity. |
+| `ModelRef` | A ref to an independent `<Model />` component instance. Resolved to its spatialized frame. |
 
 ## Usage Notes
 
 ### Coordinate Units
 
-- **Entity / Model local space**: positions are expressed in **meters**.
-- **2D Frame (SpatializedElement) local space**: positions are expressed in **pixels** (view-local coordinates).
+- **Entity local space**: positions are expressed in **meters**.
+- **2D Frame (SpatializedElement) / independent Model local space**: positions are expressed in **CSS pixels** (pre-transform local coordinates).
 - **Window space**: positions are expressed in **pixels** (view global coordinates).
 
 When converting from an entity to `window`, you receive pixel values. When converting from `window` to an entity, you provide pixel values and receive meters. When converting from a 2D frame to `window`, both are in pixels but the frame uses view-local coordinates while the window uses view-global coordinates.
 
-### Fallback Behavior
+Entity `onSpatialTap` uses the same two spaces: `offsetX/Y/Z` is entity local (meters); `clientX/Y/Z` is window global (pixels). See [`docs/dynamic-3d-api-prd.md` §12](./dynamic-3d-api-prd.md#12-interaction).
 
-`convertCoordinate` is designed to be safe by default. If any of the following conditions are true, the function returns the original `position` unchanged instead of throwing:
+SpatialDiv / independent `<Model>` `onSpatialTap` uses CSS pixels: `offset*` is the element's pre-transform local space (top-left origin; front face `offsetZ ≈ 0`); `client*` is SpatialScene / window space. See `docs/visionos-transform-and-gesture-design.md` and `openspec/specs/spatial-gestures/spec.md`.
 
-- The `from` or `to` reference cannot be resolved to a valid scene ID.
-- The spatial scene is not yet available (session not initialized).
-- The native conversion call fails or throws internally.
+`convertCoordinate` for a 2D frame composes layout, `--xr-back` / `zIndex`, and the element's CSS `transform` around `transform-origin`. It therefore uses the same pre-transform local definition as gesture `offset*`: `convertCoordinate(tap.offset, { from: divRef, to: window })` maps back to the same point as `tap.client`, within floating-point tolerance.
 
-This means you can call `convertCoordinate` early in a component lifecycle without wrapping it in try/catch, though you should be aware that the result may be unconverted.
+### Unsupported behavior
+
+`convertCoordinate` is a runtime-gated API. Guard cross-environment code with `WebSpatialRuntime.supports('convertCoordinate')` before calling.
+
+| Condition | Behavior |
+|-----------|----------|
+| `supports('convertCoordinate')` is `false` (plain web, SSR) | Throws `WebSpatialRuntimeError` |
+| WebSpatial runtime but `bootSpatial()` not awaited | Throws `WebSpatialRuntimeError` (message points to `bootSpatial()`) |
+| Invalid `from` / `to` ref | Throws `WebSpatialRuntimeError` with diagnostic message |
+| Supported runtime + booted session | Performs native conversion via `ConvertCoordinateCommand` |
+
+If the native conversion call fails after the session is ready, the error propagates from the bridge (same as other spatial scene commands).
 
 ### Async Nature
 
@@ -132,8 +141,8 @@ The function is asynchronous because the actual coordinate transformation is per
 | 2D Frame | Window | Yes | Converts 2D frame view-local pixels to window-global pixels. |
 | Window | 2D Frame | Yes | Converts window-global pixels to 2D frame view-local pixels. |
 | 2D Frame | 2D Frame | Yes | Converts between two 2D frame local coordinate spaces (via window as intermediate). |
-| Model | Entity | Yes | Model refs are resolved to their underlying entity. |
-| Entity | Model | Yes | Model refs are resolved to their underlying entity. |
+| Model | Entity | Yes | Independent Model local input uses CSS pixels and converts through its spatialized frame. |
+| Entity | Model | Yes | Independent Model local output uses CSS pixels and converts through its spatialized frame. |
 | Model | Window | Yes | Equivalent to Entity-to-Window after ref resolution. |
 | Window | Model | Yes | Equivalent to Window-to-Entity after ref resolution. |
 | SpatializedElement | Entity | Yes | Element refs are resolved via their internal spatialized element ID. |
@@ -146,7 +155,7 @@ Internally, each `CoordinateConvertible` target is resolved to a string ID via t
 2. **`EntityRef`** — resolved via `entityRef.entity.id`.
 3. **`SpatializedElementRef` / `ModelRef`** — resolved by traversing `__spatializedElement`, `__innerSpatializedElement`, or falling back to the `SpatialID` DOM attribute.
 
-If resolution returns `null`, the conversion is skipped and the original position is returned.
+If resolution returns `null`, `convertCoordinate` throws `WebSpatialRuntimeError`.
 
 ## Examples
 
@@ -553,10 +562,10 @@ This two-step approach via the window coordinate system ensures cross-Reality co
 
 ## References
 
-- [`Vec3`](./Vec3.md) — 3D vector type used for positions
-- [`<Reality>`](./Reality.md) — Reality volume component
-- [`<Entity>`](./Entity.md) — Entity component and `EntityRef`
+- [`Vec3`](../packages/core/src/types/types.ts) — 3D vector type used for positions
+- [`<Reality>`](./dynamic-3d-api-prd.md#5-reality) — Reality volume component
+- [`<Entity>`](./dynamic-3d-api-prd.md#6-entity-group-container) — Entity component and `EntityRef`
 - [`<Model>`](./Model.md) — Model component and `ModelRef`
-- [`SpatializedElementRef`](./SpatializedContainer.md) — Spatialized container ref type
+- [`SpatializedElementRef`](../packages/react/src/spatialized-container/types.ts) — Spatialized container ref type
 - [RealityKit — Entity coordinate conversion](https://developer.apple.com/documentation/realitykit/entity/convert(position:from:))
 - [RealityKit — RealityViewContent](https://developer.apple.com/documentation/realitykit/realityviewcontent)

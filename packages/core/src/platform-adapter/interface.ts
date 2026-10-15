@@ -1,5 +1,6 @@
 import type { SpatialSceneCreationOptionsInternal } from '../types/internal'
 import type { AttachmentEntityOptions } from '../types/types'
+import type { OrnamentProtocolOptions } from '../Ornament'
 
 export interface CommandResult<TData = any> {
   success: boolean
@@ -44,5 +45,10 @@ export interface PlatformAbility {
   /** Create a native attachment surface; options reserved for future protocol fields. */
   createNativeAttachment(
     options?: AttachmentEntityOptions,
+  ): Promise<WebSpatialProtocolResult>
+
+  /** Create a native-backed Ornament surface. */
+  createNativeOrnament(
+    options?: OrnamentProtocolOptions,
   ): Promise<WebSpatialProtocolResult>
 }

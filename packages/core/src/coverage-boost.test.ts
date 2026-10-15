@@ -80,15 +80,17 @@ describe('utils', () => {
       { x: 2, y: 3, z: 4 },
     )
 
+    // Use toMatchObject because happy-dom returns a real DOMPoint (which
+    // includes a `w` property) rather than a plain {x,y,z} object.
     const origin = m.transformPoint({ x: 0, y: 0, z: 0 })
-    expect(origin).toEqual({
+    expect(origin).toMatchObject({
       x: 10,
       y: 20,
       z: 30,
     })
 
     const p = m.transformPoint({ x: 1, y: 1, z: 1 })
-    expect(p).toEqual({ x: 12, y: 23, z: 34 })
+    expect(p).toMatchObject({ x: 12, y: 23, z: 34 })
   })
 })
 
@@ -265,6 +267,45 @@ describe('SpatialObject', () => {
     await expect(obj.destroy()).resolves.toBeUndefined()
     expect(onDestroy).toHaveBeenCalledTimes(1)
   })
+
+  it('treats missing native spatial objects as already destroyed', async () => {
+    const onDestroy = vi.fn()
+    vi.doMock('./JSBCommand', () => {
+      return {
+        InspectCommand: vi.fn().mockImplementation(function () {
+          return {
+            execute: vi.fn().mockResolvedValue({
+              success: true,
+              data: undefined,
+              errorMessage: '',
+            }),
+          }
+        }),
+        DestroyCommand: vi.fn().mockImplementation(function () {
+          return {
+            execute: vi.fn().mockResolvedValue({
+              success: false,
+              data: undefined,
+              errorMessage:
+                'Failed to destroy SpatialObject: invalid inspect spatial object id obj-2 not exsit!',
+            }),
+          }
+        }),
+      }
+    })
+
+    const { SpatialObject } = await import('./SpatialObject')
+    class TestObject extends SpatialObject {
+      protected onDestroy() {
+        onDestroy()
+      }
+    }
+
+    const obj = new TestObject('obj-2')
+    await expect(obj.destroy()).resolves.toBeUndefined()
+    expect(obj.isDestroyed).toBe(true)
+    expect(onDestroy).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('platform adapters', () => {
@@ -273,18 +314,6 @@ describe('platform adapters', () => {
     vi.resetModules()
     vi.clearAllMocks()
     vi.unmock('./JSBCommand')
-  })
-
-  it('SSRPlatform returns successful no-op results', async () => {
-    const { SSRPlatform } = await import('./platform-adapter/ssr/SSRPlatform')
-    const platform = new SSRPlatform()
-
-    await expect(platform.callJSB('c', '{}')).resolves.toMatchObject({
-      success: true,
-    })
-    expect(platform.openSpatialSceneSync('s', undefined)).toMatchObject({
-      success: true,
-    })
   })
 
   it('VisionOSPlatform.callJSB returns success and parses failures', async () => {
@@ -466,6 +495,44 @@ describe('spatialWindowPolyfill', () => {
 
     document.documentElement.style.removeProperty('--xr-background-material')
     expect(updateSpatialProperties).toHaveBeenCalledWith({
+      material: 'none',
+    })
+
+    await Promise.resolve()
+    await Promise.resolve()
+    updateSpatialProperties.mockClear()
+    ;(document.documentElement.style as any)['--xr-background-material'] =
+      'translucent'
+    expect(updateSpatialProperties).toHaveBeenCalledWith({
+      material: 'translucent',
+    })
+    expect(
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--xr-background-material')
+        .trim(),
+    ).toBe('translucent')
+    expect(
+      (
+        (document.documentElement.style as any)[
+          '--xr-background-material'
+        ] as string
+      ).trim(),
+    ).toBe('translucent')
+
+    updateSpatialProperties.mockClear()
+    document.documentElement.style.setProperty('border-radius', '80px')
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(updateSpatialProperties).toHaveBeenCalledWith({
+      cornerRadius: {
+        topLeading: 80,
+        topTrailing: 80,
+        bottomLeading: 80,
+        bottomTrailing: 80,
+      },
+    })
+    expect(updateSpatialProperties).not.toHaveBeenCalledWith({
       material: 'none',
     })
   })
@@ -749,74 +816,7 @@ describe('SpatializedStatic3DElement', () => {
     vi.unmock('./JSBCommand')
   })
 
-  it('resets ready when modelURL changes and resolves on load events', async () => {
-    const execute = vi.fn().mockResolvedValue({
-      success: true,
-      data: undefined,
-      errorCode: '',
-      errorMessage: '',
-    })
-    vi.doMock('./JSBCommand', () => {
-      class OkCommand {
-        execute() {
-          return Promise.resolve({
-            success: true,
-            data: undefined,
-            errorCode: '',
-            errorMessage: '',
-          })
-        }
-      }
-
-      return {
-        InspectCommand: OkCommand,
-        DestroyCommand: OkCommand,
-        UpdateSpatializedElementTransform: OkCommand,
-        UpdateSpatialized2DElementProperties: OkCommand,
-        AddSpatializedElementToSpatialized2DElement: OkCommand,
-        UpdateSpatializedDynamic3DElementProperties: OkCommand,
-        SetParentForEntityCommand: OkCommand,
-        AddEntityToDynamic3DCommand: OkCommand,
-        createSpatialized2DElementCommand: vi.fn(),
-        CreateSpatializedStatic3DElementCommand: vi.fn(),
-        CreateSpatializedDynamic3DElementCommand: vi.fn(),
-        UpdateSpatializedStatic3DElementProperties: vi
-          .fn()
-          .mockImplementation(function () {
-            return { execute }
-          }),
-      }
-    })
-
-    const { SpatializedStatic3DElement } = await import(
-      './SpatializedStatic3DElement'
-    )
-    const { SpatialWebMsgType } = await import('./WebMsgCommand')
-
-    const el = new SpatializedStatic3DElement('m1')
-    const onLoad = vi.fn()
-    const onFail = vi.fn()
-    el.onLoadCallback = onLoad
-    el.onLoadFailureCallback = onFail
-
-    const p1 = el.ready
-    await el.updateProperties({ modelURL: 'a.glb' } as any)
-    expect(execute).toHaveBeenCalledTimes(1)
-    const p2 = el.ready
-    expect(p2).not.toBe(p1)
-
-    el.onReceiveEvent({ type: SpatialWebMsgType.modelloaded } as any)
-    await expect(p2).resolves.toBe(true)
-    expect(onLoad).toHaveBeenCalledTimes(1)
-
-    await el.updateProperties({ modelURL: 'b.glb' } as any)
-    const p3 = el.ready
-    el.onReceiveEvent({ type: SpatialWebMsgType.modelloadfailed } as any)
-    await expect(p3).resolves.toBe(false)
-    expect(onFail).toHaveBeenCalledTimes(1)
-  })
-
-  it('updateModelTransform passes float64 array to updateProperties', async () => {
+  it('entityTransform setter passes float64 array to updateProperties', async () => {
     const execute = vi.fn().mockResolvedValue({
       success: true,
       data: undefined,
@@ -868,7 +868,7 @@ describe('SpatializedStatic3DElement', () => {
     }
 
     const el = new SpatializedStatic3DElement('m2')
-    el.updateModelTransform(new DOMMatrixWithArray() as any)
+    el.entityTransform = new DOMMatrixWithArray() as any
     expect(execute).toHaveBeenCalledTimes(1)
   })
 })
@@ -978,40 +978,25 @@ describe('SpatializedDynamic3DElement', () => {
   })
 })
 
-describe('ssr-polyfill', () => {
+describe('isSSREnv', () => {
   it('isSSREnv returns false in jsdom', async () => {
-    const { isSSREnv } = await import('./ssr-polyfill')
+    const { isSSREnv } = await import('./isSSREnv')
     expect(isSSREnv()).toBe(false)
   })
 })
 
 describe('platform-adapter', () => {
-  it('createPlatform returns SSRPlatform in SSR env', async () => {
+  it('createPlatform and createPlatformSync throw in SSR env', async () => {
     vi.resetModules()
-    vi.doMock('./ssr-polyfill', () => {
+    vi.doMock('./isSSREnv', () => {
       return { isSSREnv: () => true }
     })
 
-    const { createPlatform } = await import('./platform-adapter')
-    const p = await createPlatform()
-    expect(typeof p.callJSB).toBe('function')
-    expect(typeof p.openSpatialSceneSync).toBe('function')
-    expect(typeof p.createNativeSpatialDiv).toBe('function')
-    expect(typeof p.createNativeAttachment).toBe('function')
-  })
-
-  it('createPlatformSync uses SSR sync noop in SSR env', async () => {
-    vi.resetModules()
-    vi.doMock('./ssr-polyfill', () => {
-      return { isSSREnv: () => true }
-    })
-
-    const { createPlatformSync } = await import(
-      './platform-adapter/createPlatformSync'
+    const { createPlatform, createPlatformSync } = await import(
+      './platform-adapter'
     )
-    const p = createPlatformSync()
-    const r = p.openSpatialSceneSync('https://x', undefined)
-    expect(r.success).toBe(true)
-    expect(r.data).toBeUndefined()
+    const expected = /cannot run during SSR/
+    await expect(createPlatform()).rejects.toThrow(expected)
+    expect(() => createPlatformSync()).toThrow(expected)
   })
 })

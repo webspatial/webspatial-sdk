@@ -1,4 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
+import { entityAnimationRoutes } from '../pages/entity-animation/routes'
+import { spatialElementMotionRoutes } from '../pages/spatial-element-motion/routes'
+
 export const routes = [
   { path: '/', label: 'Home' },
   { path: '/animate', label: 'Animations' },
@@ -10,7 +13,18 @@ export const routes = [
       { path: '/reality/debug', label: 'Reality Debug' },
       { path: '/reality/dynamic3d', label: 'Dynamic 3D' },
       { path: '/reality/gestures', label: 'Gestures' },
-      { path: '/reality/gestureDiv', label: 'Gesture Div' },
+      {
+        path: '/reality/entity-gesture-coordinates',
+        label: 'Entity Gesture Coordinates',
+      },
+      {
+        path: '/reality/spatial-element-gesture-coordinates',
+        label: 'SpatialDiv/Model Gesture Coordinates',
+      },
+      {
+        path: '/reality/convert-coordinate-gesture',
+        label: 'Convert Coordinate Gesture',
+      },
       { path: '/reality/spatial-div', label: 'Spatial Div Dynamic' },
       { path: '/reality/attachments', label: 'Attachments' },
       { path: '/reality/empty', label: 'Empty' },
@@ -35,6 +49,10 @@ export const routes = [
         path: '/reality/textured-unlit-box',
         label: 'Textures',
       },
+      {
+        path: '/reality/pbr-material',
+        label: 'PBR material + presets',
+      },
       { path: '/reality-test', label: 'Legacy Reality Test' },
     ],
   },
@@ -51,20 +69,40 @@ export const routes = [
     path: '/spatial-div-refresh-validation',
     label: 'Spatial Div Refresh Validation',
   },
+  {
+    path: '/entity-animation',
+    label: 'Entity Animation',
+    children: [
+      { path: '/entity-animation', label: 'Overview' },
+      ...entityAnimationRoutes.map(route => ({
+        path: route.path,
+        label: route.label,
+      })),
+    ],
+  },
   { path: '/runtime-capabilities', label: 'Runtime capabilities' },
+  {
+    path: '/spatial-element-motion',
+    label: 'Spatialized Element Motion',
+    children: [
+      { path: '/spatial-element-motion', label: 'Overview' },
+      ...spatialElementMotionRoutes.map(route => ({
+        path: route.path,
+        label: route.label,
+      })),
+    ],
+  },
   { path: '/unit-convert', label: 'Unit Convert' },
+  { path: '/scene/ornament-test', label: 'Ornament Test' },
   {
     path: '/scene',
     label: 'Scene',
     children: [
       { path: '/scene', label: 'Scene Landing' },
-      { href: '/pages/scene/hook.html', label: 'Hook', external: true },
-      { href: '/pages/scene/loading.html', label: 'Loading', external: true },
       { path: '/scene/volume', label: 'Volume' },
       {
-        href: '/pages/scene/volumeHook.html',
-        label: 'Volume Hook',
-        external: true,
+        path: '/scene/webspatial-inspector',
+        label: 'WebSpatial Inspector',
       },
       { path: '/scene/xrapp', label: 'XR App' },
       { path: '/scene/nosdk', label: 'No SDK' },
@@ -72,11 +110,9 @@ export const routes = [
     ],
   },
   {
-    path: '/spatial-drag-gesture',
+    path: '/spatial-rotate-axis-constraint',
     label: 'Gestures',
     children: [
-      { path: '/spatial-drag-gesture', label: 'Drag' },
-      { path: '/spatial-rotation-gesture', label: 'Rotate' },
       {
         path: '/spatial-rotate-axis-constraint',
         label: 'Rotate axis constraint',
@@ -101,12 +137,19 @@ export const routes = [
       { path: '/display-test', label: 'Display Test' },
       { path: '/memory-stats', label: 'Memory Stats' },
       { path: '/nested-fix-position', label: 'Nested Fix Position' },
-      { path: '/nested-scroll', label: 'Nested Scroll' },
+      { path: '/nested-scroll', label: 'SpatialDiv Scroll Sync' },
+      {
+        path: '/nested-spatial-overflow',
+        label: 'Nested Spatial Overflow',
+      },
       { path: '/spatial-converter', label: 'Spatial Converter' },
       { path: '/spatial-corner', label: 'Spatial Corner' },
-      { path: '/geometry-verify', label: 'Geometry Verify' },
       { path: '/transform-verify', label: 'Transform Verify' },
       { path: '/static-3d-model', label: 'Static 3D Model' },
+      {
+        path: '/static-3d-model/nested-ready',
+        label: 'Nested Model Ready',
+      },
       { path: '/visible-test', label: 'Visible Test' },
     ],
   },
@@ -125,6 +168,14 @@ export default function Sidebar() {
   const items = routes
   const containerClass =
     'w-64 h-screen sticky top-0 bg-[#111111] border-r border-gray-800 flex flex-col'
+  const isRouteActive = (route: (typeof routes)[number]) =>
+    location.pathname === route.path ||
+    !!route.children?.some(
+      child =>
+        'path' in child &&
+        typeof child.path === 'string' &&
+        location.pathname === child.path,
+    )
 
   return (
     <div className={containerClass}>
@@ -140,7 +191,7 @@ export default function Sidebar() {
             <Link
               to={route.path}
               className={`block px-4 py-2 rounded-lg text-sm transition-colors ${
-                location.pathname === route.path
+                isRouteActive(route)
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-400 hover:bg-gray-800 hover:text-white'
               }`}
