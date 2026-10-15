@@ -381,17 +381,17 @@ importers:
         specifier: ^4.12.24
         version: 4.12.24(postcss@8.5.28)
       esbuild:
-        specifier: ^0.25.12
-        version: 0.25.12
+        specifier: ^0.28.1
+        version: 0.28.2
       esbuild-css-modules-plugin:
         specifier: ^3.1.5
-        version: 3.1.5(esbuild@0.25.12)
+        version: 3.1.5(esbuild@0.28.2)
       esbuild-plugin-tailwindcss:
         specifier: ^1.2.3
         version: 1.2.3(tsx@4.23.13)(yaml@2.9.0)
       esbuild-sass-plugin:
         specifier: ^3.7.0
-        version: 3.7.0(esbuild@0.25.12)(sass-embedded@1.103.1)
+        version: 3.7.0(esbuild@0.28.2)(sass-embedded@1.103.1)
       postcss-modules:
         specifier: ^6.0.1
         version: 6.0.1(postcss@8.5.28)
@@ -560,14 +560,14 @@ importers:
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
       esbuild:
-        specifier: ^0.25.12
-        version: 0.25.12
+        specifier: ^0.28.1
+        version: 0.28.2
       esbuild-plugin-d.ts:
         specifier: ^1.3.1
         version: 1.3.1(typescript@5.9.3)
       esbuild-plugin-define:
         specifier: ^0.5.0
-        version: 0.5.0(esbuild@0.25.12)
+        version: 0.5.0(esbuild@0.28.2)
       jsdom:
         specifier: ^24.1.3
         version: 24.1.3(supports-color@8.1.1)
@@ -6067,8 +6067,8 @@ packages:
     resolution: {integrity: sha512-gN54ddmyzEg10orwZ2u4OOv+bjpMWdIl5jIkodK97bMq8QBSL5c0D7YX0lT1Ooz+99S7+PvFbnxzdjgHo1r41g==}
     engines: {node: '>=18.0.0'}
 
-  morgan@1.12.0:
-    resolution: {integrity: sha512-OHpTRQwn2ezasILW8iKe+Yww1XsfWsZIpUOLF7RDb2g5GwO3trPaRwi7+8BDiJ7HFx2Kg2mfUdCBcVhwYlOz2g==}
+  morgan@1.12.1:
+    resolution: {integrity: sha512-tljKC0ex20AjO58Ob/eZ53JloycbVswbVNCHx6V6VLGzqt/w8dIynVGL0G8qVjNKwiA7sYSogCrN6QtJ82IV+g==}
     engines: {node: '>= 0.8.0'}
 
   motion-dom@11.18.1:
@@ -9928,7 +9928,7 @@ snapshots:
       compression: 1.8.1(supports-color@8.1.1)
       express: 4.22.2(supports-color@8.1.1)
       get-port: 5.1.1
-      morgan: 1.12.0(supports-color@8.1.1)
+      morgan: 1.12.1(supports-color@8.1.1)
       react-router: 7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       source-map-support: 0.5.21
     transitivePeerDependencies:
@@ -11786,9 +11786,9 @@ snapshots:
       has-tostringtag: 1.0.2
       hasown: 2.0.4
 
-  esbuild-css-modules-plugin@3.1.5(esbuild@0.25.12):
+  esbuild-css-modules-plugin@3.1.5(esbuild@0.28.2):
     dependencies:
-      esbuild: 0.25.12
+      esbuild: 0.28.2
       lightningcss: 1.33.0
       lodash-es: 4.18.1
 
@@ -11800,9 +11800,9 @@ snapshots:
       type-fest: 4.41.0
       typescript: 5.9.3
 
-  esbuild-plugin-define@0.5.0(esbuild@0.25.12):
+  esbuild-plugin-define@0.5.0(esbuild@0.28.2):
     dependencies:
-      esbuild: 0.25.12
+      esbuild: 0.28.2
 
   esbuild-plugin-tailwindcss@1.2.3(tsx@4.23.13)(yaml@2.9.0):
     dependencies:
@@ -11814,9 +11814,9 @@ snapshots:
       - tsx
       - yaml
 
-  esbuild-sass-plugin@3.7.0(esbuild@0.25.12)(sass-embedded@1.103.1):
+  esbuild-sass-plugin@3.7.0(esbuild@0.28.2)(sass-embedded@1.103.1):
     dependencies:
-      esbuild: 0.25.12
+      esbuild: 0.28.2
       resolve: 1.22.12
       sass: 1.103.1
       sass-embedded: 1.103.1
@@ -13644,7 +13644,7 @@ snapshots:
 
   modern-tar@0.8.4: {}
 
-  morgan@1.12.0(supports-color@8.1.1):
+  morgan@1.12.1(supports-color@8.1.1):
     dependencies:
       basic-auth: 2.0.1
       debug: 2.6.9(supports-color@8.1.1)

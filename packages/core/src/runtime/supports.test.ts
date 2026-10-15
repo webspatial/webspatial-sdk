@@ -446,6 +446,19 @@ describe('getRuntime / supports', () => {
     },
   )
 
+  test('PICO OS 6 PicoWebApp/0.7.0 exposes Model bounding box properties', async () => {
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (X11; Linux x86_64; swan OS6.2.0 like Quest) AppleWebKit/537.36 PicoWebApp/0.7.0 (like PicoBrowser) Chrome/138.0 WebSpatial/1.5.0',
+    } as Navigator)
+    const { supports, resetRuntimeCacheForTests } = await import('./supports')
+    resetRuntimeCacheForTests()
+
+    expect(supports('Model', ['boundingBoxCenter', 'boundingBoxExtents'])).toBe(
+      true,
+    )
+  })
+
   test('useAnimation rejects all sub-tokens', async () => {
     vi.stubGlobal('navigator', {
       userAgent:

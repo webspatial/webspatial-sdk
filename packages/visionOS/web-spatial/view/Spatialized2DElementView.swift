@@ -14,8 +14,15 @@ extension View {
 
 class Spatialized2DViewGestureData {
     var dragStarted = false
-    var dragStart: CGFloat = 0.0
+    var dragStart: CGSize = .zero
     var dragVelocity: CGFloat = 0.0
+}
+
+func spatialScrollDelta(from previousTranslation: CGSize, to currentTranslation: CGSize) -> Vec2 {
+    Vec2(
+        x: previousTranslation.width - currentTranslation.width,
+        y: previousTranslation.height - currentTranslation.height
+    )
 }
 
 struct Spatialized2DElementView: View {
@@ -71,13 +78,16 @@ struct Spatialized2DElementView: View {
                 if spatialized2DElement.scrollPageEnabled {
                     if !gestureData.dragStarted {
                         gestureData.dragStarted = true
-                        gestureData.dragStart = (gesture.translation.height)
+                        gestureData.dragStart = gesture.translation
                     }
 
                     // TODO: this should have velocity
-                    let delta = gestureData.dragStart - gesture.translation.height
-                    gestureData.dragStart = gesture.translation.height
-                    spatialScene.updateDeltaScrollOffset(Vec2(x: 0, y: delta))
+                    let delta = spatialScrollDelta(
+                        from: gestureData.dragStart,
+                        to: gesture.translation
+                    )
+                    gestureData.dragStart = gesture.translation
+                    spatialScene.updateDeltaScrollOffset(delta)
                 }
             }
             .onEnded { _ in
@@ -87,7 +97,7 @@ struct Spatialized2DElementView: View {
                 }
                 if spatialized2DElement.scrollPageEnabled {
                     gestureData.dragStarted = false
-                    gestureData.dragStart = 0
+                    gestureData.dragStart = .zero
                     spatialScene.stopScrolling()
                 }
             }

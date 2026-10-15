@@ -126,6 +126,8 @@ export const SUB_TOKENS_BY_NAME: Readonly<Record<string, readonly string[]>> = {
     'source',
     'ready',
     'currentSrc',
+    'boundingBoxCenter',
+    'boundingBoxExtents',
     'entityTransform',
     'paused',
     'duration',
