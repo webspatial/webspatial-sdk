@@ -167,7 +167,7 @@ describe('SpatialObject', () => {
   afterEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./JSBCommand')
+    vi.doUnmock('./JSBCommand')
   })
 
   it('inspect returns data when command succeeds', async () => {
@@ -313,7 +313,7 @@ describe('platform adapters', () => {
     vi.useRealTimers()
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./JSBCommand')
+    vi.doUnmock('./JSBCommand')
   })
 
   it('VisionOSPlatform.callJSB returns success and parses failures', async () => {
@@ -330,9 +330,8 @@ describe('platform adapters', () => {
       },
     }
 
-    const { VisionOSPlatform } = await import(
-      './platform-adapter/vision-os/VisionOSPlatform'
-    )
+    const { VisionOSPlatform } =
+      await import('./platform-adapter/vision-os/VisionOSPlatform')
     const platform = new VisionOSPlatform()
 
     await expect(platform.callJSB('c', '{}')).resolves.toEqual({
@@ -360,9 +359,8 @@ describe('platform adapters', () => {
       messageHandlers: { bridge: { postMessage: vi.fn() } },
     }
 
-    const { VisionOSPlatform } = await import(
-      './platform-adapter/vision-os/VisionOSPlatform'
-    )
+    const { VisionOSPlatform } =
+      await import('./platform-adapter/vision-os/VisionOSPlatform')
     const platform = new VisionOSPlatform()
     const r = await platform.createNativeSpatialDiv()
 
@@ -374,18 +372,14 @@ describe('platform adapters', () => {
 
 describe('geometries', () => {
   it('constructs cone/cylinder/plane/sphere geometries', async () => {
-    const { SpatialConeGeometry } = await import(
-      './reality/geometry/SpatialConeGeometry'
-    )
-    const { SpatialCylinderGeometry } = await import(
-      './reality/geometry/SpatialCylinderGeometry'
-    )
-    const { SpatialPlaneGeometry } = await import(
-      './reality/geometry/SpatialPlaneGeometry'
-    )
-    const { SpatialSphereGeometry } = await import(
-      './reality/geometry/SpatialSphereGeometry'
-    )
+    const { SpatialConeGeometry } =
+      await import('./reality/geometry/SpatialConeGeometry')
+    const { SpatialCylinderGeometry } =
+      await import('./reality/geometry/SpatialCylinderGeometry')
+    const { SpatialPlaneGeometry } =
+      await import('./reality/geometry/SpatialPlaneGeometry')
+    const { SpatialSphereGeometry } =
+      await import('./reality/geometry/SpatialSphereGeometry')
 
     const cone = new SpatialConeGeometry('c1', { radius: 1, height: 2 })
     const cylinder = new SpatialCylinderGeometry('cy1', {
@@ -411,7 +405,7 @@ describe('spatialWindowPolyfill', () => {
   afterEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./Spatial')
+    vi.doUnmock('./Spatial')
   })
 
   it('returns early when not running in SpatialWeb', async () => {
@@ -542,7 +536,7 @@ describe('SpatializedElementCreator', () => {
   afterEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./JSBCommand')
+    vi.doUnmock('./JSBCommand')
   })
 
   it('createSpatialized2DElement sets base href and returns element', async () => {
@@ -619,9 +613,8 @@ describe('SpatializedElementCreator', () => {
       }
     })
 
-    const { createSpatialized2DElement } = await import(
-      './SpatializedElementCreator'
-    )
+    const { createSpatialized2DElement } =
+      await import('./SpatializedElementCreator')
     const el = await createSpatialized2DElement()
 
     expect(el.id).toBe('w1')
@@ -678,9 +671,8 @@ describe('SpatializedElementCreator', () => {
       }
     })
 
-    const { createSpatialized2DElement } = await import(
-      './SpatializedElementCreator'
-    )
+    const { createSpatialized2DElement } =
+      await import('./SpatializedElementCreator')
     await expect(createSpatialized2DElement()).rejects.toThrow(
       'createSpatialized2DElement failed',
     )
@@ -736,9 +728,8 @@ describe('SpatializedElementCreator', () => {
       }
     })
 
-    const { createSpatializedStatic3DElement } = await import(
-      './SpatializedElementCreator'
-    )
+    const { createSpatializedStatic3DElement } =
+      await import('./SpatializedElementCreator')
     const ok = await createSpatializedStatic3DElement('u')
     expect(ok.id).toBe('s3')
 
@@ -797,9 +788,8 @@ describe('SpatializedElementCreator', () => {
       }
     })
 
-    const { createSpatializedDynamic3DElement } = await import(
-      './SpatializedElementCreator'
-    )
+    const { createSpatializedDynamic3DElement } =
+      await import('./SpatializedElementCreator')
     const ok = await createSpatializedDynamic3DElement()
     expect(ok.id).toBe('d3')
 
@@ -813,7 +803,7 @@ describe('SpatializedStatic3DElement', () => {
   afterEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./JSBCommand')
+    vi.doUnmock('./JSBCommand')
   })
 
   it('entityTransform setter passes float64 array to updateProperties', async () => {
@@ -855,9 +845,8 @@ describe('SpatializedStatic3DElement', () => {
       }
     })
 
-    const { SpatializedStatic3DElement } = await import(
-      './SpatializedStatic3DElement'
-    )
+    const { SpatializedStatic3DElement } =
+      await import('./SpatializedStatic3DElement')
 
     class DOMMatrixWithArray {
       toFloat64Array() {
@@ -877,7 +866,7 @@ describe('SpatializedDynamic3DElement', () => {
   afterEach(() => {
     vi.resetModules()
     vi.clearAllMocks()
-    vi.unmock('./JSBCommand')
+    vi.doUnmock('./JSBCommand')
   })
 
   it('addEntity sets parent, pushes children, and calls SetParentForEntityCommand', async () => {
@@ -917,9 +906,8 @@ describe('SpatializedDynamic3DElement', () => {
       }
     })
 
-    const { SpatializedDynamic3DElement } = await import(
-      './SpatializedDynamic3DElement'
-    )
+    const { SpatializedDynamic3DElement } =
+      await import('./SpatializedDynamic3DElement')
     const el = new SpatializedDynamic3DElement('d1')
 
     const entity: any = { id: 'e1', parent: undefined }
@@ -969,9 +957,8 @@ describe('SpatializedDynamic3DElement', () => {
       }
     })
 
-    const { SpatializedDynamic3DElement } = await import(
-      './SpatializedDynamic3DElement'
-    )
+    const { SpatializedDynamic3DElement } =
+      await import('./SpatializedDynamic3DElement')
     const el = new SpatializedDynamic3DElement('d2')
     await el.updateProperties({ visible: true } as any)
     expect(execute).toHaveBeenCalledTimes(1)
@@ -992,9 +979,8 @@ describe('platform-adapter', () => {
       return { isSSREnv: () => true }
     })
 
-    const { createPlatform, createPlatformSync } = await import(
-      './platform-adapter'
-    )
+    const { createPlatform, createPlatformSync } =
+      await import('./platform-adapter')
     const expected = /cannot run during SSR/
     await expect(createPlatform()).rejects.toThrow(expected)
     expect(() => createPlatformSync()).toThrow(expected)

@@ -33,7 +33,7 @@
     "changeset:pre-exit": "changeset pre exit alpha",
     "generateStaticSite": "./tools/scripts/generateWebsite.sh",
     "commitlint": "commitlint",
-    "test:commitlint": "node --test tools/scripts/commitlint.test.cjs",
+    "test:commitlint": "node --test tools/scripts/commitlint.test.cjs tools/scripts/lint-commit-range.test.cjs",
     "lint": "eslint apps/test-server tests/ci-test packages/cli/src packages/core/src packages/react/src"
   },
   "engines": {
@@ -74,7 +74,7 @@
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
     "@fission-ai/openspec": "^1.12.0",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.4",
     "concurrently": "^8.2.2",
     "eslint": "^9.39.5",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -87,7 +87,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.69.0",
     "vite": "^6.4.3",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.4"
   },
   "packageManager": "pnpm@11.25.0"
 }
