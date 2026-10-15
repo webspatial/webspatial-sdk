@@ -194,38 +194,33 @@ Image resources loaded from a URL and sampled by **UnlitMaterial** when you set 
 ### 10.1 `<Texture>`
 
 - **Props:** `id` (string you reuse as `textureId` on `UnlitMaterial`), `url` (image URL), `onLoad?`, `onError?`.
-- **URL resolution:** `http://` and `https://` URLs are used as-is; other values are resolved with `new URL(url, window.location.href)` so relative paths work against the page origin.
-- **Loading:** Fetching and preparing the image is **asynchronous**. Use `onLoad` / `onError` to know when the texture is ready.
-- **Order inside `<Reality>`:** Put `<Texture>` before `<UnlitMaterial>` that references it. If the material is created in the same render cycle as the texture, wait until `onLoad` (or similar) before mounting that material and entities that use it, so the image is available when the material is first built.
+- **URL resolution:** Values are resolved with `new URL(url, window.location.href)`, so relative paths work against the page origin and absolute `http(s)` URLs pass through unchanged. Without a `window` (SSR), the value is used as-is — pass absolute URLs there.
+- **Loading:** Fetching and preparing the image is **asynchronous**; the texture resource resolves only after the image is fully loaded. `onLoad` fires when it is ready (and again after each successful runtime `url` change); `onError` fires when a load fails.
+- **Order inside `<Reality>`:** Put `<Texture>` before `<UnlitMaterial>` that references it. No manual gating is needed: a material whose `textureId` matches a declared texture waits for that texture internally, so the image is bound when the material is first built. If the texture is missing or fails to load, the material still renders (tint-only) and binds the texture automatically once it becomes available.
 
 ```tsx
-const [texReady, setTexReady] = useState(false);
-
 <Reality style={{ width: '100%', height: '500px' }}>
   <Texture
     id="brick"
     url="https://example.com/brick.jpg"
-    onLoad={() => setTexReady(true)}
+    onLoad={() => console.log('texture ready')}
     onError={(e) => console.error(e)}
   />
-  {texReady && (
-    <>
-      <UnlitMaterial id="matBrick" color="#ffffff" textureId="brick" />
-      <SceneGraph>
-        <BoxEntity materials={['matBrick']} width={0.2} height={0.2} depth={0.2} />
-      </SceneGraph>
-    </>
-  )}
+  <UnlitMaterial id="matBrick" color="#ffffff" textureId="brick" />
+  <SceneGraph>
+    <BoxEntity materials={['matBrick']} width={0.2} height={0.2} depth={0.2} />
+  </SceneGraph>
 </Reality>
 ```
 
-- **Runtime `url` changes:** After mount, changing `url` reloads the image; any `UnlitMaterial` that references this texture’s `id` updates to show the new image.
+- **Runtime `url` changes:** After mount, changing `url` reloads the image in place on the same texture resource; any `UnlitMaterial` that references this texture’s `id` updates to show the new image, and `onLoad` fires again. If the reload fails, `onError` fires and materials keep showing the previous image.
 
 ### 10.2 UnlitMaterial + texture
 
 - **`textureId`:** Use the same string `id` you passed to `<Texture>`. Both must live under the same `<Reality>`; the SDK wires the material to that texture resource for you.
 - **Tint:** `color` multiplies with the texture; use `#ffffff` for an untinted image.
-- **Clearing / rebinding:** After mount, `textureId=""` clears the binding; set `textureId` to another texture `id` to switch images, same as updating other material props.
+- **Missing / failed texture:** A `textureId` that has no `<Texture>` yet (or whose load failed) does not break the material — it renders tint-only and picks up the texture automatically when it becomes available.
+- **Clearing / rebinding:** After mount, `textureId=""` clears the binding; set `textureId` to another texture `id` to switch images, same as updating other material props. Leaving `textureId` `undefined` in an update keeps the current binding — use `""` to clear it explicitly.
 
 ---
 
