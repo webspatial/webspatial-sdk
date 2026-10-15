@@ -21,16 +21,26 @@ export enum SpatialWebMsgType {
 
   animationstatechange = 'animationstatechange',
 
+  /** Dedicated Entity motion lifecycle state event. */
+  spatialanimationstatechanged = 'spatialanimationstatechanged',
+  /** Dedicated asynchronous Entity animation error event. */
+  entityanimationerror = 'entityanimationerror',
+
   // Native-driven transform updates (e.g. while in `stagemode="orbit"`)
   entitytransformchange = 'entitytransformchange',
 
-  // Animation terminal events (keyed by animationId, not by this enum)
-  animationcompleted = 'animationcompleted',
-  animationstopped = 'animationstopped',
-  animationfailed = 'animationfailed',
-
   objectdestroy = 'objectdestroy',
+
+  // Native asks JS to ship a `blob:` source's bytes (native cannot fetch blobs).
+  modelblobrequest = 'modelblobrequest',
 }
+
+export type {
+  EntityAnimationErrorDetail,
+  EntityAnimationErrorMsg,
+  EntityMotionStateChangedDetail,
+  EntityMotionStateChangedMsg,
+} from './types/motion/entityMotion'
 
 export interface ObjectDestroyMsg {
   type: SpatialWebMsgType.objectdestroy
@@ -79,11 +89,27 @@ export interface SpatialMagnifyEndMsg {
 export interface ModelLoadSuccess {
   type: SpatialWebMsgType.modelloaded
   // detail object is undefined in old native runtimes
-  detail?: { src: string }
+  detail?: {
+    src: string
+    boundingBoxCenter?: { x: number; y: number; z: number }
+    boundingBoxExtents?: { x: number; y: number; z: number }
+  }
 }
 
 export interface ModelLoadFailure {
   type: SpatialWebMsgType.modelloadfailed
+}
+
+export interface ModelBlobRequestDetail {
+  /** Unique, non-reused identifier for this source attempt. */
+  requestId: string
+  /** The `blob:` URL native wants the bytes for. */
+  src: string
+}
+
+export interface ModelBlobRequestMsg {
+  type: SpatialWebMsgType.modelblobrequest
+  detail: ModelBlobRequestDetail
 }
 
 export interface AnimationStateChangeDetail {
@@ -114,26 +140,4 @@ export interface EntityTransformChangeDetail {
 export interface EntityTransformChangeMsg {
   type: SpatialWebMsgType.entitytransformchange
   detail: EntityTransformChangeDetail
-}
-
-// Animation terminal event payloads (delivered via SpatialWebEvent keyed by animationId)
-
-export interface AnimationCompletedEventPayload {
-  type: 'completed'
-  /** Column-major 4x4 matrix (16 numbers) representing the final native transform. */
-  transform: number[]
-}
-
-export interface AnimationCanceledEventPayload {
-  type: 'canceled'
-  /** Column-major 4x4 matrix (16 numbers) representing the restored transform after cancel. */
-  transform: number[]
-}
-
-export interface AnimationFailedEventPayload {
-  type: 'failed'
-  animationId: string
-  command: 'play' | 'pause' | 'resume' | 'cancel'
-  code?: string
-  reason: string
 }

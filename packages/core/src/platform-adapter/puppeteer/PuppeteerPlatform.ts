@@ -357,12 +357,8 @@ export class PuppeteerPlatform implements PlatformAbility {
       },
 
       // document access
-      get document() {
-        return iframe.contentDocument || ({} as Document)
-      },
-      get contentWindow() {
-        return iframe.contentWindow || ({} as Window)
-      },
+      document: iframe.contentDocument || ({} as Document),
+      contentWindow: iframe.contentWindow || ({} as Window),
 
       // add message communication method
       postMessage: (message: any, targetOrigin?: string) => {

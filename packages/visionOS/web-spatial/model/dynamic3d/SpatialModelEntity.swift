@@ -61,16 +61,12 @@ class SpatialModelEntity: SpatialEntity {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, isDestroyed, children, components, model
+        case model
     }
 
     override func encode(to encoder: any Encoder) throws {
+        try super.encode(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(spatialId, forKey: .id)
-        try container.encode(name, forKey: .name)
-        try container.encode(isDestroyed, forKey: .isDestroyed)
-        try container.encode(spatialChildren, forKey: .children)
-        try container.encode(spatialComponents, forKey: .components)
         try container.encode(modelEntity?.id, forKey: .model)
     }
 }

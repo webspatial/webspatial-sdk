@@ -180,6 +180,37 @@ mount after spatial readiness, such as children of `<SpatialBoot>` or a tree
 rendered after an explicit `await bootSpatial()`. Calling it before readiness
 throws `WebSpatialRuntimeError` with capability `useAnimation`.
 
+### Experimental WebSpatial Inspector
+
+`WebSpatialInspector` renders the current native scene inspect data in an
+Ornament. It includes SpatialDiv, Model, Reality entity trees, and Ornaments.
+Detached runtime objects that are not mounted in the page scene tree are not
+shown. Selecting a DOM-backed node highlights its page placeholder; native-only
+nodes remain inspectable without claiming a DOM association.
+
+```tsx
+import { SpatialBoot } from '@webspatial/react-sdk'
+import { WebSpatialInspector } from '@webspatial/react-sdk/experimental'
+
+function Root() {
+  return (
+    <SpatialBoot>
+      <App />
+      <WebSpatialInspector editable />
+    </SpatialBoot>
+  )
+}
+```
+
+The inspector runs one inspect request when it mounts, then refreshes after
+WebSpatial tree-structure commands complete or when you press Refresh. It does
+not poll continuously, and layout/property sync commands do not auto-refresh
+the panel. The inspector is read-only unless `editable` is enabled. Edit mode is
+limited to DOM-backed layout properties already supported by the normal spatial
+update path: width, height, opacity, visibility, depth, back offset, and z-index.
+Entity and Ornament state is not mutated through the inspector. Unsupported
+runtimes render no inspector because the component requires Ornament support.
+
 ### RSC, server requests, and runtime detection
 
 The default entry carries `'use client'` at the top of its emitted `dist/index.js`. Frameworks that support React Server Components treat imports from `@webspatial/react-sdk` as a **client boundary**: you can still **render** facade components from a Server Component file (they become client components), but you cannot **call** hook-style APIs from server-only modules.
@@ -273,12 +304,9 @@ For layout/size changes prefer **declarative React updates** (props/state) rathe
 
 ### Nested ordering note
 
-`onSpatialContentReady` ordering guarantees are runtime-scoped:
+`onSpatialContentReady` **parent/child delivery order is not a guaranteed API contract** in any runtime (WebSpatial or plain-web fallback). Each nested `SpatialDiv` may become ready independently.
 
-- In a WebSpatial runtime, the parent `SpatialDiv` callback runs **before** the child callback on the same ready edge.
-- In non-WebSpatial fallback (plain web DOM), parent/child ordering is **not** a guaranteed contract and should be treated as unspecified.
-
-Recommended practice: initialize imperative renderers from each container's own `ctx.host` and avoid coupling setup logic to parent/child callback sequence in fallback web mode.
+Recommended practice: initialize imperative renderers from **that container's own** `ctx.host` only. Do not couple child setup to whether the parent callback has already run.
 
 ## SpatialDiv CSS and transforms
 

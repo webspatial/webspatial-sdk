@@ -25,7 +25,9 @@ struct OrbitModifier: ViewModifier {
         content
             .simultaneousGesture(enabled ? orbitGesture : nil)
             .onChange(of: enabled) { _, isEnabled in
-                if !isEnabled { releaseElastic() }
+                if !isEnabled {
+                    releaseElastic()
+                }
             }
     }
 
@@ -33,7 +35,9 @@ struct OrbitModifier: ViewModifier {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
                 let base = dragStartTransform ?? entityTransform
-                if dragStartTransform == nil { dragStartTransform = base }
+                if dragStartTransform == nil {
+                    dragStartTransform = base
+                }
 
                 dragYawDegrees = Double(value.translation.width) * degreesPerPoint
                 let pitchTarget = Double(-value.translation.height) * degreesPerPoint

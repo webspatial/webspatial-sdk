@@ -22,13 +22,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22, 24, latest]
+        node-version: [24, latest]
     steps:
       - name: Checkout code repository
         uses: actions/checkout@v5
+        with:
+          # Changesets needs enough history to resolve changelog commits without incremental fetches.
+          fetch-depth: 1000
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/setup@v2
+        with:
+          install: false
 
       - name: Setup node.js
         uses: actions/setup-node@v4

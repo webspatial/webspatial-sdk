@@ -6,8 +6,8 @@ Attachments allow developers to render interactive 2D HTML/React content — but
 
 The API uses two components with a deliberate separation of concerns:
 
-- **`<AttachmentAsset>`** declares *what* to render (the React content template). Placed outside `<SceneGraph>`.
-- **`<AttachmentEntity>`** declares *where* to render it (transform, dimensions, parent entity). Placed inside `<SceneGraph>`.
+- **`<AttachmentAsset>`** declares _what_ to render (the React content template). Placed outside `<SceneGraph>`.
+- **`<AttachmentEntity>`** declares _where_ to render it (transform, dimensions, parent entity). Placed inside `<SceneGraph>`.
 
 This enables a 1→N pattern: one content template can be rendered into multiple 3D positions simultaneously, mirroring the existing asset-vs-entity pattern used by models and materials.
 
@@ -81,6 +81,28 @@ Optional width of the attachment frame in world-space meters. When omitted, the 
 
 Optional height of the attachment frame in world-space meters. When omitted, the native layer falls back to an internal default frame size.
 
+`cornerRadius`
+
+Optional `number` — a uniform corner radius in points applied to all four corners of the attachment surface. Defaults to `0` (square corners). The public API is a single number; internally it is expanded into the native four-corner shape (`topLeading` / `bottomLeading` / `topTrailing` / `bottomTrailing`) before serialization. Negative or non-finite values are normalized to `0`. The webview content is clipped to the rounded rectangle, so HTML that reaches the surface edge is cut at the corners.
+
+`backgroundMaterial`
+
+Optional background material for the attachment surface:
+
+```ts
+type BackgroundMaterialType =
+  | 'none'
+  | 'transparent'
+  | 'translucent'
+  | 'thin'
+  | 'regular'
+  | 'thick'
+```
+
+Defaults to `'transparent'`. `'none'` and `'transparent'` both render a fully transparent surface (the attachment shows only its HTML content). `'translucent'` renders the visionOS glass effect; `'thin'`, `'regular'`, and `'thick'` render the corresponding system materials behind the webview content, matching the Ornament material behavior. Any other value is normalized to `'transparent'`, and React warns in development builds when it receives an unsupported material.
+
+Both `cornerRadius` and `backgroundMaterial` can change at runtime. Changes are applied **in place** via `UpdateAttachmentEntityCommand` — the attachment WebView is not recreated. Updates that omit these properties preserve the attachment's current effective values.
+
 ### Usage Notes
 
 - `<AttachmentEntity>` must be placed inside `<SceneGraph>`, as a descendant of an `<Entity>`. It inherits the parent entity's transform — when the entity moves, the attachment follows.
@@ -91,10 +113,10 @@ Optional height of the attachment frame in world-space meters. When omitted, the
 
 ## Migration
 
-| Before | After |
-| --- | --- |
-| `<AttachmentAsset name="hud">` | `<AttachmentAsset id="hud">` |
-| `position={[x, y, z]}` | `position={{ x, y, z }}` |
+| Before                              | After                               |
+| ----------------------------------- | ----------------------------------- |
+| `<AttachmentAsset name="hud">`      | `<AttachmentAsset id="hud">`        |
+| `position={[x, y, z]}`              | `position={{ x, y, z }}`            |
 | `size={{ width, height }}` (points) | `width={m}` / `height={m}` (meters) |
 
 Add `rotation` and `scale` as optional `{ x, y, z }` props when you need orientation or non-uniform scaling. Tuple position and the `size` object are no longer accepted.
@@ -114,40 +136,38 @@ Inline styles set directly on elements inside the attachment work as expected.
 
 The following components detect when they are rendered inside an `<AttachmentAsset>` and degrade gracefully:
 
-| Component | Behavior Inside Attachment |
-|-----------|---------------------------|
-| `<Reality>` | Returns `null` with a console warning.  |
+| Component                               | Behavior Inside Attachment                                                    |
+| --------------------------------------- | ----------------------------------------------------------------------------- |
+| `<Reality>`                             | Returns `null` with a console warning.                                        |
 | `<SpatialDiv>` / `SpatializedContainer` | Renders as plain HTML (strips spatial props). Layout and Tailwind still work. |
-| `<Model>` | Renders as a plain `<model>` tag without spatialization. |
-
-
+| `<Model>`                               | Renders as a plain `<model>` tag without spatialization.                      |
 
 ## Technical Summary
 
-|||
-| --- | --- |
-| Permitted content for `<AttachmentAsset>` | Any valid React JSX. Spatial components (`<Reality>`, `<SpatialDiv>`, `<Model>`) will degrade to plain HTML. |
-| Permitted content for `<AttachmentEntity>` | None. Returns `null`. |
-| Permitted parents for `<AttachmentAsset>` | Direct child of `<Reality>`, outside `<SceneGraph>`. |
-| Permitted parents for `<AttachmentEntity>` | Any `<Entity>` descendant inside `<SceneGraph>`. |
-| Rendering mechanism | `createPortal` from the host React tree into each attachment WKWebView's `document.body`. |
-| Native backing | One `WKWebView` per `<AttachmentEntity>` instance, rendered as a RealityKit `ViewAttachmentEntity`. |
+|                                            |                                                                                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Permitted content for `<AttachmentAsset>`  | Any valid React JSX. Spatial components (`<Reality>`, `<SpatialDiv>`, `<Model>`) will degrade to plain HTML. |
+| Permitted content for `<AttachmentEntity>` | None. Returns `null`.                                                                                        |
+| Permitted parents for `<AttachmentAsset>`  | Direct child of `<Reality>`, outside `<SceneGraph>`.                                                         |
+| Permitted parents for `<AttachmentEntity>` | Any `<Entity>` descendant inside `<SceneGraph>`.                                                             |
+| Rendering mechanism                        | `createPortal` from the host React tree into each attachment WKWebView's `document.body`.                    |
+| Native backing                             | One `WKWebView` per `<AttachmentEntity>` instance, rendered as a RealityKit `ViewAttachmentEntity`.          |
 
 ## Browser Compatibility
 
-| Feature | visionOS |
-| --- | --- |
-| `<AttachmentAsset>` |  WebSpatial April |
+| Feature              | visionOS         |
+| -------------------- | ---------------- |
+| `<AttachmentAsset>`  | WebSpatial April |
 | `<AttachmentEntity>` | WebSpatial April |
 
 ### Not Supported
 
-| Feature | Status |
-| --- | --- |
-| Nested `<Reality>` inside attachments | Blocked — returns null with warning |
-| Nested `<SpatialDiv>` inside attachments | Degrades to plain HTML |
-| 3D content inside attachments | Not supported — 2D surfaces only |
-| Billboard / camera-facing policy | Not in this PR |
+| Feature                                  | Status                              |
+| ---------------------------------------- | ----------------------------------- |
+| Nested `<Reality>` inside attachments    | Blocked — returns null with warning |
+| Nested `<SpatialDiv>` inside attachments | Degrades to plain HTML              |
+| 3D content inside attachments            | Not supported — 2D surfaces only    |
+| Billboard / camera-facing policy         | Not in this PR                      |
 
 ## High-Level Architecture
 
@@ -167,11 +187,11 @@ Attachment creation uses `window.open("webspatial://createAttachment?...")` inst
 
 ### Creation Protocol vs. Update/Destroy Protocol
 
-| Operation | Protocol | Reason |
-|-----------|----------|--------|
-| Create | `WebSpatialProtocolCommand` (`window.open`) | Must return `WindowProxy` synchronously |
-| Update | `JSBCommand` (JSB message) | Only sends data (position, rotation, scale, width, height) — no return value needed |
-| Destroy | `DestroyCommand` (JSB message) | Standard spatial object destroy pipeline |
+| Operation | Protocol                                    | Reason                                                                                                                |
+| --------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Create    | `WebSpatialProtocolCommand` (`window.open`) | Must return `WindowProxy` synchronously                                                                               |
+| Update    | `JSBCommand` (JSB message)                  | Only sends data (position, rotation, scale, width, height, cornerRadius, backgroundMaterial) — no return value needed |
+| Destroy   | `DestroyCommand` (JSB message)              | Standard spatial object destroy pipeline                                                                              |
 
 ## Constraints
 

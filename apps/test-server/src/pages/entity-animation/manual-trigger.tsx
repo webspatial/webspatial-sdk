@@ -8,6 +8,7 @@ import {
 import { useEntityAnimation } from '@webspatial/react-sdk/experimental'
 import {
   EntityAnimationPageShell,
+  EntityPropsPanel,
   Log,
   fmtVec3,
   btnCls,
@@ -18,26 +19,30 @@ import {
 export default function EntityAnimationManualTriggerPage() {
   const logger = useLog()
   const [playbackRate, setPlaybackRate] = useState(1.0)
-  const [posX, setPosX] = useState(0)
+  const [reactPosition, setReactPosition] = useState({ x: 0, y: 0, z: 0 })
+  const [reactRotation, setReactRotation] = useState({ x: 0, y: 0, z: 0 })
+  const [reactScale, setReactScale] = useState({ x: 1, y: 1, z: 1 })
 
-  const [animation, api] = useEntityAnimation({
+  const [animation, api, entityProps] = useEntityAnimation({
     from: { position: { x: -0.1, y: 0, z: 0 } },
     to: { position: { x: 0.1, y: 0, z: 0 } },
     duration: 3.0,
+    delay: 1.0,
     timingFunction: 'easeInOut',
     playbackRate,
     autoStart: false,
     onStart: () => logger.log('onStart'),
     onComplete: value =>
       logger.log(`onComplete pos=${fmtVec3(value.position)}`),
-    onCancel: value => logger.log(`onCancel pos=${fmtVec3(value.position)}`),
-    onError: error => logger.log(`onError [${error.command}] ${error.reason}`),
+    onStop: value => logger.log(`onStop pos=${fmtVec3(value.position)}`),
+    onReset: value => logger.log(`onReset pos=${fmtVec3(value.position)}`),
+    onError: error => logger.log(`onError [${error.code}] ${error.reason}`),
   })
 
   return (
     <EntityAnimationPageShell
       title="Manual Trigger"
-      description="This case keeps autoStart disabled so playback is fully controlled through the API buttons. Adjust playbackRate before pressing Play."
+      description="Use the React transform probes during delay, running, paused, and terminal states. Native must block the probes while active and accept later probe changes after playback becomes inactive."
     >
       <section className="rounded-2xl border border-gray-800 bg-[#111] p-6">
         <div className="flex flex-wrap gap-2">
@@ -62,32 +67,79 @@ export default function EntityAnimationManualTriggerPage() {
           <button
             className={btnCls}
             onClick={() => {
-              api.cancel()
-              logger.log('cancel()')
+              api.stop()
+              logger.log('stop()')
             }}
           >
-            Cancel
+            Stop
           </button>
           <button
             className={btnCls}
             onClick={() => {
-              setPosX(prev => {
-                const next = Math.round((prev + 0.1) * 1000) / 1000
-                logger.log(`setPosX(${next})`)
-                return next
+              api.reset()
+              logger.log('reset()')
+            }}
+          >
+            Reset
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.finish()
+              logger.log('finish()')
+            }}
+          >
+            Finish
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              api.set({ position: { y: 0.06 } })
+              logger.log('api.set(y=0.06) requested; see entityProps')
+            }}
+          >
+            api.set(y = 0.06)
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              setReactPosition(value => ({ ...value, x: value.x + 0.1 }))
+              logger.log('React position.x += 0.1')
+            }}
+          >
+            React position.x += 0.1
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              setReactRotation(value => ({ ...value, y: value.y + 45 }))
+              logger.log('React rotation.y += 45')
+            }}
+          >
+            React rotation.y += 45
+          </button>
+          <button
+            className={btnCls}
+            onClick={() => {
+              setReactScale(value => {
+                const next = value.x === 1 ? 1.5 : 1
+                return { x: next, y: next, z: next }
               })
+              logger.log('Toggle React scale')
             }}
           >
-            X += 0.1
+            Toggle React scale
           </button>
           <button
             className={btnCls}
             onClick={() => {
-              setPosX(0)
-              logger.log('setPosX(0)')
+              setReactPosition({ x: 0, y: 0, z: 0 })
+              setReactRotation({ x: 0, y: 0, z: 0 })
+              setReactScale({ x: 1, y: 1, z: 1 })
+              logger.log('Reset React transform probes')
             }}
           >
-            X = 0
+            Reset React probes
           </button>
           <button className={btnCls} onClick={logger.clear}>
             Clear log
@@ -114,10 +166,19 @@ export default function EntityAnimationManualTriggerPage() {
           ))}
         </div>
 
-        <div className="mt-3 text-xs font-mono text-gray-500">
+        <div
+          data-webspatial-play-state={api.playState}
+          data-webspatial-react-position={JSON.stringify(reactPosition)}
+          data-webspatial-react-rotation={JSON.stringify(reactRotation)}
+          data-webspatial-react-scale={JSON.stringify(reactScale)}
+          className="mt-3 text-xs font-mono text-gray-500"
+        >
           isAnimating={String(api.isAnimating)} &nbsp; isPaused=
-          {String(api.isPaused)} &nbsp; playbackRate={playbackRate} &nbsp; posX=
-          {posX}
+          {String(api.isPaused)} &nbsp; playState={api.playState} &nbsp;
+          playbackRate={playbackRate}
+          <br />
+          React position={fmtVec3(reactPosition)} rotation=
+          {fmtVec3(reactRotation)} scale={fmtVec3(reactScale)}
         </div>
         <Reality style={{ width: '100%', height: '220px' }}>
           <UnlitMaterial id="matRed" color="#ff0000" />
@@ -126,13 +187,23 @@ export default function EntityAnimationManualTriggerPage() {
               width={0.1}
               height={0.1}
               depth={0.1}
-              position={{ x: posX, y: 0, z: 0 }}
               materials={['matRed']}
+              {...entityProps}
+              position={reactPosition}
+              rotation={reactRotation}
+              scale={reactScale}
               animation={animation}
             />
           </SceneGraph>
         </Reality>
+        <EntityPropsPanel entityProps={entityProps} />
         <Log lines={logger.lines} />
+        <p className="mt-3 text-xs text-gray-500">
+          This probe intentionally applies React transform props after
+          entityProps. During delay, running, or paused playback the box must
+          ignore probe changes. After stop, reset, finish, or natural
+          completion, the next probe change must update the box.
+        </p>
       </section>
     </EntityAnimationPageShell>
   )

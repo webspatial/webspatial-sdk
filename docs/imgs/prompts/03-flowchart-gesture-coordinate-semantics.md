@@ -4,37 +4,39 @@ type: flowchart
 style: blueprint
 ---
 
-Gesture Coordinate Semantics — Local vs Scene Space
+Gesture Coordinate Semantics — Scene Hit to Local vs Global
 
-Layout: two-lane pipeline diagram (left lane = element-local semantic, right lane = scene-space).
+Layout: two-lane pipeline diagram (left lane = element-local / offset, right lane = scene-space / client).
 
-LEFT LANE (Element-local / semantic local):
-1. Input: `event.location3D (x, y, z)` captured at `.simultaneousGesture`
-2. Compute: `frameZ = zIndex * zOrderBias + backOffset (--xr-back)`
-3. Output: `localPoint3D = (x, y, z - frameZ)`
-4. Note box: “Front face tap ⇒ offsetZ ≈ 0”
+SHARED INPUT (top center):
+- `event.location3D` in named coordinate space `"SpatialScene"` (CSS pixels)
 
-RIGHT LANE (Scene-space / SpatialScene):
-1. Input: `event.location3D (raw)`
-2. Apply: `globalPoint3D = proxyTransform * (x, y, z, 1)`
-3. Output: `Point3D in SpatialScene`
+LEFT LANE (Element-local / offset*):
+1. Input: scene hit point `P_scene`
+2. Build: `M = sceneTransform × anchoredCSSTransform` (layout + --xr-back/zIndex + CSS transform with transform-origin)
+3. Compute: `P_local = inverse(M) × P_scene`
+4. Output: `location3D` / `offsetX/Y/Z`
+5. Note box: “Top-left front-face tap ⇒ offset ≈ (0, 0, 0). Target transform does not leak.”
 
-CENTER CALLOUT (bridging both lanes):
-- Show the identity/no-op:
-  - `proxyTransform · T(0,0,frameZ) · (x, y, z−frameZ) = proxyTransform · (x, y, z)`
-- Label: “Subtract-then-add frameZ is a no-op; apply proxyTransform to raw point.”
+RIGHT LANE (Scene-space / client*):
+1. Input: same `P_scene`
+2. Output: `globalLocation3D` / `clientX/Y/Z` = `P_scene` as-is
+3. Note box: “Window / SpatialScene pixels; moves when the element moves.”
+
+CENTER CALLOUT:
+- Do not use SwiftUI `.local` space of the gesture modifier.
+- `.offset(z:)` and `.transform3DEffect` are inverted explicitly via `M`, not inferred from the modifier chain.
 
 CONNECTIONS:
 - Use arrows within each lane (top-down).
-- Use thin dashed line between lanes to show “same raw source, different semantics”.
+- Dashed line from shared input to both lanes: “same scene hit, two spaces.”
 
 STYLE:
 - Blueprint schematic style with grid background.
-- White text/lines; use accent color to highlight `frameZ` and the identity equation.
+- White text/lines; accent color on `inverse(M)` and `"SpatialScene"`.
 - Monospace font for identifiers.
 
 Clean composition with generous white space. Simple or no background. Main elements centered or positioned by content needs.
 Text should be large and prominent. Keep minimal, focus on keywords.
 
 ASPECT: 16:9
-

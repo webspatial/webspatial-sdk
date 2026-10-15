@@ -2,6 +2,7 @@
 
 import { ComponentType, ForwardedRef, forwardRef } from 'react'
 import type {
+  BackgroundMaterialType,
   SpatialBoxGeometryOptions,
   SpatialConeGeometryOptions,
   SpatialCylinderGeometryOptions,
@@ -13,7 +14,7 @@ import type { EntityRefShape } from '../reality/hooks/useEntityRef'
 import type { EntityEventHandler, EntityProps } from '../reality/type'
 import { requireSpatialImpl } from '../runtime/bridge'
 import { useSpatialReady } from '../runtime/useSpatialReady'
-import { warnBootForgotten } from './shared/warnBootForgotten'
+import { BootForgottenDiagnostic } from './shared/BootForgottenDiagnostic'
 
 export type { EntityRefShape }
 
@@ -43,8 +44,7 @@ function createEntityRefFacade<P>(
   function Impl(props: P, ref: ForwardedRef<EntityRefShape>) {
     const ready = useSpatialReady()
     if (!ready) {
-      warnBootForgotten(componentName)
-      return null
+      return <BootForgottenDiagnostic componentName={componentName} />
     }
     const RealComponent = pickReal(requireSpatialImpl()) as ComponentType<
       P & { ref?: unknown }
@@ -64,8 +64,7 @@ function createNullFacade<P>(
   function Facade(props: P) {
     const ready = useSpatialReady()
     if (!ready) {
-      warnBootForgotten(componentName)
-      return null
+      return <BootForgottenDiagnostic componentName={componentName} />
     }
     const RealComponent = pickReal(requireSpatialImpl()) as ComponentType<any>
     return <RealComponent {...(props as any)} />
@@ -105,6 +104,8 @@ export type AttachmentEntityProps = {
   scale?: Vec3
   width?: number
   height?: number
+  cornerRadius?: number
+  backgroundMaterial?: BackgroundMaterialType
 }
 
 // `/* @__PURE__ */` annotations on each factory call: tells the consumer

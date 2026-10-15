@@ -36,11 +36,12 @@ import '@webspatial/core-sdk/install-polyfills'
 import { initPolyfill } from '../spatialized-container'
 
 export * from '../Model'
+export * from '../inspector'
 export * from '../ornament'
 export * from '../reality'
 export { useMetrics } from '../useMetrics'
 export { useAnimation } from '../spatialized-container/motion'
-export { useEntityAnimation } from '../reality/hooks/useAnimation'
+export { useEntityAnimation } from '../reality/hooks/useEntityAnimation'
 export { withSpatialized2DElementContainer } from '../spatialized-container'
 export { withSpatialMonitor } from '../spatialized-container-monitor'
 

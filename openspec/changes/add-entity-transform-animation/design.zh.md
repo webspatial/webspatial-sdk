@@ -1,3 +1,5 @@
+> **状态:已正式 superseded。** `redesign-entity-motion-api` 是 Entity motion 的权威设计。本文件仅保留为实现历史。
+
 ## 背景
 
 完整动机见 proposal。简言之：实体 transform 更新目前是瞬时跳变，缺少 native 过渡能力。本设计文档覆盖 transform-only 动画 API、跨层契约及行为规则。

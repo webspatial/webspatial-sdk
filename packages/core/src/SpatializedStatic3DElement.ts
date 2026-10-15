@@ -9,11 +9,13 @@ import {
 import {
   ModelLoadSuccess,
   ModelLoadFailure,
+  ModelBlobRequestMsg,
   SpatialWebMsgType,
   AnimationStateChangeDetail,
   AnimationStateChangeMsg,
   EntityTransformChangeMsg,
 } from './WebMsgCommand'
+import { transferBlob } from './blob/blobTransfer'
 
 /**
  * Represents a static 3D model element in the spatial environment.
@@ -77,6 +79,24 @@ export class SpatializedStatic3DElement extends SpatializedElement {
   }
 
   /**
+   * Center of the model's axis-aligned bounding box in local meters.
+   */
+  private _boundingBoxCenter: DOMPointReadOnly = new DOMPointReadOnly()
+
+  get boundingBoxCenter(): DOMPointReadOnly {
+    return this._boundingBoxCenter
+  }
+
+  /**
+   * Full extents of the model's axis-aligned bounding box in local meters.
+   */
+  private _boundingBoxExtents: DOMPointReadOnly = new DOMPointReadOnly()
+
+  get boundingBoxExtents(): DOMPointReadOnly {
+    return this._boundingBoxExtents
+  }
+
+  /**
    * Creates a new promise for tracking the ready state of the model.
    * @returns Promise that resolves when the model is loaded (true) or fails to load (false)
    */
@@ -119,6 +139,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       }
     }
     if (needsReadyReset) {
+      this._boundingBoxCenter = new DOMPointReadOnly()
+      this._boundingBoxExtents = new DOMPointReadOnly()
       this.ready = this.createReadyPromise()
     }
     if (properties.autoplay !== undefined) {
@@ -293,6 +315,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
     if (data.type === SpatialWebMsgType.modelloaded) {
       // On old runtimes (<⍺2.1) detail is not returned so fallback to modelURL
       this._currentSrc = data.detail?.src ?? this.modelURL ?? ''
+      this._boundingBoxCenter = toDOMPoint(data.detail?.boundingBoxCenter)
+      this._boundingBoxExtents = toDOMPoint(data.detail?.boundingBoxExtents)
       // Handle successful model loading
       this._onLoadCallback?.()
       this._readyResolve?.(true)
@@ -309,6 +333,8 @@ export class SpatializedStatic3DElement extends SpatializedElement {
       this._onAnimationStateChangeCallback?.(data.detail)
     } else if (data.type === SpatialWebMsgType.entitytransformchange) {
       this._entityTransform = new DOMMatrixReadOnly(data.detail.transform)
+    } else if (data.type === SpatialWebMsgType.modelblobrequest) {
+      transferBlob(this, data.detail.requestId, data.detail.src)
     } else {
       // Handle other spatial events using the base class implementation
       super.onReceiveEvent(data)
@@ -412,9 +438,14 @@ function clamp(num: number, min: number, max: number) {
   return num <= min ? min : num >= max ? max : num
 }
 
+function toDOMPoint(point?: { x: number; y: number; z: number }) {
+  return new DOMPointReadOnly(point?.x, point?.y, point?.z)
+}
+
 type Static3DReceiveEventData =
   | ModelLoadSuccess
   | ModelLoadFailure
+  | ModelBlobRequestMsg
   | ReceiveEventData
   | AnimationStateChangeMsg
   | EntityTransformChangeMsg

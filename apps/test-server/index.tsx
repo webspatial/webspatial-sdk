@@ -21,7 +21,9 @@ import RealityTest from './src/pages/reality/index'
 import RealityDebug from './src/pages/reality/debug'
 import RealityDynamic3D from './src/pages/reality/dynamic3d'
 import RealityGestures from './src/pages/reality/gestures'
-import GestureDiv from './src/pages/reality/gestureDiv'
+import EntityGestureCoordinates from './src/pages/reality/entityGestureCoordinates'
+import SpatialElementGestureCoordinates from './src/pages/reality/spatialElementGestureCoordinates'
+import ConvertCoordinateGesture from './src/pages/reality/convertCoordinateGesture'
 import RealitySpatialDiv from './src/pages/reality/spatialDivDynamic'
 import BasicTransform from './src/pages/basic-transform/index'
 import ModelTest from './src/pages/model-test/index'
@@ -42,12 +44,11 @@ import RealityNested from './src/pages/reality/nested'
 import RealityAttachments from './src/pages/reality/attachments'
 import RealityDynamicAssets from './src/pages/reality/dynamicAssets'
 import RealityTexturedUnlitBox from './src/pages/reality/texturedUnlitBox'
+import RealityPBRMaterial from './src/pages/reality/pbrMaterial'
 import RealityTestIndex from './src/pages/reality-test/index'
 import RealityAliases from './src/pages/reality/aliases'
-import SpatialDragGesture from './src/pages/spatial-drag-gesture/index'
 import SpatialGuesture from './src/pages/spatial-guesture/index'
 import SpatialMagnifyGesture from './src/pages/spatial-magnify-gesture/index'
-import SpatialRotationGesture from './src/pages/spatial-rotation-gesture/index'
 import SpatialRotateAxisConstraint from './src/pages/spatial-rotate-axis-constraint/index'
 import BackgroundMaterial from './src/pages/backgroundmaterial/index'
 import FixedPositionTest from './src/pages/FixedPositionTest/index'
@@ -58,7 +59,6 @@ import NestedScroll from './src/pages/nestedscroll/index'
 import NestedSpatialOverflow from './src/pages/nested-spatial-overflow/index'
 import SpatialConverter from './src/pages/spatial-converter/index'
 import SpatialCorner from './src/pages/spatialCorner/index'
-import GeometryVerify from './src/pages/geometry-verify/index'
 import TransformVerify from './src/pages/transform-verify/index'
 import Static3DModel from './src/pages/static-3d-model/index'
 import NestedStatic3DModelReady from './src/pages/static-3d-model/nested-ready'
@@ -74,15 +74,21 @@ import SpatialDivTest from './src/pages/spatialDivTest/index'
 import SpatialContentReadyThree from './src/pages/spatial-content-ready-three/index'
 import DropdownMenuTest from './src/pages/dropdown-menu-test/index'
 import RuntimeCapabilitiesPage from './src/pages/runtime-capabilities/index'
+import PagePropertiesCornerPage from './src/pages/page-properties-corner/index'
 import OrnamentTestPage from './src/pages/ornament-test/index'
+import WebSpatialInspectorPage from './src/pages/webspatial-inspector/index'
 import EntityAnimationPage from './src/pages/entity-animation/index'
 import EntityAnimationEntrancePage from './src/pages/entity-animation/entrance'
 import EntityAnimationManualTriggerPage from './src/pages/entity-animation/manual-trigger'
+import EntityAnimationTransformCacheReproPage from './src/pages/entity-animation/transform-cache-repro'
 import EntityAnimationReverseLoopPage from './src/pages/entity-animation/reverse-loop'
 import EntityAnimationCancelSyncPage from './src/pages/entity-animation/cancel-sync'
 import EntityAnimationCapabilityCheckPage from './src/pages/entity-animation/capability-check'
 import EntityAnimationResetLoopPage from './src/pages/entity-animation/reset-loop'
 import EntityAnimationPlayStatePage from './src/pages/entity-animation/play-state'
+import EntityAnimationBindingOwnershipPage from './src/pages/entity-animation/binding-ownership'
+import EntityAnimationConfigReplacementPage from './src/pages/entity-animation/config-replacement'
+import EntityAnimationIsolationCleanupPage from './src/pages/entity-animation/isolation-cleanup'
 import SpatialElementMotionPage from './src/pages/spatial-element-motion/index'
 import SpatialElementMotionRealityContainerPage from './src/pages/spatial-element-motion/reality-container'
 import SpatialElementMotionStaticModelContainerPage from './src/pages/spatial-element-motion/static-model-container'
@@ -217,8 +223,16 @@ function App() {
                   element={<RuntimeCapabilitiesPage />}
                 />
                 <Route
+                  path="/page-properties-corner"
+                  element={<PagePropertiesCornerPage />}
+                />
+                <Route
                   path="/scene/ornament-test"
                   element={<OrnamentTestPage />}
+                />
+                <Route
+                  path="/scene/webspatial-inspector"
+                  element={<WebSpatialInspectorPage />}
                 />
                 <Route
                   path="/entity-animation"
@@ -231,6 +245,10 @@ function App() {
                 <Route
                   path="/entity-animation/manual-trigger"
                   element={<EntityAnimationManualTriggerPage />}
+                />
+                <Route
+                  path="/entity-animation/transform-cache-repro"
+                  element={<EntityAnimationTransformCacheReproPage />}
                 />
                 <Route
                   path="/entity-animation/reverse-loop"
@@ -251,6 +269,18 @@ function App() {
                 <Route
                   path="/entity-animation/play-state"
                   element={<EntityAnimationPlayStatePage />}
+                />
+                <Route
+                  path="/entity-animation/binding-ownership"
+                  element={<EntityAnimationBindingOwnershipPage />}
+                />
+                <Route
+                  path="/entity-animation/config-replacement"
+                  element={<EntityAnimationConfigReplacementPage />}
+                />
+                <Route
+                  path="/entity-animation/isolation-cleanup"
+                  element={<EntityAnimationIsolationCleanupPage />}
                 />
                 <Route
                   path="/spatial-element-motion"
@@ -338,7 +368,18 @@ function App() {
                   element={<RealityDynamic3D />}
                 />
                 <Route path="/reality/gestures" element={<RealityGestures />} />
-                <Route path="/reality/gestureDiv" element={<GestureDiv />} />
+                <Route
+                  path="/reality/entity-gesture-coordinates"
+                  element={<EntityGestureCoordinates />}
+                />
+                <Route
+                  path="/reality/spatial-element-gesture-coordinates"
+                  element={<SpatialElementGestureCoordinates />}
+                />
+                <Route
+                  path="/reality/convert-coordinate-gesture"
+                  element={<ConvertCoordinateGesture />}
+                />
                 <Route
                   path="/reality/spatial-div"
                   element={<RealitySpatialDiv />}
@@ -384,19 +425,15 @@ function App() {
                   path="/reality/textured-unlit-box"
                   element={<RealityTexturedUnlitBox />}
                 />
-                <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route
-                  path="/spatial-drag-gesture"
-                  element={<SpatialDragGesture />}
+                  path="/reality/pbr-material"
+                  element={<RealityPBRMaterial />}
                 />
+                <Route path="/reality-test" element={<RealityTestIndex />} />
                 <Route path="/spatial-guesture" element={<SpatialGuesture />} />
                 <Route
                   path="/spatial-magnify-gesture"
                   element={<SpatialMagnifyGesture />}
-                />
-                <Route
-                  path="/spatial-rotation-gesture"
-                  element={<SpatialRotationGesture />}
                 />
                 <Route
                   path="/spatial-rotate-axis-constraint"
@@ -435,7 +472,6 @@ function App() {
                   element={<DropdownMenuTest />}
                 />
                 <Route path="/spatial-corner" element={<SpatialCorner />} />
-                <Route path="/geometry-verify" element={<GeometryVerify />} />
                 <Route path="/transform-verify" element={<TransformVerify />} />
                 <Route path="/static-3d-model" element={<Static3DModel />} />
                 <Route

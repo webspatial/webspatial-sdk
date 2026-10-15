@@ -261,7 +261,6 @@ describe('useSpatialReady getServerSnapshot stability (spec tasks.md §13.4 + "g
 
 describe('Hydration round-trip — boot AFTER hydrate (spec tasks.md §13.5 + "First client render matches server render regardless of boot timing" + "Switch to spatial happens after hydration commits" Scenarios)', () => {
   it('hydration completes without React mismatch warnings; subsequent bootSpatial() resolution swaps to real implementations on the next commit', async () => {
-    setPuppeteerUserAgent()
     const sentinelImpl = makeSentinelImpl()
     __setSpatialImplLoaderForTests(() => Promise.resolve(sentinelImpl))
 
@@ -272,7 +271,14 @@ describe('Hydration round-trip — boot AFTER hydrate (spec tasks.md §13.5 + "F
         <BoxEntity />
       </>
     )
+    // Model a real server process: unlike jsdom, it has no `window` even
+    // though the hydrating client runs with a WebSpatial user agent.
+    const clientWindow = window
+    vi.stubGlobal('window', undefined)
     const html = renderToString(tree)
+    vi.stubGlobal('window', clientWindow)
+    setPuppeteerUserAgent()
+    expect(html).not.toContain('data-webspatial-boot-forgotten')
 
     // Mount the SSR'd HTML into a real DOM container.
     const container = document.createElement('div')
@@ -303,6 +309,9 @@ describe('Hydration round-trip — boot AFTER hydrate (spec tasks.md §13.5 + "F
     // same fallback (matched), so the model element is still present.
     expect(container.querySelector('model')).not.toBeNull()
     expect(container.querySelector('[data-sentinel="Model"]')).toBeNull()
+    expect(
+      container.querySelectorAll('[data-webspatial-boot-forgotten]'),
+    ).toHaveLength(1)
 
     // Now boot — the bridge resolves and the next render commits real impls.
     await act(async () => {

@@ -22,19 +22,22 @@ type UpdatePropertiesPayload = {
 type SpatializedElementStub = {
   updateProperties: (payload: UpdatePropertiesPayload) => void
   modelUrl: string
+  boundingBoxCenter: DOMPointReadOnly
+  boundingBoxExtents: DOMPointReadOnly
 }
 
 const updateProperties = vi.fn<(payload: UpdatePropertiesPayload) => void>()
 const spatializedElement: SpatializedElementStub = {
   updateProperties,
   modelUrl: '',
+  boundingBoxCenter: { x: 1, y: 2, z: 3 } as DOMPointReadOnly,
+  boundingBoxExtents: { x: 4, y: 5, z: 6 } as DOMPointReadOnly,
 }
 const portalInstanceValue = {
   dom: document.createElement('div'),
 } as { dom?: HTMLElement }
 let lastExtraRefProps:
-  | ((domProxy: unknown) => Record<string, unknown>)
-  | undefined
+  ((domProxy: unknown) => Record<string, unknown>) | undefined
 
 vi.mock('@webspatial/core-sdk', () => ({
   SpatializedStatic3DElement: class {},
@@ -259,5 +262,53 @@ describe('SpatializedStatic3DElementContainer lazy/eager loading behavior', () =
     ).resolves.toMatchObject({
       type: 'modelloaded',
     })
+  })
+
+  it('exposes bounding box properties from the DOM-linked spatialized element', () => {
+    render(<SpatializedStatic3DElementContainer src="/model.usdz" />)
+
+    const domProxy = Object.assign(document.createElement('div'), {
+      __innerSpatializedElement: () => spatializedElement,
+    })
+    const extra = lastExtraRefProps!(domProxy)
+
+    expect(extra.boundingBoxCenter).toBe(spatializedElement.boundingBoxCenter)
+    expect(extra.boundingBoxExtents).toBe(spatializedElement.boundingBoxExtents)
+  })
+
+  it('reads bounds through the same ref when the core element becomes available or is replaced', () => {
+    render(<SpatializedStatic3DElementContainer src="/model.usdz" />)
+
+    let linkedElement: SpatializedElementStub | undefined
+    const domProxy = Object.assign(document.createElement('div'), {
+      __innerSpatializedElement: () => linkedElement,
+    })
+    const extra = lastExtraRefProps!(domProxy)
+
+    linkedElement = spatializedElement
+    expect(extra.boundingBoxCenter).toBe(linkedElement.boundingBoxCenter)
+    expect(extra.boundingBoxExtents).toBe(linkedElement.boundingBoxExtents)
+
+    linkedElement = {
+      ...spatializedElement,
+      boundingBoxCenter: { x: -1, y: -2, z: -3 } as DOMPointReadOnly,
+      boundingBoxExtents: { x: 0.1, y: 0.2, z: 0.3 } as DOMPointReadOnly,
+    }
+    expect(extra.boundingBoxCenter).toBe(linkedElement.boundingBoxCenter)
+    expect(extra.boundingBoxExtents).toBe(linkedElement.boundingBoxExtents)
+  })
+
+  it('exposes getter-only bounds from a directly bound core element', () => {
+    render(<SpatializedStatic3DElementContainer src="/model.usdz" />)
+
+    const domProxy = Object.assign(document.createElement('div'), {
+      __spatializedElement: spatializedElement,
+    })
+    const extra = lastExtraRefProps!(domProxy)
+
+    expect(extra.boundingBoxCenter).toBe(spatializedElement.boundingBoxCenter)
+    expect(extra.boundingBoxExtents).toBe(spatializedElement.boundingBoxExtents)
+    expect(Reflect.set(extra, 'boundingBoxCenter', {})).toBe(false)
+    expect(Reflect.set(extra, 'boundingBoxExtents', {})).toBe(false)
   })
 })
