@@ -3,6 +3,20 @@ import * as fs from 'fs'
 import { HistoryInfo } from '../types'
 import { CliLog } from './utils'
 import { PROJECT_TEST_DIRECTORY } from '../resource'
+import { parseBuffer as parseBinaryPlist } from 'bplist-parser'
+
+export function isCachedAppValid(appFile: string, expectedBundleId: string) {
+  if (!expectedBundleId || !fs.existsSync(appFile)) {
+    return false
+  }
+  try {
+    const data = fs.readFileSync(join(appFile, 'Info.plist'))
+    const info = parseBinaryPlist<Record<string, unknown>>(data)[0]
+    return info.CFBundleIdentifier === expectedBundleId
+  } catch {
+    return false
+  }
+}
 
 /*
   Histoy is used to record information about successful execution of the run command,
@@ -74,14 +88,14 @@ export default class CliHistory {
     return this.compareObjects(this.history.manifest, manifest)
   }
 
-  // Check whether the test app exists
-  public static checkTestAppIsExist() {
+  // Check whether the cached app is installable for the current manifest
+  public static checkTestAppIsValid() {
     const appInfo = this.getAppInfoRecord()
     const appFile = join(
       PROJECT_TEST_DIRECTORY,
       `Build/Products/Debug-xrsimulator/${appInfo.name}.app`,
     )
-    return fs.existsSync(appFile)
+    return isCachedAppValid(appFile, appInfo.id)
   }
 
   // Compare whether two objects are equal
