@@ -56,7 +56,7 @@ export async function run(args: any) {
     // If this command is a new command, go through the build process; otherwise, go through the launch process
     if (
       CliHistory.checkManifest(manifestInfo.json) &&
-      CliHistory.checkTestAppIsExist()
+      CliHistory.checkTestAppIsValid()
     ) {
       console.log('Same as the previous record')
       await XcodeManager.runWithHistory()
