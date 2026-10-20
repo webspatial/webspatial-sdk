@@ -1,10 +1,10 @@
-const assert = require('node:assert/strict')
-const fs = require('node:fs')
-const os = require('node:os')
-const path = require('node:path')
-const test = require('node:test')
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import test from 'node:test'
 
-const { clearDir } = require('../dist/lib/resource/file')
+import { clearDir } from '../dist/lib/resource/file.js'
 
 test('clearDir removes nested files and dangling symbolic links', t => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'clear-dir-'))
