@@ -410,6 +410,9 @@ importers:
       '@webspatial/platform-visionos':
         specifier: workspace:^
         version: link:../visionOS
+      bplist-parser:
+        specifier: ^0.5.0
+        version: 0.5.0
       cli-progress:
         specifier: ^3.12.0
         version: 3.12.0
@@ -3820,6 +3823,10 @@ packages:
   bplist-parser@0.3.1:
     resolution: {integrity: sha512-PyJxiNtA5T2PlLIeBot4lbp7rj4OadzjnMZD/G5zuBNt8ei/yCU7+wW0h2bag9vr8c+/WuRWmSxbqAl9hL1rBA==}
     engines: {node: '>= 5.10.0'}
+
+  bplist-parser@0.5.0:
+    resolution: {integrity: sha512-owgQ0RGbndIGNrQkpHe99HVSslIK59t31nVyAPDRqhq9mNDc2kRl5HwYO292GuKjHqiJRdJNiaI63a02hjLFIQ==}
+    engines: {node: '>=20.19.0'}
 
   brace-expansion@1.1.21:
     resolution: {integrity: sha512-9zeA+KLZNNzglF2TPKRQEDyx6Yby7daAkuy8MiPzpXPsYDWi/DRM8jmwUDxokQjYqBpv5DgPiwD4h4ZZSy1Ujw==}
@@ -11007,6 +11014,8 @@ snapshots:
   bplist-parser@0.3.1:
     dependencies:
       big-integer: 1.6.52
+
+  bplist-parser@0.5.0: {}
 
   brace-expansion@1.1.21:
     dependencies:

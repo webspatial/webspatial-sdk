@@ -12,7 +12,7 @@
   "scripts": {
     "start": "tsc -w",
     "test": "tsc",
-    "test:unit": "tsc && node --test \"test/**/*.test.js\"",
+    "test:unit": "tsc && node --test \"test/**/*.test.{js,mjs}\"",
     "test0": "npm run build && bin/bundlepwa.js test",
     "test1": "npm run build && bin/bundlepwa.js build --manifest=../testLocal/manifest.json --project=../testLocal --export=./export --version=1.0 --teamId=teamId",
     "test2": "npm run build && bin/bundlepwa.js publish --manifest=../pack-test/pwa_test.json --project=../pack-test --version=1.0 --teamId=teamId --u=username --p=password",
@@ -46,6 +46,7 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "@webspatial/platform-visionos": "workspace:^",
+    "bplist-parser": "^0.5.0",
     "cli-progress": "^3.12.0",
     "colors": "^1.4.0",
     "commander": "^13.1.0",

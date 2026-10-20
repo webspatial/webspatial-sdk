@@ -21,18 +21,12 @@ export function copyDir(from: string, to: string) {
 }
 
 export function clearDir(from: string) {
+  if (!fs.existsSync(from)) {
+    return
+  }
   const paths = fs.readdirSync(from)
   paths.forEach(path => {
     const _from = from + '/' + path
-    const stat = fs.statSync(_from)
-    if (stat.isFile()) {
-      try {
-        fs.unlinkSync(_from)
-      } catch (err) {
-        console.log(err)
-      }
-    } else if (stat.isDirectory()) {
-      clearDir(_from)
-    }
+    fs.rmSync(_from, { recursive: true, force: true })
   })
 }
