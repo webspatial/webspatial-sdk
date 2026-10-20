@@ -164,6 +164,7 @@ struct SpatialNavView: View {
                 }
                 .padding(12)
                 .background(Color(hex: "#161616E5"))
+                .compositingGroup()
                 .hoverEffect(in: navHoverGroup) { effect, isActive, _ in
                     effect.opacity((isActive && showNav == 0 && showUrl == 0) ? 1 : 0)
                 }
