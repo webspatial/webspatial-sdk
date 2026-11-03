@@ -45,9 +45,17 @@ export const Texture: React.FC<TextureProps> = ({
       const resolvedUrl = getAbsoluteUrl(url)
       try {
         if (textureRef.current) {
-          await textureRef.current.updateProperties({ url: resolvedUrl })
+          const result = await textureRef.current.updateProperties({
+            url: resolvedUrl,
+          })
 
           if (cancelled || revision !== urlRevisionRef.current) return
+
+          if (!result.success) {
+            throw new Error(
+              result.errorMessage || 'Failed to update texture URL',
+            )
+          }
 
           resourceRegistry.notify(id)
           onLoad?.()
