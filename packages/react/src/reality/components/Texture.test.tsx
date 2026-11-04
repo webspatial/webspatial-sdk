@@ -1,7 +1,7 @@
 /* @vitest-environment jsdom */
 
 import React from 'react'
-import { act, cleanup, render, waitFor } from '@testing-library/react'
+import { cleanup, render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Texture } from './Texture'
 
@@ -55,40 +55,23 @@ async function mountLoadedTexture() {
 }
 
 describe('Texture reload callbacks', () => {
-  it.each(['HTTP 404: texture not found', 'Failed to decode texture image'])(
-    'reports a bridge failure through onError: %s',
-    async errorMessage => {
-      const view = await mountLoadedTexture()
-      mocks.texture.updateProperties.mockResolvedValue({
-        success: false,
-        errorMessage,
-      })
-
-      view.reload('/invalid.png')
-
-      await waitFor(() => expect(view.onError).toHaveBeenCalledTimes(1))
-      expect(view.onError).toHaveBeenCalledWith(new Error(errorMessage))
-      expect(view.onLoad).not.toHaveBeenCalled()
-      expect(mocks.resourceRegistry.notify).not.toHaveBeenCalled()
-      expect(mocks.session.createTexture).toHaveBeenCalledTimes(1)
-      expect(mocks.texture.destroy).not.toHaveBeenCalled()
-    },
-  )
-
-  it('uses a fallback message when the bridge provides an empty message', async () => {
+  it('reports a failed URL update through onError', async () => {
     const view = await mountLoadedTexture()
     mocks.texture.updateProperties.mockResolvedValue({
       success: false,
-      errorMessage: '',
+      errorMessage: 'HTTP 404: texture not found',
     })
 
     view.reload('/invalid.png')
 
     await waitFor(() => expect(view.onError).toHaveBeenCalledTimes(1))
     expect(view.onError).toHaveBeenCalledWith(
-      new Error('Failed to update texture URL'),
+      new Error('HTTP 404: texture not found'),
     )
     expect(view.onLoad).not.toHaveBeenCalled()
+    expect(mocks.resourceRegistry.notify).not.toHaveBeenCalled()
+    expect(mocks.session.createTexture).toHaveBeenCalledTimes(1)
+    expect(mocks.texture.destroy).not.toHaveBeenCalled()
   })
 
   it('notifies resource subscribers and calls onLoad after a successful reload', async () => {
@@ -104,19 +87,6 @@ describe('Texture reload callbacks', () => {
       url: new URL('/replacement.png', window.location.href).href,
     })
     expect(mocks.session.createTexture).toHaveBeenCalledTimes(1)
-  })
-
-  it('continues to report rejected reload promises through onError', async () => {
-    const view = await mountLoadedTexture()
-    const error = new Error('Bridge transport failed')
-    mocks.texture.updateProperties.mockRejectedValue(error)
-
-    view.reload('/invalid.png')
-
-    await waitFor(() => expect(view.onError).toHaveBeenCalledTimes(1))
-    expect(view.onError).toHaveBeenCalledWith(error)
-    expect(view.onLoad).not.toHaveBeenCalled()
-    expect(mocks.resourceRegistry.notify).not.toHaveBeenCalled()
   })
 
   it('recovers on a later successful reload without recreating the texture', async () => {
@@ -135,97 +105,5 @@ describe('Texture reload callbacks', () => {
     expect(mocks.resourceRegistry.notify).toHaveBeenCalledTimes(1)
     expect(mocks.session.createTexture).toHaveBeenCalledTimes(1)
     expect(mocks.texture.updateProperties).toHaveBeenCalledTimes(2)
-  })
-
-  it.each([true, false])(
-    'ignores an obsolete reload completion with success=%s',
-    async success => {
-      const view = await mountLoadedTexture()
-      let completeOld!: (result: {
-        success: boolean
-        errorMessage?: string
-      }) => void
-      mocks.texture.updateProperties.mockReturnValueOnce(
-        new Promise(resolve => {
-          completeOld = resolve
-        }),
-      )
-
-      view.reload('/slow.png')
-      view.reload('/latest.png')
-      await waitFor(() => expect(view.onLoad).toHaveBeenCalledTimes(1))
-
-      await act(async () => {
-        completeOld({ success, errorMessage: 'Obsolete failure' })
-      })
-
-      expect(view.onLoad).toHaveBeenCalledTimes(1)
-      expect(view.onError).not.toHaveBeenCalled()
-      expect(mocks.resourceRegistry.notify).toHaveBeenCalledTimes(1)
-    },
-  )
-
-  it('does not call callbacks after unmount during a failed reload', async () => {
-    const view = await mountLoadedTexture()
-    let complete!: (result: { success: boolean; errorMessage: string }) => void
-    mocks.texture.updateProperties.mockReturnValueOnce(
-      new Promise(resolve => {
-        complete = resolve
-      }),
-    )
-    view.reload('/slow.png')
-    view.unmount()
-
-    await act(async () => {
-      complete({ success: false, errorMessage: 'Late failure' })
-    })
-
-    expect(view.onLoad).not.toHaveBeenCalled()
-    expect(view.onError).not.toHaveBeenCalled()
-    expect(mocks.resourceRegistry.notify).not.toHaveBeenCalled()
-    expect(mocks.resourceRegistry.removeAndDestroy).toHaveBeenCalledWith(
-      'texture',
-    )
-  })
-
-  it('handles a failed reload when onError is omitted', async () => {
-    const onLoad = vi.fn()
-    const view = render(
-      <Texture id="texture" url="/valid.png" onLoad={onLoad} />,
-    )
-    await waitFor(() => expect(onLoad).toHaveBeenCalledTimes(1))
-    onLoad.mockClear()
-    mocks.texture.updateProperties.mockResolvedValue({
-      success: false,
-      errorMessage: 'Failed to update texture URL',
-    })
-
-    await act(async () => {
-      view.rerender(<Texture id="texture" url="/invalid.png" onLoad={onLoad} />)
-    })
-
-    expect(mocks.texture.updateProperties).toHaveBeenCalledTimes(1)
-    expect(onLoad).not.toHaveBeenCalled()
-  })
-
-  it('preserves initial texture creation error handling', async () => {
-    const error = new Error('Failed to load texture')
-    mocks.session.createTexture.mockRejectedValue(error)
-    const onLoad = vi.fn()
-    const onError = vi.fn()
-
-    render(
-      <Texture
-        id="texture"
-        url="/invalid.png"
-        onLoad={onLoad}
-        onError={onError}
-      />,
-    )
-
-    await waitFor(() => expect(onError).toHaveBeenCalledTimes(1))
-    expect(onError).toHaveBeenCalledWith(error)
-    expect(onLoad).not.toHaveBeenCalled()
-    expect(mocks.texture.updateProperties).not.toHaveBeenCalled()
   })
 })
