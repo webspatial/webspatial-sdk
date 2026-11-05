@@ -15,6 +15,8 @@ export class SpatialObject {
 
   isDestroyed = false
 
+  private pendingDestroy: Promise<any> | undefined
+
   async inspect() {
     const ret = await new InspectCommand(this.id).execute()
     if (ret.success) {
@@ -24,10 +26,22 @@ export class SpatialObject {
   }
 
   async destroy() {
+    if (this.pendingDestroy) {
+      return this.pendingDestroy
+    }
     if (this.isDestroyed) {
       return
     }
 
+    this.pendingDestroy = this.destroyNativeObject()
+    try {
+      return await this.pendingDestroy
+    } finally {
+      this.pendingDestroy = undefined
+    }
+  }
+
+  private async destroyNativeObject() {
     const ret = await new DestroyCommand(this.id).execute()
     if (ret.success) {
       this.onDestroy()
