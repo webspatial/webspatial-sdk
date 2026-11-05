@@ -15,6 +15,7 @@ interface RunPicoArgs {
 }
 
 interface RunPicoDependencies {
+  checkPrerequisites: () => Promise<void>
   loadManifest: (args: RunPicoArgs) => Promise<Record<string, any>>
   executeAdbShell: (command: string) => Promise<void>
 }
@@ -135,19 +136,72 @@ export function createPicoLaunchCommand(manifest: Record<string, any>): string {
   ].join(' ')
 }
 
-function executeAdbShell(command: string): Promise<void> {
+function executeAdb(args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
-    execFile('adb', ['shell', command], error => {
+    execFile('adb', args, (error, stdout, stderr) => {
       if (error) {
-        reject(error)
+        const details = stderr.trim() || error.message
+        let message = `ADB failed: ${details}`
+
+        if (error.code === 'ENOENT') {
+          message =
+            'ADB was not found. Install Android SDK Platform-Tools ' +
+            '(https://developer.android.com/tools/releases/platform-tools), ' +
+            'add its directory to PATH, and verify that "adb version" works.'
+        } else if (error.code === 'EACCES' || error.code === 'EPERM') {
+          message =
+            'ADB could not be executed. Check the permissions of the adb ' +
+            'binary in PATH and verify that "adb version" works.'
+        } else if (/unauthorized/i.test(details)) {
+          message =
+            'The ADB device is unauthorized. Enable USB debugging on your ' +
+            'PICO device and accept the debugging authorization prompt, ' +
+            'then verify the connection with "adb devices".'
+        } else if (/offline/i.test(details)) {
+          message =
+            'The ADB device is offline. Reconnect your PICO device and ' +
+            'restart ADB with "adb kill-server" and "adb start-server", ' +
+            'then verify the connection with "adb devices".'
+        } else if (/more than one device\/emulator/i.test(details)) {
+          message =
+            'Multiple ADB devices are connected. Disconnect the other ' +
+            'devices or set ANDROID_SERIAL to your PICO device serial ' +
+            'from "adb devices", then retry.'
+        } else if (
+          /no devices\/emulators found|device .* not found/i.test(details)
+        ) {
+          message =
+            'No ADB device was found. Connect your PICO device, enable USB ' +
+            'debugging, and verify that it appears in "adb devices". ' +
+            'If ANDROID_SERIAL is set, check that it matches the device serial.'
+        }
+
+        reject(new Error(message))
         return
       }
-      resolve()
+      resolve(stdout)
     })
   })
 }
 
+export async function checkPicoPrerequisites(): Promise<void> {
+  await executeAdb(['version'])
+  const state = (await executeAdb(['get-state'])).trim()
+  if (state !== 'device') {
+    throw new Error(
+      `The ADB device is not ready (state: ${state || 'unknown'}). ` +
+        'Connect your PICO device, enable USB debugging, and verify ' +
+        'that "adb devices" reports its state as "device".',
+    )
+  }
+}
+
+async function executeAdbShell(command: string): Promise<void> {
+  await executeAdb(['shell', command])
+}
+
 const defaultDependencies: RunPicoDependencies = {
+  checkPrerequisites: checkPicoPrerequisites,
   loadManifest: args => loadPicoManifest(args),
   executeAdbShell,
 }
@@ -157,6 +211,7 @@ export async function runPico(
   dependencies: RunPicoDependencies = defaultDependencies,
 ): Promise<void> {
   const base = normalizePicoBase(args.base ?? DEFAULT_PICO_BASE)
+  await dependencies.checkPrerequisites()
   const manifest = await dependencies.loadManifest(args)
   const picoManifest = createPicoManifest(manifest, base)
 
